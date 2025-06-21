@@ -4,17 +4,17 @@ using SharedKernel.Domain;
 namespace Attending.Presentation.DataGather.CMD.Sources.FamilyPracticeNoteBook;
 internal static class FamilyPracticeNotebookScraperService
 {
-    public static async Task<IEnumerable<Symptom>> GetSymptoms() => await get<Symptom>(LinkUrls.Symptoms);
-    public static async Task<IEnumerable<Examination>> GetExaminations() => await get<Examination>(LinkUrls.Examinations);
-    public static async Task<IEnumerable<Medication>> GetMedications() => await get<Medication>(LinkUrls.Medications);
-    public static async Task<IEnumerable<Procedure>> GetProcedures() => await get<Procedure>(LinkUrls.Procedures);
+    public static async Task<IEnumerable<Symptom>> GetSymptoms() => await get<Symptom>($"{LinkUrls.BaseUrl}/{LinkUrls.Symptoms}");
+    public static async Task<IEnumerable<Examination>> GetExaminations() => await get<Examination>($"{LinkUrls.BaseUrl}/{LinkUrls.Examinations}");
+    public static async Task<IEnumerable<Medication>> GetMedications() => await get<Medication>($"{LinkUrls.BaseUrl}/{LinkUrls.Medications}");
+    public static async Task<IEnumerable<Procedure>> GetProcedures() => await get<Procedure>($"{LinkUrls.BaseUrl}/{LinkUrls.Procedures}");
 
 
     private static async Task<IEnumerable<T>> get<T>(string dataUrl) where T : Data, new()
     {
-        var httpClient = new HttpClient
+        var httpClient = new HttpClient()
         {
-            BaseAddress = new Uri(LinkUrls.BaseUrl)
+            BaseAddress = new Uri(LinkUrls.HomeUrl)
         };
         var detailLinks = await getDataWithDetailsLinks(httpClient, dataUrl);
         if(!detailLinks.Any())
@@ -23,16 +23,16 @@ internal static class FamilyPracticeNotebookScraperService
             return [];
         }
 
-        var result = await Task.WhenAll(getDetailsTasks<T>(httpClient, detailLinks));
+        using var semaphoreSlim = new SemaphoreSlim(Concurrency.MaxDop);
+        var result = await Task.WhenAll(getDetailsTasks<T>(httpClient, detailLinks, semaphoreSlim));
         return result;
     }
-    private static IEnumerable<Task<T>> getDetailsTasks<T>(HttpClient httpClient, IEnumerable<DataWithDetailsLinkDto> detailLinks) where T : Data, new()
+    private static IEnumerable<Task<T>> getDetailsTasks<T>(HttpClient httpClient, IEnumerable<DataWithDetailsLinkDto> detailLinks, SemaphoreSlim semaphoreSlim) where T : Data, new()
     {
-        using var semaphore = new SemaphoreSlim(Concurrency.SoftCap, Concurrency.HardCap);
         return detailLinks
             .Select(async detailLink =>
             {
-                await semaphore.WaitAsync();
+                await semaphoreSlim.WaitAsync();
                 try
                 {
                     var details = await getDetails(httpClient, detailLink);
@@ -45,7 +45,7 @@ internal static class FamilyPracticeNotebookScraperService
                 }
                 finally
                 {
-                    semaphore.Release();
+                    semaphoreSlim.Release();
                 }
             });
     }

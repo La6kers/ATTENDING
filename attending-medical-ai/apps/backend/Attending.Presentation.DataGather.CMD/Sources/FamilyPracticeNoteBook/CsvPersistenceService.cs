@@ -24,7 +24,7 @@ internal static class CsvPersistenceService
         using var writer = new StreamWriter(csvFilePath);
         using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
         await csv.WriteRecordsAsync(csvDtos);
-        Console.WriteLine($"Symptoms saved to {csvFilePath}");
+        Console.WriteLine($"Data saved to {csvFilePath}");
     }
 
     private static IEnumerable<CSVDto> ToCsvDtos<T>(this IEnumerable<T> data) where T : Data
