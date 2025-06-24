@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treatment Planning - Bubble UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .provider-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            background: #f3f4f6;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .notification-icon:hover {
+            transform: scale(1.1);
+            background: #e5e7eb;
+        }
+
+        .notification-icon:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ef4444;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f3f4f6;
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-menu:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        .user-menu:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Patient Banner */
+        .patient-banner {
+            background: white;
+            margin: 20px;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .patient-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .patient-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .patient-details h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+            color: #1f2937;
+        }
+
+        .patient-meta {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .diagnosis-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: white;
+            border: 2px solid #e5e7eb;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            background: #f3f4f6;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .action-btn:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Main Container */
+        .main-container {
+            padding: 0 20px 20px;
+            display: grid;
+            grid-template-columns: 20% 1fr;
+            grid-auto-rows: max-content;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        /* Card grid positioning */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .card-header svg {
+            width: 20px;
+            height: 20px;
+            color: #667eea;
+        }
+
+        /* Diagnosis Box */
+        .diagnosis-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Treatment Items */
+        .treatment-item {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .treatment-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .treatment-item.selected {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6efff 100%);
+            border-color: #667eea;
+        }
+
+        .treatment-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .treatment-details {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* Education Materials */
+        .education-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .education-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .education-item:focus-within {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+
+        .checkbox:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Patient Factors */
+        .factor-section {
+            margin-bottom: 16px;
+        }
+
+        .factor-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .factor-label svg {
+            width: 14px;
+            height: 14px;
+            color: #667eea;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-right: 6px;
+            margin-bottom: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tag::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .tag:hover::before {
+            left: 100%;
+        }
+
+        .tag.allergy {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #dc2626;
+            border: 1px solid #f87171;
+        }
+
+        .tag.medication {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #2563eb;
+            border: 1px solid #60a5fa;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .status-item {
+            background: linear-gradient(135deg, #f0f9f4 0%, #e6f7ed 100%);
+            border: 1px solid #d1fae5;
+            border-radius: 10px;
+            padding: 8px 10px;
+            transition: all 0.2s ease;
+        }
+
+        .status-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.1);
+        }
+
+        .status-item-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-item-label svg {
+            width: 12px;
+            height: 12px;
+            color: #667eea;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .status-indicator.safe {
+            color: #059669;
+            font-weight: 500;
+        }
+
+        .status-indicator.warning {
+            color: #d97706;
+            font-weight: 500;
+        }
+
+        .status-indicator svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        /* Execute Button */
+        .execute-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .execute-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .execute-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .execute-btn:disabled {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+        }
+
+        .execute-btn:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Treatment Options */
+        .category-header {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .treatment-option {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .treatment-option.selected {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .treatment-option:focus-within {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .treatment-option-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+        }
+
+        .treatment-option.selected .treatment-option-header {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6efff 100%);
+        }
+
+        .treatment-option-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .treatment-badges {
+            display: flex;
+            gap: 8px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge.covered {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .badge.not-covered {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge.fda {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .treatment-option-details {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .detail-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 8px;
+        }
+
+        .detail-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .detail-list li {
+            position: relative;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .detail-list li:before {
+            content: "•";
+            position: absolute;
+            left: -15px;
+            color: #9ca3af;
+        }
+
+        .warning-box {
+            margin-top: 15px;
+            background: #fef2f2;
+            border: 2px solid #fee2e2;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .warning-box svg {
+            color: #dc2626;
+            flex-shrink: 0;
+        }
+
+        .warning-content h5 {
+            color: #dc2626;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .warning-content p {
+            color: #991b1b;
+            font-size: 13px;
+        }
+
+        /* Follow-up Cards */
+        .follow-up-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .follow-up-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .follow-up-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .follow-up-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+            border-color: #667eea;
+        }
+
+        .follow-up-card:hover::before {
+            width: 6px;
+        }
+
+        .follow-up-card:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .follow-up-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1f2937;
+            font-size: 14px;
+        }
+
+        .follow-up-header svg {
+            color: #667eea;
+            flex-shrink: 0;
+        }
+
+        .follow-up-description {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .follow-up-action {
+            color: #667eea;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .follow-up-action:hover {
+            color: #764ba2;
+            transform: translateX(2px);
+        }
+
+        .follow-up-action::after {
+            content: '→';
+            transition: transform 0.2s ease;
+        }
+
+        .follow-up-action:hover::after {
+            transform: translateX(2px);
+        }
+
+        /* Button Group */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #4b5563;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .btn-secondary:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        /* Error Message Styles */
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Loading State */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Screen Reader Only */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .left-column, .right-column {
+                display: contents;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .patient-banner {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .action-buttons {
+                width: 100%;
+            }
+
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" role="banner">
+        <div class="logo-section">
+            <div class="logo">ATTENDING</div>
+            <div class="provider-badge">Provider Portal</div>
+        </div>
+        <h1 class="page-title">TREATMENT PLAN</h1>
+        <div class="header-right">
+            <button class="notification-icon" tabindex="0" aria-label="Notifications" aria-describedby="notification-count">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="notification-badge" id="notification-count" aria-label="3 new notifications">3</span>
+            </button>
+            <button class="user-menu" tabindex="0" aria-label="User menu" aria-expanded="false">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>Dr. Thomas Reed</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Patient Banner -->
+    <section class="patient-banner" role="region" aria-labelledby="patient-info">
+        <div class="patient-info">
+            <div class="patient-avatar" aria-hidden="true">SJ</div>
+            <div class="patient-details">
+                <h2 id="patient-info">Sarah Johnson</h2>
+                <div class="patient-meta">
+                    32 y/o Female • MRN: 78932145
+                    <span class="diagnosis-badge">Migraine with aura</span>
+                </div>
+            </div>
+        </div>
+        <div class="action-buttons">
+            <button class="action-btn" aria-label="View patient timeline">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Patient Timeline
+            </button>
+            <button class="action-btn" aria-label="Review patient chart">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Chart Review
+            </button>
+        </div>
+    </section>
+
+    <!-- Error Display -->
+    <div id="error-container" class="error-message" role="alert" aria-live="polite"></div>
+
+    <!-- Main Content -->
+    <main class="main-container" role="main">
+        <!-- Left Column -->
+        <aside class="left-column" aria-label="Patient information and follow-up">
+            <!-- Patient Factors Card -->
+            <section class="card patient-factors-card" aria-labelledby="patient-factors-header">
+                <h3 class="card-header" id="patient-factors-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Patient Factors
+                </h3>
+
+                <div class="factor-section">
+                    <h4 class="factor-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Allergies
+                    </h4>
+                    <div class="tags-container" role="list" aria-label="Patient allergies">
+                        <span class="tag allergy" role="listitem">Penicillin</span>
+                        <span class="tag allergy" role="listitem">Sulfa drugs</span>
+                    </div>
+                </div>
+
+                <div class="factor-section">
+                    <h4 class="factor-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <rect x="7" y="7" width="3" height="9"></rect>
+                            <rect x="14" y="7" width="3" height="5"></rect>
+                        </svg>
+                        Current Medications
+                    </h4>
+                    <div class="tags-container" role="list" aria-label="Current medications">
+                        <span class="tag medication" role="listitem">Oral contraceptive</span>
+                    </div>
+                </div>
+
+                <div class="factor-section">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <h5 class="status-item-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                Pregnancy Status
+                            </h5>
+                            <div class="status-indicator safe">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Not Pregnant
+                            </div>
+                        </div>
+                        <div class="status-item">
+                            <h5 class="status-item-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <circle cx="9" cy="21" r="1"></circle>
+                                    <circle cx="20" cy="21" r="1"></circle>
+                                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                </svg>
+                                Breastfeeding
+                            </h5>
+                            <div class="status-indicator safe">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Not Breastfeeding
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Follow-up Recommendations Card -->
+            <section class="card followup-card" aria-labelledby="followup-header">
+                <h3 class="card-header" id="followup-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Follow-up Recommendations
+                </h3>
+
+                <div class="follow-up-grid">
+                    <div class="follow-up-card" tabindex="0" role="button" aria-label="Schedule follow-up appointment">
+                        <h4 class="follow-up-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            Follow-up Appointment
+                        </h4>
+                        <p class="follow-up-description">
+                            Schedule a follow-up in 2-4 weeks to assess treatment efficacy
+                        </p>
+                        <span class="follow-up-action">Schedule Now</span>
+                    </div>
+
+                    <div class="follow-up-card" tabindex="0" role="button" aria-label="Include headache journal in education materials">
+                        <h4 class="follow-up-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Headache Journal
+                        </h4>
+                        <p class="follow-up-description">
+                            Recommend patient maintains a headache journal to identify triggers
+                        </p>
+                        <span class="follow-up-action">Include in Education Materials</span>
+                    </div>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Right Column -->
+        <div class="right-column">
+            <!-- Treatment Options Card -->
+            <section class="card treatment-options-card" aria-labelledby="treatment-options-header">
+                <h3 class="card-header" id="treatment-options-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    AI-Recommended Treatment Options
+                </h3>
+
+                <p style="font-size: 14px; color: #6b7280; margin-bottom: 25px;">
+                    Based on the final diagnosis of <strong style="color: #1f2937;">Migraine with aura</strong>, ATTENDING has generated evidence-based treatment options:
+                </p>
+
+                <!-- First-line Therapies -->
+                <h4 class="category-header">First-line Therapies</h4>
+                
+                <div class="treatment-option selected" data-treatment="sumatriptan" role="group" aria-labelledby="sumatriptan-label">
+                    <div class="treatment-option-header">
+                        <div class="treatment-option-info">
+                            <input type="checkbox" class="checkbox" checked data-treatment="sumatriptan" id="sumatriptan-checkbox" aria-describedby="sumatriptan-details">
+                            <div>
+                                <label for="sumatriptan-checkbox" id="sumatriptan-label" style="font-weight: 600; color: #1f2937; cursor: pointer;">Sumatriptan</label>
+                                <div id="sumatriptan-details" style="font-size: 14px; color: #6b7280;">100mg Oral, As needed for migraine, max 200mg/day</div>
+                            </div>
+                        </div>
+                        <div class="treatment-badges" role="list" aria-label="Treatment attributes">
+                            <span class="badge covered" role="listitem">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Insurance Covered
+                            </span>
+                            <span class="badge fda" role="listitem">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                    <path d="M2 17l10 5 10-5"></path>
+                                    <path d="M2 12l10 5 10-5"></path>
+                                </svg>
+                                FDA Approved
+                            </span>
+                        </div>
+                    </div>
+                    <div class="treatment-option-details">
+                        <div class="detail-grid">
+                            <div>
+                                <h5>Contraindications:</h5>
+                                <div style="color: #6b7280; font-size: 14px;">No major contraindications</div>
+                            </div>
+                            <div>
+                                <h5>Interactions:</h5>
+                                <div style="color: #6b7280; font-size: 14px;">No major interactions with current medications</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="treatment-option" data-treatment="rizatriptan" role="group" aria-labelledby="rizatriptan-label">
+                    <div class="treatment-option-header">
+                        <div class="treatment-option-info">
+                            <input type="checkbox" class="checkbox" data-treatment="rizatriptan" id="rizatriptan-checkbox" aria-describedby="rizatriptan-details">
+                            <div>
+                                <label for="rizatriptan-checkbox" id="rizatriptan-label" style="font-weight: 600; color: #1f2937; cursor: pointer;">Rizatriptan</label>
+                                <div id="rizatriptan-details" style="font-size: 14px; color: #6b7280;">10mg Oral, As needed for migraine, max 30mg/day</div>
+                            </div>
+                        </div>
+                        <div class="treatment-badges" role="list" aria-label="Treatment attributes">
+                            <span class="badge covered" role="listitem">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Insurance Covered
+                            </span>
+                            <span class="badge fda" role="listitem">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                    <path d="M2 17l10 5 10-5"></path>
+                                    <path d="M2 12l10 5 10-5"></path>
+                                </svg>
+                                FDA Approved
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second-line Therapies -->
+                <h4 class="category-header" style="margin-top: 25px;">Second-line Therapies</h4>
+
+                <div class="treatment-option" data-treatment="dihydroergotamine" role="group" aria-labelledby="dihydroergotamine-label">
+                    <div class="treatment-option-header">
+                        <div class="treatment-option-info">
+                            <input type="checkbox" class="checkbox" data-treatment="dihydroergotamine" id="dihydroergotamine-checkbox" aria-describedby="dihydroergotamine-details">
+                            <div>
+                                <label for="dihydroergotamine-checkbox" id="dihydroergotamine-label" style="font-weight: 600; color: #1f2937; cursor: pointer;">Dihydroergotamine</label>
+                                <div id="dihydroergotamine-details" style="font-size: 14px; color: #6b7280;">1mg Nasal spray, As needed for migraine</div>
+                            </div>
+                        </div>
+                        <div class="treatment-badges" role="list" aria-label="Treatment attributes">
+                            <span class="badge not-covered" role="listitem">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                Not Covered
+                            </span>
+                            <span class="badge fda" role="listitem">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                    <path d="M2 17l10 5 10-5"></path>
+                                    <path d="M2 12l10 5 10-5"></path>
+                                </svg>
+                                FDA Approved
+                            </span>
+                        </div>
+                    </div>
+                    <div class="treatment-option-details" style="display: none;" aria-expanded="false">
+                        <div class="detail-grid">
+                            <div>
+                                <h5>Contraindications:</h5>
+                                <ul class="detail-list">
+                                    <li>Pregnancy</li>
+                                    <li>Coronary artery disease</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5>Interactions:</h5>
+                                <ul class="detail-list">
+                                    <li>MAOIs</li>
+                                    <li>SSRIs</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="warning-box" role="alert">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <div class="warning-content">
+                                <h6>Warning: Potential interaction</h6>
+                                <p>This medication may interact with oral contraceptives. Consider alternative therapy or additional contraception methods.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-secondary" aria-label="Modify treatment options">Modify Options</button>
+                    <button class="btn-primary" aria-label="Create custom order">
+                        Custom Order
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Diagnosis & Treatment Plan Card -->
+            <section class="card diagnosis-treatment-card" aria-labelledby="diagnosis-header">
+                <h3 class="card-header" id="diagnosis-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                    </svg>
+                    Final Diagnosis
+                </h3>
+                <div class="diagnosis-box" role="status">
+                    Migraine with aura
+                </div>
+
+                <h3 class="card-header">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                    Selected Treatment Plan
+                </h3>
+                
+                <div id="selected-treatments" role="list" aria-label="Selected treatments">
+                    <div class="treatment-item" data-treatment="sumatriptan" role="listitem">
+                        <div class="treatment-name">Sumatriptan</div>
+                        <div class="treatment-details">100mg Oral, As needed for migraine, max 200mg/day</div>
+                    </div>
+                </div>
+
+                <div id="no-treatments" style="display: none;" role="status" aria-live="polite">
+                    <div style="text-align: center; color: #6b7280; font-style: italic; padding: 20px;">
+                        No treatments selected. Please select treatments from the options above.
+                    </div>
+                </div>
+
+                <h3 class="card-header" style="margin-top: 30px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M9 11H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h5m10-11h5a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-5m-7-11V2m0 9v11"></path>
+                    </svg>
+                    Patient Education Materials
+                </h3>
+
+                <div class="education-item">
+                    <input type="checkbox" class="checkbox" checked id="education-1" aria-describedby="education-1-desc">
+                    <div>
+                        <label for="education-1" style="font-weight: 600; font-size: 14px; cursor: pointer;">Understanding Migraines</label>
+                        <div id="education-1-desc" style="font-size: 12px; color: #6b7280;">PDF</div>
+                    </div>
+                </div>
+                <div class="education-item">
+                    <input type="checkbox" class="checkbox" checked id="education-2" aria-describedby="education-2-desc">
+                    <div>
+                        <label for="education-2" style="font-weight: 600; font-size: 14px; cursor: pointer;">Migraine Triggers and Prevention</label>
+                        <div id="education-2-desc" style="font-size: 12px; color: #6b7280;">PDF</div>
+                    </div>
+                </div>
+                <div class="education-item">
+                    <input type="checkbox" class="checkbox" checked id="education-3" aria-describedby="education-3-desc">
+                    <div>
+                        <label for="education-3" style="font-weight: 600; font-size: 14px; cursor: pointer;">How to Take Your Medications</label>
+                        <div id="education-3-desc" style="font-size: 12px; color: #6b7280;">Video</div>
+                    </div>
+                </div>
+
+                <button style="color: #667eea; font-size: 14px; font-weight: 600; background: none; border: none; cursor: pointer; margin-top: 10px; display: flex; align-items: center; gap: 6px;" aria-label="Add more education materials">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Add more materials
+                </button>
+
+                <button class="execute-btn" style="margin-top: 30px;" aria-label="Execute treatment plan" id="execute-plan-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Execute Treatment Plan
+                </button>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        'use strict';
+
+        // Application State Management
+        class TreatmentPlanningApp {
+            constructor() {
+                this.state = {
+                    selectedTreatments: new Set(['sumatriptan']),
+                    patientFactors: {
+                        allergies: ['Penicillin', 'Sulfa drugs'],
+                        medications: ['Oral contraceptive'],
+                        pregnancy: false,
+                        breastfeeding: false
+                    },
+                    diagnosis: 'Migraine with aura',
+                    loading: false,
+                    errors: []
+                };
+                
+                this.treatmentData = {
+                    sumatriptan: {
+                        name: "Sumatriptan",
+                        details: "100mg Oral, As needed for migraine, max 200mg/day",
+                        contraindications: [],
+                        interactions: [],
+                        covered: true,
+                        fdaApproved: true
+                    },
+                    rizatriptan: {
+                        name: "Rizatriptan", 
+                        details: "10mg Oral, As needed for migraine, max 30mg/day",
+                        contraindications: [],
+                        interactions: [],
+                        covered: true,
+                        fdaApproved: true
+                    },
+                    dihydroergotamine: {
+                        name: "Dihydroergotamine",
+                        details: "1mg Nasal spray, As needed for migraine",
+                        contraindications: ['Pregnancy', 'Coronary artery disease'],
+                        interactions: ['MAOIs', 'SSRIs', 'Oral contraceptives'],
+                        covered: false,
+                        fdaApproved: true,
+                        warnings: ['This medication may interact with oral contraceptives. Consider alternative therapy or additional contraception methods.']
+                    }
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setupKeyboardNavigation();
+                this.setupAccessibility();
+                this.render();
+            }
+
+            setupEventListeners() {
+                // Treatment selection
+                document.querySelectorAll('.treatment-option input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => this.handleTreatmentSelection(e));
+                });
+
+                // Follow-up actions
+                document.querySelectorAll('.follow-up-action').forEach(action => {
+                    action.addEventListener('click', (e) => this.handleFollowUpAction(e));
+                });
+
+                // Execute button
+                const executeBtn = document.getElementById('execute-plan-btn');
+                if (executeBtn) {
+                    executeBtn.addEventListener('click', () => this.handleExecutePlan());
+                }
+
+                // Education materials
+                document.querySelectorAll('.education-item input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => this.handleEducationSelection(e));
+                });
+
+                // Action buttons
+                document.querySelectorAll('.action-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleActionButton(e));
+                });
+
+                // Button group actions
+                document.querySelectorAll('.btn-secondary, .btn-primary').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleButtonAction(e));
+                });
+            }
+
+            setupKeyboardNavigation() {
+                // Add keyboard support for follow-up cards
+                document.querySelectorAll('.follow-up-card').forEach(card => {
+                    card.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            const action = card.querySelector('.follow-up-action');
+                            if (action) action.click();
+                        }
+                    });
+                });
+
+                // Add keyboard support for treatment options
+                document.querySelectorAll('.treatment-option').forEach(option => {
+                    option.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            const checkbox = option.querySelector('input[type="checkbox"]');
+                            if (checkbox && e.target !== checkbox) {
+                                e.preventDefault();
+                                checkbox.click();
+                            }
+                        }
+                    });
+                });
+            }
+
+            setupAccessibility() {
+                // Announce state changes
+                this.announcer = document.createElement('div');
+                this.announcer.setAttribute('aria-live', 'polite');
+                this.announcer.setAttribute('aria-atomic', 'true');
+                this.announcer.className = 'sr-only';
+                document.body.appendChild(this.announcer);
+
+                // Set initial ARIA states
+                document.querySelectorAll('.treatment-option-details').forEach(details => {
+                    const isVisible = details.style.display !== 'none';
+                    const checkbox = details.closest('.treatment-option').querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        checkbox.setAttribute('aria-expanded', isVisible.toString());
+                    }
+                });
+            }
+
+            handleTreatmentSelection(event) {
+                try {
+                    const checkbox = event.target;
+                    const treatmentId = checkbox.getAttribute('data-treatment');
+                    
+                    if (!treatmentId || !this.treatmentData[treatmentId]) {
+                        throw new Error('Invalid treatment selection');
+                    }
+
+                    this.setLoading(true);
+
+                    // Validate treatment selection
+                    const validationResult = this.validateTreatmentSelection(treatmentId, checkbox.checked);
+                    if (!validationResult.valid) {
+                        checkbox.checked = !checkbox.checked; // Revert
+                        this.showError(validationResult.message);
+                        return;
+                    }
+
+                    // Update state
+                    if (checkbox.checked) {
+                        this.state.selectedTreatments.add(treatmentId);
+                    } else {
+                        this.state.selectedTreatments.delete(treatmentId);
+                    }
+
+                    // Update UI
+                    this.toggleTreatmentDetails(checkbox);
+                    this.updateSelectedTreatments();
+                    
+                    // Announce change
+                    this.announceChange(`Treatment ${this.treatmentData[treatmentId].name} ${checkbox.checked ? 'selected' : 'deselected'}`);
+
+                } catch (error) {
+                    this.handleError(error);
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+
+            validateTreatmentSelection(treatmentId, isSelected) {
+                const treatment = this.treatmentData[treatmentId];
+                
+                if (!isSelected) {
+                    return { valid: true };
+                }
+
+                // Check contraindications
+                if (treatment.contraindications.length > 0) {
+                    // Example: Check pregnancy contraindication
+                    if (treatment.contraindications.includes('Pregnancy') && this.state.patientFactors.pregnancy) {
+                        return { 
+                            valid: false, 
+                            message: `${treatment.name} is contraindicated in pregnancy.` 
+                        };
+                    }
+                }
+
+                // Check interactions
+                if (treatment.interactions.length > 0) {
+                    const interactions = treatment.interactions.filter(interaction => 
+                        this.state.patientFactors.medications.some(med => 
+                            med.toLowerCase().includes(interaction.toLowerCase()) ||
+                            interaction.toLowerCase().includes(med.toLowerCase())
+                        )
+                    );
+
+                    if (interactions.length > 0) {
+                        // Don't prevent selection, but show warning
+                        setTimeout(() => {
+                            this.showWarning(`${treatment.name} may interact with current medications: ${interactions.join(', ')}`);
+                        }, 100);
+                    }
+                }
+
+                return { valid: true };
+            }
+
+            toggleTreatmentDetails(checkbox) {
+                const option = checkbox.closest('.treatment-option');
+                const details = option.querySelector('.treatment-option-details');
+                
+                if (checkbox.checked) {
+                    option.classList.add('selected');
+                    if (details) {
+                        details.style.display = 'block';
+                        checkbox.setAttribute('aria-expanded', 'true');
+                    }
+                } else {
+                    option.classList.remove('selected');
+                    if (details) {
+                        details.style.display = 'none';
+                        checkbox.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            }
+
+            updateSelectedTreatments() {
+                const container = document.getElementById('selected-treatments');
+                const noTreatmentsMessage = document.getElementById('no-treatments');
+                const executeButton = document.getElementById('execute-plan-btn');
+                
+                if (!container || !noTreatmentsMessage || !executeButton) {
+                    console.warn('Required DOM elements not found');
+                    return;
+                }
+
+                // Clear current treatments
+                container.innerHTML = '';
+                
+                if (this.state.selectedTreatments.size === 0) {
+                    container.style.display = 'none';
+                    noTreatmentsMessage.style.display = 'block';
+                    executeButton.disabled = true;
+                    executeButton.setAttribute('aria-disabled', 'true');
+                } else {
+                    container.style.display = 'block';
+                    noTreatmentsMessage.style.display = 'none';
+                    executeButton.disabled = false;
+                    executeButton.setAttribute('aria-disabled', 'false');
+                    
+                    // Add each selected treatment
+                    this.state.selectedTreatments.forEach(treatmentId => {
+                        const treatment = this.treatmentData[treatmentId];
+                        if (treatment) {
+                            const treatmentElement = this.createTreatmentElement(treatmentId, treatment);
+                            container.appendChild(treatmentElement);
+                        }
+                    });
+                }
+            }
+
+            createTreatmentElement(treatmentId, treatment) {
+                const element = document.createElement('div');
+                element.className = 'treatment-item';
+                element.setAttribute('data-treatment', treatmentId);
+                element.setAttribute('role', 'listitem');
+                
+                element.innerHTML = `
+                    <div class="treatment-name">${this.escapeHtml(treatment.name)}</div>
+                    <div class="treatment-details">${this.escapeHtml(treatment.details)}</div>
+                `;
+                
+                return element;
+            }
+
+            handleFollowUpAction(event) {
+                try {
+                    event.preventDefault();
+                    const action = event.target;
+                    const actionText = action.textContent.trim();
+                    
+                    this.announceChange(`Follow-up action: ${actionText}`);
+                    
+                    // Simulate action handling
+                    console.log(`Executing follow-up action: ${actionText}`);
+                    
+                } catch (error) {
+                    this.handleError(error);
+                }
+            }
+
+            handleExecutePlan() {
+                try {
+                    if (this.state.selectedTreatments.size === 0) {
+                        this.showError('Please select at least one treatment before executing the plan.');
+                        return;
+                    }
+
+                    this.setLoading(true);
+                    
+                    // Simulate plan execution
+                    setTimeout(() => {
+                        this.announceChange('Treatment plan executed successfully');
+                        this.setLoading(false);
+                        console.log('Treatment plan executed with treatments:', Array.from(this.state.selectedTreatments));
+                    }, 1000);
+
+                } catch (error) {
+                    this.handleError(error);
+                    this.setLoading(false);
+                }
+            }
+
+            handleEducationSelection(event) {
+                const checkbox = event.target;
+                const label = checkbox.closest('.education-item').querySelector('label').textContent;
+                this.announceChange(`Education material ${label} ${checkbox.checked ? 'selected' : 'deselected'}`);
+            }
+
+            handleActionButton(event) {
+                const button = event.target.closest('button');
+                const action = button.textContent.trim();
+                this.announceChange(`Action: ${action}`);
+                console.log(`Action button clicked: ${action}`);
+            }
+
+            handleButtonAction(event) {
+                const button = event.target.closest('button');
+                const action = button.textContent.trim();
+                this.announceChange(`Button action: ${action}`);
+                console.log(`Button clicked: ${action}`);
+            }
+
+            setLoading(isLoading) {
+                this.state.loading = isLoading;
+                const container = document.querySelector('.main-container');
+                if (container) {
+                    container.classList.toggle('loading', isLoading);
+                }
+            }
+
+            showError(message) {
+                this.state.errors.push(message);
+                this.displayError(message);
+                this.announceChange(`Error: ${message}`);
+            }
+
+            showWarning(message) {
+                this.displayError(message, 'warning');
+                this.announceChange(`Warning: ${message}`);
+            }
+
+            displayError(message, type = 'error') {
+                const errorContainer = document.getElementById('error-container');
+                if (errorContainer) {
+                    errorContainer.textContent = message;
+                    errorContainer.className = `error-message show ${type}`;
+                    
+                    // Auto-hide after 5 seconds
+                    setTimeout(() => {
+                        errorContainer.classList.remove('show');
+                    }, 5000);
+                }
+            }
+
+            handleError(error) {
+                console.error('Application error:', error);
+                this.showError('An unexpected error occurred. Please try again.');
+            }
+
+            announceChange(message) {
+                if (this.announcer) {
+                    this.announcer.textContent = message;
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            render() {
+                this.updateSelectedTreatments();
+            }
+
+            // Public API methods
+            getState() {
+                return { ...this.state };
+            }
+
+            getSelectedTreatments() {
+                return Array.from(this.state.selectedTreatments).map(id => this.treatmentData[id]);
+            }
+
+            addTreatment(treatmentId) {
+                const checkbox = document.querySelector(`input[data-treatment="${treatmentId}"]`);
+                if (checkbox && !checkbox.checked) {
+                    checkbox.click();
+                }
+            }
+
+            removeTreatment(treatmentId) {
+                const checkbox = document.querySelector(`input[data-treatment="${treatmentId}"]`);
+                if (checkbox && checkbox.checked) {
+                    checkbox.click();
+                }
+            }
+        }
+
+        // Initialize application
+        let app;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                app = new TreatmentPlanningApp();
+                
+                // Expose app to global scope for debugging
+                window.treatmentApp = app;
+                
+                console.log('Treatment Planning Application initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize application:', error);
+            }
+        });
+
+        // Legacy function support for backward compatibility
+        function toggleDetails(checkbox) {
+            if (app) {
+                app.toggleTreatmentDetails(checkbox);
+                app.updateSelectedTreatments();
+            }
+        }
+
+        function updateSelectedTreatments() {
+            if (app) {
+                app.updateSelectedTreatments();
+            }
+        }
+
+        // Error boundary for uncaught errors
+        window.addEventListener('error', function(event) {
+            console.error('Uncaught error:', event.error);
+            if (app) {
+                app.handleError(event.error);
+            }
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            if (app) {
+                app.handleError(event.reason);
+            }
+        });
+    </script>
+</body>
+</html>

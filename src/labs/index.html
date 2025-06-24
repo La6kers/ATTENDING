@@ -1,0 +1,3243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATTENDING AI - Comprehensive Lab Interface</title>
+    <style>
+        /* ===== DESIGN SYSTEM FOUNDATION ===== */
+        :root {
+            --brand-primary: #667eea;
+            --brand-secondary: #764ba2;
+            --brand-gradient: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+            --status-normal: #10b981;
+            --status-caution: #f59e0b;
+            --status-critical: #ef4444;
+            --status-info: #3b82f6;
+            --neutral-0: #ffffff;
+            --neutral-50: #f9fafb;
+            --neutral-100: #f3f4f6;
+            --neutral-200: #e5e7eb;
+            --neutral-300: #d1d5db;
+            --neutral-500: #6b7280;
+            --neutral-700: #374151;
+            --neutral-900: #111827;
+            --text-xs: 10px;
+            --text-sm: 12px;
+            --text-base: 13px;
+            --text-lg: 14px;
+            --text-xl: 16px;
+            --text-2xl: 18px;
+            --space-xs: 2px;
+            --space-sm: 4px;
+            --space-md: 8px;
+            --space-lg: 12px;
+            --space-xl: 16px;
+            --space-2xl: 24px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition-fast: 0.15s ease;
+            --transition-base: 0.2s ease;
+        }
+
+        /* ===== LOADING STATES ===== */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--neutral-200);
+            border-top: 2px solid var(--brand-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== ADDITIONAL LAB ORDERS CARD ===== */
+        .additional-labs-card {
+            background: var(--neutral-0);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+            border: 1px solid var(--neutral-200);
+        }
+
+        .additional-labs-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--neutral-200);
+        }
+
+        .additional-labs-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .additional-labs-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin: 0;
+        }
+
+        .additional-labs-subtitle {
+            font-size: var(--text-sm);
+            color: var(--neutral-500);
+            margin: var(--space-xs) 0 0;
+        }
+
+        .lab-types-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-md);
+        }
+
+        .lab-type-card {
+            background: var(--neutral-50);
+            border: 2px solid var(--neutral-200);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lab-type-card:hover {
+            border-color: var(--status-normal);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            background: linear-gradient(135deg, var(--neutral-0), #f0fdf4);
+        }
+
+        .lab-type-card:active {
+            transform: translateY(0);
+        }
+
+        .lab-type-icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-md);
+            display: block;
+        }
+
+        .lab-type-title {
+            font-size: var(--text-base);
+            font-weight: 600;
+            color: var(--neutral-900);
+            margin-bottom: var(--space-xs);
+        }
+
+        .lab-type-description {
+            font-size: var(--text-xs);
+            color: var(--neutral-600);
+            line-height: 1.4;
+            margin-bottom: var(--space-sm);
+        }
+
+        .lab-type-examples {
+            font-size: 10px;
+            color: var(--neutral-500);
+            font-style: italic;
+            line-height: 1.2;
+        }
+
+        .lab-type-badge {
+            position: absolute;
+            top: var(--space-sm);
+            right: var(--space-sm);
+            background: var(--status-normal);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        .lab-type-badge--stat {
+            background: var(--status-critical);
+        }
+
+        .lab-type-badge--routine {
+            background: var(--status-info);
+        }
+
+        .lab-type-badge--specialty {
+            background: var(--status-caution);
+        }
+        .quick-actions-bar {
+            display: flex;
+            gap: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .quick-action {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: normal;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .quick-action:hover,
+        .quick-action:focus {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        /* ===== PATIENT INFO BAR ===== */
+        .patient-bar {
+            background: var(--neutral-0);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            animation: slideDown 0.5s ease;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: var(--space-lg);
+        }
+
+        .patient-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            align-self: flex-start;
+        }
+
+        .patient-avatar {
+            width: 56px;
+            height: 56px;
+            background: var(--brand-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            letter-spacing: 1px;
+        }
+
+        .patient-details h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--neutral-900);
+        }
+
+        .patient-meta {
+            color: var(--neutral-500);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .patient-action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-gap-sm { gap: var(--space-sm); }
+        .flex-gap-md { gap: var(--space-md); }
+        .text-gradient { background: var(--brand-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .card-hover { transition: var(--transition-fast); }
+        .card-hover:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+        /* ===== BASE LAYOUT ===== */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--brand-gradient);
+            min-height: 100vh;
+            color: var(--neutral-900);
+            line-height: 1.6;
+        }
+
+        .app-header {
+            background: var(--neutral-0);
+            box-shadow: var(--shadow-sm);
+            padding: 3px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .app-header .container { 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            padding: 5px var(--space-md); 
+        }
+
+        .container { max-width: 1600px; margin: 0 auto; padding: var(--space-md); }
+        .wide-container { max-width: 1800px; margin: 0 auto; padding: var(--space-md); }
+
+        /* ===== COMPONENT STYLES ===== */
+        .lab-category {
+            background: var(--neutral-0);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: var(--transition-base);
+            animation: slideIn 0.3s ease;
+            position: relative;
+        }
+
+        .category-header {
+            padding: var(--space-lg);
+            cursor: pointer;
+            user-select: none;
+            transition: var(--transition-fast);
+        }
+
+        .category-header--critical { background: linear-gradient(135deg, var(--status-critical), #dc2626); color: white; }
+        .category-header--info { background: linear-gradient(135deg, var(--status-info), #1e40af); color: white; }
+        .category-header--caution { background: linear-gradient(135deg, var(--status-caution), #d97706); color: white; }
+        .category-header--additional { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+
+        .category-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .category-content.expanded { max-height: 1500px; }
+
+        .labs-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-sm);
+            padding: var(--space-md);
+            background: var(--neutral-50);
+        }
+
+        .lab-card {
+            background: var(--neutral-0);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--neutral-200);
+            transition: var(--transition-fast);
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+            position: relative;
+        }
+
+        .lab-card:hover {
+            border-color: var(--brand-primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .lab-card.selected {
+            border-color: var(--brand-primary);
+            background: linear-gradient(135deg, var(--neutral-0), #f0f4ff);
+        }
+
+        .lab-card-header {
+            padding: var(--space-md);
+            display: flex;
+            align-items: center;
+            background: var(--neutral-0);
+            flex: 1;
+        }
+
+        .lab-main-info {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            flex: 1;
+        }
+
+        .lab-checkbox {
+            width: 14px;
+            height: 14px;
+            accent-color: var(--brand-primary);
+            flex-shrink: 0;
+        }
+
+        .lab-name-section {
+            display: flex;
+            align-items: baseline;
+            gap: var(--space-sm);
+            min-width: 180px;
+            flex-shrink: 0;
+        }
+
+        .lab-name {
+            font-size: var(--text-base);
+            font-weight: 600;
+            color: var(--neutral-900);
+            line-height: 1.3;
+        }
+
+        .lab-code {
+            font-size: var(--text-xs);
+            color: var(--neutral-900);
+            font-family: 'Courier New', monospace;
+            background: var(--neutral-100);
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .lab-description {
+            font-size: var(--text-xs);
+            color: var(--neutral-700);
+            line-height: 1.4;
+            flex: 1;
+            padding-left: var(--space-sm);
+            padding-right: var(--space-md);
+        }
+
+        .lab-timing-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--space-xs);
+            flex-shrink: 0;
+            padding-right: var(--space-md);
+        }
+
+        .priority-badge {
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .priority-badge--critical { background: var(--status-critical); color: white; }
+        .priority-badge--info { background: var(--status-info); color: white; }
+        .priority-badge--caution { background: var(--status-caution); color: white; }
+
+        .lab-cost {
+            font-size: var(--text-xs);
+            color: var(--neutral-500);
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .ai-rationale {
+            background: linear-gradient(135deg, #f0f4ff, #e0ecff);
+            border-left: 1px solid var(--neutral-200);
+            padding: var(--space-md);
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .ai-rationale-content {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            width: 100%;
+        }
+
+        .ai-icon {
+            width: 12px;
+            height: 12px;
+            background: var(--brand-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ai-rationale-text {
+            font-size: var(--text-xs);
+            color: var(--neutral-700);
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .ai-label {
+            font-weight: 600;
+            color: var(--brand-primary);
+            margin-right: var(--space-xs);
+        }
+
+        .stats-panel {
+            background: var(--neutral-0);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: var(--space-sm);
+            background: var(--neutral-50);
+            border-radius: var(--radius-sm);
+        }
+
+        .stat-number {
+            font-size: var(--text-lg);
+            font-weight: 700;
+            color: var(--brand-primary);
+        }
+
+        .stat-label {
+            font-size: var(--text-xs);
+            color: var(--neutral-600);
+            margin-top: var(--space-xs);
+        }
+
+        .action-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-xs);
+            margin-bottom: var(--space-md);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+            padding: var(--space-sm) var(--space-md);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            text-decoration: none;
+            position: relative;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn--primary {
+            background: var(--brand-gradient);
+            color: var(--neutral-0);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn--primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn--secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: var(--brand-primary);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-height: 40px;
+        }
+
+        .btn--secondary:hover:not(:disabled) {
+            background: var(--brand-primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn--critical {
+            background: var(--status-critical);
+            color: var(--neutral-0);
+        }
+
+        .btn--critical:hover:not(:disabled) {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .notification {
+            position: fixed;
+            top: var(--space-md);
+            right: var(--space-md);
+            background: var(--neutral-0);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            padding: var(--space-md);
+            max-width: 300px;
+            z-index: 1001;
+            transform: translateX(320px);
+            transition: var(--transition-base);
+            font-size: var(--text-xs);
+        }
+
+        .notification.show { transform: translateX(0); }
+        .notification--critical { border-left: 3px solid var(--status-critical); }
+        .notification--normal { border-left: 3px solid var(--status-normal); }
+        .notification--info { border-left: 3px solid var(--status-info); }
+
+        .expand-arrow {
+            transition: var(--transition-base);
+            width: 16px;
+            height: 16px;
+        }
+
+        .expand-arrow.expanded { transform: rotate(180deg); }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .search-input {
+            position: relative;
+        }
+
+        .search-input:focus {
+            border-color: var(--brand-primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-input:hover {
+            border-color: var(--neutral-300);
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: var(--brand-primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input:hover,
+        .form-select:hover,
+        .form-textarea:hover {
+            border-color: var(--neutral-300);
+        }
+
+        .cost-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: var(--text-xs);
+            color: var(--neutral-600);
+            margin-bottom: var(--space-md);
+        }
+
+        .cost-toggle input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--brand-primary);
+        }
+
+        .cost-toggle label {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Hide costs when toggled off */
+        .costs-hidden .lab-cost {
+            display: none;
+        }
+
+        .costs-hidden #total-cost {
+            display: none;
+        }
+
+        .costs-hidden .stat-card:last-child {
+            display: none;
+        }
+
+        .costs-hidden .cost-info {
+            display: none;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 1400px) {
+            .ai-rationale { min-width: 300px; }
+        }
+
+        @media (max-width: 1200px) {
+            .lab-card { flex-direction: column; }
+            .lab-main-info { gap: var(--space-sm); }
+            .lab-name-section { min-width: 160px; }
+            .ai-rationale { border-left: none; border-top: 1px solid var(--neutral-200); min-width: auto; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .wide-container, .container { padding: var(--space-sm); }
+            .lab-card-header { flex-direction: column; align-items: stretch; gap: var(--space-sm); }
+            .lab-main-info { flex-direction: column; gap: var(--space-sm); }
+            .lab-name-section { min-width: auto; }
+            .lab-timing-info { flex-direction: row; justify-content: space-between; }
+            .ai-rationale-content { flex-direction: column; gap: var(--space-sm); align-items: flex-start; }
+            .action-controls { justify-content: center; gap: var(--space-xs); }
+            .action-controls .btn { flex: 1; min-width: 0; white-space: nowrap; font-size: var(--text-xs); }
+            
+            /* Mobile layout for main action row */
+            .main-action-row { 
+                flex-direction: column !important; 
+                gap: var(--space-md) !important; 
+                align-items: center !important;
+                justify-content: center !important;
+                position: static !important;
+            }
+            .main-action-row .btn { 
+                width: 100%; 
+                justify-content: center;
+                position: static !important;
+                left: auto !important;
+            }
+
+            /* Patient bar mobile */
+            .patient-bar {
+                padding: 1.5rem;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            .patient-info {
+                justify-content: center;
+                text-align: center;
+                align-self: center;
+            }
+
+            .patient-action-buttons {
+                justify-content: center;
+                width: 100%;
+                align-self: center;
+            }
+
+            .patient-action-buttons .btn {
+                flex: 1;
+                justify-content: center;
+                min-width: 120px;
+            }
+
+            /* Quick actions mobile */
+            .quick-actions-bar {
+                padding: 8px;
+                gap: 6px;
+            }
+
+            .quick-action {
+                padding: 6px 12px;
+                font-size: 12px;
+                min-width: fit-content;
+            }
+
+            /* Additional lab orders mobile */
+            .lab-types-grid {
+                grid-template-columns: 1fr;
+                gap: var(--space-sm);
+            }
+
+            .search-controls {
+                flex-direction: column;
+                gap: var(--space-sm);
+            }
+
+            .search-input-container {
+                width: 100%;
+            }
+
+            .search-filter-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .filters-panel > div {
+                grid-template-columns: 1fr !important;
+                gap: var(--space-md) !important;
+            }
+
+            .custom-order-form > div:first-child {
+                grid-template-columns: 1fr !important;
+                gap: var(--space-md) !important;
+            }
+
+            .custom-order-form > div:last-child {
+                grid-template-columns: 1fr !important;
+                gap: var(--space-md) !important;
+            }
+
+            .form-actions {
+                width: 100% !important;
+            }
+
+            .form-actions .btn {
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+
+            /* Cost toggle mobile */
+            .cost-toggle {
+                font-size: var(--text-xs);
+                justify-content: center;
+            }
+
+            /* Stats panel header mobile */
+            .stats-panel > div:first-child {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: var(--space-sm) !important;
+                text-align: center;
+            }
+
+            .cost-toggle {
+                align-self: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Component -->
+    <header class="app-header">
+        <div class="container">
+            <div class="flex-between">
+                <div style="display: flex; align-items: center; gap: var(--space-md);">
+                    <div class="text-gradient" style="font-size: var(--text-lg); font-weight: 700;">ATTENDING AI</div>
+                    <div style="background: rgba(16, 185, 129, 0.1); color: var(--status-normal); padding: var(--space-xs) var(--space-sm); border-radius: 999px; font-size: var(--text-xs); font-weight: 500;">
+                        <div style="width: 6px; height: 6px; background: currentColor; border-radius: 50%; display: inline-block; margin-right: var(--space-xs);"></div>
+                        System Online
+                    </div>
+                </div>
+                <div style="flex: 1; text-align: center;">
+                    <h1 class="text-gradient" style="font-size: 72px; font-weight: 700; margin: 0; letter-spacing: 0.5px;">LAB ORDERS</h1>
+                </div>
+                <div style="display: flex; gap: var(--space-xs);">
+                    <button class="btn btn--secondary" aria-label="View system alerts">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        Alerts
+                    </button>
+                    <button class="btn btn--primary" aria-label="Open clinical guidelines">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14,2 14,8 20,8"></polyline>
+                        </svg>
+                        Guidelines
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="wide-container">
+        <!-- Patient Info Bar -->
+        <div class="patient-bar">
+            <div class="patient-info">
+                <div class="patient-avatar" aria-label="Patient SJ">SJ</div>
+                <div class="patient-details">
+                    <h2>Sarah Johnson</h2>
+                    <div class="patient-meta">32 y/o Female • MRN: 78932145 • Chief Complaint: "Worst headache of life" with confusion</div>
+                </div>
+            </div>
+            <div class="patient-action-buttons">
+                <button class="btn btn--secondary" style="padding: var(--space-md) var(--space-lg); font-size: var(--text-sm);" aria-label="Review complete patient chart">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14,2 14,8 20,8"></polyline>
+                    </svg>
+                    Review Complete Chart
+                </button>
+                <button class="btn btn--secondary" id="toggle-all-btn" style="padding: var(--space-md) var(--space-lg); font-size: var(--text-sm);" aria-label="Toggle all lab categories">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                    Collapse All
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Actions Bar -->
+        <nav class="quick-actions-bar" role="navigation" aria-label="Quick actions">
+            <button class="quick-action" data-action="medications" aria-label="Navigate to medications">
+                <span role="img" aria-label="Medications">💊</span> Medications
+            </button>
+            <button class="quick-action" data-action="imaging" aria-label="Navigate to imaging orders">
+                <span role="img" aria-label="Imaging">🔍</span> Imaging
+            </button>
+            <button class="quick-action" data-action="referrals" aria-label="Navigate to referrals">
+                <span role="img" aria-label="Referrals">👥</span> Referrals
+            </button>
+            <button class="quick-action" data-action="followup" aria-label="Navigate to follow-up scheduling">
+                <span role="img" aria-label="Follow-up">📅</span> Follow-up
+            </button>
+            <button class="quick-action" data-action="education" aria-label="Navigate to patient education">
+                <span role="img" aria-label="Education">📚</span> Patient Education
+            </button>
+        </nav>
+
+        <!-- Lab Categories Container -->
+        <div id="categories-container" role="main" aria-label="Laboratory test categories"></div>
+
+        <!-- Additional Lab Orders Section -->
+        <div class="lab-category">
+            <div class="category-header category-header--additional" data-category="additional" style="cursor: pointer;" role="button" tabindex="0" aria-expanded="false" aria-label="Additional Lab Orders section">
+                <div class="flex-between">
+                    <div style="display: flex; align-items: center; gap: var(--space-md);">
+                        <div style="width: 20px; height: 20px; background: rgba(255, 255, 255, 0.2); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-xs);">Additional Lab Orders</h3>
+                            <div style="font-size: var(--text-xs); opacity: 0.9;">Search and add custom laboratory tests from our comprehensive database</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--text-xs);">
+                        <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12l2 2 4-4"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            <span id="additional-labs-count" aria-live="polite">0 Added</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>~5 min</span>
+                        </div>
+                        <svg class="expand-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="category-content">
+                <div style="padding: var(--space-lg); background: var(--neutral-50); position: relative;">
+                    <div class="loading-overlay" id="additional-labs-loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+
+                    <!-- Search for Lab Tests -->
+                    <div class="search-section" style="margin-bottom: var(--space-lg);">
+                        <div class="search-header" style="margin-bottom: var(--space-md);">
+                            <h4 style="font-size: var(--text-base); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-xs);">Search Laboratory Tests</h4>
+                            <p style="font-size: var(--text-xs); color: var(--neutral-600);">Find additional tests by name, category, or clinical indication</p>
+                        </div>
+                        <div class="search-controls" style="display: flex; gap: var(--space-md); margin-bottom: var(--space-md);">
+                            <div class="search-input-container" style="flex: 1; position: relative;">
+                                <svg class="search-icon" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--neutral-500);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                <input 
+                                    type="text" 
+                                    class="search-input" 
+                                    style="width: 100%; padding: 12px 12px 12px 40px; border: 2px solid var(--neutral-200); border-radius: var(--radius-sm); font-size: var(--text-sm); transition: var(--transition-fast);"
+                                    placeholder="Search by test name, analyte, or indication..."
+                                    id="labSearch"
+                                    aria-label="Search laboratory tests"
+                                    role="searchbox"
+                                    aria-describedby="search-help"
+                                >
+                            </div>
+                            <button class="search-filter-btn btn btn--secondary" onclick="toggleLabFilters()" style="white-space: nowrap;" aria-label="Toggle search filters">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                </svg>
+                                Filters
+                            </button>
+                        </div>
+                        
+                        <!-- Lab Filters Panel -->
+                        <div class="filters-panel" id="labFiltersPanel" style="display: none; background: var(--neutral-50); border-radius: var(--radius-sm); padding: var(--space-lg); border: 1px solid var(--neutral-200);" role="group" aria-label="Search filters">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);">
+                                <div class="filter-group">
+                                    <label class="filter-label" style="font-size: var(--text-sm); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-sm); display: block;">Lab Category:</label>
+                                    <div class="filter-options" style="display: flex; flex-direction: column; gap: var(--space-xs);" role="group" aria-label="Laboratory categories">
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="chemistry" aria-describedby="chemistry-desc"> Clinical Chemistry</label>
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="hematology" aria-describedby="hematology-desc"> Hematology</label>
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="microbiology" aria-describedby="microbiology-desc"> Microbiology</label>
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="immunology" aria-describedby="immunology-desc"> Immunology</label>
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="genetics" aria-describedby="genetics-desc"> Genetics</label>
+                                    </div>
+                                </div>
+                                <div class="filter-group">
+                                    <label class="filter-label" style="font-size: var(--text-sm); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-sm); display: block;">Sample Type:</label>
+                                    <div class="filter-options" style="display: flex; flex-direction: column; gap: var(--space-xs);" role="group" aria-label="Sample types">
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="blood"> Blood</label>
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="urine"> Urine</label>
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="csf"> CSF</label>
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="tissue"> Tissue</label>
+                                        <label style="display: flex; align-items: center; gap: var(--space-xs); font-size: var(--text-xs);"><input type="checkbox" value="other"> Other</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div class="search-results" id="labSearchResults" style="display: none; margin-bottom: var(--space-lg);" role="region" aria-label="Search results" aria-live="polite">
+                        <div class="results-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+                            <h4 style="font-size: var(--text-base); font-weight: 600; color: var(--neutral-900);">Search Results</h4>
+                            <span class="results-count" id="labResultsCount" style="font-size: var(--text-xs); color: var(--neutral-500);" aria-live="polite">0 tests found</span>
+                        </div>
+                        <div class="results-list" id="labResultsList" style="display: grid; gap: var(--space-sm);" role="list">
+                            <!-- Dynamic search results will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Add Common Lab Tests -->
+                    <div class="quick-add-section" style="margin-bottom: var(--space-lg);">
+                        <div class="quick-add-header" style="margin-bottom: var(--space-md);">
+                            <h4 style="font-size: var(--text-base); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-xs);">Commonly Ordered Lab Tests</h4>
+                            <p style="font-size: var(--text-xs); color: var(--neutral-600);">Quick access to frequently requested laboratory tests</p>
+                        </div>
+                        <div class="lab-types-grid" role="group" aria-label="Common laboratory tests">
+                            <div class="lab-type-card" onclick="addQuickLabOrder('Procalcitonin', 45, 'Bacterial infection marker')" role="button" tabindex="0" aria-label="Add Procalcitonin test - STAT priority - Bacterial infection and sepsis marker">
+                                <div class="lab-type-badge lab-type-badge--stat">STAT</div>
+                                <div class="lab-type-icon" role="img" aria-label="Laboratory icon">🔬</div>
+                                <div class="lab-type-title">Procalcitonin</div>
+                                <div class="lab-type-description">Bacterial infection and sepsis marker</div>
+                                <div class="lab-type-examples">Sepsis evaluation • Antibiotic stewardship</div>
+                            </div>
+                            
+                            <div class="lab-type-card" onclick="addQuickLabOrder('D-Dimer', 35, 'Thrombosis screening')" role="button" tabindex="0" aria-label="Add D-Dimer test - STAT priority - Fibrin degradation product for VTE screening">
+                                <div class="lab-type-badge lab-type-badge--stat">STAT</div>
+                                <div class="lab-type-icon" role="img" aria-label="Blood test icon">🩸</div>
+                                <div class="lab-type-title">D-Dimer</div>
+                                <div class="lab-type-description">Fibrin degradation product for VTE screening</div>
+                                <div class="lab-type-examples">PE rule-out • DVT screening</div>
+                            </div>
+                            
+                            <div class="lab-type-card" onclick="addQuickLabOrder('Troponin I', 40, 'Cardiac injury marker')" role="button" tabindex="0" aria-label="Add Troponin I test - STAT priority - Cardiac muscle injury biomarker">
+                                <div class="lab-type-badge lab-type-badge--stat">STAT</div>
+                                <div class="lab-type-icon" role="img" aria-label="Heart icon">❤️</div>
+                                <div class="lab-type-title">Troponin I</div>
+                                <div class="lab-type-description">Cardiac muscle injury biomarker</div>
+                                <div class="lab-type-examples">MI evaluation • Chest pain workup</div>
+                            </div>
+                            
+                            <div class="lab-type-card" onclick="addQuickLabOrder('Lactate', 25, 'Tissue perfusion marker')" role="button" tabindex="0" aria-label="Add Lactate test - STAT priority - Tissue hypoperfusion and shock marker">
+                                <div class="lab-type-badge lab-type-badge--stat">STAT</div>
+                                <div class="lab-type-icon" role="img" aria-label="Energy icon">⚡</div>
+                                <div class="lab-type-title">Lactate</div>
+                                <div class="lab-type-description">Tissue hypoperfusion and shock marker</div>
+                                <div class="lab-type-examples">Sepsis • Shock evaluation</div>
+                            </div>
+
+                            <div class="lab-type-card" onclick="addQuickLabOrder('Ammonia', 55, 'Hepatic encephalopathy')" role="button" tabindex="0" aria-label="Add Ammonia test - Routine priority - Hepatic function and encephalopathy marker">
+                                <div class="lab-type-badge lab-type-badge--routine">Routine</div>
+                                <div class="lab-type-icon" role="img" aria-label="Brain icon">🧠</div>
+                                <div class="lab-type-title">Ammonia</div>
+                                <div class="lab-type-description">Hepatic function and encephalopathy marker</div>
+                                <div class="lab-type-examples">Liver disease • Altered mental status</div>
+                            </div>
+
+                            <div class="lab-type-card" onclick="addQuickLabOrder('Vitamin D 25-OH', 65, 'Vitamin D status')" role="button" tabindex="0" aria-label="Add Vitamin D 25-OH test - Routine priority - Vitamin D deficiency screening">
+                                <div class="lab-type-badge lab-type-badge--routine">Routine</div>
+                                <div class="lab-type-icon" role="img" aria-label="Sun icon">☀️</div>
+                                <div class="lab-type-title">Vitamin D 25-OH</div>
+                                <div class="lab-type-description">Vitamin D deficiency screening</div>
+                                <div class="lab-type-examples">Bone health • Fatigue workup</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Lab Order Entry -->
+                    <div class="custom-order-section" style="background: var(--neutral-0); border-radius: var(--radius-md); padding: var(--space-lg); margin-bottom: var(--space-lg); border: 1px solid var(--neutral-200);">
+                        <div class="custom-order-header" style="margin-bottom: var(--space-lg);">
+                            <h4 style="font-size: var(--text-base); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-xs);">Custom Lab Order Entry</h4>
+                            <p style="font-size: var(--text-xs); color: var(--neutral-600);">Add specialized or unlisted laboratory tests</p>
+                        </div>
+                        <form class="custom-order-form" novalidate aria-label="Custom laboratory test order form">
+                            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-md); margin-bottom: var(--space-md);">
+                                <div class="form-group">
+                                    <label for="customLabName" style="font-size: var(--text-sm); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-xs); display: block;">Test Name*</label>
+                                    <input 
+                                        type="text" 
+                                        id="customLabName" 
+                                        class="form-input"
+                                        style="width: 100%; padding: 12px; border: 2px solid var(--neutral-200); border-radius: var(--radius-sm); font-size: var(--text-sm);"
+                                        placeholder="e.g., Factor V Leiden Mutation"
+                                        required
+                                        aria-describedby="customLabName-error"
+                                    >
+                                    <div id="customLabName-error" class="error-message" style="color: var(--status-critical); font-size: var(--text-xs); margin-top: var(--space-xs); display: none;" role="alert"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="customLabPriority" style="font-size: var(--text-sm); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-xs); display: block;">Priority</label>
+                                    <select id="customLabPriority" class="form-select" style="width: 100%; padding: 12px; border: 2px solid var(--neutral-200); border-radius: var(--radius-sm); font-size: var(--text-sm);" aria-label="Select test priority">
+                                        <option value="Consider">Consider</option>
+                                        <option value="Routine">Routine</option>
+                                        <option value="STAT">STAT</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: var(--space-md);">
+                                <div class="form-group">
+                                    <label for="customLabIndication" style="font-size: var(--text-sm); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-xs); display: block;">Clinical Indication*</label>
+                                    <textarea 
+                                        id="customLabIndication" 
+                                        class="form-textarea"
+                                        style="width: 100%; padding: 12px; border: 2px solid var(--neutral-200); border-radius: var(--radius-sm); font-size: var(--text-sm); resize: vertical;"
+                                        placeholder="Provide clinical indication and any special collection instructions..."
+                                        rows="3"
+                                        required
+                                        aria-describedby="customLabIndication-error"
+                                    ></textarea>
+                                    <div id="customLabIndication-error" class="error-message" style="color: var(--status-critical); font-size: var(--text-xs); margin-top: var(--space-xs); display: none;" role="alert"></div>
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: var(--space-md); align-items: end;">
+                                <div class="form-group">
+                                    <label for="customLabCost" style="font-size: var(--text-sm); font-weight: 600; color: var(--neutral-900); margin-bottom: var(--space-xs); display: block;">Estimated Cost</label>
+                                    <input 
+                                        type="number" 
+                                        id="customLabCost" 
+                                        class="form-input"
+                                        style="width: 100%; padding: 12px; border: 2px solid var(--neutral-200); border-radius: var(--radius-sm); font-size: var(--text-sm);"
+                                        placeholder="0"
+                                        min="0"
+                                        step="5"
+                                        aria-label="Estimated cost in dollars"
+                                    >
+                                </div>
+                                <div class="form-actions" style="display: flex; gap: var(--space-sm);">
+                                    <button type="button" class="btn btn--secondary" onclick="clearCustomLabForm()" style="flex: 1;" aria-label="Clear custom lab form">
+                                        Clear
+                                    </button>
+                                    <button type="button" class="btn btn--primary" onclick="addCustomLabOrder()" style="flex: 2;" aria-label="Add custom lab test to order">
+                                        Add Lab Test
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Added Custom Lab Orders List -->
+                    <div class="custom-orders-list" id="customLabOrdersList" style="display: none;" role="region" aria-label="Custom lab orders">
+                        <div class="custom-orders-header" style="margin-bottom: var(--space-md);">
+                            <h4 style="font-size: var(--text-base); font-weight: 600; color: var(--neutral-900);">Added Custom Lab Orders</h4>
+                        </div>
+                        <div id="customLabOrdersContainer" style="display: grid; gap: var(--space-sm);" role="list">
+                            <!-- Custom lab orders will be added here dynamically -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Insights Panel -->
+        <div class="stats-panel">
+            <div style="display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-md);">
+                <div style="width: 24px; height: 24px; background: var(--brand-gradient); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                    </svg>
+                </div>
+                <div style="flex: 1;">
+                    <h1 style="color: var(--neutral-900); margin: 0; font-size: var(--text-lg);">AI Lab Orders Dashboard</h1>
+                    <p style="color: var(--neutral-600); font-size: var(--text-xs); margin: var(--space-xs) 0 0;">Red flag presentation: "Worst headache of life" with confusion</p>
+                </div>
+                <div class="cost-toggle">
+                    <input type="checkbox" id="costToggle" checked onchange="toggleCosts()" aria-label="Toggle cost display">
+                    <label for="costToggle">Show Costs</label>
+                </div>
+            </div>
+
+            <div class="stats-grid" role="group" aria-label="Laboratory statistics">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-labs" aria-live="polite">12</div>
+                    <div class="stat-label">Total Labs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-labs" aria-live="polite">5</div>
+                    <div class="stat-label">STAT Priority</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">~15</div>
+                    <div class="stat-label">Min to Results</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-cost" aria-live="polite">$247</div>
+                    <div class="stat-label">Est. Cost</div>
+                </div>
+            </div>
+
+            <!-- Single Action Row with All Buttons -->
+            <div class="main-action-row" style="display: flex; align-items: center; justify-content: center; gap: var(--space-md); margin-top: var(--space-xl); flex-wrap: wrap; position: relative;">
+                <button class="btn btn--primary" style="padding: var(--space-md) var(--space-lg); font-size: var(--text-sm); position: absolute; left: 0;" aria-label="Navigate back to diagnosis">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                    Back to Diagnosis
+                </button>
+                <button class="btn btn--primary" id="order-labs-btn" style="
+                    padding: var(--space-xl) var(--space-2xl);
+                    font-size: var(--text-xl);
+                    font-weight: 700;
+                    min-height: 60px;
+                    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+                    transform: translateY(0);
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    border: 3px solid transparent;
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    position: relative;
+                    overflow: hidden;
+                " aria-label="Submit selected laboratory orders">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: var(--space-md);">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                    🧪 ORDER SELECTED LABS
+                    <div style="
+                        position: absolute;
+                        top: -50%;
+                        left: -50%;
+                        width: 200%;
+                        height: 200%;
+                        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+                        transform: rotate(45deg);
+                        transition: all 0.6s;
+                        opacity: 0;
+                    " class="shine-effect"></div>
+                </button>
+            </div>
+
+            <style>
+                #order-labs-btn:hover:not(:disabled) {
+                    transform: translateY(-4px) scale(1.02);
+                    box-shadow: 0 12px 48px rgba(16, 185, 129, 0.5);
+                    border-color: rgba(255, 255, 255, 0.3);
+                }
+
+                #order-labs-btn:hover:not(:disabled) .shine-effect {
+                    opacity: 1;
+                    left: 100%;
+                }
+
+                #order-labs-btn:active {
+                    transform: translateY(-2px) scale(1.01);
+                    transition: all 0.1s;
+                }
+
+                @keyframes pulse-success {
+                    0% { box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4); }
+                    50% { box-shadow: 0 8px 32px rgba(16, 185, 129, 0.7); }
+                    100% { box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4); }
+                }
+
+                #order-labs-btn.has-selection {
+                    animation: pulse-success 2s ease-in-out infinite;
+                }
+            </style>
+        </div>
+
+    </main>
+
+    <script>
+        'use strict';
+
+        // ===== CONFIGURATION & CONSTANTS =====
+        const APP_CONFIG = {
+            SEARCH_DEBOUNCE_MS: 300,
+            MAX_CUSTOM_LABS: 10,
+            NOTIFICATION_DURATION: 4000,
+            MAX_LAB_NAME_LENGTH: 100,
+            MAX_INDICATION_LENGTH: 500,
+            LOADING_DELAY: 100,
+            API_TIMEOUT: 30000,
+            
+            PRIORITIES: ['STAT', 'Routine', 'Consider'],
+            LAB_CATEGORIES: ['chemistry', 'hematology', 'microbiology', 'immunology', 'genetics'],
+            SAMPLE_TYPES: ['blood', 'urine', 'csf', 'tissue', 'other'],
+            
+            ERROR_MESSAGES: {
+                NETWORK_ERROR: 'Network error occurred. Please check your connection.',
+                VALIDATION_ERROR: 'Please correct the highlighted fields.',
+                DUPLICATE_LAB: 'This lab test has already been added.',
+                MAX_LABS_EXCEEDED: 'Maximum number of custom labs exceeded.',
+                REQUIRED_FIELD: 'This field is required.',
+                INVALID_COST: 'Please enter a valid cost amount.'
+            }
+        };
+
+        // ===== UTILITY FUNCTIONS =====
+        class Utils {
+            /**
+             * Debounce function execution
+             * @param {Function} func - Function to debounce
+             * @param {number} wait - Wait time in milliseconds
+             * @returns {Function} Debounced function
+             */
+            static debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func.apply(this, args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            /**
+             * Sanitize HTML to prevent XSS
+             * @param {string} str - String to sanitize
+             * @returns {string} Sanitized string
+             */
+            static sanitizeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            /**
+             * Generate unique ID
+             * @returns {string} Unique ID
+             */
+            static generateId() {
+                return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            }
+
+            /**
+             * Format currency
+             * @param {number} amount - Amount to format
+             * @returns {string} Formatted currency
+             */
+            static formatCurrency(amount) {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0
+                }).format(amount);
+            }
+
+            /**
+             * Show loading state
+             * @param {HTMLElement} element - Element to show loading on
+             */
+            static showLoading(element) {
+                const overlay = element.querySelector('.loading-overlay');
+                if (overlay) {
+                    overlay.classList.add('show');
+                }
+            }
+
+            /**
+             * Hide loading state
+             * @param {HTMLElement} element - Element to hide loading on
+             */
+            static hideLoading(element) {
+                const overlay = element.querySelector('.loading-overlay');
+                if (overlay) {
+                    overlay.classList.remove('show');
+                }
+            }
+        }
+
+        // ===== ERROR HANDLING & VALIDATION =====
+        class ErrorHandler {
+            /**
+             * Handle application errors
+             * @param {Error} error - Error to handle
+             * @param {string} context - Context where error occurred
+             */
+            static handleError(error, context = 'Unknown') {
+                console.error(`[${context}] Error:`, error);
+                
+                let userMessage = APP_CONFIG.ERROR_MESSAGES.NETWORK_ERROR;
+                if (error.name === 'ValidationError') {
+                    userMessage = error.message;
+                } else if (error.name === 'NetworkError') {
+                    userMessage = APP_CONFIG.ERROR_MESSAGES.NETWORK_ERROR;
+                }
+                
+                NotificationService.show(userMessage, 'critical');
+                
+                // In a real app, we'd send to logging service
+                this.logError(error, context);
+            }
+
+            /**
+             * Log error to monitoring service
+             * @param {Error} error - Error to log
+             * @param {string} context - Context where error occurred
+             */
+            static logError(error, context) {
+                // In production, this would send to a logging service
+                console.warn('Logging error to monitoring service:', {
+                    error: error.message,
+                    stack: error.stack,
+                    context,
+                    timestamp: new Date().toISOString(),
+                    userAgent: navigator.userAgent
+                });
+            }
+        }
+
+        class Validator {
+            /**
+             * Validate custom lab order data
+             * @param {Object} data - Lab order data to validate
+             * @returns {Object} Validation result
+             */
+            static validateLabOrder(data) {
+                const errors = [];
+                
+                if (!data.name || data.name.trim().length === 0) {
+                    errors.push({ field: 'name', message: APP_CONFIG.ERROR_MESSAGES.REQUIRED_FIELD });
+                } else if (data.name.length > APP_CONFIG.MAX_LAB_NAME_LENGTH) {
+                    errors.push({ field: 'name', message: `Test name must be less than ${APP_CONFIG.MAX_LAB_NAME_LENGTH} characters` });
+                }
+                
+                if (!data.indication || data.indication.trim().length === 0) {
+                    errors.push({ field: 'indication', message: APP_CONFIG.ERROR_MESSAGES.REQUIRED_FIELD });
+                } else if (data.indication.length > APP_CONFIG.MAX_INDICATION_LENGTH) {
+                    errors.push({ field: 'indication', message: `Indication must be less than ${APP_CONFIG.MAX_INDICATION_LENGTH} characters` });
+                }
+                
+                if (!APP_CONFIG.PRIORITIES.includes(data.priority)) {
+                    errors.push({ field: 'priority', message: 'Invalid priority selected' });
+                }
+                
+                if (data.cost !== undefined && (isNaN(data.cost) || data.cost < 0)) {
+                    errors.push({ field: 'cost', message: APP_CONFIG.ERROR_MESSAGES.INVALID_COST });
+                }
+                
+                return {
+                    isValid: errors.length === 0,
+                    errors
+                };
+            }
+
+            /**
+             * Display validation errors in form
+             * @param {Array} errors - Array of validation errors
+             */
+            static displayValidationErrors(errors) {
+                // Clear previous errors
+                document.querySelectorAll('.error-message').forEach(el => {
+                    el.style.display = 'none';
+                    el.textContent = '';
+                });
+                
+                document.querySelectorAll('.form-input, .form-textarea, .form-select').forEach(el => {
+                    el.style.borderColor = 'var(--neutral-200)';
+                });
+                
+                // Show new errors
+                errors.forEach(error => {
+                    const field = document.getElementById(`customLab${error.field.charAt(0).toUpperCase() + error.field.slice(1)}`);
+                    const errorEl = document.getElementById(`${field?.id}-error`);
+                    
+                    if (field && errorEl) {
+                        field.style.borderColor = 'var(--status-critical)';
+                        errorEl.textContent = error.message;
+                        errorEl.style.display = 'block';
+                        
+                        // Focus first error field
+                        if (errors.indexOf(error) === 0) {
+                            field.focus();
+                        }
+                    }
+                });
+            }
+        }
+
+        // ===== DATA LAYER =====
+        const LAB_DATA = {
+            categories: {
+                critical: {
+                    id: 'critical',
+                    title: 'STAT - Urgent Evaluation',
+                    subtitle: 'Critical labs for secondary headache rule-out',
+                    type: 'critical',
+                    expanded: true,
+                    stats: { labCount: 5, timeEstimate: '~15 min' },
+                    icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+                },
+                routine: {
+                    id: 'routine',
+                    title: 'Routine Migraine Workup',
+                    subtitle: 'Standard evaluation for headache disorders',
+                    type: 'info',
+                    expanded: false,
+                    stats: { labCount: 3, timeEstimate: '~45 min' },
+                    icon: 'M9 11l3 3L22 4'
+                },
+                risk: {
+                    id: 'risk',
+                    title: 'Risk Factor Assessment',
+                    subtitle: 'Demographics and medication-based screening',
+                    type: 'caution',
+                    expanded: false,
+                    stats: { labCount: 4, timeEstimate: '~60 min' },
+                    icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+                },
+                additional: {
+                    id: 'additional',
+                    title: 'Additional Lab Orders',
+                    subtitle: 'Search and add custom laboratory tests',
+                    type: 'additional',
+                    expanded: false,
+                    stats: { labCount: 0, timeEstimate: '~5 min' },
+                    icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+                }
+            },
+            labs: {
+                'CBC-DIFF': {
+                    code: 'CBC-DIFF',
+                    name: 'Complete Blood Count with Differential',
+                    description: 'Comprehensive blood analysis including white blood cell count, differential, hemoglobin, hematocrit, and platelet count to evaluate for infection, anemia, or hematologic disorders.',
+                    priority: 'STAT',
+                    cost: 24,
+                    category: 'critical',
+                    selected: true,
+                    rationale: 'Red flag symptoms (confusion, "worst headache") require immediate rule-out of infectious causes (meningitis) and systemic conditions. WBC count and differential essential for detecting CNS infection or inflammatory processes.'
+                },
+                'CMP': {
+                    code: 'CMP',
+                    name: 'Comprehensive Metabolic Panel',
+                    description: 'Complete electrolyte panel, glucose, kidney function (BUN, creatinine), liver function (ALT, AST), and protein levels to identify metabolic causes of altered mental status.',
+                    priority: 'STAT',
+                    cost: 18,
+                    category: 'critical',
+                    selected: true,
+                    rationale: 'Severe headache with confusion may indicate metabolic derangements (hyponatremia, hypoglycemia, uremia). Essential for pre-imaging safety and identifying treatable metabolic causes. Bicarbonate level critical for detecting topiramate-induced metabolic acidosis.'
+                },
+                'hCG-U': {
+                    code: 'hCG-U',
+                    name: 'Pregnancy Test (Urine hCG)',
+                    description: 'Qualitative urine pregnancy test essential before imaging studies with contrast and medication administration including triptans.',
+                    priority: 'STAT',
+                    cost: 12,
+                    category: 'critical',
+                    selected: true,
+                    rationale: 'Pregnancy status critical before CT with contrast, medication selections (triptans contraindicated in pregnancy), and treatment decisions. Required for imaging safety protocols and appropriate therapeutic choices.'
+                },
+                'ESR': {
+                    code: 'ESR',
+                    name: 'Erythrocyte Sedimentation Rate',
+                    description: 'Non-specific inflammatory marker to evaluate for temporal arteritis, CNS vasculitis, and other inflammatory conditions causing severe headache.',
+                    priority: 'STAT',
+                    cost: 15,
+                    category: 'critical',
+                    selected: true,
+                    rationale: '"Worst headache of life" in 32-year-old raises concern for secondary causes. ESR elevated in temporal arteritis, CNS vasculitis, and inflammatory conditions causing severe headache. Age-appropriate screening.'
+                },
+                'CRP': {
+                    code: 'CRP',
+                    name: 'C-Reactive Protein',
+                    description: 'Acute phase reactant for detecting infection or inflammatory processes. More sensitive than ESR for acute inflammation and complements ESR evaluation.',
+                    priority: 'STAT',
+                    cost: 16,
+                    category: 'critical',
+                    selected: true,
+                    rationale: 'Complements ESR for inflammatory evaluation. More sensitive for acute inflammation. Essential for ruling out CNS infection or systemic inflammatory conditions with neurological manifestations.'
+                },
+                'TSH': {
+                    code: 'TSH',
+                    name: 'Thyroid Stimulating Hormone',
+                    description: 'Thyroid function screening as both hyperthyroidism and hypothyroidism can contribute to headache disorders and mimic or exacerbate migraine symptoms.',
+                    priority: 'Routine',
+                    cost: 22,
+                    category: 'routine',
+                    selected: true,
+                    rationale: 'Standard workup for new-onset severe headaches. Thyroid disorders common in reproductive-age women and can exacerbate or mimic migraine symptoms. Cost-effective screening test with high clinical utility.'
+                },
+                'UA-MICRO': {
+                    code: 'UA-MICRO',
+                    name: 'Urinalysis with Microscopy',
+                    description: 'Complete urinalysis including microscopic examination to screen for kidney stones, crystals, protein, blood, and general renal health assessment.',
+                    priority: 'Routine',
+                    cost: 14,
+                    category: 'routine',
+                    selected: false,
+                    rationale: 'Topiramate increases risk of nephrolithiasis. Urinalysis can detect early signs of kidney stones, crystals, or renal dysfunction. Chronic NSAID use also warrants renal monitoring and baseline assessment.'
+                },
+                'LFT': {
+                    code: 'LFT',
+                    name: 'Comprehensive Hepatic Function Panel',
+                    description: 'Complete liver function assessment including ALT, AST, bilirubin, alkaline phosphatase, and albumin for patients on chronic medications.',
+                    priority: 'Routine',
+                    cost: 28,
+                    category: 'routine',
+                    selected: true,
+                    rationale: 'Chronic NSAID use (ibuprofen) and antiepileptic drugs (topiramate) require periodic hepatic monitoring. Establishes baseline and screens for drug-induced hepatotoxicity.'
+                },
+                'LIPID': {
+                    code: 'LIPID',
+                    name: 'Lipid Panel (Fasting)',
+                    description: 'Comprehensive lipid profile including total cholesterol, HDL, LDL, and triglycerides for cardiovascular risk assessment in patient on oral contraceptives.',
+                    priority: 'Consider',
+                    cost: 31,
+                    category: 'risk',
+                    selected: false,
+                    rationale: 'Elevated BP (138/88) in young woman on oral contraceptives warrants cardiovascular risk stratification. May influence choice of migraine preventive therapy and contraceptive counseling.'
+                },
+                'B12': {
+                    code: 'B12',
+                    name: 'Vitamin B12 Level',
+                    description: 'Vitamin B12 deficiency assessment as deficiency can cause headaches, neurological symptoms, and confusion - all present in current case.',
+                    priority: 'Consider',
+                    cost: 38,
+                    category: 'risk',
+                    selected: false,
+                    rationale: 'Patient reports confusion along with headache. B12 deficiency can cause both symptoms and is a treatable cause of neurological dysfunction. Consider given constellation of symptoms.'
+                },
+                'MG': {
+                    code: 'MG',
+                    name: 'Magnesium Level',
+                    description: 'Serum magnesium level to evaluate deficiency status, as hypomagnesemia is linked to increased migraine frequency and therapeutic response.',
+                    priority: 'Consider',
+                    cost: 19,
+                    category: 'risk',
+                    selected: false,
+                    rationale: 'Baseline level helps guide optimal dosing and confirms therapeutic adequacy. Hypomagnesemia associated with increased migraine frequency and reduced treatment response.'
+                },
+                'HBA1C': {
+                    code: 'HBA1C',
+                    name: 'Hemoglobin A1C',
+                    description: 'Three-month average glucose control assessment for diabetes screening, especially relevant given medication effects on glucose metabolism.',
+                    priority: 'Consider',
+                    cost: 25,
+                    category: 'risk',
+                    selected: false,
+                    rationale: 'Topiramate can cause weight loss and affect glucose metabolism. Baseline glucose assessment important for monitoring and future therapeutic decisions. Consider in context of overall health screening.'
+                }
+            }
+        };
+
+        // Sample additional lab tests database
+        const ADDITIONAL_LABS_DB = [
+            { id: 'PCT', name: 'Procalcitonin', category: 'chemistry', sample: 'blood', cost: 45, description: 'Bacterial infection and sepsis marker' },
+            { id: 'DDIMER', name: 'D-Dimer', category: 'hematology', sample: 'blood', cost: 35, description: 'Fibrin degradation product for VTE screening' },
+            { id: 'TROP', name: 'Troponin I', category: 'chemistry', sample: 'blood', cost: 40, description: 'Cardiac muscle injury biomarker' },
+            { id: 'LACT', name: 'Lactate', category: 'chemistry', sample: 'blood', cost: 25, description: 'Tissue hypoperfusion marker' },
+            { id: 'NH3', name: 'Ammonia', category: 'chemistry', sample: 'blood', cost: 55, description: 'Hepatic function marker' },
+            { id: 'VIT-D', name: 'Vitamin D 25-OH', category: 'chemistry', sample: 'blood', cost: 65, description: 'Vitamin D status assessment' },
+            { id: 'BNP', name: 'B-Type Natriuretic Peptide', category: 'chemistry', sample: 'blood', cost: 50, description: 'Heart failure marker' },
+            { id: 'CORTISOL', name: 'Cortisol (AM)', category: 'chemistry', sample: 'blood', cost: 30, description: 'Adrenal function assessment' },
+            { id: 'FERRITIN', name: 'Ferritin', category: 'chemistry', sample: 'blood', cost: 35, description: 'Iron storage protein' },
+            { id: 'HOMOCYS', name: 'Homocysteine', category: 'chemistry', sample: 'blood', cost: 60, description: 'Cardiovascular risk marker' }
+        ];
+
+        // ===== STATE MANAGEMENT =====
+        class AppState {
+            constructor() {
+                this.selectedLabs = new Set();
+                this.categories = new Map();
+                this.customLabOrders = [];
+                this.costsVisible = true;
+                this.searchFilters = {
+                    categories: [],
+                    samples: []
+                };
+                this.subscribers = new Map();
+                
+                this.initializeFromData();
+            }
+
+            /**
+             * Initialize state from lab data
+             */
+            initializeFromData() {
+                Object.values(LAB_DATA.labs).forEach(lab => {
+                    if (lab.selected) {
+                        this.selectedLabs.add(lab.code);
+                    }
+                });
+                
+                Object.entries(LAB_DATA.categories).forEach(([key, category]) => {
+                    this.categories.set(key, category);
+                });
+            }
+
+            /**
+             * Subscribe to state changes
+             * @param {string} event - Event name
+             * @param {Function} callback - Callback function
+             */
+            subscribe(event, callback) {
+                if (!this.subscribers.has(event)) {
+                    this.subscribers.set(event, []);
+                }
+                this.subscribers.get(event).push(callback);
+            }
+
+            /**
+             * Emit state change event
+             * @param {string} event - Event name
+             * @param {*} data - Event data
+             */
+            emit(event, data) {
+                if (this.subscribers.has(event)) {
+                    this.subscribers.get(event).forEach(callback => {
+                        try {
+                            callback(data);
+                        } catch (error) {
+                            ErrorHandler.handleError(error, `State event: ${event}`);
+                        }
+                    });
+                }
+            }
+
+            /**
+             * Select/deselect a lab
+             * @param {string} labCode - Lab code
+             * @param {boolean} selected - Selection state
+             */
+            selectLab(labCode, selected) {
+                try {
+                    if (selected) {
+                        this.selectedLabs.add(labCode);
+                        if (LAB_DATA.labs[labCode]) {
+                            LAB_DATA.labs[labCode].selected = true;
+                        }
+                    } else {
+                        this.selectedLabs.delete(labCode);
+                        if (LAB_DATA.labs[labCode]) {
+                            LAB_DATA.labs[labCode].selected = false;
+                        }
+                    }
+                    
+                    this.emit('labSelectionChanged', { labCode, selected });
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'selectLab');
+                }
+            }
+
+            /**
+             * Add custom lab order
+             * @param {Object} labOrder - Lab order data
+             */
+            addCustomLabOrder(labOrder) {
+                try {
+                    if (this.customLabOrders.length >= APP_CONFIG.MAX_CUSTOM_LABS) {
+                        throw new Error(APP_CONFIG.ERROR_MESSAGES.MAX_LABS_EXCEEDED);
+                    }
+                    
+                    this.customLabOrders.push(labOrder);
+                    this.emit('customLabAdded', labOrder);
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'addCustomLabOrder');
+                }
+            }
+
+            /**
+             * Remove custom lab order
+             * @param {string} orderId - Order ID
+             */
+            removeCustomLabOrder(orderId) {
+                try {
+                    this.customLabOrders = this.customLabOrders.filter(order => order.id !== orderId);
+                    this.emit('customLabRemoved', orderId);
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'removeCustomLabOrder');
+                }
+            }
+
+            /**
+             * Get lab statistics
+             * @returns {Object} Lab statistics
+             */
+            getLabStats() {
+                const totalSelected = this.selectedLabs.size;
+                const statLabs = Array.from(this.selectedLabs).filter(code => 
+                    LAB_DATA.labs[code]?.priority === 'STAT'
+                ).length;
+                const totalCost = Array.from(this.selectedLabs).reduce((sum, code) => 
+                    sum + (LAB_DATA.labs[code]?.cost || 0), 0
+                );
+
+                return { totalSelected, statLabs, totalCost };
+            }
+        }
+
+        // ===== UI COMPONENTS =====
+        class LabCard {
+            constructor(labData) {
+                this.labData = labData;
+            }
+
+            render() {
+                const priorityClass = this.labData.priority === 'STAT' ? 'critical' : 
+                                   this.labData.priority === 'Routine' ? 'info' : 'caution';
+                
+                const sanitizedName = Utils.sanitizeHTML(this.labData.name);
+                const sanitizedDescription = Utils.sanitizeHTML(this.labData.description);
+                const sanitizedRationale = Utils.sanitizeHTML(this.labData.rationale);
+                
+                return `
+                    <div class="lab-card ${this.labData.selected ? 'selected' : ''}" 
+                         data-lab-code="${this.labData.code}"
+                         role="checkbox"
+                         aria-checked="${this.labData.selected}"
+                         aria-labelledby="lab-name-${this.labData.code}"
+                         tabindex="0">
+                        <div class="lab-card-header">
+                            <div class="lab-main-info">
+                                <input type="checkbox" 
+                                       class="lab-checkbox" 
+                                       ${this.labData.selected ? 'checked' : ''}
+                                       aria-label="Select ${sanitizedName}">
+                                <div class="lab-name-section">
+                                    <div class="lab-name" id="lab-name-${this.labData.code}">${sanitizedName}</div>
+                                    <div class="lab-code">${this.labData.code}</div>
+                                </div>
+                                <div class="lab-description">${sanitizedDescription}</div>
+                            </div>
+                            <div class="lab-timing-info">
+                                <div class="priority-badge priority-badge--${priorityClass}">${this.labData.priority}</div>
+                                <div class="lab-cost">${Utils.formatCurrency(this.labData.cost)}</div>
+                            </div>
+                        </div>
+                        <div class="ai-rationale">
+                            <div class="ai-rationale-content">
+                                <div class="ai-icon">
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ai-rationale-text">
+                                    <span class="ai-label">AI Clinical Rationale:</span>${sanitizedRationale}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        class CategorySection {
+            constructor(categoryData, labs) {
+                this.categoryData = categoryData;
+                this.labs = labs;
+            }
+
+            render() {
+                const labCards = this.labs.map(lab => new LabCard(lab));
+                
+                return `
+                    <div class="lab-category">
+                        <div class="category-header category-header--${this.categoryData.type}" 
+                             data-category="${this.categoryData.id}"
+                             role="button"
+                             tabindex="0"
+                             aria-expanded="${this.categoryData.expanded}"
+                             aria-label="${this.categoryData.title} section">
+                            <div class="flex-between">
+                                <div style="display: flex; align-items: center; gap: var(--space-md);">
+                                    <div style="width: 20px; height: 20px; background: rgba(255, 255, 255, 0.2); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="${this.categoryData.icon}"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 style="font-size: var(--text-lg); margin-bottom: var(--space-xs);">${Utils.sanitizeHTML(this.categoryData.title)}</h3>
+                                        <div style="font-size: var(--text-xs); opacity: 0.9;">${Utils.sanitizeHTML(this.categoryData.subtitle)}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: var(--space-md); font-size: var(--text-xs);">
+                                    <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M9 12l2 2 4-4"></path>
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                        </svg>
+                                        <span>${this.categoryData.stats.labCount} Labs</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: var(--space-xs);">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                        <span>${this.categoryData.stats.timeEstimate}</span>
+                                    </div>
+                                    <svg class="expand-arrow ${this.categoryData.expanded ? 'expanded' : ''}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="category-content ${this.categoryData.expanded ? 'expanded' : ''}">
+                            <div class="labs-grid" role="group" aria-label="${this.categoryData.title} laboratory tests">
+                                ${labCards.map(card => card.render()).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // ===== SERVICES =====
+        class NotificationService {
+            static notifications = [];
+
+            /**
+             * Show notification
+             * @param {string} message - Notification message
+             * @param {string} type - Notification type (info, normal, critical)
+             * @param {number} duration - Display duration in milliseconds
+             */
+            static show(message, type = 'info', duration = APP_CONFIG.NOTIFICATION_DURATION) {
+                try {
+                    const notification = document.createElement('div');
+                    const notificationId = Utils.generateId();
+                    
+                    notification.className = `notification notification--${type} show`;
+                    notification.id = notificationId;
+                    notification.setAttribute('role', 'alert');
+                    notification.setAttribute('aria-live', type === 'critical' ? 'assertive' : 'polite');
+                    
+                    const sanitizedMessage = Utils.sanitizeHTML(message);
+                    notification.innerHTML = `
+                        <div style="display: flex; align-items: flex-start; gap: var(--space-xs);">
+                            <div style="font-weight: 600; flex: 1; font-size: var(--text-xs);">${sanitizedMessage}</div>
+                            <button onclick="NotificationService.dismiss('${notificationId}')" 
+                                    style="background: none; border: none; font-size: 14px; cursor: pointer; color: var(--neutral-500);"
+                                    aria-label="Dismiss notification">
+                                &times;
+                            </button>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    this.notifications.push({ id: notificationId, element: notification });
+                    
+                    // Auto-dismiss after duration
+                    setTimeout(() => {
+                        this.dismiss(notificationId);
+                    }, duration);
+                    
+                } catch (error) {
+                    console.error('Failed to show notification:', error);
+                }
+            }
+
+            /**
+             * Dismiss notification
+             * @param {string} notificationId - Notification ID
+             */
+            static dismiss(notificationId) {
+                try {
+                    const notification = document.getElementById(notificationId);
+                    if (notification) {
+                        notification.style.transform = 'translateX(320px)';
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                        
+                        this.notifications = this.notifications.filter(n => n.id !== notificationId);
+                    }
+                } catch (error) {
+                    console.error('Failed to dismiss notification:', error);
+                }
+            }
+        }
+
+        class LabSelectionManager {
+            constructor(appState) {
+                this.appState = appState;
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                this.appState.subscribe('labSelectionChanged', this.onLabSelectionChanged.bind(this));
+            }
+
+            /**
+             * Handle lab selection change
+             * @param {Object} data - Selection change data
+             */
+            onLabSelectionChanged(data) {
+                this.updateStats();
+                this.notify(data.labCode, data.selected);
+            }
+
+            /**
+             * Select all STAT labs
+             */
+            selectAllSTAT() {
+                try {
+                    const statLabs = Object.values(LAB_DATA.labs).filter(lab => lab.priority === 'STAT');
+                    
+                    statLabs.forEach(lab => {
+                        this.appState.selectLab(lab.code, true);
+                        const checkbox = document.querySelector(`[data-lab-code="${lab.code}"] .lab-checkbox`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            checkbox.closest('.lab-card').classList.add('selected');
+                            checkbox.closest('.lab-card').setAttribute('aria-checked', 'true');
+                        }
+                    });
+                    
+                    NotificationService.show('All STAT labs selected', 'critical');
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'selectAllSTAT');
+                }
+            }
+
+            /**
+             * Order selected labs
+             */
+            async orderLabs() {
+                try {
+                    const orderBtn = document.getElementById('order-labs-btn');
+                    
+                    if (this.appState.selectedLabs.size === 0) {
+                        NotificationService.show('Please select at least one laboratory test', 'info');
+                        return;
+                    }
+
+                    // Disable button and show loading
+                    orderBtn.disabled = true;
+                    const originalText = orderBtn.innerHTML;
+                    orderBtn.innerHTML = `
+                        <div class="loading-spinner" style="width: 20px; height: 20px; margin-right: var(--space-md);"></div>
+                        Processing Order...
+                    `;
+
+                    const stats = this.appState.getLabStats();
+                    
+                    NotificationService.show(
+                        `Ordering ${stats.totalSelected} labs (${stats.statLabs} STAT) - Total: ${Utils.formatCurrency(stats.totalCost)}`, 
+                        'critical'
+                    );
+
+                    // Simulate async operation
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    NotificationService.show('Lab orders successfully transmitted to laboratory', 'normal');
+                    
+                    // Reset button
+                    orderBtn.disabled = false;
+                    orderBtn.innerHTML = originalText;
+                    
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'orderLabs');
+                    
+                    // Reset button on error
+                    const orderBtn = document.getElementById('order-labs-btn');
+                    orderBtn.disabled = false;
+                }
+            }
+
+            /**
+             * Update statistics display
+             */
+            updateStats() {
+                try {
+                    const stats = this.appState.getLabStats();
+                    
+                    const totalLabsEl = document.getElementById('total-labs');
+                    const statLabsEl = document.getElementById('stat-labs');
+                    const totalCostEl = document.getElementById('total-cost');
+                    
+                    if (totalLabsEl) totalLabsEl.textContent = stats.totalSelected;
+                    if (statLabsEl) statLabsEl.textContent = stats.statLabs;
+                    if (totalCostEl) totalCostEl.textContent = Utils.formatCurrency(stats.totalCost);
+
+                    this.updateOrderButton(stats);
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'updateStats');
+                }
+            }
+
+            /**
+             * Update order button appearance
+             * @param {Object} stats - Lab statistics
+             */
+            updateOrderButton(stats) {
+                try {
+                    const orderBtn = document.getElementById('order-labs-btn');
+                    if (!orderBtn) return;
+                    
+                    if (stats.totalSelected > 0) {
+                        orderBtn.classList.add('has-selection');
+                        const costText = this.appState.costsVisible ? ` (${Utils.formatCurrency(stats.totalCost)})` : '';
+                        orderBtn.innerHTML = `
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: var(--space-md);">
+                                <path d="M9 12l2 2 4-4"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            🧪 ORDER ${stats.totalSelected} SELECTED LAB${stats.totalSelected > 1 ? 'S' : ''}${costText}
+                            <div style="
+                                position: absolute;
+                                top: -50%;
+                                left: -50%;
+                                width: 200%;
+                                height: 200%;
+                                background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+                                transform: rotate(45deg);
+                                transition: all 0.6s;
+                                opacity: 0;
+                            " class="shine-effect"></div>
+                        `;
+                    } else {
+                        orderBtn.classList.remove('has-selection');
+                        orderBtn.innerHTML = `
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: var(--space-md);">
+                                <path d="M9 12l2 2 4-4"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            🧪 ORDER SELECTED LABS
+                            <div style="
+                                position: absolute;
+                                top: -50%;
+                                left: -50%;
+                                width: 200%;
+                                height: 200%;
+                                background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+                                transform: rotate(45deg);
+                                transition: all 0.6s;
+                                opacity: 0;
+                            " class="shine-effect"></div>
+                        `;
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'updateOrderButton');
+                }
+            }
+
+            /**
+             * Show lab selection notification
+             * @param {string} labCode - Lab code
+             * @param {boolean} selected - Selection state
+             */
+            notify(labCode, selected) {
+                try {
+                    const action = selected ? 'Added' : 'Removed';
+                    const priority = LAB_DATA.labs[labCode]?.priority || 'Standard';
+                    const type = priority === 'STAT' ? 'critical' : 'info';
+                    NotificationService.show(`${action} ${labCode} (${priority} priority)`, type);
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'notify');
+                }
+            }
+        }
+
+        class CategoryManager {
+            constructor(appState) {
+                this.appState = appState;
+            }
+
+            /**
+             * Toggle category expansion
+             * @param {string} categoryId - Category ID
+             */
+            toggleCategory(categoryId) {
+                try {
+                    const header = document.querySelector(`[data-category="${categoryId}"]`);
+                    const content = header?.nextElementSibling;
+                    const arrow = header?.querySelector('.expand-arrow');
+                    
+                    if (!header || !content || !arrow) return;
+                    
+                    const isExpanded = content.classList.contains('expanded');
+                    
+                    if (isExpanded) {
+                        content.classList.remove('expanded');
+                        arrow.classList.remove('expanded');
+                        header.setAttribute('aria-expanded', 'false');
+                        LAB_DATA.categories[categoryId].expanded = false;
+                    } else {
+                        content.classList.add('expanded');
+                        arrow.classList.add('expanded');
+                        header.setAttribute('aria-expanded', 'true');
+                        LAB_DATA.categories[categoryId].expanded = true;
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'toggleCategory');
+                }
+            }
+
+            /**
+             * Toggle all categories
+             */
+            toggleAll() {
+                try {
+                    const toggleBtn = document.getElementById('toggle-all-btn');
+                    const btnIcon = toggleBtn?.querySelector('svg polyline');
+                    
+                    if (!toggleBtn || !btnIcon) return;
+                    
+                    // Check if any categories are expanded
+                    const anyExpanded = Object.values(LAB_DATA.categories).some(cat => cat.expanded);
+                    
+                    if (anyExpanded) {
+                        // Collapse all
+                        Object.keys(LAB_DATA.categories).forEach(categoryId => {
+                            const header = document.querySelector(`[data-category="${categoryId}"]`);
+                            const content = header?.nextElementSibling;
+                            const arrow = header?.querySelector('.expand-arrow');
+                            
+                            if (content && arrow && header) {
+                                content.classList.remove('expanded');
+                                arrow.classList.remove('expanded');
+                                header.setAttribute('aria-expanded', 'false');
+                                LAB_DATA.categories[categoryId].expanded = false;
+                            }
+                        });
+                        
+                        btnIcon.setAttribute('points', '6 9 12 15 18 9');
+                        toggleBtn.childNodes[2].textContent = 'Expand All';
+                        NotificationService.show('All categories collapsed', 'info');
+                    } else {
+                        // Expand all
+                        Object.keys(LAB_DATA.categories).forEach(categoryId => {
+                            const header = document.querySelector(`[data-category="${categoryId}"]`);
+                            const content = header?.nextElementSibling;
+                            const arrow = header?.querySelector('.expand-arrow');
+                            
+                            if (content && arrow && header) {
+                                content.classList.add('expanded');
+                                arrow.classList.add('expanded');
+                                header.setAttribute('aria-expanded', 'true');
+                                LAB_DATA.categories[categoryId].expanded = true;
+                            }
+                        });
+                        
+                        btnIcon.setAttribute('points', '18 15 12 9 6 15');
+                        toggleBtn.childNodes[2].textContent = 'Collapse All';
+                        NotificationService.show('All categories expanded', 'info');
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'toggleAll');
+                }
+            }
+
+            /**
+             * Update toggle button state
+             */
+            updateToggleButton() {
+                try {
+                    const toggleBtn = document.getElementById('toggle-all-btn');
+                    if (!toggleBtn) return;
+                    
+                    const btnIcon = toggleBtn.querySelector('svg polyline');
+                    const anyExpanded = Object.values(LAB_DATA.categories).some(cat => cat.expanded);
+                    
+                    if (anyExpanded) {
+                        btnIcon?.setAttribute('points', '18 15 12 9 6 15');
+                        if (toggleBtn.childNodes[2]) {
+                            toggleBtn.childNodes[2].textContent = 'Collapse All';
+                        }
+                    } else {
+                        btnIcon?.setAttribute('points', '6 9 12 15 18 9');
+                        if (toggleBtn.childNodes[2]) {
+                            toggleBtn.childNodes[2].textContent = 'Expand All';
+                        }
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'updateToggleButton');
+                }
+            }
+        }
+
+        class NavigationService {
+            /**
+             * Navigate to different modules
+             * @param {string} module - Module name
+             */
+            static navigate(module) {
+                try {
+                    const moduleNames = {
+                        medications: 'Medication Management',
+                        imaging: 'Imaging Orders',
+                        referrals: 'Specialist Referrals',
+                        followup: 'Follow-up Scheduling',
+                        education: 'Patient Education'
+                    };
+                    
+                    const moduleName = moduleNames[module] || 'Unknown Module';
+                    NotificationService.show(`Opening ${moduleName} interface...`, 'info');
+                    console.log(`Navigate to: ${moduleName} module`);
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'navigate');
+                }
+            }
+        }
+
+        // ===== ADDITIONAL LAB ORDERS FUNCTIONALITY =====
+        class AdditionalLabsManager {
+            constructor(appState) {
+                this.appState = appState;
+                this.debouncedSearch = Utils.debounce(this.performSearch.bind(this), APP_CONFIG.SEARCH_DEBOUNCE_MS);
+                
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                this.appState.subscribe('customLabAdded', this.onCustomLabAdded.bind(this));
+                this.appState.subscribe('customLabRemoved', this.onCustomLabRemoved.bind(this));
+            }
+
+            /**
+             * Search labs with debouncing
+             * @param {string} query - Search query
+             */
+            searchLabs(query) {
+                this.debouncedSearch(query);
+            }
+
+            /**
+             * Perform actual search
+             * @param {string} query - Search query
+             */
+            performSearch(query) {
+                try {
+                    const resultsSection = document.getElementById('labSearchResults');
+                    const resultsList = document.getElementById('labResultsList');
+                    const resultsCount = document.getElementById('labResultsCount');
+                    
+                    if (!resultsSection || !resultsList || !resultsCount) return;
+                    
+                    if (!query || query.length < 2) {
+                        resultsSection.style.display = 'none';
+                        return;
+                    }
+
+                    // Show loading
+                    Utils.showLoading(document.getElementById('additional-labs-loading')?.parentElement);
+
+                    // Get active filters
+                    const activeFilters = this.getActiveLabFilters();
+                    
+                    // Filter labs based on query and filters
+                    const filteredLabs = ADDITIONAL_LABS_DB.filter(lab => {
+                        const matchesQuery = lab.name.toLowerCase().includes(query.toLowerCase()) ||
+                                          lab.description.toLowerCase().includes(query.toLowerCase());
+                        const matchesCategory = activeFilters.categories.length === 0 || 
+                                              activeFilters.categories.includes(lab.category);
+                        const matchesSample = activeFilters.samples.length === 0 || 
+                                            activeFilters.samples.includes(lab.sample);
+                        
+                        return matchesQuery && matchesCategory && matchesSample;
+                    });
+
+                    resultsCount.textContent = `${filteredLabs.length} test${filteredLabs.length !== 1 ? 's' : ''} found`;
+                    
+                    resultsList.innerHTML = filteredLabs.map(lab => `
+                        <div class="lab-card card-hover" 
+                             style="cursor: pointer;" 
+                             onclick="additionalLabsManager.addSearchResultLab('${lab.id}')"
+                             role="listitem"
+                             tabindex="0"
+                             aria-label="Add ${Utils.sanitizeHTML(lab.name)} test">
+                            <div class="lab-card-header">
+                                <div class="lab-main-info">
+                                    <div class="lab-name-section">
+                                        <div class="lab-name">${Utils.sanitizeHTML(lab.name)}</div>
+                                        <div class="lab-code">${lab.id}</div>
+                                    </div>
+                                    <div class="lab-description">${Utils.sanitizeHTML(lab.description)}</div>
+                                </div>
+                                <div class="lab-timing-info">
+                                    <div class="priority-badge priority-badge--info">Add</div>
+                                    <div class="lab-cost">${Utils.formatCurrency(lab.cost)}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    resultsSection.style.display = 'block';
+                    
+                    // Hide loading
+                    Utils.hideLoading(document.getElementById('additional-labs-loading')?.parentElement);
+                    
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'performSearch');
+                    Utils.hideLoading(document.getElementById('additional-labs-loading')?.parentElement);
+                }
+            }
+
+            /**
+             * Get active lab filters
+             * @returns {Object} Active filters
+             */
+            getActiveLabFilters() {
+                try {
+                    const categoryFilters = Array.from(document.querySelectorAll('#labFiltersPanel input[type="checkbox"]:checked'))
+                        .map(cb => cb.value);
+                    
+                    return {
+                        categories: categoryFilters.filter(f => APP_CONFIG.LAB_CATEGORIES.includes(f)),
+                        samples: categoryFilters.filter(f => APP_CONFIG.SAMPLE_TYPES.includes(f))
+                    };
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'getActiveLabFilters');
+                    return { categories: [], samples: [] };
+                }
+            }
+
+            /**
+             * Toggle lab filters panel
+             */
+            toggleLabFilters() {
+                try {
+                    const filtersPanel = document.getElementById('labFiltersPanel');
+                    if (filtersPanel) {
+                        filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'toggleLabFilters');
+                }
+            }
+
+            /**
+             * Add search result lab
+             * @param {string} labId - Lab ID
+             */
+            addSearchResultLab(labId) {
+                try {
+                    const lab = ADDITIONAL_LABS_DB.find(l => l.id === labId);
+                    if (!lab) {
+                        throw new Error(`Lab with ID ${labId} not found`);
+                    }
+                    
+                    if (LAB_DATA.labs[labId]) {
+                        NotificationService.show(APP_CONFIG.ERROR_MESSAGES.DUPLICATE_LAB, 'info');
+                        return;
+                    }
+                    
+                    // Add to main lab data
+                    LAB_DATA.labs[labId] = {
+                        code: lab.id,
+                        name: lab.name,
+                        description: lab.description,
+                        priority: 'Consider',
+                        cost: lab.cost,
+                        category: 'additional',
+                        selected: true,
+                        rationale: `Additional test ordered based on clinical assessment. ${lab.description}`
+                    };
+
+                    // Add to selection manager
+                    this.appState.selectLab(labId, true);
+                    
+                    // Update additional labs count
+                    this.updateAdditionalLabsCount();
+                    
+                    NotificationService.show(`Added ${lab.name} to lab orders`, 'normal');
+                    
+                    // Clear search
+                    const searchInput = document.getElementById('labSearch');
+                    if (searchInput) {
+                        searchInput.value = '';
+                    }
+                    
+                    const resultsSection = document.getElementById('labSearchResults');
+                    if (resultsSection) {
+                        resultsSection.style.display = 'none';
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'addSearchResultLab');
+                }
+            }
+
+            /**
+             * Add quick lab order
+             * @param {string} name - Lab name
+             * @param {number} cost - Lab cost
+             * @param {string} description - Lab description
+             */
+            addQuickLabOrder(name, cost, description) {
+                try {
+                    const labId = name.replace(/\s+/g, '-').toUpperCase();
+                    
+                    if (LAB_DATA.labs[labId]) {
+                        NotificationService.show(`${name} already in lab orders`, 'info');
+                        return;
+                    }
+                    
+                    LAB_DATA.labs[labId] = {
+                        code: labId,
+                        name: name,
+                        description: description,
+                        priority: 'Consider',
+                        cost: cost,
+                        category: 'additional',
+                        selected: true,
+                        rationale: `Commonly ordered test added for clinical evaluation. ${description}`
+                    };
+
+                    this.appState.selectLab(labId, true);
+                    this.updateAdditionalLabsCount();
+                    NotificationService.show(`Added ${name} to lab orders`, 'normal');
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'addQuickLabOrder');
+                }
+            }
+
+            /**
+             * Add custom lab order
+             */
+            addCustomLabOrder() {
+                try {
+                    const name = document.getElementById('customLabName')?.value.trim();
+                    const priority = document.getElementById('customLabPriority')?.value;
+                    const indication = document.getElementById('customLabIndication')?.value.trim();
+                    const cost = parseInt(document.getElementById('customLabCost')?.value) || 0;
+
+                    const validation = Validator.validateLabOrder({
+                        name,
+                        priority,
+                        indication,
+                        cost
+                    });
+
+                    if (!validation.isValid) {
+                        Validator.displayValidationErrors(validation.errors);
+                        return;
+                    }
+
+                    const labId = `CUSTOM-${Utils.generateId()}`;
+                    const customOrder = {
+                        id: labId,
+                        name,
+                        priority,
+                        indication,
+                        cost,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    // Add to state
+                    this.appState.addCustomLabOrder(customOrder);
+                    
+                    // Add to main lab data
+                    LAB_DATA.labs[labId] = {
+                        code: labId,
+                        name: name,
+                        description: indication,
+                        priority: priority,
+                        cost: cost,
+                        category: 'additional',
+                        selected: true,
+                        rationale: `Custom lab order: ${indication}`
+                    };
+
+                    // Add to selection manager
+                    this.appState.selectLab(labId, true);
+
+                    // Clear form
+                    this.clearCustomLabForm();
+                    
+                    NotificationService.show(`Custom lab order "${name}" added successfully`, 'normal');
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'addCustomLabOrder');
+                }
+            }
+
+            /**
+             * Handle custom lab added event
+             * @param {Object} labOrder - Lab order data
+             */
+            onCustomLabAdded(labOrder) {
+                this.updateCustomLabOrdersDisplay();
+                this.updateAdditionalLabsCount();
+            }
+
+            /**
+             * Handle custom lab removed event
+             * @param {string} orderId - Order ID
+             */
+            onCustomLabRemoved(orderId) {
+                // Remove from main lab data
+                delete LAB_DATA.labs[orderId];
+                
+                // Remove from selection manager
+                this.appState.selectLab(orderId, false);
+                
+                // Update display
+                this.updateCustomLabOrdersDisplay();
+                this.updateAdditionalLabsCount();
+                
+                NotificationService.show('Custom lab order removed', 'info');
+            }
+
+            /**
+             * Remove custom lab order
+             * @param {string} orderId - Order ID
+             */
+            removeCustomLabOrder(orderId) {
+                try {
+                    this.appState.removeCustomLabOrder(orderId);
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'removeCustomLabOrder');
+                }
+            }
+
+            /**
+             * Update custom lab orders display
+             */
+            updateCustomLabOrdersDisplay() {
+                try {
+                    const container = document.getElementById('customLabOrdersContainer');
+                    const listSection = document.getElementById('customLabOrdersList');
+                    
+                    if (!container || !listSection) return;
+                    
+                    if (this.appState.customLabOrders.length === 0) {
+                        listSection.style.display = 'none';
+                        return;
+                    }
+
+                    listSection.style.display = 'block';
+                    container.innerHTML = this.appState.customLabOrders.map(order => `
+                        <div class="lab-card" 
+                             data-custom-id="${order.id}"
+                             role="listitem"
+                             aria-label="Custom lab order: ${Utils.sanitizeHTML(order.name)}">
+                            <div class="lab-card-header">
+                                <div class="lab-main-info">
+                                    <div style="display: flex; align-items: center; gap: var(--space-sm);">
+                                        <input type="checkbox" class="lab-checkbox" checked disabled aria-label="Selected">
+                                        <div class="lab-name-section">
+                                            <div class="lab-name">${Utils.sanitizeHTML(order.name)}</div>
+                                            <div class="lab-code">CUSTOM</div>
+                                        </div>
+                                        <div class="lab-description">${Utils.sanitizeHTML(order.indication)}</div>
+                                    </div>
+                                    <div class="lab-timing-info">
+                                        <div class="priority-badge priority-badge--${order.priority === 'STAT' ? 'critical' : order.priority === 'Routine' ? 'info' : 'caution'}">${order.priority}</div>
+                                        <div class="lab-cost">${Utils.formatCurrency(order.cost)}</div>
+                                    </div>
+                                </div>
+                                <button class="btn btn--secondary" 
+                                        onclick="additionalLabsManager.removeCustomLabOrder('${order.id}')" 
+                                        style="margin-left: var(--space-md); padding: 4px 8px;"
+                                        aria-label="Remove custom lab order: ${Utils.sanitizeHTML(order.name)}">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'updateCustomLabOrdersDisplay');
+                }
+            }
+
+            /**
+             * Update additional labs count
+             */
+            updateAdditionalLabsCount() {
+                try {
+                    const additionalLabs = Object.values(LAB_DATA.labs).filter(lab => 
+                        lab.category === 'additional' && lab.selected
+                    );
+                    const count = additionalLabs.length;
+                    const countElement = document.getElementById('additional-labs-count');
+                    if (countElement) {
+                        countElement.textContent = `${count} Added`;
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'updateAdditionalLabsCount');
+                }
+            }
+
+            /**
+             * Clear custom lab form
+             */
+            clearCustomLabForm() {
+                try {
+                    const nameField = document.getElementById('customLabName');
+                    const priorityField = document.getElementById('customLabPriority');
+                    const indicationField = document.getElementById('customLabIndication');
+                    const costField = document.getElementById('customLabCost');
+                    
+                    if (nameField) nameField.value = '';
+                    if (priorityField) priorityField.value = 'Consider';
+                    if (indicationField) indicationField.value = '';
+                    if (costField) costField.value = '';
+                    
+                    // Clear any validation errors
+                    document.querySelectorAll('.error-message').forEach(el => {
+                        el.style.display = 'none';
+                        el.textContent = '';
+                    });
+                    
+                    document.querySelectorAll('.form-input, .form-textarea, .form-select').forEach(el => {
+                        el.style.borderColor = 'var(--neutral-200)';
+                    });
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'clearCustomLabForm');
+                }
+            }
+        }
+
+        // ===== COST TOGGLE FUNCTIONALITY =====
+        class CostManager {
+            constructor(appState) {
+                this.appState = appState;
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                this.appState.subscribe('labSelectionChanged', () => {
+                    this.updateOrderButtonText();
+                });
+            }
+
+            /**
+             * Toggle cost visibility
+             */
+            toggleCosts() {
+                try {
+                    const checkbox = document.getElementById('costToggle');
+                    if (!checkbox) return;
+                    
+                    this.appState.costsVisible = checkbox.checked;
+                    
+                    if (this.appState.costsVisible) {
+                        document.body.classList.remove('costs-hidden');
+                        NotificationService.show('Cost information is now visible', 'info');
+                    } else {
+                        document.body.classList.add('costs-hidden');
+                        NotificationService.show('Cost information is now hidden', 'info');
+                    }
+                    
+                    this.updateOrderButtonText();
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'toggleCosts');
+                }
+            }
+
+            /**
+             * Update order button text
+             */
+            updateOrderButtonText() {
+                try {
+                    const orderBtn = document.getElementById('order-labs-btn');
+                    if (!orderBtn) return;
+                    
+                    const stats = this.appState.getLabStats();
+                    
+                    if (stats.totalSelected > 0) {
+                        const costText = this.appState.costsVisible ? ` (${Utils.formatCurrency(stats.totalCost)})` : '';
+                        orderBtn.innerHTML = `
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: var(--space-md);">
+                                <path d="M9 12l2 2 4-4"></path>
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            🧪 ORDER ${stats.totalSelected} SELECTED LAB${stats.totalSelected > 1 ? 'S' : ''}${costText}
+                            <div style="
+                                position: absolute;
+                                top: -50%;
+                                left: -50%;
+                                width: 200%;
+                                height: 200%;
+                                background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+                                transform: rotate(45deg);
+                                transition: all 0.6s;
+                                opacity: 0;
+                            " class="shine-effect"></div>
+                        `;
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'updateOrderButtonText');
+                }
+            }
+        }
+
+        // ===== KEYBOARD NAVIGATION =====
+        class KeyboardNavigationManager {
+            constructor() {
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.addEventListener('keydown', this.handleKeyDown.bind(this));
+            }
+
+            /**
+             * Handle keyboard navigation
+             * @param {KeyboardEvent} event - Keyboard event
+             */
+            handleKeyDown(event) {
+                try {
+                    const activeElement = document.activeElement;
+                    
+                    // Handle Enter/Space on lab cards and category headers
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        if (activeElement.classList.contains('lab-card')) {
+                            event.preventDefault();
+                            const checkbox = activeElement.querySelector('.lab-checkbox');
+                            if (checkbox) {
+                                checkbox.click();
+                            }
+                        } else if (activeElement.classList.contains('category-header')) {
+                            event.preventDefault();
+                            activeElement.click();
+                        } else if (activeElement.classList.contains('lab-type-card')) {
+                            event.preventDefault();
+                            activeElement.click();
+                        }
+                    }
+                    
+                    // Handle Escape key
+                    if (event.key === 'Escape') {
+                        // Close any open modals or panels
+                        const filtersPanel = document.getElementById('labFiltersPanel');
+                        if (filtersPanel && filtersPanel.style.display !== 'none') {
+                            filtersPanel.style.display = 'none';
+                        }
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'handleKeyDown');
+                }
+            }
+        }
+
+        // ===== APPLICATION CONTROLLER =====
+        class LabOrderApp {
+            constructor() {
+                this.appState = new AppState();
+                this.labManager = new LabSelectionManager(this.appState);
+                this.categoryManager = new CategoryManager(this.appState);
+                this.additionalLabsManager = new AdditionalLabsManager(this.appState);
+                this.costManager = new CostManager(this.appState);
+                this.keyboardManager = new KeyboardNavigationManager();
+                
+                this.init();
+            }
+
+            /**
+             * Initialize application
+             */
+            async init() {
+                try {
+                    // Show loading during initialization
+                    const mainContainer = document.querySelector('main');
+                    if (mainContainer) {
+                        Utils.showLoading(mainContainer);
+                    }
+                    
+                    await this.render();
+                    this.bindEvents();
+                    
+                    // Set initial toggle button state
+                    setTimeout(() => this.categoryManager.updateToggleButton(), 100);
+                    
+                    // Make managers globally accessible for onclick handlers
+                    window.labManager = this.labManager;
+                    window.additionalLabsManager = this.additionalLabsManager;
+                    window.categoryManager = this.categoryManager;
+                    
+                    // Hide loading
+                    if (mainContainer) {
+                        Utils.hideLoading(mainContainer);
+                    }
+                    
+                    console.log('Lab Order Application initialized successfully');
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'App initialization');
+                }
+            }
+
+            /**
+             * Render application components
+             */
+            async render() {
+                try {
+                    const container = document.getElementById('categories-container');
+                    if (!container) {
+                        throw new Error('Categories container not found');
+                    }
+                    
+                    // Render regular categories (excluding additional)
+                    Object.entries(LAB_DATA.categories).forEach(([categoryId, categoryData]) => {
+                        if (categoryId !== 'additional') {
+                            const categoryLabs = Object.values(LAB_DATA.labs).filter(lab => lab.category === categoryId);
+                            const categorySection = new CategorySection(categoryData, categoryLabs);
+                            container.innerHTML += categorySection.render();
+                        }
+                    });
+                    
+                    // Update additional labs count
+                    this.additionalLabsManager.updateAdditionalLabsCount();
+                    
+                    // Initial stats update
+                    this.labManager.updateStats();
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'render');
+                }
+            }
+
+            /**
+             * Bind event listeners
+             */
+            bindEvents() {
+                try {
+                    // Category toggles with keyboard support
+                    document.addEventListener('click', this.handleCategoryToggle.bind(this));
+                    document.addEventListener('keydown', this.handleCategoryKeydown.bind(this));
+
+                    // Lab selection
+                    document.addEventListener('change', this.handleLabSelection.bind(this));
+
+                    // Navigation buttons
+                    document.addEventListener('click', this.handleNavigation.bind(this));
+
+                    // Action buttons
+                    const toggleAllBtn = document.getElementById('toggle-all-btn');
+                    if (toggleAllBtn) {
+                        toggleAllBtn.addEventListener('click', () => this.categoryManager.toggleAll());
+                    }
+
+                    const orderLabsBtn = document.getElementById('order-labs-btn');
+                    if (orderLabsBtn) {
+                        orderLabsBtn.addEventListener('click', () => this.labManager.orderLabs());
+                    }
+
+                    // Search functionality
+                    const labSearchInput = document.getElementById('labSearch');
+                    if (labSearchInput) {
+                        labSearchInput.addEventListener('input', (e) => {
+                            this.additionalLabsManager.searchLabs(e.target.value);
+                        });
+                        
+                        // Add input styling on focus/blur
+                        labSearchInput.addEventListener('focus', function() {
+                            this.style.borderColor = 'var(--brand-primary)';
+                        });
+                        labSearchInput.addEventListener('blur', function() {
+                            this.style.borderColor = 'var(--neutral-200)';
+                        });
+                    }
+
+                    // Button visual feedback
+                    document.addEventListener('click', this.handleButtonFeedback.bind(this));
+                    
+                    // Form validation real-time feedback
+                    this.setupFormValidation();
+                    
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'bindEvents');
+                }
+            }
+
+            /**
+             * Handle category toggle clicks
+             * @param {Event} e - Click event
+             */
+            handleCategoryToggle(e) {
+                const categoryHeader = e.target.closest('.category-header');
+                if (categoryHeader) {
+                    const categoryId = categoryHeader.dataset.category;
+                    this.categoryManager.toggleCategory(categoryId);
+                    setTimeout(() => this.categoryManager.updateToggleButton(), 100);
+                }
+            }
+
+            /**
+             * Handle category keyboard navigation
+             * @param {KeyboardEvent} e - Keyboard event
+             */
+            handleCategoryKeydown(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    const categoryHeader = e.target.closest('.category-header');
+                    if (categoryHeader) {
+                        e.preventDefault();
+                        categoryHeader.click();
+                    }
+                }
+            }
+
+            /**
+             * Handle lab selection changes
+             * @param {Event} e - Change event
+             */
+            handleLabSelection(e) {
+                if (e.target.classList.contains('lab-checkbox')) {
+                    const card = e.target.closest('.lab-card');
+                    const labCode = card?.dataset.labCode;
+                    const selected = e.target.checked;
+                    
+                    if (labCode) {
+                        this.appState.selectLab(labCode, selected);
+                        
+                        if (selected) {
+                            card.classList.add('selected');
+                            card.setAttribute('aria-checked', 'true');
+                        } else {
+                            card.classList.remove('selected');
+                            card.setAttribute('aria-checked', 'false');
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Handle navigation button clicks
+             * @param {Event} e - Click event
+             */
+            handleNavigation(e) {
+                const navElement = e.target.closest('[data-nav]') || e.target.closest('[data-action]');
+                if (navElement) {
+                    const module = navElement.dataset.nav || navElement.dataset.action;
+                    NavigationService.navigate(module);
+                }
+            }
+
+            /**
+             * Handle button visual feedback
+             * @param {Event} e - Click event
+             */
+            handleButtonFeedback(e) {
+                const btn = e.target.closest('.btn');
+                if (btn && !btn.disabled) {
+                    btn.style.transform = 'translateY(-2px)';
+                    setTimeout(() => {
+                        btn.style.transform = '';
+                    }, 150);
+                }
+            }
+
+            /**
+             * Setup form validation
+             */
+            setupFormValidation() {
+                try {
+                    const nameField = document.getElementById('customLabName');
+                    const indicationField = document.getElementById('customLabIndication');
+                    
+                    if (nameField) {
+                        nameField.addEventListener('blur', () => {
+                            this.validateField(nameField, 'name');
+                        });
+                    }
+                    
+                    if (indicationField) {
+                        indicationField.addEventListener('blur', () => {
+                            this.validateField(indicationField, 'indication');
+                        });
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'setupFormValidation');
+                }
+            }
+
+            /**
+             * Validate individual form field
+             * @param {HTMLElement} field - Form field
+             * @param {string} fieldName - Field name
+             */
+            validateField(field, fieldName) {
+                try {
+                    const value = field.value.trim();
+                    const errorEl = document.getElementById(`${field.id}-error`);
+                    
+                    if (!errorEl) return;
+                    
+                    let isValid = true;
+                    let errorMessage = '';
+                    
+                    if (fieldName === 'name') {
+                        if (!value) {
+                            isValid = false;
+                            errorMessage = APP_CONFIG.ERROR_MESSAGES.REQUIRED_FIELD;
+                        } else if (value.length > APP_CONFIG.MAX_LAB_NAME_LENGTH) {
+                            isValid = false;
+                            errorMessage = `Test name must be less than ${APP_CONFIG.MAX_LAB_NAME_LENGTH} characters`;
+                        }
+                    } else if (fieldName === 'indication') {
+                        if (!value) {
+                            isValid = false;
+                            errorMessage = APP_CONFIG.ERROR_MESSAGES.REQUIRED_FIELD;
+                        } else if (value.length > APP_CONFIG.MAX_INDICATION_LENGTH) {
+                            isValid = false;
+                            errorMessage = `Indication must be less than ${APP_CONFIG.MAX_INDICATION_LENGTH} characters`;
+                        }
+                    }
+                    
+                    if (isValid) {
+                        field.style.borderColor = 'var(--neutral-200)';
+                        errorEl.style.display = 'none';
+                        errorEl.textContent = '';
+                    } else {
+                        field.style.borderColor = 'var(--status-critical)';
+                        errorEl.textContent = errorMessage;
+                        errorEl.style.display = 'block';
+                    }
+                } catch (error) {
+                    ErrorHandler.handleError(error, 'validateField');
+                }
+            }
+        }
+
+        // ===== GLOBAL FUNCTIONS FOR ONCLICK HANDLERS =====
+        
+        /**
+         * Toggle lab filters panel
+         */
+        function toggleLabFilters() {
+            if (window.additionalLabsManager) {
+                window.additionalLabsManager.toggleLabFilters();
+            }
+        }
+
+        /**
+         * Add quick lab order
+         * @param {string} name - Lab name
+         * @param {number} cost - Lab cost
+         * @param {string} description - Lab description
+         */
+        function addQuickLabOrder(name, cost, description) {
+            if (window.additionalLabsManager) {
+                window.additionalLabsManager.addQuickLabOrder(name, cost, description);
+            }
+        }
+
+        /**
+         * Add custom lab order
+         */
+        function addCustomLabOrder() {
+            if (window.additionalLabsManager) {
+                window.additionalLabsManager.addCustomLabOrder();
+            }
+        }
+
+        /**
+         * Clear custom lab form
+         */
+        function clearCustomLabForm() {
+            if (window.additionalLabsManager) {
+                window.additionalLabsManager.clearCustomLabForm();
+            }
+        }
+
+        /**
+         * Toggle costs display
+         */
+        function toggleCosts() {
+            if (window.app && window.app.costManager) {
+                window.app.costManager.toggleCosts();
+            }
+        }
+
+        // ===== APPLICATION INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('Initializing Lab Order Application...');
+                window.app = new LabOrderApp();
+                console.log('Lab Order Application ready!');
+            } catch (error) {
+                ErrorHandler.handleError(error, 'DOMContentLoaded');
+                
+                // Show fallback error message
+                const fallbackMessage = document.createElement('div');
+                fallbackMessage.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: var(--status-critical);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 8px;
+                    text-align: center;
+                    z-index: 9999;
+                `;
+                fallbackMessage.innerHTML = `
+                    <h3>Application Error</h3>
+                    <p>Failed to initialize the lab orders interface. Please refresh the page.</p>
+                    <button onclick="location.reload()" style="margin-top: 10px; padding: 8px 16px; background: white; color: var(--status-critical); border: none; border-radius: 4px; cursor: pointer;">
+                        Reload Page
+                    </button>
+                `;
+                document.body.appendChild(fallbackMessage);
+            }
+        });
+
+        // ===== PROGRESSIVE WEB APP SUPPORT =====
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // In a real application, we would register a service worker here
+                console.log('Service Worker support detected - offline capabilities available');
+            });
+        }
+
+        // ===== PERFORMANCE MONITORING =====
+        if (window.performance && window.performance.mark) {
+            window.performance.mark('lab-app-script-loaded');
+        }
+
+    </script>
+</body>
+</html>
