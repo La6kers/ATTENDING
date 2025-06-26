@@ -1,0 +1,96 @@
+﻿@page "/chat"
+@layout EmptyLayout
+@rendermode InteractiveServer
+
+<PageTitle>COMPASS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudPaper Class="pa-4" Style="height: calc(100vh - 150px); display: flex; flex-direction: column;">
+        <MudText Typo="Typo.h5" Class="mb-4" Align="Align.Center">COMPASS</MudText>
+        
+        <MudPaper Class="flex-grow-1 overflow-auto pa-4" Elevation="0">
+            <div>
+                @foreach (var message in chatMessages)
+                {
+                    <div class="mb-3">
+                        <MudPaper Class="pa-3" Elevation="1" Style="@(message.IsUser ? "background-color: #f0f4f8" : "background-color: #ffffff")">
+                            <MudText Typo="Typo.body1">
+                                <MudText Typo="Typo.subtitle2" Color="@(message.IsUser ? Color.Primary : Color.Secondary)">
+                                    @(message.IsUser ? "You" : "Assistant")
+                                </MudText>
+                                @message.Text
+                            </MudText>
+                        </MudPaper>
+                    </div>
+                }
+            </div>
+        </MudPaper>
+        
+        <MudPaper Class="d-flex align-center mt-4" Elevation="0">
+            <MudTextField @bind-Value="currentMessage" 
+                         Placeholder="Describe your condition or symptoms..." 
+                         Variant="Variant.Outlined" 
+                         Immediate="true"
+                         Class="flex-grow-1 mr-2"
+                         OnKeyDown="@HandleKeyPress"
+                         Adornment="Adornment.End"
+                         AdornmentIcon="@Icons.Material.Filled.Send"
+                         AdornmentColor="Color.Primary"
+                         OnAdornmentClick="SendMessage" />
+            <MudButton Color="Color.Primary" 
+                      Variant="Variant.Filled" 
+                      OnClick="SendMessage">
+                Send
+            </MudButton>
+        </MudPaper>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string currentMessage = "";
+    private List<ChatMessage> chatMessages = new List<ChatMessage>();
+
+    protected override void OnInitialized()
+    {
+        // Add a welcome message
+        chatMessages.Add(new ChatMessage { 
+            Text = "Hello! How can I help you today?", 
+            IsUser = false 
+        });
+    }
+
+    private void SendMessage()
+    {
+        if (!string.IsNullOrWhiteSpace(currentMessage))
+        {
+            // Add user message
+            chatMessages.Add(new ChatMessage { 
+                Text = currentMessage, 
+                IsUser = true 
+            });
+            
+            string userMessage = currentMessage;
+            currentMessage = "";
+            
+            // Simulate response (in a real app, you'd call an API)
+            chatMessages.Add(new ChatMessage { 
+                Text = $"You said: {userMessage}", 
+                IsUser = false 
+            });
+        }
+    }
+    
+    private void HandleKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !args.ShiftKey)
+        {
+            SendMessage();
+        }
+    }
+
+    private class ChatMessage
+    {
+        public string Text { get; set; } = "";
+        public bool IsUser { get; set; }
+    }
+}
