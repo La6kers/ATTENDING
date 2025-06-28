@@ -1,52 +1,61 @@
 ﻿using Azure.AI.OpenAI;
 using OpenAI.Chat;
 using System.Runtime.CompilerServices;
+using OpenAIChatMessage = OpenAI.Chat.ChatMessage;
 
 namespace ClinicalIntake.Application.Implementations.Services;
-internal class AzureOpenAiChatService(AzureOpenAIClient azureOpenAIClient, string deploymentName, ChatCompletionOptions chatCompletionOptions)
+internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, string deploymentName, ChatCompletionOptions chatCompletionOptions)
 {
     private readonly AzureOpenAIClient _azureOpenAIClient = azureOpenAIClient;
     private readonly string _deploymentName = deploymentName;
     private readonly ChatCompletionOptions _chatCompletionOptions = chatCompletionOptions;
 
-    public async IAsyncEnumerable<string> GetGatherSymptomsReply(IEnumerable<string> messages, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<string> GetGatherSymptomsReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages == null || !messages.Any())
-            yield break;
+            return AsyncEnumerable.Empty<string>();
 
-        IEnumerable<ChatMessage> chatMessages = createChatMessageList(SystemChatMessages.GatherSymptoms, messages);
-        await foreach(var reply in sendChatRequest(chatMessages, cancellationToken))
-            yield return reply;
+        IEnumerable<OpenAIChatMessage> openAIChatMessages = createOpenAIChatMessageList(SystemPrompts.GatherSymptoms, messages);
+        return sendChatRequest(openAIChatMessages, cancellationToken);
     }
-
-    public async IAsyncEnumerable<string> GetClinicalSummaryReply(IEnumerable<string> messages, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<string> GetClinicalSummaryReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages == null || !messages.Any())
-            yield break;
+            return AsyncEnumerable.Empty<string>();
 
-        IEnumerable<ChatMessage> chatMessages = createChatMessageList(SystemChatMessages.ClinicalSummary, [.. messages]);
-        await foreach(var reply in sendChatRequest(chatMessages, cancellationToken))
-            yield return reply;
+        IEnumerable<OpenAIChatMessage> chatMessages = createOpenAIChatMessageList(SystemPrompts.ClinicalSummary, messages);
+        return sendChatRequest(chatMessages, cancellationToken);
     }
 
-    private static List<ChatMessage> createChatMessageList(string systemMessage, IEnumerable<string> messages)
+    private static List<OpenAIChatMessage> createOpenAIChatMessageList(string systemMessage, IEnumerable<ChatMessage> messages)
     {
-        List<ChatMessage> chatMessages = [new SystemChatMessage(systemMessage)];
-        chatMessages.AddRange(messages.Select(message => new UserChatMessage(message)));
-        return chatMessages;
+        List<OpenAIChatMessage> openAiChatMessages = [new SystemChatMessage(systemMessage)];
+
+        foreach(var message in messages)
+        {
+            OpenAIChatMessage newOpenAiChatMessage = message.Role switch
+            {
+                ChatRole.User => new UserChatMessage(message.Content),
+                ChatRole.Assistant => new AssistantChatMessage(message.Content),
+                _ => throw new ArgumentException($"Unsupported chat role: {message.Role}", nameof(message.Role))
+            };
+            openAiChatMessages.Add(newOpenAiChatMessage);
+        }
+
+        return openAiChatMessages;
     }
-    private async IAsyncEnumerable<string> sendChatRequest(IEnumerable<ChatMessage> chatMessages, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private async IAsyncEnumerable<string> sendChatRequest(IEnumerable<OpenAIChatMessage> openAIChatMessages, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         ChatClient chatClient = _azureOpenAIClient.GetChatClient(_deploymentName);
-        var response = chatClient.CompleteChatStreamingAsync(chatMessages, _chatCompletionOptions, cancellationToken);
+        var stream = chatClient.CompleteChatStreamingAsync(openAIChatMessages, _chatCompletionOptions, cancellationToken);
 
-        await foreach(var update in response.WithCancellation(cancellationToken))
+        await foreach(var update in stream.WithCancellation(cancellationToken))
             foreach(var updatePart in update.ContentUpdate)
                 if(!string.IsNullOrEmpty(updatePart.Text))
                     yield return updatePart.Text;
     }
 
-    private static class SystemChatMessages
+    private static class SystemPrompts
     {
         public const string GatherSymptoms = @"You are a clinical intake assistant. You will be asking questions that will get the patient's chief complaint, symptoms, medical history, and current medications. 
     
