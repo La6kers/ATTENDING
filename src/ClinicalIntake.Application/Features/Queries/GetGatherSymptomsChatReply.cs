@@ -6,7 +6,7 @@ using Error = SharedKernel.Error;
 namespace ClinicalIntake.Application.Features.Queries;
 public static class GetGatherSymptomsChatReply
 {
-    public record Request(IEnumerable<ChatMessage> Messages) : IRequest<Response>;
+    public record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;
     public record Response(IAsyncEnumerable<string> ChatReply);
 
     internal static IServiceCollection AddGetGatherSymptomsChatReplyFeature(this IServiceCollection services) => services.AddScoped<IRequestHandler<Request, Response>, Handler>();
@@ -19,10 +19,10 @@ public static class GetGatherSymptomsChatReply
         {
             try
             {
-                if(request.Messages == null || !request.Messages.Any())
-                    return Task.FromResult(Result.Fail<Response>(new Error(nameof(GetGatherSymptomsChatReply), "Messages cannot be null or empty.")));
+                if(request.ChatMessages == null || !request.ChatMessages.Any())
+                    return Task.FromResult(Result.Fail<Response>(new Error(nameof(GetGatherSymptomsChatReply), "Chat messages cannot be empty.")));
 
-                var chatReply = _chatService.GetReply(request.Messages, cancellationToken);
+                var chatReply = _chatService.GetReply(request.ChatMessages, cancellationToken);
                 var response = new Response(chatReply);
                 var result = Result.Ok(response);
                 return Task.FromResult(result);
