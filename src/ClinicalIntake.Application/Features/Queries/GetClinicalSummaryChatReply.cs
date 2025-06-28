@@ -2,7 +2,7 @@
 using SharedKernel;
 
 namespace ClinicalIntake.Application.Features.Queries;
-public static class GetClinicalSummary
+public static class GetClinicalSummaryChatReply
 {
     public record Request(string PatientId) : IRequest<Response>;
     public record Response(string Summary);
@@ -18,7 +18,7 @@ public static class GetClinicalSummary
             }
             catch(Exception exception)
             {
-                return Result.Fail(new SharedKernel.ExceptionalError(nameof(GetClinicalSummary), exception))
+                return Result.Fail(new SharedKernel.ExceptionalError(nameof(GetClinicalSummaryChatReply), exception))
                     .WithError("An error occurred while getting the clinical summary.");
             }
         }
