@@ -36,6 +36,5 @@ public static class GetClinicalSummaryChatReply
     internal interface IClinicalSummaryService
     {
         IAsyncEnumerable<string> GetClinicalSummary(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken);
-
     }
 }
