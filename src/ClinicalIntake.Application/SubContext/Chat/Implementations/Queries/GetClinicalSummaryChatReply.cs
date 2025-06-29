@@ -3,9 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using static ClinicalIntake.Application.SubContext.Chat.Features.Queries.GetClinicalSummaryChatReply;
 
 namespace ClinicalIntake.Application.SubContext.Chat.Implementations.Queries;
-public static class GetClinicalSummaryChatReply
+internal static class GetClinicalSummaryChatReply
 {
-    internal static IServiceCollection AddAzureOpenAIClinicalSummary(IServiceCollection services)
+    public static IServiceCollection AddAzureOpenAIClinicalSummary(this IServiceCollection services)
     {
         return services.AddScoped<IClinicalSummaryService, ChatServiceAzureOpenAI>();
     }

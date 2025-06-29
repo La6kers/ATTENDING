@@ -25,4 +25,19 @@ public class ChatController(Mediator mediator) : Controller
 
         return Ok(result.Value.StreamingChatReply);
     }
+
+    [HttpGet("GetQuickReplies")]
+    public async Task<IActionResult> GetQuickReplies([FromBody] List<ChatMessage> messages, CancellationToken cancellationToken)
+    {
+        if(messages == null || !messages.Any())
+            return BadRequest("Chat messages cannot be empty.");
+
+        var request = new GetQuickRepliesChatReply.Request(messages);
+        Result<GetQuickRepliesChatReply.Response> result = await _mediator.Send<GetQuickRepliesChatReply.Request, GetQuickRepliesChatReply.Response>(request, cancellationToken);
+
+        if(result.IsFailed)
+            return StatusCode(500, result.Errors);
+
+        return Ok(result.Value);
+    }
 }

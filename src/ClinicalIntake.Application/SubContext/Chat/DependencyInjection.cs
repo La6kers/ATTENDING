@@ -12,9 +12,9 @@ public static class DependencyInjection
     public static IServiceCollection AddSubContextClinicalIntakeChat(this IServiceCollection services)
     {
         services
-            .AddGetGatherSymptomsChatReplyFeature();
-        //.AddGetQuickRepliesChatReplyFeature()
-        //.AddGetClinicalSummaryChatReplyFeature();
+            .AddGetGatherSymptomsChatReplyFeature()
+            .AddGetQuickRepliesChatReplyFeature()
+            .AddGetClinicalSummaryChatReplyFeature();
 
         return services;
     }
@@ -39,6 +39,8 @@ public static class DependencyInjection
         });
 
         return services
-            .AddAzureOpenAIGetChatReply();
+            .AddAzureOpenAIGetChatReply()
+            .AddAzureOpenAIGetQuickReplies()
+            .AddAzureOpenAIClinicalSummary();
     }
 }

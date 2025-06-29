@@ -7,15 +7,15 @@ using ExceptionalError = SharedKernel.ExceptionalError;
 namespace ClinicalIntake.Application.SubContext.Chat.Features.Queries;
 public static class GetQuickRepliesChatReply
 {
-    public record Query(IEnumerable<ChatMessage> Messages) : IRequest<Response>;
+    public record Request(IEnumerable<ChatMessage> Messages) : IRequest<Response>;
     public record Response(IEnumerable<string> QuickReplies);
     internal static IServiceCollection AddGetQuickRepliesChatReplyFeature(this IServiceCollection services)
-        => services.AddScoped<IRequestHandler<Query, Response>, Handler>();
+        => services.AddScoped<IRequestHandler<Request, Response>, Handler>();
 
-    private class Handler(IChatService chatService) : IRequestHandler<Query, Response>
+    private class Handler(IChatService chatService) : IRequestHandler<Request, Response>
     {
         private readonly IChatService _chatService = chatService;
-        public async Task<Result<Response>> Handle(Query request, CancellationToken cancellationToken)
+        public async Task<Result<Response>> Handle(Request request, CancellationToken cancellationToken)
         {
             try
             {

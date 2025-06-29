@@ -13,12 +13,26 @@ Content-Type: application/json
 
 ### Test ChatController Send Endpoint
 GET {{ClinicalIntake.API_HostAddress}}/api/chat/send
-Content-Type: application/json
 Accept: application/json
-
+Content-Type: application/json
 [
   {
     "role": 2,
     "Content": "What are the symptoms of flu?"
+  }
+]
+
+### Test ChatController Get QuickReplies Endpoint
+GET {{ClinicalIntake.API_HostAddress}}/api/chat/getquickreplies
+Accept: application/json
+Content-Type: application/json
+[
+  {
+    "role": 2,
+    "Content": "I have a cough"
+  },
+  {
+    "role": 3,
+    "Content": "Thank you for sharing that. Let's start with a few questions:\n\n1. How long have you been experiencing the cough?\n2. Is the cough dry or productive (producing mucus)?\n3. Are there any other symptoms accompanying the cough, such as fever, shortness of breath, chest pain, or fatigue?\n4. On a scale of 1 to 10, how severe would you say the cough is?"
   }
 ]

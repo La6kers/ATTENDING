@@ -36,11 +36,8 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         }
 
         // Parse the JSON response to extract quick replies
-        var quickRepliesDto = System.Text.Json.JsonSerializer.Deserialize<QuickRepliesDto>(jsonString.ToString());
-        if(quickRepliesDto == null || quickRepliesDto.Replies == null || quickRepliesDto.Replies.Count == 0)
-            return [];
-
-        return quickRepliesDto.Replies;
+        var result = System.Text.Json.JsonSerializer.Deserialize<List<String>>(jsonString.ToString());
+        return result ?? [];
     }
     public IAsyncEnumerable<string> GetClinicalSummaryReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
@@ -154,12 +151,6 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
 
         await foreach(var chunk in stream.WithCancellation(cancellationToken))
             yield return chunk;
-    }
-
-
-    private class QuickRepliesDto()
-    {
-        public List<string> Replies { get; set; } = [];
     }
 
     private static class SystemPrompts

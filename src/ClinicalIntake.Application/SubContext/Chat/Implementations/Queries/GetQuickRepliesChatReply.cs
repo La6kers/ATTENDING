@@ -3,9 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using static ClinicalIntake.Application.SubContext.Chat.Features.Queries.GetQuickRepliesChatReply;
 
 namespace ClinicalIntake.Application.SubContext.Chat.Implementations.Queries;
-public static class GetQuickRepliesChatReply
+internal static class GetQuickRepliesChatReply
 {
-    internal static IServiceCollection AddAzureOpenAIGetQuickReplies(IServiceCollection services)
+    public static IServiceCollection AddAzureOpenAIGetQuickReplies(this IServiceCollection services)
     {
         return services.AddScoped<IChatService, ChatServiceAzureOpenAI>();
     }
