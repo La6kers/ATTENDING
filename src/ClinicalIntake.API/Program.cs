@@ -1,4 +1,6 @@
 
+using Orchestration.ServiceDefaults;
+
 namespace ClinicalIntake.API;
 
 public class Program

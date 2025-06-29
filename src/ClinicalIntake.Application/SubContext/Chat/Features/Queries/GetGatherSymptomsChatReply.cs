@@ -3,11 +3,11 @@ using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 using Error = SharedKernel.Error;
 
-namespace ClinicalIntake.Application.Features.Queries;
+namespace ClinicalIntake.Application.SubContext.Chat.Features.Queries;
 public static class GetGatherSymptomsChatReply
 {
     public record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;
-    public record Response(IAsyncEnumerable<string> ChatReply);
+    public record Response(StreamingChatReply StreamingChatReply);
 
     internal static IServiceCollection AddGetGatherSymptomsChatReplyFeature(this IServiceCollection services) => services.AddScoped<IRequestHandler<Request, Response>, Handler>();
 
@@ -37,6 +37,6 @@ public static class GetGatherSymptomsChatReply
 
     internal interface IChatService
     {
-        IAsyncEnumerable<string> GetReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken);
+        StreamingChatReply GetReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken);
     }
 }

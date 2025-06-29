@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 
-namespace ClinicalIntake.Application.Features.Queries;
+namespace ClinicalIntake.Application.SubContext.Chat.Features.Queries;
 public static class GetClinicalSummaryChatReply
 {
     public record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;
@@ -36,5 +36,6 @@ public static class GetClinicalSummaryChatReply
     internal interface IClinicalSummaryService
     {
         IAsyncEnumerable<string> GetClinicalSummary(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken);
+
     }
 }
