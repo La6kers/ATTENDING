@@ -1,6 +1,24 @@
 @ClinicalIntake.API_HostAddress = http://localhost:5276
 
-GET {{ClinicalIntake.API_HostAddress}}/weatherforecast/
+### Test ChatController Send Endpoint
+GET {{ClinicalIntake.API_HostAddress}}/api/chat/send
+Accept: application/json
+Content-Type: application/json
+[
+  {
+    "role": 2,
+    "Content": "I have a cough"
+  }
+]
+
+### Test ChatController Send Endpoint
+GET {{ClinicalIntake.API_HostAddress}}/api/chat/send
+Content-Type: application/json
 Accept: application/json
 
-###
+[
+  {
+    "role": 2,
+    "Content": "What are the symptoms of flu?"
+  }
+]

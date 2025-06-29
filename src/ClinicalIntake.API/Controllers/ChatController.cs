@@ -1,18 +1,28 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ClinicalIntake.Application.SubContext.Chat;
+using ClinicalIntake.Application.SubContext.Chat.Features.Queries;
+using FluentResults;
+using Microsoft.AspNetCore.Mvc;
+using SharedKernel;
 
 namespace ClinicalIntake.API.Controllers;
-public class ChatController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class ChatController(Mediator mediator) : Controller
 {
-    public async Task<SendResponse> Send(IEnumerable<string> messages)
+    private readonly Mediator _mediator = mediator;
+
+    [HttpGet("Send")]
+    public async Task<IActionResult> Send([FromBody] List<ChatMessage> messages, CancellationToken cancellationToken)
     {
-        var response = new SendResponse(
-            Reply: "",
-            QuickReplies: new[] { "" },
-            ClinicalSummary: ""
-        );
+        if(messages == null || !messages.Any())
+            return BadRequest("Chat messages cannot be empty.");
 
-        return await Task.FromResult(response);
+        var request = new GetGatherSymptomsChatReply.Request(messages);
+        Result<GetGatherSymptomsChatReply.Response> result = await _mediator.Send<GetGatherSymptomsChatReply.Request, GetGatherSymptomsChatReply.Response>(request, cancellationToken);
+
+        if(result.IsFailed)
+            return StatusCode(500, result.Errors);
+
+        return Ok(result.Value.StreamingChatReply);
     }
-
-    public record SendResponse(string Reply, IEnumerable<string> QuickReplies, string ClinicalSummary);
 }

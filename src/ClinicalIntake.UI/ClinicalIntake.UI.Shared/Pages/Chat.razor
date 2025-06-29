@@ -2,6 +2,8 @@
 @layout EmptyLayout
 @rendermode InteractiveServer
 
+@inject HttpClient Http
+
 <PageTitle>COMPASS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
@@ -62,7 +64,7 @@
         });
     }
 
-    private void SendMessage()
+    private async Task SendMessage()
     {
         if (!string.IsNullOrWhiteSpace(currentMessage))
         {
@@ -75,25 +77,53 @@
             string userMessage = currentMessage;
             currentMessage = "";
             
-            // Simulate response (in a real app, you'd call an API)
-            chatMessages.Add(new ChatMessage { 
-                Text = $"You said: {userMessage}", 
-                IsUser = false 
-            });
+            try
+            {
+                // Call the API to get the assistant's reply
+                var response = await Http.PostAsJsonAsync("api/chat/send", chatMessages);
+                if (response.IsSuccessStatusCode)
+                {
+                    var reply = await response.Content.ReadFromJsonAsync<StreamingChatReply>();
+                    if (reply != null)
+                    {
+                        chatMessages.Add(new ChatMessage { 
+                            Text = reply.Text, 
+                            IsUser = false 
+                        });
+                    }
+                }
+                else
+                {
+                    chatMessages.Add(new ChatMessage { 
+                        Text = "An error occurred while getting a reply.", 
+                        IsUser = false 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                chatMessages.Add(new ChatMessage { 
+                    Text = $"Error: {ex.Message}", 
+                    IsUser = false 
+                });
+            }
         }
     }
     
-    private void HandleKeyPress(KeyboardEventArgs args)
+    private async void HandleKeyPress(KeyboardEventArgs args)
     {
         if (args.Key == "Enter" && !args.ShiftKey)
-        {
-            SendMessage();
-        }
+            await SendMessage();
     }
 
     private class ChatMessage
     {
         public string Text { get; set; } = "";
         public bool IsUser { get; set; }
+    }
+
+    private class StreamingChatReply
+    {
+        public string Text { get; set; } = "";
     }
 }

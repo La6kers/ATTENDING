@@ -5,7 +5,7 @@ using static ClinicalIntake.Application.SubContext.Chat.Features.Queries.GetGath
 namespace ClinicalIntake.Application.SubContext.Chat.Implementations.Queries;
 internal static class GetGatherSymptomsChatReply
 {
-    internal static IServiceCollection AddAzureOpenAiGetChatReply(IServiceCollection services)
+    internal static IServiceCollection AddAzureOpenAIGetChatReply(this IServiceCollection services)
     {
         return services.AddScoped<IChatService, ChatServiceAzureOpenAI>();
     }

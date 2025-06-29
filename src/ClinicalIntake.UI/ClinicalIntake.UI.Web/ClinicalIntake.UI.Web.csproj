@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ClinicalIntake.Application\ClinicalIntake.Application.csproj" />
     <ProjectReference Include="..\..\Orchestration.ServiceDefaults\Orchestration.ServiceDefaults.csproj" />
     <ProjectReference Include="..\ClinicalIntake.UI.Shared\ClinicalIntake.UI.Shared.csproj" />
   </ItemGroup>
