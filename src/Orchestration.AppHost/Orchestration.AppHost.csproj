@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ClinicalIntake.API\ClinicalIntake.API.csproj" />
+    <ProjectReference Include="..\ClinicalIntake.UI\ClinicalIntake.UI.Web\ClinicalIntake.UI.Web.csproj" />
   </ItemGroup>
 
 </Project>

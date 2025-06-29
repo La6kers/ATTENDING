@@ -1,10 +1,8 @@
-using ClinicalIntake.Application.SubContext.Chat;
 using ClinicalIntake.UI.Shared.Services;
 using ClinicalIntake.UI.Web.Components;
 using ClinicalIntake.UI.Web.Services;
 using MudBlazor.Services;
 using Orchestration.ServiceDefaults;
-using SharedKernel;
 
 namespace ClinicalIntake.UI.Web;
 public class Program
@@ -24,10 +22,12 @@ public class Program
         // Add MudBlazor services
         builder.Services.AddMudServices();
 
-        // add application services
-        builder.Services.AddScoped<Mediator>();
-        builder.Services.AddSubContextClinicalIntakeChat()
-            .AddImplementationClinicalIntakeChatAzureOpenAI();
+        // Add environment variable for ClinicalIntake API URL
+        var clinicalIntakeApiUrl = builder.Configuration["ClinicalIntakeApiUrl"];
+        if(string.IsNullOrEmpty(clinicalIntakeApiUrl))
+            throw new InvalidOperationException("The ClinicalIntakeApiUrl environment variable is not set.");
+
+        builder.Services.AddHttpClient("ClinicalIntakeApi", client => client.BaseAddress = new Uri(clinicalIntakeApiUrl));
 
         var app = builder.Build();
 

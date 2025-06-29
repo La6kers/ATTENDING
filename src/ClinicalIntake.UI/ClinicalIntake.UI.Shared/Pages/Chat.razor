@@ -2,7 +2,9 @@
 @layout EmptyLayout
 @rendermode InteractiveServer
 
-@inject HttpClient Http
+@using Microsoft.Extensions.Http
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime JSRuntime
 
 <PageTitle>COMPASS</PageTitle>
 
@@ -13,7 +15,7 @@
             <MudText Typo="Typo.h5" Align="Align.Center">COMPASS</MudText>
         </div>
         
-        <MudPaper Class="flex-grow-1 overflow-auto pa-4" Elevation="0">
+        <MudPaper Class="flex-grow-1 overflow-auto pa-4" Elevation="0" id="chatContainer">
             <div>
                 @foreach (var message in chatMessages)
                 {
@@ -28,23 +30,23 @@
                         </MudPaper>
                     </div>
                 }
+                <div id="scrollTarget"></div>
             </div>
         </MudPaper>
         
         <MudPaper Class="d-flex align-center mt-4" Elevation="0">
-            <MudTextField @bind-Value="currentMessage" 
+            <MudTextField @bind-value="currentMessage" 
                          Placeholder="Describe your condition or symptoms..." 
                          Variant="Variant.Outlined" 
-                         Immediate="true"
                          Class="flex-grow-1 mr-2"
-                         OnKeyDown="@HandleKeyPress"
-                         Adornment="Adornment.End"
-                         AdornmentIcon="@Icons.Material.Filled.Send"
-                         AdornmentColor="Color.Primary"
-                         OnAdornmentClick="SendMessage" />
+                         OnKeyDown="@HandleKeyPress" 
+                         Immediate="true"
+                         TextUpdateSuppression="false"
+                         Clearable="true" />
             <MudButton Color="Color.Primary" 
-                      Variant="Variant.Filled" 
-                      OnClick="SendMessage">
+                      Variant="Variant.Filled"
+                      OnClick="SendMessage"
+                      Disabled="isLoading">
                 Send
             </MudButton>
         </MudPaper>
@@ -52,69 +54,129 @@
 </MudContainer>
 
 @code {
-    private string currentMessage = "";
-    private List<ChatMessage> chatMessages = new List<ChatMessage>();
+    private string currentMessage = string.Empty;
+    private List<ChatMessage> chatMessages = [];
+    private HttpClient Http => HttpClientFactory.CreateClient("ClinicalIntakeApi");
+    private bool isLoading = false;
 
     protected override void OnInitialized()
     {
-        // Add a welcome message
         chatMessages.Add(new ChatMessage { 
-            Text = "Hello! How can I help you today?", 
+            Text = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider.", 
             IsUser = false 
         });
+    }
+
+    private async Task ScrollToBottom()
+    {
+        await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");
     }
 
     private async Task SendMessage()
     {
         if (!string.IsNullOrWhiteSpace(currentMessage))
         {
+            isLoading = true; // Disable the button
+            StateHasChanged();
+
             // Add user message
-            chatMessages.Add(new ChatMessage { 
+            var currentUserChatMessage = new ChatMessage() { 
                 Text = currentMessage, 
-                IsUser = true 
-            });
-            
-            string userMessage = currentMessage;
+                IsUser = true
+            };
+
+            chatMessages.Add(currentUserChatMessage);
+
             currentMessage = "";
-            
+            StateHasChanged();
+
+            await ScrollToBottom();
+
             try
             {
-                // Call the API to get the assistant's reply
-                var response = await Http.PostAsJsonAsync("api/chat/send", chatMessages);
-                if (response.IsSuccessStatusCode)
+                var content = chatMessages.Select(msg => new sendChatMessageDto(msg.IsUser ? 2 : 3, msg.Text));
+                var request = new HttpRequestMessage(HttpMethod.Post, "api/chat/send")
                 {
-                    var reply = await response.Content.ReadFromJsonAsync<StreamingChatReply>();
-                    if (reply != null)
+                    Content = JsonContent.Create(content)
+                };
+
+                using var httpResponse = await Http.PostAsync("api/chat/send", JsonContent.Create(content));
+                if (httpResponse.IsSuccessStatusCode)
+                {
+
+                    var newChatResponse = new ChatMessage() { IsUser = false };
+                    chatMessages.Add(newChatResponse); 
+                    StateHasChanged();
+
+                    var stream = await httpResponse.Content.ReadAsStreamAsync();
+                    using var reader = new StreamReader(stream);
+                    while(!reader.EndOfStream)
                     {
-                        chatMessages.Add(new ChatMessage { 
-                            Text = reply.Text, 
-                            IsUser = false 
-                        });
+                        var textChunksJson = reader.ReadLine();
+                        if(string.IsNullOrEmpty(textChunksJson))
+                            continue;
+
+                        // Check if the line contains metadata
+                        if (textChunksJson.Contains("\"IsComplete\":true"))
+                        {
+                            var completeConversationChatResponse = new ChatMessage() { 
+                                Text = "Conversation Completed",
+                                IsUser = false };
+                            chatMessages.Add(completeConversationChatResponse);
+                            StateHasChanged();
+
+                            break;
+                        }
+
+                        var textChunks = System.Text.Json.JsonSerializer.Deserialize<List<string?>>(textChunksJson) ?? [];
+                        foreach (var textChunk in textChunks)
+                            if (!string.IsNullOrEmpty(textChunk))
+                            {
+                                newChatResponse.Text += textChunk;
+                                StateHasChanged();
+                                await ScrollToBottom();
+                            }
                     }
                 }
                 else
                 {
-                    chatMessages.Add(new ChatMessage { 
-                        Text = "An error occurred while getting a reply.", 
+                    var newChatResponse = new ChatMessage() 
+                    { 
+                        Text = "An error occurred while getting a reply.",
                         IsUser = false 
-                    });
+                    };
+
+                    chatMessages.Add(newChatResponse);
+                    StateHasChanged();
                 }
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                chatMessages.Add(new ChatMessage { 
-                    Text = $"Error: {ex.Message}", 
+                var chatResponse = new ChatMessage() 
+                { 
+                    Text = $"Error: {exception.Message}",
                     IsUser = false 
-                });
+                };
+                chatMessages.Add(chatResponse);
+                StateHasChanged();
             }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+
+            await ScrollToBottom(); 
         }
     }
-    
-    private async void HandleKeyPress(KeyboardEventArgs args)
+
+    private async Task HandleKeyPress(KeyboardEventArgs args)
     {
         if (args.Key == "Enter" && !args.ShiftKey)
             await SendMessage();
     }
+
+    private record sendChatMessageDto(int role, string content);
 
     private class ChatMessage
     {

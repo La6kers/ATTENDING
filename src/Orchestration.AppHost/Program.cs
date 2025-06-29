@@ -1,5 +1,16 @@
-var builder = DistributedApplication.CreateBuilder(args);
+internal class Program
+{
+    private static void Main(string[] args)
+    {
+        var builder = DistributedApplication.CreateBuilder(args);
 
-builder.AddProject<Projects.ClinicalIntake_API>("clinicalintake-api");
+        var clinicalIntakeApi = builder.AddProject<Projects.ClinicalIntake_API>("ClinicalIntake-API");
 
-builder.Build().Run();
+        builder.AddProject<Projects.ClinicalIntake_UI_Web>("ClinicalIntake-UI-Web")
+            .WithReference(clinicalIntakeApi)
+            .WaitFor(clinicalIntakeApi)
+            .WithEnvironment("ClinicalIntakeApiUrl", clinicalIntakeApi.GetEndpoint("https"));
+
+        builder.Build().Run();
+    }
+}

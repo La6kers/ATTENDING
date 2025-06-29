@@ -104,7 +104,6 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
             if(chunk == null) // Indicates an error occurred
                 yield break;
 
-
             buffer.Append(chunk);
             var content = buffer.ToString();
 
@@ -163,7 +162,7 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         3. Inquire about relevant medical history
         4. Ask about current medications
     
-        When you have collected sufficient information, say ""[FINISH]""";
+        When you have collected sufficient information, say ""[FINISH]"" and nothing else.";
         public const string QuickReplies = @"You will be generating quick replies based on the user's input. Your replies should be concise and relevant to the context of the conversation.
         The replies should be in the form of a list of strings, each representing a quick reply option for the user.
         return the list of quick replies as a JSON array.";
