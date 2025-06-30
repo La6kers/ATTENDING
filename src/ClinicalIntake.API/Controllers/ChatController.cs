@@ -61,4 +61,18 @@ public class ChatController(Mediator mediator) : Controller
 
         return Ok(result.Value);
     }
+
+    [HttpPost()]
+    public async Task<IActionResult> GetClinicalSummary([FromBody] List<ChatMessage> messages, CancellationToken cancellationToken)
+    {
+        if(messages == null || !messages.Any())
+            return BadRequest("Chat messages cannot be empty.");
+
+        var request = new GetClinicalSummaryChatReply.Request(messages);
+        Result<GetClinicalSummaryChatReply.Response> result = await _mediator.Send<GetClinicalSummaryChatReply.Request, GetClinicalSummaryChatReply.Response>(request, cancellationToken);
+        if(result.IsFailed)
+            return Problem(result.Errors.Select(e => e.Message).ToString(), statusCode: StatusCodes.Status500InternalServerError);
+
+        return Ok(result.Value);
+    }
 }
