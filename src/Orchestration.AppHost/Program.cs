@@ -7,6 +7,7 @@ internal class Program
         var clinicalIntakeApi = builder.AddProject<Projects.ClinicalIntake_API>("clinical-intake-api");
 
         builder.AddProject<Projects.ClinicalIntake_UI_Web>("clinical-intake-ui-web")
+            .WithExternalHttpEndpoints()
             .WithReference(clinicalIntakeApi)
             .WaitFor(clinicalIntakeApi)
             .WithEnvironment("ClinicalIntakeApiUrl", clinicalIntakeApi.GetEndpoint("https"));
