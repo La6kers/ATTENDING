@@ -52,6 +52,18 @@
                 Send
             </MudButton>
         </MudPaper>
+
+        @if (quickReplies.Any())
+        {
+            <MudPaper Class="d-flex flex-wrap mt-2" Elevation="0">
+                @foreach (var reply in quickReplies)
+                {
+                    <MudButton Variant="Variant.Outlined" Class="m-1" OnClick="() => HandleQuickReply(reply)">
+                        @reply
+                    </MudButton>
+                }
+            </MudPaper>
+        }
     </MudPaper>
 </MudContainer>
 
@@ -64,6 +76,7 @@
     private const string CONVERSATION_COMPLETED_MARKER = "[FINISH]";
     private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider.";
     private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
+    private List<string> quickReplies = new();
 
 
     protected override void OnInitialized()
@@ -125,6 +138,7 @@
             var newChatResponse = new ChatMessage { IsUser = false };
             chatMessages.Add(newChatResponse);
             StateHasChanged();
+            await ScrollToBottom();
 
             using var stream = await response.Content.ReadAsStreamAsync();
             await ProcessStreamingResponse(stream, newChatResponse);
@@ -154,16 +168,55 @@
 
             if (newChatResponse.Text.Contains(CONVERSATION_COMPLETED_MARKER))
             {
+                quickReplies.Clear();
                 isConversationComplete = true;
                 chatMessages.Remove(newChatResponse);
                 AddCompletionMessage();
-                await GetClinicalSummary();
-                break;
+                StateHasChanged();
+                await ScrollToBottom();
+
+                await FetchClinicalSummary();
+                return;
             }
+        }
+
+        await FetchQuickReplies();
+    }
+
+    private async Task FetchQuickReplies()
+    {
+        try
+        {
+            var content = PrepareChatContent();
+            var response = await Http.PostAsync("api/chat/getquickreplies", JsonContent.Create(content));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var quickRepliesResponse = await response.Content.ReadFromJsonAsync<List<string>>();
+                if (quickRepliesResponse != null)
+                    quickReplies = quickRepliesResponse;
+            }
+            else
+                quickReplies.Clear();
+        }
+        catch (Exception ex)
+        {
+            quickReplies.Clear();
+            AddErrorMessage($"Error fetching quick replies: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
         }
     }
 
-    private async Task GetClinicalSummary()
+    private async Task HandleQuickReply(string reply)
+    {
+        currentMessage = reply;
+        await SendMessage();
+    }
+
+    private async Task FetchClinicalSummary()
     {
         try
         {
@@ -185,6 +238,7 @@
         finally
         {
             StateHasChanged();
+            await ScrollToBottom();
         }
     }
 
@@ -222,7 +276,6 @@
         };
 
         chatMessages.Add(completeConversationChatResponse);
-        StateHasChanged();
     }
 
     private void AddSummaryMessage(string summary)

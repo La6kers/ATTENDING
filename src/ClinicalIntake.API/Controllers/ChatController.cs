@@ -59,7 +59,7 @@ public class ChatController(Mediator mediator) : Controller
         if(result.IsFailed)
             return StatusCode(500, result.Errors);
 
-        return Ok(result.Value);
+        return Ok(result.Value.QuickReplies);
     }
 
     [HttpPost()]
