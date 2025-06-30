@@ -4,9 +4,9 @@ internal class Program
     {
         var builder = DistributedApplication.CreateBuilder(args);
 
-        var clinicalIntakeApi = builder.AddProject<Projects.ClinicalIntake_API>("ClinicalIntake-API");
+        var clinicalIntakeApi = builder.AddProject<Projects.ClinicalIntake_API>("clinical-intake-api");
 
-        builder.AddProject<Projects.ClinicalIntake_UI_Web>("ClinicalIntake-UI-Web")
+        builder.AddProject<Projects.ClinicalIntake_UI_Web>("clinical-intake-ui-web")
             .WithReference(clinicalIntakeApi)
             .WaitFor(clinicalIntakeApi)
             .WithEnvironment("ClinicalIntakeApiUrl", clinicalIntakeApi.GetEndpoint("https"));
