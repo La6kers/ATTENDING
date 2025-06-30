@@ -212,6 +212,9 @@
 
     private async Task HandleQuickReply(string reply)
     {
+        quickReplies.Clear();
+        StateHasChanged();
+        
         currentMessage = reply;
         await SendMessage();
     }
