@@ -1,10 +1,11 @@
-﻿using FluentResults;
+﻿using ClinicalIntake.Application.Chat;
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 using Error = SharedKernel.Error;
 using ExceptionalError = SharedKernel.ExceptionalError;
 
-namespace ClinicalIntake.Application.SubContext.Chat.Features.Queries;
+namespace ClinicalIntake.Application.Chat.Features.Queries;
 public static class GetQuickRepliesChatReply
 {
     public record Request(IEnumerable<ChatMessage> Messages) : IRequest<Response>;

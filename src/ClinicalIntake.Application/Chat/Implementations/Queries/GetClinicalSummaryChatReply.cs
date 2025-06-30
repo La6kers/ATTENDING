@@ -1,8 +1,9 @@
-﻿using ClinicalIntake.Application.SubContext.Chat.Implementations.Services;
+﻿using ClinicalIntake.Application.Chat;
+using ClinicalIntake.Application.Chat.Implementations.Services;
 using Microsoft.Extensions.DependencyInjection;
-using static ClinicalIntake.Application.SubContext.Chat.Features.Queries.GetClinicalSummaryChatReply;
+using static ClinicalIntake.Application.Chat.Features.Queries.GetClinicalSummaryChatReply;
 
-namespace ClinicalIntake.Application.SubContext.Chat.Implementations.Queries;
+namespace ClinicalIntake.Application.Chat.Implementations.Queries;
 internal static class GetClinicalSummaryChatReply
 {
     public static IServiceCollection AddAzureOpenAIClinicalSummary(this IServiceCollection services)

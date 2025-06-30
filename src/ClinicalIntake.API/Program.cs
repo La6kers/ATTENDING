@@ -1,5 +1,5 @@
 
-using ClinicalIntake.Application.SubContext.Chat;
+using ClinicalIntake.Application.Chat;
 using Orchestration.ServiceDefaults;
 using SharedKernel;
 

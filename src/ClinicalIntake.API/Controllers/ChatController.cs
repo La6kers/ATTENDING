@@ -1,5 +1,5 @@
-﻿using ClinicalIntake.Application.SubContext.Chat;
-using ClinicalIntake.Application.SubContext.Chat.Features.Queries;
+﻿using ClinicalIntake.Application.Chat;
+using ClinicalIntake.Application.Chat.Features.Queries;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using SharedKernel;

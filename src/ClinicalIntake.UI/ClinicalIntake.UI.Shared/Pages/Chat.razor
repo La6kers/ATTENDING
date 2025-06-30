@@ -42,11 +42,12 @@
                          OnKeyDown="@HandleKeyPress" 
                          Immediate="true"
                          TextUpdateSuppression="false"
-                         Clearable="true" />
+                         Clearable="true" 
+                         Disabled="isConversationComplete"/>
             <MudButton Color="Color.Primary" 
                       Variant="Variant.Filled"
                       OnClick="SendMessage"
-                      Disabled="isLoading">
+                      Disabled="isLoading || isConversationComplete">
                 Send
             </MudButton>
         </MudPaper>
@@ -58,11 +59,16 @@
     private List<ChatMessage> chatMessages = [];
     private HttpClient Http => HttpClientFactory.CreateClient("ClinicalIntakeApi");
     private bool isLoading = false;
+    private bool isConversationComplete = false;
+    private const string CONVERSATION_COMPLETED_MARKER = "[FINISH]";
+    private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider.";
+    private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
+
 
     protected override void OnInitialized()
     {
         chatMessages.Add(new ChatMessage { 
-            Text = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider.", 
+            Text = WELCOME_MESSAGE,
             IsUser = false 
         });
     }
@@ -74,100 +80,129 @@
 
     private async Task SendMessage()
     {
-        if (!string.IsNullOrWhiteSpace(currentMessage))
+        if (string.IsNullOrWhiteSpace(currentMessage)) return;
+
+        isLoading = true;
+        StateHasChanged();
+
+        AddUserMessage();
+        await ScrollToBottom();
+
+        try
         {
-            isLoading = true; // Disable the button
-            StateHasChanged();
-
-            // Add user message
-            var currentUserChatMessage = new ChatMessage() { 
-                Text = currentMessage, 
-                IsUser = true
-            };
-
-            chatMessages.Add(currentUserChatMessage);
-
-            currentMessage = "";
-            StateHasChanged();
-
-            await ScrollToBottom();
-
-            try
-            {
-                var content = chatMessages.Select(msg => new sendChatMessageDto(msg.IsUser ? 2 : 3, msg.Text));
-                var request = new HttpRequestMessage(HttpMethod.Post, "api/chat/send")
-                {
-                    Content = JsonContent.Create(content)
-                };
-
-                using var httpResponse = await Http.PostAsync("api/chat/send", JsonContent.Create(content));
-                if (httpResponse.IsSuccessStatusCode)
-                {
-
-                    var newChatResponse = new ChatMessage() { IsUser = false };
-                    chatMessages.Add(newChatResponse); 
-                    StateHasChanged();
-
-                    var stream = await httpResponse.Content.ReadAsStreamAsync();
-                    using var reader = new StreamReader(stream);
-                    while(!reader.EndOfStream)
-                    {
-                        var textChunksJson = reader.ReadLine();
-                        if(string.IsNullOrEmpty(textChunksJson))
-                            continue;
-
-                        // Check if the line contains metadata
-                        if (textChunksJson.Contains("\"IsComplete\":true"))
-                        {
-                            var completeConversationChatResponse = new ChatMessage() { 
-                                Text = "Conversation Completed",
-                                IsUser = false };
-                            chatMessages.Add(completeConversationChatResponse);
-                            StateHasChanged();
-
-                            break;
-                        }
-
-                        var textChunks = System.Text.Json.JsonSerializer.Deserialize<List<string?>>(textChunksJson) ?? [];
-                        foreach (var textChunk in textChunks)
-                            if (!string.IsNullOrEmpty(textChunk))
-                            {
-                                newChatResponse.Text += textChunk;
-                                StateHasChanged();
-                                await ScrollToBottom();
-                            }
-                    }
-                }
-                else
-                {
-                    var newChatResponse = new ChatMessage() 
-                    { 
-                        Text = "An error occurred while getting a reply.",
-                        IsUser = false 
-                    };
-
-                    chatMessages.Add(newChatResponse);
-                    StateHasChanged();
-                }
-            }
-            catch (Exception exception)
-            {
-                var chatResponse = new ChatMessage() 
-                { 
-                    Text = $"Error: {exception.Message}",
-                    IsUser = false 
-                };
-                chatMessages.Add(chatResponse);
-                StateHasChanged();
-            }
-            finally
-            {
-                isLoading = false;
-                StateHasChanged();
-            }
-
-            await ScrollToBottom(); 
+            var content = PrepareChatContent();
+            var response = await SendChatRequest(content);
+            await HandleChatResponse(response);
         }
+        catch (Exception exception)
+        {
+            HandleError(exception);
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+
+        await ScrollToBottom();
+    }
+
+    private void AddUserMessage()
+    {
+        var currentUserChatMessage = new ChatMessage
+        {
+            Text = currentMessage,
+            IsUser = true
+        };
+
+        chatMessages.Add(currentUserChatMessage);
+        currentMessage = string.Empty;
+        StateHasChanged();
+    }
+
+    private IEnumerable<sendChatMessageDto> PrepareChatContent()
+    {
+        return chatMessages.Select(msg => new sendChatMessageDto(msg.IsUser ? 2 : 3, msg.Text));
+    }
+
+    private async Task<HttpResponseMessage> SendChatRequest(IEnumerable<sendChatMessageDto> content)
+    {
+        return await Http.PostAsync("api/chat/send", JsonContent.Create(content));
+    }
+
+    private async Task HandleChatResponse(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            var newChatResponse = new ChatMessage { IsUser = false };
+            chatMessages.Add(newChatResponse);
+            StateHasChanged();
+
+            var stream = await response.Content.ReadAsStreamAsync();
+            await ProcessStreamingResponse(stream, newChatResponse);
+        }
+        else
+        {
+            AddErrorMessage("An error occurred while getting a reply.");
+        }
+    }
+
+    private async Task ProcessStreamingResponse(Stream stream, ChatMessage newChatResponse)
+    {
+        using var reader = new StreamReader(stream);
+        while (!reader.EndOfStream)
+        {
+            var textChunksJson = await reader.ReadLineAsync();
+            if (string.IsNullOrEmpty(textChunksJson)) continue;
+
+            var textChunks = System.Text.Json.JsonSerializer.Deserialize<List<string?>>(textChunksJson) ?? new List<string?>();
+            foreach (var textChunk in textChunks)
+            {
+                if (!string.IsNullOrEmpty(textChunk))
+                {
+                    newChatResponse.Text += textChunk;
+                    StateHasChanged();
+                    await ScrollToBottom();
+                }
+            }
+
+            if (newChatResponse.Text.Contains(CONVERSATION_COMPLETED_MARKER))
+            {
+                isConversationComplete = true;
+                chatMessages.Remove(newChatResponse);
+                AddCompletionMessage();
+                break;
+            }
+        }
+    }
+
+    private void HandleError(Exception exception)
+    {
+        AddErrorMessage($"Error: {exception.Message}");
+    }
+
+    private void AddErrorMessage(string message)
+    {
+        var chatResponse = new ChatMessage
+        {
+            Text = message,
+            IsUser = false
+        };
+
+        chatMessages.Add(chatResponse);
+        StateHasChanged();
+    }
+
+    private void AddCompletionMessage()
+    {
+        var completeConversationChatResponse = new ChatMessage
+        {
+            Text = GOODBYE_MESSAGE,
+            IsUser = false
+        };
+
+        chatMessages.Add(completeConversationChatResponse);
+        StateHasChanged();
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs args)

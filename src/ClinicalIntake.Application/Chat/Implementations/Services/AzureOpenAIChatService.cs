@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using OpenAIChatMessage = OpenAI.Chat.ChatMessage;
 
-namespace ClinicalIntake.Application.SubContext.Chat.Implementations.Services;
+namespace ClinicalIntake.Application.Chat.Implementations.Services;
 internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, string deploymentName, ChatCompletionOptions chatCompletionOptions)
 {
     private readonly AzureOpenAIClient _azureOpenAIClient = azureOpenAIClient;
@@ -36,7 +36,7 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         }
 
         // Parse the JSON response to extract quick replies
-        var result = System.Text.Json.JsonSerializer.Deserialize<List<String>>(jsonString.ToString());
+        var result = System.Text.Json.JsonSerializer.Deserialize<List<string>>(jsonString.ToString());
         return result ?? [];
     }
     public IAsyncEnumerable<string> GetClinicalSummaryReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)

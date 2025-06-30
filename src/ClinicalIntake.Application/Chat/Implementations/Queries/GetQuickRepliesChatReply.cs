@@ -1,8 +1,9 @@
-﻿using ClinicalIntake.Application.SubContext.Chat.Implementations.Services;
+﻿using ClinicalIntake.Application.Chat;
+using ClinicalIntake.Application.Chat.Implementations.Services;
 using Microsoft.Extensions.DependencyInjection;
-using static ClinicalIntake.Application.SubContext.Chat.Features.Queries.GetQuickRepliesChatReply;
+using static ClinicalIntake.Application.Chat.Features.Queries.GetQuickRepliesChatReply;
 
-namespace ClinicalIntake.Application.SubContext.Chat.Implementations.Queries;
+namespace ClinicalIntake.Application.Chat.Implementations.Queries;
 internal static class GetQuickRepliesChatReply
 {
     public static IServiceCollection AddAzureOpenAIGetQuickReplies(this IServiceCollection services)

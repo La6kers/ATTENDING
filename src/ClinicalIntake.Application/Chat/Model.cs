@@ -1,4 +1,4 @@
-﻿namespace ClinicalIntake.Application.SubContext.Chat;
+﻿namespace ClinicalIntake.Application.Chat;
 public record ChatMessage(ChatRole Role, string Content);
 public record StreamingChatReply(IAsyncEnumerable<string> TextChunks, Task<bool> IsConversationComplete);
 

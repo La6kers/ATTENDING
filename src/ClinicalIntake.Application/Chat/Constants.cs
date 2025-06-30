@@ -1,4 +1,4 @@
-﻿namespace ClinicalIntake.Application.SubContext.Chat;
+﻿namespace ClinicalIntake.Application.Chat;
 
 internal static class Constants
 {

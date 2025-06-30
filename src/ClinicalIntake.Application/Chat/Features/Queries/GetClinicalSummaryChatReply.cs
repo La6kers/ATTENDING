@@ -1,8 +1,9 @@
-﻿using FluentResults;
+﻿using ClinicalIntake.Application.Chat;
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 
-namespace ClinicalIntake.Application.SubContext.Chat.Features.Queries;
+namespace ClinicalIntake.Application.Chat.Features.Queries;
 public static class GetClinicalSummaryChatReply
 {
     public record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;

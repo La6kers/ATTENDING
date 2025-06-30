@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 using Error = SharedKernel.Error;
 
-namespace ClinicalIntake.Application.SubContext.Chat.Features.Queries;
+namespace ClinicalIntake.Application.Chat.Features.Queries;
 public static class GetGatherSymptomsChatReply
 {
     public record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;
