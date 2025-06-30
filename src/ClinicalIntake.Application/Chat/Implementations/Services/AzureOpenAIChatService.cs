@@ -19,7 +19,7 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         IEnumerable<OpenAIChatMessage> openAIChatMessages = createOpenAIChatMessageList(SystemPrompts.GatherSymptoms, messages);
         return createStreamingChatResult(openAIChatMessages, cancellationToken);
     }
-    public async Task<IEnumerable<string>> GetQuickRepliesAsync(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
+    public async Task<IEnumerable<string>> GetQuickReplies(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages == null || !messages.Any())
             return [];
@@ -39,13 +39,23 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         var result = System.Text.Json.JsonSerializer.Deserialize<List<string>>(jsonString.ToString());
         return result ?? [];
     }
-    public IAsyncEnumerable<string> GetClinicalSummaryReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
+    public async Task<string> GetClinicalSummaryReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
-        if(messages == null || !messages.Any())
-            return AsyncEnumerable.Empty<string>();
+        if(messages is null || !messages.Any())
+            return string.Empty;
 
         IEnumerable<OpenAIChatMessage> chatMessages = createOpenAIChatMessageList(SystemPrompts.ClinicalSummary, messages);
-        return sendChatRequest(chatMessages, cancellationToken);
+        var stringBuilder = new StringBuilder();
+
+        await foreach(var chunk in sendChatRequest(chatMessages, cancellationToken).WithCancellation(cancellationToken))
+        {
+            if(string.IsNullOrEmpty(chunk))
+                continue;
+
+            stringBuilder.Append(chunk);
+        }
+
+        return stringBuilder.ToString();
     }
 
     private static List<OpenAIChatMessage> createOpenAIChatMessageList(string systemMessage, IEnumerable<ChatMessage> messages)

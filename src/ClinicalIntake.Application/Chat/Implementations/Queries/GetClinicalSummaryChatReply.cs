@@ -1,5 +1,4 @@
-﻿using ClinicalIntake.Application.Chat;
-using ClinicalIntake.Application.Chat.Implementations.Services;
+﻿using ClinicalIntake.Application.Chat.Implementations.Services;
 using Microsoft.Extensions.DependencyInjection;
 using static ClinicalIntake.Application.Chat.Features.Queries.GetClinicalSummaryChatReply;
 
@@ -15,7 +14,7 @@ internal static class GetClinicalSummaryChatReply
     {
         private readonly AzureOpenAIChatService _azureOpenAiChatService = azureOpenAIChatService;
 
-        public IAsyncEnumerable<string> GetClinicalSummary(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken) =>
-            _azureOpenAiChatService.GetClinicalSummaryReply(messages, cancellationToken);
+        public async Task<string> GetClinicalSummary(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken) =>
+            await _azureOpenAiChatService.GetClinicalSummaryReply(messages, cancellationToken);
     }
 }

@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 
 @using Microsoft.Extensions.Http
+@using System.Text.Json
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JSRuntime
 
@@ -107,19 +108,6 @@
         await ScrollToBottom();
     }
 
-    private void AddUserMessage()
-    {
-        var currentUserChatMessage = new ChatMessage
-        {
-            Text = currentMessage,
-            IsUser = true
-        };
-
-        chatMessages.Add(currentUserChatMessage);
-        currentMessage = string.Empty;
-        StateHasChanged();
-    }
-
     private IEnumerable<sendChatMessageDto> PrepareChatContent()
     {
         return chatMessages.Select(msg => new sendChatMessageDto(msg.IsUser ? 2 : 3, msg.Text));
@@ -138,7 +126,7 @@
             chatMessages.Add(newChatResponse);
             StateHasChanged();
 
-            var stream = await response.Content.ReadAsStreamAsync();
+            using var stream = await response.Content.ReadAsStreamAsync();
             await ProcessStreamingResponse(stream, newChatResponse);
         }
         else
@@ -155,30 +143,62 @@
             var textChunksJson = await reader.ReadLineAsync();
             if (string.IsNullOrEmpty(textChunksJson)) continue;
 
-            var textChunks = System.Text.Json.JsonSerializer.Deserialize<List<string?>>(textChunksJson) ?? new List<string?>();
+            var textChunks = JsonSerializer.Deserialize<List<string?>>(textChunksJson) ?? [];
             foreach (var textChunk in textChunks)
-            {
                 if (!string.IsNullOrEmpty(textChunk))
                 {
                     newChatResponse.Text += textChunk;
                     StateHasChanged();
                     await ScrollToBottom();
                 }
-            }
 
             if (newChatResponse.Text.Contains(CONVERSATION_COMPLETED_MARKER))
             {
                 isConversationComplete = true;
                 chatMessages.Remove(newChatResponse);
                 AddCompletionMessage();
+                await GetClinicalSummary();
                 break;
             }
         }
     }
 
-    private void HandleError(Exception exception)
+    private async Task GetClinicalSummary()
     {
-        AddErrorMessage($"Error: {exception.Message}");
+        try
+        {
+            var content = PrepareChatContent();
+            var response = await Http.PostAsync("api/chat/getclinicalsummary", JsonContent.Create(content));
+
+            if (response.IsSuccessStatusCode)
+            {
+                var summary = await response.Content.ReadAsStringAsync();
+                AddSummaryMessage(summary);
+            }
+            else
+                AddErrorMessage("Failed to retrieve clinical summary.");
+        }
+        catch (Exception ex)
+        {
+            AddErrorMessage($"Error: {ex.Message}");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private void AddUserMessage()
+    {
+        var currentUserChatMessage = new ChatMessage
+        {
+            Text = currentMessage,
+            IsUser = true
+        };
+
+        chatMessages.Add(currentUserChatMessage);
+        currentMessage = string.Empty;
+        StateHasChanged();
     }
 
     private void AddErrorMessage(string message)
@@ -205,10 +225,27 @@
         StateHasChanged();
     }
 
+    private void AddSummaryMessage(string summary)
+    {
+        var summaryMessage = new ChatMessage
+        {
+            Text = $"Clinical Summary:\n{summary}",
+            IsUser = false
+        };
+
+        chatMessages.Add(summaryMessage);
+        StateHasChanged();
+    }
+
     private async Task HandleKeyPress(KeyboardEventArgs args)
     {
         if (args.Key == "Enter" && !args.ShiftKey)
             await SendMessage();
+    }
+
+    private void HandleError(Exception exception)
+    {
+        AddErrorMessage($"Error: {exception.Message}");
     }
 
     private record sendChatMessageDto(int role, string content);

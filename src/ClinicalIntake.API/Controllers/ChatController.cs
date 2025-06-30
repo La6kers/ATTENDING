@@ -65,7 +65,7 @@ public class ChatController(Mediator mediator) : Controller
     [HttpPost()]
     public async Task<IActionResult> GetClinicalSummary([FromBody] List<ChatMessage> messages, CancellationToken cancellationToken)
     {
-        if(messages == null || !messages.Any())
+        if(messages is null || !messages.Any())
             return BadRequest("Chat messages cannot be empty.");
 
         var request = new GetClinicalSummaryChatReply.Request(messages);
@@ -73,6 +73,6 @@ public class ChatController(Mediator mediator) : Controller
         if(result.IsFailed)
             return Problem(result.Errors.Select(e => e.Message).ToString(), statusCode: StatusCodes.Status500InternalServerError);
 
-        return Ok(result.Value);
+        return Ok(result.Value.ClinicalSummary);
     }
 }

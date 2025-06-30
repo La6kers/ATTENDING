@@ -16,7 +16,7 @@ internal static class GetQuickRepliesChatReply
         private readonly AzureOpenAIChatService _azureOpenAiChatService = azureOpenAIChatService;
 
         public async Task<IEnumerable<string>> GetQuickReplies(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken) =>
-            await _azureOpenAiChatService.GetQuickRepliesAsync(messages, cancellationToken);
+            await _azureOpenAiChatService.GetQuickReplies(messages, cancellationToken);
 
     }
 }
