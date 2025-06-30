@@ -168,7 +168,7 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         When you have collected sufficient information, reply with a single word answer of ""[FINISH]"" and nothing else. do include both square brackets.";
         public const string QuickReplies = @"You will be generating quick replies based on the user's input. Your replies should be concise and relevant to the context of the conversation.
         The replies should be in the form of a list of strings, each representing a quick reply option from the user's point of view. The quick replies will be used to reply and answer questions from you. Attempt to make the
-        short, about 2 - 4 words long, and relevant to the conversation. Do not include any additional text or explanations.
+        short, about 2 - 4 words long, and relevant to the conversation, and should never be a question but answers. Do not include any additional text or explanations.
         Return the list of quick replies as a JSON array.";
         public const string ClinicalSummary = @"You will be summarizing the patient's chief complaint, symptoms, medical history, and current medications into a concise clinical summary in paragraph form. Provide nothing else but the clinical summary.";
     }
