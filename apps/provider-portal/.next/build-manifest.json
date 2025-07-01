@@ -32,11 +32,6 @@
       "static/chunks/main.js",
       "static/chunks/pages/imaging.js"
     ],
-    "/inbox": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/inbox.js"
-    ],
     "/labs": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
