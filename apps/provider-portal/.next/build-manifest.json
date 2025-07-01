@@ -12,6 +12,11 @@
   ],
   "rootMainFiles": [],
   "pages": {
+    "/": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/index.js"
+    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -22,10 +27,35 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/test": [
+    "/imaging": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/test.js"
+      "static/chunks/pages/imaging.js"
+    ],
+    "/inbox": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/inbox.js"
+    ],
+    "/labs": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/labs.js"
+    ],
+    "/medications": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/medications.js"
+    ],
+    "/patient-assessment": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/patient-assessment.js"
+    ],
+    "/treatment-plans": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/treatment-plans.js"
     ]
   },
   "ampFirstPages": []
