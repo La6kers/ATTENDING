@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
 import { ConversationView } from './ConversationView';
 import { ResponseComposer } from './ResponseComposer';
+import { Settings, Brain, Inbox } from 'lucide-react';
 
 export const MainContent: FC = () => {
   const { currentMessage } = useInbox();
@@ -15,10 +16,12 @@ export const MainContent: FC = () => {
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 rounded-lg bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
-            ?? Settings
+            <Settings className="w-4 h-4" />
+            Settings
           </button>
           <button className="flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600">
-            ? AI Summary
+            <Brain className="w-4 h-4" />
+            AI Summary
           </button>
         </div>
       </div>
@@ -30,7 +33,7 @@ export const MainContent: FC = () => {
         </>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center text-center text-slate-500">
-          <div className="mb-4 text-5xl">??</div>
+          <Inbox className="mb-4 w-16 h-16 text-slate-400" />
           <h3 className="mb-2 text-lg font-semibold text-slate-700">
             Welcome to Your AI-Enhanced Inbox
           </h3>

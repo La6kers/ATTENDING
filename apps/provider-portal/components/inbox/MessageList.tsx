@@ -1,30 +1,36 @@
 import * as React from 'react';
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useEffect } from 'react';
 import { useInbox } from '../../store/useInbox';
 import type { Message } from '../../store/useInbox';
 import { cn } from '../../lib/utils';
 import { Checkbox } from '../ui/checkbox';
-import { Select } from '../ui/select';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { Search, SortAsc, SortDesc } from 'lucide-react';
+import { Search, SortAsc, SortDesc, Mail, Flask, Phone, Pill } from 'lucide-react';
 
 const MessageItem: FC<{ message: Message }> = ({ message }) => {
   const { selectMessage, currentMessage, toggleMessageSelection, selectedMessages } = useInbox();
   
   const typeIcons = {
-    email: '?? Email',
-    lab: '?? Lab Result',
-    phone: '?? Phone Message',
-    refill: '?? Refill Request',
+    email: <Mail className="w-4 h-4 inline mr-1" />,
+    lab: <Flask className="w-4 h-4 inline mr-1" />,
+    phone: <Phone className="w-4 h-4 inline mr-1" />,
+    refill: <Pill className="w-4 h-4 inline mr-1" />,
+  };
+
+  const typeLabels = {
+    email: 'Email',
+    lab: 'Lab Result',
+    phone: 'Phone Message',
+    refill: 'Refill Request',
   };
 
   return (
     <div
       className={cn(
         'group relative cursor-pointer rounded-xl border border-slate-200 p-4 transition-all hover:translate-y-[-2px] hover:shadow-md',
-        message.unread && 'bg-blue-50 border-blue-500',
-        message.urgent && 'border-l-4 border-l-red-500 bg-red-50',
+        message.status === 'unread' && 'bg-blue-50 border-blue-500',
+        message.priority === 'urgent' && 'border-l-4 border-l-red-500 bg-red-50',
         currentMessage?.id === message.id && 'bg-blue-500 text-white border-blue-500',
         'mb-3'
       )}
@@ -40,23 +46,23 @@ const MessageItem: FC<{ message: Message }> = ({ message }) => {
       </div>
       
       <div className="ml-8" onClick={() => selectMessage(message)}>
-        {message.urgent && <div className="absolute right-2 top-2 h-2 w-2 rounded-full bg-emerald-500" />}
+        {message.priority === 'urgent' && <div className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
         
         <div className="mb-2 flex items-center justify-between">
-          <span className="font-semibold">{message.patientName}</span>
-          <span className="text-xs opacity-70">{message.time}</span>
+          <span className="font-semibold">{message.patientDetails.name}</span>
+          <span className="text-xs opacity-70">{new Date(message.createdAt).toLocaleTimeString()}</span>
         </div>
 
         <div className={cn(
-          'mb-2 inline-block rounded-lg px-2 py-1 text-xs font-medium',
-          currentMessage?.id === message.id ? 'bg-white/20' : {
-            'bg-blue-100 text-blue-800': message.type === 'email',
-            'bg-green-100 text-green-800': message.type === 'lab',
-            'bg-purple-100 text-purple-800': message.type === 'phone',
-            'bg-amber-100 text-amber-800': message.type === 'refill',
-          }
+          'mb-2 inline-flex items-center rounded-lg px-2 py-1 text-xs font-medium',
+          currentMessage?.id === message.id ? 'bg-white/20' : 
+          message.type === 'email' ? 'bg-blue-100 text-blue-800' :
+          message.type === 'lab' ? 'bg-green-100 text-green-800' :
+          message.type === 'phone' ? 'bg-purple-100 text-purple-800' :
+          'bg-amber-100 text-amber-800'
         )}>
           {typeIcons[message.type]}
+          {typeLabels[message.type]}
         </div>
 
         <div className="line-clamp-2 text-sm opacity-80">
@@ -80,26 +86,29 @@ export const MessageList: FC = () => {
     selectedMessages,
     selectAllMessages,
     clearSelection,
-    markSelectedAsRead,
-    archiveMessages
+    markAsRead,
+    archiveMessages,
+    fetchMessages,
+    isLoading
   } = useInbox();
+
+  // Fetch messages on mount
+  useEffect(() => {
+    fetchMessages();
+  }, []);
 
   const filteredAndSortedMessages = useMemo(() => {
     let result = messages.filter((message) => {
-      const matchesFilter = filter === 'all' 
-        ? true 
-        : filter === 'urgent' 
-          ? message.urgent 
-          : filter === 'unread' 
-            ? message.unread 
-            : message.type === filter;
+      // Filter by status (archived messages are hidden)
+      if (message.status === 'archived') return false;
 
       const matchesSearch = searchQuery 
-        ? message.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          message.preview.toLowerCase().includes(searchQuery.toLowerCase())
+        ? message.patientDetails.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          message.preview.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          message.subject.toLowerCase().includes(searchQuery.toLowerCase())
         : true;
 
-      return matchesFilter && matchesSearch;
+      return matchesSearch;
     });
 
     return result.sort((a, b) => {
@@ -108,16 +117,20 @@ export const MessageList: FC = () => {
         case 'date':
           comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           break;
-        case 'urgency':
-          comparison = Number(b.urgent) - Number(a.urgent);
+        case 'priority':
+          const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+          comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
           break;
         case 'patientName':
-          comparison = a.patientName.localeCompare(b.patientName);
+          comparison = a.patientDetails.name.localeCompare(b.patientDetails.name);
+          break;
+        case 'type':
+          comparison = a.type.localeCompare(b.type);
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [messages, filter, searchQuery, sortBy, sortOrder]);
+  }, [messages, searchQuery, sortBy, sortOrder]);
 
   return (
     <div className="flex flex-col h-full">
@@ -133,14 +146,16 @@ export const MessageList: FC = () => {
               className="pl-10"
             />
           </div>
-          <Select
+          <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="date">Date</option>
-            <option value="urgency">Urgency</option>
+            <option value="priority">Priority</option>
             <option value="patientName">Patient Name</option>
-          </Select>
+            <option value="type">Type</option>
+          </select>
           <Button
             variant="ghost"
             size="icon"
@@ -158,7 +173,7 @@ export const MessageList: FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => markSelectedAsRead()}
+              onClick={() => markAsRead(Array.from(selectedMessages))}
             >
               Mark as Read
             </Button>
@@ -181,9 +196,19 @@ export const MessageList: FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        {filteredAndSortedMessages.map((message) => (
-          <MessageItem key={message.id} message={message} />
-        ))}
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-gray-500">Loading messages...</div>
+          </div>
+        ) : filteredAndSortedMessages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-gray-500">No messages found</div>
+          </div>
+        ) : (
+          filteredAndSortedMessages.map((message) => (
+            <MessageItem key={message.id} message={message} />
+          ))
+        )}
       </div>
     </div>
   );

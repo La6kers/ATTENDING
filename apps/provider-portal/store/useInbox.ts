@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
+import { generateMockMessages } from '../lib/mockData';
 
 export type MessagePriority = 'urgent' | 'high' | 'normal' | 'low';
 export type MessageStatus = 'unread' | 'read' | 'archived' | 'deleted';
@@ -173,23 +174,28 @@ const initialState = {
 
 export const useInbox = create<InboxState>()(
   devtools(
-    persist(
-      immer((set, get) => ({
-        ...initialState,
+    immer((set, get) => ({
+      ...initialState,
 
         // Message Operations
         fetchMessages: async () => {
           set(state => { state.isLoading = true; state.error = null; });
           try {
-            // API call would go here
-            const messages: Message[] = [];
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Generate mock messages
+            const messages = generateMockMessages(25);
+            
             set(state => {
               state.messages = messages;
               state.isLoading = false;
               state.lastSynced = new Date();
-              state.updateMessageCounts();
             });
-          } catch (error) {
+            
+            // Update counts after setting messages
+            get().updateMessageCounts();
+          } catch (error: any) {
             set(state => {
               state.isLoading = false;
               state.error = error.message;
@@ -222,8 +228,8 @@ export const useInbox = create<InboxState>()(
 
         selectAllMessages: () =>
           set(state => {
-            const filtered = get().getFilteredMessages();
-            state.selectedMessages = new Set(filtered.map(m => m.id));
+            // For now, select all visible messages
+            state.selectedMessages = new Set(state.messages.map(m => m.id));
           }),
 
         clearSelection: () =>
@@ -393,16 +399,85 @@ export const useInbox = create<InboxState>()(
             state.error = error.message;
             console.error('Inbox Error:', error);
           }),
-      })),
-      {
-        name: 'inbox-storage',
-        partialize: (state) => ({
-          view: state.view,
-          sortBy: state.sortBy,
-          sortOrder: state.sortOrder,
-          sidebarCollapsed: state.sidebarCollapsed,
-        }),
-      }
-    )
+
+        // Placeholder implementations for missing methods
+        deleteMessages: async (messageIds) => {
+          set(state => {
+            state.messages = state.messages.filter(m => !messageIds.includes(m.id));
+            state.selectedMessages.clear();
+            get().updateMessageCounts();
+          });
+        },
+
+        restoreMessages: async (messageIds) => {
+          // Placeholder implementation
+          console.log('Restore messages:', messageIds);
+        },
+
+        assignMessages: async (messageIds, userId) => {
+          set(state => {
+            messageIds.forEach(id => {
+              const message = state.messages.find(m => m.id === id);
+              if (message) {
+                message.assignedTo = userId;
+              }
+            });
+          });
+        },
+
+        addLabel: async (messageIds, label) => {
+          set(state => {
+            messageIds.forEach(id => {
+              const message = state.messages.find(m => m.id === id);
+              if (message && !message.labels.includes(label)) {
+                message.labels.push(label);
+              }
+            });
+            get().updateMessageCounts();
+          });
+        },
+
+        removeLabel: async (messageIds, label) => {
+          set(state => {
+            messageIds.forEach(id => {
+              const message = state.messages.find(m => m.id === id);
+              if (message) {
+                message.labels = message.labels.filter(l => l !== label);
+              }
+            });
+            get().updateMessageCounts();
+          });
+        },
+
+        setFollowUpDate: async (messageId, date) => {
+          set(state => {
+            const message = state.messages.find(m => m.id === messageId);
+            if (message) {
+              message.followUpDate = date;
+            }
+          });
+        },
+
+        startComposing: () =>
+          set(state => {
+            state.isComposing = true;
+          }),
+
+        cancelComposing: () =>
+          set(state => {
+            state.isComposing = false;
+            state.draftMessage = null;
+          }),
+
+        saveDraft: (draft) =>
+          set(state => {
+            state.draftMessage = draft;
+          }),
+
+        sendMessage: async (message) => {
+          // Placeholder implementation
+          console.log('Send message:', message);
+        },
+      }))
   )
 );
