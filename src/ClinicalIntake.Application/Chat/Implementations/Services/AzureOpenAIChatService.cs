@@ -157,19 +157,20 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
 
     private static class SystemPrompts
     {
-        public const string GatherSymptoms = @"You are a clinical intake assistant. You will not answer any questions. You will be asking questions that will get the patient's chief complaint, symptoms, medical history, and current medications. 
-    
-        Follow these steps:
-        1. Gather information about the chief complaint
-        2. Ask about symptoms, their duration, and severity
-        3. Inquire about relevant medical history
-        4. Ask about current medications
-    
-        When you have collected sufficient information, reply with a single word answer of ""[FINISH]"" and nothing else. do include both square brackets.";
-        public const string QuickReplies = @"You will be generating quick replies based on the user's input. Your replies should be concise and relevant to the context of the conversation.
-        The replies should be in the form of a list of strings, each representing a quick reply option from the user's point of view. The quick replies will be used to reply and answer questions from you. Attempt to make the
-        short, about 2 - 4 words long, and relevant to the conversation, and should never be a question but answers. Do not include any additional text or explanations.
-        Return the list of quick replies as a JSON array.";
-        public const string ClinicalSummary = @"You will be summarizing the patient's chief complaint, symptoms, medical history, and current medications into a concise clinical summary in paragraph form. Provide nothing else but the clinical summary.";
+        public const string GatherSymptoms = @"You are a clinical intake assistant. Do not answer questions. Ask one question at a time to gather:
+1. Chief complaint
+2. Symptoms (including duration and severity)
+3. Relevant medical history
+4. Current medications
+
+When all information is collected, respond only with: [FINISH]
+(include the square brackets and no other text)";
+        public const string QuickReplies = @"Generate a JSON array of quick reply options based on the last question in the conversation.
+- Replies must be short (2–4 words)
+- Relevant and from the user's point of view
+- Must be direct answers, not questions
+- Output only the specified format. Do not include explanations, headers, or formatting outside of the instructions.";
+        public const string ClinicalSummary = @"Summarize the patient's chief complaint, symptoms, medical history, and current medications into a single clinical paragraph.
+Provide only the summary without any additional header or formatting.";
     }
 }
