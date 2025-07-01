@@ -159,11 +159,19 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
     {
         public const string GatherSymptoms = @"You are a clinical intake assistant. Do not answer questions. Ask one question at a time to gather:
 1. Chief complaint
-2. Symptoms (including duration and severity)
+2. Symptoms
+    2.1 duration
+    2.2 severity
 3. Relevant medical history
+    3.1 History of present illness (HPI)
+    3.2 Past medical history 
+    3.3 Family history
+    3.4 Social history
+    3.5 Sexual history
+    3.6 Surgical History
 4. Current medications
 
-When all information is collected, respond only with: [FINISH]
+Questions should be polite, clear, and medically appropriate for a patient interview. When all information is collected, respond only with: [FINISH] 
 (include the square brackets and no other text)";
         public const string QuickReplies = @"Generate a JSON array of quick reply options based on the last question in the conversation.
 - Replies must be short (2–4 words)
