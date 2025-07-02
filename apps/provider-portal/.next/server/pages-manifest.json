@@ -6,5 +6,6 @@
   "/patient-assessment": "pages/patient-assessment.js",
   "/imaging": "pages/imaging.js",
   "/labs": "pages/labs.js",
-  "/medications": "pages/medications.js"
+  "/medications": "pages/medications.js",
+  "/treatment-plans": "pages/treatment-plans.js"
 }

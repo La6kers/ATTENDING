@@ -46,6 +46,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/patient-assessment.js"
+    ],
+    "/treatment-plans": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/treatment-plans.js"
     ]
   },
   "ampFirstPages": []
