@@ -25,7 +25,7 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
             return [];
 
         List<ChatMessage> lastSystemMessage = [];
-        lastSystemMessage.Add(messages.Last(m => m.Role == ChatRole.System));
+        lastSystemMessage.Add(messages.Last(m => m.Role == ChatRole.Assistant));
 
         IEnumerable<OpenAIChatMessage> chatMessages = createOpenAIChatMessageList(SystemPrompts.QuickReplies, lastSystemMessage);
         var stream = sendChatRequest(chatMessages, cancellationToken);
