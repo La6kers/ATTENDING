@@ -4,5 +4,7 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/patient-assessment": "pages/patient-assessment.js",
-  "/patient-chat": "pages/patient-chat.js"
+  "/imaging": "pages/imaging.js",
+  "/labs": "pages/labs.js",
+  "/medications": "pages/medications.js"
 }
