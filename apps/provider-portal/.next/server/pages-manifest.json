@@ -2,10 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/medications": "pages/medications.js",
   "/": "pages/index.js",
   "/patient-assessment": "pages/patient-assessment.js",
-  "/imaging": "pages/imaging.js",
-  "/labs": "pages/labs.js",
-  "/treatment-plans": "pages/treatment-plans.js"
+  "/patient-chat": "pages/patient-chat.js"
 }

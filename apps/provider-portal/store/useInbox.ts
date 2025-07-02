@@ -5,7 +5,7 @@ import { generateMockMessages } from '../lib/mockData';
 
 export type MessagePriority = 'urgent' | 'high' | 'normal' | 'low';
 export type MessageStatus = 'unread' | 'read' | 'archived' | 'deleted';
-export type MessageType = 'email' | 'lab' | 'phone' | 'refill';
+export type MessageType = 'email' | 'lab' | 'phone' | 'refill' | 'biomistral-assessment';
 
 export interface PatientDetails {
   id: string;
@@ -48,6 +48,7 @@ export interface Message {
     recommendations: string[];
     riskFactors: string[];
     suggestedActions: string[];
+    source?: string;
   };
 }
 
@@ -334,10 +335,10 @@ export const useInbox = create<InboxState>()(
                 };
               }
             });
-          } catch (error) {
+          } catch (error: any) {
             set(state => {
               state.aiAssistant.isAnalyzing = false;
-              state.aiAssistant.error = error.message;
+              state.aiAssistant.error = error.message || 'An error occurred';
             });
           }
         },
@@ -355,10 +356,10 @@ export const useInbox = create<InboxState>()(
               state.aiAssistant.suggestion = response;
             });
             return response;
-          } catch (error) {
+          } catch (error: any) {
             set(state => {
               state.aiAssistant.isAnalyzing = false;
-              state.aiAssistant.error = error.message;
+              state.aiAssistant.error = error.message || 'An error occurred';
             });
             return '';
           }

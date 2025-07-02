@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
-import { Brain, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { Brain, AlertCircle, CheckCircle, Info, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const AIAssistant: FC = () => {
@@ -9,12 +9,24 @@ export const AIAssistant: FC = () => {
   if (!currentMessage?.aiAnalysis) return null;
 
   const { summary, recommendations, riskFactors, suggestedActions } = currentMessage.aiAnalysis;
+  
+  // Check if this is a BioMistral assessment
+  const isBioMistralAssessment = currentMessage.type === 'biomistral-assessment' || 
+    currentMessage.aiAnalysis.source === 'biomistral-7b';
 
   return (
     <div className="mb-6 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 p-5">
       <div className="mb-4 flex items-center gap-2">
         <Brain className="h-5 w-5 text-blue-600" />
-        <h3 className="text-lg font-semibold text-slate-800">AI Analysis</h3>
+        <h3 className="text-lg font-semibold text-slate-800">
+          {isBioMistralAssessment ? 'BioMistral-7B Clinical Assessment' : 'AI Analysis'}
+        </h3>
+        {isBioMistralAssessment && (
+          <span className="ml-auto text-xs font-medium text-green-600 flex items-center gap-1">
+            <Activity className="h-3 w-3" />
+            AI-Conducted Interview
+          </span>
+        )}
       </div>
 
       {/* Summary */}
