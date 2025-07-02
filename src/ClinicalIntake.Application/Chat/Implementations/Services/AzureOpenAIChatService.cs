@@ -24,7 +24,10 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         if(messages == null || !messages.Any())
             return [];
 
-        IEnumerable<OpenAIChatMessage> chatMessages = createOpenAIChatMessageList(SystemPrompts.QuickReplies, messages);
+        List<ChatMessage> lastSystemMessage = [];
+        lastSystemMessage.Add(messages.Last(m => m.Role == ChatRole.System));
+
+        IEnumerable<OpenAIChatMessage> chatMessages = createOpenAIChatMessageList(SystemPrompts.QuickReplies, lastSystemMessage);
         var stream = sendChatRequest(chatMessages, cancellationToken);
         var jsonString = new StringBuilder();
         await foreach(var streamChunk in stream.WithCancellation(cancellationToken))
