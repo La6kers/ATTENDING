@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
 import { cn } from '@/lib/utils';
-import { Mail, Flask, Phone, Pill, AlertCircle, Clock } from 'lucide-react';
+import { Mail, TestTube, Phone, Pill, AlertCircle, Clock } from 'lucide-react';
 
 export const FilterTabs: FC = () => {
   const { filter, setFilter, unreadCount, urgentCount, messages } = useInbox();
@@ -11,7 +11,7 @@ export const FilterTabs: FC = () => {
     { id: 'unread', label: 'Unread', count: unreadCount, icon: Clock },
     { id: 'urgent', label: 'Urgent', count: urgentCount, icon: AlertCircle },
     { id: 'email', label: 'Emails', count: messages.filter(m => m.type === 'email').length, icon: Mail },
-    { id: 'lab', label: 'Lab Results', count: messages.filter(m => m.type === 'lab').length, icon: Flask },
+    { id: 'lab', label: 'Lab Results', count: messages.filter(m => m.type === 'lab').length, icon: TestTube },
     { id: 'phone', label: 'Phone', count: messages.filter(m => m.type === 'phone').length, icon: Phone },
     { id: 'refill', label: 'Refills', count: messages.filter(m => m.type === 'refill').length, icon: Pill },
   ];

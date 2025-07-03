@@ -5,6 +5,7 @@ import StatCards from '../components/dashboard/StatCards';
 import PatientQueue from '../components/dashboard/PatientQueue';
 import AIInsights from '../components/dashboard/AIInsights';
 import QuickAccess from '../components/dashboard/QuickAccess';
+import PatientMessaging from '../components/PatientMessaging';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -54,6 +55,11 @@ export default function Dashboard() {
             <div className="lg:col-span-1">
               <AIInsights />
             </div>
+          </div>
+
+          {/* Patient Messaging Section */}
+          <div className="mt-8">
+            <PatientMessaging />
           </div>
         </div>
       </div>

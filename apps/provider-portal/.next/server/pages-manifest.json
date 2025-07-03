@@ -2,15 +2,11 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/treatment-plans": "pages/treatment-plans.js",
-  "/medications": "pages/medications.js",
-  "/patient-assessment": "pages/patient-assessment.js",
   "/": "pages/index.js",
+  "/patient-assessment": "pages/patient-assessment.js",
+  "/inbox": "pages/inbox.js",
+  "/imaging": "pages/imaging.js",
   "/labs": "pages/labs.js",
-<<<<<<< HEAD
-  "/imaging": "pages/imaging.js"
-=======
   "/medications": "pages/medications.js",
   "/treatment-plans": "pages/treatment-plans.js"
->>>>>>> fa423b23a54b28e4f825b3b6d9805f26e8cbcde1
 }

@@ -6,16 +6,17 @@ import { cn } from '../../lib/utils';
 import { Checkbox } from '../ui/checkbox';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { Search, SortAsc, SortDesc, Mail, Flask, Phone, Pill } from 'lucide-react';
+import { Search, SortAsc, SortDesc, Mail, Beaker, Phone, Pill } from 'lucide-react';
 
 const MessageItem: FC<{ message: Message }> = ({ message }) => {
   const { selectMessage, currentMessage, toggleMessageSelection, selectedMessages } = useInbox();
   
   const typeIcons = {
     email: <Mail className="w-4 h-4 inline mr-1" />,
-    lab: <Flask className="w-4 h-4 inline mr-1" />,
+    lab: <Beaker className="w-4 h-4 inline mr-1" />,
     phone: <Phone className="w-4 h-4 inline mr-1" />,
     refill: <Pill className="w-4 h-4 inline mr-1" />,
+    'biomistral-assessment': <Beaker className="w-4 h-4 inline mr-1" />,
   };
 
   const typeLabels = {
@@ -23,6 +24,7 @@ const MessageItem: FC<{ message: Message }> = ({ message }) => {
     lab: 'Lab Result',
     phone: 'Phone Message',
     refill: 'Refill Request',
+    'biomistral-assessment': 'Assessment',
   };
 
   return (

@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
 import { AIAssistant } from './AIAssistant';
 import { MedicationAnalysis } from './MedicationAnalysis';
-import { Mail, Flask, Phone, Pill } from 'lucide-react';
+import { Mail, Beaker, Phone, Pill } from 'lucide-react';
 
 export const ConversationView: FC = () => {
   const { currentMessage } = useInbox();
@@ -45,7 +45,7 @@ export const ConversationView: FC = () => {
         <div className="mb-4 flex justify-between">
           <div className="text-base font-semibold text-slate-800 flex items-center gap-2">
             {currentMessage.type === 'email' && <><Mail className="w-4 h-4" /> Email Message</>}
-            {currentMessage.type === 'lab' && <><Flask className="w-4 h-4" /> Lab Results</>}
+            {currentMessage.type === 'lab' && <><Beaker className="w-4 h-4" /> Lab Results</>}
             {currentMessage.type === 'phone' && <><Phone className="w-4 h-4" /> Phone Message</>}
             {currentMessage.type === 'refill' && <><Pill className="w-4 h-4" /> Refill Request</>}
           </div>

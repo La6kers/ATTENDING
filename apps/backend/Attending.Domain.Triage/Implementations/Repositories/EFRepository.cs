@@ -34,7 +34,7 @@ internal class TriageDbContext : DbContext
         public void Configure(EntityTypeBuilder<Survey> builder)
         {
             builder.HasKey(Survey => Survey.Id);
-            builder.Property(Survey => Survey.Id).HasValueGenerator()
+            builder.Property(Survey => Survey.Id).HasValueGenerator();
             builder.Property(Survey => Survey.MRN)
                 .HasMaxLength(20);
 
