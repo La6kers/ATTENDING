@@ -48,7 +48,7 @@
             <MudButton Color="Color.Primary" 
                       Variant="Variant.Filled"
                       OnClick="SendMessage"
-                      Disabled="isLoading || isConversationComplete">
+                      Disabled="isLoading || isConversationComplete || string.IsNullOrWhiteSpace(currentMessage)">
                 Send
             </MudButton>
         </MudPaper>
@@ -70,10 +70,11 @@
 @code {
     private string currentMessage = string.Empty;
     private List<ChatMessage> chatMessages = [];
+    private ChatStage chatStage = ChatStage.ChiefComplaint;
     private HttpClient Http => HttpClientFactory.CreateClient("ClinicalIntakeApi");
     private bool isLoading = false;
     private bool isConversationComplete = false;
-    private const string CONVERSATION_COMPLETED_MARKER = "[FINISH]";
+    private const string CHAT_STAGE_COMPLETED_MARKER = "[FINISH]";
     private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider.";
     private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
     private List<string> quickReplies = new();
@@ -94,8 +95,6 @@
 
     private async Task SendMessage()
     {
-        if (string.IsNullOrWhiteSpace(currentMessage)) return;
-
         isLoading = true;
         StateHasChanged();
 
@@ -128,7 +127,7 @@
 
     private async Task<HttpResponseMessage> SendChatRequest(IEnumerable<sendChatMessageDto> content)
     {
-        return await Http.PostAsync("api/chat/send", JsonContent.Create(content));
+        return await Http.PostAsync("api/chat/send", JsonContent.Create(new sendMessageContentDto(content, chatStage)));
     }
 
     private async Task HandleChatResponse(HttpResponseMessage response)
@@ -152,6 +151,7 @@
     private async Task ProcessStreamingResponse(Stream stream, ChatMessage newChatResponse)
     {
         using var reader = new StreamReader(stream);
+        bool isChatStageCompleted = false;
         while (!reader.EndOfStream)
         {
             var textChunksJson = await reader.ReadLineAsync();
@@ -166,21 +166,57 @@
                     await ScrollToBottom();
                 }
 
-            if (newChatResponse.Text.Contains(CONVERSATION_COMPLETED_MARKER))
+            if (newChatResponse.Text.Contains(CHAT_STAGE_COMPLETED_MARKER))
             {
-                quickReplies.Clear();
-                isConversationComplete = true;
-                chatMessages.Remove(newChatResponse);
-                AddCompletionMessage();
-                StateHasChanged();
-                await ScrollToBottom();
-
-                await FetchClinicalSummary();
-                return;
+                isChatStageCompleted = true;
+                break;
             }
         }
 
-        await FetchQuickReplies();
+        if (isChatStageCompleted)
+        {
+            await CompleteChatStage();                
+            chatMessages.Remove(newChatResponse);
+            StateHasChanged();
+            await ScrollToBottom();
+            
+            if (!isConversationComplete)
+            {
+                await SendMessage();
+                await FetchQuickReplies();
+            }
+
+            return;
+        }
+
+        if(!isConversationComplete)
+            await FetchQuickReplies();
+    }
+
+    private async Task CompleteChatStage()
+    {
+        // increase chat stage by 1
+        chatStage = chatStage switch
+        {
+            ChatStage.ChiefComplaint => ChatStage.MedicalHistory,
+            ChatStage.MedicalHistory => ChatStage.CurrentMedications,
+            ChatStage.CurrentMedications => ChatStage.ClinicalSummary,
+            _ => chatStage
+        };
+
+        await OnCompleteChatStage();
+    }
+
+    private async Task OnCompleteChatStage()
+    {
+        if (chatStage == ChatStage.ClinicalSummary)
+        {
+            quickReplies.Clear();
+            isConversationComplete = true;
+            AddCompletionMessage();
+            await FetchClinicalSummary();
+            return;
+        }       
     }
 
     private async Task FetchQuickReplies()
@@ -304,7 +340,17 @@
         AddErrorMessage($"Error: {exception.Message}");
     }
 
+    private record sendMessageContentDto(IEnumerable<sendChatMessageDto> Messages, ChatStage ChatStage);
     private record sendChatMessageDto(int role, string content);
+    private enum ChatStage
+    {
+        ChiefComplaint = 1,
+        // SymptomAnalysis,
+        MedicalHistory = 3,
+        CurrentMedications = 4,
+        // RiskAssessment,
+        ClinicalSummary
+    }
 
     private class ChatMessage
     {

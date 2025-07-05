@@ -14,17 +14,17 @@ public class ChatController(Mediator mediator) : Controller
     private readonly Mediator _mediator = mediator;
 
     [HttpPost()]
-    public async IAsyncEnumerable<string> Send([FromBody] List<ChatMessage> messages, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<string> Send([FromBody] ChatSendRequestDto chatSendRequest, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        if(messages == null || !messages.Any())
+        if(chatSendRequest?.Messages == null || !chatSendRequest.Messages.Any())
         {
             HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             await HttpContext.Response.WriteAsJsonAsync(new { Error = "Chat messages cannot be empty." }, cancellationToken);
             yield break;
         }
 
-        var request = new GetGatherSymptomsChatReply.Request(messages);
-        Result<GetGatherSymptomsChatReply.Response> response = await _mediator.Send<GetGatherSymptomsChatReply.Request, GetGatherSymptomsChatReply.Response>(request, cancellationToken);
+        var request = new GetChatReply.Request(chatSendRequest.Messages, chatSendRequest.ChatStage);
+        Result<GetChatReply.Response> response = await _mediator.Send<GetChatReply.Request, GetChatReply.Response>(request, cancellationToken);
 
         if(response.IsFailed)
         {
@@ -75,4 +75,6 @@ public class ChatController(Mediator mediator) : Controller
 
         return Ok(result.Value.ClinicalSummary);
     }
+
+    public record ChatSendRequestDto(List<ChatMessage> Messages, ChatStage ChatStage);
 }

@@ -1,10 +1,9 @@
-﻿using ClinicalIntake.Application.Chat;
-using ClinicalIntake.Application.Chat.Implementations.Services;
+﻿using ClinicalIntake.Application.Chat.Implementations.Services;
 using Microsoft.Extensions.DependencyInjection;
-using static ClinicalIntake.Application.Chat.Features.Queries.GetGatherSymptomsChatReply;
+using static ClinicalIntake.Application.Chat.Features.Queries.GetChatReply;
 
 namespace ClinicalIntake.Application.Chat.Implementations.Queries;
-internal static class GetGatherSymptomsChatReply
+internal static class GetChatReply
 {
     public static IServiceCollection AddAzureOpenAIGetChatReply(this IServiceCollection services)
     {
@@ -15,7 +14,7 @@ internal static class GetGatherSymptomsChatReply
     {
         private readonly AzureOpenAIChatService _azureOpenAiChatService = azureOpenAIChatService;
 
-        public StreamingChatReply GetReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken) =>
-            _azureOpenAiChatService.GetGatherSymptomsReply(messages, cancellationToken);
+        public StreamingChatReply GetReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken) =>
+            _azureOpenAiChatService.GetChatReply(messages, ChatStage.ChiefComplaint, cancellationToken);
     }
 }

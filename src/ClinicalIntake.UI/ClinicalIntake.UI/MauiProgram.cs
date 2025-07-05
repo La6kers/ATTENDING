@@ -1,6 +1,7 @@
 ﻿using ClinicalIntake.UI.Services;
 using ClinicalIntake.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 namespace ClinicalIntake.UI;
 public static class MauiProgram
@@ -24,6 +25,7 @@ public static class MauiProgram
         builder.Services.AddBlazorWebViewDeveloperTools();
         builder.Logging.AddDebug();
 #endif
+        builder.Services.AddMudServices();
 
         return builder.Build();
     }

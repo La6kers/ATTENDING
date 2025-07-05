@@ -12,7 +12,7 @@ public static class DependencyInjection
     public static IServiceCollection AddSubContextClinicalIntakeChat(this IServiceCollection services)
     {
         services
-            .AddGetGatherSymptomsChatReplyFeature()
+            .AddGetChatReplyFeature()
             .AddGetQuickRepliesChatReplyFeature()
             .AddGetClinicalSummaryChatReplyFeature();
 

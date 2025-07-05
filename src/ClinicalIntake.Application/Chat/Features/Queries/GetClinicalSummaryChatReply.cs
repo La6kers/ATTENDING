@@ -19,7 +19,7 @@ public static class GetClinicalSummaryChatReply
             try
             {
                 if(request.ChatMessages == null || !request.ChatMessages.Any())
-                    return Result.Fail<Response>(new SharedKernel.Error(nameof(GetGatherSymptomsChatReply), "Chat messages cannot be empty."));
+                    return Result.Fail<Response>(new SharedKernel.Error(nameof(GetChatReply), "Chat messages cannot be empty."));
 
                 var chatReply = await _clinicalSummaryService.GetClinicalSummary(request.ChatMessages, cancellationToken);
                 var response = new Response(chatReply);
@@ -27,7 +27,7 @@ public static class GetClinicalSummaryChatReply
             }
             catch(Exception exception)
             {
-                return Result.Fail<Response>(new SharedKernel.ExceptionalError(nameof(GetGatherSymptomsChatReply), exception))
+                return Result.Fail<Response>(new SharedKernel.ExceptionalError(nameof(GetChatReply), exception))
                     .WithError("An error occurred while getting a clinical summary.");
             }
         }

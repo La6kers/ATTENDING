@@ -4,12 +4,12 @@ using SharedKernel;
 using Error = SharedKernel.Error;
 
 namespace ClinicalIntake.Application.Chat.Features.Queries;
-public static class GetGatherSymptomsChatReply
+public static class GetChatReply
 {
-    public record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;
+    public record Request(IEnumerable<ChatMessage> ChatMessages, ChatStage ChatStage) : IRequest<Response>;
     public record Response(StreamingChatReply StreamingChatReply);
 
-    internal static IServiceCollection AddGetGatherSymptomsChatReplyFeature(this IServiceCollection services) => services.AddScoped<IRequestHandler<Request, Response>, Handler>();
+    internal static IServiceCollection AddGetChatReplyFeature(this IServiceCollection services) => services.AddScoped<IRequestHandler<Request, Response>, Handler>();
 
     private class Handler(IChatService chatService) : IRequestHandler<Request, Response>
     {
@@ -20,16 +20,16 @@ public static class GetGatherSymptomsChatReply
             try
             {
                 if(request.ChatMessages == null || !request.ChatMessages.Any())
-                    return Task.FromResult(Result.Fail<Response>(new Error(nameof(GetGatherSymptomsChatReply), "Chat messages cannot be empty.")));
+                    return Task.FromResult(Result.Fail<Response>(new Error(nameof(GetChatReply), "Chat messages cannot be empty.")));
 
-                var chatReply = _chatService.GetReply(request.ChatMessages, cancellationToken);
+                var chatReply = _chatService.GetReply(request.ChatMessages, request.ChatStage, cancellationToken);
                 var response = new Response(chatReply);
                 var result = Result.Ok(response);
                 return Task.FromResult(result);
             }
             catch(Exception exception)
             {
-                return Task.FromResult(Result.Fail<Response>(new SharedKernel.ExceptionalError(nameof(GetGatherSymptomsChatReply), exception))
+                return Task.FromResult(Result.Fail<Response>(new SharedKernel.ExceptionalError(nameof(GetChatReply), exception))
                     .WithError("An error occurred while getting a chat reply."));
             }
         }
@@ -37,6 +37,6 @@ public static class GetGatherSymptomsChatReply
 
     internal interface IChatService
     {
-        StreamingChatReply GetReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken);
+        StreamingChatReply GetReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken);
     }
 }
