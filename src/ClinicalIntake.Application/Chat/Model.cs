@@ -1,6 +1,6 @@
 ﻿namespace ClinicalIntake.Application.Chat;
 public record ChatMessage(ChatRole Role, string Content);
-public record StreamingChatReply(IAsyncEnumerable<string> TextChunks, Task<bool> IsConversationComplete);
+public record StreamingChatReply(IAsyncEnumerable<string> Stream, Task<bool> IsChatStageComplete);
 
 public enum ChatStage
 {

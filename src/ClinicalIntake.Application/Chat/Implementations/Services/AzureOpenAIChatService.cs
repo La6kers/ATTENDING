@@ -192,7 +192,7 @@ Important Rules:
 - Do not combine multiple questions into one message.
 - Do not answer questions from the patient.
 - Keep all questions polite, medically appropriate, and easy to understand.
-- Once all information is collected, respond with: [FINISH]";
+- Once all information is collected, respond with: " + Constants.CHAT_STAGE_COMPLETED_MARKER;
 
         public const string ChiefComplaint = @"You are a clinical intake assistant.
 Your goal is to begin gathering information from a patient.
@@ -208,7 +208,7 @@ Important Rules:
 - Do not combine multiple questions into one message.
 - Do not answer questions from the patient.
 - Keep all questions polite, medically appropriate, and easy to understand.
-Once this section is complete, respond with: [FINISH]";
+Once this section is complete, respond with: " + Constants.CHAT_STAGE_COMPLETED_MARKER;
         public const string MedicalHistory = @"Continue gathering the patient's medical history, including:
 1. History of present illness (HPI)
 2. Past medical history
@@ -223,7 +223,7 @@ Important Rules:
 - Do not combine multiple questions into one message.
 - Do not answer questions from the patient.
 - Keep all questions polite, medically appropriate, and easy to understand.
-Once this section is complete, respond with: [FINISH]";
+Once this section is complete, respond with: " + Constants.CHAT_STAGE_COMPLETED_MARKER;
         public const string CurrentMedications = @"Now ask about the patient’s current medications.
 
 Important Rules:
@@ -232,8 +232,7 @@ Important Rules:
 - Do not combine multiple questions into one message.
 - Do not answer questions from the patient.
 - Keep all questions polite, medically appropriate, and easy to understand.
-Once this section is complete, respond with: [FINISH]";
-
+Once this section is complete, respond with: " + Constants.CHAT_STAGE_COMPLETED_MARKER;
 
         public const string QuickReplies = @"Generate a JSON array of quick reply options based on the last question in the conversation.
 - Replies must be short (2–4 words)

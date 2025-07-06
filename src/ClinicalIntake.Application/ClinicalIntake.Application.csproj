@@ -7,15 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Chat\Service.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Chat\Service.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
     <PackageReference Include="System.Linq.Async" Version="6.0.3" />
   </ItemGroup>
 

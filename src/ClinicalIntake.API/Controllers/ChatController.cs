@@ -37,13 +37,13 @@ public class ChatController(Mediator mediator) : Controller
             yield break;
         }
 
-        await foreach(var chunk in response.Value.StreamingChatReply.TextChunks.WithCancellation(cancellationToken))
+        await foreach(var chunk in response.Value.StreamingChatReply.Stream.WithCancellation(cancellationToken))
             yield return chunk;
 
-        var isComplete = await response.Value.StreamingChatReply.IsConversationComplete;
+        var isComplete = await response.Value.StreamingChatReply.IsChatStageComplete;
         Console.WriteLine($"Conversation complete: {isComplete}");
 
-        if(await response.Value.StreamingChatReply.IsConversationComplete)
+        if(await response.Value.StreamingChatReply.IsChatStageComplete)
             yield return JsonSerializer.Serialize(new { IsComplete = true });
     }
 
