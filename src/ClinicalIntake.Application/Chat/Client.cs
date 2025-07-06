@@ -4,20 +4,26 @@ using System.Text.Json;
 using static ClinicalIntake.Application.Chat.ClinicalIntakeChatService;
 
 namespace ClinicalIntake.Application.Chat;
-public class ClinicalIntakeChatClient(Mediator mediator, IHttpClientFactory httpClientFactory)
+public class ClinicalIntakeChatClient(IHttpClientFactory httpClientFactory)
 {
-    private readonly Mediator _mediator = mediator;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
-    public async IAsyncEnumerable<string> GetChatReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken)
+    /// <summary>
+    /// Sends a chat request to the server and appends the response to the provided ObservableStringBuilder.
+    /// </summary>
+    /// <param name="messages"></param>
+    /// <param name="chatStage"></param>
+    /// <param name="observableStringBuilder"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns> Returns true if the chat stage is complete, otherwise false.</returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<bool> GetChatReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, ObservableStringBuilder observableStringBuilder, CancellationToken cancellationToken)
     {
         using var client = _httpClientFactory.CreateClient("ClinicalIntakeChatClient");
         var response = await client.PostAsync("api/chat/send", JsonContent.Create(new ChatRequestDto(messages, chatStage)), cancellationToken);
 
         if(!response.IsSuccessStatusCode)
             throw new Exception("Failed to get chat reply from the server.");
-
-        bool isChatStageCompleted = false;
 
         using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new StreamReader(stream);
@@ -31,15 +37,14 @@ public class ClinicalIntakeChatClient(Mediator mediator, IHttpClientFactory http
             foreach(var textChunk in textChunks)
                 if(!string.IsNullOrEmpty(textChunk))
                 {
+                    observableStringBuilder.Append(textChunk);
+
                     if(textChunk.Contains(Constants.CHAT_STAGE_COMPLETED_MARKER))
-                    {
-                        isChatStageCompleted = true;
-                        yield return textChunk.Replace(Constants.CHAT_STAGE_COMPLETED_MARKER, string.Empty);
-                        break;
-                    }
-                    yield return textChunk;
+                        return true;
                 }
         }
+
+        return false;
     }
 
 

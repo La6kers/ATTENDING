@@ -5,7 +5,7 @@ public record StreamingChatReply(IAsyncEnumerable<string> Stream, Task<bool> IsC
 public enum ChatStage
 {
     ChiefComplaint = 1,
-    SymptomAnalysis,
+    //SymptomAnalysis,
     MedicalHistory,
     CurrentMedications,
 }
