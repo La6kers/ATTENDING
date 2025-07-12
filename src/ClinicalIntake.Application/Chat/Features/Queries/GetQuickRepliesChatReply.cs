@@ -1,5 +1,4 @@
-﻿using ClinicalIntake.Application.Chat;
-using FluentResults;
+﻿using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 using Error = SharedKernel.Error;
@@ -8,8 +7,8 @@ using ExceptionalError = SharedKernel.ExceptionalError;
 namespace ClinicalIntake.Application.Chat.Features.Queries;
 public static class GetQuickRepliesChatReply
 {
-    public record Request(IEnumerable<ChatMessage> Messages) : IRequest<Response>;
-    public record Response(IEnumerable<string> QuickReplies);
+    internal record Request(IEnumerable<ChatMessage> Messages) : IRequest<Response>;
+    internal record Response(IEnumerable<string> QuickReplies);
     internal static IServiceCollection AddGetQuickRepliesChatReplyFeature(this IServiceCollection services)
         => services.AddScoped<IRequestHandler<Request, Response>, Handler>();
 

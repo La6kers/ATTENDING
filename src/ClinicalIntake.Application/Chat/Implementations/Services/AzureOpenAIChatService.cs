@@ -11,14 +11,14 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
     private readonly string _deploymentName = deploymentName;
     private readonly ChatCompletionOptions _chatCompletionOptions = chatCompletionOptions;
 
-    public StreamingChatReply GetChatReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken)
+    public IAsyncEnumerable<string> GetChatReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken)
     {
         if(messages == null || !messages.Any())
             return Constants.DefaultStreamingChatReply;
 
         var systemMessage = getSystemMessageByChatStage(chatStage);
         IEnumerable<OpenAIChatMessage> openAIChatMessages = createOpenAIChatMessageList(systemMessage, messages);
-        return createStreamingChatResult(openAIChatMessages, cancellationToken);
+        return sendChatRequest(openAIChatMessages, cancellationToken);
     }
     public async Task<IEnumerable<string>> GetQuickReplies(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
@@ -62,17 +62,14 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         return stringBuilder.ToString();
     }
 
-    private static string getSystemMessageByChatStage(ChatStage chatStage)
+    private static string getSystemMessageByChatStage(ChatStage chatStage) => chatStage switch
     {
-        return chatStage switch
-        {
-            ChatStage.ChiefComplaint => SystemPrompts.ChiefComplaint,
-            ChatStage.SymptomAnalysis => SystemPrompts.GatherSymptoms,
-            ChatStage.MedicalHistory => SystemPrompts.MedicalHistory,
-            ChatStage.CurrentMedications => SystemPrompts.CurrentMedications,
-            _ => throw new ArgumentOutOfRangeException(nameof(chatStage), chatStage, "Unsupported chat stage")
-        };
-    }
+        ChatStage.ChiefComplaint => SystemPrompts.ChiefComplaint,
+        ChatStage.MedicalHistory => SystemPrompts.MedicalHistory,
+        ChatStage.CurrentMedications => SystemPrompts.CurrentMedications,
+        _ => throw new ArgumentOutOfRangeException(nameof(chatStage), chatStage, "Unsupported chat stage")
+    };
+
     private static List<OpenAIChatMessage> createOpenAIChatMessageList(string systemMessage, IEnumerable<ChatMessage> messages)
     {
         List<OpenAIChatMessage> openAIChatMessages = [new SystemChatMessage(systemMessage)];
@@ -90,21 +87,7 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
 
         return openAIChatMessages;
     }
-    private StreamingChatReply createStreamingChatResult(IEnumerable<OpenAIChatMessage> openAIChatMessages, CancellationToken cancellationToken)
-    {
-        var completionSource = new TaskCompletionSource<bool>();
 
-        try
-        {
-            var processedStream = processStreamForCompletion(openAIChatMessages, completionSource, cancellationToken);
-            return new StreamingChatReply(processedStream, completionSource.Task);
-        }
-        catch(Exception ex)
-        {
-            completionSource.SetException(ex);
-            return new StreamingChatReply(AsyncEnumerable.Empty<string>(), completionSource.Task);
-        }
-    }
     private async IAsyncEnumerable<string> sendChatRequest(IEnumerable<OpenAIChatMessage> openAIChatMessages, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         ChatClient chatClient = _azureOpenAIClient.GetChatClient(_deploymentName);
@@ -114,60 +97,6 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
             foreach(var updatePart in update.ContentUpdate)
                 if(!string.IsNullOrEmpty(updatePart.Text))
                     yield return updatePart.Text;
-    }
-
-    private async IAsyncEnumerable<string> processStreamForCompletion(
-        IEnumerable<OpenAIChatMessage> openAIChatMessages,
-        TaskCompletionSource<bool> completionSource,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        var buffer = new StringBuilder();
-        const string finishMarker = "[FINISH]";
-
-        await foreach(var chunk in sendChatRequestSafely(openAIChatMessages, completionSource, cancellationToken))
-        {
-            if(chunk == null) // Indicates an error occurred
-                yield break;
-
-            buffer.Append(chunk);
-            var content = buffer.ToString();
-
-            // Yield the chunk as normal
-            yield return chunk;
-
-            // Check if we have the finish marker
-            var finishIndex = content.IndexOf(finishMarker, StringComparison.OrdinalIgnoreCase);
-            if(finishIndex >= 0)
-            {
-                // Mark conversation as complete
-                completionSource.TrySetResult(true);
-                yield break;
-            }
-        }
-
-        // Stream ended without finish marker
-        completionSource.TrySetResult(false);
-    }
-
-    private async IAsyncEnumerable<string?> sendChatRequestSafely(
-        IEnumerable<OpenAIChatMessage> openAIChatMessages,
-        TaskCompletionSource<bool> completionSource,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        IAsyncEnumerable<string> stream;
-
-        try
-        {
-            stream = sendChatRequest(openAIChatMessages, cancellationToken);
-        }
-        catch(Exception exception)
-        {
-            completionSource.SetException(exception);
-            yield break;
-        }
-
-        await foreach(var chunk in stream.WithCancellation(cancellationToken))
-            yield return chunk;
     }
 
     private static class SystemPrompts

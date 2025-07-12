@@ -4,10 +4,10 @@ using SharedKernel;
 using Error = SharedKernel.Error;
 
 namespace ClinicalIntake.Application.Chat.Features.Queries;
-public static class GetChatReply
+internal static class GetChatReply
 {
-    public record Request(IEnumerable<ChatMessage> ChatMessages, ChatStage ChatStage) : IRequest<Response>;
-    public record Response(StreamingChatReply StreamingChatReply);
+    internal record Request(IEnumerable<ChatMessage> ChatMessages, ChatStage ChatStage) : IRequest<Response>;
+    internal record Response(IAsyncEnumerable<string> StreamingChatReply);
 
     internal static IServiceCollection AddGetChatReplyFeature(this IServiceCollection services) => services.AddScoped<IRequestHandler<Request, Response>, Handler>();
 
@@ -37,6 +37,6 @@ public static class GetChatReply
 
     internal interface IChatService
     {
-        StreamingChatReply GetReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken);
+        IAsyncEnumerable<string> GetReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken);
     }
 }

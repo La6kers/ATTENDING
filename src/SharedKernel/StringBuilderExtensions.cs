@@ -5,6 +5,7 @@ namespace SharedKernel;
 public class ObservableStringBuilder() : IDisposable
 {
     public event EventHandler<(string AppendedString, string FullString)>? Appended;
+    public event EventHandler? Cleared;
     private readonly StringBuilder _stringBuilder = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
@@ -15,6 +16,20 @@ public class ObservableStringBuilder() : IDisposable
         {
             _stringBuilder.Append(value);
             Appended?.Invoke(this, new(value, _stringBuilder.ToString()));
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    public void Clear()
+    {
+        _semaphore.Wait();
+        try
+        {
+            _stringBuilder.Clear();
+            Cleared?.Invoke(this, EventArgs.Empty);
         }
         finally
         {

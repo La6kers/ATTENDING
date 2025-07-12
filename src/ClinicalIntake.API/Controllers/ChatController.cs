@@ -1,80 +1,65 @@
 ﻿using ClinicalIntake.Application.Chat;
-using ClinicalIntake.Application.Chat.Features.Queries;
-using FluentResults;
 using Microsoft.AspNetCore.Mvc;
-using SharedKernel;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
+using static ClinicalIntake.Application.Chat.ClinicalIntakeChatService;
 
 namespace ClinicalIntake.API.Controllers;
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class ChatController(Mediator mediator) : Controller
+public class ChatController(ClinicalIntakeChatService clinicalIntakeChatService) : Controller
 {
-    private readonly Mediator _mediator = mediator;
+    private readonly ClinicalIntakeChatService _clinicalIntakeChatService = clinicalIntakeChatService;
 
     [HttpPost()]
-    public async IAsyncEnumerable<string> Send([FromBody] ChatSendRequestDto chatSendRequest, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<string> GetChatReply([FromBody] GetChatReplyRequestDto getChatReplyRequestDto, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        if(chatSendRequest?.Messages == null || !chatSendRequest.Messages.Any())
+        if(getChatReplyRequestDto?.Messages == null || !getChatReplyRequestDto.Messages.Any())
         {
             HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             await HttpContext.Response.WriteAsJsonAsync(new { Error = "Chat messages cannot be empty." }, cancellationToken);
             yield break;
         }
 
-        var request = new GetChatReply.Request(chatSendRequest.Messages, chatSendRequest.ChatStage);
-        Result<GetChatReply.Response> response = await _mediator.Send<GetChatReply.Request, GetChatReply.Response>(request, cancellationToken);
-
-        if(response.IsFailed)
+        var getChatReplyResult = await _clinicalIntakeChatService.GetChatReply(getChatReplyRequestDto.Messages, getChatReplyRequestDto.ChatStage, cancellationToken);
+        if(getChatReplyResult.IsFailed)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await HttpContext.Response.WriteAsJsonAsync(new
-            {
-                Error = "An error occurred while processing the request.",
-                Details = response.Errors.Select(e => e.Message)
-            }, cancellationToken);
+            await HttpContext.Response.WriteAsJsonAsync(new { Error = getChatReplyResult.Errors.Select(e => e.Message) }, cancellationToken);
             yield break;
         }
 
-        await foreach(var chunk in response.Value.StreamingChatReply.Stream.WithCancellation(cancellationToken))
+        await foreach(var chunk in getChatReplyResult.Value.WithCancellation(cancellationToken))
+        {
+            if(string.IsNullOrEmpty(chunk))
+                continue;
+
             yield return chunk;
-
-        var isComplete = await response.Value.StreamingChatReply.IsChatStageComplete;
-        Console.WriteLine($"Conversation complete: {isComplete}");
-
-        if(await response.Value.StreamingChatReply.IsChatStageComplete)
-            yield return JsonSerializer.Serialize(new { IsComplete = true });
+        }
     }
 
     [HttpPost()]
-    public async Task<IActionResult> GetQuickReplies([FromBody] List<ChatMessage> messages, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetQuickReplies([FromBody] IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages == null || !messages.Any())
             return BadRequest("Chat messages cannot be empty.");
 
-        var request = new GetQuickRepliesChatReply.Request(messages);
-        Result<GetQuickRepliesChatReply.Response> result = await _mediator.Send<GetQuickRepliesChatReply.Request, GetQuickRepliesChatReply.Response>(request, cancellationToken);
+        var getQuickRepliesResult = await _clinicalIntakeChatService.GetQuickReplies(messages, cancellationToken);
+        if(getQuickRepliesResult.IsFailed)
+            return Problem(getQuickRepliesResult.Errors.Select(e => e.Message).ToString(), statusCode: StatusCodes.Status500InternalServerError);
 
-        if(result.IsFailed)
-            return StatusCode(500, result.Errors);
-
-        return Ok(result.Value.QuickReplies);
+        return Ok(getQuickRepliesResult.Value);
     }
 
     [HttpPost()]
-    public async Task<IActionResult> GetClinicalSummary([FromBody] List<ChatMessage> messages, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetClinicalSummary([FromBody] IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages is null || !messages.Any())
             return BadRequest("Chat messages cannot be empty.");
 
-        var request = new GetClinicalSummaryChatReply.Request(messages);
-        Result<GetClinicalSummaryChatReply.Response> result = await _mediator.Send<GetClinicalSummaryChatReply.Request, GetClinicalSummaryChatReply.Response>(request, cancellationToken);
-        if(result.IsFailed)
-            return Problem(result.Errors.Select(e => e.Message).ToString(), statusCode: StatusCodes.Status500InternalServerError);
+        var getClinicalSummaryResult = await _clinicalIntakeChatService.GetClinicalSummary(messages, cancellationToken);
+        if(getClinicalSummaryResult.IsFailed)
+            return Problem(getClinicalSummaryResult.Errors.Select(e => e.Message).ToString(), statusCode: StatusCodes.Status500InternalServerError);
 
-        return Ok(result.Value.ClinicalSummary);
+        return Ok(getClinicalSummaryResult.Value);
     }
-
-    public record ChatSendRequestDto(List<ChatMessage> Messages, ChatStage ChatStage);
 }

@@ -5,8 +5,8 @@ using SharedKernel;
 namespace ClinicalIntake.Application.Chat.Features.Queries;
 public static class GetClinicalSummaryChatReply
 {
-    public record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;
-    public record Response(string ClinicalSummary);
+    internal record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;
+    internal record Response(string ClinicalSummary);
 
     internal static IServiceCollection AddGetClinicalSummaryChatReplyFeature(this IServiceCollection services) =>
         services.AddScoped<IRequestHandler<Request, Response>, Handler>();

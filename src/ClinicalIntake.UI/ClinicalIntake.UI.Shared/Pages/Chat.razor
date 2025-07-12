@@ -2,9 +2,12 @@
 @layout EmptyLayout
 @rendermode InteractiveServer
 
+@using ClinicalIntake.Application.Chat
 @using Microsoft.Extensions.Http
 @using System.Text.Json
-@inject IHttpClientFactory HttpClientFactory
+@using SharedKernel
+
+@inject ClinicalIntakeChatClient ClinicalIntakeChatClient
 @inject IJSRuntime JSRuntime
 
 <PageTitle>COMPASS</PageTitle>
@@ -21,17 +24,16 @@
                 @foreach (var message in chatMessages)
                 {
                     <div class="mb-3">
-                        <MudPaper Class="pa-3" Elevation="1" Style="@(message.IsUser ? "background-color: #f0f4f8" : "background-color: #ffffff")">
+                        <MudPaper Class="pa-3" Elevation="1" Style="@(message.Role == ChatRole.User ? "background-color: #f0f4f8" : "background-color: #ffffff")">
                             <MudText Typo="Typo.body1">
-                                <MudText Typo="Typo.subtitle2" Color="@(message.IsUser ? Color.Primary : Color.Secondary)">
-                                    @(message.IsUser ? "You" : "Assistant")
+                                <MudText Typo="Typo.subtitle2" Color="@(message.Role == ChatRole.User ? Color.Primary : Color.Secondary)">
+                                    @(message.Role == ChatRole.User ? "You" : "Assistant")
                                 </MudText>
-                                @message.Text
+                                @message.Content
                             </MudText>
                         </MudPaper>
                     </div>
                 }
-                <div id="scrollTarget"></div>
             </div>
         </MudPaper>
         
@@ -68,44 +70,57 @@
 </MudContainer>
 
 @code {
+    private readonly List<ChatMessage> chatMessages = [];
+    private readonly List<string> quickReplies = [];
     private string currentMessage = string.Empty;
-    private List<ChatMessage> chatMessages = [];
     private ChatStage chatStage = ChatStage.ChiefComplaint;
-    private HttpClient Http => HttpClientFactory.CreateClient("ClinicalIntakeApi");
     private bool isLoading = false;
     private bool isConversationComplete = false;
-    private const string CHAT_STAGE_COMPLETED_MARKER = "[FINISH]";
+
     private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider.";
     private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
-    private List<string> quickReplies = new();
-
 
     protected override void OnInitialized()
     {
-        chatMessages.Add(new ChatMessage { 
-            Text = WELCOME_MESSAGE,
-            IsUser = false 
-        });
+        chatMessages.Add(new ChatMessage(ChatRole.Assistant, WELCOME_MESSAGE));
     }
 
-    private async Task ScrollToBottom()
-    {
-        await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");
-    }
+    private async Task ScrollToBottom() => await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");
 
     private async Task SendMessage()
     {
-        isLoading = true;
+        // set loading state true
+        // clear quick replies
+        // add user message to chat
+        // scroll to bottom
+        // get chat reply
+        // handle chat stage completion
+        // handle conversation completion
+        // fetch quick replies
+
+        // set loading state false
+
+
+        BeginLoading();
+        ClearQuickReplies();
+        AddUserMessage();
         StateHasChanged();
 
-        AddUserMessage();
         await ScrollToBottom();
 
         try
         {
-            var content = PrepareChatContent();
-            var response = await SendChatRequest(content);
-            await HandleChatResponse(response);
+            using var chatReplyStream = AddAssistantMessage();
+
+            var isChatStageComplete = await ClinicalIntakeChatClient.GetChatReply(chatMessages, chatStage, chatReplyStream);
+
+            if (isChatStageComplete)
+            {
+                await OnChatStageComplete(chatReplyStream);
+                return;
+            }
+
+            await FetchQuickReplies();
         }
         catch (Exception exception)
         {
@@ -113,102 +128,20 @@
         }
         finally
         {
-            isLoading = false;
+            EndLoading();
             StateHasChanged();
         }
-
-        await ScrollToBottom();
     }
 
-    private IEnumerable<sendChatMessageDto> PrepareChatContent()
+    private void BeginLoading() => isLoading = true;
+    private void EndLoading() => isLoading = false;
+
+    private void ClearQuickReplies() => quickReplies.Clear();
+
+    private async Task OnChatStageComplete(ObservableStringBuilder chatReplyStream)
     {
-        return chatMessages.Select(msg => new sendChatMessageDto(msg.IsUser ? 2 : 3, msg.Text));
-    }
+        chatStage = await ClinicalIntakeChatClient.HandleChatStageCompletion(chatMessages, chatStage, chatReplyStream);
 
-    private async Task<HttpResponseMessage> SendChatRequest(IEnumerable<sendChatMessageDto> content)
-    {
-        return await Http.PostAsync("api/chat/send", JsonContent.Create(new sendMessageContentDto(content, chatStage)));
-    }
-
-    private async Task HandleChatResponse(HttpResponseMessage response)
-    {
-        if (response.IsSuccessStatusCode)
-        {
-            var newChatResponse = new ChatMessage { IsUser = false };
-            chatMessages.Add(newChatResponse);
-            StateHasChanged();
-            await ScrollToBottom();
-
-            using var stream = await response.Content.ReadAsStreamAsync();
-            await ProcessStreamingResponse(stream, newChatResponse);
-        }
-        else
-        {
-            AddErrorMessage("An error occurred while getting a reply.");
-        }
-    }
-
-    private async Task ProcessStreamingResponse(Stream stream, ChatMessage newChatResponse)
-    {
-        using var reader = new StreamReader(stream);
-        bool isChatStageCompleted = false;
-        while (!reader.EndOfStream)
-        {
-            var textChunksJson = await reader.ReadLineAsync();
-            if (string.IsNullOrEmpty(textChunksJson)) continue;
-
-            var textChunks = JsonSerializer.Deserialize<List<string?>>(textChunksJson) ?? [];
-            foreach (var textChunk in textChunks)
-                if (!string.IsNullOrEmpty(textChunk))
-                {
-                    newChatResponse.Text += textChunk;
-                    StateHasChanged();
-                    await ScrollToBottom();
-                }
-
-            if (newChatResponse.Text.Contains(CHAT_STAGE_COMPLETED_MARKER))
-            {
-                isChatStageCompleted = true;
-                break;
-            }
-        }
-
-        if (isChatStageCompleted)
-        {
-            await CompleteChatStage();                
-            chatMessages.Remove(newChatResponse);
-            StateHasChanged();
-            await ScrollToBottom();
-            
-            if (!isConversationComplete)
-            {
-                await SendMessage();
-                await FetchQuickReplies();
-            }
-
-            return;
-        }
-
-        if(!isConversationComplete)
-            await FetchQuickReplies();
-    }
-
-    private async Task CompleteChatStage()
-    {
-        // increase chat stage by 1
-        chatStage = chatStage switch
-        {
-            ChatStage.ChiefComplaint => ChatStage.MedicalHistory,
-            ChatStage.MedicalHistory => ChatStage.CurrentMedications,
-            ChatStage.CurrentMedications => ChatStage.ClinicalSummary,
-            _ => chatStage
-        };
-
-        await OnCompleteChatStage();
-    }
-
-    private async Task OnCompleteChatStage()
-    {
         if (chatStage == ChatStage.ClinicalSummary)
         {
             quickReplies.Clear();
@@ -216,116 +149,79 @@
             AddCompletionMessage();
             await FetchClinicalSummary();
             return;
-        }       
+        }
     }
 
     private async Task FetchQuickReplies()
     {
+        quickReplies.Clear();
+
         try
         {
-            var content = PrepareChatContent();
-            var response = await Http.PostAsync("api/chat/getquickreplies", JsonContent.Create(content));
+            var fetchedQuickReplies = await ClinicalIntakeChatClient.GetQuickReplies(chatMessages);
+            if(fetchedQuickReplies is null)
+                return;
 
-            if (response.IsSuccessStatusCode)
-            {
-                var quickRepliesResponse = await response.Content.ReadFromJsonAsync<List<string>>();
-                if (quickRepliesResponse != null)
-                    quickReplies = quickRepliesResponse;
-            }
-            else
-                quickReplies.Clear();
+            quickReplies.AddRange(fetchedQuickReplies);
         }
-        catch (Exception ex)
+        catch(Exception exception)
         {
-            quickReplies.Clear();
-            AddErrorMessage($"Error fetching quick replies: {ex.Message}");
+            AddErrorMessage($"Error fetching quick replies: {exception.Message}");
         }
-        finally
-        {
-            StateHasChanged();
-        }
-    }
-
-    private async Task HandleQuickReply(string reply)
-    {
-        quickReplies.Clear();
-        StateHasChanged();
-        
-        currentMessage = reply;
-        await SendMessage();
     }
 
     private async Task FetchClinicalSummary()
     {
         try
         {
-            var content = PrepareChatContent();
-            var response = await Http.PostAsync("api/chat/getclinicalsummary", JsonContent.Create(content));
+            var clinicalSummary = await ClinicalIntakeChatClient.GetClinicalSummary(chatMessages);
+            if(clinicalSummary is null)
+                return;
 
-            if (response.IsSuccessStatusCode)
-            {
-                var summary = await response.Content.ReadAsStringAsync();
-                AddSummaryMessage(summary);
-            }
-            else
-                AddErrorMessage("Failed to retrieve clinical summary.");
+            chatMessages.Add(new ChatMessage(ChatRole.Assistant, clinicalSummary));
         }
-        catch (Exception ex)
+        catch(Exception exception)
         {
-            AddErrorMessage($"Error: {ex.Message}");
-        }
-        finally
-        {
-            StateHasChanged();
-            await ScrollToBottom();
+            AddErrorMessage($"Error fetching clinical summary: {exception.Message}");
         }
     }
 
     private void AddUserMessage()
     {
-        var currentUserChatMessage = new ChatMessage
-        {
-            Text = currentMessage,
-            IsUser = true
-        };
+        if(string.IsNullOrEmpty(currentMessage))
+            return;
 
-        chatMessages.Add(currentUserChatMessage);
+        chatMessages.Add(new (ChatRole.User, currentMessage));
         currentMessage = string.Empty;
-        StateHasChanged();
+    }
+
+    private ObservableStringBuilder AddAssistantMessage()
+    {
+        var newAssistantMessage = new ChatMessage(ChatRole.Assistant, string.Empty);
+        chatMessages.Add(newAssistantMessage);
+        ObservableStringBuilder observableStringBuilder = new();
+        observableStringBuilder.Appended += (sender, eventArgs) => onChatReplyStreamAppended(sender, eventArgs, newAssistantMessage);
+        return observableStringBuilder;
     }
 
     private void AddErrorMessage(string message)
     {
-        var chatResponse = new ChatMessage
-        {
-            Text = message,
-            IsUser = false
-        };
-
-        chatMessages.Add(chatResponse);
+        chatMessages.Add(new(ChatRole.Assistant, message));
         StateHasChanged();
     }
 
     private void AddCompletionMessage()
     {
-        var completeConversationChatResponse = new ChatMessage
-        {
-            Text = GOODBYE_MESSAGE,
-            IsUser = false
-        };
-
+        var completeConversationChatResponse = new ChatMessage(ChatRole.Assistant, GOODBYE_MESSAGE);
         chatMessages.Add(completeConversationChatResponse);
     }
 
-    private void AddSummaryMessage(string summary)
+    private void onChatReplyStreamAppended(object? sender, (string AppendedString, string FullString) eventArgs, ChatMessage chatMessage)
     {
-        var summaryMessage = new ChatMessage
-        {
-            Text = $"Clinical Summary:\n{summary}",
-            IsUser = false
-        };
+        if(chatMessage is null)
+            return;
 
-        chatMessages.Add(summaryMessage);
+        chatMessage.Content = eventArgs.FullString ?? string.Empty;
         StateHasChanged();
     }
 
@@ -335,31 +231,14 @@
             await SendMessage();
     }
 
+    private async Task HandleQuickReply(string reply)
+    {
+        currentMessage = reply;
+        await SendMessage();
+    }
+
     private void HandleError(Exception exception)
     {
         AddErrorMessage($"Error: {exception.Message}");
-    }
-
-    private record sendMessageContentDto(IEnumerable<sendChatMessageDto> Messages, ChatStage ChatStage);
-    private record sendChatMessageDto(int role, string content);
-    private enum ChatStage
-    {
-        ChiefComplaint = 1,
-        // SymptomAnalysis,
-        MedicalHistory = 3,
-        CurrentMedications = 4,
-        // RiskAssessment,
-        ClinicalSummary
-    }
-
-    private class ChatMessage
-    {
-        public string Text { get; set; } = "";
-        public bool IsUser { get; set; }
-    }
-
-    private class StreamingChatReply
-    {
-        public string Text { get; set; } = "";
     }
 }
