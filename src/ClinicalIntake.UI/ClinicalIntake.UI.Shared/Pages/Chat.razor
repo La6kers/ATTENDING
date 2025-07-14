@@ -13,59 +13,80 @@
 <PageTitle>COMPASS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
-    <MudPaper Class="pa-4" Style="height: calc(100vh - 150px); display: flex; flex-direction: column;">
-        <div Class="d-flex align-center justify-center mb-4">
-            <MudIcon Icon="@Icons.Material.Filled.Explore" Style="font-size: 2rem; margin-right: 8px;" Color="Color.Primary" />
-            <MudText Typo="Typo.h5" Align="Align.Center">COMPASS</MudText>
-        </div>
-        
-        <MudPaper Class="flex-grow-1 overflow-auto pa-4" Elevation="0" id="chatContainer">
-            <div>
-                @foreach (var message in chatMessages)
+    <MudPaper Class="pa-4" Style="height: calc(100vh - 150px); display: flex; flex-direction: row;">
+
+        <!-- Sidebar -->
+        <MudPaper Class="pa-4" Style="width: 700px; display: flex; flex-direction: column; border-right: 1px solid #e0e0e0;">
+            <MudText Typo="Typo.h6" Class="mb-2">Chat Stages</MudText>
+            <MudList T="ChatStage">
+                @foreach (ChatStage stage in ChatStages)
                 {
-                    <div class="mb-3">
-                        <MudPaper Class="pa-3" Elevation="1" Style="@(message.Role == ChatRole.User ? "background-color: #f0f4f8" : "background-color: #ffffff")">
-                            <MudText Typo="Typo.body1">
-                                <MudText Typo="Typo.subtitle2" Color="@(message.Role == ChatRole.User ? Color.Primary : Color.Secondary)">
-                                    @(message.Role == ChatRole.User ? "You" : "Assistant")
-                                </MudText>
-                                @message.Content
-                            </MudText>
-                        </MudPaper>
-                    </div>
+                    <MudListItem Class="d-flex align-center" Style="@(stage >= chatStage ? "background-color: #e3f2fd;" : "")">
+                        <MudCheckBox
+                            Disabled="true" 
+                            Class="mr-2" >
+                        <MudText Typo="Typo.body1">@stage</MudText>
+                        </MudCheckBox>
+                    </MudListItem>
                 }
-            </div>
-        </MudPaper>
-        
-        <MudPaper Class="d-flex align-center mt-4" Elevation="0">
-            <MudTextField @bind-value="currentMessage" 
-                         Placeholder="Describe your condition or symptoms..." 
-                         Variant="Variant.Outlined" 
-                         Class="flex-grow-1 mr-2"
-                         OnKeyDown="@HandleKeyPress" 
-                         Immediate="true"
-                         TextUpdateSuppression="false"
-                         Clearable="true" 
-                         Disabled="isConversationComplete"/>
-            <MudButton Color="Color.Primary" 
-                      Variant="Variant.Filled"
-                      OnClick="SendMessage"
-                      Disabled="isLoading || isConversationComplete || string.IsNullOrWhiteSpace(currentMessage)">
-                Send
-            </MudButton>
+            </MudList>
         </MudPaper>
 
-        @if (quickReplies.Any())
-        {
-            <MudPaper Class="d-flex flex-wrap mt-2" Elevation="0">
-                @foreach (var reply in quickReplies)
-                {
-                    <MudButton Variant="Variant.Outlined" Class="m-1" OnClick="() => HandleQuickReply(reply)">
-                        @reply
-                    </MudButton>
-                }
+        <!-- Chat Interface -->
+        <MudPaper Class="pa-4 flex-grow-1" Style="display: flex; flex-direction: column;">
+            <div Class="d-flex align-center justify-center mb-4">
+                <MudIcon Icon="@Icons.Material.Filled.Explore" Style="font-size: 2rem; margin-right: 8px;" Color="Color.Primary" />
+                <MudText Typo="Typo.h5" Align="Align.Center">COMPASS</MudText>
+            </div>
+
+            <MudPaper Class="flex-grow-1 overflow-auto pa-4" Elevation="0" id="chatContainer">
+                <div>
+                    @foreach(var message in chatMessages)
+                    {
+                        <div class="mb-3">
+                            <MudPaper Class="pa-3" Elevation="1" Style="@(message.Role == ChatRole.User ? "background-color: #f0f4f8" : "background-color: #ffffff")">
+                                <MudText Typo="Typo.body1">
+                                    <MudText Typo="Typo.subtitle2" Color="@(message.Role == ChatRole.User ? Color.Primary : Color.Secondary)">
+                                        @(message.Role == ChatRole.User ? "You" : "Assistant")
+                                    </MudText>
+                                    @message.Content
+                                </MudText>
+                            </MudPaper>
+                        </div>
+                    }
+                </div>
             </MudPaper>
-        }
+
+            <MudPaper Class="d-flex align-center mt-4" Elevation="0">
+                <MudTextField @bind-value="currentMessage"
+                              Placeholder="Describe your condition or symptoms..."
+                              Variant="Variant.Outlined"
+                              Class="flex-grow-1 mr-2"
+                              OnKeyDown="@HandleKeyPress"
+                              Immediate="true"
+                              TextUpdateSuppression="false"
+                              Clearable="true"
+                              Disabled="isConversationComplete" />
+                <MudButton Color="Color.Primary"
+                           Variant="Variant.Filled"
+                           OnClick="SendMessage"
+                           Disabled="isLoading || isConversationComplete || string.IsNullOrWhiteSpace(currentMessage)">
+                    Send
+                </MudButton>
+            </MudPaper>
+
+            @if(quickReplies.Any())
+            {
+                <MudPaper Class="d-flex flex-wrap mt-2" Elevation="0">
+                    @foreach(var reply in quickReplies)
+                    {
+                        <MudButton Variant="Variant.Outlined" Class="m-1" OnClick="() => HandleQuickReply(reply)">
+                            @reply
+                        </MudButton>
+                    }
+                </MudPaper>
+            }
+        </MudPaper>
     </MudPaper>
 </MudContainer>
 
@@ -80,10 +101,21 @@
     private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider. Lets start with what is the main reason for your visit today?";
     private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
 
+    private static readonly IEnumerable<ChatStage> ChatStages =
+    [
+        ChatStage.ChiefComplaint,
+        ChatStage.Symptoms,
+        ChatStage.MedicalHistory,
+        ChatStage.CurrentMedications,
+        ChatStage.ClinicalSummary,
+    ];
+
     protected override void OnInitialized()
     {
         chatMessages.Add(new ChatMessage(ChatRole.Assistant, WELCOME_MESSAGE));
     }
+
+    public static bool isChatStageChecked(ChatStage currentChatStage, ChatStage stage) => currentChatStage >= stage;
 
     private async Task ScrollToBottom() => await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");
 
@@ -101,7 +133,7 @@
             var newAssistantChatMessage = AddAssistantMessage();
 
             var chatReplyStream = ClinicalIntakeChatClient.GetChatReply(chatMessages);
-            if (chatReplyStream is null)
+            if(chatReplyStream is null)
                 return;
 
             var detectedStageString = string.Empty;
@@ -126,6 +158,7 @@
                     {
                         detectedStage = parsedStage;
                         chatStage = parsedStage; // Update the current chat stage
+                        StateHasChanged();
                     }
 
                     // Remove the stage name from tempContent
@@ -144,7 +177,7 @@
             AddCompletionMessage();
             await FetchClinicalSummary();
         }
-        catch (Exception exception)
+        catch(Exception exception)
         {
             HandleError(exception);
         }
@@ -205,7 +238,7 @@
         if(string.IsNullOrEmpty(currentMessage))
             return;
 
-        chatMessages.Add(new (ChatRole.User, currentMessage));
+        chatMessages.Add(new(ChatRole.User, currentMessage));
         currentMessage = string.Empty;
     }
 
@@ -243,7 +276,7 @@
 
     private async Task HandleKeyPress(KeyboardEventArgs args)
     {
-        if (args.Key == "Enter" && !args.ShiftKey)
+        if(args.Key == "Enter" && !args.ShiftKey)
             await SendMessage();
     }
 
