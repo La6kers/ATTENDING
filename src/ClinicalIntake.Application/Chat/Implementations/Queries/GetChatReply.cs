@@ -14,7 +14,7 @@ internal static class GetChatReply
     {
         private readonly AzureOpenAIChatService _azureOpenAiChatService = azureOpenAIChatService;
 
-        public IAsyncEnumerable<string> GetReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken) =>
-            _azureOpenAiChatService.GetChatReply(messages, ChatStage.ChiefComplaint, cancellationToken);
+        public IAsyncEnumerable<string> GetReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken) =>
+            _azureOpenAiChatService.GetChatReply(messages, cancellationToken);
     }
 }

@@ -1,3 +1,4 @@
+using ClinicalIntake.Application.Chat;
 using ClinicalIntake.UI.Shared.Services;
 using ClinicalIntake.UI.Web.Components;
 using ClinicalIntake.UI.Web.Services;
@@ -23,11 +24,7 @@ public class Program
         builder.Services.AddMudServices();
 
         // Add environment variable for ClinicalIntake API URL
-        var clinicalIntakeApiUrl = builder.Configuration["ClinicalIntakeApiUrl"];
-        if(string.IsNullOrEmpty(clinicalIntakeApiUrl))
-            throw new InvalidOperationException("The ClinicalIntakeApiUrl environment variable is not set.");
-
-        builder.Services.AddHttpClient("ClinicalIntakeApi", client => client.BaseAddress = new Uri(clinicalIntakeApiUrl));
+        builder.Services.AddClinicalIntakeChatClient();
 
         var app = builder.Build();
 

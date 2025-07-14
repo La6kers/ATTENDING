@@ -6,7 +6,7 @@ using Error = SharedKernel.Error;
 namespace ClinicalIntake.Application.Chat.Features.Queries;
 internal static class GetChatReply
 {
-    internal record Request(IEnumerable<ChatMessage> ChatMessages, ChatStage ChatStage) : IRequest<Response>;
+    internal record Request(IEnumerable<ChatMessage> ChatMessages) : IRequest<Response>;
     internal record Response(IAsyncEnumerable<string> StreamingChatReply);
 
     internal static IServiceCollection AddGetChatReplyFeature(this IServiceCollection services) => services.AddScoped<IRequestHandler<Request, Response>, Handler>();
@@ -22,7 +22,7 @@ internal static class GetChatReply
                 if(request.ChatMessages == null || !request.ChatMessages.Any())
                     return Task.FromResult(Result.Fail<Response>(new Error(nameof(GetChatReply), "Chat messages cannot be empty.")));
 
-                var chatReply = _chatService.GetReply(request.ChatMessages, request.ChatStage, cancellationToken);
+                var chatReply = _chatService.GetReply(request.ChatMessages, cancellationToken);
                 var response = new Response(chatReply);
                 var result = Result.Ok(response);
                 return Task.FromResult(result);
@@ -37,6 +37,6 @@ internal static class GetChatReply
 
     internal interface IChatService
     {
-        IAsyncEnumerable<string> GetReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken);
+        IAsyncEnumerable<string> GetReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken);
     }
 }

@@ -1,22 +1,29 @@
 ﻿namespace ClinicalIntake.Application.Chat;
-public record ChatMessage(ChatRole role, string content)
+
+public record ChatMessage
 {
-    public ChatRole Role { get; init; } = role;
-    public string Content { get; set; } = content;
+    public ChatMessage(ChatRole role, string content)
+    {
+        Role = role;
+        Content = content;
+    }
+    public ChatRole Role { get; init; }
+    public string Content { get; set; }
 }
 
 public enum ChatStage
 {
     ChiefComplaint = 1,
-    //SymptomAnalysis,
+    Symptoms,
     MedicalHistory,
     CurrentMedications,
-    ClinicalSummary,
+    Complete,
+    ClinicalSummary
 }
 
 public enum ChatRole
 {
     System = 1,
-    User,
+    User,               // TODO: the model should be patient
     Assistant
 }

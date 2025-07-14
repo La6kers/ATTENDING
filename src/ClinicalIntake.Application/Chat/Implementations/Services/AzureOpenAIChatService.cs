@@ -11,13 +11,13 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
     private readonly string _deploymentName = deploymentName;
     private readonly ChatCompletionOptions _chatCompletionOptions = chatCompletionOptions;
 
-    public IAsyncEnumerable<string> GetChatReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken)
+    public IAsyncEnumerable<string> GetChatReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages == null || !messages.Any())
-            return Constants.DefaultStreamingChatReply;
+            return AsyncEnumerable.Empty<string>();
 
-        var systemMessage = getSystemMessageByChatStage(chatStage);
-        IEnumerable<OpenAIChatMessage> openAIChatMessages = createOpenAIChatMessageList(systemMessage, messages);
+        var systemMessage = SystemPrompts.Survey;
+        IEnumerable<OpenAIChatMessage> openAIChatMessages = createOpenAIChatMessageList(systemMessage, messages.TakeLast(10));
         return sendChatRequest(openAIChatMessages, cancellationToken);
     }
     public async Task<IEnumerable<string>> GetQuickReplies(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
@@ -62,14 +62,6 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         return stringBuilder.ToString();
     }
 
-    private static string getSystemMessageByChatStage(ChatStage chatStage) => chatStage switch
-    {
-        ChatStage.ChiefComplaint => SystemPrompts.ChiefComplaint,
-        ChatStage.MedicalHistory => SystemPrompts.MedicalHistory,
-        ChatStage.CurrentMedications => SystemPrompts.CurrentMedications,
-        _ => throw new ArgumentOutOfRangeException(nameof(chatStage), chatStage, "Unsupported chat stage")
-    };
-
     private static List<OpenAIChatMessage> createOpenAIChatMessageList(string systemMessage, IEnumerable<ChatMessage> messages)
     {
         List<OpenAIChatMessage> openAIChatMessages = [new SystemChatMessage(systemMessage)];
@@ -101,7 +93,7 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
 
     private static class SystemPrompts
     {
-        public const string GatherSymptoms = @"You are a clinical intake assistant.
+        public const string Survey = @"You are a clinical intake assistant.
 Your goal is to gather the following information from a patient through a step-by-step interview:
 -Chief complaint
 -Symptoms
@@ -116,52 +108,17 @@ Your goal is to gather the following information from a patient through a step-b
   - Surgical history
 -Current medications
 Important Rules:
-- Ask only one question at a time.
-- Wait for the patient's response before continuing.
-- Do not combine multiple questions into one message.
 - Do not answer questions from the patient.
+- Begin each reply with its section name in square brackets, e.g.: [CHIEFCOMPLAINT], [SYMPTOMS], [MEDICALHISTORY], [CURRENTMEDICATIONS].
 - Keep all questions polite, medically appropriate, and easy to understand.
-- Once all information is collected, respond with: " + Constants.CHAT_STAGE_COMPLETED_MARKER;
-
-        public const string ChiefComplaint = @"You are a clinical intake assistant.
-Your goal is to begin gathering information from a patient.
-Start by asking about:
-1. Chief complaint
-2. Symptoms
-   - Duration
-   - Severity
-
-Important Rules:
 - Ask only one question at a time.
-- Wait for the patient's response before continuing.
 - Do not combine multiple questions into one message.
-- Do not answer questions from the patient.
-- Keep all questions polite, medically appropriate, and easy to understand.
-Once this section is complete, respond with: " + Constants.CHAT_STAGE_COMPLETED_MARKER;
-        public const string MedicalHistory = @"Continue gathering the patient's medical history, including:
-1. History of present illness (HPI)
-2. Past medical history
-3. Family history
-4. Social history
-5. Sexual history
-6. Surgical history
-
-Important Rules:
-- Ask only one question at a time.
 - Wait for the patient's response before continuing.
-- Do not combine multiple questions into one message.
-- Do not answer questions from the patient.
-- Keep all questions polite, medically appropriate, and easy to understand.
-Once this section is complete, respond with: " + Constants.CHAT_STAGE_COMPLETED_MARKER;
-        public const string CurrentMedications = @"Now ask about the patient’s current medications.
-
-Important Rules:
-- Ask only one question at a time.
-- Wait for the patient's response before continuing.
-- Do not combine multiple questions into one message.
-- Do not answer questions from the patient.
-- Keep all questions polite, medically appropriate, and easy to understand.
-Once this section is complete, respond with: " + Constants.CHAT_STAGE_COMPLETED_MARKER;
+- Make sure all of your questions are answered before proceeding to the next section.
+- Once a section is complete and you have all the information, move to the next section.
+- If the patient does not answer a question, politely ask them to provide an answer.
+- If the patient provides an answer that is not relevant to the current section, politely redirect them back to the topic at hand.
+- Once all information is collected, respond with a section name of complete, e.g.: [COMPLETE]";
 
         public const string QuickReplies = @"Generate a JSON array of quick reply options based on the last question in the conversation.
 - Replies must be short (2–4 words)

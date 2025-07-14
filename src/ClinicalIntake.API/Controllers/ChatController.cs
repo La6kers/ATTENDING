@@ -1,7 +1,6 @@
 ﻿using ClinicalIntake.Application.Chat;
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.CompilerServices;
-using static ClinicalIntake.Application.Chat.ClinicalIntakeChatService;
 
 namespace ClinicalIntake.API.Controllers;
 [ApiController]
@@ -11,29 +10,27 @@ public class ChatController(ClinicalIntakeChatService clinicalIntakeChatService)
     private readonly ClinicalIntakeChatService _clinicalIntakeChatService = clinicalIntakeChatService;
 
     [HttpPost()]
-    public async IAsyncEnumerable<string> GetChatReply([FromBody] GetChatReplyRequestDto getChatReplyRequestDto, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<string> GetChatReply([FromBody] IEnumerable<ChatMessage> messages, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        if(getChatReplyRequestDto?.Messages == null || !getChatReplyRequestDto.Messages.Any())
+        if(messages is null || !messages.Any())
         {
             HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             await HttpContext.Response.WriteAsJsonAsync(new { Error = "Chat messages cannot be empty." }, cancellationToken);
             yield break;
         }
 
-        var getChatReplyResult = await _clinicalIntakeChatService.GetChatReply(getChatReplyRequestDto.Messages, getChatReplyRequestDto.ChatStage, cancellationToken);
-        if(getChatReplyResult.IsFailed)
+        var getChatReplyStream = await _clinicalIntakeChatService.GetChatReply(messages, cancellationToken);
+        if(getChatReplyStream is null)
         {
             HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await HttpContext.Response.WriteAsJsonAsync(new { Error = getChatReplyResult.Errors.Select(e => e.Message) }, cancellationToken);
+            await HttpContext.Response.WriteAsJsonAsync(new { Error = "An error occurred while processing the chat reply." }, cancellationToken);
             yield break;
         }
 
-        await foreach(var chunk in getChatReplyResult.Value.WithCancellation(cancellationToken))
+        await foreach(var chunk in getChatReplyStream.WithCancellation(cancellationToken))
         {
-            if(string.IsNullOrEmpty(chunk))
-                continue;
-
-            yield return chunk;
+            if(!string.IsNullOrEmpty(chunk))
+                yield return chunk;
         }
     }
 

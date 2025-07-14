@@ -7,20 +7,19 @@ public class ClinicalIntakeChatService(Mediator mediator)
 {
     private readonly Mediator _mediator = mediator;
 
-    public async Task<Result<IAsyncEnumerable<string>>> GetChatReply(IEnumerable<ChatMessage> messages, ChatStage chatStage, CancellationToken cancellationToken)
+    public async Task<IAsyncEnumerable<string>> GetChatReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages is null || !messages.Any())
-            return Result.Fail<IAsyncEnumerable<string>>("Chat messages cannot be empty.");
+            throw new ArgumentException("Chat messages cannot be empty.", nameof(messages));
 
-        var request = new GetChatReply.Request(messages, chatStage);
+        var request = new GetChatReply.Request(messages);
         Result<GetChatReply.Response> response = await _mediator.Send<GetChatReply.Request, GetChatReply.Response>(request, cancellationToken);
 
         if(response.IsFailed)
-            return Result.Fail<IAsyncEnumerable<string>>("An error occurred while processing the request.");
+            throw new ArgumentException("An error occurred while processing the request.", nameof(messages));
 
-        return Result.Ok(response.Value.StreamingChatReply);
+        return response.Value.StreamingChatReply;
     }
-
     public async Task<Result<IEnumerable<string>>> GetQuickReplies(IEnumerable<ChatMessage> chatMessages, CancellationToken cancellationToken)
     {
         var request = new GetQuickRepliesChatReply.Request(chatMessages);
@@ -30,7 +29,6 @@ public class ClinicalIntakeChatService(Mediator mediator)
 
         return Result.Ok(result.Value.QuickReplies);
     }
-
     public async Task<Result<string>> GetClinicalSummary(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages is null || !messages.Any())
@@ -43,6 +41,4 @@ public class ClinicalIntakeChatService(Mediator mediator)
 
         return Result.Ok(response.Value.ClinicalSummary);
     }
-
-    public record GetChatReplyRequestDto(IEnumerable<ChatMessage> Messages, ChatStage ChatStage);
 }

@@ -1,4 +1,3 @@
-
 using ClinicalIntake.Application.Chat;
 using Orchestration.ServiceDefaults;
 using SharedKernel;
@@ -20,8 +19,7 @@ public class Program
 
         // add application services
         builder.Services.AddScoped<Mediator>();
-        builder.Services.AddSubContextClinicalIntakeChat()
-            .AddImplementationClinicalIntakeChatAzureOpenAI();
+        builder.Services.AddClinicalIntakeChatService();
 
         var app = builder.Build();
 

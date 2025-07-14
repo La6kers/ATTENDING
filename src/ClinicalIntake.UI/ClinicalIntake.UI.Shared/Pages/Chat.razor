@@ -75,9 +75,9 @@
     private string currentMessage = string.Empty;
     private ChatStage chatStage = ChatStage.ChiefComplaint;
     private bool isLoading = false;
-    private bool isConversationComplete = false;
+    private bool isConversationComplete => chatStage >= ChatStage.Complete;
 
-    private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider.";
+    private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider. Lets start with what is the main reason for your visit today?";
     private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
 
     protected override void OnInitialized()
@@ -89,18 +89,6 @@
 
     private async Task SendMessage()
     {
-        // set loading state true
-        // clear quick replies
-        // add user message to chat
-        // scroll to bottom
-        // get chat reply
-        // handle chat stage completion
-        // handle conversation completion
-        // fetch quick replies
-
-        // set loading state false
-
-
         BeginLoading();
         ClearQuickReplies();
         AddUserMessage();
@@ -110,17 +98,51 @@
 
         try
         {
-            using var chatReplyStream = AddAssistantMessage();
+            var newAssistantChatMessage = AddAssistantMessage();
 
-            var isChatStageComplete = await ClinicalIntakeChatClient.GetChatReply(chatMessages, chatStage, chatReplyStream);
-
-            if (isChatStageComplete)
-            {
-                await OnChatStageComplete(chatReplyStream);
+            var chatReplyStream = ClinicalIntakeChatClient.GetChatReply(chatMessages);
+            if (chatReplyStream is null)
                 return;
+
+            var detectedStageString = string.Empty;
+            ChatStage? detectedStage = null;
+            await foreach(var chunk in chatReplyStream)
+            {
+                if(string.IsNullOrEmpty(chunk))
+                    continue;
+
+                detectedStageString += chunk;
+
+                // Check if the stage name is present
+                var stageEndIndex = detectedStageString.IndexOf(']');
+                if(stageEndIndex != -1 && detectedStage is null)
+                {
+                    // Extract the stage name (e.g., "[CHIEF_COMPLAINT]")
+                    var stageName = detectedStageString.Substring(1, stageEndIndex - 1); // Skip the '[' and exclude ']'
+                    Console.WriteLine($"Detected stage name: {stageName}");
+                    Console.WriteLine($"Detected stage string: {detectedStageString}");
+                    // Try to parse the stage name into the ChatStage enum
+                    if(Enum.TryParse<ChatStage>(stageName, true, out var parsedStage))
+                    {
+                        detectedStage = parsedStage;
+                        chatStage = parsedStage; // Update the current chat stage
+                    }
+
+                    // Remove the stage name from tempContent
+                    newAssistantChatMessage.Content = detectedStageString[(stageEndIndex + 1)..];
+                    continue;
+                }
+
+                // Append the remaining content to the assistant's message
+                newAssistantChatMessage.Content += chunk;
+
+                StateHasChanged();
+                await ScrollToBottom();
             }
 
             await FetchQuickReplies();
+            AddCompletionMessage();
+            await FetchClinicalSummary();
         }
         catch (Exception exception)
         {
@@ -130,6 +152,7 @@
         {
             EndLoading();
             StateHasChanged();
+            await ScrollToBottom();
         }
     }
 
@@ -138,23 +161,11 @@
 
     private void ClearQuickReplies() => quickReplies.Clear();
 
-    private async Task OnChatStageComplete(ObservableStringBuilder chatReplyStream)
-    {
-        chatStage = await ClinicalIntakeChatClient.HandleChatStageCompletion(chatMessages, chatStage, chatReplyStream);
-
-        if (chatStage == ChatStage.ClinicalSummary)
-        {
-            quickReplies.Clear();
-            isConversationComplete = true;
-            AddCompletionMessage();
-            await FetchClinicalSummary();
-            return;
-        }
-    }
-
     private async Task FetchQuickReplies()
     {
         quickReplies.Clear();
+        if(chatStage >= ChatStage.Complete)
+            return;
 
         try
         {
@@ -172,6 +183,9 @@
 
     private async Task FetchClinicalSummary()
     {
+        if(chatStage < ChatStage.Complete)
+            return;
+
         try
         {
             var clinicalSummary = await ClinicalIntakeChatClient.GetClinicalSummary(chatMessages);
@@ -195,13 +209,12 @@
         currentMessage = string.Empty;
     }
 
-    private ObservableStringBuilder AddAssistantMessage()
+    private ChatMessage AddAssistantMessage()
     {
         var newAssistantMessage = new ChatMessage(ChatRole.Assistant, string.Empty);
         chatMessages.Add(newAssistantMessage);
-        ObservableStringBuilder observableStringBuilder = new();
-        observableStringBuilder.Appended += (sender, eventArgs) => onChatReplyStreamAppended(sender, eventArgs, newAssistantMessage);
-        return observableStringBuilder;
+
+        return newAssistantMessage;
     }
 
     private void AddErrorMessage(string message)
@@ -212,17 +225,20 @@
 
     private void AddCompletionMessage()
     {
+        if(chatStage < ChatStage.Complete)
+            return;
         var completeConversationChatResponse = new ChatMessage(ChatRole.Assistant, GOODBYE_MESSAGE);
         chatMessages.Add(completeConversationChatResponse);
     }
 
-    private void onChatReplyStreamAppended(object? sender, (string AppendedString, string FullString) eventArgs, ChatMessage chatMessage)
+    private async void onChatReplyStreamAppended(object? sender, (string AppendedString, string FullString) eventArgs, ChatMessage chatMessage)
     {
         if(chatMessage is null)
             return;
 
-        chatMessage.Content = eventArgs.FullString ?? string.Empty;
+        chatMessage.Content += eventArgs.AppendedString ?? string.Empty;
         StateHasChanged();
+        await ScrollToBottom();
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs args)

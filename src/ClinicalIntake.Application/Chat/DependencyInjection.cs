@@ -3,23 +3,39 @@ using Azure.AI.OpenAI;
 using ClinicalIntake.Application.Chat.Features.Queries;
 using ClinicalIntake.Application.Chat.Implementations.Queries;
 using ClinicalIntake.Application.Chat.Implementations.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenAI.Chat;
 
 namespace ClinicalIntake.Application.Chat;
 public static class DependencyInjection
 {
-    public static IServiceCollection AddSubContextClinicalIntakeChat(this IServiceCollection services)
+    public static IServiceCollection AddClinicalIntakeChatService(this IServiceCollection services)
     {
+        return services
+            .AddScoped<ClinicalIntakeChatService>()
+            .addClinicalIntakeChatSubContext()
+            .addImplementationClinicalIntakeChatAzureOpenAI();
+    }
+
+    public static IServiceCollection AddClinicalIntakeChatClient(this IServiceCollection services)
+    {
+
         services
-            .AddGetChatReplyFeature()
-            .AddGetQuickRepliesChatReplyFeature()
-            .AddGetClinicalSummaryChatReplyFeature();
+            .AddScoped<ClinicalIntakeChatClient>()
+            .AddHttpClient("ClinicalIntakeChatClient", (provider, client) =>
+        {
+            var configuration = provider.GetRequiredService<IConfiguration>();
+            var baseUrl = configuration["ClinicalIntakeApiUrl"] ?? "https://localhost:5001/";
+
+            client.BaseAddress = new Uri(baseUrl);
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
 
         return services;
     }
 
-    public static IServiceCollection AddImplementationClinicalIntakeChatAzureOpenAI(this IServiceCollection services)
+    private static IServiceCollection addImplementationClinicalIntakeChatAzureOpenAI(this IServiceCollection services)
     {
         const string azureOpenAIEndpoint = "https://attending-dev-open-ai.openai.azure.com/";
         const string azureOpenAIKey = "93DXOskItpoFvO6PGcMb9QKGExZxZU4RTc30LyszuFmrARdngZA4JQQJ99BFACYeBjFXJ3w3AAABACOGnMAI";
@@ -28,7 +44,11 @@ public static class DependencyInjection
         services.AddSingleton(provider => new AzureOpenAIClient(new Uri(azureOpenAIEndpoint), new AzureKeyCredential(azureOpenAIKey)));
         services.AddSingleton(provider => new ChatCompletionOptions
         {
-            Temperature = 0.7f,
+            MaxOutputTokenCount = 800,
+            Temperature = 0.3f,
+            TopP = 0.95f,
+            FrequencyPenalty = 0,
+            PresencePenalty = 0
         });
 
         services.AddSingleton(provider =>
@@ -42,5 +62,15 @@ public static class DependencyInjection
             .AddAzureOpenAIGetChatReply()
             .AddAzureOpenAIGetQuickReplies()
             .AddAzureOpenAIClinicalSummary();
+    }
+
+    private static IServiceCollection addClinicalIntakeChatSubContext(this IServiceCollection services)
+    {
+        services
+            .AddGetChatReplyFeature()
+            .AddGetQuickRepliesChatReplyFeature()
+            .AddGetClinicalSummaryChatReplyFeature();
+
+        return services;
     }
 }
