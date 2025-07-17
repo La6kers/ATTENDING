@@ -1,0 +1,79 @@
+﻿@page "/building"
+@layout EmptyLayout
+
+@using ClinicalIntake.Application.Chat
+@using Microsoft.Extensions.Http
+@using System.Text.Json
+@using SharedKernel
+
+<PageTitle>COMPASS</PageTitle>
+
+<MudPaper Class="page-background pt-11" Height="100vh" Width="100vw">
+    <MudContainer MaxWidth="MaxWidth.Large">
+
+        <!-- dashboard -->
+        <MudPaper Class="page-foreground rounded-xl d-flex flex-column pt-4">
+            <MudGrid Class="flex-fill ps-6">
+                <!-- aside -->
+                <MudItem md="4" Class="d-none d-md-flex pa-0 mt-2 border-end">
+                    <MudStack Spacing="0" Class="flex-fill">
+                        <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4">ATTENDING AI</MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ma-4 py-3 rounded-lg">Emergency</MudButton>
+                        <MudPaper>
+
+                        </MudPaper>
+                    </MudStack>
+                </MudItem>
+
+                <!-- main -->
+                <MudItem xs="12" md="8" Class="pa-0 mt-2">
+                    <MudStack>
+
+                        <!-- header -->
+                        <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold border-bottom py-4">COMPASS</MudText>
+
+                        <!-- chat -->
+                        <MudPaper Elevation="0" Class="flex-fill overflow-auto pa-4">
+                            @foreach(var chatMessage in chatMessages)
+                            {
+                                if(chatMessage.Role == ChatRole.User)
+                                {
+                                    <MudChat ChatPosition="ChatBubblePosition.End">
+                                        <MudChatBubble Color="Color.Primary" Variant="Variant.Filled">
+                                            @chatMessage.Content
+                                        </MudChatBubble>
+                                    </MudChat>
+                                }
+                                else
+                                {
+                                    <MudChat ChatPosition="ChatBubblePosition.Start" Elevation="1">
+                                        <MudAvatar>
+                                            <MudImage Src="/images/compass.svg" />
+                                        </MudAvatar>
+                                        <MudChatBubble Variant="Variant.Outlined">
+                                            @chatMessage.Content
+                                        </MudChatBubble>
+                                    </MudChat>
+                                }
+                            }
+                        </MudPaper>
+                    </MudStack>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudContainer>
+</MudPaper>
+
+@code {
+    private readonly List<ChatMessage> chatMessages = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize chat messages with a system message
+        chatMessages.Add(new ChatMessage(ChatRole.System, "You are a helpful AI assistant."));
+        // Simulate a user message
+        chatMessages.Add(new ChatMessage(ChatRole.User, "Hello, I need help with my symptoms."));
+        // Simulate an assistant response
+        chatMessages.Add(new ChatMessage(ChatRole.Assistant, "Sure, I can help you with that. Please describe your symptoms."));
+    }
+}
