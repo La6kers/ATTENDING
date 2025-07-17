@@ -13,7 +13,7 @@
 
         <!-- dashboard -->
         <MudPaper Class="page-foreground rounded-xl d-flex flex-column pt-4">
-            <MudGrid Class="flex-fill ps-6">
+            <MudGrid Class="ps-6">
                 <!-- aside -->
                 <MudItem md="4" Class="d-none d-md-flex pa-0 mt-2 border-end">
                     <MudStack Spacing="0" Class="flex-fill">
@@ -27,7 +27,7 @@
 
                 <!-- main -->
                 <MudItem xs="12" md="8" Class="pa-0 mt-2">
-                    <MudStack>
+                    <MudPaper Class="d-flex flex-column" Elevation="0">
 
                         <!-- header -->
                         <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold border-bottom py-4">COMPASS</MudText>
@@ -57,7 +57,33 @@
                                 }
                             }
                         </MudPaper>
-                    </MudStack>
+
+                        <!-- chat toolbar -->
+                        <MudStack Row="true" Spacing=3 Class="px-5">
+                            <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false" />
+                            <MudFab Color="Color.Success" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false"/>
+                        </MudStack>
+
+                        <!-- chat input -->
+                        <MudPaper Class="d-flex align-center mt-4" Elevation="0">
+                            <MudTextField @bind-value="currentMessage"
+                                          Placeholder="Describe your condition or symptoms..."
+                                          Variant="Variant.Outlined"
+                                          Class="rounded-textfield flex-fill mr-2"
+                                          OnKeyDown="@HandleKeyPress"
+                                          Immediate="true"
+                                          TextUpdateSuppression="false"
+                                          Clearable="true"
+                                          Disabled="isConversationComplete" />
+                            <MudFab Color="Color.Primary"
+                                    StartIcon="@Icons.Material.Outlined.Send"
+                                    OnClick="SendMessage"
+                                    Disabled="isLoading || isConversationComplete || string.IsNullOrWhiteSpace(currentMessage)"
+                                    DropShadow="false">
+                                Send
+                            </MudFab>
+                        </MudPaper>
+                    </MudPaper>
                 </MudItem>
             </MudGrid>
         </MudPaper>
@@ -66,6 +92,9 @@
 
 @code {
     private readonly List<ChatMessage> chatMessages = [];
+    private string currentMessage = string.Empty;
+    private bool isLoading = false;
+    private bool isConversationComplete = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,5 +104,22 @@
         chatMessages.Add(new ChatMessage(ChatRole.User, "Hello, I need help with my symptoms."));
         // Simulate an assistant response
         chatMessages.Add(new ChatMessage(ChatRole.Assistant, "Sure, I can help you with that. Please describe your symptoms."));
+    }
+
+    private async Task SendMessage()
+    {
+        
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs args)
+    {
+        // if(args.Key == "Enter" && !args.ShiftKey)
+        //     await SendMessage();
+    }
+
+    private async Task HandleQuickReply(string reply)
+    {
+        currentMessage = reply;
+        // await SendMessage();
     }
 }

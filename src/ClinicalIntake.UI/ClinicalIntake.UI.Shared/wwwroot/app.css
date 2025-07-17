@@ -11,3 +11,7 @@ html, body {
     background-color: white;
     height: 90vh;
 }
+
+.rounded-textfield {
+    border-radius: 50px !important;
+}
