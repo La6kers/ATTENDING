@@ -86,8 +86,8 @@
 
                     <!-- chat toolbar -->
                     <MudStack Row="true" Spacing=2 Class="mx-4">
-                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false" Disabled="isConversationComplete" />
-                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false" Disabled="isConversationComplete" />
+                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false" Disabled="isLoading || isConversationComplete" />
+                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false" Disabled="isLoading || isConversationComplete" />
                     </MudStack>
 
                     <!-- chat input -->
