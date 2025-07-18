@@ -8,94 +8,106 @@
 
 <PageTitle>COMPASS</PageTitle>
 
-<MudPaper Class="page-background pt-11" Height="100vh" Width="100vw">
+<MudPaper Class="page-background rounded-0 pt-9" Height="100vh" Width="100vw">
     <MudContainer MaxWidth="MaxWidth.Large">
 
         <!-- dashboard -->
-        <MudPaper Class="page-foreground rounded-xl pt-4">
-            <MudGrid Class="ps-6">
+        <MudPaper Class="page-foreground rounded-xl d-flex flex-row">
 
+            <MudGrid Spacing="0">
                 <!-- aside -->
-                <MudItem md="4" Class="d-none d-md-flex pa-0 mt-2 border-end">
-                    <MudStack Spacing="0" Class="flex-fill">
-                        <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4">ATTENDING AI</MudText>
-                        <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ma-4 py-3 rounded-lg">Emergency</MudButton>
-                        <MudPaper>
-                            <MudStack>
-                                <MudText Class="fw-bold" Typo="Typo.body2" Align="Align.Center">Assessment Progress</MudText>
-                                <MudStack Spacing="2" Class="ml-6">
-                                    @foreach(var stage in chatStages)
-                                    {
-                                        <MudPaper Elevation="0">
-                                            <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="chatStage < stage.Enum">@((int)stage.Enum)</MudChip>
-                                            <MudText Class="ml-2" Typo="Typo.subtitle1" Color="Color.Dark" Inline=true>@stage.Value</MudText>
-                                        </MudPaper>
-                                    }
-                                </MudStack>
-                            </MudStack>
-                        </MudPaper>
-                    </MudStack>
+                <MudItem md="4" Class="d-none d-md-flex flex-column flex-fill border-end">
+                    <!-- header -->
+                    <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4">ATTENDING AI</MudText>
+                    
+                    <!-- emergency button -->
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ma-4 py-3 rounded-lg">Emergency</MudButton>
+
+                    <!-- assessment progress -->
+                    <MudPaper Class="ma-4 pa-4 rounded-xl" Elevation="1">
+                        <MudText Class="fw-bold pb-4 rounded-top-xl" Typo="Typo.body2" Align="Align.Center">Assessment Progress</MudText>
+                        <MudStack Spacing="2" Class="ml-6">
+                            @foreach(var stage in chatStages)
+                            {
+                                <MudPaper Elevation="0">
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="chatStage < stage.Enum">@((int)stage.Enum)</MudChip>
+                                    <MudText Class="ml-2" Typo="Typo.subtitle1" Color="Color.Dark" Inline=true>@stage.Value</MudText>
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudPaper>
                 </MudItem>
 
                 <!-- main -->
-                <MudItem xs="12" md="8" Class="pa-0 mt-2">
-                    <MudStack Spacing="0">
+                <MudItem xs="12" md="8" Class="d-flex flex-column">
 
-                        <!-- header -->
-                        <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold border-bottom py-4">COMPASS</MudText>
+                    <!-- header -->
+                    <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4 border-bottom">COMPASS</MudText>
 
-                        <!-- chat -->
-                        <MudPaper Elevation="0" Class=" overflow-auto pa-4">
-                            @foreach(var chatMessage in chatMessages)
+                    <!-- chat -->
+                    <MudPaper Elevation="0" Class="flex-fill overflow-auto mx-4">
+                        @foreach(var chatMessage in chatMessages)
+                        {
+                            if(chatMessage.Role == ChatRole.User)
                             {
-                                if(chatMessage.Role == ChatRole.User)
-                                {
-                                    <MudChat ChatPosition="ChatBubblePosition.End">
-                                        <MudChatBubble Color="Color.Primary" Variant="Variant.Filled">
-                                            @chatMessage.Content
-                                        </MudChatBubble>
-                                    </MudChat>
-                                }
-                                else
-                                {
-                                    <MudChat ChatPosition="ChatBubblePosition.Start" Elevation="1">
-                                        <MudAvatar Color="Color.Primary">
-                                            <MudImage Src="/images/compass.svg" />
-                                        </MudAvatar>
-                                        <MudChatBubble Variant="Variant.Outlined">
-                                            @chatMessage.Content
-                                        </MudChatBubble>
-                                    </MudChat>
-                                }
+                                <MudChat ChatPosition="ChatBubblePosition.End">
+                                    <MudChatBubble Color="Color.Primary" Variant="Variant.Filled">
+                                        @chatMessage.Content
+                                    </MudChatBubble>
+                                </MudChat>
+                            }
+                            else
+                            {
+                                <MudChat ChatPosition="ChatBubblePosition.Start" Elevation="1">
+                                    <MudAvatar Color="Color.Primary">
+                                        <MudImage Src="/images/compass.svg" />
+                                    </MudAvatar>
+                                    <MudChatBubble Variant="Variant.Outlined">
+                                        @chatMessage.Content
+                                    </MudChatBubble>
+                                </MudChat>
+                            }
+                        }
+                    </MudPaper>
+
+                    <!-- chat toolbar -->
+                    <MudStack Row="true" Spacing=2 Class="mx-4">
+                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false" />
+                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false" />
+                    </MudStack>
+
+                    <!-- chat input -->
+                    <MudPaper Class="d-flex ma-4" Elevation="0">
+                        <MudTextField @bind-value="currentMessage"
+                                      Placeholder="Describe your condition or symptoms..."
+                                      Variant="Variant.Outlined"
+                                      Class="flex-fill mr-2"
+                                      OnKeyDown="@HandleKeyPress"
+                                      Immediate="true"
+                                      TextUpdateSuppression="false"
+                                      Clearable="true"
+                                      Disabled="isConversationComplete" />
+                        <MudFab Color="Color.Primary"
+                                StartIcon="@Icons.Material.Outlined.Send"
+                                OnClick="SendMessage"
+                                Disabled="isLoading || isConversationComplete || string.IsNullOrWhiteSpace(currentMessage)"
+                                DropShadow="false">
+                            Send
+                        </MudFab>
+                    </MudPaper>
+
+                    <!-- quick replies -->
+                    @if(quickReplies.Any())
+                    {
+                        <MudPaper Class="d-flex flex-wrap mt-2" Elevation="0">
+                            @foreach(var reply in quickReplies)
+                            {
+                                <MudButton Variant="Variant.Outlined" Class="m-1" OnClick="() => HandleQuickReply(reply)">
+                                    @reply
+                                </MudButton>
                             }
                         </MudPaper>
-
-                        <!-- chat toolbar -->
-                        <MudStack Row="true" Spacing=3 Class="px-5">
-                            <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false" />
-                            <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false" />
-                        </MudStack>
-
-                        <!-- chat input -->
-                        <MudPaper Class="d-flex mt-4" Elevation="0">
-                            <MudTextField @bind-value="currentMessage"
-                                          Placeholder="Describe your condition or symptoms..."
-                                          Variant="Variant.Outlined"
-                                          Class="flex-fill mr-2"
-                                          OnKeyDown="@HandleKeyPress"
-                                          Immediate="true"
-                                          TextUpdateSuppression="false"
-                                          Clearable="true"
-                                          Disabled="isConversationComplete" />
-                            <MudFab Color="Color.Primary"
-                                    StartIcon="@Icons.Material.Outlined.Send"
-                                    OnClick="SendMessage"
-                                    Disabled="isLoading || isConversationComplete || string.IsNullOrWhiteSpace(currentMessage)"
-                                    DropShadow="false">
-                                Send
-                            </MudFab>
-                        </MudPaper>
-                    </MudStack>
+                    }
                 </MudItem>
             </MudGrid>
         </MudPaper>
@@ -103,7 +115,15 @@
 </MudPaper>
 
 @code {
+    [Inject()]
+    private ClinicalIntakeChatClient ClinicalIntakeChatClient { get; init; } = null!;
+
+    [Inject()]
+    private IJSRuntime JSRuntime { get; init; } = null!;
+
+
     private readonly List<ChatMessage> chatMessages = [];
+    private readonly List<string> quickReplies = [];
     private string currentMessage = string.Empty;
     private bool isLoading = false;
     private bool isConversationComplete = false;
@@ -118,7 +138,7 @@
         (Enum: ChatStage.ClinicalSummary, Value: "Clinical Summary")
     ];
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         // Initialize chat messages with a system message
         chatMessages.Add(new ChatMessage(ChatRole.System, "You are a helpful AI assistant."));
