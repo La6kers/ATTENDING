@@ -1,115 +1,159 @@
 ﻿@page "/chat"
 @layout EmptyLayout
-@rendermode InteractiveServer
 
 @using ClinicalIntake.Application.Chat
 @using Microsoft.Extensions.Http
 @using System.Text.Json
 @using SharedKernel
 
-@inject ClinicalIntakeChatClient ClinicalIntakeChatClient
-@inject IJSRuntime JSRuntime
-
 <PageTitle>COMPASS</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
-    <MudPaper Class="pa-4 d-flex flex-row" Style="height: calc(100vh - 150px);">
+<MudPaper Class="page-background rounded-0 pt-9" Height="100vh" Width="100vw">
+    <MudContainer MaxWidth="MaxWidth.Large">
 
-        <!-- Sidebar -->
-        <MudPaper Class="pa-4 d-flex flex-column border-r border-solid mud-border-primary" Style="width: 700px;">
-            <MudText Typo="Typo.h6" Class="mb-2">Assessment Progress</MudText>
-            <MudList T="ChatStage">
-                @foreach (var stage in ChatStages)
-                {
-                    <MudListItem Class="d-flex align-center" Style="@(chatStage >= stage? "background-color: #e3f2fd;" : "")">
-                        <MudChip T="string" Variant="Variant.Filled" Color="Color.Primary" Disabled="chatStage < stage">@((int)stage)</MudChip>
-                        <MudText Typo="Typo.body1" Inline=true>@stage</MudText>
-                    </MudListItem>
-                }
-            </MudList>
-        </MudPaper>
+        <!-- dashboard -->
+        <MudPaper Class="page-foreground rounded-xl d-flex flex-row">
 
-        <!-- Chat Interface -->
-        <MudPaper Class="pa-4 d-flex flex-column flex-grow-1">
-            <div Class="d-flex align-center justify-center mb-4">
-                <MudIcon Icon="@Icons.Material.Filled.Explore" Class="mr-2" Style="font-size: 2rem;" Color="Color.Primary" />
-                <MudText Typo="Typo.h5" Align="Align.Center">COMPASS</MudText>
-            </div>
+            <MudGrid Spacing="0">
 
-            <MudPaper Class="flex-grow-1 overflow-auto pa-4" Elevation="0" id="chatContainer">
-                <div>
-                    @foreach(var message in chatMessages)
+                <!-- aside -->
+                <MudItem md="4" Class="d-none d-md-flex flex-column flex-fill border-end">
+                    <!-- header -->
+                    <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4">ATTENDING AI</MudText>
+                    
+                    <!-- emergency button -->
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ma-4 py-3 rounded-lg" OnClick="() => isEmergencyDialogVisible = true" Disabled="isConversationComplete">Emergency</MudButton>
+
+                    <!-- assessment progress -->
+                    <MudPaper Class="ma-4 pa-4 rounded-xl" Elevation="1">
+                        <MudText Class="fw-bold pb-4 rounded-top-xl" Typo="Typo.body2" Align="Align.Center">Assessment Progress</MudText>
+                        <MudStack Spacing="2" Class="ml-6">
+                            @foreach(var stage in chatStages)
+                            {
+                                <MudPaper Elevation="0">
+                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="chatStage < stage.Enum">@((int)stage.Enum)</MudChip>
+                                    <MudText Class="ml-2" Typo="Typo.subtitle1" Color="Color.Dark" Inline=true>@stage.Value</MudText>
+                                </MudPaper>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- main -->
+                <MudItem xs="12" md="8" Class="d-flex flex-column h-100">
+
+                    <!-- header -->
+                    <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4 border-bottom">COMPASS</MudText>
+
+                    <!-- chat -->
+                    <MudPaper id="chatContainer" Elevation="0" Class="flex-fill mx-4 overflow-y-scroll">
+                        @foreach(var chatMessage in chatMessages)
+                        {
+                            if(chatMessage.Role == ChatRole.User)
+                            {
+                                <MudChat ChatPosition="ChatBubblePosition.End">
+                                    <MudChatBubble Color="Color.Primary" Variant="Variant.Filled">
+                                        @chatMessage.Content
+                                    </MudChatBubble>
+                                </MudChat>
+                            }
+                            else
+                            {
+                                <MudChat ChatPosition="ChatBubblePosition.Start" Elevation="1">
+                                    <MudAvatar Color="Color.Primary">
+                                        <MudImage Src="/images/compass.svg" />
+                                    </MudAvatar>
+                                    <MudChatBubble Variant="Variant.Outlined">
+                                        @chatMessage.Content
+                                    </MudChatBubble>
+                                </MudChat>
+                            }
+                        }
+                    </MudPaper>
+
+                    <!-- quick replies -->
+                    @if(quickReplies.Any())
                     {
-                        <div class="mb-3">
-                            <MudPaper Class="pa-3" Elevation="1" Style="@(message.Role == ChatRole.User ? "background-color: #f0f4f8" : "background-color: #ffffff")">
-                                <MudText Typo="Typo.body1">
-                                    <MudText Typo="Typo.subtitle2" Color="@(message.Role == ChatRole.User ? Color.Primary : Color.Secondary)">
-                                        @(message.Role == ChatRole.User ? "You" : "Assistant")
-                                    </MudText>
-                                    @message.Content
-                                </MudText>
-                            </MudPaper>
-                        </div>
+                        <MudPaper Class="d-flex ma-4" Elevation="0">
+                            @foreach(var reply in quickReplies)
+                            {
+                                <MudButton Variant="Variant.Filled" Class="py-2 m-1 rounded-pill" OnClick="() => HandleQuickReply(reply)">
+                                    @reply
+                                </MudButton>
+                            }
+                        </MudPaper>
                     }
-                </div>
-            </MudPaper>
 
-            <MudPaper Class="d-flex align-center mt-4" Elevation="0">
-                <MudTextField @bind-value="currentMessage"
-                              Placeholder="Describe your condition or symptoms..."
-                              Variant="Variant.Outlined"
-                              Class="flex-grow-1 mr-2"
-                              OnKeyDown="@HandleKeyPress"
-                              Immediate="true"
-                              TextUpdateSuppression="false"
-                              Clearable="true"
-                              Disabled="isConversationComplete" />
-                <MudButton Color="Color.Primary"
-                           Variant="Variant.Filled"
-                           OnClick="SendMessage"
-                           Disabled="isLoading || isConversationComplete || string.IsNullOrWhiteSpace(currentMessage)">
-                    Send
-                </MudButton>
-            </MudPaper>
+                    <!-- chat toolbar -->
+                    <MudStack Row="true" Spacing=2 Class="mx-4">
+                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false"/>
+                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false"/>
+                    </MudStack>
 
-            @if(quickReplies.Any())
-            {
-                <MudPaper Class="d-flex flex-wrap mt-2" Elevation="0">
-                    @foreach(var reply in quickReplies)
-                    {
-                        <MudButton Variant="Variant.Outlined" Class="m-1" OnClick="() => HandleQuickReply(reply)">
-                            @reply
-                        </MudButton>
-                    }
-                </MudPaper>
-            }
+                    <!-- chat input -->
+                    <MudPaper Class="d-flex ma-4" Elevation="0">
+                        <MudTextField @bind-value="currentMessage"
+                                      Placeholder="Describe your condition or symptoms..."
+                                      Variant="Variant.Outlined"
+                                      Class="flex-fill mr-2"
+                                      OnKeyDown="@HandleKeyPress"
+                                      Immediate="true"
+                                      TextUpdateSuppression="false"
+                                      Clearable="true"
+                                      Disabled="isConversationComplete" />
+                        <MudFab Color="Color.Primary"
+                                StartIcon="@Icons.Material.Outlined.Send"
+                                OnClick="SendMessage"
+                                Disabled="isLoading || isConversationComplete || string.IsNullOrWhiteSpace(currentMessage)"
+                                DropShadow="false">
+                            Send
+                        </MudFab>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
         </MudPaper>
-    </MudPaper>
-</MudContainer>
+    </MudContainer>
+
+    <MudDialog @bind-Visible="isEmergencyDialogVisible">
+        <TitleContent>
+            <MudText Typo="Typo.h6" Align="Align.Center" Class="fw-bold">Emergency Help</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudImage Src="/images/under-construction.jpg" Class="w-100 mb-4" />"
+        </DialogContent>
+    </MudDialog>
+</MudPaper>
 
 @code {
+    [Inject()]
+    private ClinicalIntakeChatClient ClinicalIntakeChatClient { get; init; } = null!;
+
+    [Inject()]
+    private IJSRuntime JSRuntime { get; init; } = null!;
+
     private readonly List<ChatMessage> chatMessages = [];
     private readonly List<string> quickReplies = [];
-    private string currentMessage = string.Empty;
     private ChatStage chatStage = ChatStage.ChiefComplaint;
+    private string currentMessage = string.Empty;
     private bool isLoading = false;
     private bool isConversationComplete => chatStage >= ChatStage.Complete;
+    private bool isEmergencyDialogVisible = false;
 
     private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider. Lets start with what is the main reason for your visit today?";
     private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
 
-    private readonly IEnumerable<ChatStage> ChatStages =
+    private readonly IEnumerable<(ChatStage Enum, string Value)> chatStages =
     [
-        ChatStage.ChiefComplaint,
-        ChatStage.Symptoms,
-        ChatStage.MedicalHistory,
-        ChatStage.CurrentMedications,
-        ChatStage.ClinicalSummary
+        (Enum: ChatStage.ChiefComplaint, Value: "Chief Complaint"),
+        (Enum: ChatStage.Symptoms, Value: "Symptoms"),
+        (Enum: ChatStage.MedicalHistory, Value: "Medical History"),
+        (Enum: ChatStage.CurrentMedications, Value: "Current Medication"),
+        (Enum: ChatStage.ClinicalSummary, Value: "Clinical Summary")
     ];
 
     protected override void OnInitialized()
     {
-        chatMessages.Add(new ChatMessage(ChatRole.Assistant, WELCOME_MESSAGE));
+        chatMessages.Add(new ChatMessage(ChatRole.Assistant, WELCOME_MESSAGE));   
     }
 
     private bool isChatStageChecked(ChatStage stage) => chatStage >= stage;
