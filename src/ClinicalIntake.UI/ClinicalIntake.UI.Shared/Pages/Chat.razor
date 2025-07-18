@@ -86,8 +86,8 @@
 
                     <!-- chat toolbar -->
                     <MudStack Row="true" Spacing=2 Class="mx-4">
-                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false"/>
-                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false"/>
+                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false" Disabled="isConversationComplete" />
+                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false" Disabled="isConversationComplete" />
                     </MudStack>
 
                     <!-- chat input -->
@@ -156,8 +156,6 @@
         chatMessages.Add(new ChatMessage(ChatRole.Assistant, WELCOME_MESSAGE));   
     }
 
-    private bool isChatStageChecked(ChatStage stage) => chatStage >= stage;
-
     private async Task ScrollToBottom() => await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");
 
     private async Task SendMessage()
@@ -213,6 +211,9 @@
                 StateHasChanged();
                 await ScrollToBottom();
             }
+
+            if(string.IsNullOrEmpty(newAssistantChatMessage.Content))
+                chatMessages.Remove(newAssistantChatMessage);
 
             await FetchQuickReplies();
             AddCompletionMessage();
