@@ -46,7 +46,7 @@
                     <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4 border-bottom">COMPASS</MudText>
 
                     <!-- chat -->
-                    <MudPaper Elevation="0" Class="flex-fill mx-4 overflow-scroll">
+                    <MudPaper id="chatContainer" Elevation="0" Class="flex-fill mx-4 overflow-y-scroll">
                         @foreach(var chatMessage in chatMessages)
                         {
                             if(chatMessage.Role == ChatRole.User)
