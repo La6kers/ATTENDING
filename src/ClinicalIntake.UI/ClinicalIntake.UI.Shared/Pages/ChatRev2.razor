@@ -22,7 +22,7 @@
                     <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4">ATTENDING AI</MudText>
                     
                     <!-- emergency button -->
-                    <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ma-4 py-3 rounded-lg" Disabled=true>Emergency</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ma-4 py-3 rounded-lg" OnClick="() => isEmergencyDialogVisible = true" Disabled="isConversationComplete">Emergency</MudButton>
 
                     <!-- assessment progress -->
                     <MudPaper Class="ma-4 pa-4 rounded-xl" Elevation="1">
@@ -86,8 +86,8 @@
 
                     <!-- chat toolbar -->
                     <MudStack Row="true" Spacing=2 Class="mx-4">
-                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false" Disabled=true/>
-                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false" Disabled=true />
+                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false"/>
+                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false"/>
                     </MudStack>
 
                     <!-- chat input -->
@@ -113,6 +113,15 @@
             </MudGrid>
         </MudPaper>
     </MudContainer>
+
+    <MudDialog @bind-Visible="isEmergencyDialogVisible">
+        <TitleContent>
+            <MudText Typo="Typo.h6" Align="Align.Center" Class="fw-bold">Emergency Help</MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudImage Src="/images/under-construction.jpg" Class="w-100 mb-4" />"
+        </DialogContent>
+    </MudDialog>
 </MudPaper>
 
 @code {
@@ -128,6 +137,7 @@
     private string currentMessage = string.Empty;
     private bool isLoading = false;
     private bool isConversationComplete => chatStage >= ChatStage.Complete;
+    private bool isEmergencyDialogVisible = false;
 
     private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider. Lets start with what is the main reason for your visit today?";
     private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
