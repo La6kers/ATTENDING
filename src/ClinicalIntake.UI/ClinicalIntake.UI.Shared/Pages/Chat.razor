@@ -12,7 +12,7 @@
     <MudContainer MaxWidth="MaxWidth.Large">
 
         <!-- dashboard -->
-        <MudPaper Class="page-foreground rounded-xl d-flex flex-row">
+        <MudPaper Class="page-foreground rounded-xl d-flex flex-row" Height="90vh">
 
             <MudGrid Spacing="0">
 
@@ -20,7 +20,7 @@
                 <MudItem md="4" Class="d-none d-md-flex flex-column flex-fill border-end">
                     <!-- header -->
                     <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4">ATTENDING AI</MudText>
-                    
+
                     <!-- emergency button -->
                     <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ma-4 py-3 rounded-lg" OnClick="() => isEmergencyDialogVisible = true" Disabled="isConversationComplete">Emergency</MudButton>
 
@@ -43,7 +43,13 @@
                 <MudItem xs="12" md="8" Class="d-flex flex-column h-100">
 
                     <!-- header -->
-                    <MudText Typo="Typo.h5" Align="Align.Center" Class="fw-bold py-4 border-bottom">COMPASS</MudText>
+                    <MudFab Color="Color.Error"
+                            Size="Size.Small"
+                            StartIcon="@Icons.Material.Outlined.CrisisAlert"
+                            Class="position-absolute my-3 mx-4 d-flex d-md-none"
+                            OnClick="() => isEmergencyDialogVisible = true"
+                            DropShadow="false" />
+                    <MudText Typo="Typo.h5" Align="Align.Center" Inline="true" Class="fw-bold py-4 border-bottom">COMPASS</MudText>
 
                     <!-- chat -->
                     <MudPaper id="chatContainer" Elevation="0" Class="flex-fill mx-4 overflow-y-scroll">
@@ -86,7 +92,11 @@
 
                     <!-- chat toolbar -->
                     <MudStack Row="true" Spacing=2 Class="mx-4">
-                        <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Outlined.CameraAlt" DropShadow="false" Disabled="isLoading || isConversationComplete" />
+                        <MudFab Color="Color.Primary"
+                                Size="Size.Small"
+                                StartIcon="@Icons.Material.Outlined.CameraAlt"
+                                DropShadow="false"
+                                Disabled="isLoading || isConversationComplete" />
                         <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false" Disabled="isLoading || isConversationComplete" />
                     </MudStack>
 
@@ -153,7 +163,7 @@
 
     protected override void OnInitialized()
     {
-        chatMessages.Add(new ChatMessage(ChatRole.Assistant, WELCOME_MESSAGE));   
+        chatMessages.Add(new ChatMessage(ChatRole.Assistant, WELCOME_MESSAGE));
     }
 
     private async Task ScrollToBottom() => await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");
