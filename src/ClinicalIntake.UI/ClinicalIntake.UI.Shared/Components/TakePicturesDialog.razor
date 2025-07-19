@@ -1,0 +1,84 @@
+﻿<MudDialog VisibleChanged="onVisibleChanged"
+           Options="takingPicturesDialogOptions"
+           Class="pt-4 rounded-xl">
+    <DialogContent>
+        <MudPaper Class="d-flex flex-column py-1" Elevation="0">
+            <video id="cameraFeed" class="w-50 h-auto mx-auto border-1" autoplay playsinline></video>
+            <canvas id="snapshotCanvas" style="display: none;"></canvas>
+
+            <MudFab Color="Color.Error"
+                    StartIcon="@Icons.Material.Outlined.Camera"
+                    Class="mt-3 mx-auto"
+                    OnClick="takePicture"
+                    DropShadow="false"
+                    Disabled="@(!hasWebcam)" />
+            <img id="capturedImage" class="w-50 h-auto border-1 my-2 mx-auto" />
+        </MudPaper>
+    </DialogContent>
+</MudDialog>
+
+@if (!hasWebcam)
+{
+    <MudGrid Class="w-75 pa-2 ma-2 mx-auto" Justify="Justify.Center">
+        <MudItem xs="8">
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled">
+                No camera device found.
+            </MudAlert>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Inject()]
+    private IJSRuntime JSRuntime { get; init; } = null!;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private readonly DialogOptions takingPicturesDialogOptions = new()
+    {
+        CloseButton = true,
+        FullWidth = true,
+        MaxWidth = MaxWidth.Medium,
+        BackdropClick = false
+    };
+
+    private bool isDialogVisible;
+    private bool hasWebcam;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hasWebcam = await CheckForWebcam();
+    }
+
+    private async Task<bool> CheckForWebcam()
+    {
+        return await JSRuntime.InvokeAsync<bool>("cameraInterop.hasWebcam");
+    }
+
+    private async Task onVisibleChanged(bool isVisible)
+    {
+        isDialogVisible = isVisible;
+
+        if (!isVisible)
+            await stopCamera();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (isDialogVisible && hasWebcam)
+            await startCamera();
+    }
+
+    private async Task startCamera() => await JSRuntime.InvokeVoidAsync("cameraInterop.startCamera", "cameraFeed");
+    private async Task stopCamera() => await JSRuntime.InvokeVoidAsync("cameraInterop.stopCamera", "cameraFeed");
+    private async Task takePicture()
+    {
+        // Call the JavaScript function to take a snapshot
+        var imageDataUrl = await JSRuntime.InvokeAsync<string>("cameraInterop.takeSnapshot", "cameraFeed", "snapshotCanvas");
+
+        // Display the captured image
+        var imgElement = await JSRuntime.InvokeAsync<IJSObjectReference>("document.getElementById", "capturedImage");
+        await imgElement.InvokeVoidAsync("setAttribute", "src", imageDataUrl);
+    }
+}
