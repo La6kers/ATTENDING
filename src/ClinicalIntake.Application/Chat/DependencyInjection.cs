@@ -1,5 +1,6 @@
 using Azure;
 using Azure.AI.OpenAI;
+using ClinicalIntake.Application.Chat.Events;
 using ClinicalIntake.Application.Chat.Features.Queries;
 using ClinicalIntake.Application.Chat.Implementations.Queries;
 using ClinicalIntake.Application.Chat.Implementations.Services;
@@ -69,7 +70,8 @@ public static class DependencyInjection
         services
             .AddGetChatReplyFeature()
             .AddGetQuickRepliesChatReplyFeature()
-            .AddGetClinicalSummaryChatReplyFeature();
+            .AddGetClinicalSummaryChatReplyFeature()
+            .AddSaveChatSurvey();
 
         return services;
     }

@@ -60,7 +60,7 @@
                             {
                                 <MudChat ChatPosition="ChatBubblePosition.End">
                                     <MudChatBubble Color="Color.Primary" Variant="Variant.Filled">
-                                        @chatMessage.Content
+                                        @chatMessage.Text
                                     </MudChatBubble>
                                 </MudChat>
                             }
@@ -71,7 +71,7 @@
                                         <MudImage Src="/images/compass.svg" />
                                     </MudAvatar>
                                     <MudChatBubble Variant="Variant.Outlined">
-                                        @chatMessage.Content
+                                        @chatMessage.Text
                                     </MudChatBubble>
                                 </MudChat>
                             }
@@ -99,7 +99,12 @@
                                 DropShadow="false"
                                 Disabled="isLoading || isConversationComplete"
                                 OnClick="openTakePictureDialog" />
-                        <MudFab Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Outlined.MicNone" DropShadow="false" Disabled="isLoading || isConversationComplete" />
+                        <MudFab Color="Color.Success"
+                                Size="Size.Small"
+                                StartIcon="@Icons.Material.Outlined.MicNone"
+                                DropShadow="false"
+                                Disabled="isLoading || isConversationComplete"
+                                OnClick="openRecordVoiceMessageDialog" />
                     </MudStack>
 
                     <!-- chat input -->
@@ -127,12 +132,47 @@
     </MudContainer>
 
     <!-- Emergency Dialog -->
-    <MudDialog @bind-Visible="isEmergencyDialogVisible">
+    <MudDialog @bind-Visible="isEmergencyDialogVisible" Class="rounded-xl" Options="emergencyDialogOptions">
         <TitleContent>
-            <MudText Typo="Typo.h6" Align="Align.Center" Class="fw-bold">Emergency Help</MudText>
+            <MudText Typo="Typo.h6" Align="Align.Center" Color="Color.Error" Class="fw-bold">🚨Emergency Help</MudText>
         </TitleContent>
         <DialogContent>
-            <MudImage Src="/images/under-construction.jpg" Class="w-100 mb-4" />"
+            <MudPaper Class="d-flex flex-column pb-3">
+                <MudText Align="Align.Center" Class="mw-100 flex-shrink-1">If you're experiencing a life-threatening emergency, severe symptoms, or sudden onset of concerning symptoms, please seek immediate medical attention. Use the location finder to get GPS directions to nearby facilities.</MudText>
+                <MudButton Variant="Variant.Outlined" Class="rounded-lg mt-3">
+                    <MudStack Spacing="1" Class="flex-fill">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="fw-bold">🚨 Call 911</MudText>
+                        <MudText Typo="Typo.caption" Align="Align.Left">For severe injuries or life-threatening conditions</MudText>
+                    </MudStack>
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Class="rounded-lg mt-3">
+                    <MudStack Spacing="1" Class="flex-fill">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="fw-bold">🏥 Find Emergency Rooms</MudText>
+                        <MudText Typo="Typo.caption" Align="Align.Left">Locate nearby emergency departments with GPS</MudText>
+                    </MudStack>
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Class="rounded-lg mt-3">
+                    <MudStack Spacing="1" Class="flex-fill">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="fw-bold">⚕️ Find Urgent Care</MudText>
+                        <MudText Typo="Typo.caption" Align="Align.Left">Locate nearby urgent care centers with GPS</MudText>
+                    </MudStack>
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Class="rounded-lg mt-3">
+                    <MudStack Spacing="1" Class="flex-fill">
+                        <MudText Typo="Typo.subtitle1" Align="Align.Left" Class="fw-bold">📞 Nurse Hotline</MudText>
+                        <MudText Typo="Typo.caption" Align="Align.Left">24/7 medical guidance</MudText>
+                    </MudStack>
+                </MudButton>
+            </MudPaper>
+        </DialogContent>
+    </MudDialog>
+
+    <MudDialog @bind-Visible="isRecordVoiceMessageDialogVisible">
+        <TitleContent>
+            <MudText Typo="Typo.h6" Align="Align.Center" Class="fw-bold">Record Voice Message</MudText>
+        </TitleContent>
+        <DialogContent>
+            Voice message recording is not yet implemented. Please use text input to communicate your symptoms.
         </DialogContent>
     </MudDialog>
 </MudPaper>
@@ -147,6 +187,8 @@
     [Inject()]
     private IDialogService DialogService { get; init; } = null!;
 
+    private int ClinicId = int.Parse(Environment.GetEnvironmentVariable("CLINIC_ID") ?? throw new ArgumentNullException("CLINIC_ID environment variable has not been set."));
+    private string MRN = string.Empty;
     private readonly List<ChatMessage> chatMessages = [];
     private readonly List<string> quickReplies = [];
     private ChatStage chatStage = ChatStage.ChiefComplaint;
@@ -155,6 +197,12 @@
     private bool isConversationComplete => chatStage >= ChatStage.Complete;
     private bool isEmergencyDialogVisible = false;
     private bool isTakingPictureDialogVisible = false;
+    private bool isRecordVoiceMessageDialogVisible = false;
+    private readonly DialogOptions emergencyDialogOptions = new()
+    {
+        MaxWidth = MaxWidth.ExtraSmall,
+        FullWidth = true
+    };
     private readonly DialogOptions takingPictureDialogOptions = new()
     {
         CloseButton = true,
@@ -177,7 +225,8 @@
 
     protected override void OnInitialized()
     {
-        chatMessages.Add(new ChatMessage(ChatRole.Assistant, WELCOME_MESSAGE));
+        chatMessages.Add(new ChatMessage(ChatRole.Assistant) { Text = WELCOME_MESSAGE });
+        MRN = MedicalRecordNumberGenerator.Generate(ClinicId);
     }
 
     private async Task ScrollToBottom() => await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");
@@ -225,18 +274,18 @@
                     }
 
                     // Remove the stage name from tempContent
-                    newAssistantChatMessage.Content = detectedStageString[(stageEndIndex + 1)..];
+                    newAssistantChatMessage.Text = detectedStageString[(stageEndIndex + 1)..];
                     continue;
                 }
 
                 // Append the remaining content to the assistant's message
-                newAssistantChatMessage.Content += chunk;
+                newAssistantChatMessage.Text += chunk;
 
                 StateHasChanged();
                 await ScrollToBottom();
             }
 
-            if(string.IsNullOrEmpty(newAssistantChatMessage.Content))
+            if(string.IsNullOrEmpty(newAssistantChatMessage.Text))
                 chatMessages.Remove(newAssistantChatMessage);
 
             await FetchQuickReplies();
@@ -292,7 +341,7 @@
             if(clinicalSummary is null)
                 return;
 
-            chatMessages.Add(new ChatMessage(ChatRole.Assistant, clinicalSummary));
+            chatMessages.Add(new ChatMessage(ChatRole.Assistant) { Text = clinicalSummary });
         }
         catch(Exception exception)
         {
@@ -305,13 +354,13 @@
         if(string.IsNullOrEmpty(currentMessage))
             return;
 
-        chatMessages.Add(new(ChatRole.User, currentMessage));
+        chatMessages.Add(new(ChatRole.User) { Text = currentMessage });
         currentMessage = string.Empty;
     }
 
     private ChatMessage AddAssistantMessage()
     {
-        var newAssistantMessage = new ChatMessage(ChatRole.Assistant, string.Empty);
+        var newAssistantMessage = new ChatMessage(ChatRole.Assistant);
         chatMessages.Add(newAssistantMessage);
 
         return newAssistantMessage;
@@ -319,7 +368,7 @@
 
     private void AddErrorMessage(string message)
     {
-        chatMessages.Add(new(ChatRole.Assistant, message));
+        chatMessages.Add(new(ChatRole.Assistant) { Text = message });
         StateHasChanged();
     }
 
@@ -329,8 +378,23 @@
             return;
 
         chatStage = ChatStage.Complete;
-        var completeConversationChatResponse = new ChatMessage(ChatRole.Assistant, GOODBYE_MESSAGE);
+        var completeConversationChatResponse = new ChatMessage(ChatRole.Assistant) { Text = GOODBYE_MESSAGE };
         chatMessages.Add(completeConversationChatResponse);
+    }
+
+    private async Task SaveChatSurvey()
+    {
+        if(chatStage < ChatStage.Complete)
+            return; 
+                
+
+        await ClinicalIntakeChatClient.SaveChatSurvey(new ChatSurvey(ClinicId)
+        {
+            MedicalRecordNumber = MRN,
+        });
+
+
+
     }
 
     private async void onChatReplyStreamAppended(object? sender, (string AppendedString, string FullString) eventArgs, ChatMessage chatMessage)
@@ -338,7 +402,7 @@
         if(chatMessage is null)
             return;
 
-        chatMessage.Content += eventArgs.AppendedString ?? string.Empty;
+        chatMessage.Text += eventArgs.AppendedString ?? string.Empty;
         StateHasChanged();
         await ScrollToBottom();
     }
@@ -360,8 +424,8 @@
         AddErrorMessage($"Error: {exception.Message}");
     }
 
-    private Task openTakePictureDialog()
-    {
-        return DialogService.ShowAsync<TakePicturesDialog>(null, takingPictureDialogOptions);
-    }
+    private void openRecordVoiceMessageDialog() => isRecordVoiceMessageDialogVisible = true;
+    private void closeRecordVoiceMessageDialog() => isRecordVoiceMessageDialogVisible = false;
+
+    private Task openTakePictureDialog() => DialogService.ShowAsync<TakePicturesDialog>(null, takingPictureDialogOptions);
 }

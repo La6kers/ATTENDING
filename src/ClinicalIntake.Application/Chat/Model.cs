@@ -1,14 +1,34 @@
-﻿namespace ClinicalIntake.Application.Chat;
+﻿using SharedKernel;
 
-public record ChatMessage
+namespace ClinicalIntake.Application.Chat;
+
+public class ChatSurvey(int clinicId) : ISurvey
 {
-    public ChatMessage(ChatRole role, string content)
-    {
-        Role = role;
-        Content = content;
-    }
-    public ChatRole Role { get; init; }
-    public string Content { get; set; }
+    public int ClinicId { get; private set; } = clinicId;
+    public string MedicalRecordNumber { get; private set; } = MedicalRecordNumberGenerator.Generate(clinicId);
+    public string Summary { get; private set; } = string.Empty;
+    public List<ChatMessage> Messages { get; private set; } = [];
+}
+
+public record ChatMessage(ChatRole Role)
+{
+    public ChatRole Role { get; private set; } = Role;
+    public string Text { get; set; } = string.Empty;
+
+    public ChatMessage() : this(ChatRole.Undefined) { }
+}
+
+public class Image(ImageMimeType mimeType, BinaryData data)
+{
+    public ImageMimeType MimeType { get; init; } = mimeType;
+    public BinaryData Data { get; init; } = data;
+}
+
+public interface ISurvey
+{
+    int ClinicId { get; }
+    string MedicalRecordNumber { get; }
+    string Summary { get; }
 }
 
 public enum ChatStage
@@ -23,7 +43,17 @@ public enum ChatStage
 
 public enum ChatRole
 {
-    System = 1,
-    User,               // TODO: the model should be patient
+    Undefined = 1,
+    System,
+    User,               // TODO: the domain model should be patient
     Assistant
+}
+
+public enum ImageMimeType
+{
+    Jpeg = 1,
+    Png,
+    Gif,
+    Bmp,
+    Tiff
 }

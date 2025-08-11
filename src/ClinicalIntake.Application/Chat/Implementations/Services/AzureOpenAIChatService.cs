@@ -88,10 +88,15 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
         {
             OpenAIChatMessage newOpenAiChatMessage = message.Role switch
             {
-                ChatRole.User => new UserChatMessage(message.Content),
-                ChatRole.Assistant => new AssistantChatMessage(message.Content),
-                _ => throw new ArgumentException($"Unsupported chat role: {message.Role}", nameof(message.Role))
+                ChatRole.User => new UserChatMessage(message.Text),
+                ChatRole.Assistant => new AssistantChatMessage(message.Text),
+                _ => throw new Exception($"Unsupported chat role: {message.Role}")
             };
+
+            if(message.Images is not null && message.Images.Any())
+                foreach(var image in message.Images)
+                    newOpenAiChatMessage.Content.Add(ChatMessageContentPart.CreateImagePart(image.Data, getMIMEType(image.MimeType)));
+
             openAIChatMessages.Add(newOpenAiChatMessage);
         }
 
@@ -108,6 +113,14 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
                 if(!string.IsNullOrEmpty(updatePart.Text))
                     yield return updatePart.Text;
     }
+
+    private static string getMIMEType(ImageMimeType imageMimeType) => imageMimeType switch
+    {
+        ImageMimeType.Png => "image/png",
+        ImageMimeType.Jpeg => "image/jpeg",
+        ImageMimeType.Gif => "image/gif",
+        _ => throw new ArgumentOutOfRangeException(nameof(imageMimeType), $"Unsupported image MIME type: {imageMimeType}")
+    };
 
     private static class SystemPrompts
     {

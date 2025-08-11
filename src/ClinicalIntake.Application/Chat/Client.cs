@@ -65,4 +65,13 @@ public class ClinicalIntakeChatClient(IHttpClientFactory httpClientFactory)
 
         return await response.Content.ReadAsStringAsync(cancellationToken);
     }
+    public async Task SaveChatSurvey(ChatSurvey chatSurvey, CancellationToken cancellationToken = default)
+    {
+        if(chatSurvey == null)
+            throw new ArgumentNullException(nameof(chatSurvey), "Chat survey cannot be null.");
+        using var client = _httpClientFactory.CreateClient("ClinicalIntakeChatClient");
+        var response = await client.PostAsJsonAsync("api/chat/saveChatSurvey", chatSurvey, cancellationToken);
+        if(!response.IsSuccessStatusCode)
+            throw new Exception("Failed to save chat survey.");
+    }
 }
