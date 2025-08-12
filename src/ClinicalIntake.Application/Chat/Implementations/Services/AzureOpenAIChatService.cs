@@ -93,9 +93,9 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
                 _ => throw new Exception($"Unsupported chat role: {message.Role}")
             };
 
-            if(message.Images is not null && message.Images.Any())
-                foreach(var image in message.Images)
-                    newOpenAiChatMessage.Content.Add(ChatMessageContentPart.CreateImagePart(image.Data, getMIMEType(image.MimeType)));
+            //if(message.Images is not null && message.Images.Any())
+            //    foreach(var image in message.Images)
+            //        newOpenAiChatMessage.Content.Add(ChatMessageContentPart.CreateImagePart(image.Data, getMIMEType(image.MimeType)));
 
             openAIChatMessages.Add(newOpenAiChatMessage);
         }

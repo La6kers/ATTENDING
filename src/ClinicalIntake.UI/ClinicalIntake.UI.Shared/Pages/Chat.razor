@@ -210,6 +210,7 @@
         MaxWidth = MaxWidth.Medium,
         BackdropClick = false
     };
+    private string clinicalSummary = string.Empty;
 
     private const string WELCOME_MESSAGE = "Welcome to Compass! I'm here to guide you through this process of documenting your health concerns and preparing a comprehensive report for your healthcare provider. Lets start with what is the main reason for your visit today?";
     private const string GOODBYE_MESSAGE = "Thank you for using Compass! A comprehensive report for your healthcare provider will be generated based on our conversation.";
@@ -291,6 +292,7 @@
             await FetchQuickReplies();
             AddCompletionMessage();
             await FetchClinicalSummary();
+            await NotifyChatCompletion();
         }
         catch(Exception exception)
         {
@@ -337,7 +339,7 @@
         try
         {
             chatStage = ChatStage.ClinicalSummary;
-            var clinicalSummary = await ClinicalIntakeChatClient.GetClinicalSummary(chatMessages);
+            clinicalSummary = await ClinicalIntakeChatClient.GetClinicalSummary(chatMessages);
             if(clinicalSummary is null)
                 return;
 
@@ -382,19 +384,12 @@
         chatMessages.Add(completeConversationChatResponse);
     }
 
-    private async Task SaveChatSurvey()
+    private async Task NotifyChatCompletion()
     {
         if(chatStage < ChatStage.Complete)
             return; 
-                
 
-        await ClinicalIntakeChatClient.SaveChatSurvey(new ChatSurvey(ClinicId)
-        {
-            MedicalRecordNumber = MRN,
-        });
-
-
-
+        // ClinicalIntakeChatClient
     }
 
     private async void onChatReplyStreamAppended(object? sender, (string AppendedString, string FullString) eventArgs, ChatMessage chatMessage)
