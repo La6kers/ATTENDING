@@ -1,4 +1,5 @@
-﻿using ClinicalIntake.Application.Chat.Features.Queries;
+﻿using ClinicalIntake.Application.Chat.Events;
+using ClinicalIntake.Application.Chat.Features.Queries;
 using FluentResults;
 using SharedKernel;
 
@@ -7,21 +8,24 @@ public class ClinicalIntakeChatService(Mediator mediator)
 {
     private readonly Mediator _mediator = mediator;
 
-    public async Task<IAsyncEnumerable<string>> GetChatReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
+    public async Task<IAsyncEnumerable<string>> GetChatReply(IEnumerable<ChatMessage> chatMessages, CancellationToken cancellationToken)
     {
-        if(messages is null || !messages.Any())
-            throw new ArgumentException("Chat messages cannot be empty.", nameof(messages));
+        if(chatMessages is null || !chatMessages.Any())
+            throw new ArgumentException("Chat messages cannot be empty.", nameof(chatMessages));
 
-        var request = new GetChatReply.Request(messages);
+        var request = new GetChatReply.Request(chatMessages);
         Result<GetChatReply.Response> response = await _mediator.Send<GetChatReply.Request, GetChatReply.Response>(request, cancellationToken);
 
         if(response.IsFailed)
-            throw new ArgumentException("An error occurred while processing the request.", nameof(messages));
+            throw new ArgumentException("An error occurred while processing the request.", nameof(chatMessages));
 
         return response.Value.StreamingChatReply;
     }
     public async Task<Result<IEnumerable<string>>> GetQuickReplies(IEnumerable<ChatMessage> chatMessages, CancellationToken cancellationToken)
     {
+        if(chatMessages is null || !chatMessages.Any())
+            throw new ArgumentException("Chat messages cannot be empty.", nameof(chatMessages));
+
         var request = new GetQuickRepliesChatReply.Request(chatMessages);
         Result<GetQuickRepliesChatReply.Response> result = await _mediator.Send<GetQuickRepliesChatReply.Request, GetQuickRepliesChatReply.Response>(request, cancellationToken);
         if(result.IsFailed)
@@ -40,5 +44,15 @@ public class ClinicalIntakeChatService(Mediator mediator)
             return Result.Fail<string>("An error occurred while getting the clinical summary.");
 
         return Result.Ok(response.Value.ClinicalSummary);
+    }
+    public async Task<Result> TriggerEventChatSurveyCompleted(ChatSurvey chatSurvey, CancellationToken cancellationToken = default)
+    {
+        if(chatSurvey is null)
+            return Result.Fail("Chat survey cannot be null.");
+        var request = new ChatSurveyCompleted.Request(chatSurvey);
+        Result result = await _mediator.Send<ChatSurveyCompleted.Request>(request, cancellationToken);
+        if(result.IsFailed)
+            return Result.Fail("An error occurred while saving the chat survey.");
+        return Result.Ok();
     }
 }

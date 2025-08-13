@@ -6,33 +6,36 @@ using Success = SharedKernel.Success;
 
 namespace ClinicalIntake.Application.Chat.Events;
 
-//TODO: make this an event
-public static class SaveChatSurvey
+//TODO: make ChatSurveyCompleted an event
+public static class ChatSurveyCompleted
 {
     public record Request(ChatSurvey ChatSurvey) : ICommandRequest;
 
     internal static IServiceCollection AddSaveChatSurvey(this IServiceCollection services)
         => services.AddScoped<ICommandRequestHandler<Request>, Handler>();
 
-    private class Handler(IRepository<ChatSurvey> chatSurveyRepository) : ICommandRequestHandler<Request>
+    private class Handler(IEventBus eventBus) : ICommandRequestHandler<Request>
     {
-        private readonly IRepository<ChatSurvey> _chatSurveyRepository = chatSurveyRepository;
+        private readonly IEventBus _eventBus = eventBus;
         public async Task<Result> Handle(Request request, CancellationToken cancellationToken)
         {
             try
             {
-                //TODO: check if the chat survey already exists
                 ArgumentNullException.ThrowIfNull(request.ChatSurvey, nameof(request.ChatSurvey));
-                await _chatSurveyRepository.Add(request.ChatSurvey, cancellationToken);
-                await _chatSurveyRepository.Save(cancellationToken);
+                await _eventBus.Trigger(request.ChatSurvey).ConfigureAwait(false);
                 return Result.Ok()
-                    .WithSuccess(new Success(nameof(SaveChatSurvey), "Chat survey saved successfully."));
+                    .WithSuccess(new Success(nameof(ChatSurveyCompleted), "Event Chat Survey Completed triggered successfully."));
             }
             catch(Exception exception)
             {
-                return Result.Fail(new SharedKernel.ExceptionalError(nameof(SaveChatSurvey), exception))
-                    .WithError(new Error(nameof(ChatSurvey), "An error occurred while saving the chat survey."));
+                return Result.Fail(new SharedKernel.ExceptionalError(nameof(ChatSurveyCompleted), exception))
+                    .WithError(new Error(nameof(ChatSurvey), "An error occurred while triggering event Chat Survey Completed."));
             }
         }
+    }
+
+    public interface IEventBus
+    {
+        Task Trigger(ChatSurvey ChatSurvey);
     }
 }

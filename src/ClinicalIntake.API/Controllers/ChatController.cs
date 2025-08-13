@@ -55,8 +55,21 @@ public class ChatController(ClinicalIntakeChatService clinicalIntakeChatService)
 
         var getClinicalSummaryResult = await _clinicalIntakeChatService.GetClinicalSummary(messages, cancellationToken);
         if(getClinicalSummaryResult.IsFailed)
-            return Problem(getClinicalSummaryResult.Errors.Select(e => e.Message).ToString(), statusCode: StatusCodes.Status500InternalServerError);
+            return Problem();
 
         return Ok(getClinicalSummaryResult.Value);
+    }
+
+    [HttpPost()]
+    public async Task<IActionResult> TriggerEventSurveyCompleted([FromBody] ChatSurvey chatSurvey, CancellationToken cancellationToken)
+    {
+        if(chatSurvey is null)
+            return BadRequest("Must provide a chat survey.");
+
+        var response = await _clinicalIntakeChatService.TriggerEventChatSurveyCompleted(chatSurvey, cancellationToken);
+        if(response.IsFailed)
+            return Problem();
+
+        return NoContent();
     }
 }

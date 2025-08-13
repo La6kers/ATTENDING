@@ -292,7 +292,7 @@
             await FetchQuickReplies();
             AddCompletionMessage();
             await FetchClinicalSummary();
-            await NotifyChatCompletion();
+            await TriggerEventChatSurveyCompleted();
         }
         catch(Exception exception)
         {
@@ -384,12 +384,12 @@
         chatMessages.Add(completeConversationChatResponse);
     }
 
-    private async Task NotifyChatCompletion()
+    private async Task TriggerEventChatSurveyCompleted()
     {
         if(chatStage < ChatStage.Complete)
-            return; 
+            return;
 
-        // ClinicalIntakeChatClient
+        ClinicalIntakeChatClient.TriggerEventChatSurveyCompleted();
     }
 
     private async void onChatReplyStreamAppended(object? sender, (string AppendedString, string FullString) eventArgs, ChatMessage chatMessage)
