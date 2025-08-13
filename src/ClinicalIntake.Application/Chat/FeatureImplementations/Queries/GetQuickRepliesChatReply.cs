@@ -1,5 +1,5 @@
 ﻿using ClinicalIntake.Application.Chat;
-using ClinicalIntake.Application.Chat.Implementations.Services;
+using ClinicalIntake.Application.Chat.Services;
 using Microsoft.Extensions.DependencyInjection;
 using static ClinicalIntake.Application.Chat.Features.Queries.GetQuickRepliesChatReply;
 

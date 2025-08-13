@@ -1,12 +1,10 @@
-﻿using SharedKernel;
-
-namespace ClinicalIntake.Application.Chat;
+﻿namespace ClinicalIntake.Application.Chat;
 
 public class ChatSurvey(int clinicId) : ISurvey
 {
     public int ClinicId { get; private set; } = clinicId;
-    public string MedicalRecordNumber { get; private set; } = MedicalRecordNumberGenerator.Generate(clinicId);
-    public string Summary { get; private set; } = string.Empty;
+    public string MedicalRecordNumber { get; init; } = string.Empty;
+    public string Summary { get; init; } = string.Empty;
     public List<ChatMessage> Messages { get; private set; } = [];
 }
 

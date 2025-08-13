@@ -4,7 +4,7 @@ using SharedKernel;
 using Error = SharedKernel.Error;
 using Success = SharedKernel.Success;
 
-namespace ClinicalIntake.Application.Chat.Events;
+namespace ClinicalIntake.Application.Chat.Features.Events;
 
 //TODO: make ChatSurveyCompleted an event
 public static class ChatSurveyCompleted

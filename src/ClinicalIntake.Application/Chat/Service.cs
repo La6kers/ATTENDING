@@ -1,4 +1,4 @@
-﻿using ClinicalIntake.Application.Chat.Events;
+﻿using ClinicalIntake.Application.Chat.Features.Events;
 using ClinicalIntake.Application.Chat.Features.Queries;
 using FluentResults;
 using SharedKernel;

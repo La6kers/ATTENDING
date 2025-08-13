@@ -1,9 +1,9 @@
 using Azure;
 using Azure.AI.OpenAI;
-using ClinicalIntake.Application.Chat.Events;
+using ClinicalIntake.Application.Chat.Features.Events;
 using ClinicalIntake.Application.Chat.Features.Queries;
 using ClinicalIntake.Application.Chat.Implementations.Queries;
-using ClinicalIntake.Application.Chat.Implementations.Services;
+using ClinicalIntake.Application.Chat.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenAI.Chat;

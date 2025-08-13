@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using OpenAIChatMessage = OpenAI.Chat.ChatMessage;
 
-namespace ClinicalIntake.Application.Chat.Implementations.Services;
+namespace ClinicalIntake.Application.Chat.Services;
 internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, string deploymentName, ChatCompletionOptions chatCompletionOptions)
 {
     private readonly AzureOpenAIClient _azureOpenAIClient = azureOpenAIClient;
