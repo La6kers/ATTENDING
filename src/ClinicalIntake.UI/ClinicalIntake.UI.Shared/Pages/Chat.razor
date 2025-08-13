@@ -51,7 +51,8 @@
                             OnClick="() => isEmergencyDialogVisible = true"
                             DropShadow="false" />
                     <MudText Typo="Typo.h5" Align="Align.Center" Inline="true" Class="fw-bold py-4 border-bottom">COMPASS</MudText>
-
+                    <MudText Typo="Typo.subtitle1" Align="Align.Start" Inline="true" Class="px-4">MRN: @MRN</MudText>
+                    
                     <!-- chat -->
                     <MudPaper id="chatContainer" Elevation="0" Class="flex-fill mx-4 overflow-y-scroll">
                         @foreach(var chatMessage in chatMessages)
@@ -97,13 +98,13 @@
                                 Size="Size.Small"
                                 StartIcon="@Icons.Material.Outlined.CameraAlt"
                                 DropShadow="false"
-                                Disabled="isLoading || isConversationComplete"
+                                Disabled=true
                                 OnClick="openTakePictureDialog" />
                         <MudFab Color="Color.Success"
                                 Size="Size.Small"
                                 StartIcon="@Icons.Material.Outlined.MicNone"
                                 DropShadow="false"
-                                Disabled="isLoading || isConversationComplete"
+                                Disabled=true
                                 OnClick="openRecordVoiceMessageDialog" />
                     </MudStack>
 

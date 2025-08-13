@@ -11,8 +11,13 @@ public static class ChatSurveyCompleted
 {
     public record Request(ChatSurvey ChatSurvey) : ICommandRequest;
 
-    internal static IServiceCollection AddSaveChatSurvey(this IServiceCollection services)
-        => services.AddScoped<ICommandRequestHandler<Request>, Handler>();
+    internal static IServiceCollection AddChatSurveyCompletedEvent(this IServiceCollection services)
+        => services.AddScoped<ICommandRequestHandler<Request>, Handler>(provider =>
+        {
+            var eventBus = provider.GetKeyedService<IEventBus>(nameof(ChatSurveyCompleted));
+            ArgumentNullException.ThrowIfNull(eventBus, nameof(eventBus));
+            return new(eventBus);
+        });
 
     private class Handler(IEventBus eventBus) : ICommandRequestHandler<Request>
     {

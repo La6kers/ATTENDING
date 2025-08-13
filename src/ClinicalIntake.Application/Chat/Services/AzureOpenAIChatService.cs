@@ -11,24 +11,6 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
     private readonly string _deploymentName = deploymentName;
     private readonly ChatCompletionOptions _chatCompletionOptions = chatCompletionOptions;
 
-    public async Task<bool> HealthCheck()
-    {
-        try
-        {
-            ChatClient chatClient = _azureOpenAIClient.GetChatClient(_deploymentName);
-            var response = await chatClient.CompleteChatAsync([new SystemChatMessage(SystemPrompts.HealthCheck)], new ChatCompletionOptions
-            {
-                MaxOutputTokenCount = 1,
-                Temperature = 0.0f
-            });
-            return response is not null && response.Value.Content.Any();
-        }
-        catch(Exception)
-        {
-            return false;
-        }
-    }
-
     public IAsyncEnumerable<string> GetChatReply(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
         if(messages == null || !messages.Any())
@@ -124,7 +106,6 @@ internal class AzureOpenAIChatService(AzureOpenAIClient azureOpenAIClient, strin
 
     private static class SystemPrompts
     {
-        public const string HealthCheck = @"Respond 'Hi'";
         public const string Survey = @"You are a clinical intake assistant.
 Your goal is to gather the following information from a patient through a step-by-step interview:
 -Chief complaint
