@@ -5,7 +5,7 @@ using ClinicalIntake.UI.Web.Services;
 using MudBlazor.Services;
 using Orchestration.ServiceDefaults;
 
-namespace ClinicalIntake.UI.Web;
+namespace ClinicalIntake.UI;
 public class Program
 {
     public static void Main(string[] args)
@@ -15,7 +15,8 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents();
+            .AddInteractiveServerComponents()
+            .AddInteractiveWebAssemblyComponents();
 
         // Add device-specific services used by the ClinicalIntake.UI.Shared project
         builder.Services.AddSingleton<IFormFactor, FormFactor>();
@@ -29,7 +30,11 @@ public class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        if(!app.Environment.IsDevelopment())
+        if(app.Environment.IsDevelopment())
+        {
+            app.UseWebAssemblyDebugging();
+        }
+        else
         {
             app.UseExceptionHandler("/Error");
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -43,7 +48,10 @@ public class Program
 
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode()
-            .AddAdditionalAssemblies(typeof(Shared._Imports).Assembly);
+            .AddInteractiveWebAssemblyRenderMode()
+            .AddAdditionalAssemblies(
+                typeof(Shared._Imports).Assembly,
+                typeof(Web.Client._Imports).Assembly);
 
         app.Run();
     }

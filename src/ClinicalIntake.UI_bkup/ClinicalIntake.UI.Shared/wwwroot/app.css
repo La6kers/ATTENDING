@@ -1,0 +1,15 @@
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.page-background {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.page-foreground {
+    background-color: white;
+}
+
+.rounded-textfield {
+    border-radius: 50px !important;
+}

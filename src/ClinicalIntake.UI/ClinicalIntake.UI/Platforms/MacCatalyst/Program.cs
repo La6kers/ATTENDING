@@ -1,7 +1,7 @@
 ﻿using ObjCRuntime;
 using UIKit;
 
-namespace ClinicalIntake.UI.Platforms.MacCatalyst;
+namespace ClinicalIntake.UI;
 public class Program
 {
     // This is the main entry point of the application.

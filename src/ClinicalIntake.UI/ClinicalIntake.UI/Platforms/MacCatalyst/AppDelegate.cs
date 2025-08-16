@@ -1,6 +1,6 @@
 ﻿using Foundation;
 
-namespace ClinicalIntake.UI.Platforms.MacCatalyst;
+namespace ClinicalIntake.UI;
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate
 {

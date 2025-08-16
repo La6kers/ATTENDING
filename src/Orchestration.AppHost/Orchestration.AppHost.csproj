@@ -21,6 +21,7 @@
     <ProjectReference Include="..\ClinicalIntake.API\ClinicalIntake.API.csproj" />
     <ProjectReference Include="..\ClinicalIntake.UI\ClinicalIntake.UI.Web\ClinicalIntake.UI.Web.csproj" />
     <ProjectReference Include="..\PatientCare.Infrastructure.EventBusAdapter\PatientCare.Infrastructure.EventBusAdapter.csproj" />
+    <ProjectReference Include="..\PatientCare.UI\PatientCare.UI.Web\PatientCare.UI.Web.csproj" />
   </ItemGroup>
 
 </Project>

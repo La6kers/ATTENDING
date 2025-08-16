@@ -1,8 +1,6 @@
-﻿using MauiApplication = Microsoft.Maui.Controls.Application;
+﻿namespace ClinicalIntake.UI;
 
-namespace ClinicalIntake.UI;
-
-public partial class App : MauiApplication
+public partial class App : Application
 {
     public App()
     {
