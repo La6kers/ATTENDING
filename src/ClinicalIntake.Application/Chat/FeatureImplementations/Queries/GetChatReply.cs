@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using static ClinicalIntake.Application.Chat.Features.Queries.GetChatReply;
 
-namespace ClinicalIntake.Application.Chat.Implementations.Queries;
+namespace ClinicalIntake.Application.Chat.FeatureImplementations.Queries;
 internal static class GetChatReply
 {
     public static IServiceCollection AddAzureOpenAIGetChatReply(this IServiceCollection services)

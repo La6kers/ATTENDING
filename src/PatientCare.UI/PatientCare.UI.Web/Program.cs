@@ -1,4 +1,3 @@
-using Orchestration.ServiceDefaults;
 using PatientCare.UI.Shared.Services;
 using PatientCare.UI.Web.Components;
 using PatientCare.UI.Web.Services;
@@ -9,10 +8,10 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        builder.AddServiceDefaults();
 
         // Add services to the container.
         builder.Services.AddRazorComponents()
+            .AddInteractiveServerComponents()
             .AddInteractiveWebAssemblyComponents();
 
         // Add device-specific services used by the PatientCare.UI.Shared project
@@ -38,6 +37,7 @@ public class Program
         app.UseAntiforgery();
 
         app.MapRazorComponents<App>()
+            .AddInteractiveServerRenderMode()
             .AddInteractiveWebAssemblyRenderMode()
             .AddAdditionalAssemblies(
                 typeof(PatientCare.UI.Shared._Imports).Assembly,

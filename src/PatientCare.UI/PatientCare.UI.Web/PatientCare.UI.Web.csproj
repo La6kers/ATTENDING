@@ -7,10 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Orchestration.ServiceDefaults\Orchestration.ServiceDefaults.csproj" />
     <ProjectReference Include="..\PatientCare.UI.Web.Client\PatientCare.UI.Web.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.0" />
-    <PackageReference Include="MudBlazor" Version="8.11.0" />
   </ItemGroup>
 
 </Project>

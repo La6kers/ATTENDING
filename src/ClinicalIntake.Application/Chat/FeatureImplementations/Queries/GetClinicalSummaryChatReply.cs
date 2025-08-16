@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using static ClinicalIntake.Application.Chat.Features.Queries.GetClinicalSummaryChatReply;
 
-namespace ClinicalIntake.Application.Chat.Implementations.Queries;
+namespace ClinicalIntake.Application.Chat.FeatureImplementations.Queries;
 internal static class GetClinicalSummaryChatReply
 {
     public static IServiceCollection AddAzureOpenAIClinicalSummary(this IServiceCollection services)
