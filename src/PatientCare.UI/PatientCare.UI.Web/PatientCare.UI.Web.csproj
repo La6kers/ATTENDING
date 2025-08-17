@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PatientCare.UI.Web.Client\PatientCare.UI.Web.Client.csproj" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.8" />
   </ItemGroup>
 
 </Project>

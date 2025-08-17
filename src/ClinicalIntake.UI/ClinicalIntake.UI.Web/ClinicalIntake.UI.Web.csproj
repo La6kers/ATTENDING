@@ -4,12 +4,16 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>096bfa1b-0bb6-40b2-844b-1550e7070dda</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Orchestration.ServiceDefaults\Orchestration.ServiceDefaults.csproj" />
     <ProjectReference Include="..\ClinicalIntake.UI.Web.Client\ClinicalIntake.UI.Web.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
   </ItemGroup>
 
 </Project>

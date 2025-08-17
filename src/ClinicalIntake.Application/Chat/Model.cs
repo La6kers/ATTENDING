@@ -2,6 +2,7 @@
 
 public class ChatSurvey(int clinicId) : ISurvey
 {
+    public Guid Id { get; private set; } = Guid.NewGuid();
     public int ClinicId { get; private set; } = clinicId;
     public string MedicalRecordNumber { get; init; } = string.Empty;
     public string Summary { get; init; } = string.Empty;
@@ -24,6 +25,7 @@ public class Image(ImageMimeType mimeType, BinaryData data)
 
 public interface ISurvey
 {
+    Guid Id { get; }
     int ClinicId { get; }
     string MedicalRecordNumber { get; }
     string Summary { get; }

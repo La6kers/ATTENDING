@@ -50,7 +50,7 @@ public static class DependencyInjection
         services.AddSingleton<ServiceBusClient>(provider =>
         {
             var configuration = provider.GetRequiredService<IConfiguration>();
-            var connectionString = configuration["AzureServiceBusConnectionString"];
+            var connectionString = configuration["EventBusConnectionString"];
             ArgumentNullException.ThrowIfNull(connectionString, nameof(connectionString));
             return new(connectionString);
         });

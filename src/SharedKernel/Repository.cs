@@ -5,20 +5,19 @@ namespace SharedKernel;
 public interface IReadRepository<T>
     where T : class
 {
-    Task<bool> Any(Expression<Func<T, bool>> specification, CancellationToken cancellationToken);
-    Task<IEnumerable<T>> GetAllWhere(Expression<Func<T, bool>> specifications, CancellationToken cancellationToken);
-    Task<T?> GetSingleWhere(Expression<Func<T, bool>> specifications, CancellationToken cancellationToken);
-    Task<T?> GetSingleByKey(object?[]? keyValues, CancellationToken cancellationToken);
+    Task<bool> Any(Expression<Func<T, bool>> specification, CancellationToken cancellationToken = default);
+    Task<IEnumerable<T>> GetAllWhere(Expression<Func<T, bool>> specifications, CancellationToken cancellationToken = default);
+    Task<T?> GetSingleWhere(Expression<Func<T, bool>> specifications, CancellationToken cancellationToken = default);
+    Task<T?> GetSingleByKey(object?[]? keyValues, CancellationToken cancellationToken = default);
 }
 
 public interface IReadWriteRepository<T> : IReadRepository<T>
     where T : class
 {
-    Task Add(T entity, CancellationToken cancellationToken);
-    Task Add(IEnumerable<T> entities, CancellationToken cancellationToken);
-    Task Update(T entity, CancellationToken cancellationToken);
-    Task Update(IEnumerable<T> entities, CancellationToken cancellationToken);
-    Task Save(CancellationToken cancellationToken);
+    Task Add(T entity, CancellationToken cancellationToken = default);
+    Task Add(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+    Task Update(T entity, CancellationToken cancellationToken = default);
+    Task Update(IEnumerable<T> entities, CancellationToken cancellationToken = default);
 }
 
 public class EFReadRepository<TEntity, TDbContext>(TDbContext dbContext) : IReadRepository<TEntity>
@@ -26,25 +25,56 @@ public class EFReadRepository<TEntity, TDbContext>(TDbContext dbContext) : IRead
     where TDbContext : DbContext
 {
     protected readonly TDbContext _dbContext = dbContext;
+    protected virtual bool _trackChanges => false;
 
-    public async Task<bool> Any(Expression<Func<TEntity, bool>> specification, CancellationToken cancellationToken)
+    public async Task<bool> Any(Expression<Func<TEntity, bool>> specification, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Set<TEntity>().AnyAsync(specification, cancellationToken);
     }
-    public async Task<IEnumerable<TEntity>> GetAllWhere(Expression<Func<TEntity, bool>> specifications, CancellationToken cancellationToken)
+    public async Task<IEnumerable<TEntity>> GetAllWhere(Expression<Func<TEntity, bool>> specifications, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Set<TEntity>().Where(specifications).ToListAsync(cancellationToken);
     }
-    public async Task<TEntity?> GetSingleWhere(Expression<Func<TEntity, bool>> specifications, CancellationToken cancellationToken)
+    public async Task<TEntity?> GetSingleWhere(Expression<Func<TEntity, bool>> specifications, CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Set<TEntity>().Where(specifications).FirstOrDefaultAsync(cancellationToken);
+        return await _dbContext.Set<TEntity>().Where(specifications).AsNoTracking().FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<TEntity?> GetSingleByKey(object?[]? keyValues, CancellationToken cancellationToken)
+    public async Task<TEntity?> GetSingleByKey(object?[]? keyValues, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(keyValues, nameof(keyValues));
         ArgumentOutOfRangeException.ThrowIfLessThan(keyValues.Length, 1, nameof(keyValues));
 
         return await _dbContext.Set<TEntity>().FindAsync(keyValues, cancellationToken);
+    }
+}
+
+public class EFReadWriteRepository<TEntity, TDbContext>(TDbContext dbContext) : EFReadRepository<TEntity, TDbContext>(dbContext), IReadWriteRepository<TEntity>
+    where TEntity : class
+    where TDbContext : DbContext
+{
+    public async Task Add(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entity, nameof(entity));
+        await _dbContext.Set<TEntity>().AddAsync(entity, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+    public async Task Add(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entities, nameof(entities));
+        await _dbContext.Set<TEntity>().AddRangeAsync(entities, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+    public async Task Update(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entity, nameof(entity));
+        _dbContext.Set<TEntity>().Update(entity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+    public async Task Update(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entities, nameof(entities));
+        _dbContext.Set<TEntity>().UpdateRange(entities);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }
