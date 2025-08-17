@@ -1,16 +1,13 @@
 using Azure.Messaging.ServiceBus;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using PatientCare.Application.Diagnostics;
+using PatientCare.Application.Diagnostics.Features;
 using SharedKernel;
 
 namespace PatientCare.Infrastructure.EventBusAdapter.Functions;
 
-public class OnChatSurveyCompleted(ILogger<OnChatSurveyCompleted> logger)
+public class OnChatSurveyCompleted(Mediator mediator, ILogger<OnChatSurveyCompleted> logger)
 {
-    private readonly ILogger<OnChatSurveyCompleted> _logger = logger;
-    private readonly IReadWriteRepository<ClinicalSummary> _repository;
-
     [Function(nameof(OnChatSurveyCompleted))]
     public async Task Run(
         [ServiceBusTrigger("clinicalintake-chatsurvey-completed", "patientcare", Connection = "PatientcareEventBusConnection")]
@@ -20,14 +17,28 @@ public class OnChatSurveyCompleted(ILogger<OnChatSurveyCompleted> logger)
         var messageDto = message.Body.ToObjectFromJson<MessageDto>();
         ArgumentNullException.ThrowIfNull(messageDto, nameof(messageDto));
 
-        await _repository.Add(new ClinicalSummary()
-        {
-            MedicalRecordNumber = messageDto.MedicalRecordNumber,
-            ChiefComplaint = messageDto.Summary
-        }, cancellationToken);
+        AddClinicalSummary.Request request = new(
+            ClinicId: messageDto.ClinicId,
+            MedicalRecordNumber: messageDto.MedicalRecordNumber,
+            VitalSigns: new(null, null, null, null, null),
+            ChiefComplaint: messageDto.Summary);
 
-        // Complete the message
-        await messageActions.CompleteMessageAsync(message);
+        try
+        {
+            var result = await mediator.Send(request, cancellationToken);
+            if(result.IsFailed)
+            {
+                logger.LogError("Failed to process chat survey completed message: {Errors}", result.Errors);
+                await messageActions.AbandonMessageAsync(message, cancellationToken: cancellationToken);
+            }
+
+            await messageActions.CompleteMessageAsync(message);
+        }
+        catch(Exception exception)
+        {
+            await messageActions.AbandonMessageAsync(message, cancellationToken: cancellationToken);
+            logger.LogError(exception, "An error occurred while processing the chat survey completed message.");
+        }
     }
 
     private record MessageDto(

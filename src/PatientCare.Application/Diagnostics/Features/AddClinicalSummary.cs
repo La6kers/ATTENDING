@@ -28,7 +28,6 @@ public static class AddClinicalSummary
                 {
                     ClinicId = request.ClinicId,
                     MedicalRecordNumber = request.MedicalRecordNumber,
-                    VitalSigns = request.VitalSigns,
                     ChiefComplaint = request.ChiefComplaint
                 };
                 await repository.Add(clinicalSummary, cancellationToken);
