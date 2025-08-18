@@ -180,13 +180,13 @@
 </MudPaper>
 
 @code {
-    [Inject()]
+    [Inject]
     private ClinicalIntakeChatClient ClinicalIntakeChatClient { get; init; } = null!;
 
-    [Inject()]
+    [Inject]
     private IJSRuntime JSRuntime { get; init; } = null!;
 
-    [Inject()]
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     private int ClinicId = int.Parse(Environment.GetEnvironmentVariable("CLINIC_ID") ?? throw new ArgumentNullException("CLINIC_ID environment variable has not been set."));
