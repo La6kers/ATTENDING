@@ -1,0 +1,110 @@
+﻿@page "/"
+@page "/provider-portal/ClinicalSummaries"
+
+@using PatientCare.Application.Diagnostics
+@using PatientCare.UI.Shared.Services
+@using MudBlazor
+
+<PageTitle>Provider Portal</PageTitle>
+
+<MudStack Spacing="3" Class="m-4">
+    @* clinic *@
+    <MudText Typo="Typo.h4" Align="Align.Center">Clinic Id: @_clinicId</MudText>
+
+    @* provider *@
+    <MudPaper Elevation="2">
+        <MudSelect T="string"
+            @bind-Value="_selectedProvider"
+            Label="Providers"
+            Placeholder="Choose Providers">
+            @foreach(var provider in _providers)
+            {
+                <MudSelectItem Value="@provider">@provider</MudSelectItem>
+            }
+        </MudSelect>
+    </MudPaper>
+
+    @* navigation *@
+    <MudPaper Elevation="2" Class="d-flex flex-fill justify-content-center">
+        <MudButtonGroup Color="Color.Primary" Variant="Variant.Text" >
+            <MudButton>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">🧪 Order Labs</MudText>
+            </MudButton>
+            <MudButton>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">💊 E-Prescribe</MudText>
+            </MudButton>
+            <MudButton>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">👥 Refer</MudText>
+            </MudButton>
+            <MudButton>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">🔍 Order Imaging</MudText>
+            </MudButton>
+            <MudButton>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">📅 Schedule Follow-up</MudText>
+            </MudButton>
+            <MudButton>
+                <MudText Typo="Typo.subtitle1" Align="Align.Center">📚 Patient Education</MudText>
+            </MudButton>
+        </MudButtonGroup>
+    </MudPaper>
+
+    @* summaries *@
+    <MudPaper Elevation="2">
+        <MudTable T="ClinicalSummaryDto" Items="@clinicalSummaries" Hover="true" Striped="true" Filter="new Func<ClinicalSummaryDto, bool>(FilterFunction)">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Clinical Summaries</MudText>
+                <MudSpacer />
+                <MudTextField T="string" @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Medical Record Number</MudTh>
+                <MudTh>First Name</MudTh>
+                <MudTh>Last Name</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Medical Record Number">@context.MedicalRecordNumber</MudTd>
+                <MudTd DataLabel="First Name">[first name goes here]</MudTd>
+                <MudTd DataLabel="Last Name">[last name goes here]</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
+</MudStack>
+
+@code {
+    private readonly int _clinicId = 9001;
+    private readonly List<string> _providers = [];
+    private readonly List<ClinicalSummaryDto> clinicalSummaries = [];
+    private string searchString = string.Empty;
+
+    private string _selectedProvider = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _providers.Add("Bob the Builder");
+        _providers.Add("Darth Vader");
+        _providers.Add("Dora the Explorer");
+
+        clinicalSummaries.Add(new("123456", string.Empty, "Patient has a headache"));
+        clinicalSummaries.Add(new("111222", string.Empty, "Patient has a stomach ache"));
+        clinicalSummaries.Add(new("654321", string.Empty, "Patient has a back pain"));
+    }
+
+    private bool FilterFunction(ClinicalSummaryDto clinicalSummary)
+    {
+        if(string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if(clinicalSummary.MedicalRecordNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+
+    public record ClinicalSummaryDto(
+        string MedicalRecordNumber,
+        string FirstName,
+        string LastName
+    );
+}

@@ -1,4 +1,5 @@
-﻿@page "/survey/chat"
+﻿@page "/COMPASS"
+@page "/survey/chat"
 @page "/"
 @rendermode InteractiveServer
 
@@ -51,8 +52,15 @@
                             Class="position-absolute my-3 mx-4 d-flex d-md-none"
                             OnClick="() => isEmergencyDialogVisible = true"
                             DropShadow="false" />
-                    <MudText Typo="Typo.h5" Align="Align.Center" Inline="true" Class="fw-bold py-4 border-bottom">COMPASS</MudText>
-                    <MudText Typo="Typo.subtitle1" Align="Align.Start" Inline="true" Class="px-4">MRN: @MRN</MudText>
+
+                    <MudPaper Outlined="false" Class="d-flex flex-row">
+                        <MudText Typo="Typo.h5" Align="Align.Center" Inline="true" Class="fw-bold py-4 border-bottom flex-fill">COMPASS</MudText>
+
+                        <MudStack>
+                            <MudText Typo="Typo.subtitle1" Align="Align.Start" Inline="true" Class="px-4">Clinic ID: @ClinicId</MudText>
+                            <MudText Typo="Typo.subtitle1" Align="Align.Start" Inline="true" Class="px-4">MRN: @MRN</MudText>
+                        </MudStack>
+                    </MudPaper>
                     
                     <!-- chat -->
                     <MudPaper id="chatContainer" Elevation="0" Class="flex-fill mx-4 overflow-y-scroll">

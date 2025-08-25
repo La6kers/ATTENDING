@@ -41,16 +41,17 @@ internal class Program
         var patientCareContainer = database.AddContainer("patient-care-container", "/id");
 
         // (clinical intake) api
-        var azureOpenAIEndpoint = builder.Configuration["AzureOpenAIEndpoint"];
-        var azureOpenAIKey = builder.Configuration["AzureOpenAIKey"];
-        var azureOpenAIDeploymentName = builder.Configuration["AzureOpenAIDeploymentName"];
+        var azureOpenAIEndpoint = builder.Configuration["Azure__OpenAI__Endpoint"];
+        var azureOpenAIKey = builder.Configuration["Azure__OpenAI__Key"];
+        var azureOpenAIDeploymentName = builder.Configuration["Azure__OpenAI__DeploymentName"];
+
 
         var clinicalIntakeApi = builder.AddProject<Projects.ClinicalIntake_API>("clinical-intake-api")
             .WaitFor(attendingEventBus)
             .WithEnvironment("EventBusConnectionString", Constants.ServiceBusConnectionString)
-            .WithEnvironment("AzureOpenAIEndpoint", azureOpenAIEndpoint)
-            .WithEnvironment("AzureOpenAIKey", azureOpenAIKey)
-            .WithEnvironment("AzureOpenAIDeploymentName", azureOpenAIDeploymentName);
+            .WithEnvironment("Azure__OpenAI__Endpoint", azureOpenAIEndpoint)
+            .WithEnvironment("Azure__OpenAI__Key", azureOpenAIKey)
+            .WithEnvironment("Azure__OpenAI__DeploymentName", azureOpenAIDeploymentName);
 
         // (clinical intake) web
         builder.AddProject<Projects.ClinicalIntake_UI_Web>("clinical-intake-web")

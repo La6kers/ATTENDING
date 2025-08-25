@@ -6,7 +6,7 @@ public class ClinicalSummary()
     public VitalSigns VitalSigns { get; private set; } = new(0, 0, 0, 0.0, 0);
     public string ChiefComplaint { get; init; } = string.Empty;
 
-    internal void SetBloodPressure(int systolic, int diastolic)
+    public void SetBloodPressure(int systolic, int diastolic)
     {
         VitalSigns = VitalSigns with
         {
@@ -14,21 +14,21 @@ public class ClinicalSummary()
             BloodPressureDiastolic = diastolic
         };
     }
-    internal void SetHeartRate(int heartRate)
+    public void SetHeartRate(int heartRate)
     {
         VitalSigns = VitalSigns with
         {
             HeartRate = heartRate
         };
     }
-    internal void SetTemperature(double temperatureFahrenheit)
+    public void SetTemperature(double temperatureFahrenheit)
     {
         VitalSigns = VitalSigns with
         {
             TemperatureFahrenheit = temperatureFahrenheit
         };
     }
-    internal void SetOxygenSaturation(int oxygenSaturation)
+    public void SetOxygenSaturation(int oxygenSaturation)
     {
         VitalSigns = VitalSigns with
         {

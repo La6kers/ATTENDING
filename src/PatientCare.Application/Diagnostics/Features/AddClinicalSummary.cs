@@ -1,4 +1,5 @@
 ﻿using FluentResults;
+using Microsoft.Extensions.DependencyInjection;
 using SharedKernel;
 using Error = SharedKernel.Error;
 using ExceptionalError = SharedKernel.ExceptionalError;
@@ -11,6 +12,11 @@ public static class AddClinicalSummary
         string MedicalRecordNumber,
         VitalSigns VitalSigns,
         string ChiefComplaint) : ICommandRequest;
+
+    internal static IServiceCollection AddAddClinicalSummaryFeature(this IServiceCollection services)
+    {
+        return services.AddScoped<ICommandRequestHandler<Request>, Handler>();
+    }
 
     public class Handler(IReadWriteRepository<ClinicalSummary> repository) : ICommandRequestHandler<Request>
     {

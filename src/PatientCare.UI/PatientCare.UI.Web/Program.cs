@@ -1,3 +1,4 @@
+using MudBlazor.Services;
 using PatientCare.UI.Shared.Services;
 using PatientCare.UI.Web.Components;
 using PatientCare.UI.Web.Services;
@@ -17,12 +18,16 @@ public class Program
         // Add device-specific services used by the PatientCare.UI.Shared project
         builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+        // Add MudBlazor services
+        builder.Services.AddMudServices();
+
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
-        if(app.Environment.IsDevelopment())
+        if(!app.Environment.IsProduction())
         {
             app.UseWebAssemblyDebugging();
+            app.UseDeveloperExceptionPage();
         }
         else
         {
