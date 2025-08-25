@@ -1,6 +1,7 @@
 ﻿namespace PatientCare.UI;
+using MauiApplication = Microsoft.Maui.Controls.Application;
 
-public partial class App : Application
+public partial class App : MauiApplication
 {
     public App()
     {
