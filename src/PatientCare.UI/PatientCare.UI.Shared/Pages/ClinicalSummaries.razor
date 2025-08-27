@@ -4,6 +4,7 @@
 @using PatientCare.Application.Diagnostics
 @using PatientCare.UI.Shared.Services
 @using MudBlazor
+@inject NavigationManager Navigation
 
 <PageTitle>Provider Portal</PageTitle>
 
@@ -14,9 +15,9 @@
     @* provider *@
     <MudPaper Elevation="2">
         <MudSelect T="string"
-            @bind-Value="_selectedProvider"
-            Label="Providers"
-            Placeholder="Choose Providers">
+                   @bind-Value="_selectedProvider"
+                   Label="Providers"
+                   Placeholder="Choose Providers">
             @foreach(var provider in _providers)
             {
                 <MudSelectItem Value="@provider">@provider</MudSelectItem>
@@ -25,36 +26,47 @@
     </MudPaper>
 
     @* navigation *@
-    <MudPaper Elevation="2" Class="d-flex flex-fill justify-content-center">
-        <MudButtonGroup Color="Color.Primary" Variant="Variant.Text" >
-            <MudButton>
+    <MudPaper Elevation="2" Class="d-flex flex-fill flex-column">
+        <MudStack Spacing="1" Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Stretch" StretchItems="StretchItems.All">
+            <MudButton FullWidth="true" Disabled="true">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">🧪 Order Labs</MudText>
             </MudButton>
-            <MudButton>
+            <MudButton FullWidth="true" Disabled="true">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">💊 E-Prescribe</MudText>
             </MudButton>
-            <MudButton>
+            <MudButton FullWidth="true" Disabled="true">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">👥 Refer</MudText>
             </MudButton>
-            <MudButton>
+            <MudButton FullWidth="true" Disabled="true">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">🔍 Order Imaging</MudText>
             </MudButton>
-            <MudButton>
+            <MudButton FullWidth="true" Disabled="true">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">📅 Schedule Follow-up</MudText>
             </MudButton>
-            <MudButton>
+            <MudButton FullWidth="true" Disabled="true">
                 <MudText Typo="Typo.subtitle1" Align="Align.Center">📚 Patient Education</MudText>
             </MudButton>
-        </MudButtonGroup>
+        </MudStack>    
     </MudPaper>
 
     @* summaries *@
     <MudPaper Elevation="2">
-        <MudTable T="ClinicalSummaryDto" Items="@clinicalSummaries" Hover="true" Striped="true" Filter="new Func<ClinicalSummaryDto, bool>(FilterFunction)">
+        <MudTable T="ClinicalSummaryDto"
+                  Items="@clinicalSummaries"
+                  Hover="true"
+                  Striped="true"
+                  Filter="new Func<ClinicalSummaryDto, bool>(FilterFunction)"
+                  RowClick="OnRowClick">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Clinical Summaries</MudText>
                 <MudSpacer />
-                <MudTextField T="string" @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                <MudTextField T="string"
+                              @bind-Value="searchString"
+                              Placeholder="Search"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium"
+                              Class="mt-0" />
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>Medical Record Number</MudTh>
@@ -63,8 +75,8 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Medical Record Number">@context.MedicalRecordNumber</MudTd>
-                <MudTd DataLabel="First Name">[first name goes here]</MudTd>
-                <MudTd DataLabel="Last Name">[last name goes here]</MudTd>
+                <MudTd DataLabel="First Name">@context.FirstName</MudTd>
+                <MudTd DataLabel="Last Name">@context.LastName</MudTd>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager />
@@ -87,19 +99,25 @@
         _providers.Add("Darth Vader");
         _providers.Add("Dora the Explorer");
 
-        clinicalSummaries.Add(new("123456", string.Empty, "Patient has a headache"));
-        clinicalSummaries.Add(new("111222", string.Empty, "Patient has a stomach ache"));
-        clinicalSummaries.Add(new("654321", string.Empty, "Patient has a back pain"));
+        clinicalSummaries.Add(new("123456", "Alice", "Anderson"));
+        clinicalSummaries.Add(new("111222", "Brian", "Baker"));
+        clinicalSummaries.Add(new("654321", "Carla", "Cruz"));
     }
 
     private bool FilterFunction(ClinicalSummaryDto clinicalSummary)
     {
-        if(string.IsNullOrWhiteSpace(searchString))
+        if (string.IsNullOrWhiteSpace(searchString))
             return true;
-        if(clinicalSummary.MedicalRecordNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        if (clinicalSummary.MedicalRecordNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
             return true;
 
         return false;
+    }
+
+    private void OnRowClick(TableRowClickEventArgs<ClinicalSummaryDto> args)
+    {
+        // Navigate to detail page; pass MRN as query string (adjust detail page to read it)
+        Navigation.NavigateTo($"/provider-portal/ClinicalSummary?mrn={args.Item.MedicalRecordNumber}");
     }
 
     public record ClinicalSummaryDto(

@@ -77,9 +77,9 @@ public static class DependencyInjection
         services.AddSingleton(provider =>
         {
             var configuration = provider.GetRequiredService<IConfiguration>();
-            var azureOpenAIEndpoint = configuration["Azure__OpenAI__Endpoint"];
+            var azureOpenAIEndpoint = configuration["Azure:OpenAI:Endpoint"];
             ArgumentNullException.ThrowIfNull(azureOpenAIEndpoint, nameof(azureOpenAIEndpoint));
-            var azureOpenAIKey = configuration["Azure__OpenAI__Key"];
+            var azureOpenAIKey = configuration["Azure:OpenAI:ApiKey"];
             ArgumentNullException.ThrowIfNull(azureOpenAIKey, nameof(azureOpenAIKey));
 
             return new AzureOpenAIClient(new Uri(azureOpenAIEndpoint), new AzureKeyCredential(azureOpenAIKey));
@@ -96,7 +96,7 @@ public static class DependencyInjection
         services.AddSingleton(provider =>
         {
             var configuration = provider.GetRequiredService<IConfiguration>();
-            var deploymentName = configuration["Azure__OpenAI__DeploymentName"];
+            var deploymentName = configuration["Azure:OpenAI:DeploymentName"];
             ArgumentNullException.ThrowIfNull(deploymentName, nameof(deploymentName));
 
             var azureOpenAIClient = provider.GetRequiredService<AzureOpenAIClient>();

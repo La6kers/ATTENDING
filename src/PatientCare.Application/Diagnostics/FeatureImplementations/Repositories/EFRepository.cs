@@ -18,9 +18,9 @@ internal class PatientCareDiagnosticsCosmosDbContext(string accountEndpoint, str
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
+            .HasDefaultContainer("patient-care-container")
             .HasShadowIds()
-            .HasRootDiscriminatorInJsonId()
-            .HasDefaultContainer("patient-care-container");
+            .HasRootDiscriminatorInJsonId();
         modelBuilder.ApplyConfiguration(EntityTypeConfigurations.ClinicalSummaryConfiguration.Instance);
     }
 
@@ -51,7 +51,7 @@ internal class PatientCareDiagnosticsCosmosDbContext(string accountEndpoint, str
                 });
                 builder.Property(x => x.ChiefComplaint).IsRequired().ToJsonProperty("chiefComplaint");
 
-                builder.HasKey(x => x.ChiefComplaint);
+                builder.HasKey(x => new { x.ClinicId, x.MedicalRecordNumber });
                 builder.UseETagConcurrency();
             }
         }

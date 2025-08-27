@@ -15,7 +15,9 @@ public class Program
 
         builder.Services.AddControllers();
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
+        //builder.Services.AddOpenApi();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
 
         // add application services
         builder.Services.AddScoped<Mediator>();
@@ -23,17 +25,21 @@ public class Program
 
         var app = builder.Build();
 
-        app.MapDefaultEndpoints();
-
         // Configure the HTTP request pipeline.
         if(!app.Environment.IsProduction())
-            app.MapOpenApi("openai");
+        {
+            //app.MapOpenApi("openapi");
+            app.UseSwagger()
+               .UseSwaggerUI();
+        }
 
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
 
         app.MapControllers();
+
+        app.MapDefaultEndpoints();
 
         app.Run();
     }

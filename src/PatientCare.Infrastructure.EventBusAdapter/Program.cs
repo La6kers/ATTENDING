@@ -1,7 +1,9 @@
 using Microsoft.Azure.Functions.Worker.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Orchestration.ServiceDefaults;
 using PatientCare.Application.Diagnostics;
+using SharedKernel;
 
 internal class Program
 {
@@ -17,14 +19,15 @@ internal class Program
         //    .AddApplicationInsightsTelemetryWorkerService()
         //    .ConfigureFunctionsApplicationInsights();
 
-        // add patient care domain
+        // add application services
+        builder.Services.AddScoped<Mediator>();
         builder.Services
             .AddPatientCareDiagnosticsDomain();
 
         // add patent care implementations
-        var cosmosDbAccountEndpoint = builder.Configuration["Azure__CosmosDb__AccountEndpoint"];
+        var cosmosDbAccountEndpoint = builder.Configuration["Azure:CosmosDb:AccountEndpoint"];
         ArgumentNullException.ThrowIfNullOrEmpty(cosmosDbAccountEndpoint, nameof(cosmosDbAccountEndpoint));
-        var cosmosDbAccountKey = builder.Configuration["Azure__CosmosDb__AccountKey"];
+        var cosmosDbAccountKey = builder.Configuration["Azure:CosmosDb:AccountKey"];
         builder.Services
             .AddPatientCareDiagnosticsCosmosDbRepositoryImplementation(cosmosDbAccountEndpoint, cosmosDbAccountKey);
 

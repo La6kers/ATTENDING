@@ -31,7 +31,8 @@ public class ClinicalIntakeChatService(Mediator mediator)
         if(result.IsFailed)
             return Result.Fail<IEnumerable<string>>("An error occurred while getting quick replies.");
 
-        return Result.Ok(result.Value.QuickReplies);
+        return Result.Ok(result.Value.QuickReplies)
+            .WithReasons(result.Reasons);
     }
     public async Task<Result<string>> GetClinicalSummary(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
@@ -43,7 +44,8 @@ public class ClinicalIntakeChatService(Mediator mediator)
         if(response.IsFailed)
             return Result.Fail<string>("An error occurred while getting the clinical summary.");
 
-        return Result.Ok(response.Value.ClinicalSummary);
+        return Result.Ok(response.Value.ClinicalSummary)
+            .WithReasons(response.Reasons);
     }
     public async Task<Result> TriggerEventChatSurveyCompleted(ChatSurvey chatSurvey, CancellationToken cancellationToken = default)
     {
@@ -53,6 +55,7 @@ public class ClinicalIntakeChatService(Mediator mediator)
         Result result = await _mediator.Send<ChatSurveyCompleted.Request>(request, cancellationToken);
         if(result.IsFailed)
             return Result.Fail("An error occurred while saving the chat survey.");
-        return Result.Ok();
+        return Result.Ok()
+            .WithReasons(result.Reasons);
     }
 }

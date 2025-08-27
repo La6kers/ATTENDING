@@ -1,4 +1,6 @@
-﻿namespace ClinicalIntake.Application.Chat;
+﻿using System.Text.Json.Serialization;
+
+namespace ClinicalIntake.Application.Chat;
 
 public class ChatSurvey(int clinicId) : ISurvey
 {
@@ -11,7 +13,7 @@ public class ChatSurvey(int clinicId) : ISurvey
 
 public record ChatMessage(ChatRole Role)
 {
-    public ChatRole Role { get; private set; } = Role;
+    public ChatRole Role { get; init; } = Role;
     public string Text { get; set; } = string.Empty;
 
     public ChatMessage() : this(ChatRole.Undefined) { }
@@ -31,6 +33,7 @@ public interface ISurvey
     string Summary { get; }
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ChatStage
 {
     ChiefComplaint = 1,
@@ -41,6 +44,7 @@ public enum ChatStage
     ClinicalSummary
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ChatRole
 {
     Undefined = 1,
@@ -49,6 +53,7 @@ public enum ChatRole
     Assistant
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum ImageMimeType
 {
     Jpeg = 1,

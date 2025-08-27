@@ -23,5 +23,7 @@ public static class DependencyInjection
                 var dbContext = new PatientCareDiagnosticsCosmosDbContext(accountEndpoint, databaseName, accountKey);
                 return new EFReadWriteRepository<ClinicalSummary, PatientCareDiagnosticsCosmosDbContext>(dbContext);
             });
+
+        return services;
     }
 }

@@ -10,7 +10,7 @@ public class OnChatSurveyCompleted(Mediator mediator, ILogger<OnChatSurveyComple
 {
     [Function(nameof(OnChatSurveyCompleted))]
     public async Task Run(
-        [ServiceBusTrigger("clinicalintake-chatsurvey-completed", "patientcare", Connection = "PatientcareEventBusConnection")]
+        [ServiceBusTrigger("clinicalintake-chatsurvey-completed", "patientcare", Connection = "EventBusConnectionString")]
         ServiceBusReceivedMessage message,
         ServiceBusMessageActions messageActions, CancellationToken cancellationToken)
     {
@@ -30,6 +30,7 @@ public class OnChatSurveyCompleted(Mediator mediator, ILogger<OnChatSurveyComple
             {
                 logger.LogError("Failed to process chat survey completed message: {Errors}", result.Errors);
                 await messageActions.AbandonMessageAsync(message, cancellationToken: cancellationToken);
+                return;
             }
 
             await messageActions.CompleteMessageAsync(message, cancellationToken);
