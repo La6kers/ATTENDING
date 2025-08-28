@@ -142,14 +142,14 @@
     </MudContainer>
 
     <!-- pre-requisite information dialog -->
-    <MudDialog @bind-Visible="isPreReqDialogVisible" Class="rounded-xl">
+    <MudDialog @bind-Visible="isPreReqDialogVisible" Options="preReqDialogOptions">
         <TitleContent>
             <MudText Typo="Typo.h6" Align="Align.Center" Class="fw-bold">Pre-requisite Information</MudText>
         </TitleContent>
         <DialogContent>
             <MudPaper Elevation="0" Class="d-flex flex-column pb-3">
                 <MudText Typo="Typo.caption" Class="mb-2">
-                    Please provide a few details before beginning the assessment.
+                    Please provide a few details before starting.
                 </MudText>
                 <MudStack Spacing="2">
                     <MudTextField @bind-Value="phoneNumber"
@@ -258,6 +258,13 @@
         && appointmentDate.HasValue
         && appointmentTime.HasValue;
 
+    private static DialogOptions preReqDialogOptions = new()
+    {
+        MaxWidth = MaxWidth.ExtraLarge,
+        CloseButton = true,
+        BackdropClick = true
+    };
+
     private ChatStage chatStage = ChatStage.ChiefComplaint;
     private readonly List<string> quickReplies = [];
     private string currentMessage = string.Empty;
@@ -303,11 +310,7 @@
         if(!IsPreReqValid)
             return;
 
-        // Clear the fields after submission
-        phoneNumber = string.Empty;
-        providerName = string.Empty;
-        appointmentDate = null;
-        appointmentTime = null;
+        isPreReqDialogVisible = false;
     }
 
     private async Task ScrollToBottom() => await JSRuntime.InvokeVoidAsync("scrollToBottom", "chatContainer");

@@ -11,15 +11,17 @@ internal class Program
 
         // Manually load user secrets for custom non-Production environments.
         if(builder.Environment.IsEnvironment("Local") || builder.Environment.IsDevelopment())
-        {
             builder.Configuration.AddUserSecrets<Program>(optional: true);
-        }
+
         var environment = builder.Environment.EnvironmentName;
 
         switch(environment)
         {
             case "Local":
                 Builds.Local.Build(builder);
+                break;
+            case "Test":
+                Builds.Test.Build(builder);
                 break;
             default:
                 throw new Exception($"Environment '{environment}' is not supported.");
