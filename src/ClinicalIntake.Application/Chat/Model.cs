@@ -9,6 +9,9 @@ public class ChatSurvey(int clinicId) : ISurvey
     public string MedicalRecordNumber { get; init; } = string.Empty;
     public string Summary { get; init; } = string.Empty;
     public List<ChatMessage> Messages { get; private set; } = [];
+    public string? PhoneNumber { get; set; } = string.Empty;
+    public DateTimeOffset? AppointmentTime { get; set; } = null;
+    public string ProviderName { get; set; } = string.Empty;
 }
 
 public record ChatMessage(ChatRole Role)

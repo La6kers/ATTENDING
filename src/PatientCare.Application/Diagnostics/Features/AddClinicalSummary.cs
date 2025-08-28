@@ -36,6 +36,7 @@ public static class AddClinicalSummary
                     MedicalRecordNumber = request.MedicalRecordNumber,
                     ChiefComplaint = request.ChiefComplaint
                 };
+                //TODO: check if MRN already exists before adding
                 await repository.Add(clinicalSummary, cancellationToken);
                 return Result.Ok();
             }

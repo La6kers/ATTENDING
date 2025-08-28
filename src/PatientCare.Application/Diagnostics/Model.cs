@@ -6,6 +6,11 @@ public class ClinicalSummary()
     public VitalSigns VitalSigns { get; private set; } = new(0, 0, 0, 0.0, 0);
     public string ChiefComplaint { get; init; } = string.Empty;
 
+    public string? PhoneNumber { get; set; } = string.Empty;
+    public DateTimeOffset? AppointmentTime { get; set; } = null;
+    public string ProviderName { get; set; } = string.Empty;
+    public bool ReviewedByProvider { get; set; } = false;
+
     public void SetBloodPressure(int systolic, int diastolic)
     {
         VitalSigns = VitalSigns with

@@ -22,14 +22,10 @@ internal class Program
         // add application services
         builder.Services.AddScoped<Mediator>();
         builder.Services
-            .AddPatientCareDiagnosticsDomain();
+            .Add_PatientCare_Diagnostics_Domain();
 
         // add patent care implementations
-        var cosmosDbAccountEndpoint = builder.Configuration["Azure:CosmosDb:AccountEndpoint"];
-        ArgumentNullException.ThrowIfNullOrEmpty(cosmosDbAccountEndpoint, nameof(cosmosDbAccountEndpoint));
-        var cosmosDbAccountKey = builder.Configuration["Azure:CosmosDb:AccountKey"];
-        builder.Services
-            .AddPatientCareDiagnosticsCosmosDbRepositoryImplementation(cosmosDbAccountEndpoint, cosmosDbAccountKey);
+        builder.Add_PatientCare_Diagnostics_CosmosDbRepository_Implementation();
 
         builder.Build().Run();
     }

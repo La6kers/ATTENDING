@@ -38,7 +38,6 @@ public static class GetClinicalSummariesByClinicId
             {
                 return Result.Fail<Response>(new ExceptionalError(nameof(GetClinicalSummariesByClinicId), exception));
             }
-
         }
     }
 }

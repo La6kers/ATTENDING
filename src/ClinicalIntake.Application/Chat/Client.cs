@@ -72,6 +72,6 @@ public class ClinicalIntakeChatClient(IHttpClientFactory httpClientFactory)
         using var client = _httpClientFactory.CreateClient("ClinicalIntakeChatClient");
         var response = await client.PostAsJsonAsync("api/chat/triggerEventChatSurveyCompleted", chatSurvey, cancellationToken);
         if(!response.IsSuccessStatusCode)
-            throw new Exception("Failed to trigger event 'Chat Survey Completed.");
+            throw new Exception("Failed to trigger event 'Chat Survey Completed'.");
     }
 }

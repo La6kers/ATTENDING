@@ -1,18 +1,10 @@
-﻿using Azure.Core;
-using Azure.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace PatientCare.Application.Diagnostics.FeatureImplementations.Repositories;
 
-internal class PatientCareDiagnosticsCosmosDbContext(string accountEndpoint, string databaseName, string? accountKey = null) : DbContext()
+internal class PatientCareDiagnosticsCosmosDbContext(DbContextOptions<PatientCareDiagnosticsCosmosDbContext> options) : DbContext(options)
 {
-    private static readonly TokenCredential _defaultCredential = new DefaultAzureCredential();
-
-    private readonly string _accountEndpoint = accountEndpoint;
-    private readonly string _databaseName = databaseName;
-    private readonly string? _accountKey = accountKey;
-
     public DbSet<ClinicalSummary> ClinicalSummaries { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -22,14 +14,6 @@ internal class PatientCareDiagnosticsCosmosDbContext(string accountEndpoint, str
             .HasShadowIds()
             .HasRootDiscriminatorInJsonId();
         modelBuilder.ApplyConfiguration(EntityTypeConfigurations.ClinicalSummaryConfiguration.Instance);
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if(!string.IsNullOrEmpty(_accountKey))
-            optionsBuilder.UseCosmos(_accountEndpoint, _accountKey, _databaseName);
-        else
-            optionsBuilder.UseCosmos(_accountEndpoint, _defaultCredential, _databaseName);
     }
 
     private static class EntityTypeConfigurations
@@ -52,6 +36,7 @@ internal class PatientCareDiagnosticsCosmosDbContext(string accountEndpoint, str
                 builder.Property(x => x.ChiefComplaint).IsRequired().ToJsonProperty("chiefComplaint");
 
                 builder.HasKey(x => new { x.ClinicId, x.MedicalRecordNumber });
+                builder.HasPartitionKey("__id");
                 builder.UseETagConcurrency();
             }
         }

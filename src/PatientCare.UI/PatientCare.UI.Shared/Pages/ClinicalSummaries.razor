@@ -2,15 +2,18 @@
 @page "/provider-portal/ClinicalSummaries"
 
 @using PatientCare.Application.Diagnostics
+@using PatientCare.Application.Diagnostics.Features
 @using PatientCare.UI.Shared.Services
 @using MudBlazor
-@inject NavigationManager Navigation
+@using SharedKernel
+
+@rendermode InteractiveServer
 
 <PageTitle>Provider Portal</PageTitle>
 
 <MudStack Spacing="3" Class="m-4">
     @* clinic *@
-    <MudText Typo="Typo.h4" Align="Align.Center">Clinic Id: @_clinicId</MudText>
+    <MudText Typo="Typo.h4" Align="Align.Center">Clinic Id: @ClinicId</MudText>
 
     @* provider *@
     <MudPaper Elevation="2">
@@ -51,12 +54,11 @@
 
     @* summaries *@
     <MudPaper Elevation="2">
-        <MudTable T="ClinicalSummaryDto"
+        <MudTable T="ClinicalSummary"
                   Items="@clinicalSummaries"
                   Hover="true"
                   Striped="true"
-                  Filter="new Func<ClinicalSummaryDto, bool>(FilterFunction)"
-                  RowClick="OnRowClick">
+                  Filter="new Func<ClinicalSummary, bool>(FilterFunction)">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Clinical Summaries</MudText>
                 <MudSpacer />
@@ -74,9 +76,11 @@
                 <MudTh>Last Name</MudTh>
             </HeaderContent>
             <RowTemplate>
+                <MudTr Style="cursor:pointer" @onclick="() => NavigateTo(context)">
                 <MudTd DataLabel="Medical Record Number">@context.MedicalRecordNumber</MudTd>
-                <MudTd DataLabel="First Name">@context.FirstName</MudTd>
-                <MudTd DataLabel="Last Name">@context.LastName</MudTd>
+                <MudTd DataLabel="First Name">[Currently Not Recorded]</MudTd>
+                <MudTd DataLabel="Last Name">[Currently Not Recorded]</MudTd>
+                </MudTr>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager />
@@ -86,25 +90,40 @@
 </MudStack>
 
 @code {
-    private readonly int _clinicId = 9001;
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    [Inject]
+    private Mediator Mediator { get; set; } = null!;
+
+    private int ClinicId = int.Parse(Environment.GetEnvironmentVariable("CLINIC_ID") ?? throw new ArgumentNullException("CLINIC_ID environment variable has not been set."));
+
     private readonly List<string> _providers = [];
-    private readonly List<ClinicalSummaryDto> clinicalSummaries = [];
+    private readonly List<ClinicalSummary> clinicalSummaries = [];
     private string searchString = string.Empty;
 
     private string _selectedProvider = string.Empty;
 
-    protected override void OnInitialized()
-    {
+    protected override async Task OnInitializedAsync()
+    {    
         _providers.Add("Bob the Builder");
         _providers.Add("Darth Vader");
         _providers.Add("Dora the Explorer");
 
-        clinicalSummaries.Add(new("123456", "Alice", "Anderson"));
-        clinicalSummaries.Add(new("111222", "Brian", "Baker"));
-        clinicalSummaries.Add(new("654321", "Carla", "Cruz"));
+        await GetClinicalSummaries();
     }
 
-    private bool FilterFunction(ClinicalSummaryDto clinicalSummary)
+    private async Task GetClinicalSummaries()
+    {
+        clinicalSummaries.Clear();
+
+        var request = new GetClinicalSummariesByClinicId.Request(ClinicId);
+        var response = await Mediator.Send<GetClinicalSummariesByClinicId.Request, GetClinicalSummariesByClinicId.Response>(request);
+        if(response.IsSuccess)
+            clinicalSummaries.AddRange(response.Value.ClinicalSummaries);
+    }
+
+    private bool FilterFunction(ClinicalSummary clinicalSummary)
     {
         if (string.IsNullOrWhiteSpace(searchString))
             return true;
@@ -114,15 +133,11 @@
         return false;
     }
 
-    private void OnRowClick(TableRowClickEventArgs<ClinicalSummaryDto> args)
+    private void NavigateTo(ClinicalSummary item)
     {
-        // Navigate to detail page; pass MRN as query string (adjust detail page to read it)
-        Navigation.NavigateTo($"/provider-portal/ClinicalSummary?mrn={args.Item.MedicalRecordNumber}");
-    }
+        if(item is null)
+            return;
 
-    public record ClinicalSummaryDto(
-        string MedicalRecordNumber,
-        string FirstName,
-        string LastName
-    );
+        Navigation.NavigateTo($"/provider-portal/ClinicalSummary/{item.MedicalRecordNumber}");
+    }
 }

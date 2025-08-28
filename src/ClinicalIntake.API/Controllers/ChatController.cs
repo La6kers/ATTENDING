@@ -61,7 +61,7 @@ public class ChatController(ClinicalIntakeChatService clinicalIntakeChatService)
     }
 
     [HttpPost()]
-    public async Task<IActionResult> TriggerEventSurveyCompleted([FromBody] ChatSurvey chatSurvey, CancellationToken cancellationToken)
+    public async Task<IActionResult> TriggerEventChatSurveyCompleted([FromBody] ChatSurvey chatSurvey, CancellationToken cancellationToken)
     {
         if(chatSurvey is null)
             return BadRequest("Must provide a chat survey.");

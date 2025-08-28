@@ -1,7 +1,9 @@
 using MudBlazor.Services;
+using PatientCare.Application.Diagnostics;
 using PatientCare.UI.Shared.Services;
 using PatientCare.UI.Web.Components;
 using PatientCare.UI.Web.Services;
+using SharedKernel;
 
 namespace PatientCare.UI;
 public class Program
@@ -20,6 +22,14 @@ public class Program
 
         // Add MudBlazor services
         builder.Services.AddMudServices();
+
+        // add application services
+        builder.Services.AddScoped<Mediator>();
+        builder.Services
+            .Add_PatientCare_Diagnostics_Domain();
+
+        // add patent care implementations
+        builder.Add_PatientCare_Diagnostics_CosmosDbRepository_Implementation();
 
         var app = builder.Build();
 

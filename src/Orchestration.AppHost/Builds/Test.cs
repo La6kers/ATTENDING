@@ -1,31 +1,22 @@
 ﻿namespace Orchestration.AppHost.Builds;
-internal static class Local
+internal static class Test
 {
     public static IDistributedApplicationBuilder? Build(IDistributedApplicationBuilder? builder)
     {
         if(builder is null)
             return null;
 
-        // (global)event bus repository
-        var attendingEventBusRepository = builder.AddContainer("attending-event-bus-repository", "mcr.microsoft.com/mssql/server", "2022-latest")
-            .WithContainerName("attending-event-bus-repository")
-            .WithEnvironment("ACCEPT_EULA", "Y")
-            .WithEnvironment("MSSQL_SA_PASSWORD", "P@ssword1!")
-            .WithEndpoint(1433, 1433);
-
         // (global)event bus
-        // seealso: https://hub.docker.com/r/microsoft/azure-messaging-servicebus-emulator
-        var attendingEventBus = builder.AddContainer("attending-event-bus", "mcr.microsoft.com/azure-messaging/servicebus-emulator", "latest")
-            .WithContainerName("attending-event-bus")
-            .WaitFor(attendingEventBusRepository)
-            .WithEnvironment("ACCEPT_EULA", "Y")
-            .WithEnvironment("SQL_SERVER", "attending-event-bus-repository")
-            .WithEnvironment("MSSQL_SA_PASSWORD", "P@ssword1!")
-            .WithBindMount(@"C:\Repos\LakersAttending\src\Orchestration.AppHost\EventBus\AzureServiceBusConfiguration.json", "/ServiceBus_Emulator/ConfigFiles/Config.json", true)
-            .WithEndpoint(5099, 5672);
+        var attendingEventBus = builder.AddAzureServiceBus("attending-event-bus")
+            .RunAsExisting("resource", "resource-group")
+            .PublishAsExisting("resource", "resource-group");
 
         // (global)repository
         // remarks: first run might take a while to initialize the database
+        var attendingRepository2 = builder.AddAzureCosmosDB("attending-repository")
+            .RunAsExisting("resource", "resource-group")
+            .PublishAsExisting("resource", "resource-group");
+
         var attendingRepository = builder.AddAzureCosmosDB("attending-repository")
             .RunAsEmulator(emulator =>
             {
