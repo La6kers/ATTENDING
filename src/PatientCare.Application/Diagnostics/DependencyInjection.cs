@@ -25,9 +25,17 @@ public static class DependencyInjection
 
         var connectionString = builder.Configuration.GetConnectionString(cosmosContainerName);
         var accountEndpoint = builder.Configuration["Azure:CosmosDb:AccountEndpoint"];
+        var accountKey = builder.Configuration["Azure:CosmosDb:AccountKey"];
 
         if(!string.IsNullOrEmpty(connectionString))
             builder.AddCosmosDbContext<PatientCareDiagnosticsCosmosDbContext>(cosmosContainerName, cosmosDatabaseName);
+        else if(!string.IsNullOrEmpty(accountKey) && !string.IsNullOrEmpty(accountEndpoint))
+        {
+            builder.Services.AddDbContext<PatientCareDiagnosticsCosmosDbContext>((provider, options) =>
+           {
+               options.UseCosmos(accountEndpoint, accountKey, cosmosDatabaseName);
+           });
+        }
         else if(!string.IsNullOrEmpty(accountEndpoint))
         {
             builder.Services.AddSingleton(new DefaultAzureCredential());
