@@ -47,6 +47,7 @@ internal static class Local
             .RunAsExisting(clinicalAIChatBot_ResourceName, clinicalAIChatBot_ResourceGroupName)
             .PublishAsExisting(clinicalAIChatBot_ResourceName, clinicalAIChatBot_ResourceGroupName);
 
+        // *** unable to add deployment in preview
         //var clinicalIntakeLLMDeployment = clinicalIntakeAIChatBot.AddDeployment("attending-gpt-4o", "gpt-4o", "2024-11-20");
 
         // (clinical intake) api
