@@ -34,8 +34,7 @@
         "ASPNETCORE_ENVIRONMENT": "Test",
         "DOTNET_ENVIRONMENT": "Test",
         "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21250",
-        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:20225",
-        "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true"
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:20225"
       }
     }
   }

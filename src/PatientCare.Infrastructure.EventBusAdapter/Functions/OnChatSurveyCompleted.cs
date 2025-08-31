@@ -10,7 +10,7 @@ public class OnChatSurveyCompleted(Mediator mediator, ILogger<OnChatSurveyComple
 {
     [Function(nameof(OnChatSurveyCompleted))]
     public async Task Run(
-        [ServiceBusTrigger("clinicalintake-chatsurvey-completed", "patientcare", Connection = "EventBusConnectionString")]
+        [ServiceBusTrigger("clinicalintake-chatsurvey-completed", "patientcare", Connection = "Attending-EventBus")]
         ServiceBusReceivedMessage message,
         ServiceBusMessageActions messageActions, CancellationToken cancellationToken)
     {

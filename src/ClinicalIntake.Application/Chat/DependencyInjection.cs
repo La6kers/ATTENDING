@@ -50,7 +50,7 @@ public static class DependencyInjection
         services.AddSingleton<ServiceBusClient>(provider =>
         {
             var configuration = provider.GetRequiredService<IConfiguration>();
-            var connectionString = configuration["EventBusConnectionString"];
+            var connectionString = configuration.GetConnectionString("Attending-EventBus");
             ArgumentNullException.ThrowIfNull(connectionString, nameof(connectionString));
             return new(connectionString);
         });

@@ -1,4 +1,4 @@
-﻿namespace ClinicalIntake.MSTests;
+﻿namespace ClinicalIntake.MSTests.Tests;
 
 [TestClass]
 public sealed class GetChatReply_Tests
