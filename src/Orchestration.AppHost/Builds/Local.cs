@@ -67,7 +67,8 @@ internal static class Local
             .WithReference(clinicalIntakeApi)
             .WithEnvironment("ClinicalIntakeApiUrl", clinicalIntakeApi.GetEndpoint("http"))
             .WithEnvironment("CLINIC_ID", "9001")
-            .WithEndpoint(5001, 5227);
+            .WithEndpoint(5001, 5227)
+            .WithUrlForEndpoint("http", urlAnnotation => urlAnnotation.DisplayText = "COMPASS");
 
         // (patient care) event bus adapter
         var patientCareEventBusAdapter = builder.AddProject<Projects.PatientCare_Infrastructure_EventBusAdapter>("PatientCare-Eventbus-Adapter")
@@ -89,7 +90,8 @@ internal static class Local
             .WithEnvironment("CLINIC_ID", "9001")
             .WithEnvironment("Azure__CosmosDb__AccountEndpoint", attendingRepository.GetEndpoint("https"))
             .WithEnvironment("Azure__CosmosDb__AccountKey", Constants.CosmosDbEmulator.DefaultAccountKey)
-            .WithEndpoint(5003, 5021);
+            .WithEndpoint(5003, 5021)
+            .WithUrlForEndpoint("http", urlAnnotation => urlAnnotation.DisplayText = "Provider Portal");
 
         return builder;
     }
