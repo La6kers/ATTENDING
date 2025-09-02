@@ -20,6 +20,8 @@ public static class AddClinicalSummary
 
     public class Handler(IReadWriteRepository<ClinicalSummary> repository) : ICommandRequestHandler<Request>
     {
+        private readonly IReadWriteRepository<ClinicalSummary> _repository = repository;
+
         public async Task<Result> Handle(Request request, CancellationToken cancellationToken)
         {
             try
@@ -37,7 +39,7 @@ public static class AddClinicalSummary
                     ChiefComplaint = request.ChiefComplaint
                 };
                 //TODO: check if MRN already exists before adding
-                await repository.Add(clinicalSummary, cancellationToken);
+                await _repository.Add(clinicalSummary, cancellationToken);
                 return Result.Ok();
             }
             catch(Exception exception)

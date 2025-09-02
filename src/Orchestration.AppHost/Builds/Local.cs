@@ -54,7 +54,6 @@ internal static class Local
         var clinicalIntakeApi = builder.AddProject<Projects.ClinicalIntake_API>("ClinicalIntake-API")
             .WaitFor(attendingEventBus)
             .WithReference(attendingEventBus)
-            .WithReference(clinicalIntakeAIChatBot)
             .WithEnvironment("Azure__OpenAI__Endpoint", azureOpenAIEndpoint)
             .WithEnvironment("Azure__OpenAI__ApiKey", azureOpenAIKey)
             .WithEnvironment("Azure__OpenAI__DeploymentName", azureOpenAIDeploymentName)

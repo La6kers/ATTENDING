@@ -2,22 +2,22 @@
 using System.Linq.Expressions;
 
 namespace SharedKernel;
-public interface IReadRepository<T>
-    where T : class
+public interface IReadRepository<TEntity>
+    where TEntity : class
 {
-    Task<bool> Any(Expression<Func<T, bool>> specification, CancellationToken cancellationToken = default);
-    Task<IEnumerable<T>> GetAllWhere(Expression<Func<T, bool>> specifications, CancellationToken cancellationToken = default);
-    Task<T?> GetSingleWhere(Expression<Func<T, bool>> specifications, CancellationToken cancellationToken = default);
-    Task<T?> GetSingleByKey(object?[]? keyValues, CancellationToken cancellationToken = default);
+    Task<bool> Any(Expression<Func<TEntity, bool>> specification, CancellationToken cancellationToken = default);
+    Task<IEnumerable<TEntity>> GetAllWhere(Expression<Func<TEntity, bool>> specifications, CancellationToken cancellationToken = default);
+    Task<TEntity?> GetSingleWhere(Expression<Func<TEntity, bool>> specifications, CancellationToken cancellationToken = default);
+    Task<TEntity?> GetSingleByKey(object?[]? keyValues, CancellationToken cancellationToken = default);
 }
 
-public interface IReadWriteRepository<T> : IReadRepository<T>
-    where T : class
+public interface IReadWriteRepository<TEntity> : IReadRepository<TEntity>
+    where TEntity : class
 {
-    Task Add(T entity, CancellationToken cancellationToken = default);
-    Task Add(IEnumerable<T> entities, CancellationToken cancellationToken = default);
-    Task Update(T entity, CancellationToken cancellationToken = default);
-    Task Update(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+    Task Add(TEntity entity, CancellationToken cancellationToken = default);
+    Task Add(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
+    Task Update(TEntity entity, CancellationToken cancellationToken = default);
+    Task Update(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default);
 }
 
 public class EFReadRepository<TEntity, TDbContext>(TDbContext dbContext) : IReadRepository<TEntity>
