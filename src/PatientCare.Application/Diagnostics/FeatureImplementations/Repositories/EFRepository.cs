@@ -10,7 +10,7 @@ internal class PatientCareDiagnosticsCosmosDbContext(DbContextOptions<PatientCar
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .HasDefaultContainer("patient-care-container")
+            .HasDefaultContainer("PatientCare-Database-Container")
             .HasShadowIds()
             .HasRootDiscriminatorInJsonId();
         modelBuilder.ApplyConfiguration(EntityTypeConfigurations.ClinicalSummaryConfiguration.Instance);

@@ -20,8 +20,8 @@ public static class DependencyInjection
     public static IHostApplicationBuilder Add_PatientCare_Diagnostics_CosmosDbRepository_Implementation(this IHostApplicationBuilder builder)
     {
         // TODO: get database name from configuration
-        var cosmosDatabaseName = "attending-database";
-        var cosmosContainerName = "patient-care-container";
+        var cosmosDatabaseName = "Attending-Database";
+        var cosmosContainerName = "PatientCare-Database-Container";
 
         var connectionString = builder.Configuration.GetConnectionString(cosmosContainerName);
         var accountEndpoint = builder.Configuration["Azure:CosmosDb:AccountEndpoint"];
