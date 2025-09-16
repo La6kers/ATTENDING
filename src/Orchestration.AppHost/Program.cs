@@ -13,19 +13,92 @@ internal class Program
         if(builder.Environment.IsEnvironment("Local") || builder.Environment.IsDevelopment())
             builder.Configuration.AddUserSecrets<Program>(optional: true);
 
-        var environment = builder.Environment.EnvironmentName;
+        // (global)event bus
+        var attendingEventBus = builder.AddAzureServiceBus("Attending-EventBus")
+            .RunAsEmulator(emulator =>
+            {
+                emulator.WithContainerName("attending-eventbus");
+                emulator.WithLifetime(ContainerLifetime.Persistent);
+            });
 
-        switch(environment)
-        {
-            case "Local":
-                Builds.Local.Build(builder);
-                break;
-            case "Test":
-                Builds.Test.Build(builder);
-                break;
-            default:
-                throw new Exception($"Environment '{environment}' is not supported.");
-        }
+        // (global)repository
+        // remarks: first run might take a while to initialize the database
+        var attendingRepository = builder.AddAzureCosmosDB("Attending-Repository")
+            .RunAsEmulator(emulator =>
+            {
+                emulator.WithContainerName("attending-repository");
+                emulator.WithPartitionCount(2);
+                emulator.WithLifetime(ContainerLifetime.Persistent);
+                emulator.WithDataVolume("attending-repository-data");
+            })
+            .WithHttpsEndpoint(5099, 8081)
+            .WithUrl("https://localhost:5099/_explorer/index.html", "CosmosDb Explorer")
+            .WithUrl("https://localhost:5099/_explorer/emulator.pem", "SSL Certificate");
+
+        var database = attendingRepository.AddCosmosDatabase("Attending-Database");
+        var clinicalIntakeContainer = database.AddContainer("ClinicalIntake-Database-Container", "/id");
+        var patientCareContainer = database.AddContainer("PatientCare-Database-Container", "/id");
+
+        // AI ChatBot
+        var azureOpenAIEndpoint = builder.Configuration["Azure:OpenAI:Endpoint"];
+        var azureOpenAIKey = builder.Configuration["Azure:OpenAI:ApiKey"];
+        var azureOpenAIDeploymentName = builder.Configuration["Azure:OpenAI:DeploymentName"];
+
+        // in preview and and currently unable to add deployments
+        var clinicalAIChatBot_ResourceName = builder.Configuration["ClinicalIntake:AI:ChatBot:ResourceName"];
+        ArgumentNullException.ThrowIfNullOrEmpty(clinicalAIChatBot_ResourceName, "Please configure the ClinicalIntake:AI:ChatBot:ResourceName in your configuration.");
+        var clinicalAIChatBot_ResourceGroupName = builder.Configuration["ClinicalIntake:AI:ChatBot:ResourceGroupName"];
+
+        var clinicalIntakeAIChatBot = builder.AddAzureOpenAI("ClinicalIntake-AI-Chatbot");
+        clinicalIntakeAIChatBot
+            .RunAsExisting(clinicalAIChatBot_ResourceName, clinicalAIChatBot_ResourceGroupName)
+            .PublishAsExisting(clinicalAIChatBot_ResourceName, clinicalAIChatBot_ResourceGroupName);
+
+        // *** unable to add deployment in preview
+        //var clinicalIntakeLLMDeployment = clinicalIntakeAIChatBot.AddDeployment("attending-gpt-4o", "gpt-4o", "2024-11-20");
+
+        // (clinical intake) api
+        var clinicalIntakeApi = builder.AddProject<Projects.ClinicalIntake_API>("ClinicalIntake-API")
+            .WaitFor(attendingEventBus)
+            .WithReference(attendingEventBus)
+            .WithEnvironment("Azure__OpenAI__Endpoint", azureOpenAIEndpoint)
+            .WithEnvironment("Azure__OpenAI__ApiKey", azureOpenAIKey)
+            .WithEnvironment("Azure__OpenAI__DeploymentName", azureOpenAIDeploymentName)
+            .WithEndpoint(5002, 5276)
+            .WithUrl("http://localhost:5002/swagger/index.html", "Swagger");
+
+
+        // (clinical intake) web
+        builder.AddProject<Projects.ClinicalIntake_UI_Web>("ClinicalIntake-Web")
+            .WaitFor(clinicalIntakeApi)
+            .WithReference(clinicalIntakeApi)
+            .WithEnvironment("ClinicalIntakeApiUrl", clinicalIntakeApi.GetEndpoint("http"))
+            .WithEnvironment("CLINIC_ID", "9001")
+            .WithEndpoint(5001, 5227)
+            .WithUrlForEndpoint("http", urlAnnotation => urlAnnotation.DisplayText = "COMPASS");
+
+        // (patient care) event bus adapter
+        var patientCareEventBusAdapter = builder.AddProject<Projects.PatientCare_Infrastructure_EventBusAdapter>("PatientCare-Eventbus-Adapter")
+            .WaitFor(attendingEventBus)
+            .WaitFor(attendingRepository)
+            .WithReference(database)
+            .WithReference(patientCareContainer)
+            .WithReference(attendingEventBus)
+            .WithEnvironment("Azure__CosmosDb__AccountEndpoint", attendingRepository.GetEndpoint("https"))
+            .WithEnvironment("Azure__CosmosDb__AccountKey", Constants.CosmosDbEmulator.DefaultAccountKey);
+
+        // (patient care) web
+        builder.AddProject<Projects.PatientCare_UI_Web>("PatientCare-Web")
+            .WaitFor(attendingEventBus)
+            .WaitFor(attendingRepository)
+            .WithReference(database)
+            .WithReference(patientCareContainer)
+            .WithReference(attendingEventBus)
+            .WithEnvironment("CLINIC_ID", "9001")
+            .WithEnvironment("Azure__CosmosDb__AccountEndpoint", attendingRepository.GetEndpoint("https"))
+            .WithEnvironment("Azure__CosmosDb__AccountKey", Constants.CosmosDbEmulator.DefaultAccountKey)
+            .WithEndpoint(5003, 5021)
+            .WithUrlForEndpoint("http", urlAnnotation => urlAnnotation.DisplayText = "Provider Portal");
 
         builder.Build().Run();
     }

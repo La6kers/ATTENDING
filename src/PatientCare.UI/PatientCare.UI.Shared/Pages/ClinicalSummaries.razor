@@ -11,7 +11,8 @@
 
 <PageTitle>Provider Portal</PageTitle>
 
-<MudStack Spacing="3" Class="m-4">
+<MudPaper Class="page-background rounded-0 pt-9" Height="100vh" Width="100vw">
+    <MudStack Spacing="3" Class="m-4">
     @* clinic *@
     <MudText Typo="Typo.h4" Align="Align.Center">Clinic Id: @ClinicId</MudText>
 
@@ -19,8 +20,8 @@
     <MudPaper Elevation="2">
         <MudSelect T="string"
                    @bind-Value="_selectedProvider"
-                   Label="Providers"
-                   Placeholder="Choose Providers">
+                   Label="Provider"
+                   Placeholder="Choose Provider">
             @foreach(var provider in _providers)
             {
                 <MudSelectItem Value="@provider">@provider</MudSelectItem>
@@ -58,7 +59,8 @@
                   Items="@clinicalSummaries"
                   Hover="true"
                   Striped="true"
-                  Filter="new Func<ClinicalSummary, bool>(FilterFunction)">
+                  Filter="new Func<ClinicalSummary, bool>(FilterFunction)"
+                      OnRowClick="OnSummaryClick">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Clinical Summaries</MudText>
                 <MudSpacer />
@@ -76,11 +78,9 @@
                 <MudTh>Last Name</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTr Style="cursor:pointer" @onclick="() => NavigateTo(context)">
                 <MudTd DataLabel="Medical Record Number">@context.MedicalRecordNumber</MudTd>
                 <MudTd DataLabel="First Name">[Currently Not Recorded]</MudTd>
                 <MudTd DataLabel="Last Name">[Currently Not Recorded]</MudTd>
-                </MudTr>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager />
@@ -88,6 +88,7 @@
         </MudTable>
     </MudPaper>
 </MudStack>
+</MudPaper>
 
 @code {
     [Inject]
@@ -133,11 +134,11 @@
         return false;
     }
 
-    private void NavigateTo(ClinicalSummary item)
+    private void OnSummaryClick(TableRowClickEventArgs<ClinicalSummary> tableRowClickEventArgs)
     {
-        if(item is null)
-            return;
+        if (tableRowClickEventArgs.Item is null)
+			return;
 
-        Navigation.NavigateTo($"/provider-portal/ClinicalSummary/{item.MedicalRecordNumber}");
+        Navigation.NavigateTo($"/provider-portal/ClinicalSummary/{tableRowClickEventArgs.Item.MedicalRecordNumber}");
     }
 }
