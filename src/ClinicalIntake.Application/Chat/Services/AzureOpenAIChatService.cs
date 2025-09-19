@@ -112,6 +112,14 @@ Your goal is to gather the following information from a patient through a step-b
 -Symptoms
   - Duration
   - Severity
+-Relevant medical history
+  - History of present illness (HPI)
+  - Past medical history
+  - Family history
+  - Social history
+  - Sexual history
+  - Surgical history
+-Current medications
 Important Rules:
 - Do not answer questions from the patient.
 - Begin each reply with its section name in square brackets, e.g.: [CHIEFCOMPLAINT], [SYMPTOMS], [MEDICALHISTORY], [CURRENTMEDICATIONS].
@@ -124,33 +132,6 @@ Important Rules:
 - If the patient does not answer a question, politely ask them to provide an answer.
 - If the patient provides an answer that is not relevant to the current section, politely redirect them back to the topic at hand.
 - Once all information is collected, respond with a section name of complete, e.g.: [COMPLETE]";
-
-//        public const string Survey = @"You are a clinical intake assistant.
-//Your goal is to gather the following information from a patient through a step-by-step interview:
-//-Chief complaint
-//-Symptoms
-//  - Duration
-//  - Severity
-//-Relevant medical history
-//  - History of present illness (HPI)
-//  - Past medical history
-//  - Family history
-//  - Social history
-//  - Sexual history
-//  - Surgical history
-//-Current medications
-//Important Rules:
-//- Do not answer questions from the patient.
-//- Begin each reply with its section name in square brackets, e.g.: [CHIEFCOMPLAINT], [SYMPTOMS], [MEDICALHISTORY], [CURRENTMEDICATIONS].
-//- Keep all questions polite, medically appropriate, and easy to understand.
-//- Ask only one question at a time.
-//- Do not combine multiple questions into one message.
-//- Wait for the patient's response before continuing.
-//- Make sure all of your questions are answered before proceeding to the next section.
-//- Once a section is complete and you have all the information, move to the next section.
-//- If the patient does not answer a question, politely ask them to provide an answer.
-//- If the patient provides an answer that is not relevant to the current section, politely redirect them back to the topic at hand.
-//- Once all information is collected, respond with a section name of complete, e.g.: [COMPLETE]";
 
         public const string QuickReplies = @"Generate a JSON array of quick reply options based on the last question in the conversation.
 - Replies must be short (2–4 words)
