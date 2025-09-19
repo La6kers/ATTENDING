@@ -2,116 +2,124 @@
 
 @using PatientCare.Application.Diagnostics
 @using PatientCare.Application.Diagnostics.Features
+@using PatientCare.UI.Shared.Components
 @using PatientCare.UI.Shared.Services
 @using MudBlazor
 @using SharedKernel
 
 <PageTitle>Provider Portal</PageTitle>
 
-<MudStack Spacing="3" Class="m-4">
-    @* clinic *@
-    <MudText Typo="Typo.h4" Align="Align.Center">Clinic Id: @clinicalSummary.ClinicId</MudText>
-    <MudText Typo="Typo.h4" Align="Align.Center">MRN: @clinicalSummary.MedicalRecordNumber</MudText>
+<MudPaper Class="page-background rounded-0 pt-9 pb-2" MinHeight="100vh" Width="100vw">
+	<MudStack Spacing="3" Class="m-4">
+		@* clinic *@
+		<MudText Typo="Typo.h4" Align="Align.Center">Clinic Id: @clinicalSummary.ClinicId</MudText>
+		<MudText Typo="Typo.h4" Align="Align.Center">MRN: @clinicalSummary.MedicalRecordNumber</MudText>
 
-    @* navigation *@
-    <MudPaper Elevation="2" Class="d-flex flex-fill flex-column">
-        <MudStack Spacing="1" Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Stretch" StretchItems="StretchItems.All">
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">🧪 Order Labs</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">💊 E-Prescribe</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">👥 Refer</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">🔍 Order Imaging</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">📅 Schedule Follow-up</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">📚 Patient Education</MudText>
-            </MudButton>
-        </MudStack>
-    </MudPaper>
+		@* navigation *@
+		<DomainNavigation />
+		<PatientNavigation />
 
-    @* summary details *@
-    <MudPaper Elevation="3">
-        <MudStack Class="m-3">
-            <MudText Typo="Typo.caption">🤖 AI-Generated Clinical Summary</MudText>
-            
-            @* vital signs *@
-            <MudPaper Elevation="3">
-                <MudFab Label="📊" />
-                <MudText Typo="Typo.h6">Vital Signs</MudText>
-                @* blood preasure *@
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Typo="Typo.caption">BP: @clinicalSummary.VitalSigns.BloodPressureDiastolic/@clinicalSummary.VitalSigns.BloodPressureSystolic</MudText>
-                    </MudCardContent>
-                </MudCard>
+		@* summary details *@
+		<MudPaper Elevation="3" Class="p-4">
+			<MudText Typo="Typo.caption">🤖 AI-Generated Clinical Summary</MudText>
+			<MudGrid Spacing="4">
+				@* vital signs *@
+				<MudItem xs="12" md="6">
+					<MudPaper Elevation="5" Class="p-3">
+					<MudPaper Elevation="0" Class="d-flex gap-2">
+						<MudPaper Class="rounded-circle d-flex overflow-hidden justify-center align-center"
+									Elevation="0"
+									Height="3rem"
+									Width="3rem"
+									Style="background-color: #FEE2E2F2;">
+							<MudText Align="Align.Center" Typo="Typo.body1">
+								📊
+							</MudText>
+						</MudPaper>
+						<MudText Typo="Typo.h6" Class="d-flex flex-fill align-center">Vital Signs</MudText>
+					</MudPaper>
 
-                @* heart rate *@
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Typo="Typo.caption">HR: @clinicalSummary.VitalSigns.HeartRate</MudText>
-                    </MudCardContent>
-                </MudCard>
+					<MudPaper Elevation="0" Class="d-flex flex-wrap gap-2 mt-2">
+						@* blood preasure *@
+						<MudCard>
+							<MudCardContent>
+								<MudText Typo="Typo.caption">BP: @clinicalSummary.VitalSigns.BloodPressureDiastolic/@clinicalSummary.VitalSigns.BloodPressureSystolic</MudText>
+							</MudCardContent>
+						</MudCard>
 
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Typo="Typo.caption">Temp: @clinicalSummary.VitalSigns.TemperatureFahrenheit°F</MudText>
-                    </MudCardContent>
-                </MudCard>
+						@* heart rate *@
+						<MudCard>
+							<MudCardContent>
+								<MudText Typo="Typo.caption">HR: @clinicalSummary.VitalSigns.HeartRate</MudText>
+							</MudCardContent>
+						</MudCard>
 
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Typo="Typo.caption">SpO2: @clinicalSummary.VitalSigns.OxygenSaturation%</MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudPaper>
+						<MudCard>
+							<MudCardContent>
+								<MudText Typo="Typo.caption">Temp: @clinicalSummary.VitalSigns.TemperatureFahrenheit°F</MudText>
+							</MudCardContent>
+						</MudCard>
 
-            @* chief complaint *@
-            <MudPaper Elevation="3">
-                <MudFab Label="📝" />
-                <MudText Typo="Typo.h6">Chief Complaint</MudText>
-                <MudStack>
-                    <MudText Typo="Typo.caption">
-                        @clinicalSummary.ChiefComplaint
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-        </MudStack>
-    </MudPaper>
-</MudStack>
+						<MudCard>
+							<MudCardContent>
+								<MudText Typo="Typo.caption">SpO2: @clinicalSummary.VitalSigns.OxygenSaturation%</MudText>
+							</MudCardContent>
+						</MudCard>
+					</MudPaper>
+				</MudPaper>
+				</MudItem>
+
+				@* chief complaint *@
+				<MudItem xs="12" md="6">
+					<MudPaper Elevation="5" Class="p-3">
+						<MudPaper Elevation="0" Class="d-flex gap-2">
+							<MudPaper Class="rounded-circle d-flex overflow-hidden justify-center align-center"
+										Elevation="0"
+										Height="3rem"
+										Width="3rem"
+										Style="background-color: #DBEAFEF2;">
+								<MudText Align="Align.Center" Typo="Typo.body1">
+									📝
+								</MudText>
+							</MudPaper>
+							<MudText Typo="Typo.h6" Class="d-flex flex-fill align-center">Chief Complaint</MudText>
+						</MudPaper>
+
+						<MudText Typo="Typo.caption" Class="mt-2" Style="word-break: break-word; white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%;">
+							@clinicalSummary.ChiefComplaint
+						</MudText>
+					</MudPaper>
+				</MudItem>
+			</MudGrid>
+		</MudPaper>
+	</MudStack>
+</MudPaper>
 
 @code {
-    [Inject]
-    private Mediator Mediator { get; set; } = null!;
+	[Inject]
+	private Mediator Mediator { get; set; } = null!;
 
-    private int ClinicId = int.Parse(Environment.GetEnvironmentVariable("CLINIC_ID") ?? throw new ArgumentNullException("CLINIC_ID environment variable has not been set."));
-    [Parameter] public string? MedicalRecordNumber { get; set; }
+	private int ClinicId = int.Parse(Environment.GetEnvironmentVariable("CLINIC_ID") ?? throw new ArgumentNullException("CLINIC_ID environment variable has not been set."));
+	[Parameter] public string? MedicalRecordNumber { get; set; }
 
-    private ClinicalSummary clinicalSummary { get; set; } = new ClinicalSummary();
+	private ClinicalSummary clinicalSummary { get; set; } = new ClinicalSummary();
 
-    protected override async Task OnInitializedAsync()
-    {
-        await GetClinicalSummary();
+	protected override async Task OnInitializedAsync()
+	{
+		await GetClinicalSummary();
 
-        clinicalSummary.SetBloodPressure(138, 88);
-        clinicalSummary.SetHeartRate(96);
-        clinicalSummary.SetTemperature(98.6);
-        clinicalSummary.SetOxygenSaturation(99);
-    }
+		clinicalSummary.SetBloodPressure(138, 88);
+		clinicalSummary.SetHeartRate(96);
+		clinicalSummary.SetTemperature(98.6);
+		clinicalSummary.SetOxygenSaturation(99);
+	}
 
-    private async Task GetClinicalSummary()
-    {
-        var request = new GetClinicalSummariesByClinicId.Request(ClinicId);
-        var response = await Mediator.Send<GetClinicalSummariesByClinicId.Request, GetClinicalSummariesByClinicId.Response>(request);
-        if (response.IsSuccess)
-            clinicalSummary = response.Value.ClinicalSummaries.FirstOrDefault(x => x.MedicalRecordNumber == MedicalRecordNumber) ?? new ClinicalSummary();
-        
-    }
+	private async Task GetClinicalSummary()
+	{
+		var request = new GetClinicalSummariesByClinicId.Request(ClinicId);
+		var response = await Mediator.Send<GetClinicalSummariesByClinicId.Request, GetClinicalSummariesByClinicId.Response>(request);
+		if(response.IsSuccess)
+			clinicalSummary = response.Value.ClinicalSummaries.FirstOrDefault(x => x.MedicalRecordNumber == MedicalRecordNumber) ?? new ClinicalSummary();
+
+	}
 }

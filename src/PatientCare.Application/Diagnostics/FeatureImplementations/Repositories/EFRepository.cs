@@ -34,6 +34,10 @@ internal class PatientCareDiagnosticsCosmosDbContext(DbContextOptions<PatientCar
                     vs.Property(v => v.OxygenSaturation).ToJsonProperty("oxygenSaturation");
                 });
                 builder.Property(x => x.ChiefComplaint).IsRequired().ToJsonProperty("chiefComplaint");
+                builder.Property(x => x.PhoneNumber).ToJsonProperty("phoneNumber");
+                builder.Property(x => x.AppointmentTime).ToJsonProperty("appointmentTime");
+                builder.Property(x => x.ProviderName).IsRequired().ToJsonProperty("providerName");
+                builder.Property(x => x.ReviewedByProvider).ToJsonProperty("reviewedByProvider");
 
                 builder.HasKey(x => new { x.ClinicId, x.MedicalRecordNumber });
                 builder.HasPartitionKey("__id");

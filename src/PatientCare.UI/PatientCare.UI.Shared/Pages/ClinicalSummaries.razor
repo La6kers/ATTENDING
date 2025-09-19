@@ -3,6 +3,7 @@
 
 @using PatientCare.Application.Diagnostics
 @using PatientCare.Application.Diagnostics.Features
+@using PatientCare.UI.Shared.Components
 @using PatientCare.UI.Shared.Services
 @using MudBlazor
 @using SharedKernel
@@ -11,83 +12,80 @@
 
 <PageTitle>Provider Portal</PageTitle>
 
-<MudPaper Class="page-background rounded-0 pt-9" Height="100vh" Width="100vw">
+<MudPaper Class="page-background rounded-0 pt-9 pb-2" MinHeight="100vh" Width="100vw">
     <MudStack Spacing="3" Class="m-4">
-    @* clinic *@
-    <MudText Typo="Typo.h4" Align="Align.Center">Clinic Id: @ClinicId</MudText>
+        @* clinic *@
+        <MudText Typo="Typo.h4" Align="Align.Center">Clinic Id: @ClinicId</MudText>
 
-    @* provider *@
-    <MudPaper Elevation="2">
-        <MudSelect T="string"
-                   @bind-Value="_selectedProvider"
-                   Label="Provider"
-                   Placeholder="Choose Provider">
-            @foreach(var provider in _providers)
-            {
-                <MudSelectItem Value="@provider">@provider</MudSelectItem>
-            }
-        </MudSelect>
-    </MudPaper>
+        @* provider *@
+        <MudPaper Elevation="2">
+            <MudSelect T="string"
+                       Label="Provider"
+                       Placeholder="Choose Provider"
+                       Clearable="true"
+                       ValueChanged="OnProviderChanged">
+                @foreach(var provider in _providers)
+                {
+                    <MudSelectItem Value="@provider">@provider</MudSelectItem>
+                }
+            </MudSelect>
+        </MudPaper>
 
-    @* navigation *@
-    <MudPaper Elevation="2" Class="d-flex flex-fill flex-column">
-        <MudStack Spacing="1" Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Stretch" StretchItems="StretchItems.All">
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">🧪 Order Labs</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">💊 E-Prescribe</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">👥 Refer</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">🔍 Order Imaging</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">📅 Schedule Follow-up</MudText>
-            </MudButton>
-            <MudButton FullWidth="true" Disabled="true">
-                <MudText Typo="Typo.subtitle1" Align="Align.Center">📚 Patient Education</MudText>
-            </MudButton>
-        </MudStack>    
-    </MudPaper>
+        @* navigation *@
+        <DomainNavigation/>
 
-    @* summaries *@
-    <MudPaper Elevation="2">
-        <MudTable T="ClinicalSummary"
-                  Items="@clinicalSummaries"
-                  Hover="true"
-                  Striped="true"
-                  Filter="new Func<ClinicalSummary, bool>(FilterFunction)"
-                      OnRowClick="OnSummaryClick">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Clinical Summaries</MudText>
-                <MudSpacer />
-                <MudTextField T="string"
-                              @bind-Value="searchString"
-                              Placeholder="Search"
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              IconSize="Size.Medium"
-                              Class="mt-0" />
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Medical Record Number</MudTh>
-                <MudTh>First Name</MudTh>
-                <MudTh>Last Name</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Medical Record Number">@context.MedicalRecordNumber</MudTd>
-                <MudTd DataLabel="First Name">[Currently Not Recorded]</MudTd>
-                <MudTd DataLabel="Last Name">[Currently Not Recorded]</MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager />
-            </PagerContent>
-        </MudTable>
-    </MudPaper>
-</MudStack>
+        @* summaries *@
+        <MudPaper Elevation="2">
+            <MudTable T="ClinicalSummary"
+                      @ref="clinicalSummariesTable"
+                      Items="@clinicalSummaries"
+                      ServerData="ReloadClinicalSummariesTable"
+                      Hover="true"
+                      Striped="true"
+                      Filter="new Func<ClinicalSummary, bool>(FilterFunction)"
+                          OnRowClick="OnSummaryClick"
+                      FixedHeader="true"
+                      FixedFooter="true">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Clinical Summaries</MudText>
+                    <MudSpacer />
+                    <MudTextField T="string"
+                                  ValueChanged="OnSearch"
+                                  Placeholder="Search MRN"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Class="mt-0" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Medical Record Number</MudTh>
+                    <MudTh>Provider</MudTh>
+                    <MudTh>Appointment Time</MudTh>
+                    <MudTh Style="text-align:center">Reviewed</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Medical Record Number">@context.MedicalRecordNumber</MudTd>
+                    <MudTd DataLabel="Provider">@context.ProviderName</MudTd>
+                    <MudTd DataLabel="Appointment Time">@context.AppointmentTime</MudTd>
+                    <MudTd DataLabel="Reviewed" Style="text-align:center">
+                        @if (context.ReviewedByProvider)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success"  />
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No records found</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Loading...</MudText>
+                </LoadingContent>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudPaper>
+    </MudStack>
 </MudPaper>
 
 @code {
@@ -100,45 +98,89 @@
     private int ClinicId = int.Parse(Environment.GetEnvironmentVariable("CLINIC_ID") ?? throw new ArgumentNullException("CLINIC_ID environment variable has not been set."));
 
     private readonly List<string> _providers = [];
+    private MudTable<ClinicalSummary>? clinicalSummariesTable;
     private readonly List<ClinicalSummary> clinicalSummaries = [];
     private string searchString = string.Empty;
 
     private string _selectedProvider = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {    
         _providers.Add("Bob the Builder");
         _providers.Add("Darth Vader");
         _providers.Add("Dora the Explorer");
 
-        await GetClinicalSummaries();
+        return Task.CompletedTask;
     }
 
-    private async Task GetClinicalSummaries()
+    private async Task<IEnumerable<ClinicalSummary>> GetClinicalSummaries()
     {
         clinicalSummaries.Clear();
 
         var request = new GetClinicalSummariesByClinicId.Request(ClinicId);
         var response = await Mediator.Send<GetClinicalSummariesByClinicId.Request, GetClinicalSummariesByClinicId.Response>(request);
         if(response.IsSuccess)
-            clinicalSummaries.AddRange(response.Value.ClinicalSummaries);
+            return response.Value.ClinicalSummaries;
+        else
+            return []; // TODO: provide user feedback that the request was unsuccessful
     }
 
     private bool FilterFunction(ClinicalSummary clinicalSummary)
     {
         if (string.IsNullOrWhiteSpace(searchString))
             return true;
-        if (clinicalSummary.MedicalRecordNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
-            return true;
 
-        return false;
+        var isProviderMatch = false;
+        if(string.IsNullOrWhiteSpace(_selectedProvider) || _selectedProvider == clinicalSummary.ProviderName)
+            isProviderMatch = true;
+
+        var isSearchFilterMatch = false;
+
+        if (clinicalSummary.MedicalRecordNumber.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            isSearchFilterMatch = true;
+
+        return (isProviderMatch && isSearchFilterMatch);
     }
 
     private void OnSummaryClick(TableRowClickEventArgs<ClinicalSummary> tableRowClickEventArgs)
     {
         if (tableRowClickEventArgs.Item is null)
-			return;
+            return;
 
         Navigation.NavigateTo($"/provider-portal/ClinicalSummary/{tableRowClickEventArgs.Item.MedicalRecordNumber}");
+    }
+
+    private async Task OnProviderChanged(string providerName)
+    {
+        _selectedProvider = providerName;
+        if(clinicalSummariesTable is not null)
+            await clinicalSummariesTable.ReloadServerData();
+    }
+
+    private async Task OnSearch(string text)
+    {
+        searchString = text;
+        if(clinicalSummariesTable is not null)
+            await clinicalSummariesTable.ReloadServerData();
+    }
+
+    private async Task<TableData<ClinicalSummary>> ReloadClinicalSummariesTable(TableState state, CancellationToken token)
+    {
+        var clinicalSummaries = await GetClinicalSummaries();
+
+        // filter provider
+        if(!string.IsNullOrWhiteSpace(_selectedProvider))
+            clinicalSummaries = clinicalSummaries.Where(x => x.ProviderName == _selectedProvider);
+
+        // filter seatch
+        if(!string.IsNullOrWhiteSpace(searchString))
+            clinicalSummaries = clinicalSummaries.Where(x =>
+        {
+            var isMRNMatch = x.MedicalRecordNumber.Contains(searchString);
+            return isMRNMatch;
+        });
+
+        clinicalSummaries = clinicalSummaries.Skip(state.Page * state.PageSize).Take(state.PageSize);
+        return new TableData<ClinicalSummary>() { TotalItems = clinicalSummaries.Count(), Items = clinicalSummaries };
     }
 }
