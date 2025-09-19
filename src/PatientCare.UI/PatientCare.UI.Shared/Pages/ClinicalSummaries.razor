@@ -66,7 +66,9 @@
                 <RowTemplate>
                     <MudTd DataLabel="Medical Record Number">@context.MedicalRecordNumber</MudTd>
                     <MudTd DataLabel="Provider">@context.ProviderName</MudTd>
-                    <MudTd DataLabel="Appointment Time">@context.AppointmentTime</MudTd>
+                    <MudTd DataLabel="Appointment Time">
+                        @_appointmentLocalTimes.GetValueOrDefault(context.MedicalRecordNumber)
+                    </MudTd>
                     <MudTd DataLabel="Reviewed" Style="text-align:center">
                         @if (context.ReviewedByProvider)
                         {
@@ -95,6 +97,9 @@
     [Inject]
     private Mediator Mediator { get; set; } = null!;
 
+    [Inject]
+    IJSRuntime JS { get; set; } = null!;
+
     private int ClinicId = int.Parse(Environment.GetEnvironmentVariable("CLINIC_ID") ?? throw new ArgumentNullException("CLINIC_ID environment variable has not been set."));
 
     private readonly List<string> _providers = [];
@@ -103,6 +108,7 @@
     private string searchString = string.Empty;
 
     private string _selectedProvider = string.Empty;
+    private Dictionary<string, string> _appointmentLocalTimes = [];
 
     protected override Task OnInitializedAsync()
     {    
@@ -180,7 +186,32 @@
             return isMRNMatch;
         });
 
-        clinicalSummaries = clinicalSummaries.Skip(state.Page * state.PageSize).Take(state.PageSize);
-        return new TableData<ClinicalSummary>() { TotalItems = clinicalSummaries.Count(), Items = clinicalSummaries };
+        var pagedSummaries = clinicalSummaries.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+
+		await computeLocalTimes(pagedSummaries);
+
+        return new TableData<ClinicalSummary>() { TotalItems = clinicalSummaries.Count(), Items = pagedSummaries };
+    }
+
+    private async Task computeLocalTimes(IEnumerable<ClinicalSummary> clinicalSummaries)
+    {
+        _appointmentLocalTimes.Clear();
+
+        foreach(var summary in clinicalSummaries)
+            if(summary.AppointmentTime is not null)
+            {
+                var localTime = await JS.InvokeAsync<string>("toLocalTimeString", summary.AppointmentTime);
+                _appointmentLocalTimes[summary.MedicalRecordNumber] = localTime;
+            }
+            else
+                _appointmentLocalTimes[summary.MedicalRecordNumber] = string.Empty;
+    }
+
+    private async Task<string> ToLocalTimeStringAsync(DateTimeOffset? dateTime)
+    {
+        if(dateTime is null)
+            return string.Empty;
+
+        return await JS.InvokeAsync<string>("toLocalTimeString", dateTime.Value);
     }
 }

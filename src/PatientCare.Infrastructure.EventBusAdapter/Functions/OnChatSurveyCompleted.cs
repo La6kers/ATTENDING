@@ -18,10 +18,12 @@ public class OnChatSurveyCompleted(Mediator mediator, ILogger<OnChatSurveyComple
         ArgumentNullException.ThrowIfNull(messageDto, nameof(messageDto));
 
         AddClinicalSummary.Request request = new(
-            ClinicId: messageDto.ClinicId,
-            MedicalRecordNumber: messageDto.MedicalRecordNumber,
-            VitalSigns: new(null, null, null, null, null),
-            ChiefComplaint: messageDto.Summary);
+            messageDto.ClinicId,
+            messageDto.ProviderName,
+            messageDto.MedicalRecordNumber,
+            messageDto.Summary,
+            messageDto.PhoneNumber,
+            messageDto.AppointmentTime);
 
         try
         {
@@ -43,7 +45,10 @@ public class OnChatSurveyCompleted(Mediator mediator, ILogger<OnChatSurveyComple
     }
 
     private record MessageDto(
-        int ClinicId,
+        int ClinicId, 
+        string ProviderName,
         string MedicalRecordNumber,
-        string Summary);
+        string Summary,
+        string? PhoneNumber,
+        DateTimeOffset AppointmentTime);
 }

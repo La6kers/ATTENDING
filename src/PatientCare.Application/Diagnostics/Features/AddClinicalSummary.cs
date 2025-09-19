@@ -9,9 +9,12 @@ public static class AddClinicalSummary
 {
     public record Request(
         int ClinicId,
+        string ProviderName,
         string MedicalRecordNumber,
-        VitalSigns VitalSigns,
-        string ChiefComplaint) : ICommandRequest;
+        string ChiefComplaint,
+        string? PhoneNumber,
+        DateTimeOffset AppointmentTime
+        ) : ICommandRequest;
 
     internal static IServiceCollection AddAddClinicalSummaryFeature(this IServiceCollection services)
     {
@@ -30,13 +33,15 @@ public static class AddClinicalSummary
                     return Result.Fail(new Error(nameof(AddClinicalSummary), "Clinic ID must be greater than zero."));
                 if(string.IsNullOrWhiteSpace(request.MedicalRecordNumber))
                     return Result.Fail(new Error(nameof(AddClinicalSummary), "Medical record number cannot be empty."));
-                if(request.VitalSigns == null)
-                    return Result.Fail(new Error(nameof(AddClinicalSummary), "Vital signs cannot be null."));
+
                 var clinicalSummary = new ClinicalSummary
                 {
                     ClinicId = request.ClinicId,
+                    ProviderName = request.ProviderName,
                     MedicalRecordNumber = request.MedicalRecordNumber,
-                    ChiefComplaint = request.ChiefComplaint
+                    ChiefComplaint = request.ChiefComplaint,
+                    PhoneNumber = request.PhoneNumber,
+                    AppointmentTime = request.AppointmentTime
                 };
                 //TODO: check if MRN already exists before adding
                 await _repository.Add(clinicalSummary, cancellationToken);

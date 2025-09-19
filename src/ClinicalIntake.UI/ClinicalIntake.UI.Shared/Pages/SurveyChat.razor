@@ -262,7 +262,7 @@
     {
         MaxWidth = MaxWidth.ExtraLarge,
         CloseButton = false,
-        BackdropClick = true
+        BackdropClick = false
     };
 
     private ChatStage chatStage = ChatStage.ChiefComplaint;
@@ -472,8 +472,16 @@
         if(chatStage < ChatStage.Complete)
             return;
 
+        var appointmentDateTime = appointmentDate.HasValue && appointmentTime.HasValue
+            ? appointmentDate.Value.Date.Add(appointmentTime.Value)
+            : (DateTime?)null;
+
         var chatSurvey = new ChatSurvey(ClinicId)
         {
+            PhoneNumber = phoneNumber,
+            ProviderName = providerName,
+            AppointmentTime = appointmentDateTime.HasValue ?
+                new DateTimeOffset(appointmentDateTime.Value, TimeZoneInfo.Local.GetUtcOffset(appointmentDateTime.Value)) : null,
             MedicalRecordNumber = MRN,
             Summary = clinicalSummary
         };

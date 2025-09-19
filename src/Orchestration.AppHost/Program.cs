@@ -21,6 +21,9 @@ internal class Program
                 emulator.WithLifetime(ContainerLifetime.Persistent);
             });
 
+        var clinicalChatSurveyCompletedTopic = attendingEventBus.AddServiceBusTopic("clinicalintake-chatsurvey-completed-topic", "clinicalintake-chatsurvey-completed");
+        clinicalChatSurveyCompletedTopic.AddServiceBusSubscription("patientcare-chatsurvey-completed-subscription", "patientcare");
+
         // (global)repository
         // remarks: first run might take a while to initialize the database
         var attendingRepository = builder.AddAzureCosmosDB("Attending-Repository")
