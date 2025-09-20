@@ -60,13 +60,13 @@
                 <HeaderContent>
                     <MudTh>Medical Record Number</MudTh>
                     <MudTh>Provider</MudTh>
-                    <MudTh>Appointment Time</MudTh>
+                    <MudTh>Appointment Time (Local Time)</MudTh>
                     <MudTh Style="text-align:center">Reviewed</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Medical Record Number">@context.MedicalRecordNumber</MudTd>
                     <MudTd DataLabel="Provider">@context.ProviderName</MudTd>
-                    <MudTd DataLabel="Appointment Time">
+                    <MudTd DataLabel="Appointment Time (Local Time)">
                         @_appointmentLocalTimes.GetValueOrDefault(context.MedicalRecordNumber)
                     </MudTd>
                     <MudTd DataLabel="Reviewed" Style="text-align:center">
