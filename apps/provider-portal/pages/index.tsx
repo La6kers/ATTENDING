@@ -5,6 +5,7 @@ import StatCards from '../components/dashboard/StatCards';
 import PatientQueue from '../components/dashboard/PatientQueue';
 import AIInsights from '../components/dashboard/AIInsights';
 import QuickAccess from '../components/dashboard/QuickAccess';
+import RecentAssessments from '../components/dashboard/RecentAssessments';
 import PatientMessaging from '../components/PatientMessaging';
 
 export default function Dashboard() {
@@ -20,13 +21,17 @@ export default function Dashboard() {
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Provider Dashboard</h1>
                 <p className="mt-1 text-sm text-gray-500">
-                  Welcome back, Dr. Reed. BioMistral AI has prepared clinical insights for your review.
+                  Welcome back, Dr. Reed. COMPASS AI has prepared clinical insights for your review.
                 </p>
               </div>
               <div className="flex items-center space-x-3">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                  BioMistral-7B Active
+                  COMPASS Active
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                  <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2 animate-pulse"></span>
+                  BioMistral-7B Ready
                 </span>
               </div>
             </div>
@@ -35,7 +40,7 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Stats Overview */}
+          {/* Stats Overview - Now shows COMPASS assessment stats */}
           <StatCards />
 
           {/* Quick Access Cards */}
@@ -44,22 +49,30 @@ export default function Dashboard() {
             <QuickAccess />
           </div>
 
-          {/* Main Grid */}
+          {/* Main Grid - Reorganized with COMPASS Assessments prominent */}
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Patient Queue - Takes up 2 columns */}
+            {/* Recent COMPASS Assessments - Primary focus */}
             <div className="lg:col-span-2">
-              <PatientQueue />
+              <RecentAssessments />
             </div>
 
-            {/* AI Insights - Takes up 1 column */}
+            {/* AI Insights - Side column */}
             <div className="lg:col-span-1">
               <AIInsights />
             </div>
           </div>
 
-          {/* Patient Messaging Section */}
-          <div className="mt-8">
-            <PatientMessaging />
+          {/* Secondary Grid - Patient Queue and Messaging */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Patient Queue */}
+            <div>
+              <PatientQueue />
+            </div>
+
+            {/* Patient Messaging */}
+            <div>
+              <PatientMessaging />
+            </div>
           </div>
         </div>
       </div>

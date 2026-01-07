@@ -1,0 +1,20 @@
+{
+  "name": "@attending/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/index.ts",
+    "./services": "./services/index.ts",
+    "./machines": "./machines/index.ts"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

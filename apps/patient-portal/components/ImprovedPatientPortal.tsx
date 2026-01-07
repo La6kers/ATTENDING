@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import { 
   MessageCircle, Calendar, FileText, Activity, Bell, User, Heart, Clock,
   AlertCircle, ChevronRight, Send, Shield, Stethoscope, Phone, AlertTriangle,
@@ -21,6 +22,7 @@ interface ChatContext {
 }
 
 const ImprovedPatientPortal = () => {
+  const router = useRouter();
   // Enhanced state management
   const [user, setUser] = useState({
     name: "Sarah Johnson",
@@ -89,7 +91,7 @@ const ImprovedPatientPortal = () => {
 
   // COMPASS Chat Integration
   const openCompassChat = () => {
-    // Open COMPASS chat and prepare medical context
+    // Store medical context for the chat session
     const medicalContext = {
       patientId: user.id,
       currentMedications: healthData.medications,
@@ -97,18 +99,10 @@ const ImprovedPatientPortal = () => {
       alerts: healthData.alerts,
       timestamp: new Date().toISOString()
     };
-
-    // Open chat in new window with context
-    const chatWindow = window.open(
-      'http://localhost:3003/chat/index.html',
-      '_blank',
-      'width=1200,height=800,scrollbars=yes,resizable=yes'
-    );
-
-    // Store context for the chat session
-    if (chatWindow) {
-      sessionStorage.setItem('compass-context', JSON.stringify(medicalContext));
-    }
+    sessionStorage.setItem('compass-context', JSON.stringify(medicalContext));
+    
+    // Navigate to the COMPASS chat page
+    router.push('/chat');
   };
 
   const sendChatSummaryToProvider = async () => {

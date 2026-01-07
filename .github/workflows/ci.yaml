@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-type-check:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies (Provider Portal)
+        working-directory: apps/provider-portal
+        run: npm ci
+        
+      - name: Type check (Provider Portal)
+        working-directory: apps/provider-portal
+        run: npx tsc --noEmit
+        
+      - name: Lint (Provider Portal)
+        working-directory: apps/provider-portal
+        run: npm run lint || true
+        
+      - name: Install dependencies (Patient Portal)
+        working-directory: apps/patient-portal
+        run: npm ci
+        
+      - name: Type check (Patient Portal)
+        working-directory: apps/patient-portal
+        run: npx tsc --noEmit
+
+  build:
+    name: Build Applications
+    runs-on: ubuntu-latest
+    needs: lint-and-type-check
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Build Provider Portal
+        working-directory: apps/provider-portal
+        run: |
+          npm ci
+          npm run build
+          
+      - name: Build Patient Portal
+        working-directory: apps/patient-portal
+        run: |
+          npm ci
+          npm run build
+          
+      - name: Upload Provider Portal Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-portal-build
+          path: apps/provider-portal/.next
+          retention-days: 7
+          
+      - name: Upload Patient Portal Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: patient-portal-build
+          path: apps/patient-portal/.next
+          retention-days: 7
+
+  # Placeholder for future backend build
+  # build-backend:
+  #   name: Build .NET Backend
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-dotnet@v4
+  #       with:
+  #         dotnet-version: '8.0.x'
+  #     - run: dotnet build apps/backend

@@ -1,33 +1,17 @@
-// Chat-specific type definitions
+// Re-export all chat types from shared package
+// This file maintains backward compatibility with existing imports
+// Eventually, imports should be updated to use @attending/shared directly
 
-import { AssessmentPhase, BioMistralResponse, UrgencyLevel } from './medical';
+export type {
+  ChatMessage,
+  ChatSession,
+  AIStatus,
+  AssessmentPhase,
+  UrgencyLevel,
+  BioMistralResponse,
+} from '@attending/shared';
 
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: string;
-  metadata?: {
-    phase?: AssessmentPhase;
-    urgencyLevel?: UrgencyLevel;
-    quickReplies?: string[];
-    medicalSuggestions?: string[];
-    aiThinking?: string;
-    clinicalData?: any;
-  };
-}
-
-export interface ChatSession {
-  id: string;
-  patientId: string;
-  startTime: string;
-  endTime?: string;
-  messages: ChatMessage[];
-  currentPhase: AssessmentPhase;
-  isComplete: boolean;
-  clinicalSummaryId?: string;
-}
-
+// Additional types for UI components (not in shared yet)
 export interface QuickReply {
   text: string;
   value: string;
@@ -37,13 +21,6 @@ export interface QuickReply {
 export interface MedicalSuggestion {
   text: string;
   type: 'follow-up' | 'clarification' | 'symptom' | 'action';
-}
-
-export interface AIStatus {
-  isProcessing: boolean;
-  currentAction?: string;
-  error?: string;
-  lastUpdate?: string;
 }
 
 export interface TypingIndicator {
