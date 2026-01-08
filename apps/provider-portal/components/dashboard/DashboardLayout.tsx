@@ -1,17 +1,17 @@
 import React, { ReactNode } from 'react';
-import Navigation from '../layout/Navigation';
 
 interface DashboardLayoutProps {
   children: ReactNode;
 }
 
+/**
+ * DashboardLayout provides consistent styling for dashboard pages.
+ * Note: Navigation is now handled at the _app.tsx level.
+ */
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      <main className="pt-16">
-        {children}
-      </main>
+    <div className="min-h-screen bg-background">
+      {children}
     </div>
   );
 }

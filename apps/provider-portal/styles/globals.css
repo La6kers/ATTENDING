@@ -4,26 +4,89 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* ATTENDING AI Purple Theme */
+    --background: 270 50% 98%;
+    --foreground: 270 50% 10%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 270 50% 10%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover-foreground: 270 50% 10%;
+    
+    /* Primary purple palette */
+    --primary: 271 81% 56%;              /* #8b5cf6 */
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - lighter purple */
+    --secondary: 270 60% 95%;
+    --secondary-foreground: 271 81% 40%;
+    
+    --muted: 270 30% 96%;
+    --muted-foreground: 270 20% 45%;
+    
+    /* Accent - complementary purple */
+    --accent: 280 70% 94%;
+    --accent-foreground: 280 70% 35%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 270 30% 90%;
+    --input: 270 30% 90%;
+    --ring: 271 81% 56%;
     --radius: 0.5rem;
+    
+    /* ========================================
+       ATTENDING AI Brand Gradient Colors
+       ======================================== */
+    --brand-gradient-start: #4c51bf;
+    --brand-gradient-25: #553c9a;
+    --brand-gradient-50: #6b46c1;
+    --brand-gradient-75: #7c3aed;
+    --brand-gradient-end: #8b5cf6;
+    
+    /* Brand purple scale */
+    --brand-purple: 271 81% 56%;
+    --brand-purple-dark: 271 81% 45%;
+    --brand-purple-light: 270 60% 95%;
+    --brand-indigo: 239 84% 67%;
+    
+    /* Clinical alert colors */
+    --clinical-urgent: 0 84% 60%;
+    --clinical-warning: 38 92% 50%;
+    --clinical-success: 142 76% 36%;
+    --clinical-info: 217 91% 60%;
+  }
+
+  .dark {
+    --background: 270 50% 8%;
+    --foreground: 270 20% 95%;
+    
+    --card: 270 40% 12%;
+    --card-foreground: 270 20% 95%;
+    
+    --popover: 270 40% 12%;
+    --popover-foreground: 270 20% 95%;
+    
+    --primary: 271 81% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 270 40% 20%;
+    --secondary-foreground: 270 20% 90%;
+    
+    --muted: 270 40% 18%;
+    --muted-foreground: 270 20% 65%;
+    
+    --accent: 280 50% 25%;
+    --accent-foreground: 280 50% 90%;
+    
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 270 40% 20%;
+    --input: 270 40% 20%;
+    --ring: 271 81% 60%;
   }
 }
 
@@ -31,19 +94,277 @@
   * {
     @apply border-border;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground antialiased;
+    /* Rich purple gradient background for provider portal */
+    background: linear-gradient(135deg, 
+      #4c51bf 0%, 
+      #553c9a 25%, 
+      #6b46c1 50%, 
+      #7c3aed 75%, 
+      #8b5cf6 100%);
+    min-height: 100vh;
   }
 }
 
+/* ========================================
+   ATTENDING AI BRAND GRADIENTS
+   ======================================== */
+@layer utilities {
+  /* Primary brand gradient */
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, 
+      #4c51bf 0%, 
+      #553c9a 25%, 
+      #6b46c1 50%, 
+      #7c3aed 75%, 
+      #8b5cf6 100%);
+  }
+  
+  /* Darker variant for hover */
+  .bg-brand-gradient-hover {
+    background: linear-gradient(135deg, 
+      #3730a3 0%, 
+      #4c1d95 25%, 
+      #5b21b6 50%, 
+      #6d28d9 75%, 
+      #7c3aed 100%);
+  }
+  
+  /* Subtle gradient for light backgrounds */
+  .bg-brand-gradient-subtle {
+    background: linear-gradient(135deg, 
+      hsl(270 50% 98%) 0%, 
+      hsl(280 40% 97%) 50%, 
+      hsl(270 45% 96%) 100%);
+  }
+  
+  /* Text gradient */
+  .text-brand-gradient {
+    background: linear-gradient(135deg, 
+      #4c51bf 0%, 
+      #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Glass morphism effects */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(139, 92, 246, 0.1);
+  }
+  
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  }
+  
+  /* Main content area on gradient background */
+  .main-content-glass {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-radius: 1.5rem 0 0 0;
+  }
+  
+  .border-brand {
+    border-color: hsl(271 81% 56% / 0.3);
+  }
+  
+  .shadow-brand {
+    box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.15);
+  }
+  
+  .shadow-brand-lg {
+    box-shadow: 0 10px 25px -3px rgba(139, 92, 246, 0.2);
+  }
+  
+  .ring-brand {
+    --tw-ring-color: hsl(271 81% 56% / 0.5);
+  }
+}
+
+/* ========================================
+   TYPOGRAPHY & BASE STYLES
+   ======================================== */
 html,
 body {
   padding: 0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* ========================================
+   SCROLLBAR STYLING
+   ======================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(270 30% 96%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(271 81% 56% / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(271 81% 56% / 0.5);
+}
+
+/* ========================================
+   FOCUS & SELECTION STYLES
+   ======================================== */
+:focus-visible {
+  outline: 2px solid hsl(271 81% 56%);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: hsl(271 81% 56% / 0.2);
+  color: hsl(270 50% 10%);
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes pulse-urgent {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    opacity: 0.9;
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+@keyframes pulse-purple {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse-urgent {
+  animation: pulse-urgent 1.5s ease-in-out infinite;
+}
+
+.animate-pulse-purple {
+  animation: pulse-purple 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+/* ========================================
+   CLINICAL STATUS UTILITIES
+   ======================================== */
+.urgency-routine {
+  @apply bg-green-100 text-green-700 border-green-200;
+}
+
+.urgency-urgent {
+  @apply bg-yellow-100 text-yellow-700 border-yellow-200;
+}
+
+.urgency-stat {
+  @apply bg-orange-100 text-orange-700 border-orange-200;
+}
+
+.urgency-critical {
+  @apply bg-red-100 text-red-700 border-red-200;
+}
+
+/* ========================================
+   BUTTON STYLES
+   ======================================== */
+.btn-brand {
+  @apply px-4 py-2 rounded-lg font-medium text-white transition-all duration-200;
+  background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+}
+
+.btn-brand:hover {
+  @apply shadow-lg;
+  background: linear-gradient(135deg, #553c9a 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+}
+
+.btn-brand-secondary {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+  @apply bg-white text-purple-700 border-2 border-purple-200;
+}
+
+.btn-brand-secondary:hover {
+  @apply bg-purple-50 border-purple-400;
+}
+
+/* ========================================
+   CARD STYLES
+   ======================================== */
+.card-clinical {
+  @apply bg-white rounded-xl border border-gray-200 shadow-sm;
+  @apply transition-all duration-200;
+}
+
+.card-clinical:hover {
+  @apply shadow-md border-purple-200;
+}
+
+.card-clinical-urgent {
+  @apply border-l-4 border-l-red-500;
+}
+
+.card-clinical-warning {
+  @apply border-l-4 border-l-amber-500;
+}
+
+/* ========================================
+   NAVIGATION ACTIVE STATES
+   ======================================== */
+.nav-item-active {
+  @apply bg-purple-100 text-purple-700;
+}
+
+.nav-item-inactive {
+  @apply text-gray-600 hover:bg-purple-50 hover:text-purple-600;
 }

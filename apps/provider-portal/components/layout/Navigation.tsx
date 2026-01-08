@@ -65,16 +65,19 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">
+    <nav className="fixed top-0 left-0 right-0 glass-nav z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo and Brand */}
+          {/* Logo and Brand - Using purple gradient */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
-              <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="w-9 h-9 bg-brand-gradient rounded-xl flex items-center justify-center shadow-md">
+                <Stethoscope className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-2xl font-bold text-brand-gradient">
                 ATTENDING
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-gradient text-white shadow-sm">
                 AI Health
               </span>
             </Link>
@@ -90,10 +93,10 @@ const Navigation = () => {
                   key={item.name}
                   href={item.href}
                   className={`
-                    relative flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
+                    relative flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
                     ${active
-                      ? 'bg-indigo-100 text-indigo-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
                     }
                   `}
                 >
@@ -112,21 +115,21 @@ const Navigation = () => {
           {/* Right side items */}
           <div className="flex items-center space-x-4">
             {/* Search */}
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <button className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200">
               <Search className="w-5 h-5" />
             </button>
 
             {/* Notifications */}
-            <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <button className="relative p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200">
               <Bell className="w-5 h-5" />
               {(urgentCount > 0 || pendingCount > 0) && (
                 <span className={`absolute top-1 right-1 w-2.5 h-2.5 ${urgentCount > 0 ? 'bg-red-500' : 'bg-amber-500'} rounded-full animate-pulse`}></span>
               )}
             </button>
 
-            {/* User Avatar */}
+            {/* User Avatar - Using brand gradient */}
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+              <div className="w-8 h-8 bg-brand-gradient rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
                 DR
               </div>
             </div>
@@ -134,7 +137,7 @@ const Navigation = () => {
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+              className="lg:hidden p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -144,7 +147,7 @@ const Navigation = () => {
 
       {/* Mobile Navigation */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t">
+        <div className="lg:hidden bg-white border-t border-purple-100">
           <div className="px-2 pt-2 pb-3 space-y-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -154,10 +157,10 @@ const Navigation = () => {
                   key={item.name}
                   href={item.href}
                   className={`
-                    flex items-center justify-between px-3 py-2 rounded-md text-base font-medium transition-colors
+                    flex items-center justify-between px-3 py-2 rounded-lg text-base font-medium transition-all duration-200
                     ${active
-                      ? 'bg-indigo-100 text-indigo-700'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
                     }
                   `}
                   onClick={() => setMobileMenuOpen(false)}
@@ -184,7 +187,7 @@ const Navigation = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-2 flex items-center justify-between">
               <div className="flex items-center text-red-700">
-                <AlertTriangle className="w-4 h-4 mr-2" />
+                <AlertTriangle className="w-4 h-4 mr-2 animate-pulse" />
                 <span className="text-sm font-medium">
                   {urgentCount} urgent assessment{urgentCount !== 1 ? 's' : ''} requiring immediate attention
                 </span>

@@ -1,149 +1,201 @@
-// Patient API - Get, Update, Delete individual patient
+// ============================================================
+// ATTENDING AI - Single Patient API Route
 // apps/provider-portal/pages/api/patients/[id].ts
+//
+// Get full patient details including history and assessments
+// ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/api/prisma';
-import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { prisma } from '@/lib/prisma';
 
-async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   const { id } = req.query;
-  
-  if (typeof id !== 'string') {
-    return res.status(400).json({ error: 'Invalid patient ID' });
+
+  if (!id || typeof id !== 'string') {
+    return res.status(400).json({ error: 'Patient ID is required' });
   }
 
-  switch (req.method) {
-    case 'GET':
-      return getPatient(req, res, session, id);
-    case 'PUT':
-    case 'PATCH':
-      return updatePatient(req, res, session, id);
-    case 'DELETE':
-      return deletePatient(req, res, session, id);
-    default:
-      res.setHeader('Allow', ['GET', 'PUT', 'PATCH', 'DELETE']);
-      return res.status(405).json({ error: `Method ${req.method} not allowed` });
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', ['GET']);
+    return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
-}
 
-async function getPatient(req: NextApiRequest, res: NextApiResponse, session: any, id: string) {
   try {
     const patient = await prisma.patient.findUnique({
       where: { id },
       include: {
-        allergies: { where: { isActive: true } },
-        conditions: true,
-        medications: { where: { isActive: true } },
-        vitals: { orderBy: { recordedAt: 'desc' }, take: 10 },
-        encounters: {
-          orderBy: { scheduledAt: 'desc' },
-          take: 5,
-          include: {
-            provider: { select: { name: true, specialty: true } },
-          },
+        allergies: {
+          where: { isActive: true },
+          orderBy: { severity: 'desc' },
+        },
+        medications: {
+          where: { isActive: true },
+          orderBy: { startDate: 'desc' },
+        },
+        conditions: {
+          orderBy: { onsetDate: 'desc' },
+        },
+        vitals: {
+          orderBy: { recordedAt: 'desc' },
+          take: 10,
         },
         assessments: {
           orderBy: { submittedAt: 'desc' },
-          take: 5,
+          take: 10,
+          include: {
+            assignedProvider: {
+              select: { name: true, specialty: true },
+            },
+          },
+        },
+        encounters: {
+          orderBy: { scheduledAt: 'desc' },
+          take: 10,
+          include: {
+            provider: {
+              select: { name: true, specialty: true },
+            },
+            labOrders: {
+              orderBy: { orderedAt: 'desc' },
+              take: 5,
+            },
+            imagingOrders: {
+              orderBy: { orderedAt: 'desc' },
+              take: 5,
+            },
+          },
         },
       },
     });
-    
+
     if (!patient) {
       return res.status(404).json({ error: 'Patient not found' });
     }
-    
-    await createAuditLog(session.user.id, 'VIEW', 'Patient', id, null, req);
-    
-    return res.status(200).json(patient);
-  } catch (error) {
-    console.error('Error fetching patient:', error);
-    return res.status(500).json({ error: 'Failed to fetch patient' });
-  }
-}
 
-async function updatePatient(req: NextApiRequest, res: NextApiResponse, session: any, id: string) {
-  try {
-    const {
-      firstName,
-      lastName,
-      middleName,
-      dateOfBirth,
-      gender,
-      email,
-      phone,
-      address,
-      city,
-      state,
-      zipCode,
-      emergencyContact,
-      emergencyPhone,
-      insuranceId,
-      insuranceName,
-      primaryProviderId,
-      preferredLanguage,
-      isActive,
-    } = req.body;
-    
-    const existingPatient = await prisma.patient.findUnique({ where: { id } });
-    
-    if (!existingPatient) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
-    
-    const patient = await prisma.patient.update({
-      where: { id },
-      data: {
-        firstName,
-        lastName,
-        middleName,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
-        gender,
-        email,
-        phone,
-        address,
-        city,
-        state,
-        zipCode,
-        emergencyContact,
-        emergencyPhone,
-        insuranceId,
-        insuranceName,
-        primaryProviderId,
-        preferredLanguage,
-        isActive,
+    const transformed = {
+      id: patient.id,
+      mrn: patient.mrn,
+      name: `${patient.firstName} ${patient.lastName}`,
+      firstName: patient.firstName,
+      lastName: patient.lastName,
+      middleName: patient.middleName,
+      dateOfBirth: patient.dateOfBirth.toISOString().split('T')[0],
+      age: calculateAge(patient.dateOfBirth),
+      gender: patient.gender,
+      
+      // Contact info
+      contact: {
+        phone: patient.phone,
+        email: patient.email,
+        address: patient.address,
+        city: patient.city,
+        state: patient.state,
+        zipCode: patient.zipCode,
       },
-      include: {
-        allergies: true,
-        conditions: true,
-        medications: true,
+      
+      // Emergency contact
+      emergencyContact: {
+        name: patient.emergencyContact,
+        phone: patient.emergencyPhone,
       },
-    });
-    
-    await createAuditLog(session.user.id, 'UPDATE', 'Patient', id, req.body, req);
-    
-    return res.status(200).json(patient);
+      
+      // Insurance
+      insurance: {
+        id: patient.insuranceId,
+        name: patient.insuranceName,
+      },
+      
+      // Clinical data
+      allergies: patient.allergies.map(a => ({
+        id: a.id,
+        allergen: a.allergen,
+        reaction: a.reaction,
+        severity: a.severity,
+        type: a.type,
+      })),
+      
+      medications: patient.medications.map(m => ({
+        id: m.id,
+        name: m.medicationName,
+        genericName: m.genericName,
+        dose: m.dose,
+        frequency: m.frequency,
+        route: m.route,
+        prescriber: m.prescriber,
+        indication: m.indication,
+        startDate: m.startDate?.toISOString().split('T')[0],
+      })),
+      
+      conditions: patient.conditions.map(c => ({
+        id: c.id,
+        name: c.name,
+        icdCode: c.icdCode,
+        status: c.status,
+        onsetDate: c.onsetDate?.toISOString().split('T')[0],
+      })),
+      
+      // Recent vitals
+      vitals: patient.vitals.map(v => ({
+        id: v.id,
+        bloodPressure: v.systolic && v.diastolic ? `${v.systolic}/${v.diastolic}` : null,
+        systolic: v.systolic,
+        diastolic: v.diastolic,
+        heartRate: v.heartRate,
+        temperature: v.temperature,
+        respiratoryRate: v.respiratoryRate,
+        oxygenSaturation: v.oxygenSaturation,
+        weight: v.weight,
+        height: v.height,
+        painLevel: v.painLevel,
+        recordedAt: v.recordedAt.toISOString(),
+      })),
+      
+      // Assessment history
+      assessments: patient.assessments.map(a => ({
+        id: a.id,
+        chiefComplaint: a.chiefComplaint,
+        urgencyLevel: a.urgencyLevel.toLowerCase(),
+        status: a.status.toLowerCase().replace('_', '-'),
+        submittedAt: a.submittedAt?.toISOString(),
+        completedAt: a.completedAt?.toISOString(),
+        provider: a.assignedProvider?.name,
+      })),
+      
+      // Encounter history
+      encounters: patient.encounters.map(e => ({
+        id: e.id,
+        visitType: e.visitType,
+        status: e.status,
+        chiefComplaint: e.chiefComplaint,
+        scheduledAt: e.scheduledAt?.toISOString(),
+        provider: e.provider.name,
+        labOrderCount: e.labOrders.length,
+        imagingOrderCount: e.imagingOrders.length,
+      })),
+      
+      // Metadata
+      preferredLanguage: patient.preferredLanguage,
+      isActive: patient.isActive,
+      createdAt: patient.createdAt.toISOString(),
+      updatedAt: patient.updatedAt.toISOString(),
+    };
+
+    return res.status(200).json(transformed);
   } catch (error) {
-    console.error('Error updating patient:', error);
-    return res.status(500).json({ error: 'Failed to update patient' });
+    console.error('API Error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
 
-async function deletePatient(req: NextApiRequest, res: NextApiResponse, session: any, id: string) {
-  try {
-    // Soft delete - just mark as inactive
-    await prisma.patient.update({
-      where: { id },
-      data: { isActive: false },
-    });
-    
-    await createAuditLog(session.user.id, 'DELETE', 'Patient', id, null, req);
-    
-    return res.status(200).json({ success: true, message: 'Patient deactivated' });
-  } catch (error) {
-    console.error('Error deleting patient:', error);
-    return res.status(500).json({ error: 'Failed to delete patient' });
+function calculateAge(dateOfBirth: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - dateOfBirth.getFullYear();
+  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+    age--;
   }
+  return age;
 }
-
-export default requireAuth(handler);

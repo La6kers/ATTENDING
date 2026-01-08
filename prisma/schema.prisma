@@ -757,3 +757,70 @@ model PatientEducationMaterial {
   @@index([category])
   @@index([conditions])
 }
+
+// ============== TREATMENT PLANS ==============
+
+model TreatmentPlan {
+  id                    String   @id @default(cuid())
+  encounterId           String   @unique
+  patientId             String
+  providerId            String
+  diagnoses             Json     @default("[]")
+  chiefComplaint        String?
+  clinicalSummary       String?  @db.Text
+  labOrderIds           Json     @default("[]")
+  imagingOrderIds       Json     @default("[]")
+  prescriptionIds       Json     @default("[]")
+  referralIds           Json     @default("[]")
+  followUpSchedule      Json     @default("[]")
+  patientEducation      Json     @default("[]")
+  returnPrecautions     Json     @default("[]")
+  additionalInstructions String? @db.Text
+  protocolApplied       String?
+  status                TreatmentPlanStatus @default(DRAFT)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  approvedBy            String?
+  approvedAt            DateTime?
+
+  @@index([patientId])
+  @@index([providerId])
+  @@index([status])
+}
+
+enum TreatmentPlanStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  EXECUTED
+  MODIFIED
+}
+
+// ============== PROVIDER DIRECTORY ==============
+
+model ProviderDirectory {
+  id                   String   @id @default(cuid())
+  name                 String
+  credentials          String
+  specialty            String
+  subspecialty         String?
+  organization         String
+  address              String
+  phone                String
+  fax                  String?
+  npi                  String?  @unique
+  acceptingNew         Boolean  @default(true)
+  insurancesAccepted   Json     @default("[]")
+  nextAvailableRoutine String?
+  nextAvailableUrgent  String?
+  rating               Float?
+  preferred            Boolean  @default(false)
+  active               Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([specialty])
+  @@index([subspecialty])
+  @@index([acceptingNew])
+  @@index([preferred])
+}

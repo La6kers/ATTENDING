@@ -8,13 +8,48 @@
     ".": "./index.ts",
     "./types": "./types/index.ts",
     "./services": "./services/index.ts",
-    "./machines": "./machines/index.ts"
+    "./machines": "./machines/index.ts",
+    "./lib/prisma": "./lib/prisma.ts",
+    "./lib/utils": "./lib/utils.ts",
+    "./hooks": "./hooks/index.ts",
+    "./stores": "./stores/index.ts",
+    "./components/ui": "./components/ui/index.ts",
+    "./auth": "./auth/index.ts"
+  },
+  "prisma": {
+    "schema": "../../prisma/schema.prisma"
   },
   "peerDependencies": {
-    "react": "^18.0.0",
-    "zustand": "^5.0.0"
+    "react": "^18.2.0",
+    "@prisma/client": "^5.0.0",
+    "zustand": "^5.0.0",
+    "socket.io-client": "^4.7.0",
+    "next-auth": "^4.24.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    },
+    "zustand": {
+      "optional": true
+    },
+    "@prisma/client": {
+      "optional": true
+    },
+    "socket.io-client": {
+      "optional": true
+    },
+    "next-auth": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.2.0",
+    "immer": "^10.1.1"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "@types/react": "^18.2.48",
+    "typescript": "^5.3.3"
   }
 }

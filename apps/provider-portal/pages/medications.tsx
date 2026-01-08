@@ -168,7 +168,7 @@ export default function Medications() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         {/* Patient Banner */}
         <div className="bg-white shadow-sm mx-6 mt-6 rounded-2xl p-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
