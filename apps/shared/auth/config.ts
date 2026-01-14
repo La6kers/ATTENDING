@@ -8,8 +8,8 @@
 
 import type { NextAuthOptions, User, Session } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+import type { OAuthConfig } from 'next-auth/providers/oauth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import type { OAuthConfig } from 'next-auth/providers';
 
 // ============================================================
 // TYPES

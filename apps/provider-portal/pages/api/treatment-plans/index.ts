@@ -48,13 +48,6 @@ async function getTreatmentPlans(req: NextApiRequest, res: NextApiResponse, sess
       const [plans, total] = await Promise.all([
         prisma.treatmentPlan.findMany({
           where,
-          include: {
-            encounter: {
-              include: {
-                patient: { select: { id: true, firstName: true, lastName: true, mrn: true } },
-              },
-            },
-          },
           orderBy: { updatedAt: 'desc' },
           take: parseInt(String(limit)),
           skip: parseInt(String(offset)),
@@ -62,9 +55,18 @@ async function getTreatmentPlans(req: NextApiRequest, res: NextApiResponse, sess
         prisma.treatmentPlan.count({ where }),
       ]);
       
+      // Fetch patient info for each plan
+      const patientIds = [...new Set(plans.map(p => p.patientId).filter(Boolean))];
+      const patients = await prisma.patient.findMany({
+        where: { id: { in: patientIds } },
+        select: { id: true, firstName: true, lastName: true, mrn: true },
+      });
+      const patientMap = new Map(patients.map(p => [p.id, p]));
+      
       // Parse JSON fields
       const parsedPlans = plans.map((plan: any) => ({
         ...plan,
+        patient: patientMap.get(plan.patientId) || null,
         diagnoses: typeof plan.diagnoses === 'string' ? JSON.parse(plan.diagnoses) : plan.diagnoses,
         labOrderIds: typeof plan.labOrderIds === 'string' ? JSON.parse(plan.labOrderIds) : plan.labOrderIds,
         imagingOrderIds: typeof plan.imagingOrderIds === 'string' ? JSON.parse(plan.imagingOrderIds) : plan.imagingOrderIds,
@@ -140,13 +142,6 @@ async function createTreatmentPlan(req: NextApiRequest, res: NextApiResponse, se
           additionalInstructions,
           protocolApplied,
           status,
-        },
-        include: {
-          encounter: {
-            include: {
-              patient: { select: { firstName: true, lastName: true, mrn: true } },
-            },
-          },
         },
       });
       

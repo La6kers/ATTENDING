@@ -97,7 +97,9 @@ module.exports = {
         },
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+        // ATTENDING AI Standard Gradient
+        'brand-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'brand-gradient-hover': 'linear-gradient(135deg, #5a6fd6 0%, #6a4292 100%)',
         'brand-gradient-subtle': 'linear-gradient(135deg, #faf5ff 0%, #eef2ff 100%)',
       },
       boxShadow: {

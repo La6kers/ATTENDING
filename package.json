@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
+    "packages/*",
     "apps/shared",
     "apps/provider-portal",
     "apps/patient-portal"
@@ -28,8 +29,8 @@
     "build:provider": "npm run build --workspace=apps/provider-portal",
     "build:patient": "npm run build --workspace=apps/patient-portal",
     "lint": "npm run lint --workspaces --if-present",
-    "clean": "rimraf node_modules apps/*/node_modules apps/*/.next",
-    "clean:cache": "rimraf .next apps/*/.next node_modules/.cache",
+    "clean": "npx rimraf node_modules apps/provider-portal/node_modules apps/patient-portal/node_modules apps/shared/node_modules apps/provider-portal/.next apps/patient-portal/.next",
+    "clean:cache": "npx rimraf .next apps/*/.next node_modules/.cache",
     "reinstall": "npm run clean && npm install",
     "db:generate": "npx prisma generate --schema=prisma/schema.prisma",
     "db:push": "npx prisma db push --schema=prisma/schema.prisma",

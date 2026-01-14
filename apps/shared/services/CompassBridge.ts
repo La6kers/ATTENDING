@@ -516,7 +516,7 @@ class CompassBridgeClass {
       },
       status: 'pending',
       submittedAt: pending.submittedAt || new Date().toISOString(),
-      clinicalSummary: null,
+      clinicalSummary: undefined,
     };
   }
 }

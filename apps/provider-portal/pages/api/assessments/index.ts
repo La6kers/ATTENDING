@@ -3,12 +3,17 @@
 // apps/provider-portal/pages/api/assessments/index.ts
 //
 // Handles GET (list) and POST (create) operations for patient assessments
-// NOW USING PRISMA - Real database queries
+// NOW USING PRISMA + ZOD VALIDATION
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { Prisma, UrgencyLevel, AssessmentStatus } from '@prisma/client';
+import { 
+  SubmitAssessmentSchema, 
+  AssessmentQuerySchema,
+  validate 
+} from '@attending/shared/schemas';
 
 export default async function handler(
   req: NextApiRequest,
@@ -35,13 +40,27 @@ export default async function handler(
 
 // GET /api/assessments - List assessments with optional filtering
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
-  const { status, urgency, limit = '50', offset = '0' } = req.query;
+  // Validate query parameters
+  const queryValidation = validate(AssessmentQuerySchema, {
+    status: req.query.status,
+    urgencyLevel: req.query.urgency,
+    assignedProviderId: req.query.assignedProviderId,
+    patientId: req.query.patientId,
+    limit: req.query.limit,
+    offset: req.query.offset,
+  });
+
+  // Use defaults if validation fails (query params are optional)
+  const { limit = 50, offset = 0 } = queryValidation.success 
+    ? queryValidation.data 
+    : { limit: 50, offset: 0 };
+
+  const { status, urgency } = req.query;
 
   // Build where clause dynamically
   const where: Prisma.PatientAssessmentWhereInput = {};
   
   if (status && status !== 'all') {
-    // Map frontend status format to Prisma enum
     const statusMap: Record<string, AssessmentStatus> = {
       'pending': AssessmentStatus.PENDING,
       'urgent': AssessmentStatus.URGENT,
@@ -99,8 +118,8 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
         { urgencyLevel: 'desc' },
         { submittedAt: 'desc' },
       ],
-      take: parseInt(limit as string),
-      skip: parseInt(offset as string),
+      take: limit,
+      skip: offset,
     }),
     prisma.patientAssessment.count({ where }),
   ]);
@@ -162,21 +181,21 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   return res.status(200).json({
     assessments: transformed,
     total,
-    limit: parseInt(limit as string),
-    offset: parseInt(offset as string),
+    limit,
+    offset,
   });
 }
 
 // POST /api/assessments - Create new assessment (from COMPASS)
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
-  const data = req.body;
-
-  // Validate required fields
-  if (!data.patientId || !data.chiefComplaint) {
-    return res.status(400).json({
-      error: 'Missing required fields: patientId and chiefComplaint',
-    });
+  // Validate request body with Zod
+  const validation = validate(SubmitAssessmentSchema, req.body);
+  
+  if (!validation.success) {
+    return res.status(400).json(validation.error.toJSON());
   }
+
+  const data = validation.data;
 
   // Verify patient exists
   const patient = await prisma.patient.findUnique({
@@ -192,8 +211,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   // Generate session ID
   const sessionId = data.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Determine status based on urgency
-  const urgencyLevel = mapUrgencyLevel(data.urgencyLevel);
+  // Determine status based on urgency - Zod's .default() guarantees this value exists
+  const urgencyLevel = mapUrgencyLevel(data.urgencyLevel ?? 'standard');
   let status: AssessmentStatus = AssessmentStatus.PENDING;
   if (urgencyLevel === UrgencyLevel.HIGH || urgencyLevel === UrgencyLevel.EMERGENCY) {
     status = AssessmentStatus.URGENT;
@@ -206,7 +225,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       sessionId,
       chiefComplaint: data.chiefComplaint,
       urgencyLevel,
-      urgencyScore: data.urgencyScore || calculateUrgencyScore(data),
+      urgencyScore: calculateUrgencyScore(data),
       status,
       hpiOnset: data.hpiData?.onset,
       hpiLocation: data.hpiData?.location,
@@ -217,20 +236,17 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       hpiAggravating: data.hpiData?.aggravatingFactors || [],
       hpiRelieving: data.hpiData?.relievingFactors || [],
       hpiAssociated: data.hpiData?.associatedSymptoms || [],
-      medications: data.medicalHistory?.medications || data.medications || [],
-      allergies: data.medicalHistory?.allergies || data.allergies || [],
+      medications: data.medicalHistory?.medications || [],
+      allergies: data.medicalHistory?.allergies || [],
       medicalHistory: data.medicalHistory?.conditions || [],
       surgicalHistory: data.medicalHistory?.surgeries || [],
-      familyHistory: data.familyHistory,
-      socialHistory: data.socialHistory,
-      reviewOfSystems: data.reviewOfSystems,
-      redFlags: data.redFlags || [],
-      riskFactors: data.riskFactors || [],
-      differentialDx: data.differentialDiagnosis ? { primary: data.differentialDiagnosis } : {},
-      aiRecommendations: data.recommendations || data.aiRecommendations || [],
-      clinicalPearls: data.clinicalPearls || [],
+      redFlags: data.redFlags ?? [],
+      riskFactors: data.riskFactors ?? [],
+      differentialDx: (data.differentialDiagnosis ?? []).length > 0 
+        ? { primary: data.differentialDiagnosis } 
+        : {},
       compassVersion: data.compassVersion || '1.0.0',
-      aiModelUsed: data.aiModelUsed || 'BioMistral-7B',
+      aiModelUsed: 'BioMistral-7B',
       submittedAt: new Date(),
     },
     include: {
@@ -243,7 +259,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   const priority = status === AssessmentStatus.URGENT ? 'CRITICAL' : 'NORMAL';
   const emoji = status === AssessmentStatus.URGENT ? '🚨' : '📋';
 
-  // Find a provider to notify (in production, use assignment logic)
+  // Find a provider to notify
   const provider = await prisma.user.findFirst({
     where: { role: 'PROVIDER', isActive: true },
   });
@@ -263,7 +279,6 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  // Log for WebSocket notification (will be picked up by WS service)
   console.log(`[ASSESSMENT] New ${status} assessment created:`, {
     id: assessment.id,
     patient: `${assessment.patient.firstName} ${assessment.patient.lastName}`,
@@ -320,8 +335,6 @@ function mapStatusToFrontend(status: AssessmentStatus): string {
 
 function transformDifferentialDx(dx: any): Array<{name: string; probability: number; supportingEvidence: string[]; icdCode?: string}> {
   if (!dx) return [];
-  
-  // Handle both { primary: [...] } and direct array formats
   const dxArray = dx.primary || dx;
   if (!Array.isArray(dxArray)) return [];
   
@@ -335,32 +348,26 @@ function transformDifferentialDx(dx: any): Array<{name: string; probability: num
 
 function calculateUrgencyScore(data: any): number {
   let score = 0;
-  
-  // Severity contribution (0-50)
   if (data.hpiData?.severity) {
     score += data.hpiData.severity * 5;
   }
-  
-  // Red flags contribution
   if (data.redFlags?.length) {
     score += data.redFlags.length * 15;
   }
-  
-  // Risk factors contribution
   if (data.riskFactors?.length) {
     score += data.riskFactors.length * 5;
   }
-  
   return Math.min(100, score);
 }
 
 async function getQueuePosition(assessmentId: string): Promise<number> {
+  const assessment = await prisma.patientAssessment.findUnique({ where: { id: assessmentId } });
+  if (!assessment) return 1;
+  
   const count = await prisma.patientAssessment.count({
     where: {
       status: { in: [AssessmentStatus.PENDING, AssessmentStatus.URGENT] },
-      createdAt: {
-        lt: (await prisma.patientAssessment.findUnique({ where: { id: assessmentId } }))?.createdAt,
-      },
+      createdAt: { lt: assessment.createdAt },
     },
   });
   return count + 1;

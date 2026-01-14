@@ -12,7 +12,7 @@ import {
   FileText,
   AlertTriangle
 } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { TreatmentPlanPanel } from '@/components/treatment-plan';
 import type { PatientContext } from '@/store/treatmentPlanStore';
 
@@ -89,16 +89,16 @@ export default function TreatmentPlanPage() {
 
   if (!patientContext) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Loading patient information...</div>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <Layout>
+    <DashboardLayout>
       <Head>
         <title>Treatment Plan | ATTENDING AI</title>
       </Head>
@@ -276,6 +276,6 @@ export default function TreatmentPlanPage() {
           )}
         </div>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }

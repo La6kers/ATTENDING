@@ -1,255 +1,398 @@
-// WebSocket Hook for Real-time Updates
+// =============================================================================
+// ATTENDING AI - WebSocket Hook for Provider Portal
 // apps/provider-portal/hooks/useWebSocket.ts
+//
+// Real-time WebSocket connection with audio alerts for critical notifications.
+// Integrates with the unified provider store for state management.
+// =============================================================================
 
-import { useEffect, useCallback, useRef, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { useProviderStore } from '@/store/useProviderStore';
 
-type MessageHandler = (data: any) => void;
+// ============================================================================
+// Types
+// ============================================================================
 
-interface UseWebSocketOptions {
-  onNotification?: (notification: any) => void;
-  onEmergency?: (alert: any) => void;
-  onCriticalResult?: (result: any) => void;
-  onAssessmentUpdate?: (assessment: any) => void;
+export type NotificationType = 
+  | 'assessment:new'
+  | 'assessment:urgent'
+  | 'assessment:status-updated'
+  | 'red-flag:detected'
+  | 'lab:critical'
+  | 'lab:ready'
+  | 'message:received'
+  | 'provider:online'
+  | 'provider:offline'
+  | 'server:shutdown';
+
+export interface WebSocketConfig {
+  url: string;
+  providerId: string;
+  providerName: string;
   autoConnect?: boolean;
+  enableAudioAlerts?: boolean;
+  onConnect?: () => void;
+  onDisconnect?: () => void;
+  onError?: (error: Error) => void;
 }
 
-interface WebSocketState {
+export interface WebSocketState {
   isConnected: boolean;
-  lastMessage: any;
-  error: Error | null;
+  isConnecting: boolean;
+  error: string | null;
+  lastEventTime: string | null;
 }
 
-export function useWebSocket(options: UseWebSocketOptions = {}) {
-  const { data: session } = useSession();
-  const wsRef = useRef<WebSocket | null>(null);
-  const handlersRef = useRef<Map<string, Set<MessageHandler>>>(new Map());
+// ============================================================================
+// Audio Alert Manager
+// ============================================================================
+
+class AudioAlertManager {
+  private audioContext: AudioContext | null = null;
+  private enabled: boolean = true;
+  private alertSounds: Record<string, AudioBuffer | null> = {
+    critical: null,
+    urgent: null,
+    standard: null,
+  };
+
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.initAudioContext();
+    }
+  }
+
+  private async initAudioContext() {
+    try {
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // Generate simple alert tones
+      this.alertSounds.critical = await this.generateTone(880, 0.3, 3); // High A, 3 beeps
+      this.alertSounds.urgent = await this.generateTone(660, 0.2, 2);   // E, 2 beeps
+      this.alertSounds.standard = await this.generateTone(440, 0.15, 1); // A, 1 beep
+    } catch (error) {
+      console.warn('Audio context initialization failed:', error);
+    }
+  }
+
+  private async generateTone(frequency: number, duration: number, repeats: number): Promise<AudioBuffer | null> {
+    if (!this.audioContext) return null;
+
+    const sampleRate = this.audioContext.sampleRate;
+    const totalDuration = (duration + 0.1) * repeats; // duration + gap between beeps
+    const buffer = this.audioContext.createBuffer(1, sampleRate * totalDuration, sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let r = 0; r < repeats; r++) {
+      const startSample = Math.floor(r * (duration + 0.1) * sampleRate);
+      const endSample = Math.floor(startSample + duration * sampleRate);
+      
+      for (let i = startSample; i < endSample; i++) {
+        const t = (i - startSample) / sampleRate;
+        const envelope = Math.sin(Math.PI * t / duration); // Fade in/out
+        data[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.3;
+      }
+    }
+
+    return buffer;
+  }
+
+  setEnabled(enabled: boolean) {
+    this.enabled = enabled;
+  }
+
+  async play(type: 'critical' | 'urgent' | 'standard') {
+    if (!this.enabled || !this.audioContext || !this.alertSounds[type]) {
+      return;
+    }
+
+    try {
+      // Resume audio context if suspended (browser autoplay policy)
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+
+      const source = this.audioContext.createBufferSource();
+      source.buffer = this.alertSounds[type];
+      source.connect(this.audioContext.destination);
+      source.start();
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
+    }
+  }
+}
+
+// ============================================================================
+// WebSocket Hook
+// ============================================================================
+
+export function useWebSocket(config: WebSocketConfig) {
+  const socketRef = useRef<Socket | null>(null);
+  const audioManagerRef = useRef<AudioAlertManager | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const maxReconnectAttempts = 5;
 
   const [state, setState] = useState<WebSocketState>({
     isConnected: false,
-    lastMessage: null,
+    isConnecting: false,
     error: null,
+    lastEventTime: null,
   });
 
-  const maxReconnectAttempts = 5;
-  const baseReconnectDelay = 1000;
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:4000';
+  // Store actions
+  const {
+    setConnectionStatus,
+    addAssessment,
+    updateAssessment,
+    addRedFlag,
+    addNotification,
+    audioAlertsEnabled,
+  } = useProviderStore();
 
-  // Register message handlers
-  const on = useCallback((type: string, handler: MessageHandler) => {
-    if (!handlersRef.current.has(type)) {
-      handlersRef.current.set(type, new Set());
-    }
-    handlersRef.current.get(type)!.add(handler);
-
+  // Initialize audio manager
+  useEffect(() => {
+    audioManagerRef.current = new AudioAlertManager();
     return () => {
-      handlersRef.current.get(type)?.delete(handler);
+      audioManagerRef.current = null;
     };
   }, []);
 
-  // Remove message handler
-  const off = useCallback((type: string, handler: MessageHandler) => {
-    handlersRef.current.get(type)?.delete(handler);
-  }, []);
-
-  // Handle incoming messages
-  const handleMessage = useCallback((event: MessageEvent) => {
-    try {
-      const data = JSON.parse(event.data);
-      setState(prev => ({ ...prev, lastMessage: data }));
-
-      // Route to specific handlers
-      const handlers = handlersRef.current.get(data.type);
-      if (handlers) {
-        handlers.forEach(handler => handler(data));
-      }
-
-      // Call option handlers
-      switch (data.type) {
-        case 'URGENT_ASSESSMENT':
-        case 'NEW_ASSESSMENT':
-          options.onAssessmentUpdate?.(data);
-          options.onNotification?.(data);
-          break;
-        case 'RED_FLAG_DETECTED':
-        case 'EMERGENCY_PROTOCOL_ACTIVATED':
-          options.onEmergency?.(data);
-          options.onNotification?.(data);
-          playAlertSound('emergency');
-          break;
-        case 'CRITICAL_LAB_RESULT':
-          options.onCriticalResult?.(data);
-          options.onNotification?.(data);
-          playAlertSound('critical');
-          break;
-        default:
-          if (data.type?.includes('NOTIFICATION') || data.type?.includes('MESSAGE')) {
-            options.onNotification?.(data);
-          }
-      }
-    } catch (error) {
-      console.error('Error parsing WebSocket message:', error);
+  // Sync audio alerts enabled with store
+  useEffect(() => {
+    if (audioManagerRef.current) {
+      audioManagerRef.current.setEnabled(audioAlertsEnabled);
     }
-  }, [options]);
+  }, [audioAlertsEnabled]);
 
-  // Play alert sound
-  const playAlertSound = (type: 'emergency' | 'critical' | 'normal') => {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      const frequencies: Record<string, number[]> = {
-        emergency: [880, 440, 880, 440], // Urgent alternating tones
-        critical: [660, 550, 660],       // Critical three-tone
-        normal: [440],                   // Single beep
-      };
+  // Handle incoming events
+  const handleEvent = useCallback((eventType: string, data: any) => {
+    setState(prev => ({ ...prev, lastEventTime: new Date().toISOString() }));
 
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const tones = frequencies[type] || frequencies.normal;
-      
-      tones.forEach((freq, i) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.value = freq;
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + i * 0.2);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.2 + 0.15);
-        
-        oscillator.start(audioContext.currentTime + i * 0.2);
-        oscillator.stop(audioContext.currentTime + i * 0.2 + 0.15);
-      });
-    } catch (error) {
-      console.log('Audio not available');
+    switch (eventType) {
+      case 'assessment:new':
+        addAssessment(data.assessment);
+        if (data.assessment.urgencyLevel === 'critical' || data.assessment.urgencyLevel === 'emergent') {
+          audioManagerRef.current?.play('urgent');
+        }
+        break;
+
+      case 'assessment:urgent':
+        addNotification({
+          type: 'escalation',
+          title: '🚨 URGENT Assessment',
+          message: `${data.patientName}: ${data.chiefComplaint}`,
+          assessmentId: data.assessmentId,
+          urgency: 'critical',
+        });
+        audioManagerRef.current?.play('critical');
+        break;
+
+      case 'red-flag:detected':
+        if (data.assessmentId) {
+          addRedFlag(data.assessmentId, {
+            id: `rf-${Date.now()}`,
+            symptom: data.symptom,
+            severity: data.severity || 'critical',
+            detectedAt: new Date().toISOString(),
+            acknowledged: false,
+          });
+        }
+        addNotification({
+          type: 'red-flag',
+          title: '⚠️ RED FLAG',
+          message: data.symptom,
+          assessmentId: data.assessmentId,
+          urgency: 'critical',
+        });
+        audioManagerRef.current?.play('critical');
+        break;
+
+      case 'assessment:status-updated':
+        updateAssessment(data.assessmentId, { status: data.newStatus });
+        break;
+
+      case 'lab:critical':
+        addNotification({
+          type: 'red-flag',
+          title: '🔬 CRITICAL Lab Result',
+          message: `${data.patientName}: ${data.testName} = ${data.value}`,
+          assessmentId: data.assessmentId,
+          urgency: 'critical',
+        });
+        audioManagerRef.current?.play('critical');
+        break;
+
+      case 'lab:ready':
+        addNotification({
+          type: 'system',
+          title: 'Lab Result Ready',
+          message: `${data.patientName}: ${data.testName}`,
+          assessmentId: data.assessmentId,
+          urgency: data.isAbnormal ? 'urgent' : 'routine',
+        });
+        if (data.isAbnormal) {
+          audioManagerRef.current?.play('urgent');
+        }
+        break;
+
+      case 'message:received':
+        addNotification({
+          type: 'message',
+          title: 'New Message',
+          message: `${data.senderName}: ${data.preview}`,
+          assessmentId: data.assessmentId,
+          urgency: 'routine',
+        });
+        audioManagerRef.current?.play('standard');
+        break;
+
+      case 'provider:online':
+      case 'provider:offline':
+        // Could update a provider list in store
+        break;
+
+      case 'server:shutdown':
+        setState(prev => ({ ...prev, error: 'Server is shutting down' }));
+        break;
     }
-  };
+  }, [addAssessment, updateAssessment, addRedFlag, addNotification]);
 
   // Connect to WebSocket
   const connect = useCallback(() => {
-    if (!session?.user?.id) return;
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (socketRef.current?.connected) return;
 
-    try {
-      wsRef.current = new WebSocket(wsUrl);
+    setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
-      wsRef.current.onopen = () => {
-        console.log('WebSocket connected');
-        reconnectAttemptsRef.current = 0;
-        setState(prev => ({ ...prev, isConnected: true, error: null }));
+    const socket = io(config.url, {
+      query: {
+        role: 'provider',
+        providerId: config.providerId,
+        providerName: config.providerName,
+      },
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: maxReconnectAttempts,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+    });
 
-        // Authenticate
-        wsRef.current?.send(JSON.stringify({
-          type: 'AUTH',
-          payload: {
-            userId: session.user.id,
-            role: session.user.role,
-          },
+    socket.on('connect', () => {
+      console.log('[WS] Connected to notification server');
+      setState(prev => ({ ...prev, isConnected: true, isConnecting: false, error: null }));
+      setConnectionStatus(true);
+      reconnectAttemptsRef.current = 0;
+      
+      // Register as provider
+      socket.emit('provider:join', {
+        providerId: config.providerId,
+        providerName: config.providerName,
+      });
+
+      config.onConnect?.();
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('[WS] Disconnected:', reason);
+      setState(prev => ({ ...prev, isConnected: false }));
+      setConnectionStatus(false);
+      config.onDisconnect?.();
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('[WS] Connection error:', error);
+      reconnectAttemptsRef.current++;
+      
+      if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+        setState(prev => ({ 
+          ...prev, 
+          isConnecting: false, 
+          error: 'Failed to connect to notification server' 
         }));
+      }
+      
+      config.onError?.(error);
+    });
 
-        // Start ping interval
-        pingIntervalRef.current = setInterval(() => {
-          if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({ type: 'PING' }));
-          }
-        }, 30000);
-      };
+    // Event handlers
+    socket.on('assessment:new', (data) => handleEvent('assessment:new', data));
+    socket.on('assessment:urgent', (data) => handleEvent('assessment:urgent', data));
+    socket.on('assessment:status-updated', (data) => handleEvent('assessment:status-updated', data));
+    socket.on('assessment:being-viewed', (data) => handleEvent('assessment:being-viewed', data));
+    socket.on('red-flag:detected', (data) => handleEvent('red-flag:detected', data));
+    socket.on('lab:critical', (data) => handleEvent('lab:critical', data));
+    socket.on('lab:ready', (data) => handleEvent('lab:ready', data));
+    socket.on('message:received', (data) => handleEvent('message:received', data));
+    socket.on('provider:online', (data) => handleEvent('provider:online', data));
+    socket.on('provider:offline', (data) => handleEvent('provider:offline', data));
+    socket.on('server:shutdown', (data) => handleEvent('server:shutdown', data));
 
-      wsRef.current.onmessage = handleMessage;
+    // Queue status on initial connect
+    socket.on('queue:status', (data) => {
+      if (data.assessments) {
+        data.assessments.forEach((assessment: any) => {
+          addAssessment(assessment);
+        });
+      }
+    });
 
-      wsRef.current.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
-        setState(prev => ({ ...prev, isConnected: false }));
-
-        if (pingIntervalRef.current) {
-          clearInterval(pingIntervalRef.current);
-          pingIntervalRef.current = null;
-        }
-
-        // Auto-reconnect with exponential backoff
-        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-          const delay = baseReconnectDelay * Math.pow(2, reconnectAttemptsRef.current);
-          reconnectAttemptsRef.current++;
-          
-          console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`);
-          reconnectTimeoutRef.current = setTimeout(connect, delay);
-        }
-      };
-
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setState(prev => ({ ...prev, error: error as any }));
-      };
-    } catch (error) {
-      console.error('Failed to create WebSocket:', error);
-      setState(prev => ({ ...prev, error: error as Error }));
-    }
-  }, [session?.user?.id, session?.user?.role, handleMessage, wsUrl]);
+    socketRef.current = socket;
+  }, [config, handleEvent, setConnectionStatus, addAssessment]);
 
   // Disconnect
   const disconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
+    if (socketRef.current) {
+      socketRef.current.emit('provider:leave');
+      socketRef.current.disconnect();
+      socketRef.current = null;
+      setState(prev => ({ ...prev, isConnected: false }));
+      setConnectionStatus(false);
     }
-    if (pingIntervalRef.current) {
-      clearInterval(pingIntervalRef.current);
-      pingIntervalRef.current = null;
-    }
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    setState(prev => ({ ...prev, isConnected: false }));
-  }, []);
+  }, [setConnectionStatus]);
 
-  // Send message
-  const send = useCallback((type: string, payload: any) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type, payload }));
+  // Send event
+  const emit = useCallback((event: string, data: any) => {
+    if (socketRef.current?.connected) {
+      socketRef.current.emit(event, data);
     } else {
-      console.warn('WebSocket not connected, cannot send message');
+      console.warn('[WS] Cannot emit, not connected');
     }
   }, []);
-
-  // Subscribe to specific encounter updates
-  const subscribeToEncounter = useCallback((encounterId: string) => {
-    send('SUBSCRIBE_ENCOUNTER', { encounterId });
-  }, [send]);
-
-  // Unsubscribe from encounter updates
-  const unsubscribeFromEncounter = useCallback((encounterId: string) => {
-    send('UNSUBSCRIBE_ENCOUNTER', { encounterId });
-  }, [send]);
 
   // Auto-connect on mount
   useEffect(() => {
-    if (options.autoConnect !== false && session?.user?.id) {
+    if (config.autoConnect !== false) {
       connect();
     }
 
     return () => {
       disconnect();
     };
-  }, [session?.user?.id, options.autoConnect]);
+  }, [config.autoConnect, connect, disconnect]);
+
+  // Set status (online/busy/away)
+  const setStatus = useCallback((status: 'online' | 'busy' | 'away') => {
+    emit('provider:status', { status });
+  }, [emit]);
+
+  // Notify viewing assessment
+  const notifyViewing = useCallback((assessmentId: string) => {
+    emit('assessment:viewing', { assessmentId });
+  }, [emit]);
+
+  // Update assessment status
+  const updateStatus = useCallback((assessmentId: string, newStatus: string) => {
+    emit('assessment:status-change', { assessmentId, newStatus });
+  }, [emit]);
 
   return {
-    isConnected: state.isConnected,
-    lastMessage: state.lastMessage,
-    error: state.error,
+    ...state,
     connect,
     disconnect,
-    send,
-    on,
-    off,
-    subscribeToEncounter,
-    unsubscribeFromEncounter,
-    playAlertSound,
+    emit,
+    setStatus,
+    notifyViewing,
+    updateStatus,
+    socket: socketRef.current,
   };
 }
 

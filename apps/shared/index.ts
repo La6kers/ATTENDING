@@ -13,12 +13,46 @@ export * from './types';
 // =============================================================================
 // SERVICES
 // =============================================================================
-export * from './services';
+// Export with explicit names to avoid conflicts
+export { 
+  AssessmentSubmissionService,
+  assessmentSubmissionService,
+  submitCompassAssessment,
+} from './services/assessmentSubmission';
+
+export { 
+  CompassBridge,
+  type AssessmentEventType,
+  type AssessmentEvent as CompassAssessmentEvent,
+  type AssessmentEventCallback,
+  type CompassBridgeConfig,
+} from './services/CompassBridge';
+
+export { 
+  NotificationService,
+  type NotificationType,
+  type NotificationOptions,
+  type CompassNotificationOptions,
+  type NotificationCallback,
+  type NotificationServiceConfig,
+} from './services/NotificationService';
+
+export { 
+  GeolocationService,
+  type GeolocationConfig,
+  type LocationCallback,
+  type ErrorCallback,
+} from './services/GeolocationService';
 
 // =============================================================================
 // STATE MACHINES
 // =============================================================================
-export * from './machines';
+export { 
+  assessmentMachine,
+  type AssessmentContext,
+  type AssessmentEvent as MachineAssessmentEvent,
+  type RedFlag,
+} from './machines/assessmentMachine';
 
 // =============================================================================
 // DATABASE UTILITIES

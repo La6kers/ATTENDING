@@ -40,11 +40,9 @@
     /* ========================================
        ATTENDING AI Brand Gradient Colors
        ======================================== */
-    --brand-gradient-start: #4c51bf;
-    --brand-gradient-25: #553c9a;
-    --brand-gradient-50: #6b46c1;
-    --brand-gradient-75: #7c3aed;
-    --brand-gradient-end: #8b5cf6;
+    /* ATTENDING AI Standard Gradient Endpoints */
+    --brand-gradient-start: #667eea;
+    --brand-gradient-end: #764ba2;
     
     /* Brand purple scale */
     --brand-purple: 271 81% 56%;
@@ -97,13 +95,8 @@
   
   body {
     @apply text-foreground antialiased;
-    /* Rich purple gradient background for provider portal */
-    background: linear-gradient(135deg, 
-      #4c51bf 0%, 
-      #553c9a 25%, 
-      #6b46c1 50%, 
-      #7c3aed 75%, 
-      #8b5cf6 100%);
+    /* ATTENDING AI Standard Background Gradient */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
   }
 }
@@ -112,24 +105,14 @@
    ATTENDING AI BRAND GRADIENTS
    ======================================== */
 @layer utilities {
-  /* Primary brand gradient */
+  /* Primary brand gradient - ATTENDING AI Standard */
   .bg-brand-gradient {
-    background: linear-gradient(135deg, 
-      #4c51bf 0%, 
-      #553c9a 25%, 
-      #6b46c1 50%, 
-      #7c3aed 75%, 
-      #8b5cf6 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   }
   
   /* Darker variant for hover */
   .bg-brand-gradient-hover {
-    background: linear-gradient(135deg, 
-      #3730a3 0%, 
-      #4c1d95 25%, 
-      #5b21b6 50%, 
-      #6d28d9 75%, 
-      #7c3aed 100%);
+    background: linear-gradient(135deg, #5a6fd6 0%, #6a4292 100%);
   }
   
   /* Subtle gradient for light backgrounds */

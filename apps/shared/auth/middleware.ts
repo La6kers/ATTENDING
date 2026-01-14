@@ -172,7 +172,7 @@ export function withAuditLog(
     // Create a wrapper to capture the response
     const originalJson = res.json.bind(res);
     let responseData: any;
-    let responseStatus: number;
+    let responseStatus: number = 500; // Default to error, updated by res.json override
 
     res.json = (body: any) => {
       responseData = body;

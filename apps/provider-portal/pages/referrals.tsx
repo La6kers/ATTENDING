@@ -12,7 +12,7 @@ import {
   Clock,
   Filter
 } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { ReferralOrderingPanel } from '@/components/referral-ordering';
 import type { PatientContext } from '@/store/referralOrderingStore';
 
@@ -65,16 +65,16 @@ export default function ReferralsPage() {
 
   if (!patientContext) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-gray-500">Loading patient information...</div>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <Layout>
+    <DashboardLayout>
       <Head>
         <title>Specialty Referrals | ATTENDING AI</title>
       </Head>
@@ -220,6 +220,6 @@ export default function ReferralsPage() {
           )}
         </div>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 }

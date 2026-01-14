@@ -6,8 +6,6 @@ import { createMachine, assign } from 'xstate';
 import type { 
   UrgencyLevel, 
   HistoryOfPresentIllness,
-  ClinicalData,
-  AssessmentPhase 
 } from '../types';
 
 // ================================
@@ -46,20 +44,42 @@ export interface AssessmentContext {
 // EVENT TYPES
 // ================================
 
-export type AssessmentEvent =
-  | { type: 'START'; patientId?: string; patientName?: string }
-  | { type: 'PROVIDE_CHIEF_COMPLAINT'; value: string }
-  | { type: 'PROVIDE_ONSET'; value: string }
-  | { type: 'PROVIDE_LOCATION'; value: string }
-  | { type: 'PROVIDE_SEVERITY'; value: number }
-  | { type: 'PROVIDE_QUALITY'; value: string }
-  | { type: 'PROVIDE_ASSOCIATED_SYMPTOMS'; value: string[] }
-  | { type: 'PROVIDE_AGGRAVATING_FACTORS'; value: string[] }
-  | { type: 'PROVIDE_RELIEVING_FACTORS'; value: string[] }
-  | { type: 'PROVIDE_MEDICATIONS'; value: string[] }
-  | { type: 'PROVIDE_ALLERGIES'; value: string[] }
-  | { type: 'PROVIDE_MEDICAL_HISTORY'; value: string[] }
-  | { type: 'PROVIDE_ADDITIONAL_INFO'; value: string }
+// Events with string values
+interface StringValueEvent { 
+  type: 'PROVIDE_CHIEF_COMPLAINT' | 'PROVIDE_ONSET' | 'PROVIDE_LOCATION' | 
+        'PROVIDE_QUALITY' | 'PROVIDE_ADDITIONAL_INFO'; 
+  value: string; 
+}
+
+// Events with number values
+interface NumberValueEvent { 
+  type: 'PROVIDE_SEVERITY'; 
+  value: number; 
+}
+
+// Events with string array values
+interface ArrayValueEvent { 
+  type: 'PROVIDE_ASSOCIATED_SYMPTOMS' | 'PROVIDE_AGGRAVATING_FACTORS' | 
+        'PROVIDE_RELIEVING_FACTORS' | 'PROVIDE_MEDICATIONS' | 
+        'PROVIDE_ALLERGIES' | 'PROVIDE_MEDICAL_HISTORY'; 
+  value: string[]; 
+}
+
+// Start event
+interface StartEvent { 
+  type: 'START'; 
+  patientId?: string; 
+  patientName?: string; 
+}
+
+// Error event
+interface ErrorEvent { 
+  type: 'ERROR'; 
+  message: string; 
+}
+
+// Simple events with no payload
+type SimpleEvent = 
   | { type: 'YES' }
   | { type: 'NO' }
   | { type: 'SKIP' }
@@ -69,8 +89,28 @@ export type AssessmentEvent =
   | { type: 'SUBMIT' }
   | { type: 'EDIT' }
   | { type: 'COMPLETE' }
-  | { type: 'RETRY' }
-  | { type: 'ERROR'; message: string };
+  | { type: 'RETRY' };
+
+export type AssessmentEvent = 
+  | StartEvent 
+  | StringValueEvent 
+  | NumberValueEvent 
+  | ArrayValueEvent 
+  | ErrorEvent 
+  | SimpleEvent;
+
+// Type guards for event discrimination
+const hasStringValue = (event: AssessmentEvent): event is StringValueEvent => 
+  'value' in event && typeof (event as StringValueEvent).value === 'string';
+
+const hasNumberValue = (event: AssessmentEvent): event is NumberValueEvent => 
+  'value' in event && typeof (event as NumberValueEvent).value === 'number';
+
+const hasArrayValue = (event: AssessmentEvent): event is ArrayValueEvent => 
+  'value' in event && Array.isArray((event as ArrayValueEvent).value);
+
+const isStartEvent = (event: AssessmentEvent): event is StartEvent => 
+  event.type === 'START';
 
 // ================================
 // RED FLAG DEFINITIONS
@@ -126,7 +166,10 @@ const RED_FLAG_RULES: Array<{
     recommendation: 'Evaluate for ACS - ECG, troponins, cardiology consult',
     conditions: (ctx) => {
       const complaint = (ctx.chiefComplaint || '').toLowerCase();
-      const aggravating = (ctx.userResponses.aggravatingFactors || []).join(' ').toLowerCase();
+      const aggravatingRaw = ctx.userResponses.aggravatingFactors;
+      const aggravating = Array.isArray(aggravatingRaw) 
+        ? aggravatingRaw.join(' ').toLowerCase() 
+        : String(aggravatingRaw || '').toLowerCase();
       return (
         (complaint.includes('chest') || complaint.includes('heart')) &&
         (complaint.includes('exertion') ||
@@ -172,12 +215,15 @@ const RED_FLAG_RULES: Array<{
     requiresEmergency: true,
     recommendation: 'Immediate neurological evaluation - consider stroke, metabolic, toxic causes',
     conditions: (ctx) => {
-      const symptoms = (ctx.userResponses.associatedSymptoms || []).join(' ').toLowerCase();
+      const symptomsRaw = ctx.userResponses.associatedSymptoms;
+      const symptoms = Array.isArray(symptomsRaw)
+        ? symptomsRaw.join(' ').toLowerCase()
+        : String(symptomsRaw || '').toLowerCase();
       const complaint = (ctx.chiefComplaint || '').toLowerCase();
       return (
         symptoms.includes('confusion') ||
         symptoms.includes('disoriented') ||
-        symptoms.includes('can\'t think') ||
+        symptoms.includes("can't think") ||
         complaint.includes('confusion') ||
         complaint.includes('altered')
       );
@@ -208,13 +254,16 @@ const RED_FLAG_RULES: Array<{
     recommendation: 'Urgent ophthalmology and neurology evaluation',
     conditions: (ctx) => {
       const complaint = (ctx.chiefComplaint || '').toLowerCase();
-      const symptoms = (ctx.userResponses.associatedSymptoms || []).join(' ').toLowerCase();
+      const symptomsRaw = ctx.userResponses.associatedSymptoms;
+      const symptoms = Array.isArray(symptomsRaw)
+        ? symptomsRaw.join(' ').toLowerCase()
+        : String(symptomsRaw || '').toLowerCase();
       return (
         complaint.includes('vision') || 
         complaint.includes('blind') ||
         symptoms.includes('vision') ||
         symptoms.includes('seeing spots') ||
-        symptoms.includes('can\'t see')
+        symptoms.includes("can't see")
       );
     },
   },
@@ -227,7 +276,10 @@ const RED_FLAG_RULES: Array<{
     recommendation: 'Stroke alert - immediate CT/MRI, neurology consult',
     conditions: (ctx) => {
       const complaint = (ctx.chiefComplaint || '').toLowerCase();
-      const symptoms = (ctx.userResponses.associatedSymptoms || []).join(' ').toLowerCase();
+      const symptomsRaw = ctx.userResponses.associatedSymptoms;
+      const symptoms = Array.isArray(symptomsRaw)
+        ? symptomsRaw.join(' ').toLowerCase()
+        : String(symptomsRaw || '').toLowerCase();
       return (
         (complaint.includes('weak') || symptoms.includes('weak') || symptoms.includes('numb')) &&
         (complaint.includes('one side') || symptoms.includes('one side') || 
@@ -315,23 +367,49 @@ const createInitialContext = (): AssessmentContext => ({
 });
 
 // ================================
+// TYPED ASSIGN HELPERS
+// ================================
+
+// Helper to safely extract string value from events
+const getStringValue = (event: AssessmentEvent): string => {
+  if (hasStringValue(event)) return event.value;
+  return '';
+};
+
+// Helper to safely extract number value from events
+const getNumberValue = (event: AssessmentEvent): number => {
+  if (hasNumberValue(event)) return event.value;
+  return 0;
+};
+
+// Helper to safely extract array value from events
+const getArrayValue = (event: AssessmentEvent): string[] => {
+  if (hasArrayValue(event)) return event.value;
+  return [];
+};
+
+// ================================
 // STATE MACHINE
 // ================================
 
-export const assessmentMachine = createMachine({
+export const assessmentMachine = createMachine<AssessmentContext, AssessmentEvent>({
   id: 'compassAssessment',
   initial: 'idle',
   context: createInitialContext(),
+  predictableActionArguments: true,
   states: {
     idle: {
       on: {
         START: {
           target: 'welcome',
-          actions: assign({
-            sessionId: () => generateSessionId(),
-            patientId: (_, event) => event.patientId || '',
-            patientName: (_, event) => event.patientName || '',
-            startedAt: () => new Date().toISOString(),
+          actions: assign((ctx, event) => {
+            const startEvent = isStartEvent(event) ? event : { patientId: '', patientName: '' };
+            return {
+              sessionId: generateSessionId(),
+              patientId: startEvent.patientId || '',
+              patientName: startEvent.patientName || '',
+              startedAt: new Date().toISOString(),
+            };
           }),
         },
       },
@@ -339,18 +417,18 @@ export const assessmentMachine = createMachine({
     
     welcome: {
       entry: assign({
-        currentQuestion: () => 'Hello! I\'m COMPASS, your virtual health assistant. I\'ll help gather information about your symptoms to share with your healthcare provider. What brings you in today?',
+        currentQuestion: () => "Hello! I'm COMPASS, your virtual health assistant. I'll help gather information about your symptoms to share with your healthcare provider. What brings you in today?",
       }),
       on: {
         PROVIDE_CHIEF_COMPLAINT: {
           target: 'askingOnset',
           actions: [
-            assign({
-              chiefComplaint: (_, event) => event.value,
-              userResponses: (ctx, event) => ({
-                ...ctx.userResponses,
-                chiefComplaint: event.value,
-              }),
+            assign((ctx, event) => {
+              const value = getStringValue(event);
+              return {
+                chiefComplaint: value,
+                userResponses: { ...ctx.userResponses, chiefComplaint: value },
+              };
             }),
             assign((ctx) => ({
               detectedRedFlags: checkForRedFlags(ctx),
@@ -362,23 +440,20 @@ export const assessmentMachine = createMachine({
     },
     
     askingOnset: {
-      entry: assign({
-        currentQuestion: () => 'When did this start? Please be as specific as possible.',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'chiefComplaint'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'When did this start? Please be as specific as possible.',
+        questionHistory: [...ctx.questionHistory, 'chiefComplaint'],
+      })),
       on: {
         PROVIDE_ONSET: {
           target: 'askingLocation',
           actions: [
-            assign({
-              userResponses: (ctx, event) => ({
-                ...ctx.userResponses,
-                onset: event.value,
-              }),
-              hpiData: (ctx, event) => ({
-                ...ctx.hpiData,
-                onset: event.value,
-              }),
+            assign((ctx, event) => {
+              const value = getStringValue(event);
+              return {
+                userResponses: { ...ctx.userResponses, onset: value },
+                hpiData: { ...ctx.hpiData, onset: value },
+              };
             }),
             assign((ctx) => ({
               detectedRedFlags: checkForRedFlags(ctx),
@@ -391,22 +466,19 @@ export const assessmentMachine = createMachine({
     },
     
     askingLocation: {
-      entry: assign({
-        currentQuestion: () => 'Where exactly are you feeling this? Please describe the location.',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'onset'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'Where exactly are you feeling this? Please describe the location.',
+        questionHistory: [...ctx.questionHistory, 'onset'],
+      })),
       on: {
         PROVIDE_LOCATION: {
           target: 'askingSeverity',
-          actions: assign({
-            userResponses: (ctx, event) => ({
-              ...ctx.userResponses,
-              location: event.value,
-            }),
-            hpiData: (ctx, event) => ({
-              ...ctx.hpiData,
-              location: event.value,
-            }),
+          actions: assign((ctx, event) => {
+            const value = getStringValue(event);
+            return {
+              userResponses: { ...ctx.userResponses, location: value },
+              hpiData: { ...ctx.hpiData, location: value },
+            };
           }),
         },
         SKIP: 'askingSeverity',
@@ -416,23 +488,20 @@ export const assessmentMachine = createMachine({
     },
     
     askingSeverity: {
-      entry: assign({
-        currentQuestion: () => 'On a scale of 0 to 10, how severe is this? (0 = no discomfort, 10 = worst imaginable)',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'location'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'On a scale of 0 to 10, how severe is this? (0 = no discomfort, 10 = worst imaginable)',
+        questionHistory: [...ctx.questionHistory, 'location'],
+      })),
       on: {
         PROVIDE_SEVERITY: {
           target: 'askingQuality',
           actions: [
-            assign({
-              userResponses: (ctx, event) => ({
-                ...ctx.userResponses,
-                severity: event.value,
-              }),
-              hpiData: (ctx, event) => ({
-                ...ctx.hpiData,
-                severity: event.value,
-              }),
+            assign((ctx, event) => {
+              const value = getNumberValue(event);
+              return {
+                userResponses: { ...ctx.userResponses, severity: value },
+                hpiData: { ...ctx.hpiData, severity: value },
+              };
             }),
             assign((ctx) => {
               const flags = checkForRedFlags(ctx);
@@ -451,22 +520,19 @@ export const assessmentMachine = createMachine({
     },
     
     askingQuality: {
-      entry: assign({
-        currentQuestion: () => 'How would you describe the sensation? (e.g., sharp, dull, throbbing, burning, pressure, aching)',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'severity'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'How would you describe the sensation? (e.g., sharp, dull, throbbing, burning, pressure, aching)',
+        questionHistory: [...ctx.questionHistory, 'severity'],
+      })),
       on: {
         PROVIDE_QUALITY: {
           target: 'askingAggravating',
-          actions: assign({
-            userResponses: (ctx, event) => ({
-              ...ctx.userResponses,
-              quality: event.value,
-            }),
-            hpiData: (ctx, event) => ({
-              ...ctx.hpiData,
-              character: event.value,
-            }),
+          actions: assign((ctx, event) => {
+            const value = getStringValue(event);
+            return {
+              userResponses: { ...ctx.userResponses, quality: value },
+              hpiData: { ...ctx.hpiData, character: value },
+            };
           }),
         },
         SKIP: 'askingAggravating',
@@ -476,23 +542,20 @@ export const assessmentMachine = createMachine({
     },
     
     askingAggravating: {
-      entry: assign({
-        currentQuestion: () => 'What makes it worse? (e.g., movement, eating, stress, certain positions)',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'quality'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'What makes it worse? (e.g., movement, eating, stress, certain positions)',
+        questionHistory: [...ctx.questionHistory, 'quality'],
+      })),
       on: {
         PROVIDE_AGGRAVATING_FACTORS: {
           target: 'askingRelieving',
           actions: [
-            assign({
-              userResponses: (ctx, event) => ({
-                ...ctx.userResponses,
-                aggravatingFactors: event.value,
-              }),
-              hpiData: (ctx, event) => ({
-                ...ctx.hpiData,
-                aggravatingFactors: event.value,
-              }),
+            assign((ctx, event) => {
+              const value = getArrayValue(event);
+              return {
+                userResponses: { ...ctx.userResponses, aggravatingFactors: value },
+                hpiData: { ...ctx.hpiData, aggravatingFactors: value },
+              };
             }),
             assign((ctx) => ({
               detectedRedFlags: checkForRedFlags(ctx),
@@ -507,22 +570,19 @@ export const assessmentMachine = createMachine({
     },
     
     askingRelieving: {
-      entry: assign({
-        currentQuestion: () => 'What makes it better? (e.g., rest, medication, ice, heat)',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'aggravatingFactors'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'What makes it better? (e.g., rest, medication, ice, heat)',
+        questionHistory: [...ctx.questionHistory, 'aggravatingFactors'],
+      })),
       on: {
         PROVIDE_RELIEVING_FACTORS: {
           target: 'askingAssociatedSymptoms',
-          actions: assign({
-            userResponses: (ctx, event) => ({
-              ...ctx.userResponses,
-              relievingFactors: event.value,
-            }),
-            hpiData: (ctx, event) => ({
-              ...ctx.hpiData,
-              relievingFactors: event.value,
-            }),
+          actions: assign((ctx, event) => {
+            const value = getArrayValue(event);
+            return {
+              userResponses: { ...ctx.userResponses, relievingFactors: value },
+              hpiData: { ...ctx.hpiData, relievingFactors: value },
+            };
           }),
         },
         NO: 'askingAssociatedSymptoms',
@@ -533,23 +593,20 @@ export const assessmentMachine = createMachine({
     },
     
     askingAssociatedSymptoms: {
-      entry: assign({
-        currentQuestion: () => 'Are you experiencing any other symptoms? (e.g., nausea, dizziness, fever, fatigue, shortness of breath)',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'relievingFactors'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'Are you experiencing any other symptoms? (e.g., nausea, dizziness, fever, fatigue, shortness of breath)',
+        questionHistory: [...ctx.questionHistory, 'relievingFactors'],
+      })),
       on: {
         PROVIDE_ASSOCIATED_SYMPTOMS: {
           target: 'askingMedications',
           actions: [
-            assign({
-              userResponses: (ctx, event) => ({
-                ...ctx.userResponses,
-                associatedSymptoms: event.value,
-              }),
-              hpiData: (ctx, event) => ({
-                ...ctx.hpiData,
-                associatedSymptoms: event.value,
-              }),
+            assign((ctx, event) => {
+              const value = getArrayValue(event);
+              return {
+                userResponses: { ...ctx.userResponses, associatedSymptoms: value },
+                hpiData: { ...ctx.hpiData, associatedSymptoms: value },
+              };
             }),
             assign((ctx) => ({
               detectedRedFlags: checkForRedFlags(ctx),
@@ -558,12 +615,9 @@ export const assessmentMachine = createMachine({
         },
         NO: {
           target: 'askingMedications',
-          actions: assign({
-            userResponses: (ctx) => ({
-              ...ctx.userResponses,
-              associatedSymptoms: [],
-            }),
-          }),
+          actions: assign((ctx) => ({
+            userResponses: { ...ctx.userResponses, associatedSymptoms: [] },
+          })),
         },
         BACK: 'askingRelieving',
         TRIGGER_EMERGENCY: 'emergency',
@@ -571,28 +625,22 @@ export const assessmentMachine = createMachine({
     },
     
     askingMedications: {
-      entry: assign({
-        currentQuestion: () => 'What medications are you currently taking? Please list all prescription and over-the-counter medications.',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'associatedSymptoms'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'What medications are you currently taking? Please list all prescription and over-the-counter medications.',
+        questionHistory: [...ctx.questionHistory, 'associatedSymptoms'],
+      })),
       on: {
         PROVIDE_MEDICATIONS: {
           target: 'askingAllergies',
-          actions: assign({
-            userResponses: (ctx, event) => ({
-              ...ctx.userResponses,
-              medications: event.value,
-            }),
-          }),
+          actions: assign((ctx, event) => ({
+            userResponses: { ...ctx.userResponses, medications: getArrayValue(event) },
+          })),
         },
         NO: {
           target: 'askingAllergies',
-          actions: assign({
-            userResponses: (ctx) => ({
-              ...ctx.userResponses,
-              medications: [],
-            }),
-          }),
+          actions: assign((ctx) => ({
+            userResponses: { ...ctx.userResponses, medications: [] },
+          })),
         },
         BACK: 'askingAssociatedSymptoms',
         TRIGGER_EMERGENCY: 'emergency',
@@ -600,28 +648,22 @@ export const assessmentMachine = createMachine({
     },
     
     askingAllergies: {
-      entry: assign({
-        currentQuestion: () => 'Do you have any medication allergies? If yes, please list them and any reactions you\'ve had.',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'medications'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: "Do you have any medication allergies? If yes, please list them and any reactions you've had.",
+        questionHistory: [...ctx.questionHistory, 'medications'],
+      })),
       on: {
         PROVIDE_ALLERGIES: {
           target: 'askingMedicalHistory',
-          actions: assign({
-            userResponses: (ctx, event) => ({
-              ...ctx.userResponses,
-              allergies: event.value,
-            }),
-          }),
+          actions: assign((ctx, event) => ({
+            userResponses: { ...ctx.userResponses, allergies: getArrayValue(event) },
+          })),
         },
         NO: {
           target: 'askingMedicalHistory',
-          actions: assign({
-            userResponses: (ctx) => ({
-              ...ctx.userResponses,
-              allergies: ['NKDA'],
-            }),
-          }),
+          actions: assign((ctx) => ({
+            userResponses: { ...ctx.userResponses, allergies: ['NKDA'] },
+          })),
         },
         BACK: 'askingMedications',
         TRIGGER_EMERGENCY: 'emergency',
@@ -629,28 +671,22 @@ export const assessmentMachine = createMachine({
     },
     
     askingMedicalHistory: {
-      entry: assign({
-        currentQuestion: () => 'Do you have any significant medical conditions or past surgeries we should know about?',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'allergies'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: 'Do you have any significant medical conditions or past surgeries we should know about?',
+        questionHistory: [...ctx.questionHistory, 'allergies'],
+      })),
       on: {
         PROVIDE_MEDICAL_HISTORY: {
           target: 'askingAdditionalInfo',
-          actions: assign({
-            userResponses: (ctx, event) => ({
-              ...ctx.userResponses,
-              medicalHistory: event.value,
-            }),
-          }),
+          actions: assign((ctx, event) => ({
+            userResponses: { ...ctx.userResponses, medicalHistory: getArrayValue(event) },
+          })),
         },
         NO: {
           target: 'askingAdditionalInfo',
-          actions: assign({
-            userResponses: (ctx) => ({
-              ...ctx.userResponses,
-              medicalHistory: [],
-            }),
-          }),
+          actions: assign((ctx) => ({
+            userResponses: { ...ctx.userResponses, medicalHistory: [] },
+          })),
         },
         BACK: 'askingAllergies',
         TRIGGER_EMERGENCY: 'emergency',
@@ -658,19 +694,16 @@ export const assessmentMachine = createMachine({
     },
     
     askingAdditionalInfo: {
-      entry: assign({
-        currentQuestion: () => 'Is there anything else you\'d like to tell your healthcare provider about your symptoms or concerns?',
-        questionHistory: (ctx) => [...ctx.questionHistory, 'medicalHistory'],
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: "Is there anything else you'd like to tell your healthcare provider about your symptoms or concerns?",
+        questionHistory: [...ctx.questionHistory, 'medicalHistory'],
+      })),
       on: {
         PROVIDE_ADDITIONAL_INFO: {
           target: 'review',
-          actions: assign({
-            userResponses: (ctx, event) => ({
-              ...ctx.userResponses,
-              additionalInfo: event.value,
-            }),
-          }),
+          actions: assign((ctx, event) => ({
+            userResponses: { ...ctx.userResponses, additionalInfo: getStringValue(event) },
+          })),
         },
         SKIP: 'review',
         NO: 'review',
@@ -696,7 +729,7 @@ export const assessmentMachine = createMachine({
         id: 'submitAssessment',
         src: (ctx) => {
           // This would be replaced with actual API call via CompassBridge
-          return new Promise((resolve, reject) => {
+          return new Promise<{ success: boolean; assessmentId: string }>((resolve, reject) => {
             setTimeout(() => {
               // Simulate API call
               if (Math.random() > 0.05) { // 95% success rate
@@ -715,17 +748,17 @@ export const assessmentMachine = createMachine({
         },
         onError: {
           target: 'submitError',
-          actions: assign({
-            error: (_, event) => event.data?.message || 'Failed to submit assessment',
-          }),
+          actions: assign((ctx, event) => ({
+            error: (event as any).data?.message || 'Failed to submit assessment',
+          })),
         },
       },
     },
     
     submitError: {
-      entry: assign({
-        currentQuestion: (ctx) => `There was an error submitting your assessment: ${ctx.error}. Please try again.`,
-      }),
+      entry: assign((ctx) => ({
+        currentQuestion: `There was an error submitting your assessment: ${ctx.error}. Please try again.`,
+      })),
       on: {
         RETRY: 'submitting',
         EDIT: 'review',

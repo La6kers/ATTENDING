@@ -297,7 +297,7 @@ export default function AssessmentDetailPage() {
                     <HPIField 
                       label="Severity" 
                       value={assessment.hpiData.severity ? `${assessment.hpiData.severity}/10` : undefined}
-                      highlight={assessment.hpiData.severity && assessment.hpiData.severity >= 7}
+                      highlight={Boolean(assessment.hpiData.severity && assessment.hpiData.severity >= 7)}
                     />
                   </div>
                   

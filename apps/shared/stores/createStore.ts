@@ -8,20 +8,13 @@
 // - Optional persistence
 // ============================================================
 
-import { create, StateCreator, StoreApi, UseBoundStore } from 'zustand';
+import { create } from 'zustand';
 import { devtools, persist, PersistOptions } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 // ============================================================
 // TYPES
 // ============================================================
-
-type ImmerStateCreator<T> = StateCreator<
-  T,
-  [['zustand/immer', never], ['zustand/devtools', never]],
-  [],
-  T
->;
 
 export interface StoreConfig<T> {
   /** Store name (used for DevTools and persistence) */
@@ -56,22 +49,52 @@ export interface StoreConfig<T> {
  * );
  */
 export function createStore<T>(
-  storeCreator: ImmerStateCreator<T>,
+  storeCreator: (
+    set: (fn: (state: T) => void) => void,
+    get: () => T,
+    api: any
+  ) => T,
   config: StoreConfig<T>
-): UseBoundStore<StoreApi<T>> {
-  // Apply middleware in order: immer -> devtools -> persist (optional)
-  let store: any = immer(storeCreator);
-  store = devtools(store, { name: config.name });
-  
+) {
   if (config.persist) {
-    const persistConfig: PersistOptions<T> = typeof config.persist === 'boolean'
+    const persistConfig: PersistOptions<T, T> = typeof config.persist === 'boolean'
       ? { name: config.name }
       : { name: config.name, ...config.persist };
     
-    store = persist(store, persistConfig);
+    return create<T>()(
+      persist(
+        devtools(
+          immer(storeCreator as any),
+          { name: config.name }
+        ),
+        persistConfig
+      )
+    );
   }
   
-  return create(store);
+  return create<T>()(
+    devtools(
+      immer(storeCreator as any),
+      { name: config.name }
+    )
+  );
+}
+
+// ============================================================
+// SIMPLE STORE FACTORY (without middleware complexity)
+// ============================================================
+
+/**
+ * Create a simple Zustand store with just Immer
+ * Use this if the full createStore has type issues
+ */
+export function createSimpleStore<T>(
+  storeCreator: (
+    set: (fn: (state: T) => void) => void,
+    get: () => T
+  ) => T
+) {
+  return create<T>()(immer(storeCreator as any));
 }
 
 // ============================================================

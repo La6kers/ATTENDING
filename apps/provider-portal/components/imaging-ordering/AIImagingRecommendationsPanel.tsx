@@ -1,15 +1,27 @@
 // ============================================================
-// AI Imaging Recommendations Panel
+// AI Imaging Recommendations Panel (Refactored)
 // components/imaging-ordering/AIImagingRecommendationsPanel.tsx
 //
-// Displays BioMistral AI imaging recommendations with categories
+// Displays BioMistral AI imaging recommendations using shared primitives
 // ============================================================
 
 import React from 'react';
 import { 
-  Brain, AlertTriangle, CheckCircle, HelpCircle, Loader2, 
+  Brain, AlertTriangle, CheckCircle, HelpCircle, 
   ShieldCheck, XCircle, Monitor, Waves, Radio, Heart, Zap 
 } from 'lucide-react';
+import { 
+  GradientHeader, 
+  LoadingState, 
+  PriorityBadge,
+  ConfidenceIndicator,
+  WarningBanner,
+} from '@attending/ui-primitives';
+import { 
+  type RecommendationCategory,
+  RECOMMENDATION_CATEGORY_CONFIGS,
+  groupRecommendationsByCategory,
+} from '@attending/clinical-types';
 import type { AIImagingRecommendation, ImagingModality, ImagingPriority } from '../../store/imagingOrderingStore';
 
 interface AIImagingRecommendationsPanelProps {
@@ -20,49 +32,15 @@ interface AIImagingRecommendationsPanelProps {
   onAddSingle: (studyCode: string, priority: ImagingPriority, rationale: string) => void;
 }
 
-const categoryConfig = {
-  critical: {
-    icon: AlertTriangle,
-    title: 'Critical Studies',
-    description: 'Essential for immediate patient safety evaluation',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    iconColor: 'text-red-600',
-    badgeColor: 'bg-red-100 text-red-800',
-    buttonColor: 'bg-red-600 hover:bg-red-700',
-  },
-  recommended: {
-    icon: CheckCircle,
-    title: 'Recommended Studies',
-    description: 'Strong clinical indication based on presentation',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    iconColor: 'text-blue-600',
-    badgeColor: 'bg-blue-100 text-blue-800',
-    buttonColor: 'bg-blue-600 hover:bg-blue-700',
-  },
-  consider: {
-    icon: HelpCircle,
-    title: 'Consider',
-    description: 'May provide additional diagnostic value',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
-    iconColor: 'text-amber-600',
-    badgeColor: 'bg-amber-100 text-amber-800',
-    buttonColor: 'bg-amber-600 hover:bg-amber-700',
-  },
-  'not-indicated': {
-    icon: XCircle,
-    title: 'Not Indicated',
-    description: 'Studies that are not recommended for this presentation',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-200',
-    iconColor: 'text-gray-500',
-    badgeColor: 'bg-gray-100 text-gray-600',
-    buttonColor: 'bg-gray-400',
-  },
+// Category icons mapping
+const categoryIcons: Record<RecommendationCategory, React.ComponentType<{ className?: string }>> = {
+  critical: AlertTriangle,
+  recommended: CheckCircle,
+  consider: HelpCircle,
+  'not-indicated': XCircle,
 };
 
+// Modality icons for display
 const modalityIcons: Record<ImagingModality, React.ReactNode> = {
   CT: <Monitor className="w-3 h-3" />,
   MRI: <Waves className="w-3 h-3" />,
@@ -81,19 +59,12 @@ export const AIImagingRecommendationsPanel: React.FC<AIImagingRecommendationsPan
   onAddCategory,
   onAddSingle,
 }) => {
-  const groupedRecs = recommendations.reduce((acc, rec) => {
-    if (!acc[rec.category]) acc[rec.category] = [];
-    acc[rec.category].push(rec);
-    return acc;
-  }, {} as Record<string, AIImagingRecommendation[]>);
+  const groupedRecs = groupRecommendationsByCategory(recommendations);
 
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-center gap-3 text-gray-500">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span>Generating AI imaging recommendations...</span>
-        </div>
+        <LoadingState message="Generating AI imaging recommendations..." />
       </div>
     );
   }
@@ -116,22 +87,17 @@ export const AIImagingRecommendationsPanel: React.FC<AIImagingRecommendationsPan
     );
   }
 
+  const indicatedCount = recommendations.filter(r => r.category !== 'not-indicated').length;
+
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-            <Brain className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="font-semibold">BioMistral AI Imaging Recommendations</h3>
-            <p className="text-sm opacity-90">
-              {recommendations.filter(r => r.category !== 'not-indicated').length} studies recommended based on clinical presentation
-            </p>
-          </div>
-        </div>
-      </div>
+      <GradientHeader
+        module="imaging"
+        icon={Brain}
+        title="BioMistral AI Imaging Recommendations"
+        subtitle={`${indicatedCount} studies recommended based on clinical presentation`}
+      />
 
       {/* Categories */}
       <div className="p-4 space-y-4">
@@ -139,8 +105,8 @@ export const AIImagingRecommendationsPanel: React.FC<AIImagingRecommendationsPan
           const recs = groupedRecs[category] || [];
           if (recs.length === 0) return null;
 
-          const config = categoryConfig[category];
-          const Icon = config.icon;
+          const config = RECOMMENDATION_CATEGORY_CONFIGS[category];
+          const Icon = categoryIcons[category];
           const isNotIndicated = category === 'not-indicated';
           const allSelected = !isNotIndicated && recs.every((r) => selectedCodes.has(r.studyCode));
 
@@ -214,27 +180,14 @@ export const AIImagingRecommendationsPanel: React.FC<AIImagingRecommendationsPan
                           )}
                           
                           {rec.warningMessage && (
-                            <div className="mt-2 flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
-                              <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                              <span>{rec.warningMessage}</span>
+                            <div className="mt-2">
+                              <WarningBanner type="warning" message={rec.warningMessage} />
                             </div>
                           )}
                         </div>
                         <div className="flex flex-col items-end gap-2">
-                          <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                              rec.priority === 'STAT'
-                                ? 'bg-red-100 text-red-800'
-                                : rec.priority === 'URGENT'
-                                ? 'bg-orange-100 text-orange-800'
-                                : 'bg-blue-100 text-blue-800'
-                            }`}
-                          >
-                            {rec.priority}
-                          </span>
-                          <div className="text-xs text-gray-500">
-                            {Math.round(rec.confidence * 100)}% confidence
-                          </div>
+                          <PriorityBadge priority={rec.priority} size="sm" />
+                          <ConfidenceIndicator confidence={rec.confidence} size="sm" />
                           {!isSelected && !isNotIndicated && (
                             <button
                               onClick={() => onAddSingle(rec.studyCode, rec.priority, rec.rationale)}

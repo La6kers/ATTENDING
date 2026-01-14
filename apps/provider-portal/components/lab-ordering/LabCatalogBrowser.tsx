@@ -1,12 +1,13 @@
 // ============================================================
-// Lab Catalog Browser Component
+// Lab Catalog Browser Component (Refactored)
 // components/lab-ordering/LabCatalogBrowser.tsx
 //
-// Searchable, filterable lab catalog with category tabs
+// Searchable, filterable lab catalog using shared UI primitives
 // ============================================================
 
 import React from 'react';
-import { Search, Filter, Grid, List } from 'lucide-react';
+import { Filter } from 'lucide-react';
+import { SearchInput, FilterTabs, EmptyState, type FilterTab } from '@attending/ui-primitives';
 import { LabTestCard } from './LabTestCard';
 import type { LabTest, LabCategory, LabPriority, SelectedLab } from '../../store/labOrderingStore';
 
@@ -22,16 +23,17 @@ interface LabCatalogBrowserProps {
   onPriorityChange: (code: string, priority: LabPriority) => void;
 }
 
-const categories: { id: LabCategory | 'all'; label: string; color: string }[] = [
-  { id: 'all', label: 'All', color: 'gray' },
-  { id: 'hematology', label: 'Hematology', color: 'red' },
-  { id: 'chemistry', label: 'Chemistry', color: 'blue' },
-  { id: 'endocrine', label: 'Endocrine', color: 'purple' },
-  { id: 'coagulation', label: 'Coagulation', color: 'orange' },
-  { id: 'microbiology', label: 'Microbiology', color: 'green' },
-  { id: 'urinalysis', label: 'Urinalysis', color: 'yellow' },
-  { id: 'immunology', label: 'Immunology', color: 'pink' },
-  { id: 'toxicology', label: 'Toxicology', color: 'slate' },
+// Category configuration for filter tabs
+const LAB_CATEGORY_TABS: FilterTab<LabCategory | 'all'>[] = [
+  { id: 'all', label: 'All' },
+  { id: 'hematology', label: 'Hematology' },
+  { id: 'chemistry', label: 'Chemistry' },
+  { id: 'endocrine', label: 'Endocrine' },
+  { id: 'coagulation', label: 'Coagulation' },
+  { id: 'microbiology', label: 'Microbiology' },
+  { id: 'urinalysis', label: 'Urinalysis' },
+  { id: 'immunology', label: 'Immunology' },
+  { id: 'toxicology', label: 'Toxicology' },
 ];
 
 export const LabCatalogBrowser: React.FC<LabCatalogBrowserProps> = ({
@@ -45,58 +47,37 @@ export const LabCatalogBrowser: React.FC<LabCatalogBrowserProps> = ({
   onToggleLab,
   onPriorityChange,
 }) => {
-  // Group catalog by category for display
+  // Group catalog by category for counts
   const catalogByCategory = catalog.reduce((acc, test) => {
     if (!acc[test.category]) acc[test.category] = [];
     acc[test.category].push(test);
     return acc;
   }, {} as Record<string, LabTest[]>);
 
-  const activeCategories = Object.keys(catalogByCategory);
+  // Build tabs with counts, filtering out empty categories
+  const tabsWithCounts: FilterTab<LabCategory | 'all'>[] = LAB_CATEGORY_TABS
+    .filter(tab => tab.id === 'all' || catalogByCategory[tab.id]?.length > 0)
+    .map(tab => ({
+      ...tab,
+      count: tab.id === 'all' ? catalog.length : catalogByCategory[tab.id]?.length || 0,
+    }));
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       {/* Search & Filter Header */}
       <div className="p-4 border-b bg-gray-50">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search labs by name, code, or description..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={onSearchChange}
+          placeholder="Search labs by name, code, or description..."
+          className="mb-3"
+        />
 
-        {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {categories.map((cat) => {
-            // Only show categories that have tests
-            if (cat.id !== 'all' && !activeCategories.includes(cat.id)) return null;
-            
-            const isActive = categoryFilter === cat.id;
-            const count = cat.id === 'all' 
-              ? catalog.length 
-              : catalogByCategory[cat.id]?.length || 0;
-
-            return (
-              <button
-                key={cat.id}
-                onClick={() => onCategoryChange(cat.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  isActive
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {cat.label} ({count})
-              </button>
-            );
-          })}
-        </div>
+        <FilterTabs
+          tabs={tabsWithCounts}
+          activeTab={categoryFilter}
+          onTabChange={onCategoryChange}
+        />
       </div>
 
       {/* Results Count */}
@@ -109,11 +90,11 @@ export const LabCatalogBrowser: React.FC<LabCatalogBrowserProps> = ({
       {/* Lab List */}
       <div className="p-4 max-h-[600px] overflow-y-auto space-y-3">
         {catalog.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Filter className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="font-medium">No tests found</p>
-            <p className="text-sm">Try adjusting your search or filters</p>
-          </div>
+          <EmptyState
+            icon={Filter}
+            title="No tests found"
+            subtitle="Try adjusting your search or filters"
+          />
         ) : (
           catalog.map((test) => {
             const selectedLab = selectedLabs.get(test.code);

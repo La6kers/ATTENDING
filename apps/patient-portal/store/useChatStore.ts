@@ -584,8 +584,8 @@ export const useChatStore = create<ChatState>()(
           set({ isAIProcessing: true });
 
           try {
+            // Note: assessmentData already contains sessionId
             const payload = {
-              sessionId,
               ...assessmentData,
               redFlags: redFlags.map(rf => rf.symptom),
               urgencyLevel,

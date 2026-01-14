@@ -39,31 +39,33 @@ async function getTreatmentPlan(id: string, req: NextApiRequest, res: NextApiRes
     try {
       const plan = await prisma.treatmentPlan.findUnique({
         where: { id },
-        include: {
-          encounter: {
-            include: {
-              patient: { 
-                select: { 
-                  id: true, 
-                  firstName: true, 
-                  lastName: true, 
-                  mrn: true,
-                  dateOfBirth: true,
-                  gender: true 
-                } 
-              },
-            },
-          },
-        },
       });
       
       if (!plan) {
         return res.status(404).json({ error: 'Treatment plan not found' });
       }
       
+      // Fetch patient info separately if needed
+      let patientInfo = null;
+      if (plan.patientId) {
+        const patient = await prisma.patient.findUnique({
+          where: { id: plan.patientId },
+          select: { 
+            id: true, 
+            firstName: true, 
+            lastName: true, 
+            mrn: true,
+            dateOfBirth: true,
+            gender: true 
+          }
+        });
+        patientInfo = patient;
+      }
+      
       // Parse JSON fields
       const parsedPlan = {
         ...plan,
+        patient: patientInfo,
         diagnoses: typeof plan.diagnoses === 'string' ? JSON.parse(plan.diagnoses) : plan.diagnoses,
         labOrderIds: typeof plan.labOrderIds === 'string' ? JSON.parse(plan.labOrderIds) : plan.labOrderIds,
         imagingOrderIds: typeof plan.imagingOrderIds === 'string' ? JSON.parse(plan.imagingOrderIds) : plan.imagingOrderIds,
@@ -143,18 +145,22 @@ async function updateTreatmentPlan(id: string, req: NextApiRequest, res: NextApi
       const plan = await prisma.treatmentPlan.update({
         where: { id },
         data: updateData,
-        include: {
-          encounter: {
-            include: {
-              patient: { select: { firstName: true, lastName: true, mrn: true } },
-            },
-          },
-        },
       });
+      
+      // Fetch patient info separately
+      let patientInfo = null;
+      if (plan.patientId) {
+        const patient = await prisma.patient.findUnique({
+          where: { id: plan.patientId },
+          select: { firstName: true, lastName: true, mrn: true }
+        });
+        patientInfo = patient;
+      }
       
       // Parse JSON fields for response
       const parsedPlan = {
         ...plan,
+        patient: patientInfo,
         diagnoses: typeof plan.diagnoses === 'string' ? JSON.parse(plan.diagnoses) : plan.diagnoses,
         labOrderIds: typeof plan.labOrderIds === 'string' ? JSON.parse(plan.labOrderIds) : plan.labOrderIds,
         imagingOrderIds: typeof plan.imagingOrderIds === 'string' ? JSON.parse(plan.imagingOrderIds) : plan.imagingOrderIds,

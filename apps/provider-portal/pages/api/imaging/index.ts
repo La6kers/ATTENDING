@@ -4,6 +4,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/api/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { 
+  CreateImagingOrderSchema, 
+  validate, 
+  type CreateImagingOrder 
+} from '@attending/shared/schemas';
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
   if (req.method === 'GET') {
@@ -65,29 +70,28 @@ async function getImagingOrders(req: NextApiRequest, res: NextApiResponse, sessi
 }
 
 async function createImagingOrder(req: NextApiRequest, res: NextApiResponse, session: any) {
+  // Validate request body with Zod
+  const validation = validate(CreateImagingOrderSchema, req.body);
+  
+  if (!validation.success) {
+    return res.status(400).json(validation.error.toJSON());
+  }
+
+  const {
+    encounterId,
+    studyType,
+    studyName,
+    bodyPart,
+    laterality,
+    priority,
+    indication,
+    clinicalHistory,
+    contrast,
+    contrastType,
+    specialInstructions,
+  } = validation.data;
+
   try {
-    const {
-      encounterId,
-      studyType,
-      studyName,
-      bodyPart,
-      laterality,
-      priority = 'ROUTINE',
-      indication,
-      clinicalHistory,
-      contrast = false,
-      contrastType,
-      specialInstructions,
-      scheduledAt,
-      facility,
-    } = req.body;
-    
-    if (!encounterId || !studyType || !studyName || !indication) {
-      return res.status(400).json({ 
-        error: 'Encounter ID, study type, study name, and indication are required' 
-      });
-    }
-    
     // Verify encounter exists
     const encounter = await prisma.encounter.findUnique({
       where: { id: encounterId },
@@ -113,7 +117,7 @@ async function createImagingOrder(req: NextApiRequest, res: NextApiResponse, ses
       });
       
       if (contrastAllergies.length > 0) {
-        // Don't block, but warn
+        // Don't block, but warn in response
         console.warn(`Patient has potential contrast allergies: ${contrastAllergies.map(a => a.allergen).join(', ')}`);
       }
     }
@@ -132,8 +136,6 @@ async function createImagingOrder(req: NextApiRequest, res: NextApiResponse, ses
         contrast,
         contrastType,
         specialInstructions,
-        scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
-        facility,
       },
       include: {
         encounter: {

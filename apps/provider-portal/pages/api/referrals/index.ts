@@ -3,15 +3,15 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
+import { CreateReferralSchema, validate } from '@attending/shared/schemas';
 
 // Development bypass for auth
 const isDev = process.env.NODE_ENV === 'development';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // In development, use a mock session
   const session = isDev 
     ? { user: { id: 'dev-provider-1', name: 'Dr. Development' } }
-    : null; // In production, use proper auth
+    : null;
 
   if (!session) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -45,12 +45,8 @@ async function getReferrals(req: NextApiRequest, res: NextApiResponse, session: 
     if (status) where.status = String(status);
     if (specialty) where.specialty = String(specialty);
     if (urgency) where.urgency = String(urgency);
+    if (patientId) where.patientId = String(patientId);
     
-    if (patientId) {
-      where.patientId = String(patientId);
-    }
-    
-    // Try to use Prisma if Referral model exists, otherwise return mock data
     try {
       const [referrals, total] = await Promise.all([
         prisma.referral.findMany({
@@ -64,7 +60,7 @@ async function getReferrals(req: NextApiRequest, res: NextApiResponse, session: 
           },
           orderBy: [
             { urgency: 'desc' },
-            { createdAt: 'desc' },
+            { orderedAt: 'desc' },
           ],
           take: parseInt(String(limit)),
           skip: parseInt(String(offset)),
@@ -79,8 +75,7 @@ async function getReferrals(req: NextApiRequest, res: NextApiResponse, session: 
         offset: parseInt(String(offset)),
       });
     } catch (prismaError) {
-      // Prisma model doesn't exist yet, return mock data
-      console.log('Referral model not found, returning mock data');
+      console.log('Referral model query failed, returning mock data');
       return res.status(200).json({
         referrals: getMockReferrals(),
         total: 3,
@@ -95,39 +90,38 @@ async function getReferrals(req: NextApiRequest, res: NextApiResponse, session: 
 }
 
 async function createReferral(req: NextApiRequest, res: NextApiResponse, session: any) {
+  // Validate request body with Zod
+  const validation = validate(CreateReferralSchema, req.body);
+  
+  if (!validation.success) {
+    return res.status(400).json(validation.error.toJSON());
+  }
+
+  const {
+    encounterId,
+    patientId,
+    specialty,
+    specialtyName,
+    urgency,
+    preferredProviderId,
+    clinicalQuestion,
+    relevantHistory,
+    attachedDocuments,
+    priorAuthRequired,
+  } = validation.data;
+
   try {
-    const {
-      encounterId,
-      patientId,
-      specialty,
-      specialtyName,
-      urgency = 'ROUTINE',
-      preferredProviderId,
-      clinicalQuestion,
-      relevantHistory,
-      attachedDocuments = [],
-      priorAuthRequired = false,
-    } = req.body;
-    
-    if (!encounterId || !specialty) {
-      return res.status(400).json({ error: 'Encounter ID and specialty are required' });
-    }
-    
-    // Try to create in database
     try {
       const referral = await prisma.referral.create({
         data: {
           encounterId,
-          patientId,
-          providerId: session.user.id,
+          referringProviderId: session.user.id,
           specialty,
-          specialtyName,
           urgency,
-          preferredProviderId,
-          clinicalQuestion,
-          relevantHistory,
-          attachedDocuments: JSON.stringify(attachedDocuments),
-          priorAuthRequired,
+          reason: clinicalQuestion,
+          clinicalSummary: relevantHistory,
+          preferredProvider: preferredProviderId,
+          insurancePreAuth: priorAuthRequired,
           status: 'PENDING',
         },
         include: {
@@ -139,7 +133,6 @@ async function createReferral(req: NextApiRequest, res: NextApiResponse, session
         },
       });
       
-      // Create notification for urgent referrals
       if (urgency === 'STAT' || urgency === 'URGENT') {
         try {
           await prisma.notification.create({
@@ -147,7 +140,7 @@ async function createReferral(req: NextApiRequest, res: NextApiResponse, session
               userId: session.user.id,
               type: 'ALERT',
               title: `${urgency} Referral`,
-              message: `${urgency} referral to ${specialtyName} created`,
+              message: `${urgency} referral to ${specialtyName || specialty} created`,
               priority: urgency === 'STAT' ? 'HIGH' : 'NORMAL',
               relatedType: 'Referral',
               relatedId: referral.id,
@@ -160,7 +153,6 @@ async function createReferral(req: NextApiRequest, res: NextApiResponse, session
       
       return res.status(201).json(referral);
     } catch (prismaError) {
-      // Prisma model doesn't exist yet, return mock response
       console.log('Referral model not found, returning mock response');
       const mockReferral = {
         id: `ref-${Date.now()}`,
@@ -207,17 +199,6 @@ function getMockReferrals() {
       clinicalQuestion: 'Chest pain evaluation and risk stratification',
       status: 'SCHEDULED',
       createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: 'ref-mock-3',
-      encounterId: 'enc-003',
-      patientId: 'pat-003',
-      specialty: 'GI',
-      specialtyName: 'Gastroenterology',
-      urgency: 'ROUTINE',
-      clinicalQuestion: 'Colonoscopy screening',
-      status: 'COMPLETED',
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
     },
   ];
 }

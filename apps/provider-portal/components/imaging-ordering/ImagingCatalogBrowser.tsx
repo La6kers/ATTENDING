@@ -1,12 +1,13 @@
 // ============================================================
-// Imaging Catalog Browser Component
+// Imaging Catalog Browser Component (Refactored)
 // components/imaging-ordering/ImagingCatalogBrowser.tsx
 //
-// Searchable, filterable imaging study catalog with modality tabs
+// Searchable, filterable imaging study catalog using shared primitives
 // ============================================================
 
 import React from 'react';
-import { Search, Filter, Monitor, Waves, Radio, Heart, Zap, Shield } from 'lucide-react';
+import { Filter, Monitor, Waves, Radio, Heart, Zap, Shield } from 'lucide-react';
+import { SearchInput, FilterTabs, EmptyState, type FilterTab } from '@attending/ui-primitives';
 import { ImagingStudyCard } from './ImagingStudyCard';
 import type { 
   ImagingStudy, 
@@ -28,6 +29,7 @@ interface ImagingCatalogBrowserProps {
   onContrastChange: (code: string, contrast: boolean) => void;
 }
 
+// Modality icons for filter tabs
 const modalityIcons: Record<ImagingModality, React.ReactNode> = {
   CT: <Monitor className="w-4 h-4" />,
   MRI: <Waves className="w-4 h-4" />,
@@ -39,15 +41,16 @@ const modalityIcons: Record<ImagingModality, React.ReactNode> = {
   DEXA: <Shield className="w-4 h-4" />,
 };
 
-const modalities: { id: ImagingModality | 'all'; label: string; color: string }[] = [
-  { id: 'all', label: 'All', color: 'gray' },
-  { id: 'CT', label: 'CT', color: 'blue' },
-  { id: 'MRI', label: 'MRI', color: 'purple' },
-  { id: 'XRAY', label: 'X-Ray', color: 'gray' },
-  { id: 'US', label: 'Ultrasound', color: 'teal' },
-  { id: 'NM', label: 'Nuclear Med', color: 'yellow' },
-  { id: 'MAMMO', label: 'Mammography', color: 'pink' },
-  { id: 'DEXA', label: 'DEXA', color: 'green' },
+// Base modality configuration
+const MODALITY_TABS: FilterTab<ImagingModality | 'all'>[] = [
+  { id: 'all', label: 'All' },
+  { id: 'CT', label: 'CT', icon: modalityIcons.CT },
+  { id: 'MRI', label: 'MRI', icon: modalityIcons.MRI },
+  { id: 'XRAY', label: 'X-Ray', icon: modalityIcons.XRAY },
+  { id: 'US', label: 'Ultrasound', icon: modalityIcons.US },
+  { id: 'NM', label: 'Nuclear Med', icon: modalityIcons.NM },
+  { id: 'MAMMO', label: 'Mammography', icon: modalityIcons.MAMMO },
+  { id: 'DEXA', label: 'DEXA', icon: modalityIcons.DEXA },
 ];
 
 export const ImagingCatalogBrowser: React.FC<ImagingCatalogBrowserProps> = ({
@@ -69,54 +72,30 @@ export const ImagingCatalogBrowser: React.FC<ImagingCatalogBrowserProps> = ({
     return acc;
   }, {} as Record<string, ImagingStudy[]>);
 
-  // Get total count per modality for tabs
-  const getModalityCount = (modality: ImagingModality | 'all'): number => {
-    if (modality === 'all') return catalog.length;
-    return catalogByModality[modality]?.length || 0;
-  };
+  // Build tabs with counts, filtering out empty modalities
+  const tabsWithCounts: FilterTab<ImagingModality | 'all'>[] = MODALITY_TABS
+    .filter(tab => tab.id === 'all' || catalogByModality[tab.id]?.length > 0)
+    .map(tab => ({
+      ...tab,
+      count: tab.id === 'all' ? catalog.length : catalogByModality[tab.id]?.length || 0,
+    }));
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       {/* Search & Filter Header */}
       <div className="p-4 border-b bg-gray-50">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search studies by name, body part, or description..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={onSearchChange}
+          placeholder="Search studies by name, body part, or description..."
+          className="mb-3"
+        />
 
-        {/* Modality Tabs */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {modalities.map((mod) => {
-            const count = getModalityCount(mod.id);
-            // Hide modalities with no studies (except 'all')
-            if (mod.id !== 'all' && count === 0) return null;
-            
-            const isActive = modalityFilter === mod.id;
-
-            return (
-              <button
-                key={mod.id}
-                onClick={() => onModalityChange(mod.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {mod.id !== 'all' && modalityIcons[mod.id as ImagingModality]}
-                {mod.label} ({count})
-              </button>
-            );
-          })}
-        </div>
+        <FilterTabs
+          tabs={tabsWithCounts}
+          activeTab={modalityFilter}
+          onTabChange={onModalityChange}
+        />
       </div>
 
       {/* Results Count */}
@@ -129,11 +108,11 @@ export const ImagingCatalogBrowser: React.FC<ImagingCatalogBrowserProps> = ({
       {/* Study List */}
       <div className="p-4 max-h-[600px] overflow-y-auto space-y-3">
         {catalog.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <Filter className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="font-medium">No studies found</p>
-            <p className="text-sm">Try adjusting your search or filters</p>
-          </div>
+          <EmptyState
+            icon={Filter}
+            title="No studies found"
+            subtitle="Try adjusting your search or filters"
+          />
         ) : (
           catalog.map((study) => {
             const selectedStudy = selectedStudies.get(study.code);

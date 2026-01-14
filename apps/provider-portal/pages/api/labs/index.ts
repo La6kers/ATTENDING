@@ -4,6 +4,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/api/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { 
+  CreateLabOrderSchema, 
+  validate, 
+  type CreateLabOrder 
+} from '@attending/shared/schemas';
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
   if (req.method === 'GET') {
@@ -65,20 +70,16 @@ async function getLabOrders(req: NextApiRequest, res: NextApiResponse, session: 
 }
 
 async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session: any) {
+  // Validate request body with Zod
+  const validation = validate(CreateLabOrderSchema, req.body);
+  
+  if (!validation.success) {
+    return res.status(400).json(validation.error.toJSON());
+  }
+
+  const { encounterId, tests, indication, priority, specialInstructions, collectionDate } = validation.data;
+
   try {
-    const {
-      encounterId,
-      tests, // Array of tests to order
-      indication,
-      priority = 'ROUTINE',
-      specialInstructions,
-      collectionDate,
-    } = req.body;
-    
-    if (!encounterId || !tests || !Array.isArray(tests) || tests.length === 0) {
-      return res.status(400).json({ error: 'Encounter ID and at least one test are required' });
-    }
-    
     // Verify encounter exists
     const encounter = await prisma.encounter.findUnique({
       where: { id: encounterId },
@@ -91,7 +92,7 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
     
     // Create lab orders for each test
     const labOrders = await Promise.all(
-      tests.map((test: any) =>
+      tests.map((test) =>
         prisma.labOrder.create({
           data: {
             encounterId,
@@ -99,7 +100,7 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
             testCode: test.code,
             testName: test.name,
             category: test.category,
-            priority,
+            priority: test.priority || priority,
             indication,
             specialInstructions,
             specimenType: test.specimenType,
@@ -117,11 +118,11 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
       )
     );
     
-    // Create notification for lab department (optional)
+    // Create notification for lab department if STAT
     if (priority === 'STAT') {
       await prisma.notification.create({
         data: {
-          userId: session.user.id, // In reality, this would be the lab supervisor
+          userId: session.user.id, // In production, this would be the lab supervisor
           type: 'ALERT',
           title: 'STAT Lab Order',
           message: `STAT lab order for ${encounter.patient.lastName}, ${encounter.patient.firstName}`,
@@ -137,7 +138,7 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
       'CREATE',
       'LabOrder',
       labOrders.map(l => l.id).join(','),
-      { tests: tests.map((t: any) => t.name), priority },
+      { tests: tests.map((t) => t.name), priority },
       req
     );
     
