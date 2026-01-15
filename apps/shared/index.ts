@@ -80,6 +80,23 @@ export * from './stores';
 export * from './auth';
 
 // =============================================================================
+// CLINICAL CATALOGS
+// =============================================================================
+export * from './catalogs';
+
+// =============================================================================
+// CLINICAL RECOMMENDATION SERVICE
+// =============================================================================
+export {
+  ClinicalRecommendationService,
+  clinicalRecommendationService,
+  type LabRecommendation,
+  type ImagingRecommendation,
+  type MedicationRecommendation,
+  type RecommendationResult,
+} from './services/ClinicalRecommendationService';
+
+// =============================================================================
 // UI COMPONENTS
 // Import UI components from their specific path:
 // import { Button, Card } from '@attending/shared/components/ui';

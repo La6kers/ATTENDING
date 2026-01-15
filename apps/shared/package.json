@@ -6,43 +6,50 @@
   "types": "./index.ts",
   "exports": {
     ".": "./index.ts",
+    "./catalogs": "./catalogs/index.ts",
+    "./catalogs/*": "./catalogs/*.ts",
     "./types": "./types/index.ts",
+    "./types/*": "./types/*.ts",
     "./schemas": "./schemas/index.ts",
+    "./schemas/*": "./schemas/*.ts",
     "./services": "./services/index.ts",
+    "./services/*": "./services/*.ts",
     "./machines": "./machines/index.ts",
+    "./machines/*": "./machines/*.ts",
     "./lib/prisma": "./lib/prisma.ts",
     "./lib/utils": "./lib/utils.ts",
+    "./lib/*": "./lib/*.ts",
     "./hooks": "./hooks/index.ts",
+    "./hooks/*": "./hooks/*.ts",
     "./stores": "./stores/index.ts",
+    "./stores/*": "./stores/*.ts",
     "./components/ui": "./components/ui/index.ts",
-    "./auth": "./auth/index.ts"
+    "./components/*": "./components/*.tsx",
+    "./auth": "./auth/index.ts",
+    "./auth/*": "./auth/*.ts"
   },
   "prisma": {
     "schema": "../../prisma/schema.prisma"
   },
   "peerDependencies": {
     "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "@prisma/client": "^5.0.0",
     "zustand": "^5.0.0",
     "socket.io-client": "^4.7.0",
-    "next-auth": "^4.24.0"
+    "next-auth": "^4.24.0",
+    "xstate": "^4.38.0",
+    "@xstate/react": "^3.2.0"
   },
   "peerDependenciesMeta": {
-    "react": {
-      "optional": false
-    },
-    "zustand": {
-      "optional": true
-    },
-    "@prisma/client": {
-      "optional": true
-    },
-    "socket.io-client": {
-      "optional": true
-    },
-    "next-auth": {
-      "optional": true
-    }
+    "react": { "optional": false },
+    "react-dom": { "optional": false },
+    "zustand": { "optional": true },
+    "@prisma/client": { "optional": true },
+    "socket.io-client": { "optional": true },
+    "next-auth": { "optional": true },
+    "xstate": { "optional": true },
+    "@xstate/react": { "optional": true }
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -52,6 +59,7 @@
   },
   "devDependencies": {
     "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
     "typescript": "^5.3.3"
   }
 }

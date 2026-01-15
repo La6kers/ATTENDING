@@ -30,3 +30,13 @@ export {
   type LocationCallback,
   type ErrorCallback,
 } from './GeolocationService';
+
+// Clinical Recommendation Service - AI-powered recommendations
+export {
+  ClinicalRecommendationService,
+  clinicalRecommendationService,
+  type LabRecommendation,
+  type ImagingRecommendation,
+  type MedicationRecommendation,
+  type RecommendationResult,
+} from './ClinicalRecommendationService';
