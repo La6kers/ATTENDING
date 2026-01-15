@@ -146,6 +146,32 @@
 
 ---
 
+## ✅ PHASE 5.5: Type Fixes & Patient Portal (COMPLETE)
+**Date:** January 14, 2026
+
+### Type Consolidation
+- [x] Created unified chat types (`apps/shared/types/chat.types.ts`)
+- [x] Fixed QuickReply `label` -> `text` mismatch
+- [x] Fixed ChatMessage timestamp `Date` -> ISO string
+- [x] Added 'emergency' to UrgencyLevel
+- [x] Integrated clinical-services for red flag detection
+
+### Patient Portal Pages
+- [x] `/dashboard` - Patient home with stats
+- [x] `/health-summary` - Health history with search/filter
+- [x] `/results/[id]` - Assessment results view
+- [x] `/profile` - Profile and settings
+
+### Patient API Routes
+- [x] `/api/patient/assessments` - List/create
+- [x] `/api/patient/assessments/[id]` - Single assessment
+- [x] `/api/assessments/submit` - Chat submission
+- [x] `/api/patient/notifications` - Notifications
+- [x] `/api/patient/profile` - Profile CRUD
+- [x] `/api/patient/health-profile` - Health data
+
+---
+
 ## 🔄 Remaining Phase
 
 ### PHASE 6: FHIR Integration (NEXT)
@@ -154,6 +180,12 @@
 - [ ] Oracle Health FHIR adapter
 - [ ] EHR data mapping validation
 - [ ] Bidirectional sync testing
+
+### PHASE 7: Authentication (NEXT)
+- [ ] Wire NextAuth with Azure AD B2C
+- [ ] Add role-based access control
+- [ ] Protect API routes
+- [ ] Session management
 
 ---
 

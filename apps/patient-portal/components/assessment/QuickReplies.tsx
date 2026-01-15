@@ -4,22 +4,22 @@
 //
 // Suggested response buttons for common answers during COMPASS assessment.
 // Speeds up the assessment flow and ensures consistent data capture.
+//
+// UPDATED: Uses unified QuickReply type from @attending/shared/types
 // =============================================================================
 
 import React from 'react';
 import { ArrowRight, Check, X, Clock, AlertTriangle } from 'lucide-react';
 
-// ============================================================================
-// Types
-// ============================================================================
+// Import unified types from shared
+import type { QuickReply } from '../../../shared/types/chat.types';
 
-export interface QuickReply {
-  id: string;
-  text: string;
-  value?: string;
-  icon?: 'check' | 'x' | 'clock' | 'arrow' | 'alert';
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
-}
+// Re-export for convenience
+export type { QuickReply };
+
+// ============================================================================
+// Props Interface
+// ============================================================================
 
 export interface QuickRepliesProps {
   replies: QuickReply[];
@@ -39,13 +39,13 @@ export const QUICK_REPLY_PRESETS = {
     { id: 'yes', text: 'Yes', value: 'yes', icon: 'check' as const, variant: 'success' as const },
     { id: 'no', text: 'No', value: 'no', icon: 'x' as const, variant: 'default' as const },
   ],
-  
+
   yesNoUnsure: [
     { id: 'yes', text: 'Yes', value: 'yes', icon: 'check' as const, variant: 'success' as const },
     { id: 'no', text: 'No', value: 'no', icon: 'x' as const, variant: 'default' as const },
     { id: 'unsure', text: 'Not sure', value: 'unsure', variant: 'default' as const },
   ],
-  
+
   timing: [
     { id: 'now', text: 'Just now', value: 'just now' },
     { id: 'today', text: 'Today', value: 'today' },
@@ -54,7 +54,7 @@ export const QUICK_REPLY_PRESETS = {
     { id: 'week', text: 'About a week', value: 'about a week' },
     { id: 'longer', text: 'Longer', value: 'longer than a week' },
   ],
-  
+
   painScale: [
     { id: 'pain-0', text: '0 - None', value: '0' },
     { id: 'pain-2', text: '1-2 - Mild', value: '2' },
@@ -63,7 +63,7 @@ export const QUICK_REPLY_PRESETS = {
     { id: 'pain-8', text: '7-8 - Severe', value: '8', variant: 'danger' as const },
     { id: 'pain-10', text: '9-10 - Worst possible', value: '10', variant: 'danger' as const },
   ],
-  
+
   painCharacter: [
     { id: 'sharp', text: 'Sharp', value: 'sharp' },
     { id: 'dull', text: 'Dull', value: 'dull' },
@@ -74,7 +74,7 @@ export const QUICK_REPLY_PRESETS = {
     { id: 'stabbing', text: 'Stabbing', value: 'stabbing' },
     { id: 'cramping', text: 'Cramping', value: 'cramping' },
   ],
-  
+
   frequency: [
     { id: 'constant', text: 'Constant', value: 'constant' },
     { id: 'intermittent', text: 'Comes and goes', value: 'intermittent' },
@@ -82,7 +82,7 @@ export const QUICK_REPLY_PRESETS = {
     { id: 'random', text: 'Random', value: 'random' },
     { id: 'worsening', text: 'Getting worse', value: 'progressively worsening', variant: 'warning' as const },
   ],
-  
+
   commonSymptoms: [
     { id: 'fever', text: 'Fever/Chills', value: 'fever' },
     { id: 'nausea', text: 'Nausea', value: 'nausea' },
@@ -93,7 +93,7 @@ export const QUICK_REPLY_PRESETS = {
     { id: 'sob', text: 'Short of breath', value: 'shortness of breath' },
     { id: 'none', text: 'None of these', value: 'none', icon: 'x' as const },
   ],
-  
+
   chiefComplaint: [
     { id: 'pain', text: 'I have pain', value: 'pain' },
     { id: 'sick', text: 'I feel sick', value: 'feeling sick' },
@@ -102,33 +102,33 @@ export const QUICK_REPLY_PRESETS = {
     { id: 'medication', text: 'Medication question', value: 'medication inquiry' },
     { id: 'other', text: 'Something else', value: 'other', icon: 'arrow' as const },
   ],
-  
+
   allergySeverity: [
     { id: 'mild', text: 'Mild (rash, itching)', value: 'mild' },
     { id: 'moderate', text: 'Moderate (hives, swelling)', value: 'moderate', variant: 'warning' as const },
     { id: 'severe', text: 'Severe (anaphylaxis)', value: 'severe', variant: 'danger' as const },
     { id: 'unknown', text: 'Not sure', value: 'unknown' },
   ],
-  
+
   smokingStatus: [
     { id: 'never', text: 'Never smoked', value: 'never' },
     { id: 'former', text: 'Former smoker', value: 'former' },
     { id: 'current', text: 'Current smoker', value: 'current', variant: 'warning' as const },
     { id: 'vape', text: 'Vape/E-cigarettes', value: 'vaping' },
   ],
-  
+
   alcoholUse: [
     { id: 'none', text: 'None', value: 'none' },
     { id: 'occasional', text: 'Occasional (social)', value: 'occasional' },
     { id: 'moderate', text: 'Moderate (1-2/day)', value: 'moderate' },
     { id: 'heavy', text: 'Heavy (3+/day)', value: 'heavy', variant: 'warning' as const },
   ],
-  
+
   confirmation: [
     { id: 'correct', text: 'Yes, this is correct', value: 'confirmed', icon: 'check' as const, variant: 'success' as const },
     { id: 'edit', text: 'I need to make changes', value: 'edit', icon: 'arrow' as const },
   ],
-};
+} satisfies Record<string, QuickReply[]>;
 
 // ============================================================================
 // Icon Component
@@ -161,13 +161,13 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
   disabled = false,
   columns = 2,
   size = 'md',
-  showIcons = true
+  showIcons = true,
 }) => {
   // Size classes
   const sizeClasses = {
     sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-3 text-base',
-    lg: 'px-5 py-4 text-lg'
+    lg: 'px-5 py-4 text-lg',
   };
 
   // Variant classes
@@ -190,7 +190,7 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
   const gridClasses = {
     1: 'grid-cols-1',
     2: 'grid-cols-2',
-    3: 'grid-cols-3'
+    3: 'grid-cols-3',
   };
 
   return (
@@ -222,9 +222,9 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
 // Specialized Components
 // ============================================================================
 
-export const YesNoReplies: React.FC<{ onSelect: (value: string) => void; disabled?: boolean }> = ({ 
-  onSelect, 
-  disabled 
+export const YesNoReplies: React.FC<{ onSelect: (value: string) => void; disabled?: boolean }> = ({
+  onSelect,
+  disabled,
 }) => (
   <QuickReplies
     replies={QUICK_REPLY_PRESETS.yesNo}
@@ -234,9 +234,9 @@ export const YesNoReplies: React.FC<{ onSelect: (value: string) => void; disable
   />
 );
 
-export const PainScaleReplies: React.FC<{ onSelect: (value: number) => void; disabled?: boolean }> = ({ 
-  onSelect, 
-  disabled 
+export const PainScaleReplies: React.FC<{ onSelect: (value: number) => void; disabled?: boolean }> = ({
+  onSelect,
+  disabled,
 }) => (
   <QuickReplies
     replies={QUICK_REPLY_PRESETS.painScale}
@@ -246,9 +246,9 @@ export const PainScaleReplies: React.FC<{ onSelect: (value: number) => void; dis
   />
 );
 
-export const TimingReplies: React.FC<{ onSelect: (value: string) => void; disabled?: boolean }> = ({ 
-  onSelect, 
-  disabled 
+export const TimingReplies: React.FC<{ onSelect: (value: string) => void; disabled?: boolean }> = ({
+  onSelect,
+  disabled,
 }) => (
   <QuickReplies
     replies={QUICK_REPLY_PRESETS.timing}
@@ -258,9 +258,9 @@ export const TimingReplies: React.FC<{ onSelect: (value: string) => void; disabl
   />
 );
 
-export const PainCharacterReplies: React.FC<{ onSelect: (value: string) => void; disabled?: boolean }> = ({ 
-  onSelect, 
-  disabled 
+export const PainCharacterReplies: React.FC<{ onSelect: (value: string) => void; disabled?: boolean }> = ({
+  onSelect,
+  disabled,
 }) => (
   <QuickReplies
     replies={QUICK_REPLY_PRESETS.painCharacter}

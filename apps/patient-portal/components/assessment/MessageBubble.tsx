@@ -4,32 +4,26 @@
 //
 // Individual chat message component for COMPASS assessment conversation.
 // Supports user messages, AI responses, and system notifications.
+//
+// UPDATED: Uses unified ChatMessage type from @attending/shared/types
 // =============================================================================
 
 import React from 'react';
 import { User, Bot, AlertTriangle, Info, CheckCircle } from 'lucide-react';
 
-// ============================================================================
-// Types
-// ============================================================================
+// Import unified types from shared
+import type { ChatMessage, MessageRole } from '../../../shared/types/chat.types';
+import { formatMessageTime } from '../../../shared/types/chat.types';
 
-export type MessageRole = 'user' | 'assistant' | 'system';
+// Re-export types for convenience
+export type { ChatMessage as Message, MessageRole };
 
-export interface Message {
-  id: string;
-  role: MessageRole;
-  content: string;
-  timestamp: string;
-  metadata?: {
-    isEmergency?: boolean;
-    redFlagDetected?: boolean;
-    phase?: string;
-    confidence?: number;
-  };
-}
+// ============================================================================
+// Props Interface
+// ============================================================================
 
 export interface MessageBubbleProps {
-  message: Message;
+  message: ChatMessage;
   isTyping?: boolean;
   showTimestamp?: boolean;
   showAvatar?: boolean;
@@ -47,7 +41,7 @@ const Avatar: React.FC<{ role: MessageRole; isEmergency?: boolean }> = ({ role, 
       </div>
     );
   }
-  
+
   if (role === 'system') {
     return (
       <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-md">
@@ -55,17 +49,15 @@ const Avatar: React.FC<{ role: MessageRole; isEmergency?: boolean }> = ({ role, 
       </div>
     );
   }
-  
+
   // Assistant
   return (
-    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${
-      isEmergency ? 'bg-red-600 animate-pulse' : 'bg-gradient-to-br from-purple-600 to-indigo-600'
-    }`}>
-      {isEmergency ? (
-        <AlertTriangle className="w-5 h-5 text-white" />
-      ) : (
-        <Bot className="w-5 h-5 text-white" />
-      )}
+    <div
+      className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${
+        isEmergency ? 'bg-red-600 animate-pulse' : 'bg-gradient-to-br from-purple-600 to-indigo-600'
+      }`}
+    >
+      {isEmergency ? <AlertTriangle className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
     </div>
   );
 };
@@ -83,33 +75,13 @@ const TypingIndicator: React.FC = () => (
 );
 
 // ============================================================================
-// Format timestamp
-// ============================================================================
-
-const formatTime = (timestamp: string): string => {
-  try {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
-    });
-  } catch {
-    return '';
-  }
-};
-
-// ============================================================================
-// Parse content with HTML
+// Parse content with markdown/HTML
 // ============================================================================
 
 const parseContent = (content: string): React.ReactNode => {
-  // Simple HTML parsing for bold, italic, lists
-  // In production, use a proper sanitization library
-  
   // Handle line breaks
   const lines = content.split('\n');
-  
+
   return lines.map((line, lineIdx) => {
     // Check for list items
     if (line.startsWith('- ') || line.startsWith('• ')) {
@@ -119,7 +91,7 @@ const parseContent = (content: string): React.ReactNode => {
         </li>
       );
     }
-    
+
     // Check for numbered lists
     const numberedMatch = line.match(/^(\d+)\.\s+(.+)/);
     if (numberedMatch) {
@@ -129,7 +101,7 @@ const parseContent = (content: string): React.ReactNode => {
         </li>
       );
     }
-    
+
     // Regular paragraph
     if (line.trim()) {
       return (
@@ -138,7 +110,7 @@ const parseContent = (content: string): React.ReactNode => {
         </p>
       );
     }
-    
+
     return <br key={lineIdx} />;
   });
 };
@@ -146,34 +118,28 @@ const parseContent = (content: string): React.ReactNode => {
 const parseInlineFormatting = (text: string): React.ReactNode => {
   // Handle **bold** and <strong>
   let parts: React.ReactNode[] = [text];
-  
+
   // Bold with **
   parts = parts.flatMap((part, idx) => {
     if (typeof part !== 'string') return part;
     const boldParts = part.split(/\*\*(.+?)\*\*/g);
-    return boldParts.map((p, i) => 
-      i % 2 === 1 ? <strong key={`bold-${idx}-${i}`}>{p}</strong> : p
-    );
+    return boldParts.map((p, i) => (i % 2 === 1 ? <strong key={`bold-${idx}-${i}`}>{p}</strong> : p));
   });
-  
+
   // Bold with <strong>
   parts = parts.flatMap((part, idx) => {
     if (typeof part !== 'string') return part;
     const strongParts = part.split(/<strong>(.+?)<\/strong>/g);
-    return strongParts.map((p, i) => 
-      i % 2 === 1 ? <strong key={`strong-${idx}-${i}`}>{p}</strong> : p
-    );
+    return strongParts.map((p, i) => (i % 2 === 1 ? <strong key={`strong-${idx}-${i}`}>{p}</strong> : p));
   });
-  
+
   // Italic with *
   parts = parts.flatMap((part, idx) => {
     if (typeof part !== 'string') return part;
     const italicParts = part.split(/\*(.+?)\*/g);
-    return italicParts.map((p, i) => 
-      i % 2 === 1 ? <em key={`italic-${idx}-${i}`}>{p}</em> : p
-    );
+    return italicParts.map((p, i) => (i % 2 === 1 ? <em key={`italic-${idx}-${i}`}>{p}</em> : p));
   });
-  
+
   return <>{parts}</>;
 };
 
@@ -185,29 +151,24 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   isTyping = false,
   showTimestamp = true,
-  showAvatar = true
+  showAvatar = true,
 }) => {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
   const isEmergency = message.metadata?.isEmergency;
-  const hasRedFlag = message.metadata?.redFlagDetected;
+  const hasRedFlag = message.metadata?.redFlagDetected || message.metadata?.isRedFlag;
 
   // System message styling
   if (isSystem) {
     return (
       <div className="flex justify-center my-4 animate-fade-in">
-        <div className={`
+        <div
+          className={`
           flex items-center gap-2 px-4 py-2 rounded-full text-sm
-          ${isEmergency 
-            ? 'bg-red-100 text-red-800 border border-red-200' 
-            : 'bg-blue-100 text-blue-800 border border-blue-200'
-          }
-        `}>
-          {isEmergency ? (
-            <AlertTriangle className="w-4 h-4" />
-          ) : (
-            <Info className="w-4 h-4" />
-          )}
+          ${isEmergency ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-blue-100 text-blue-800 border border-blue-200'}
+        `}
+        >
+          {isEmergency ? <AlertTriangle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
           <span>{message.content}</span>
         </div>
       </div>
@@ -215,7 +176,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`
         flex gap-3 mb-4 animate-fade-in
         ${isUser ? 'flex-row-reverse' : 'flex-row'}
@@ -229,20 +190,25 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
       )}
 
       {/* Message Content */}
-      <div className={`
+      <div
+        className={`
         flex flex-col max-w-[80%]
         ${isUser ? 'items-end' : 'items-start'}
-      `}>
+      `}
+      >
         {/* Bubble */}
-        <div className={`
+        <div
+          className={`
           relative px-4 py-3 rounded-2xl shadow-sm
-          ${isUser 
-            ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-tr-sm' 
-            : hasRedFlag
-              ? 'bg-red-50 text-gray-800 border-2 border-red-300 rounded-tl-sm'
-              : 'bg-white text-gray-800 border border-gray-200 rounded-tl-sm'
+          ${
+            isUser
+              ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-tr-sm'
+              : hasRedFlag
+                ? 'bg-red-50 text-gray-800 border-2 border-red-300 rounded-tl-sm'
+                : 'bg-white text-gray-800 border border-gray-200 rounded-tl-sm'
           }
-        `}>
+        `}
+        >
           {/* Red flag indicator */}
           {hasRedFlag && (
             <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
@@ -251,30 +217,26 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           )}
 
           {/* Message content */}
-          {isTyping ? (
-            <TypingIndicator />
-          ) : (
-            <div className="text-sm leading-relaxed">
-              {parseContent(message.content)}
-            </div>
-          )}
+          {isTyping ? <TypingIndicator /> : <div className="text-sm leading-relaxed">{parseContent(message.content)}</div>}
         </div>
 
         {/* Timestamp */}
         {showTimestamp && !isTyping && (
-          <span className={`
+          <span
+            className={`
             text-xs text-gray-400 mt-1 px-1
             ${isUser ? 'text-right' : 'text-left'}
-          `}>
-            {formatTime(message.timestamp)}
+          `}
+          >
+            {formatMessageTime(message.timestamp)}
           </span>
         )}
 
         {/* Confidence indicator for AI messages */}
-        {!isUser && message.metadata?.confidence && (
+        {!isUser && message.metadata?.aiConfidence && (
           <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
             <CheckCircle className="w-3 h-3" />
-            <span>{Math.round(message.metadata.confidence * 100)}% confident</span>
+            <span>{Math.round(message.metadata.aiConfidence * 100)}% confident</span>
           </div>
         )}
       </div>

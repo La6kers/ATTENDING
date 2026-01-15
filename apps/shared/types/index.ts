@@ -2,9 +2,16 @@
 // Used by both Provider Portal and Patient Portal (COMPASS)
 
 // =============================================================================
+// Re-export Chat Types (Single Source of Truth)
+// =============================================================================
+
+export * from './chat.types';
+
+// =============================================================================
 // Assessment Phases & Status
 // =============================================================================
 
+// High-level phases for provider view (re-exported from chat.types as HighLevelAssessmentPhase)
 export type AssessmentPhase = 
   | 'chief-complaint'
   | 'hpi-development'
@@ -21,7 +28,8 @@ export type AssessmentStatus =
   | 'completed'      // Review finished
   | 'follow_up';     // Requires follow-up action
 
-export type UrgencyLevel = 'standard' | 'moderate' | 'high';
+// NOTE: UrgencyLevel is now defined in chat.types.ts with 'emergency' level
+// Use: import { UrgencyLevel } from '@attending/shared/types'
 
 // =============================================================================
 // Clinical Data Structures

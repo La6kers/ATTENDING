@@ -4,19 +4,24 @@
 //
 // Main chat interface for COMPASS assessment.
 // Contains message list, input field, quick replies, and progress indicator.
+//
+// UPDATED: Uses unified types from @attending/shared/types
 // =============================================================================
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Send, Mic, MicOff, ChevronLeft, MoreVertical } from 'lucide-react';
-import { MessageBubble, type Message } from './MessageBubble';
-import { QuickReplies, type QuickReply } from './QuickReplies';
+import { MessageBubble } from './MessageBubble';
+import { QuickReplies } from './QuickReplies';
+
+// Import unified types from shared
+import type { ChatMessage, QuickReply, DetailedAssessmentPhase } from '../../../shared/types/chat.types';
 
 // ============================================================================
-// Types
+// Props Interface
 // ============================================================================
 
 export interface ChatContainerProps {
-  messages: Message[];
+  messages: ChatMessage[];
   quickReplies?: QuickReply[];
   isTyping?: boolean;
   inputValue: string;
@@ -25,7 +30,7 @@ export interface ChatContainerProps {
   onQuickReply?: (reply: QuickReply) => void;
   onBack?: () => void;
   progress?: number;
-  currentPhase?: string;
+  currentPhase?: DetailedAssessmentPhase;
   patientName?: string;
   disabled?: boolean;
   showVoiceInput?: boolean;
@@ -35,25 +40,34 @@ export interface ChatContainerProps {
 // Progress Bar
 // ============================================================================
 
-const ProgressBar: React.FC<{ progress: number; phase?: string }> = ({ progress, phase }) => (
-  <div className="px-4 py-2 bg-white/80 backdrop-blur border-b border-gray-100">
-    <div className="flex items-center justify-between mb-1">
-      <span className="text-xs text-gray-500">Assessment Progress</span>
-      <span className="text-xs font-medium text-purple-600">{Math.round(progress)}%</span>
+const ProgressBar: React.FC<{ progress: number; phase?: DetailedAssessmentPhase }> = ({ progress, phase }) => {
+  // Format phase name for display
+  const formatPhaseName = (phaseName?: string): string => {
+    if (!phaseName) return '';
+    return phaseName
+      .replace(/_/g, ' ')
+      .replace(/hpi/g, 'HPI')
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase())
+      .trim();
+  };
+
+  return (
+    <div className="px-4 py-2 bg-white/80 backdrop-blur border-b border-gray-100">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-gray-500">Assessment Progress</span>
+        <span className="text-xs font-medium text-purple-600">{Math.round(progress)}%</span>
+      </div>
+      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 transition-all duration-500 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      {phase && <p className="text-xs text-gray-400 mt-1">{formatPhaseName(phase)}</p>}
     </div>
-    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-      <div 
-        className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 transition-all duration-500 ease-out"
-        style={{ width: `${progress}%` }}
-      />
-    </div>
-    {phase && (
-      <p className="text-xs text-gray-400 mt-1 capitalize">
-        {phase.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-      </p>
-    )}
-  </div>
-);
+  );
+};
 
 // ============================================================================
 // Header
@@ -66,18 +80,13 @@ const ChatHeader: React.FC<{
   <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
     <div className="flex items-center gap-3">
       {onBack && (
-        <button
-          onClick={onBack}
-          className="p-1 hover:bg-white/20 rounded-full transition-colors"
-        >
+        <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
           <ChevronLeft className="w-5 h-5" />
         </button>
       )}
       <div>
         <h1 className="font-semibold">COMPASS Assessment</h1>
-        {patientName && (
-          <p className="text-xs text-white/80">{patientName}</p>
-        )}
+        {patientName && <p className="text-xs text-white/80">{patientName}</p>}
       </div>
     </div>
     <button className="p-2 hover:bg-white/20 rounded-full transition-colors">
@@ -91,7 +100,7 @@ const ChatHeader: React.FC<{
 // ============================================================================
 
 const MessageList: React.FC<{
-  messages: Message[];
+  messages: ChatMessage[];
   isTyping?: boolean;
 }> = ({ messages, isTyping }) => {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -100,28 +109,23 @@ const MessageList: React.FC<{
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
+  // Create typing indicator message
+  const typingMessage: ChatMessage = {
+    id: 'typing',
+    role: 'assistant',
+    content: '',
+    timestamp: new Date().toISOString(),
+  };
+
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
       {messages.map((message) => (
-        <MessageBubble
-          key={message.id}
-          message={message}
-        />
+        <MessageBubble key={message.id} message={message} />
       ))}
-      
+
       {/* Typing indicator */}
-      {isTyping && (
-        <MessageBubble
-          message={{
-            id: 'typing',
-            role: 'assistant',
-            content: '',
-            timestamp: new Date().toISOString()
-          }}
-          isTyping={true}
-        />
-      )}
-      
+      {isTyping && <MessageBubble message={typingMessage} isTyping={true} />}
+
       <div ref={bottomRef} />
     </div>
   );
@@ -153,7 +157,7 @@ const InputArea: React.FC<{
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
-    
+
     // Auto-resize
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
@@ -171,17 +175,14 @@ const InputArea: React.FC<{
             disabled={disabled}
             className={`
               p-2 rounded-full transition-colors
-              ${isListening 
-                ? 'bg-red-100 text-red-600 animate-pulse' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }
+              ${isListening ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
               disabled:opacity-50
             `}
           >
             {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
         )}
-        
+
         {/* Text input */}
         <div className="flex-1 relative">
           <textarea
@@ -201,16 +202,17 @@ const InputArea: React.FC<{
             style={{ maxHeight: '120px' }}
           />
         </div>
-        
+
         {/* Send button */}
         <button
           onClick={onSend}
           disabled={disabled || !value.trim()}
           className={`
             p-2.5 rounded-full transition-all
-            ${value.trim() 
-              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md hover:shadow-lg transform hover:scale-105' 
-              : 'bg-gray-100 text-gray-400'
+            ${
+              value.trim()
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md hover:shadow-lg transform hover:scale-105'
+                : 'bg-gray-100 text-gray-400'
             }
             disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
           `}
@@ -239,7 +241,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   currentPhase,
   patientName,
   disabled = false,
-  showVoiceInput = false
+  showVoiceInput = false,
 }) => {
   const [isListening, setIsListening] = useState(false);
 
@@ -250,14 +252,17 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     }
   }, [inputValue, disabled, onSend, onInputChange]);
 
-  const handleQuickReply = useCallback((reply: QuickReply) => {
-    if (onQuickReply) {
-      onQuickReply(reply);
-    } else {
-      // Default: send as message
-      onSend(reply.value || reply.text);
-    }
-  }, [onQuickReply, onSend]);
+  const handleQuickReply = useCallback(
+    (reply: QuickReply) => {
+      if (onQuickReply) {
+        onQuickReply(reply);
+      } else {
+        // Default: send as message
+        onSend(reply.value || reply.text);
+      }
+    },
+    [onQuickReply, onSend]
+  );
 
   const toggleVoice = useCallback(() => {
     setIsListening(!isListening);
@@ -268,15 +273,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     <div className="flex flex-col h-full bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
       <ChatHeader patientName={patientName} onBack={onBack} />
-      
+
       {/* Progress Bar */}
-      {progress > 0 && (
-        <ProgressBar progress={progress} phase={currentPhase} />
-      )}
-      
+      {progress > 0 && <ProgressBar progress={progress} phase={currentPhase} />}
+
       {/* Messages */}
       <MessageList messages={messages} isTyping={isTyping} />
-      
+
       {/* Quick Replies */}
       {quickReplies.length > 0 && !isTyping && (
         <div className="px-4 pb-2">
@@ -288,7 +291,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           />
         </div>
       )}
-      
+
       {/* Input */}
       <InputArea
         value={inputValue}
