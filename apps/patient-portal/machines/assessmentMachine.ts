@@ -80,6 +80,15 @@ export interface AllergyEntry {
   severity?: 'mild' | 'moderate' | 'severe';
 }
 
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+  phase?: AssessmentPhase;
+  quickReplies?: string[];
+}
+
 export interface AssessmentContext {
   // Session
   sessionId: string;
@@ -128,6 +137,7 @@ export interface AssessmentContext {
   emergencyType?: string;
   
   // Messages
+  messages: ChatMessage[];
   lastUserInput: string;
   lastAIResponse: string;
   
@@ -136,6 +146,11 @@ export interface AssessmentContext {
 }
 
 export type AssessmentEvent =
+  | { type: 'ADD_MESSAGE'; message: Omit<ChatMessage, 'id' | 'timestamp'> }
+  | { type: 'SUBMIT_HPI_DATA'; field: string; value: any }
+  | { type: 'TRIGGER_EMERGENCY'; emergencyType: string }
+  | { type: 'DISMISS_EMERGENCY' }
+  | { type: 'CALL_911' }
   | { type: 'START'; patientName: string; patientId?: string }
   | { type: 'SUBMIT_DEMOGRAPHICS'; data: { dateOfBirth: string; gender: string; contactPhone?: string } }
   | { type: 'SUBMIT_CHIEF_COMPLAINT'; complaint: string }
@@ -317,6 +332,7 @@ const initialContext: AssessmentContext = {
   phaseHistory: [],
   progressPercent: 0,
   isEmergency: false,
+  messages: [],
   lastUserInput: '',
   lastAIResponse: ''
 };
@@ -878,6 +894,42 @@ export const assessmentMachine = createMachine({
   },
   on: {
     // Global events
+    ADD_MESSAGE: {
+      actions: assign({
+        messages: (ctx, event) => [
+          ...ctx.messages,
+          {
+            id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            timestamp: new Date().toISOString(),
+            ...event.message
+          }
+        ]
+      })
+    },
+    SUBMIT_HPI_DATA: {
+      actions: assign({
+        hpiData: (ctx, event) => ({ ...ctx.hpiData, [event.field]: event.value }),
+        lastUserInput: (_, event) => String(event.value)
+      })
+    },
+    TRIGGER_EMERGENCY: {
+      target: '.emergency',
+      actions: assign({
+        isEmergency: () => true,
+        emergencyType: (_, event) => event.emergencyType,
+        urgencyLevel: () => 'critical' as UrgencyLevel
+      })
+    },
+    DISMISS_EMERGENCY: {
+      actions: assign({
+        isEmergency: () => false
+      })
+    },
+    CALL_911: {
+      actions: assign({
+        lastAIResponse: () => '911 has been called. Help is on the way.'
+      })
+    },
     RESET: {
       target: 'idle',
       actions: assign(() => ({ ...initialContext }))

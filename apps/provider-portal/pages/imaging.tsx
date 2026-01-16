@@ -41,7 +41,7 @@ const DEMO_PATIENT_CONTEXT = {
   gender: 'Female',
   mrn: 'MRN-2024-001',
   chiefComplaint: 'Severe headache with visual disturbances and confusion for 3 days',
-  allergies: ['Penicillin'],
+  allergies: [{ allergen: 'Penicillin', reaction: 'Rash', severity: 'moderate' as const }],
   currentMedications: ['Oral contraceptive', 'Metformin 500mg'],
   medicalHistory: ['Type 2 Diabetes', 'Migraines'],
   redFlags: ['Worst headache of life', 'Confusion', 'Visual changes'],
@@ -141,7 +141,7 @@ export default function Imaging() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

@@ -11,12 +11,12 @@ import {
   ClinicalSummary,
   UrgencyLevel
 } from '@/types/medical';
-import { ChatMessage, ChatSession, AIStatus } from '@/types/chat';
+import { ProviderChatMessage, ProviderChatSession, AIStatus } from '@/types/chat';
 import { bioMistralService } from '@/services/biomistral/BioMistralService';
 
 interface PatientChatStore {
   // Chat state
-  messages: ChatMessage[];
+  messages: ProviderChatMessage[];
   currentPhase: AssessmentPhase;
   isAIProcessing: boolean;
   aiStatus: AIStatus;
@@ -28,8 +28,8 @@ interface PatientChatStore {
   urgencyLevel: UrgencyLevel;
   
   // Session management
-  currentSession: ChatSession | null;
-  sessionHistory: ChatSession[];
+  currentSession: ProviderChatSession | null;
+  sessionHistory: ProviderChatSession[];
   
   // UI state
   showEmergencyModal: boolean;
@@ -39,7 +39,7 @@ interface PatientChatStore {
   // Actions - Chat operations
   sendMessage: (message: string) => Promise<void>;
   processAIResponse: (response: BioMistralResponse) => void;
-  addMessage: (message: ChatMessage) => void;
+  addMessage: (message: ProviderChatMessage) => void;
   clearChat: () => void;
   
   // Actions - Clinical data operations
@@ -106,7 +106,7 @@ export const usePatientChatStore = create<PatientChatStore>()(
         
         try {
           // Add user message
-          const userMessage: ChatMessage = {
+          const userMessage: ProviderChatMessage = {
             id: `msg-${Date.now()}`,
             role: 'user',
             content: message,
@@ -133,7 +133,7 @@ export const usePatientChatStore = create<PatientChatStore>()(
           });
           
           // Add error message
-          const errorMessage: ChatMessage = {
+          const errorMessage: ProviderChatMessage = {
             id: `msg-error-${Date.now()}`,
             role: 'assistant',
             content: "I apologize, but I encountered an error. Please try again or contact support if the issue persists.",
@@ -147,7 +147,7 @@ export const usePatientChatStore = create<PatientChatStore>()(
       processAIResponse: (response: BioMistralResponse) => {
         set(state => {
           // Add AI message
-          const aiMessage: ChatMessage = {
+          const aiMessage: ProviderChatMessage = {
             id: `msg-ai-${Date.now()}`,
             role: 'assistant',
             content: response.message,
@@ -190,7 +190,7 @@ export const usePatientChatStore = create<PatientChatStore>()(
         });
       },
       
-      addMessage: (message: ChatMessage) => {
+      addMessage: (message: ProviderChatMessage) => {
         set(state => {
           state.messages.push(message);
           
@@ -335,7 +335,7 @@ export const usePatientChatStore = create<PatientChatStore>()(
       
       // Session operations
       startNewSession: (patientId: string) => {
-        const session: ChatSession = {
+        const session: ProviderChatSession = {
           id: `session-${Date.now()}`,
           patientId,
           startTime: new Date().toISOString(),
@@ -350,7 +350,7 @@ export const usePatientChatStore = create<PatientChatStore>()(
         });
         
         // Add welcome message
-        const welcomeMessage: ChatMessage = {
+        const welcomeMessage: ProviderChatMessage = {
           id: `msg-welcome-${Date.now()}`,
           role: 'assistant',
           content: `Welcome! I'm BioMistral-7B, your medical AI assistant. I'll conduct a comprehensive clinical interview to gather your symptoms and medical history for your healthcare provider.
@@ -426,7 +426,7 @@ Let's begin with your primary concern. <strong>What is the main symptom or issue
         console.log('Emergency type:', type);
         
         // Add emergency message
-        const emergencyMessage: ChatMessage = {
+        const emergencyMessage: ProviderChatMessage = {
           id: `msg-emergency-${Date.now()}`,
           role: 'system',
           content: `🚨 Emergency protocol activated. Type: ${type}. Please follow the emergency instructions provided.`,

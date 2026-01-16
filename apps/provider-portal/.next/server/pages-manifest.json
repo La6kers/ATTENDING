@@ -5,5 +5,10 @@
   "/": "pages/index.js",
   "/api/assessments": "pages/api/assessments.js",
   "/medications": "pages/medications.js",
-  "/labs": "pages/labs.js"
+  "/assessments": "pages/assessments.js",
+  "/patient-assessment": "pages/patient-assessment.js",
+  "/inbox": "pages/inbox.js",
+  "/treatment-plans": "pages/treatment-plans.js",
+  "/labs": "pages/labs.js",
+  "/imaging": "pages/imaging.js"
 }

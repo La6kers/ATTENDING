@@ -79,7 +79,7 @@ export default function ReferralsPage() {
         <title>Specialty Referrals | ATTENDING AI</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
           <div className="max-w-7xl mx-auto px-6 py-6">

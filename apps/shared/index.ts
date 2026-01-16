@@ -6,21 +6,20 @@
 // ============================================================
 
 // =============================================================================
-// TYPES
+// TYPES (Primary source of truth)
 // =============================================================================
 export * from './types';
 
 // =============================================================================
 // SERVICES
 // =============================================================================
-// Export with explicit names to avoid conflicts
-export { 
+export {
   AssessmentSubmissionService,
   assessmentSubmissionService,
   submitCompassAssessment,
 } from './services/assessmentSubmission';
 
-export { 
+export {
   CompassBridge,
   type AssessmentEventType,
   type AssessmentEvent as CompassAssessmentEvent,
@@ -28,7 +27,7 @@ export {
   type CompassBridgeConfig,
 } from './services/CompassBridge';
 
-export { 
+export {
   NotificationService,
   type NotificationType,
   type NotificationOptions,
@@ -37,7 +36,7 @@ export {
   type NotificationServiceConfig,
 } from './services/NotificationService';
 
-export { 
+export {
   GeolocationService,
   type GeolocationConfig,
   type LocationCallback,
@@ -47,11 +46,11 @@ export {
 // =============================================================================
 // STATE MACHINES
 // =============================================================================
-export { 
+export {
   assessmentMachine,
   type AssessmentContext,
   type AssessmentEvent as MachineAssessmentEvent,
-  type RedFlag,
+  // Note: RedFlag is exported from types/chat.types.ts
 } from './machines/assessmentMachine';
 
 // =============================================================================
@@ -61,8 +60,21 @@ export * from './lib/prisma';
 
 // =============================================================================
 // GENERAL UTILITIES
+// Export specific utilities to avoid conflicts with types
 // =============================================================================
-export * from './lib/utils';
+export {
+  cn,
+  formatDate,
+  formatCurrency,
+  truncateText,
+  debounce,
+  throttle,
+  deepClone,
+  isEmptyObject,
+  sleep,
+  retry,
+  // Note: generateMessageId and generateSessionId are exported from types/chat.types.ts
+} from './lib/utils';
 
 // =============================================================================
 // REACT HOOKS
@@ -81,8 +93,45 @@ export * from './auth';
 
 // =============================================================================
 // CLINICAL CATALOGS
+// Export with explicit names to avoid conflicts
 // =============================================================================
-export * from './catalogs';
+export {
+  // Lab catalog
+  LAB_CATALOG,
+  LAB_PANELS,
+  getLabTest,
+  getLabPanel,
+  searchLabs,
+  getLabsByCategory,
+  getAllLabTests,
+  getAllLabPanels,
+  // Imaging catalog
+  IMAGING_CATALOG,
+  getImagingStudy,
+  searchImaging,
+  getImagingByModality,
+  getImagingByBodyPart,
+  getAllImagingStudies,
+  getContrastStudies,
+  getNonContrastAlternative,
+  // Medication catalog (use MedicationCatalogItem to avoid conflict with MedicationRecord type)
+  MEDICATION_CATALOG,
+  DRUG_INTERACTIONS,
+  getMedication,
+  searchMedications,
+  getMedicationsByCategory,
+  getControlledMedications,
+  getAllMedications,
+  checkDrugInteractions,
+  // Types from catalogs
+  type LabTest,
+  type LabPanel,
+  type ImagingStudy,
+  type Medication as MedicationCatalogItem,
+  type DrugInteraction,
+  type PatientContext,
+  type OrderPriority,
+} from './catalogs';
 
 // =============================================================================
 // CLINICAL RECOMMENDATION SERVICE

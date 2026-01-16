@@ -2,7 +2,7 @@
 // Used by both Provider Portal and Patient Portal (COMPASS)
 
 // =============================================================================
-// Re-export Chat Types (Single Source of Truth)
+// Re-export Chat Types (Single Source of Truth for Chat/Assessment)
 // =============================================================================
 
 export * from './chat.types';
@@ -12,7 +12,7 @@ export * from './chat.types';
 // =============================================================================
 
 // High-level phases for provider view (re-exported from chat.types as HighLevelAssessmentPhase)
-export type AssessmentPhase = 
+export type AssessmentPhase =
   | 'chief-complaint'
   | 'hpi-development'
   | 'review-of-systems'
@@ -20,16 +20,13 @@ export type AssessmentPhase =
   | 'risk-stratification'
   | 'clinical-summary';
 
-export type AssessmentStatus = 
-  | 'in_progress'    // Patient still completing COMPASS
-  | 'pending'        // Submitted, awaiting provider review
-  | 'urgent'         // High priority, needs immediate attention
-  | 'in_review'      // Provider currently reviewing
-  | 'completed'      // Review finished
-  | 'follow_up';     // Requires follow-up action
-
-// NOTE: UrgencyLevel is now defined in chat.types.ts with 'emergency' level
-// Use: import { UrgencyLevel } from '@attending/shared/types'
+export type AssessmentStatus =
+  | 'in_progress' // Patient still completing COMPASS
+  | 'pending' // Submitted, awaiting provider review
+  | 'urgent' // High priority, needs immediate attention
+  | 'in_review' // Provider currently reviewing
+  | 'completed' // Review finished
+  | 'follow_up'; // Requires follow-up action
 
 // =============================================================================
 // Clinical Data Structures
@@ -71,7 +68,9 @@ export interface PastMedicalHistory {
   immunizations?: string[];
 }
 
-export interface Medication {
+// Note: Simple Medication type for clinical data
+// For catalog medication with more details, use MedicationCatalogItem from catalogs
+export interface MedicationRecord {
   name: string;
   dose?: string;
   frequency?: string;
@@ -81,7 +80,7 @@ export interface Medication {
   indication?: string;
 }
 
-export interface Allergy {
+export interface AllergyRecord {
   allergen: string;
   reaction?: string;
   severity?: 'mild' | 'moderate' | 'severe';
@@ -128,32 +127,20 @@ export interface ClinicalExtraction {
 // Complete Clinical Data Model
 // =============================================================================
 
+// Import UrgencyLevel from chat.types for use in interfaces
+import type { UrgencyLevel } from './chat.types';
+
 export interface ClinicalData {
-  // Chief complaint
   chiefComplaint: string;
-  
-  // History of Present Illness
   hpi: Partial<HistoryOfPresentIllness>;
-  
-  // Review of Systems
   ros: Partial<ReviewOfSystems>;
-  
-  // Past Medical History
   pmh: Partial<PastMedicalHistory>;
-  
-  // Medications & Allergies
-  medications: Medication[];
-  allergies: Allergy[];
-  
-  // Social & Family History
+  medications: MedicationRecord[];
+  allergies: AllergyRecord[];
   socialHistory: Partial<SocialHistory>;
   familyHistory: FamilyHistory;
-  
-  // Risk Assessment
   riskFactors: string[];
   redFlags: string[];
-  
-  // Metadata
   assessmentPhase: AssessmentPhase;
   timestamp: string;
   version?: string;
@@ -164,44 +151,27 @@ export interface ClinicalData {
 // =============================================================================
 
 export interface ClinicalSummary {
-  // Identifiers
   id?: string;
   patientId: string;
   sessionId?: string;
-  
-  // Timestamps
   timestamp: string;
   completedAt?: string;
-  
-  // Clinical Content
   chiefComplaint: string;
   hpiNarrative?: string;
   rosFindings?: string;
   pmhSummary?: string;
   medicationList?: string;
   allergiesList?: string;
-  
-  // Assessment
   assessment?: string;
   clinicalImpression?: string;
-  
-  // Plan
   plan?: string;
   recommendedWorkup?: string[];
-  
-  // Risk & Urgency
   riskFactors: string[];
   redFlags: string[];
   urgencyLevel: UrgencyLevel;
-  
-  // Differential Diagnosis
   differentialDiagnosis: Diagnosis[];
-  
-  // Recommendations
   clinicalRecommendations: string[];
   followUpNeeded?: string;
-  
-  // Provider additions (filled after review)
   providerNotes?: string;
   confirmedDiagnoses?: Diagnosis[];
   icdCodes?: string[];
@@ -213,12 +183,9 @@ export interface ClinicalSummary {
 // =============================================================================
 
 export interface PatientAssessment {
-  // Identifiers
   id: string;
   patientId: string;
   sessionId?: string;
-  
-  // Patient Demographics
   patientName: string;
   patientAge: number;
   patientGender: string;
@@ -227,47 +194,31 @@ export interface PatientAssessment {
     phone?: string;
     email?: string;
   };
-  
-  // Clinical Data from COMPASS
   chiefComplaint: string;
   clinicalData?: ClinicalData;
   clinicalSummary?: ClinicalSummary;
-  
-  // Risk Assessment
   urgencyLevel: UrgencyLevel;
   redFlags: string[];
   riskFactors: string[];
   differentialDiagnosis: Diagnosis[];
-  
-  // HPI (extracted for quick view)
   hpiData?: Partial<HistoryOfPresentIllness>;
-  
-  // Medical History (extracted for quick view)
   medicalHistory?: {
     conditions?: string[];
     medications?: string[];
     allergies?: string[];
     surgeries?: string[];
   };
-  
-  // Workflow Status
   status: AssessmentStatus;
   assignedProviderId?: string;
-  
-  // Timestamps
   submittedAt: string;
   reviewedAt?: string;
   completedAt?: string;
-  
-  // Provider Additions
   providerNotes?: string;
   confirmedDiagnoses?: Diagnosis[];
   icdCodes?: string[];
   treatmentPlan?: string;
   followUpInstructions?: string;
   ordersPlaced?: string[];
-  
-  // COMPASS metadata
   compassVersion?: string;
   aiModelUsed?: string;
 }
@@ -316,10 +267,10 @@ export interface AssessmentListResponse {
 }
 
 // =============================================================================
-// Chat & Messaging Types
+// Provider Chat Message (different from patient ChatMessage in chat.types)
 // =============================================================================
 
-export interface ChatMessage {
+export interface ProviderChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -334,12 +285,12 @@ export interface ChatMessage {
   };
 }
 
-export interface ChatSession {
+export interface ProviderChatSession {
   id: string;
   patientId: string;
   startTime: string;
   endTime?: string;
-  messages: ChatMessage[];
+  messages: ProviderChatMessage[];
   currentPhase: AssessmentPhase;
   isComplete: boolean;
   clinicalSummaryId?: string;
@@ -395,7 +346,7 @@ export interface UserLocation {
 // Notification Types
 // =============================================================================
 
-export interface Notification {
+export interface AppNotification {
   id: string;
   type: 'urgent_assessment' | 'new_assessment' | 'message' | 'system';
   title: string;

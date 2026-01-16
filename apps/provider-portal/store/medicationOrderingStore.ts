@@ -21,6 +21,7 @@ import {
   type DrugInteraction,
   type DrugCategory,
   type DosageForm,
+  type DrugSchedule,
   type OrderPriority,
   type PatientContext,
 } from '@attending/shared/catalogs';
@@ -33,8 +34,11 @@ import {
 // =============================================================================
 // Re-export types for backward compatibility
 // =============================================================================
-export type { Medication, DrugInteraction, DrugCategory, DosageForm, OrderPriority, PatientContext };
+export type { Medication, DrugInteraction, DrugCategory, DosageForm, DrugSchedule, OrderPriority, PatientContext };
 export type PrescriptionPriority = OrderPriority;
+export type AIMedicationRecommendation = MedicationRecommendation; // Alias for component imports
+export type { MedicationRecommendation };
+
 export { MEDICATION_CATALOG, DRUG_INTERACTIONS };
 
 // =============================================================================

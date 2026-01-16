@@ -9,52 +9,55 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { 
   LabRecommender, 
-  type LabRecommendationInput, 
-  type LabRecommendation 
+  type LabRecommendation,
+  type LabBundle,
+  type RecommendationResult
 } from '@attending/clinical-services';
 
 // Types
 interface LabRequest {
   chiefComplaint: string;
-  workingDiagnosis?: string;
   symptoms?: string[];
   redFlags?: string[];
   vitalSigns?: {
     heartRate?: number;
-    bloodPressure?: string;
+    bloodPressure?: number;
     respiratoryRate?: number;
     temperature?: number;
     oxygenSaturation?: number;
   };
   existingConditions?: string[];
-  currentMedications?: string[];
-  recentLabs?: {
-    testCode: string;
-    resultDate: string;
-    value?: number;
-    unit?: string;
-  }[];
   patientAge?: number;
-  patientSex?: 'male' | 'female' | 'other';
-  pregnancyStatus?: 'pregnant' | 'not-pregnant' | 'unknown';
+}
+
+interface TransformedRecommendation {
+  testCode: string;
+  testName: string;
+  category: string;
+  priority: string;
+  rationale: string;
+  confidence: number;
+  specimenType: string;
+  turnaroundTime: string;
+  estimatedCost?: number;
 }
 
 interface LabResponse {
   success: boolean;
   data?: {
-    recommendations: LabRecommendation[];
-    bundlesSuggested: string[];
-    criticalCount: number;
-    recommendedCount: number;
-    considerCount: number;
-    totalEstimatedCost?: number;
+    recommendations: TransformedRecommendation[];
+    bundles: LabBundle[];
+    urgentTests: TransformedRecommendation[];
+    statCount: number;
+    routineCount: number;
+    totalEstimatedCost: number;
+    orderingSummary: string;
     clinicalContext: string;
   };
   error?: string;
   timestamp: string;
 }
 
-// Validate request body
 function validateRequest(body: any): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
@@ -66,27 +69,20 @@ function validateRequest(body: any): { valid: boolean; errors: string[] } {
     errors.push('patientAge must be between 0-150');
   }
   
-  if (body.patientSex && !['male', 'female', 'other'].includes(body.patientSex)) {
-    errors.push('patientSex must be male, female, or other');
-  }
-  
   return { valid: errors.length === 0, errors };
 }
 
-// Map request to recommender input
-function mapToLabInput(body: LabRequest): LabRecommendationInput {
+function transformRecommendation(rec: LabRecommendation): TransformedRecommendation {
   return {
-    chiefComplaint: body.chiefComplaint,
-    workingDiagnosis: body.workingDiagnosis,
-    symptoms: body.symptoms || [],
-    redFlags: body.redFlags || [],
-    vitalSigns: body.vitalSigns,
-    existingConditions: body.existingConditions || [],
-    currentMedications: body.currentMedications || [],
-    recentLabs: body.recentLabs || [],
-    patientAge: body.patientAge,
-    patientSex: body.patientSex,
-    pregnancyStatus: body.pregnancyStatus,
+    testCode: rec.test.code,
+    testName: rec.test.name,
+    category: rec.test.category,
+    priority: rec.priority,
+    rationale: rec.rationale,
+    confidence: rec.confidence,
+    specimenType: rec.test.specimenType,
+    turnaroundTime: rec.test.turnaroundTime,
+    estimatedCost: rec.test.cost,
   };
 }
 
@@ -94,7 +90,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<LabResponse>
 ) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -112,7 +107,6 @@ export default async function handler(
   }
   
   try {
-    // Validate request
     const validation = validateRequest(req.body);
     if (!validation.valid) {
       return res.status(400).json({
@@ -122,41 +116,59 @@ export default async function handler(
       });
     }
     
-    // Map to recommender input
-    const input = mapToLabInput(req.body);
+    const body = req.body as LabRequest;
     
-    // Initialize recommender and get recommendations
+    // Build symptoms array for recommender
+    const allSymptoms = [body.chiefComplaint];
+    if (body.symptoms) allSymptoms.push(...body.symptoms);
+    if (body.redFlags) allSymptoms.push(...body.redFlags);
+    
+    // Build context
+    const context: { age?: number; comorbidities?: string[]; vitalSigns?: Record<string, number> } = {};
+    if (body.patientAge) context.age = body.patientAge;
+    if (body.existingConditions) context.comorbidities = body.existingConditions;
+    if (body.vitalSigns) {
+      context.vitalSigns = {
+        heartRate: body.vitalSigns.heartRate,
+        bloodPressure: body.vitalSigns.bloodPressure,
+        temperature: body.vitalSigns.temperature,
+        oxygenSaturation: body.vitalSigns.oxygenSaturation,
+      };
+    }
+    
+    // Get recommendations
     const recommender = new LabRecommender();
-    const recommendations = recommender.recommend(input);
+    const result: RecommendationResult = recommender.recommend(allSymptoms, context);
     
-    // Categorize recommendations
-    const critical = recommendations.filter(r => r.category === 'critical');
-    const recommended = recommendations.filter(r => r.category === 'recommended');
-    const consider = recommendations.filter(r => r.category === 'consider');
+    // Transform recommendations
+    const transformedRecs = result.individualTests.map(transformRecommendation);
+    const transformedUrgent = result.urgentTests.map(transformRecommendation);
     
-    // Get suggested bundles
-    const bundlesSuggested = [...new Set(recommendations.map(r => r.bundle).filter(Boolean))] as string[];
+    // Count by priority
+    const statCount = result.individualTests.filter(r => r.priority === 'STAT').length;
+    const routineCount = result.individualTests.filter(r => r.priority === 'Routine').length;
     
     // Generate clinical context
-    const clinicalContext = generateClinicalContext(input, recommendations);
+    const clinicalContext = generateClinicalContext(body, result);
     
-    // Log for audit trail
     console.log('[AUDIT] Lab recommendations:', {
       timestamp: new Date().toISOString(),
-      chiefComplaint: input.chiefComplaint,
-      workingDiagnosis: input.workingDiagnosis,
-      recommendationCount: recommendations.length,
-      criticalCount: critical.length,
+      chiefComplaint: body.chiefComplaint,
+      bundleCount: result.bundles.length,
+      testCount: result.individualTests.length,
+      urgentCount: result.urgentTests.length,
     });
     
     return res.status(200).json({
       success: true,
       data: {
-        recommendations,
-        bundlesSuggested,
-        criticalCount: critical.length,
-        recommendedCount: recommended.length,
-        considerCount: consider.length,
+        recommendations: transformedRecs,
+        bundles: result.bundles,
+        urgentTests: transformedUrgent,
+        statCount,
+        routineCount,
+        totalEstimatedCost: result.estimatedCost,
+        orderingSummary: result.orderingSummary,
         clinicalContext,
       },
       timestamp: new Date().toISOString(),
@@ -172,26 +184,21 @@ export default async function handler(
   }
 }
 
-// Generate clinical context narrative
-function generateClinicalContext(
-  input: LabRecommendationInput, 
-  recommendations: LabRecommendation[]
-): string {
+function generateClinicalContext(request: LabRequest, result: RecommendationResult): string {
   const parts: string[] = [];
   
-  parts.push(`Patient presents with ${input.chiefComplaint}.`);
+  parts.push(`Patient presents with ${request.chiefComplaint}.`);
   
-  if (input.workingDiagnosis) {
-    parts.push(`Working diagnosis: ${input.workingDiagnosis}.`);
+  if (request.redFlags && request.redFlags.length > 0) {
+    parts.push(`Red flags identified: ${request.redFlags.join(', ')}.`);
   }
   
-  if (input.redFlags && input.redFlags.length > 0) {
-    parts.push(`Red flags identified: ${input.redFlags.join(', ')}.`);
+  if (result.bundles.length > 0) {
+    parts.push(`Recommended bundles: ${result.bundles.map(b => b.name).join(', ')}.`);
   }
   
-  const critical = recommendations.filter(r => r.category === 'critical');
-  if (critical.length > 0) {
-    parts.push(`CRITICAL: ${critical.length} time-sensitive labs recommended.`);
+  if (result.urgentTests.length > 0) {
+    parts.push(`STAT: ${result.urgentTests.length} time-sensitive tests recommended.`);
   }
   
   return parts.join(' ');

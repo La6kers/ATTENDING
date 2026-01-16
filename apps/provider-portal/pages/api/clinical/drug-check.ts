@@ -1,155 +1,102 @@
 // =============================================================================
-// ATTENDING AI - Drug Interactions API
+// ATTENDING AI - Drug Interaction Check API
 // apps/provider-portal/pages/api/clinical/drug-check.ts
 //
-// Endpoint for checking drug-drug interactions and allergy cross-reactivity.
-// Critical safety feature for medication ordering workflow.
+// CRITICAL SAFETY ENDPOINT: Checks for drug-drug interactions and allergy alerts.
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { 
-  DrugInteractionChecker, 
-  type DrugCheckInput, 
-  type DrugInteractionResult,
+  DrugInteractionChecker,
+  type InteractionCheckResult,
   type DrugInteraction,
-  type AllergyAlert 
+  type SeverityLevel,
+  type AllergyEntry
 } from '@attending/clinical-services';
 
-// Types
 interface DrugCheckRequest {
-  proposedMedication: {
-    name: string;
-    class?: string;
-    dose?: string;
-    route?: string;
-    frequency?: string;
-  };
-  currentMedications: {
-    name: string;
-    class?: string;
-    dose?: string;
-  }[];
-  allergies: {
+  medications: string[];
+  allergies?: Array<{
     allergen: string;
     reaction?: string;
-    severity?: 'mild' | 'moderate' | 'severe';
-  }[];
-  patientAge?: number;
-  renalFunction?: 'normal' | 'mild-impairment' | 'moderate-impairment' | 'severe-impairment' | 'esrd';
-  hepaticFunction?: 'normal' | 'mild-impairment' | 'moderate-impairment' | 'severe-impairment';
-  pregnancyStatus?: 'pregnant' | 'breastfeeding' | 'not-pregnant' | 'unknown';
+    severity?: 'mild' | 'moderate' | 'severe' | 'anaphylaxis';
+  }>;
+  includeCurrentMedications?: string[];
 }
 
 interface DrugCheckResponse {
   success: boolean;
   data?: {
-    safeToAdminister: boolean;
-    requiresReview: boolean;
-    interactions: DrugInteraction[];
-    allergyAlerts: AllergyAlert[];
-    contraindications: string[];
-    dosageAdjustments: string[];
-    monitoringRequired: string[];
-    overallRiskLevel: 'low' | 'moderate' | 'high' | 'contraindicated';
-    clinicalGuidance: string;
+    hasInteractions: boolean;
+    hasAllergyAlerts: boolean;
+    interactions: Array<{
+      drug1: string;
+      drug2: string;
+      severity: SeverityLevel;
+      clinicalEffect: string;
+      management: string;
+    }>;
+    criticalInteractions: Array<{
+      drug1: string;
+      drug2: string;
+      severity: SeverityLevel;
+      clinicalEffect: string;
+      management: string;
+    }>;
+    allergyAlerts: Array<{
+      drug: string;
+      allergen: string;
+      riskLevel: string;
+      notes?: string;
+    }>;
+    recommendations: string[];
+    riskLevel: 'low' | 'moderate' | 'high' | 'critical';
   };
   error?: string;
   timestamp: string;
 }
 
-// Validate request
 function validateRequest(body: any): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
-  if (!body.proposedMedication || !body.proposedMedication.name) {
-    errors.push('proposedMedication.name is required');
+  if (!body.medications || !Array.isArray(body.medications)) {
+    errors.push('medications is required and must be an array');
   }
   
-  if (!body.currentMedications || !Array.isArray(body.currentMedications)) {
-    errors.push('currentMedications must be an array');
-  }
-  
-  if (!body.allergies || !Array.isArray(body.allergies)) {
-    errors.push('allergies must be an array');
+  if (body.medications && body.medications.length === 0) {
+    errors.push('medications array cannot be empty');
   }
   
   return { valid: errors.length === 0, errors };
 }
 
-// Map request to checker input
-function mapToDrugCheckInput(body: DrugCheckRequest): DrugCheckInput {
-  return {
-    proposedMedication: body.proposedMedication,
-    currentMedications: body.currentMedications,
-    allergies: body.allergies,
-    patientAge: body.patientAge,
-    renalFunction: body.renalFunction,
-    hepaticFunction: body.hepaticFunction,
-    pregnancyStatus: body.pregnancyStatus,
-  };
-}
-
-// Generate clinical guidance based on results
-function generateClinicalGuidance(
-  interactions: DrugInteraction[],
-  allergyAlerts: AllergyAlert[],
-  contraindications: string[]
-): string {
-  const parts: string[] = [];
-  
-  // Contraindication warning
-  if (contraindications.length > 0) {
-    parts.push(`⛔ CONTRAINDICATED: ${contraindications.join('. ')}`);
+function determineOverallRiskLevel(result: InteractionCheckResult): 'low' | 'moderate' | 'high' | 'critical' {
+  if (result.criticalInteractions.some(i => i.severity === 'contraindicated')) {
+    return 'critical';
   }
-  
-  // Allergy warnings
-  const severeAllergies = allergyAlerts.filter(a => a.severity === 'severe');
-  if (severeAllergies.length > 0) {
-    parts.push(`⚠️ SEVERE ALLERGY RISK: ${severeAllergies.map(a => a.description).join('. ')}`);
+  if (result.criticalInteractions.some(i => i.severity === 'severe')) {
+    return 'high';
   }
-  
-  // Major interactions
-  const majorInteractions = interactions.filter(i => i.severity === 'major');
-  if (majorInteractions.length > 0) {
-    parts.push(`⚠️ MAJOR INTERACTIONS: ${majorInteractions.map(i => 
-      `${i.interactingDrug} - ${i.effect}`
-    ).join('. ')}`);
+  if (result.interactions.some(i => i.severity === 'moderate')) {
+    return 'moderate';
   }
-  
-  // Moderate interactions
-  const moderateInteractions = interactions.filter(i => i.severity === 'moderate');
-  if (moderateInteractions.length > 0) {
-    parts.push(`ℹ️ MODERATE INTERACTIONS: Monitor for ${moderateInteractions.map(i => 
-      i.effect
-    ).join(', ')}`);
-  }
-  
-  if (parts.length === 0) {
-    parts.push('✓ No significant interactions or contraindications identified');
-  }
-  
-  return parts.join('\n\n');
-}
-
-// Determine overall risk level
-function determineRiskLevel(
-  interactions: DrugInteraction[],
-  allergyAlerts: AllergyAlert[],
-  contraindications: string[]
-): 'low' | 'moderate' | 'high' | 'contraindicated' {
-  if (contraindications.length > 0) return 'contraindicated';
-  if (allergyAlerts.some(a => a.severity === 'severe')) return 'contraindicated';
-  if (interactions.some(i => i.severity === 'major')) return 'high';
-  if (interactions.some(i => i.severity === 'moderate')) return 'moderate';
-  if (allergyAlerts.some(a => a.severity === 'moderate')) return 'moderate';
   return 'low';
+}
+
+function transformInteraction(interaction: DrugInteraction) {
+  return {
+    drug1: interaction.drug1,
+    drug2: interaction.drug2,
+    severity: interaction.severity,
+    clinicalEffect: interaction.clinicalEffect,
+    management: interaction.management,
+  };
 }
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<DrugCheckResponse>
 ) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -167,7 +114,6 @@ export default async function handler(
   }
   
   try {
-    // Validate request
     const validation = validateRequest(req.body);
     if (!validation.valid) {
       return res.status(400).json({
@@ -177,63 +123,66 @@ export default async function handler(
       });
     }
     
-    // Map to checker input
-    const input = mapToDrugCheckInput(req.body);
+    const body = req.body as DrugCheckRequest;
     
-    // Initialize checker and check interactions
+    // Combine with current medications if provided
+    const allMedications = [
+      ...body.medications,
+      ...(body.includeCurrentMedications || [])
+    ];
+    
+    // Convert allergies to expected format
+    const allergies: AllergyEntry[] = (body.allergies || []).map(a => ({
+      allergen: a.allergen,
+      reaction: a.reaction || 'Unknown reaction',
+      severity: a.severity || 'moderate',
+    }));
+    
+    // Check interactions and allergies
     const checker = new DrugInteractionChecker();
-    const result = checker.check(input);
+    const result = checker.checkAll(allMedications, allergies);
     
-    // Generate additional clinical context
-    const clinicalGuidance = generateClinicalGuidance(
-      result.interactions,
-      result.allergyAlerts,
-      result.contraindications
-    );
+    // Transform for response
+    const transformedInteractions = result.interactions.map(transformInteraction);
+    const transformedCritical = result.criticalInteractions.map(transformInteraction);
     
-    const overallRiskLevel = determineRiskLevel(
-      result.interactions,
-      result.allergyAlerts,
-      result.contraindications
-    );
+    const transformedAllergyAlerts = result.allergyAlerts.map(a => ({
+      drug: a.drug,
+      allergen: a.allergen,
+      riskLevel: a.riskLevel,
+      notes: a.crossReactivity?.notes,
+    }));
     
-    const safeToAdminister = overallRiskLevel === 'low';
-    const requiresReview = overallRiskLevel !== 'low' && overallRiskLevel !== 'contraindicated';
+    const riskLevel = determineOverallRiskLevel(result);
     
-    // Log for audit trail (HIPAA-compliant logging - no PHI)
-    console.log('[AUDIT] Drug interaction check:', {
-      timestamp: new Date().toISOString(),
-      proposedMedication: input.proposedMedication.name,
-      currentMedCount: input.currentMedications.length,
-      allergyCount: input.allergies.length,
-      interactionCount: result.interactions.length,
-      allergyAlertCount: result.allergyAlerts.length,
-      overallRiskLevel,
-      safeToAdminister,
-    });
-    
-    // CRITICAL: If contraindicated, log as warning
-    if (overallRiskLevel === 'contraindicated') {
-      console.warn('[SAFETY] Contraindicated medication attempted:', {
+    // Log critical interactions for safety monitoring
+    if (result.criticalInteractions.length > 0) {
+      console.error('[CRITICAL DRUG INTERACTION]', {
         timestamp: new Date().toISOString(),
-        medication: input.proposedMedication.name,
-        contraindications: result.contraindications,
-        allergyAlerts: result.allergyAlerts.filter(a => a.severity === 'severe'),
+        medications: allMedications,
+        criticalInteractions: result.criticalInteractions,
       });
     }
+    
+    console.log('[AUDIT] Drug interaction check:', {
+      timestamp: new Date().toISOString(),
+      medicationCount: allMedications.length,
+      interactionCount: result.interactions.length,
+      criticalCount: result.criticalInteractions.length,
+      allergyAlertCount: result.allergyAlerts.length,
+      riskLevel,
+    });
     
     return res.status(200).json({
       success: true,
       data: {
-        safeToAdminister,
-        requiresReview,
-        interactions: result.interactions,
-        allergyAlerts: result.allergyAlerts,
-        contraindications: result.contraindications,
-        dosageAdjustments: result.dosageAdjustments || [],
-        monitoringRequired: result.monitoringRequired || [],
-        overallRiskLevel,
-        clinicalGuidance,
+        hasInteractions: result.hasInteractions,
+        hasAllergyAlerts: result.allergyAlerts.length > 0,
+        interactions: transformedInteractions,
+        criticalInteractions: transformedCritical,
+        allergyAlerts: transformedAllergyAlerts,
+        recommendations: result.recommendations,
+        riskLevel,
       },
       timestamp: new Date().toISOString(),
     });
@@ -242,7 +191,7 @@ export default async function handler(
     console.error('[ERROR] Drug interaction check failed:', error);
     return res.status(500).json({
       success: false,
-      error: 'Internal server error during drug interaction check. Manual pharmacist review recommended.',
+      error: 'Internal server error during drug interaction check',
       timestamp: new Date().toISOString(),
     });
   }

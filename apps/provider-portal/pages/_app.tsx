@@ -125,7 +125,7 @@ function AuthenticatedApp({ Component, pageProps }: { Component: AppProps['Compo
   // Show loading state while checking auth
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-brand-gradient">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
@@ -140,7 +140,7 @@ function AuthenticatedApp({ Component, pageProps }: { Component: AppProps['Compo
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Connection status indicator (dev mode) */}
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-gray-900 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">

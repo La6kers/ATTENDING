@@ -35,6 +35,8 @@ import {
 // =============================================================================
 export type { LabTest, LabPanel, LabCategory, OrderPriority, PatientContext };
 export type LabPriority = OrderPriority; // Alias for backward compatibility
+export type AILabRecommendation = LabRecommendation; // Alias for component imports
+export type { LabRecommendation };
 export { LAB_CATALOG, LAB_PANELS };
 
 // =============================================================================

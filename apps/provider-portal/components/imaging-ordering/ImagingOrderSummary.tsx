@@ -30,6 +30,7 @@ interface ImagingOrderSummaryProps {
 const priorityColors: Record<ImagingPriority, string> = {
   STAT: 'text-red-600',
   URGENT: 'text-orange-600',
+  ASAP: 'text-yellow-600',
   ROUTINE: 'text-blue-600',
 };
 

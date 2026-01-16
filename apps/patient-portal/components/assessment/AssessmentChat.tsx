@@ -21,7 +21,19 @@ import {
 } from 'lucide-react';
 import { assessmentMachine } from '@/machines/assessmentMachine';
 import { EmergencyModal } from './EmergencyModal';
-import { QuickReplies, PainScaleReplies } from './QuickReplies';
+import { QuickReplies, PainScaleReplies, type QuickReply } from './QuickReplies';
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+// Convert string array to QuickReply array
+const stringsToQuickReplies = (strings: string[]): QuickReply[] =>
+  strings.map((text, index) => ({
+    id: `qr-${index}`,
+    text,
+    value: text.toLowerCase(),
+  }));
 
 // ============================================================================
 // Types
@@ -137,10 +149,13 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
     isEmergency,
     emergencyType,
     progressPercent,
-    demographics,
+    patientName: contextPatientName,
     chiefComplaint,
     hpiData,
   } = state.context;
+
+  // For compatibility - component uses 'demographics' but machine uses direct fields
+  const demographics = { firstName: (contextPatientName || patientName).split(' ')[0] };
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -220,7 +235,8 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
   }, [currentPhase, send]);
 
   // Handle quick reply selection
-  const handleQuickReply = useCallback((value: string) => {
+  const handleQuickReply = useCallback((reply: QuickReply | string) => {
+    const value = typeof reply === 'string' ? reply : (reply.value || reply.text);
     const phaseConfig = PHASE_QUESTIONS[currentPhase];
     
     if (phaseConfig?.inputType === 'multiselect') {
@@ -389,10 +405,9 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
         {currentPhaseConfig?.quickReplies && currentPhaseConfig.inputType !== 'pain-scale' && (
           <div>
             <QuickReplies
-              replies={currentPhaseConfig.quickReplies}
+              replies={stringsToQuickReplies(currentPhaseConfig.quickReplies)}
               onSelect={handleQuickReply}
-              layout={currentPhaseConfig.quickReplies.length > 4 ? 'grid' : 'horizontal'}
-              selectedValue={currentPhaseConfig.inputType === 'multiselect' ? undefined : undefined}
+              columns={currentPhaseConfig.quickReplies.length > 4 ? 3 : 2}
             />
             {currentPhaseConfig.inputType === 'multiselect' && selectedMulti.length > 0 && (
               <button

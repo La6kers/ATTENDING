@@ -7,9 +7,12 @@ import type {
   UrgencyLevel, 
   ClinicalData,
   ClinicalSummary,
-  Notification,
+  AppNotification,
   UserLocation,
 } from '../types';
+
+// Alias for backward compatibility
+type Notification = AppNotification;
 import type { RedFlag, AssessmentContext } from '../machines/assessmentMachine';
 
 // ================================

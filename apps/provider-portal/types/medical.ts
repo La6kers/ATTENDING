@@ -9,8 +9,8 @@ export type {
   HistoryOfPresentIllness,
   ReviewOfSystems,
   PastMedicalHistory,
-  Medication,
-  Allergy,
+  MedicationRecord,
+  AllergyRecord,
   SocialHistory,
   FamilyHistory,
   ClinicalData,
@@ -24,8 +24,14 @@ export type {
   AssessmentListResponse,
   EmergencyFacility,
   UserLocation,
-  Notification,
+  AppNotification,
 } from '@attending/shared';
+
+// Type aliases for backward compatibility with legacy code
+import type { MedicationRecord, AllergyRecord, AppNotification } from '@attending/shared';
+export type Medication = MedicationRecord;
+export type Allergy = AllergyRecord;
+export type Notification = AppNotification;
 
 // Legacy alias for backward compatibility
 export type { EmergencyFacility as EmergencyContact } from '@attending/shared';

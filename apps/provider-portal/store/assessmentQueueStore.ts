@@ -393,7 +393,7 @@ export const useAssessmentQueueStore = create<AssessmentQueueStore>()(
             if (b.status === 'urgent' && a.status !== 'urgent') return 1;
             
             // Then by urgency level
-            const urgencyOrder: Record<UrgencyLevel, number> = { high: 0, moderate: 1, standard: 2 };
+            const urgencyOrder: Record<UrgencyLevel, number> = { emergency: 0, high: 1, moderate: 2, standard: 3 };
             const urgencyDiff = urgencyOrder[a.urgencyLevel] - urgencyOrder[b.urgencyLevel];
             if (urgencyDiff !== 0) return urgencyDiff;
             

@@ -33,6 +33,8 @@ import {
 // =============================================================================
 export type { ImagingStudy, ImagingModality, OrderPriority, PatientContext };
 export type ImagingPriority = OrderPriority;
+export type AIImagingRecommendation = ImagingRecommendation; // Alias for component imports
+export type { ImagingRecommendation };
 export { IMAGING_CATALOG };
 
 // =============================================================================

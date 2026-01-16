@@ -23,12 +23,15 @@ interface MedicationCardProps {
 const priorityStyles: Record<PrescriptionPriority, string> = {
   STAT: 'bg-red-100 text-red-800 border-red-200',
   URGENT: 'bg-orange-100 text-orange-800 border-orange-200',
+  ASAP: 'bg-yellow-100 text-yellow-800 border-yellow-200',
   ROUTINE: 'bg-blue-100 text-blue-800 border-blue-200',
 };
 
 const scheduleStyles: Record<DrugSchedule, { bg: string; text: string; label: string }> = {
+  none: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'N/A' },
   OTC: { bg: 'bg-green-100', text: 'text-green-800', label: 'OTC' },
   RX: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Rx' },
+  I: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'C-I' },
   II: { bg: 'bg-red-100', text: 'text-red-800', label: 'C-II' },
   III: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'C-III' },
   IV: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'C-IV' },

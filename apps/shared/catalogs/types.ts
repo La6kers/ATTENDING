@@ -6,12 +6,22 @@
 // ============================================================
 
 // =============================================================================
+// Recommendation Category (local definition for workspace compatibility)
+// =============================================================================
+
+/**
+ * Recommendation urgency categories for AI-powered suggestions
+ * Canonical definition - used across all ordering workflows
+ */
+export type RecommendationCategory = 'critical' | 'recommended' | 'consider' | 'avoid' | 'not-indicated';
+
+// =============================================================================
 // Common Enums
 // =============================================================================
 
 export type OrderPriority = 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE';
 
-export type DrugSchedule = 'OTC' | 'RX' | 'II' | 'III' | 'IV' | 'V';
+export type DrugSchedule = 'none' | 'OTC' | 'RX' | 'I' | 'II' | 'III' | 'IV' | 'V';
 
 // =============================================================================
 // Lab Types
@@ -157,10 +167,8 @@ export interface PatientContext {
 }
 
 // =============================================================================
-// AI Recommendation Types
+// AI Recommendation Types (category type is re-exported from clinical-types above)
 // =============================================================================
-
-export type RecommendationCategory = 'critical' | 'recommended' | 'consider' | 'avoid';
 
 export interface AIRecommendation<T = string> {
   id: string;

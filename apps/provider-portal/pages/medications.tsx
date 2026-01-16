@@ -32,12 +32,13 @@ const samplePatientContext: PatientContext = {
   mrn: '78932145',
   chiefComplaint: 'Chronic migraine with aura, occurring 8-10 days per month',
   allergies: [
-    { allergen: 'Penicillin', reaction: 'Rash, hives, difficulty breathing', severity: 'severe', crossReactivity: ['amoxicillin', 'ampicillin'] },
+    { allergen: 'Penicillin', reaction: 'Rash, hives, difficulty breathing', severity: 'severe' },
     { allergen: 'Sulfa drugs', reaction: 'Skin rash, nausea', severity: 'moderate' },
     { allergen: 'Codeine', reaction: 'Nausea, vomiting, drowsiness', severity: 'mild' },
   ],
   currentMedications: ['Ethinyl Estradiol/Norgestimate (oral contraceptive)'],
   medicalHistory: ['Migraine with aura', 'Anxiety disorder'],
+  redFlags: [],
   pregnant: false,
   breastfeeding: false,
 };
@@ -134,7 +135,7 @@ export default function MedicationsPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen">
         {/* Patient Banner */}
         {patientContext && (
           <div className="bg-white shadow-sm mx-6 mt-6 rounded-2xl p-6">
