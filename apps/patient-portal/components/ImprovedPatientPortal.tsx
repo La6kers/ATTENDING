@@ -158,7 +158,7 @@ const ImprovedPatientPortal = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-brand-gradient">
       {/* Emergency Banner */}
       <div className="bg-red-600 text-white px-4 py-2 flex items-center justify-between text-sm">
         <div className="flex items-center">
@@ -205,11 +205,11 @@ const ImprovedPatientPortal = () => {
       )}
 
       {/* Main Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white/95 backdrop-blur-md shadow-sm border-b border-purple-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Stethoscope className="h-8 w-8 text-blue-600 mr-3" />
+              <Stethoscope className="h-8 w-8 text-purple-600 mr-3" />
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">ATTENDING Patient Portal</h1>
                 <p className="text-xs text-gray-500">Secure Patient Portal</p>
@@ -249,7 +249,7 @@ const ImprovedPatientPortal = () => {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <nav className="bg-white/95 backdrop-blur-md border-b border-purple-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8 overflow-x-auto">
             {[
@@ -265,8 +265,8 @@ const ImprovedPatientPortal = () => {
                 onClick={() => setActiveView(item.id)}
                 className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                   activeView === item.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-purple-500 text-purple-600'
+                    : 'border-transparent text-gray-500 hover:text-purple-600 hover:border-purple-300'
                 }`}
                 aria-current={activeView === item.id ? 'page' : undefined}
               >
@@ -279,15 +279,15 @@ const ImprovedPatientPortal = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 bg-white/90 backdrop-blur-sm rounded-t-3xl mt-4 min-h-screen">
         {activeView === 'dashboard' && (
           <div className="space-y-6">
             {/* Health Score Card */}
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white">
+            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-6 text-white shadow-brand-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold mb-2">Your Health Score: 85/100</h2>
-                  <p className="text-blue-100">Great job! You're on track with your health goals.</p>
+                  <p className="text-purple-100">Great job! You're on track with your health goals.</p>
                   <div className="flex items-center mt-4 space-x-4">
                     <div className="flex items-center">
                       <TrendingUp className="h-4 w-4 mr-1" />
@@ -536,10 +536,10 @@ const ImprovedPatientPortal = () => {
                       ].map((topic, idx) => (
                         <button
                           key={idx}
-                          className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all text-left"
+                          className="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-sm transition-all text-left"
                           onClick={openCompassChat}
                         >
-                          <topic.icon className="h-5 w-5 text-blue-500 mr-3" />
+                          <topic.icon className="h-5 w-5 text-purple-500 mr-3" />
                           <span className="text-sm text-gray-700">{topic.text}</span>
                         </button>
                       ))}
@@ -569,7 +569,7 @@ const ImprovedPatientPortal = () => {
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Type your health question or click 'Open Full Chat' above..."
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         openCompassChat();
@@ -578,7 +578,7 @@ const ImprovedPatientPortal = () => {
                   />
                   <button 
                     onClick={openCompassChat}
-                    className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    className="p-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                   >
                     <Send className="h-5 w-5" />
                   </button>
