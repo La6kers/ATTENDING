@@ -135,12 +135,17 @@ const VitalBadge: React.FC<{
   value: string;
   status: 'normal' | 'elevated' | 'high' | 'critical' | 'low' | 'bradycardia' | 'tachycardia' | 'fever';
   icon: React.ReactNode;
-}> = ({ label, value, status, icon }) => {
+  alertId?: string;
+  isAcknowledged?: boolean;
+  onAcknowledge?: (id: string) => void;
+}> = ({ label, value, status, icon, alertId, isAcknowledged, onAcknowledge }) => {
+  const isPulsing = (status === 'critical' || status === 'high' || status === 'elevated' || status === 'tachycardia' || status === 'fever') && !isAcknowledged;
+  
   const statusStyles = {
     normal: 'bg-green-50 text-green-700 border-green-200',
     elevated: 'bg-amber-50 text-amber-700 border-amber-200',
     high: 'bg-red-50 text-red-700 border-red-200',
-    critical: 'bg-red-100 text-red-800 border-red-300 animate-pulse',
+    critical: 'bg-red-100 text-red-800 border-red-300',
     low: 'bg-blue-50 text-blue-700 border-blue-200',
     bradycardia: 'bg-blue-50 text-blue-700 border-blue-200',
     tachycardia: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -158,12 +163,25 @@ const VitalBadge: React.FC<{
     fever: 'Fever',
   };
 
+  const handleClick = () => {
+    if (alertId && onAcknowledge && isPulsing) {
+      onAcknowledge(alertId);
+    }
+  };
+
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${statusStyles[status]}`}>
+    <div 
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${statusStyles[status]} ${isPulsing ? 'animate-pulse cursor-pointer hover:opacity-80' : ''} ${isAcknowledged ? 'opacity-75' : ''} transition-all`}
+      onClick={handleClick}
+      title={isPulsing ? 'Click to acknowledge' : isAcknowledged ? 'Acknowledged' : ''}
+    >
       {icon}
       <span className="font-medium text-sm">
         {statusLabels[status]}: {value}
       </span>
+      {isAcknowledged && status !== 'normal' && (
+        <Check className="w-3 h-3" />
+      )}
     </div>
   );
 };
@@ -284,6 +302,17 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
     actionItems: 'pending',
   });
   const [actionItems, setActionItems] = useState(data.actionItems);
+  
+  // Track acknowledged (no longer pulsing) alerts
+  const [acknowledgedAlerts, setAcknowledgedAlerts] = useState<Set<string>>(new Set());
+
+  const acknowledgeAlert = useCallback((alertId: string) => {
+    setAcknowledgedAlerts(prev => new Set([...prev, alertId]));
+  }, []);
+
+  const isAlertAcknowledged = useCallback((alertId: string) => {
+    return acknowledgedAlerts.has(alertId);
+  }, [acknowledgedAlerts]);
 
   const markSectionReviewed = useCallback((section: string) => {
     setSectionStatus(prev => ({ ...prev, [section]: 'reviewed' }));
@@ -360,18 +389,30 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
 
       {/* Critical Alert Banner */}
       {data.criticalAlert && (
-        <div className="bg-gradient-to-r from-red-600 to-red-700 text-white">
+        <div 
+          className={`bg-gradient-to-r from-red-600 to-red-700 text-white cursor-pointer transition-all ${
+            isAlertAcknowledged('critical-banner') ? 'opacity-90' : ''
+          }`}
+          onClick={() => acknowledgeAlert('critical-banner')}
+          title={isAlertAcknowledged('critical-banner') ? 'Alert acknowledged' : 'Click to acknowledge'}
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 animate-pulse" />
+                <AlertTriangle className={`w-6 h-6 ${isAlertAcknowledged('critical-banner') ? '' : 'animate-pulse'}`} />
               </div>
               <div className="flex-1">
                 <span className="font-bold">CRITICAL ALERT:</span>{' '}
                 <span>{data.criticalAlert.message}</span>
+                {isAlertAcknowledged('critical-banner') && (
+                  <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded">✓ Acknowledged</span>
+                )}
               </div>
               <button
-                onClick={onEmergencyProtocol}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEmergencyProtocol?.();
+                }}
                 className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors"
               >
                 Emergency Protocol
@@ -410,18 +451,27 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                     value={`${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic}`}
                     status={vitals.bloodPressure.status}
                     icon={<Activity className="w-4 h-4" />}
+                    alertId="vital-bp"
+                    isAcknowledged={isAlertAcknowledged('vital-bp')}
+                    onAcknowledge={acknowledgeAlert}
                   />
                   <VitalBadge
                     label="HR"
                     value={`${vitals.heartRate.value} BPM`}
                     status={vitals.heartRate.status}
                     icon={<Heart className="w-4 h-4" />}
+                    alertId="vital-hr"
+                    isAcknowledged={isAlertAcknowledged('vital-hr')}
+                    onAcknowledge={acknowledgeAlert}
                   />
                   <VitalBadge
                     label="O2"
                     value={`${vitals.oxygenSat.value}%`}
                     status={vitals.oxygenSat.status}
                     icon={<Wind className="w-4 h-4" />}
+                    alertId="vital-o2"
+                    isAcknowledged={isAlertAcknowledged('vital-o2')}
+                    onAcknowledge={acknowledgeAlert}
                   />
                 </div>
               </div>
@@ -480,6 +530,15 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
               <Plus className="w-4 h-4" />
               Expand All
             </button>
+            {acknowledgedAlerts.size > 0 && (
+              <button
+                onClick={() => setAcknowledgedAlerts(new Set())}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Reset Alerts ({acknowledgedAlerts.size})
+              </button>
+            )}
           </div>
           
           <button
@@ -644,14 +703,31 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
           >
             <div className="pt-4">
               {/* Risk Level Badge */}
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold mb-4 ${
-                riskAssessment.level === 'low' ? 'bg-green-100 text-green-800' :
-                riskAssessment.level === 'moderate' ? 'bg-amber-100 text-amber-800' :
-                riskAssessment.level === 'high' ? 'bg-red-100 text-red-800' :
-                'bg-red-200 text-red-900 animate-pulse'
-              }`}>
+              <div 
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold mb-4 transition-all ${
+                  riskAssessment.level === 'low' ? 'bg-green-100 text-green-800' :
+                  riskAssessment.level === 'moderate' ? 'bg-amber-100 text-amber-800' :
+                  riskAssessment.level === 'high' ? 'bg-red-100 text-red-800' :
+                  'bg-red-200 text-red-900'
+                } ${
+                  (riskAssessment.level === 'high' || riskAssessment.level === 'critical') && !isAlertAcknowledged('risk-level')
+                    ? 'animate-pulse cursor-pointer hover:opacity-80'
+                    : ''
+                } ${
+                  isAlertAcknowledged('risk-level') ? 'opacity-75' : ''
+                }`}
+                onClick={() => {
+                  if ((riskAssessment.level === 'high' || riskAssessment.level === 'critical') && !isAlertAcknowledged('risk-level')) {
+                    acknowledgeAlert('risk-level');
+                  }
+                }}
+                title={(riskAssessment.level === 'high' || riskAssessment.level === 'critical') && !isAlertAcknowledged('risk-level') ? 'Click to acknowledge' : ''}
+              >
                 <Shield className="w-5 h-5" />
                 {riskAssessment.level.toUpperCase()} RISK - {riskAssessment.summary}
+                {isAlertAcknowledged('risk-level') && (riskAssessment.level === 'high' || riskAssessment.level === 'critical') && (
+                  <Check className="w-4 h-4 ml-1" />
+                )}
               </div>
 
               {/* Risk Factors */}
