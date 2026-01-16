@@ -3,7 +3,11 @@ import { Users, MessageSquare, Activity, AlertCircle, Clock, CheckCircle } from 
 import Link from 'next/link';
 import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
 
-const StatCards = () => {
+interface StatCardsProps {
+  compact?: boolean;
+}
+
+const StatCards: React.FC<StatCardsProps> = ({ compact = false }) => {
   // Get assessment counts from store
   const { 
     assessments, 
@@ -31,6 +35,7 @@ const StatCards = () => {
   const stats = [
     {
       title: 'COMPASS Assessments',
+      shortTitle: 'Assessments',
       value: pendingCount.toString(),
       subtitle: 'Awaiting review',
       icon: Activity,
@@ -41,6 +46,7 @@ const StatCards = () => {
     },
     {
       title: 'Urgent Alerts',
+      shortTitle: 'Urgent',
       value: urgentCount.toString(),
       subtitle: 'Require immediate attention',
       icon: AlertCircle,
@@ -52,6 +58,7 @@ const StatCards = () => {
     },
     {
       title: 'In Review',
+      shortTitle: 'In Review',
       value: inReviewCount.toString(),
       subtitle: 'Currently being reviewed',
       icon: Clock,
@@ -62,6 +69,7 @@ const StatCards = () => {
     },
     {
       title: 'Completed Today',
+      shortTitle: 'Completed',
       value: completedTodayCount.toString(),
       subtitle: 'Reviews finished',
       icon: CheckCircle,
@@ -72,6 +80,35 @@ const StatCards = () => {
     },
   ];
 
+  // Compact mode for resizable grid cards
+  if (compact) {
+    return (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 h-full">
+        {stats.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Link key={index} href={stat.href} className="block h-full">
+              <div className={`bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-all cursor-pointer h-full flex flex-col justify-center ${
+                stat.pulse ? 'ring-2 ring-red-300 animate-pulse' : ''
+              }`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className={`${stat.bgColor} p-1.5 rounded ${stat.pulse ? 'animate-pulse' : ''}`}>
+                    <Icon className={`w-4 h-4 ${stat.textColor}`} />
+                  </div>
+                  <span className="text-xs font-medium text-gray-600 truncate">
+                    {stat.shortTitle}
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Default full-size mode
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {stats.map((stat, index) => {

@@ -12,6 +12,9 @@
 // ============================================================
 
 import '../styles/globals.css'
+// React Grid Layout CSS for resizable dashboard cards
+import 'react-grid-layout/css/styles.css'
+import 'react-resizable/css/styles.css'
 import type { AppProps } from 'next/app'
 import { SessionProvider, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
