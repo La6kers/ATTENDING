@@ -1,25 +1,10 @@
 // ============================================================
-// ATTENDING AI - Prisma Client Singleton
-// apps/provider-portal/lib/prisma.ts
-// 
-// This ensures we don't create multiple Prisma client instances
-// during development hot reloading.
+// DEPRECATED - Use @attending/shared/lib/prisma instead
+// This file re-exports for backward compatibility only
 // ============================================================
 
-import { PrismaClient } from '@prisma/client';
+export { prisma } from '@attending/shared/lib/prisma';
+export { prisma as default } from '@attending/shared/lib/prisma';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'error', 'warn'] 
-    : ['error'],
-});
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
-
-export default prisma;
+// Re-export types if needed
+export type { PrismaClient } from '@attending/shared/lib/prisma';

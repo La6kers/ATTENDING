@@ -5,6 +5,8 @@
 // Initializes:
 // - NextAuth SessionProvider for authentication
 // - WebSocket connection for real-time updates
+// - Toast notification system
+// - Floating action button
 // - Notification permissions
 // - Global state management
 // ============================================================
@@ -21,7 +23,11 @@ import {
   initializeAudio,
   requestNotificationPermission 
 } from '@/lib/websocket'
+import { useKeyboardShortcuts, createClinicalShortcuts } from '@/hooks/useKeyboardShortcuts'
+import KeyboardShortcutsHelp from '@/components/shared/KeyboardShortcutsHelp'
 import { useAssessmentQueueStore } from '@/store/assessmentQueueStore'
+import { ToastProvider, useToast, setToastFn, FloatingActionButton } from '@/components/shared'
+import { EmergencyProtocolModal } from '@/components/shared'
 
 // Pages that should not show the navigation
 const noNavPages = ['/auth/signin', '/auth/error', '/login', '/error']
@@ -33,16 +39,25 @@ const publicPages = ['/auth/signin', '/auth/error', '/api']
 // AUTHENTICATED APP WRAPPER
 // ============================================================
 
-function AuthenticatedApp({ Component, pageProps }: { Component: AppProps['Component'], pageProps: any }) {
+// Inner app component that can use toast hooks
+function AppContent({ Component, pageProps }: { Component: AppProps['Component'], pageProps: any }) {
   const router = useRouter()
   const { data: session, status } = useSession()
   const [mounted, setMounted] = useState(false)
   const [wsConnected, setWsConnected] = useState(false)
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false)
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
   const fetchAssessments = useAssessmentQueueStore(state => state.fetchAssessments)
+  const toastContext = useToast()
 
   // Get provider info from session or use dev defaults
   const providerId = session?.user?.id || 'provider-dev-001'
   const providerName = session?.user?.name || 'Dr. Provider (Dev)'
+
+  // Initialize toast function for non-React contexts
+  useEffect(() => {
+    setToastFn(toastContext)
+  }, [toastContext])
 
   // Check if current page is public
   const isPublicPage = publicPages.some(page => router.pathname.startsWith(page))
@@ -58,6 +73,36 @@ function AuthenticatedApp({ Component, pageProps }: { Component: AppProps['Compo
       router.push('/auth/signin')
     }
   }, [session, status, isPublicPage, router])
+
+  // Global keyboard shortcuts
+  const globalShortcuts = createClinicalShortcuts({
+    onSearch: () => {
+      // Focus the search input in header if available
+      const searchInput = document.querySelector('[data-search-input]') as HTMLInputElement
+      if (searchInput) {
+        searchInput.focus()
+      } else {
+        toastContext.info('Search', 'Press / to search')
+      }
+    },
+    onEmergency: () => {
+      setShowEmergencyModal(true)
+    },
+  })
+
+  // Add "?" shortcut to show keyboard help
+  useKeyboardShortcuts({
+    shortcuts: [
+      ...globalShortcuts,
+      {
+        key: '?',
+        shift: true,
+        description: 'Show keyboard shortcuts',
+        action: () => setShowKeyboardHelp(true),
+      },
+    ],
+    enabled: mounted && !showEmergencyModal,
+  })
 
   // Initialize app on mount
   useEffect(() => {
@@ -139,11 +184,15 @@ function AuthenticatedApp({ Component, pageProps }: { Component: AppProps['Compo
     return null
   }
 
+  // Pages that should show the FAB
+  const showFAB = !noNavPages.some(page => router.pathname.startsWith(page)) && 
+                  router.pathname !== '/patient-assessment'
+
   return (
     <div className="min-h-screen bg-background">
       {/* Connection status indicator (dev mode) */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-gray-900 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
+        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-gray-900 text-white px-3 py-1.5 rounded-full text-xs shadow-lg">
           <span 
             className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-green-400' : 'bg-red-400'}`} 
           />
@@ -160,7 +209,46 @@ function AuthenticatedApp({ Component, pageProps }: { Component: AppProps['Compo
       <main className={showNav ? 'pt-16' : ''}>
         <Component {...pageProps} />
       </main>
+
+      {/* Global Floating Action Button */}
+      {showFAB && (
+        <FloatingActionButton
+          onEmergency={() => setShowEmergencyModal(true)}
+          position="bottom-right"
+        />
+      )}
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <KeyboardShortcutsHelp
+        isOpen={showKeyboardHelp}
+        onClose={() => setShowKeyboardHelp(false)}
+      />
+
+      {/* Emergency Protocol Modal */}
+      {showEmergencyModal && (
+        <EmergencyProtocolModal
+          isOpen={showEmergencyModal}
+          onClose={() => setShowEmergencyModal(false)}
+          patientName="Current Patient"
+          onProtocolSelect={(protocol) => {
+            toastContext.info(`Emergency Protocol: ${protocol.name}`, 'Protocol activated')
+            setShowEmergencyModal(false)
+          }}
+        />
+      )}
     </div>
+  )
+}
+
+// ============================================================
+// AUTHENTICATED APP WRAPPER WITH TOAST PROVIDER
+// ============================================================
+
+function AuthenticatedApp({ Component, pageProps }: { Component: AppProps['Component'], pageProps: any }) {
+  return (
+    <ToastProvider>
+      <AppContent Component={Component} pageProps={pageProps} />
+    </ToastProvider>
   )
 }
 

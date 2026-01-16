@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useClinicalHub } from '@/store/useClinicalHub';
 import { ClinicalMessage } from '@/lib/clinicalMockData';
-import { cn } from '@/lib/utils';
+import { cn } from '@attending/shared/lib/utils';
 
 export const ClinicalSummaryPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'risks'>('overview');

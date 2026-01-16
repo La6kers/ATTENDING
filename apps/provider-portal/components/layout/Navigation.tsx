@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { 
   Home, 
   Inbox, 
-  Users, 
-  Calendar, 
-  BarChart3, 
   Settings,
   Menu,
   X,
@@ -17,15 +14,26 @@ import {
   TestTube,
   Pill,
   ClipboardList,
-  MessageSquare,
   Activity,
-  AlertTriangle
+  AlertTriangle,
+  Keyboard,
+  ChevronDown,
+  LogOut,
+  HelpCircle,
+  User,
 } from 'lucide-react';
 import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
+import { NotificationCenter } from '@/components/shared';
 
 const Navigation = () => {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   
   // Get assessment counts for badge
   const { getUrgentCount, getPendingCount, fetchAssessments, assessments } = useAssessmentQueueStore();
@@ -35,7 +43,36 @@ const Navigation = () => {
     if (assessments.length === 0) {
       fetchAssessments();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount, assessments.length and fetchAssessments are stable
+
+  // Close user menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Focus search input when opened
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [showSearch]);
+
+  // Handle search submit
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setShowSearch(false);
+      setSearchQuery('');
+    }
+  };
 
   const urgentCount = getUrgentCount();
   const pendingCount = getPendingCount();
@@ -113,25 +150,122 @@ const Navigation = () => {
           </div>
 
           {/* Right side items */}
-          <div className="flex items-center space-x-4">
-            {/* Search */}
-            <button className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200">
-              <Search className="w-5 h-5" />
+          <div className="flex items-center space-x-2">
+            {/* Search - Expandable */}
+            {showSearch ? (
+              <form onSubmit={handleSearch} className="flex items-center">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    ref={searchInputRef}
+                    data-search-input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search patients, orders..."
+                    className="pl-9 pr-8 py-2 w-64 rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSearch(false)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowSearch(true)}
+                className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                title="Search (Ctrl+K)"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* Keyboard shortcuts help */}
+            <button
+              className="hidden sm:flex p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+              title="Keyboard shortcuts (Shift+?)"
+            >
+              <Keyboard className="w-5 h-5" />
             </button>
 
             {/* Notifications */}
-            <button className="relative p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200">
+            <button
+              onClick={() => setShowNotificationCenter(true)}
+              className="relative p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+              title="Notifications"
+            >
               <Bell className="w-5 h-5" />
               {(urgentCount > 0 || pendingCount > 0) && (
-                <span className={`absolute top-1 right-1 w-2.5 h-2.5 ${urgentCount > 0 ? 'bg-red-500' : 'bg-amber-500'} rounded-full animate-pulse`}></span>
+                <span className={`absolute top-1 right-1 min-w-[18px] h-[18px] ${urgentCount > 0 ? 'bg-red-500' : 'bg-amber-500'} text-white text-xs font-bold rounded-full flex items-center justify-center px-1`}>
+                  {urgentCount || pendingCount}
+                </span>
               )}
             </button>
 
-            {/* User Avatar - Using brand gradient */}
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-brand-gradient rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                DR
-              </div>
+            {/* User Menu */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-2 p-1.5 hover:bg-purple-50 rounded-lg transition-all duration-200"
+              >
+                <div className="w-8 h-8 bg-brand-gradient rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                  DR
+                </div>
+                <span className="hidden sm:inline text-sm font-medium text-gray-700">Dr. Reed</span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
+
+              {/* User Dropdown */}
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50 animate-slide-down">
+                  <div className="p-4 border-b bg-gray-50">
+                    <p className="font-semibold text-gray-900">Dr. Thomas Reed</p>
+                    <p className="text-sm text-gray-500">Family Medicine</p>
+                  </div>
+                  <div className="py-2">
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <User className="w-4 h-4" />
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </Link>
+                    <Link
+                      href="/help"
+                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      <HelpCircle className="w-4 h-4" />
+                      Help & Support
+                    </Link>
+                  </div>
+                  <div className="border-t py-2">
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        router.push('/auth/signin');
+                      }}
+                      className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 w-full"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -202,6 +336,11 @@ const Navigation = () => {
           </div>
         </div>
       )}
+    {/* Notification Center Panel */}
+      <NotificationCenter
+        isOpen={showNotificationCenter}
+        onClose={() => setShowNotificationCenter(false)}
+      />
     </nav>
   );
 };

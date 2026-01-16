@@ -35,6 +35,9 @@ export type { ImagingStudy, ImagingModality, OrderPriority, PatientContext };
 export type ImagingPriority = OrderPriority;
 export { IMAGING_CATALOG };
 
+// Re-export recommendation type with alias for component compatibility
+export type { ImagingRecommendation as AIImagingRecommendation } from '@attending/shared/services/ClinicalRecommendationService';
+
 // =============================================================================
 // Store-specific Types
 // =============================================================================

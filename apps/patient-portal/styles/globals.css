@@ -245,6 +245,17 @@ body {
 /* ========================================
    ANIMATIONS
    ======================================== */
+@keyframes pulse-urgent {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    opacity: 0.9;
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
 @keyframes pulse-purple {
   0%, 100% {
     opacity: 0.4;
@@ -276,6 +287,10 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.animate-pulse-urgent {
+  animation: pulse-urgent 1.5s ease-in-out infinite;
 }
 
 .animate-pulse-purple {

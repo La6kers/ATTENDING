@@ -13,13 +13,10 @@ import {
   ArrowLeft, 
   RotateCcw, 
   AlertTriangle,
-  MessageSquare,
   User,
   Bot,
-  Loader2,
-  ChevronDown
 } from 'lucide-react';
-import { assessmentMachine } from '@/machines/assessmentMachine';
+import { assessmentMachine, type AssessmentPhase } from '@/machines/assessmentMachine';
 import { EmergencyModal } from './EmergencyModal';
 import { QuickReplies, PainScaleReplies } from './QuickReplies';
 
@@ -27,9 +24,18 @@ import { QuickReplies, PainScaleReplies } from './QuickReplies';
 // Types
 // ============================================================================
 
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+  phase?: AssessmentPhase;
+  quickReplies?: string[];
+}
+
 interface AssessmentChatProps {
   patientName?: string;
-  onComplete?: (data: any) => void;
+  onComplete?: (data: unknown) => void;
   onEmergency?: (type: string) => void;
 }
 
@@ -114,33 +120,50 @@ const PHASE_QUESTIONS: Record<string, {
 };
 
 // ============================================================================
+// Helper to generate unique IDs
+// ============================================================================
+
+function generateMessageId(): string {
+  return `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// ============================================================================
 // Component
 // ============================================================================
 
 export const AssessmentChat: React.FC<AssessmentChatProps> = ({
   patientName = 'there',
-  onComplete,
+  onComplete: _onComplete,
   onEmergency,
 }) => {
   const [state, send] = useMachine(assessmentMachine);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedMulti, setSelectedMulti] = useState<string[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Extract state from machine context
   const { 
     currentPhase, 
-    messages, 
     redFlags, 
-    urgencyLevel, 
     isEmergency,
     emergencyType,
     progressPercent,
-    demographics,
-    chiefComplaint,
-    hpiData,
   } = state.context;
+
+  // Helper to add a message to local state
+  const addMessage = useCallback((message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        ...message,
+        id: generateMessageId(),
+        timestamp: new Date().toISOString(),
+      }
+    ]);
+  }, []);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -160,30 +183,24 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
     if (phaseConfig && !messages.some(m => m.phase === currentPhase && m.role === 'assistant')) {
       setIsTyping(true);
       const timer = setTimeout(() => {
-        send({
-          type: 'ADD_MESSAGE',
-          message: {
-            role: 'assistant',
-            content: phaseConfig.question,
-            phase: currentPhase,
-            quickReplies: phaseConfig.quickReplies,
-          },
+        addMessage({
+          role: 'assistant',
+          content: phaseConfig.question,
+          phase: currentPhase,
+          quickReplies: phaseConfig.quickReplies,
         });
         setIsTyping(false);
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [currentPhase, messages, send]);
+  }, [currentPhase, messages, addMessage]);
 
   // Handle text submission
   const handleSubmit = useCallback((text: string) => {
     if (!text.trim()) return;
 
     // Add user message
-    send({
-      type: 'ADD_MESSAGE',
-      message: { role: 'user', content: text, phase: currentPhase },
-    });
+    addMessage({ role: 'user', content: text, phase: currentPhase });
 
     // Route based on current phase
     switch (currentPhase) {
@@ -191,25 +208,25 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
         send({ type: 'SUBMIT_CHIEF_COMPLAINT', complaint: text });
         break;
       case 'hpiOnset':
-        send({ type: 'SUBMIT_HPI_DATA', field: 'onset', value: text });
+        send({ type: 'SUBMIT_HPI_ONSET', onset: text });
         break;
       case 'hpiLocation':
-        send({ type: 'SUBMIT_HPI_DATA', field: 'location', value: text });
+        send({ type: 'SUBMIT_HPI_LOCATION', location: text });
         break;
       case 'hpiDuration':
-        send({ type: 'SUBMIT_HPI_DATA', field: 'duration', value: text });
+        send({ type: 'SUBMIT_HPI_DURATION', duration: text });
         break;
       case 'hpiCharacter':
-        send({ type: 'SUBMIT_HPI_DATA', field: 'character', value: text });
+        send({ type: 'SUBMIT_HPI_CHARACTER', character: text });
         break;
       case 'hpiTiming':
-        send({ type: 'SUBMIT_HPI_DATA', field: 'timing', value: text });
+        send({ type: 'SUBMIT_HPI_TIMING', timing: text });
         break;
       case 'hpiContext':
-        send({ type: 'SUBMIT_HPI_DATA', field: 'context', value: text });
+        send({ type: 'SUBMIT_HPI_CONTEXT', context: text });
         break;
       case 'hpiModifying':
-        send({ type: 'SUBMIT_HPI_DATA', field: 'modifyingFactors', value: { aggravating: [text] } });
+        send({ type: 'SUBMIT_HPI_MODIFYING', aggravating: [text], relieving: [] });
         break;
       default:
         send({ type: 'NEXT' });
@@ -217,7 +234,7 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
 
     setInputValue('');
     setSelectedMulti([]);
-  }, [currentPhase, send]);
+  }, [currentPhase, send, addMessage]);
 
   // Handle quick reply selection
   const handleQuickReply = useCallback((value: string) => {
@@ -235,7 +252,7 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
 
     // Check for emergency triggers
     if (value.toLowerCase().includes('emergency')) {
-      send({ type: 'TRIGGER_EMERGENCY', emergencyType: 'User Reported' });
+      send({ type: 'EMERGENCY_TRIGGERED', emergencyType: 'User Reported' });
       return;
     }
 
@@ -244,12 +261,9 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
 
   // Handle pain scale selection
   const handlePainScale = useCallback((value: number) => {
-    send({
-      type: 'ADD_MESSAGE',
-      message: { role: 'user', content: `Pain level: ${value}/10`, phase: currentPhase },
-    });
-    send({ type: 'SUBMIT_HPI_DATA', field: 'severity', value });
-  }, [currentPhase, send]);
+    addMessage({ role: 'user', content: `Pain level: ${value}/10`, phase: currentPhase });
+    send({ type: 'SUBMIT_HPI_SEVERITY', severity: value });
+  }, [currentPhase, send, addMessage]);
 
   // Handle multiselect submission
   const handleMultiSubmit = useCallback(() => {
@@ -267,11 +281,12 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
   const handleReset = useCallback(() => {
     if (confirm('Are you sure you want to start over?')) {
       send({ type: 'RESET' });
+      setMessages([]);
     }
   }, [send]);
 
   // Render message bubble
-  const renderMessage = (message: typeof messages[0]) => {
+  const renderMessage = (message: ChatMessage) => {
     const isUser = message.role === 'user';
     const isSystem = message.role === 'system';
 
@@ -392,7 +407,6 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
               replies={currentPhaseConfig.quickReplies}
               onSelect={handleQuickReply}
               layout={currentPhaseConfig.quickReplies.length > 4 ? 'grid' : 'horizontal'}
-              selectedValue={currentPhaseConfig.inputType === 'multiselect' ? undefined : undefined}
             />
             {currentPhaseConfig.inputType === 'multiselect' && selectedMulti.length > 0 && (
               <button
@@ -436,16 +450,18 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
       {/* Emergency Modal */}
       <EmergencyModal
         isOpen={isEmergency}
-        emergencyType={emergencyType}
-        redFlags={redFlags}
-        patientName={demographics?.firstName}
-        onDismiss={() => send({ type: 'DISMISS_EMERGENCY' })}
+        emergencyType={emergencyType || 'default'}
+        symptoms={redFlags.map(rf => rf.symptom)}
+        onClose={() => send({ type: 'EMERGENCY_ACKNOWLEDGED' })}
         onCall911={() => {
-          send({ type: 'CALL_911' });
+          send({ type: 'EMERGENCY_CALL_911' });
           onEmergency?.(emergencyType || 'Unknown');
         }}
+        onFindER={() => {
+          // ER finder is handled internally by the modal
+        }}
         onContinueAssessment={() => {
-          send({ type: 'DISMISS_EMERGENCY' });
+          send({ type: 'EMERGENCY_ACKNOWLEDGED' });
           send({ type: 'NEXT' });
         }}
       />

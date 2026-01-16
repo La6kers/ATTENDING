@@ -1,5 +1,6 @@
 import React from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
+import { QuickActionsBar } from '../components/shared';
 import { ClipboardList, Target, Users, TrendingUp, Search, Filter, Plus, CheckCircle } from 'lucide-react';
 
 export default function TreatmentPlans() {
@@ -29,6 +30,15 @@ export default function TreatmentPlans() {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Quick Actions Bar */}
+          <QuickActionsBar
+            currentPage="treatment"
+            showBackButton={true}
+            backButtonLabel="Back to Diagnosis"
+            backButtonHref="/assessments"
+            showEmergencyButton={false}
+          />
+
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow-sm p-6">

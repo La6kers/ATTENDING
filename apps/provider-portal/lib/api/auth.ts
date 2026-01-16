@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import AzureADProvider from 'next-auth/providers/azure-ad';
-import { prisma } from './prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 
 // Extend NextAuth types
 declare module 'next-auth' {

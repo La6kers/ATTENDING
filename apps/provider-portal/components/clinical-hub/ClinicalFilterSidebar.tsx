@@ -1,6 +1,6 @@
 import React from 'react';
 import { useClinicalHub } from '@/store/useClinicalHub';
-import { cn } from '@/lib/utils';
+import { cn } from '@attending/shared/lib/utils';
 
 interface FilterItem {
   id: string;

@@ -2,7 +2,7 @@
 // apps/provider-portal/pages/api/treatment-plans/[id].ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 
 const isDev = process.env.NODE_ENV === 'development';
 

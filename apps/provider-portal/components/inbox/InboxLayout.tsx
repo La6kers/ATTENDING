@@ -5,7 +5,7 @@ import { MainContent } from './MainContent';
 import { Menu, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useInbox } from '../../store/useInbox';
-import { cn } from '../../lib/utils';
+import { cn } from '@attending/shared/lib/utils';
 
 export const InboxLayout: FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

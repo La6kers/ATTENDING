@@ -2,7 +2,7 @@ import * as React from 'react';
 import { FC, useMemo, useEffect } from 'react';
 import { useInbox } from '../../store/useInbox';
 import type { Message } from '../../store/useInbox';
-import { cn } from '../../lib/utils';
+import { cn } from '@attending/shared/lib/utils';
 import { Checkbox } from '../ui/checkbox';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -78,7 +78,7 @@ const MessageItem: FC<{ message: Message }> = ({ message }) => {
 export const MessageList: FC = () => {
   const {
     messages,
-    filter,
+    // filter, // Available for future filtering
     searchQuery,
     setSearchQuery,
     sortBy,
@@ -86,7 +86,7 @@ export const MessageList: FC = () => {
     sortOrder,
     setSortOrder,
     selectedMessages,
-    selectAllMessages,
+    // selectAllMessages, // Available for bulk selection
     clearSelection,
     markAsRead,
     archiveMessages,
@@ -97,10 +97,11 @@ export const MessageList: FC = () => {
   // Fetch messages on mount
   useEffect(() => {
     fetchMessages();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fetchMessages is stable, intentionally run only on mount
 
   const filteredAndSortedMessages = useMemo(() => {
-    let result = messages.filter((message) => {
+    const result = messages.filter((message) => {
       // Filter by status (archived messages are hidden)
       if (message.status === 'archived') return false;
 
@@ -119,10 +120,11 @@ export const MessageList: FC = () => {
         case 'date':
           comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           break;
-        case 'priority':
-          const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+        case 'priority': {
+          const priorityOrder: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
           comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
           break;
+        }
         case 'patientName':
           comparison = a.patientDetails.name.localeCompare(b.patientDetails.name);
           break;

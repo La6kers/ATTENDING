@@ -2,7 +2,7 @@
 // apps/provider-portal/pages/api/referrals/providers.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 
 interface Provider {
   id: string;

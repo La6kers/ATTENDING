@@ -2,7 +2,7 @@
 // apps/provider-portal/pages/api/referrals/index.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { CreateReferralSchema, validate } from '@attending/shared/schemas';
 
 // Development bypass for auth

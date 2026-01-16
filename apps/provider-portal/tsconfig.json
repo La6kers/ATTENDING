@@ -18,9 +18,20 @@
     "paths": {
       "@/*": ["./*"],
       "@attending/shared": ["../shared"],
-      "@attending/shared/*": ["../shared/*"]
+      "@attending/shared/*": ["../shared/*"],
+      "@attending/ui-primitives": ["../../packages/ui-primitives"],
+      "@attending/clinical-types": ["../../packages/clinical-types"],
+      "@attending/clinical-services": ["../../packages/clinical-services"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "../shared/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "../shared/**/*.ts",
+    "../shared/**/*.tsx",
+    "../../packages/**/*.ts",
+    "../../packages/**/*.tsx"
+  ],
   "exclude": ["node_modules"]
 }

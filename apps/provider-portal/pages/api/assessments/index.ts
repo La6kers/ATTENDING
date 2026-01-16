@@ -7,7 +7,7 @@
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { Prisma, UrgencyLevel, AssessmentStatus } from '@prisma/client';
 import { 
   SubmitAssessmentSchema, 

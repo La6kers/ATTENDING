@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
-import { cn } from '@/lib/utils';
+import { cn } from '@attending/shared/lib/utils';
 import { Mail, TestTube, Phone, Pill, AlertCircle, Clock } from 'lucide-react';
 
 export const FilterTabs: FC = () => {

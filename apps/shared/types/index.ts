@@ -7,6 +7,9 @@
 
 export * from './chat.types';
 
+// Import UrgencyLevel for use in this file's type definitions
+import type { UrgencyLevel } from './chat.types';
+
 // =============================================================================
 // Assessment Phases & Status
 // =============================================================================
@@ -27,9 +30,6 @@ export type AssessmentStatus =
   | 'in_review'      // Provider currently reviewing
   | 'completed'      // Review finished
   | 'follow_up';     // Requires follow-up action
-
-// NOTE: UrgencyLevel is now defined in chat.types.ts with 'emergency' level
-// Use: import { UrgencyLevel } from '@attending/shared/types'
 
 // =============================================================================
 // Clinical Data Structures

@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
+import { QuickActionsBar, PatientBanner, SimpleCriticalAlert, useToast } from '../components/shared';
 import {
   ImagingCatalogBrowser,
   AIImagingRecommendationsPanel,
@@ -58,6 +59,8 @@ export default function Imaging() {
   const [viewMode, setViewMode] = useState<ViewMode>('order');
   const [activeTab, setActiveTab] = useState<OrderTab>('ai');
   const [showCosts, setShowCosts] = useState(true);
+  const [alertDismissed, setAlertDismissed] = useState(false);
+  const toast = useToast();
 
   // Zustand store
   const {
@@ -131,10 +134,12 @@ export default function Imaging() {
   // Handle order submission
   const handleSubmit = async () => {
     try {
+      toast.loading('Submitting imaging orders...');
       const orderIds = await submitOrder('encounter-demo-001');
+      toast.success('Imaging orders submitted successfully!', `Order IDs: ${orderIds.join(', ')}`);
       console.log('Imaging order submitted:', orderIds);
-      alert(`Imaging order submitted successfully! Order IDs: ${orderIds.join(', ')}`);
     } catch (err) {
+      toast.error('Failed to submit imaging orders', 'Please try again or contact support.');
       console.error('Failed to submit order:', err);
     }
   };
@@ -202,59 +207,54 @@ export default function Imaging() {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Quick Actions Bar - Cross-page navigation */}
+          <QuickActionsBar
+            currentPage="imaging"
+            patientId={patientContext?.id}
+            showBackButton={true}
+            backButtonLabel="Back to Diagnosis"
+            backButtonHref="/assessments"
+            showEmergencyButton={patientContext?.redFlags && patientContext.redFlags.length > 0}
+            onEmergencyProtocol={() => {
+              // Auto-select STAT imaging for emergency protocol
+              aiRecommendations
+                .filter(r => r.category === 'critical' || r.category === 'strongly-recommended')
+                .forEach(r => r.studies?.forEach((study: any) => addStudy(study.studyCode, { priority: 'STAT', aiRecommended: true })));
+              toast.warning('Emergency Protocol Activated', 'STAT imaging auto-selected');
+            }}
+          />
+
+          {/* Critical Alert Banner - Shows when patient has red flags */}
+          {patientContext?.redFlags && patientContext.redFlags.length > 0 && !alertDismissed && (
+            <SimpleCriticalAlert
+              title="Critical Red Flags Detected"
+              message={`Patient has ${patientContext.redFlags.length} red flag${patientContext.redFlags.length > 1 ? 's' : ''}: ${patientContext.redFlags.join(', ')}. Consider STAT imaging studies.`}
+              actionLabel="Auto-Select STAT Imaging"
+              onAction={() => {
+                aiRecommendations
+                  .filter(r => r.category === 'critical' || r.category === 'strongly-recommended')
+                  .forEach(r => r.studies?.forEach((study: any) => addStudy(study.studyCode, { priority: 'STAT', aiRecommended: true })));
+                toast.success('STAT Imaging Selected', 'Critical imaging studies have been added to your order');
+                setAlertDismissed(true);
+              }}
+              onDismiss={() => setAlertDismissed(true)}
+              className="mb-4"
+            />
+          )}
+
           {viewMode === 'order' ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Study Selection */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Patient Context Banner */}
+                {/* Patient Context Banner - Using shared component */}
                 {patientContext && (
-                  <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-gray-900">
-                            {patientContext.name}
-                          </h3>
-                          <span className="text-sm text-gray-500">
-                            {patientContext.age}yo {patientContext.gender}
-                          </span>
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
-                            {patientContext.mrn}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          <strong>Chief Complaint:</strong> {patientContext.chiefComplaint}
-                        </p>
-                        {patientContext.redFlags.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <AlertTriangle className="w-4 h-4 text-red-500" />
-                            <span className="text-sm text-red-600">
-                              Red Flags: {patientContext.redFlags.join(', ')}
-                            </span>
-                          </div>
-                        )}
-                        {/* Safety Info */}
-                        <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
-                          {patientContext.creatinine && (
-                            <span>Creatinine: {patientContext.creatinine} mg/dL</span>
-                          )}
-                          {patientContext.gfr && (
-                            <span className={patientContext.gfr < 30 ? 'text-red-600 font-medium' : ''}>
-                              GFR: {patientContext.gfr}
-                            </span>
-                          )}
-                          {patientContext.allergies.length > 0 && (
-                            <span className="text-amber-600">
-                              Allergies: {patientContext.allergies.join(', ')}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <Settings className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
+                  <PatientBanner
+                    patient={patientContext}
+                    accentColor="blue"
+                    showRedFlags={true}
+                    showSafetyInfo={true}
+                    showActions={true}
+                  />
                 )}
 
                 {/* Tab Navigation */}

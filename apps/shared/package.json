@@ -24,6 +24,9 @@
     "./stores": "./stores/index.ts",
     "./stores/*": "./stores/*.ts",
     "./components/ui": "./components/ui/index.ts",
+    "./components/layout": "./components/layout/index.ts",
+    "./components/chat": "./components/chat/index.ts",
+    "./components/errors": "./components/errors/index.ts",
     "./components/*": "./components/*.tsx",
     "./auth": "./auth/index.ts",
     "./auth/*": "./auth/*.ts"

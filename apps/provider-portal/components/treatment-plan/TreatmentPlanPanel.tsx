@@ -12,10 +12,7 @@ import {
   BookOpen,
   AlertTriangle,
   CheckCircle,
-  Clock,
   Sparkles,
-  ChevronDown,
-  ChevronRight,
   Plus,
   X,
   Save,
@@ -29,7 +26,6 @@ import type {
   Diagnosis, 
   FollowUp, 
   ReturnPrecaution,
-  TreatmentProtocol,
   OrderSummary 
 } from '@/store/treatmentPlanStore';
 
@@ -55,7 +51,7 @@ export function TreatmentPlanPanel({
   onSubmit,
 }: TreatmentPlanPanelProps) {
   const [activeSection, setActiveSection] = useState<string>('diagnoses');
-  const [showProtocolModal, setShowProtocolModal] = useState(false);
+  const [_showProtocolModal, setShowProtocolModal] = useState(false);
   const [showAddDiagnosis, setShowAddDiagnosis] = useState(false);
   const [showAddFollowUp, setShowAddFollowUp] = useState(false);
 
@@ -63,9 +59,9 @@ export function TreatmentPlanPanel({
     currentPlan,
     suggestedProtocols,
     selectedProtocol,
-    loadingProtocols,
+    // loadingProtocols, // Available for loading state UI
     saving,
-    validationErrors,
+    // validationErrors, // Available for validation display
     initializePlan,
     loadProtocols,
     applyProtocol,
@@ -74,7 +70,7 @@ export function TreatmentPlanPanel({
     setClinicalSummary,
     addFollowUp,
     removeFollowUp,
-    addReturnPrecaution,
+    // addReturnPrecaution, // Available when implementing return precautions
     removeReturnPrecaution,
     setAdditionalInstructions,
     savePlan,
@@ -89,7 +85,8 @@ export function TreatmentPlanPanel({
   // Initialize plan on mount
   useEffect(() => {
     initializePlan(patientContext.id, encounterId, patientContext);
-  }, [patientContext.id, encounterId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientContext.id, encounterId]); // patientContext and initializePlan are stable
 
   // Sync orders from props
   useEffect(() => {

@@ -13,6 +13,7 @@ import {
   Filter
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { QuickActionsBar, PatientBanner, SimpleCriticalAlert, useToast } from '@/components/shared';
 import { ReferralOrderingPanel } from '@/components/referral-ordering';
 import type { PatientContext } from '@/store/referralOrderingStore';
 
@@ -39,6 +40,8 @@ export default function ReferralsPage() {
   const [activeTab, setActiveTab] = useState<'new' | 'pending' | 'history'>('new');
   const [pendingReferrals, setPendingReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [alertDismissed, setAlertDismissed] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     // Load patient context
@@ -55,6 +58,7 @@ export default function ReferralsPage() {
   }, [patientId]);
 
   const handleOrderComplete = (referralIds: string[]) => {
+    toast.success('Referrals submitted successfully!', `${referralIds.length} referral(s) sent`);
     // Refresh pending referrals
     fetch('/api/referrals?status=PENDING')
       .then(res => res.json())
@@ -125,6 +129,35 @@ export default function ReferralsPage() {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Quick Actions Bar */}
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <QuickActionsBar
+            currentPage="referrals"
+            patientId={patientContext.id}
+            encounterId={encounterId as string}
+            showBackButton={false}
+            showEmergencyButton={patientContext.redFlags && patientContext.redFlags.length > 0}
+            onEmergencyProtocol={() => {
+              toast.warning('Emergency Protocol Activated', 'Consider urgent neurology/neurosurgery referral');
+            }}
+          />
+
+          {/* Critical Alert Banner - Shows when patient has red flags */}
+          {patientContext.redFlags && patientContext.redFlags.length > 0 && !alertDismissed && (
+            <SimpleCriticalAlert
+              title="Critical Red Flags Detected"
+              message={`Patient has ${patientContext.redFlags.length} red flag${patientContext.redFlags.length > 1 ? 's' : ''}: ${patientContext.redFlags.join(', ')}. Consider urgent specialty referral.`}
+              actionLabel="View Emergency Protocol"
+              onAction={() => {
+                toast.info('Emergency Protocol', 'Consider urgent neurology or neurosurgery referral');
+                setAlertDismissed(true);
+              }}
+              onDismiss={() => setAlertDismissed(true)}
+              className="mt-4"
+            />
+          )}
         </div>
 
         {/* Tabs */}

@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
 import { Brain, AlertCircle, CheckCircle, Info, Activity } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@attending/shared/lib/utils';
 
 export const AIAssistant: FC = () => {
   const { currentMessage, aiAssistant } = useInbox();

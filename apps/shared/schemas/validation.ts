@@ -10,13 +10,13 @@ import type { NextApiResponse } from 'next';
  * Custom validation error for API responses
  */
 export class ValidationError extends Error {
-  public readonly errors: z.ZodIssue[];
-  public readonly flatErrors: z.typeToFlattenedError<any>;
+  public readonly issues: z.ZodIssue[];
+  public readonly flatErrors: { fieldErrors: Record<string, string[]>; formErrors: string[] };
   
   constructor(zodError: ZodError) {
     super('Validation failed');
     this.name = 'ValidationError';
-    this.errors = zodError.errors;
+    this.issues = zodError.issues;
     this.flatErrors = zodError.flatten();
   }
 

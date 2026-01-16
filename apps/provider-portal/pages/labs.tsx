@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
+import { QuickActionsBar, PatientBanner, SimpleCriticalAlert, useToast } from '../components/shared';
 import {
   LabCatalogBrowser,
   AIRecommendationsPanel,
@@ -53,6 +54,8 @@ export default function Labs() {
   const [viewMode, setViewMode] = useState<ViewMode>('order');
   const [activeTab, setActiveTab] = useState<OrderTab>('ai');
   const [showCosts, setShowCosts] = useState(true);
+  const [alertDismissed, setAlertDismissed] = useState(false);
+  const toast = useToast();
 
   // Zustand store
   const {
@@ -126,11 +129,12 @@ export default function Labs() {
   // Handle order submission
   const handleSubmit = async () => {
     try {
+      const loadingId = toast.loading('Submitting lab orders...');
       const orderIds = await submitOrder('encounter-demo-001');
-      // Show success notification (you could add a toast here)
+      toast.success('Lab orders submitted successfully!', `Order IDs: ${orderIds.join(', ')}`);
       console.log('Lab order submitted:', orderIds);
-      alert(`Lab order submitted successfully! Order IDs: ${orderIds.join(', ')}`);
     } catch (err) {
+      toast.error('Failed to submit lab orders', 'Please try again or contact support.');
       console.error('Failed to submit order:', err);
     }
   };
@@ -198,43 +202,53 @@ export default function Labs() {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Quick Actions Bar - Cross-page navigation */}
+          <QuickActionsBar
+            currentPage="labs"
+            patientId={patientContext?.id}
+            showBackButton={true}
+            backButtonLabel="Back to Diagnosis"
+            backButtonHref="/assessments"
+            showEmergencyButton={patientContext?.redFlags && patientContext.redFlags.length > 0}
+            onEmergencyProtocol={() => {
+              // Auto-select STAT labs for emergency protocol
+              aiRecommendations
+                .filter(r => r.category === 'critical' || r.category === 'strongly-recommended')
+                .forEach(r => r.labs.forEach(lab => addLab(lab.testCode, { priority: 'STAT', aiRecommended: true })));
+              toast.warning('Emergency Protocol Activated', 'STAT labs auto-selected');
+            }}
+          />
+
+          {/* Critical Alert Banner - Shows when patient has red flags */}
+          {patientContext?.redFlags && patientContext.redFlags.length > 0 && !alertDismissed && (
+            <SimpleCriticalAlert
+              title="Critical Red Flags Detected"
+              message={`Patient has ${patientContext.redFlags.length} red flag${patientContext.redFlags.length > 1 ? 's' : ''}: ${patientContext.redFlags.join(', ')}. Consider STAT lab orders.`}
+              actionLabel="Auto-Select STAT Labs"
+              onAction={() => {
+                aiRecommendations
+                  .filter(r => r.category === 'critical' || r.category === 'strongly-recommended')
+                  .forEach(r => r.labs?.forEach(lab => addLab(lab.testCode, { priority: 'STAT', aiRecommended: true })));
+                toast.success('STAT Labs Selected', 'Critical labs have been added to your order');
+                setAlertDismissed(true);
+              }}
+              onDismiss={() => setAlertDismissed(true)}
+              className="mb-4"
+            />
+          )}
+
           {viewMode === 'order' ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Lab Selection */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Patient Context Banner */}
+                {/* Patient Context Banner - Using shared component */}
                 {patientContext && (
-                  <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-indigo-500">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-gray-900">
-                            {patientContext.name}
-                          </h3>
-                          <span className="text-sm text-gray-500">
-                            {patientContext.age}yo {patientContext.gender}
-                          </span>
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
-                            {patientContext.mrn}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          <strong>Chief Complaint:</strong> {patientContext.chiefComplaint}
-                        </p>
-                        {patientContext.redFlags.length > 0 && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <AlertTriangle className="w-4 h-4 text-red-500" />
-                            <span className="text-sm text-red-600">
-                              Red Flags: {patientContext.redFlags.join(', ')}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <Settings className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
+                  <PatientBanner
+                    patient={patientContext}
+                    accentColor="green"
+                    showRedFlags={true}
+                    showActions={true}
+                  />
                 )}
 
                 {/* Tab Navigation */}

@@ -8,6 +8,9 @@
 // Types
 export * from './types';
 
+// Re-export RECOMMENDATION_CATEGORY_CONFIGS for easier access
+export { RECOMMENDATION_CATEGORY_CONFIGS } from './types';
+
 // Lab Catalog
 export {
   LAB_CATALOG,

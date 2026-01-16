@@ -203,6 +203,7 @@ class NotificationServiceClass {
    */
   compassAssessment(options: CompassNotificationOptions): Notification {
     const urgencyEmoji = {
+      emergency: '🆘',
       high: '🚨',
       moderate: '⚠️',
       standard: 'ℹ️',
