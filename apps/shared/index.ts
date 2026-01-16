@@ -3,61 +3,23 @@
 // apps/shared/index.ts
 //
 // Central export for all shared utilities, types, hooks, and components
-// 
-// NOTE: Use explicit exports to avoid naming conflicts
 // ============================================================
 
 // =============================================================================
-// TYPES - Export from types folder
+// TYPES (Primary source of truth)
 // =============================================================================
 export * from './types';
 
 // =============================================================================
-// CHAT TYPES - Explicit re-export to avoid conflicts
-// NOTE: generateMessageId and generateSessionId are in both chat.types.ts and lib/utils.ts
-// We export from chat.types.ts as the canonical source for chat-related functions
-// =============================================================================
-export {
-  // Types
-  type DetailedAssessmentPhase,
-  type HighLevelAssessmentPhase,
-  type UrgencyLevel,
-  type QuickReply,
-  type MessageRole,
-  type MessageMetadata,
-  type ChatMessage,
-  type RedFlag,
-  type RedFlagSeverity,
-  type HPIData,
-  type AssessmentData,
-  type ChatSession,
-  // Constants
-  PHASE_CATEGORY_MAP,
-  PHASE_PROGRESS,
-  URGENCY_CONFIG,
-  // Helper functions - from chat.types.ts
-  createMessage,
-  generateMessageId,
-  createRedFlag,
-  createAssessmentData,
-  generateSessionId,
-  calculateUrgencyScore,
-  determineUrgencyLevel,
-  formatMessageTime,
-  getPhaseProgress,
-  getPhaseCategory,
-} from './types/chat.types';
-
-// =============================================================================
 // SERVICES
 // =============================================================================
-export { 
+export {
   AssessmentSubmissionService,
   assessmentSubmissionService,
   submitCompassAssessment,
 } from './services/assessmentSubmission';
 
-export { 
+export {
   CompassBridge,
   type AssessmentEventType,
   type AssessmentEvent as CompassAssessmentEvent,
@@ -65,7 +27,7 @@ export {
   type CompassBridgeConfig,
 } from './services/CompassBridge';
 
-export { 
+export {
   NotificationService,
   type NotificationType,
   type NotificationOptions,
@@ -74,30 +36,21 @@ export {
   type NotificationServiceConfig,
 } from './services/NotificationService';
 
-export { 
+export {
   GeolocationService,
   type GeolocationConfig,
   type LocationCallback,
   type ErrorCallback,
 } from './services/GeolocationService';
 
-export {
-  ClinicalRecommendationService,
-  clinicalRecommendationService,
-  type LabRecommendation,
-  type ImagingRecommendation,
-  type MedicationRecommendation,
-  type RecommendationResult,
-} from './services/ClinicalRecommendationService';
-
 // =============================================================================
 // STATE MACHINES
 // =============================================================================
-export { 
+export {
   assessmentMachine,
   type AssessmentContext,
   type AssessmentEvent as MachineAssessmentEvent,
-  type RedFlag as MachineRedFlag,
+  // Note: RedFlag is exported from types/chat.types.ts
 } from './machines/assessmentMachine';
 
 // =============================================================================
@@ -106,31 +59,21 @@ export {
 export * from './lib/prisma';
 
 // =============================================================================
-// GENERAL UTILITIES (excluding functions that conflict with chat.types)
+// GENERAL UTILITIES
+// Export specific utilities to avoid conflicts with types
 // =============================================================================
 export {
   cn,
-  calculateAge,
   formatDate,
-  getRelativeTime,
-  generateId,
-  capitalize,
-  truncate,
-  toTitleCase,
-  slugify,
+  formatCurrency,
+  truncateText,
   debounce,
   throttle,
-  safeJsonParse,
   deepClone,
-  isEmpty,
-  groupBy,
-  formatPatientName,
-  formatMRN,
-  calculateBMI,
-  getBMICategory,
-  formatPhone,
-  getUrgencyColor,
-  getStatusColor,
+  isEmptyObject,
+  sleep,
+  retry,
+  // Note: generateMessageId and generateSessionId are exported from types/chat.types.ts
 } from './lib/utils';
 
 // =============================================================================
@@ -150,56 +93,60 @@ export * from './auth';
 
 // =============================================================================
 // CLINICAL CATALOGS
-// Export with explicit names to avoid Medication conflict
+// Export with explicit names to avoid conflicts
 // =============================================================================
 export {
-  // Lab Catalog
+  // Lab catalog
   LAB_CATALOG,
   LAB_PANELS,
   getLabTest,
   getLabPanel,
   searchLabs,
   getLabsByCategory,
-  type LabTest,
-  type LabPanel,
-  type LabCategory,
-  
-  // Imaging Catalog
+  getAllLabTests,
+  getAllLabPanels,
+  // Imaging catalog
   IMAGING_CATALOG,
   getImagingStudy,
   searchImaging,
   getImagingByModality,
+  getImagingByBodyPart,
+  getAllImagingStudies,
+  getContrastStudies,
   getNonContrastAlternative,
-  type ImagingStudy,
-  type ImagingModality,
-  type ImagingCategory,
-  
-  // Medication Catalog - renamed to avoid conflict with Medication type
+  // Medication catalog (use MedicationCatalogItem to avoid conflict with MedicationRecord type)
   MEDICATION_CATALOG,
+  DRUG_INTERACTIONS,
   getMedication,
   searchMedications,
   getMedicationsByCategory,
+  getControlledMedications,
+  getAllMedications,
   checkDrugInteractions,
-  type Medication as CatalogMedication,
-  type MedicationCategory,
+  // Types from catalogs
+  type LabTest,
+  type LabPanel,
+  type ImagingStudy,
+  type Medication as MedicationCatalogItem,
   type DrugInteraction,
-  
-  // Shared types
-  type OrderPriority,
   type PatientContext,
-  type AIRecommendation,
-  type RecommendationCategory,
-  RECOMMENDATION_CATEGORY_CONFIGS,
+  type OrderPriority,
 } from './catalogs';
 
 // =============================================================================
-// SCHEMAS (Zod validation)
+// CLINICAL RECOMMENDATION SERVICE
 // =============================================================================
-export * from './schemas';
+export {
+  ClinicalRecommendationService,
+  clinicalRecommendationService,
+  type LabRecommendation,
+  type ImagingRecommendation,
+  type MedicationRecommendation,
+  type RecommendationResult,
+} from './services/ClinicalRecommendationService';
 
 // =============================================================================
 // UI COMPONENTS
 // Import UI components from their specific path:
 // import { Button, Card } from '@attending/shared/components/ui';
-// import { MessageBubble } from '@attending/shared/components/chat';
 // =============================================================================

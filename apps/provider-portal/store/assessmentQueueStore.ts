@@ -394,7 +394,7 @@ export const useAssessmentQueueStore = create<AssessmentQueueStore>()(
             
             // Then by urgency level
             const urgencyOrder: Record<UrgencyLevel, number> = { emergency: 0, high: 1, moderate: 2, standard: 3 };
-            const urgencyDiff = (urgencyOrder[a.urgencyLevel] ?? 3) - (urgencyOrder[b.urgencyLevel] ?? 3);
+            const urgencyDiff = urgencyOrder[a.urgencyLevel] - urgencyOrder[b.urgencyLevel];
             if (urgencyDiff !== 0) return urgencyDiff;
             
             // Then by submission time (newest first)

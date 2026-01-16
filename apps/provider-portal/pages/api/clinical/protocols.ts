@@ -9,11 +9,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { 
   ClinicalProtocolService, 
-  type ProtocolRequest,
   type ClinicalProtocol 
 } from '@attending/clinical-services';
 
-// Types
 interface ProtocolApiRequest {
   condition: string;
   severity?: 'mild' | 'moderate' | 'severe' | 'critical';
@@ -26,70 +24,44 @@ interface ProtocolResponse {
   success: boolean;
   data?: {
     protocol: ClinicalProtocol;
-    alternativeProtocols?: ClinicalProtocol[];
-    references?: string[];
+    relatedProtocols?: ClinicalProtocol[];
+    references: string[];
     lastUpdated: string;
-    evidenceLevel: string;
   };
   error?: string;
   timestamp: string;
 }
 
-// Protocol lookup mapping
 const PROTOCOL_ALIASES: Record<string, string> = {
-  // Cardiac
-  'mi': 'acs',
-  'myocardial infarction': 'acs',
-  'heart attack': 'acs',
-  'stemi': 'acs',
-  'nstemi': 'acs',
-  'acute coronary syndrome': 'acs',
-  'chest pain cardiac': 'acs',
-  
-  // Stroke
-  'cva': 'stroke',
-  'cerebrovascular accident': 'stroke',
-  'tia': 'stroke',
-  'transient ischemic attack': 'stroke',
-  'brain attack': 'stroke',
-  
-  // Sepsis
-  'septic shock': 'sepsis',
-  'severe sepsis': 'sepsis',
-  'systemic infection': 'sepsis',
-  'bacteremia': 'sepsis',
-  
-  // Respiratory
-  'respiratory failure': 'respiratory',
-  'acute respiratory distress': 'respiratory',
-  'ards': 'respiratory',
-  'copd exacerbation': 'respiratory',
-  'asthma exacerbation': 'respiratory',
-  'pneumonia severe': 'respiratory',
-  
-  // Trauma
-  'major trauma': 'trauma',
-  'polytrauma': 'trauma',
-  'traumatic injury': 'trauma',
-  
-  // DKA
-  'diabetic ketoacidosis': 'dka',
-  'dka': 'dka',
-  'hyperglycemic crisis': 'dka',
-  
-  // PE
-  'pulmonary embolism': 'pe',
-  'pe': 'pe',
-  'pulmonary embolus': 'pe',
+  'mi': 'protocol-acs',
+  'myocardial infarction': 'protocol-acs',
+  'heart attack': 'protocol-acs',
+  'stemi': 'protocol-acs',
+  'nstemi': 'protocol-acs',
+  'acute coronary syndrome': 'protocol-acs',
+  'acs': 'protocol-acs',
+  'chest pain cardiac': 'protocol-acs',
+  'cva': 'protocol-stroke',
+  'cerebrovascular accident': 'protocol-stroke',
+  'stroke': 'protocol-stroke',
+  'tia': 'protocol-stroke',
+  'sepsis': 'protocol-sepsis',
+  'septic shock': 'protocol-sepsis',
+  'severe sepsis': 'protocol-sepsis',
+  'respiratory': 'protocol-respiratory',
+  'respiratory failure': 'protocol-respiratory',
+  'dka': 'protocol-dka',
+  'diabetic ketoacidosis': 'protocol-dka',
+  'pe': 'protocol-pe',
+  'pulmonary embolism': 'protocol-pe',
+  'trauma': 'protocol-trauma',
 };
 
-// Normalize condition name
-function normalizeCondition(condition: string): string {
+function normalizeConditionToProtocolId(condition: string): string {
   const lower = condition.toLowerCase().trim();
-  return PROTOCOL_ALIASES[lower] || lower;
+  return PROTOCOL_ALIASES[lower] || `protocol-${lower.replace(/\s+/g, '-')}`;
 }
 
-// Validate request
 function validateRequest(body: any): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
@@ -101,10 +73,6 @@ function validateRequest(body: any): { valid: boolean; errors: string[] } {
     errors.push('severity must be mild, moderate, severe, or critical');
   }
   
-  if (body.setting && !['emergency', 'inpatient', 'outpatient', 'icu'].includes(body.setting)) {
-    errors.push('setting must be emergency, inpatient, outpatient, or icu');
-  }
-  
   return { valid: errors.length === 0, errors };
 }
 
@@ -112,7 +80,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ProtocolResponse>
 ) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -121,7 +88,6 @@ export default async function handler(
     return res.status(200).end();
   }
   
-  // Support both GET (with query params) and POST
   let requestData: ProtocolApiRequest;
   
   if (req.method === 'GET') {
@@ -142,7 +108,6 @@ export default async function handler(
   }
   
   try {
-    // Validate request
     const validation = validateRequest(requestData);
     if (!validation.valid) {
       return res.status(400).json({
@@ -152,39 +117,42 @@ export default async function handler(
       });
     }
     
-    // Normalize condition name
-    const normalizedCondition = normalizeCondition(requestData.condition);
+    const protocolId = normalizeConditionToProtocolId(requestData.condition);
     
-    // Initialize service and get protocol
     const protocolService = new ClinicalProtocolService();
     
-    const protocolRequest: ProtocolRequest = {
-      condition: normalizedCondition,
-      severity: requestData.severity,
-      setting: requestData.setting || 'emergency',
-      patientAge: requestData.patientAge,
-      comorbidities: requestData.comorbidities || [],
-    };
+    // Try to get protocol by ID
+    let protocol = protocolService.getProtocol(protocolId);
     
-    const protocol = protocolService.getProtocol(protocolRequest);
+    // If not found by ID, try searching by symptoms
+    if (!protocol) {
+      const matchingProtocols = protocolService.findMatchingProtocols([requestData.condition]);
+      if (matchingProtocols.length > 0) {
+        protocol = matchingProtocols[0];
+      }
+    }
     
     if (!protocol) {
+      const allProtocols = protocolService.getAllProtocols();
+      const availableNames = allProtocols.map(p => p.name).join(', ');
+      
       return res.status(404).json({
         success: false,
-        error: `No protocol found for condition: ${requestData.condition}. Available protocols: stroke, acs, sepsis, respiratory, trauma, dka, pe`,
+        error: `No protocol found for condition: ${requestData.condition}. Available protocols: ${availableNames}`,
         timestamp: new Date().toISOString(),
       });
     }
     
-    // Get alternative protocols if applicable
-    const alternativeProtocols = protocolService.getAlternativeProtocols?.(normalizedCondition);
+    // Get related protocols from same category
+    const relatedProtocols = protocolService.getProtocolsByCategory(protocol.category)
+      .filter(p => p.id !== protocol!.id)
+      .slice(0, 3);
     
-    // Log for audit trail
     console.log('[AUDIT] Protocol retrieved:', {
       timestamp: new Date().toISOString(),
-      condition: normalizedCondition,
+      condition: requestData.condition,
       severity: requestData.severity,
-      setting: requestData.setting,
+      protocolId: protocol.id,
       protocolName: protocol.name,
     });
     
@@ -192,10 +160,9 @@ export default async function handler(
       success: true,
       data: {
         protocol,
-        alternativeProtocols,
+        relatedProtocols: relatedProtocols.length > 0 ? relatedProtocols : undefined,
         references: protocol.references || [],
         lastUpdated: protocol.lastUpdated || new Date().toISOString(),
-        evidenceLevel: protocol.evidenceLevel || 'Level I - High Quality',
       },
       timestamp: new Date().toISOString(),
     });

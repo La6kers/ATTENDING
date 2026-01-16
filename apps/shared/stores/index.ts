@@ -5,8 +5,19 @@
 // Export store utilities and factories
 // ============================================================
 
-// Store factory
+// Generic store factory
 export { createStore, type StoreConfig } from './createStore';
+
+// Clinical ordering store factory
+export {
+  createOrderingStore,
+  type CatalogItem,
+  type SelectedItem,
+  type BaseRecommendation,
+  type OrderingStoreConfig,
+  type OrderingStoreState,
+  type OrderingStore,
+} from './createOrderingStore';
 
 // API helpers
 export { 

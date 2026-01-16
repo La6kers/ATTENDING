@@ -7,7 +7,6 @@
 
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
-import { QuickActionsBar, PatientBanner, SimpleCriticalAlert, useToast } from '../components/shared';
 import { 
   MedicationCatalogBrowser,
   AIMedicationRecommendationsPanel,
@@ -33,12 +32,13 @@ const samplePatientContext: PatientContext = {
   mrn: '78932145',
   chiefComplaint: 'Chronic migraine with aura, occurring 8-10 days per month',
   allergies: [
-    { allergen: 'Penicillin', reaction: 'Rash, hives, difficulty breathing', severity: 'severe', crossReactivity: ['amoxicillin', 'ampicillin'] },
+    { allergen: 'Penicillin', reaction: 'Rash, hives, difficulty breathing', severity: 'severe' },
     { allergen: 'Sulfa drugs', reaction: 'Skin rash, nausea', severity: 'moderate' },
     { allergen: 'Codeine', reaction: 'Nausea, vomiting, drowsiness', severity: 'mild' },
   ],
   currentMedications: ['Ethinyl Estradiol/Norgestimate (oral contraceptive)'],
   medicalHistory: ['Migraine with aura', 'Anxiety disorder'],
+  redFlags: [],
   pregnant: false,
   breastfeeding: false,
 };
@@ -57,8 +57,6 @@ const samplePharmacy: PharmacyInfo = {
 
 export default function MedicationsPage() {
   const [viewMode, setViewMode] = useState<'prescribe' | 'review'>('prescribe');
-  const [interactionAlertDismissed, setInteractionAlertDismissed] = useState(false);
-  const toast = useToast();
 
   // Zustand store
   const {
@@ -127,52 +125,20 @@ export default function MedicationsPage() {
 
   const handleSubmit = async () => {
     try {
-      toast.loading('Submitting prescriptions...');
       await submitPrescriptions('encounter-001'); // In production, use actual encounter ID
-      toast.success('Prescriptions submitted successfully!', 'E-prescriptions sent to pharmacy');
+      // Show success message or redirect
     } catch (err) {
-      toast.error('Failed to submit prescriptions', 'Please try again or contact support.');
+      // Error is already in store
       console.error('Prescription submission failed:', err);
     }
   };
 
-  // Convert allergies to simple string array for PatientBanner
-  const patientForBanner = patientContext ? {
-    ...patientContext,
-    allergies: patientContext.allergies?.map(a => typeof a === 'string' ? a : a.allergen) || [],
-    redFlags: patientContext.allergies?.filter(a => typeof a !== 'string' && a.severity === 'severe').map(a => typeof a === 'string' ? a : `${a.allergen} (severe)`) || [],
-  } : null;
-
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50">
-        {/* Quick Actions Bar */}
-        <div className="max-w-7xl mx-auto px-6 pt-6">
-          <QuickActionsBar
-            currentPage="medications"
-            patientId={patientContext?.id}
-            showBackButton={true}
-            backButtonLabel="Back to Diagnosis"
-            backButtonHref="/assessments"
-            showEmergencyButton={false}
-          />
-        </div>
-
-        {/* Patient Banner - Using shared component */}
-        {patientForBanner && (
-          <div className="max-w-7xl mx-auto px-6 mb-6">
-            <PatientBanner
-              patient={patientForBanner}
-              accentColor="purple"
-              showRedFlags={true}
-              showActions={true}
-            />
-          </div>
-        )}
-
-        {/* Legacy Patient Banner - Keeping for medication-specific info */}
+      <div className="min-h-screen">
+        {/* Patient Banner */}
         {patientContext && (
-          <div className="bg-white shadow-sm mx-6 rounded-2xl p-6">
+          <div className="bg-white shadow-sm mx-6 mt-6 rounded-2xl p-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold">
@@ -206,22 +172,6 @@ export default function MedicationsPage() {
                 </button>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Critical Alert Banner - Shows when severe drug interactions detected */}
-        {detectedInteractions.length > 0 && !interactionAlertDismissed && (
-          <div className="max-w-7xl mx-auto px-6 mb-4">
-            <SimpleCriticalAlert
-              title="Drug Interactions Detected"
-              message={`${detectedInteractions.length} potential drug interaction${detectedInteractions.length > 1 ? 's' : ''} detected. Review before prescribing.`}
-              actionLabel="Review Interactions"
-              onAction={() => {
-                toast.info('Scroll down to view interaction details');
-                setInteractionAlertDismissed(true);
-              }}
-              onDismiss={() => setInteractionAlertDismissed(true)}
-            />
           </div>
         )}
 

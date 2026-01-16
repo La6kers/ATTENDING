@@ -19,19 +19,14 @@
       "@/*": ["./*"],
       "@attending/shared": ["../shared"],
       "@attending/shared/*": ["../shared/*"],
-      "@attending/ui-primitives": ["../../packages/ui-primitives"],
-      "@attending/clinical-types": ["../../packages/clinical-types"],
-      "@attending/clinical-services": ["../../packages/clinical-services"]
+      "@attending/clinical-services": ["../../packages/clinical-services/src"],
+      "@attending/clinical-services/*": ["../../packages/clinical-services/src/*"],
+      "@attending/clinical-types": ["../../packages/clinical-types/src"],
+      "@attending/clinical-types/*": ["../../packages/clinical-types/src/*"],
+      "@attending/ui-primitives": ["../../packages/ui-primitives/src"],
+      "@attending/ui-primitives/*": ["../../packages/ui-primitives/src/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "../shared/**/*.ts",
-    "../shared/**/*.tsx",
-    "../../packages/**/*.ts",
-    "../../packages/**/*.tsx"
-  ],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "../shared/**/*.ts", "../../packages/clinical-services/src/**/*.ts", "../../packages/clinical-types/src/**/*.ts", "../../packages/ui-primitives/src/**/*.ts", "../../packages/ui-primitives/src/**/*.tsx"],
+  "exclude": ["node_modules", "__tests__", "e2e", "*.test.ts", "*.spec.ts"]
 }

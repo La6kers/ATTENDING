@@ -141,8 +141,8 @@ function validateSubmission(data: SubmitAssessmentRequest): string | null {
   if (!data.urgencyLevel) {
     return 'Urgency level is required';
   }
-  if (!['standard', 'moderate', 'high'].includes(data.urgencyLevel)) {
-    return 'Invalid urgency level. Must be standard, moderate, or high';
+  if (!['standard', 'moderate', 'high', 'emergency'].includes(data.urgencyLevel)) {
+    return 'Invalid urgency level. Must be standard, moderate, high, or emergency';
   }
   return null;
 }
@@ -150,23 +150,25 @@ function validateSubmission(data: SubmitAssessmentRequest): string | null {
 // Calculate queue position based on urgency
 async function calculateQueuePosition(urgencyLevel: UrgencyLevel): Promise<number> {
   // In production, this would query the actual queue
-  const mockQueueSizes = {
+  const mockQueueSizes: Record<UrgencyLevel, number> = {
+    emergency: 0,
     high: 2,
     moderate: 5,
     standard: 12,
   };
-  return mockQueueSizes[urgencyLevel] || 10;
+  return mockQueueSizes[urgencyLevel] ?? 10;
 }
 
 // Calculate estimated review time
 function calculateEstimatedReviewTime(queuePosition: number, urgencyLevel: UrgencyLevel): string {
-  const baseMinutesPerCase = {
+  const baseMinutesPerCase: Record<UrgencyLevel, number> = {
+    emergency: 0,
     high: 5,
     moderate: 15,
     standard: 30,
   };
   
-  const minutes = queuePosition * (baseMinutesPerCase[urgencyLevel] || 20);
+  const minutes = queuePosition * (baseMinutesPerCase[urgencyLevel] ?? 20);
   
   if (minutes < 60) {
     return `${minutes} minutes`;

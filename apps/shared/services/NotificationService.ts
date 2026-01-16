@@ -2,7 +2,10 @@
 // Unified Notification Service for ATTENDING AI Platform
 // Handles in-app notifications, toast messages, and COMPASS assessment alerts
 
-import type { Notification, UrgencyLevel } from '../types';
+import type { AppNotification, UrgencyLevel } from '../types';
+
+// Alias for backward compatibility
+type Notification = AppNotification;
 
 // ================================
 // TYPES

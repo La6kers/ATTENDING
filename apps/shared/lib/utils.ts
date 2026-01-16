@@ -130,6 +130,9 @@ export function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength - 3) + '...';
 }
 
+/** Alias for truncate - for backward compatibility */
+export const truncateText = truncate;
+
 /** Convert snake_case or kebab-case to Title Case */
 export function toTitleCase(str: string): string {
   return str
@@ -193,6 +196,46 @@ export function safeJsonParse<T>(json: string, fallback: T): T {
 /** Deep clone an object */
 export function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
+}
+
+/** Check if object is empty */
+export function isEmptyObject(obj: object): boolean {
+  return obj !== null && typeof obj === 'object' && Object.keys(obj).length === 0;
+}
+
+/** Format currency */
+export function formatCurrency(amount: number, currency = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+}
+
+/** Sleep for specified milliseconds */
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/** Retry a function with exponential backoff */
+export async function retry<T>(
+  fn: () => Promise<T>,
+  options: { maxAttempts?: number; delayMs?: number; backoff?: number } = {}
+): Promise<T> {
+  const { maxAttempts = 3, delayMs = 1000, backoff = 2 } = options;
+  let lastError: Error | undefined;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < maxAttempts) {
+        await sleep(delayMs * Math.pow(backoff, attempt - 1));
+      }
+    }
+  }
+  
+  throw lastError;
 }
 
 /** Check if value is empty (null, undefined, empty string, empty array, empty object) */

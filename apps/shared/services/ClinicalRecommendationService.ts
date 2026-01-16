@@ -393,8 +393,14 @@ export class ClinicalRecommendationService {
     
     // Sort by category priority
     const sortByCategory = (a: AIRecommendation, b: AIRecommendation) => {
-      const order: Record<RecommendationCategory, number> = { critical: 0, recommended: 1, consider: 2, avoid: 3 };
-      return order[a.category] - order[b.category];
+      const order: Record<RecommendationCategory, number> = { 
+        critical: 0, 
+        recommended: 1, 
+        consider: 2, 
+        avoid: 3,
+        'not-indicated': 4 
+      };
+      return (order[a.category] ?? 5) - (order[b.category] ?? 5);
     };
     
     labs.sort(sortByCategory);

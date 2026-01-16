@@ -35,9 +35,9 @@ export function ChatContainer() {
     : [];
 
   return (
-    <div className="flex h-full bg-gray-50">
+    <div className="flex h-full">
       {/* Sidebar with Progress Tracker */}
-      <aside className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-80 bg-white/95 backdrop-blur-md border-r border-purple-100 flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center gap-3">

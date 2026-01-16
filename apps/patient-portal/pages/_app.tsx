@@ -33,7 +33,7 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
         <meta name="theme-color" content="#8b5cf6" />
         <title>COMPASS - Patient Health Assessment</title>
       </Head>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen">
         <Component {...pageProps} />
       </div>
     </SessionProvider>

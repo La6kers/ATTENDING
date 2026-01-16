@@ -11,7 +11,7 @@
 // Run: npm run dev:ws (from root) or node src/index.ts
 // ============================================================
 
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
@@ -296,7 +296,7 @@ io.on('connection', (socket: Socket) => {
   // DISCONNECT
   // =====================================================
 
-  socket.on('disconnect', (reason) => {
+  socket.on('disconnect', (reason: string) => {
     const user = connectedUsers.get(socket.id);
     
     if (user) {
@@ -324,7 +324,7 @@ io.on('connection', (socket: Socket) => {
 // ============================================================
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     uptime: process.uptime(),
@@ -339,7 +339,7 @@ app.get('/health', (req, res) => {
 });
 
 // Get current queue status
-app.get('/queue', (req, res) => {
+app.get('/queue', (_req: Request, res: Response) => {
   res.json({
     assessments: Array.from(activeAssessments.values()),
     count: activeAssessments.size,
@@ -347,7 +347,7 @@ app.get('/queue', (req, res) => {
 });
 
 // Webhook endpoint for external notifications (from API routes)
-app.post('/webhook/assessment', (req, res) => {
+app.post('/webhook/assessment', (req: Request, res: Response) => {
   const { assessment } = req.body;
   
   if (assessment) {
@@ -388,7 +388,7 @@ app.post('/webhook/assessment', (req, res) => {
 });
 
 // Manual broadcast for testing
-app.post('/broadcast/test', (req, res) => {
+app.post('/broadcast/test', (req: Request, res: Response) => {
   const { event, data } = req.body;
   
   if (event && data) {
