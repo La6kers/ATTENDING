@@ -2,6 +2,12 @@
 // Used by both Provider Portal and Patient Portal (COMPASS)
 
 // =============================================================================
+// Re-export Clinical Types (Single Source of Truth for Ordering)
+// =============================================================================
+
+export * from './clinical.types';
+
+// =============================================================================
 // Re-export Chat Types (Single Source of Truth for Chat/Assessment)
 // =============================================================================
 

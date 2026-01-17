@@ -28,6 +28,8 @@ const getMockPatientContext = (patientId?: string): StorePatientContext => ({
   chiefComplaint: 'Severe headache with visual disturbances and neck stiffness',
   primaryDiagnosis: 'Headache - Rule out secondary cause',
   allergies: ['Penicillin', 'Sulfa'],
+  currentMedications: ['Lisinopril 10mg daily', 'Metformin 500mg BID'],
+  medicalHistory: ['Hypertension', 'Type 2 Diabetes'],
   insurancePlan: 'Blue Cross',
   pcp: 'Dr. Robert Johnson',
   redFlags: ['Worst headache of life', 'Neck stiffness', 'Visual changes'],

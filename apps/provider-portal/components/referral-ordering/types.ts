@@ -1,54 +1,28 @@
 // ============================================================
 // Referral Ordering Types
 // apps/provider-portal/components/referral-ordering/types.ts
+//
+// Note: Core types are now imported from shared catalogs
+// This file maintains UI-specific types and configurations
 // ============================================================
 
-export type ReferralUrgency = 'STAT' | 'URGENT' | 'ROUTINE' | 'ELECTIVE';
+// Re-export shared types for convenience
+export type {
+  PatientContext,
+  ReferralUrgency,
+  Specialty,
+  ReferralProvider as Provider,
+  ReferralRecommendation as AIReferralRecommendation,
+} from '@attending/shared/catalogs';
+
+// Import types for local use in this file
+import type { Specialty, ReferralProvider as Provider, ReferralUrgency } from '@attending/shared/catalogs';
 export type ReferralStatus = 'DRAFT' | 'PENDING' | 'SENT' | 'RECEIVED' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'DENIED';
 // Aligned with RecommendationCategory from shared catalogs
 export type ReferralCategory = 'critical' | 'recommended' | 'consider' | 'avoid' | 'not-indicated' | 'new';
 
-export interface Specialty {
-  code: string;
-  name: string;
-  category: 'medical' | 'surgical' | 'diagnostic' | 'therapeutic' | 'behavioral';
-  subspecialties: string[];
-  averageWaitDays: { routine: number; urgent: number };
-  requiresAuth: boolean;
-  commonIndications: string[];
-  redFlagIndications: string[];
-  icon?: string;
-}
-
-export interface Provider {
-  id: string;
-  name: string;
-  credentials: string;
-  specialty: string;
-  subspecialty?: string;
-  organization: string;
-  address: string;
-  phone: string;
-  fax: string;
-  acceptingNew: boolean;
-  insurancesAccepted: string[];
-  nextAvailable: { routine: string; urgent: string };
-  rating?: number;
-  preferred?: boolean;
-}
-
-export interface AIReferralRecommendation {
-  id: string;
-  specialty: string;
-  subspecialty?: string;
-  urgency: ReferralUrgency;
-  rationale: string;
-  clinicalQuestion: string;
-  suggestedTests: string[];
-  confidence: number;
-  category: ReferralCategory;
-  redFlagRelated?: boolean;
-}
+// Note: Specialty, Provider (as ReferralProvider), and AIReferralRecommendation
+// are now imported from shared catalogs above
 
 export interface SelectedReferral {
   specialty: Specialty;
@@ -63,18 +37,9 @@ export interface SelectedReferral {
   status?: ReferralStatus;
 }
 
-export interface PatientContext {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
-  mrn: string;
-  chiefComplaint: string;
-  primaryDiagnosis?: string;
-  allergies: string[];
-  insurancePlan: string;
-  pcp: string;
-  redFlags: string[];
+// PatientContext is now imported from shared catalogs above
+// Extended patient context for UI-specific needs (add riskLevel if needed)
+export interface UIPatientContext {
   riskLevel?: 'low' | 'moderate' | 'high';
 }
 

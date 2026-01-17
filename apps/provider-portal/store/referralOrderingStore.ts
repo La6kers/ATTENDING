@@ -24,33 +24,18 @@ import {
   type ReferralProvider,
   type ReferralRecommendation,
   type ReferralUrgency,
+  type PatientContext,
 } from '@attending/shared/catalogs';
 
 // =============================================================================
 // Re-export types for backward compatibility
 // =============================================================================
-export type { Specialty, ReferralProvider, ReferralRecommendation, ReferralUrgency, SpecialtyCategory };
+export type { Specialty, ReferralProvider, ReferralRecommendation, ReferralUrgency, SpecialtyCategory, PatientContext };
 export { SPECIALTY_CATALOG, PROVIDER_DIRECTORY };
 
 // =============================================================================
 // Store-specific Types
 // =============================================================================
-
-export interface PatientContext {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
-  mrn: string;
-  chiefComplaint: string;
-  primaryDiagnosis?: string;
-  allergies: string[] | Array<{ allergen: string; reaction: string; severity: 'mild' | 'moderate' | 'severe' }>;
-  insurancePlan?: string;
-  pcp?: string;
-  redFlags: string[];
-  currentMedications?: string[];
-  medicalHistory?: string[];
-}
 
 export interface SelectedReferral {
   specialty: Specialty;

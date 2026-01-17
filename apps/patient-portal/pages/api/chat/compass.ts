@@ -262,7 +262,7 @@ function extractClinicalData(message: string, _phase: AssessmentPhase, _existing
 }
 
 // Extract risk factors
-function extractRiskFactors(message: string, clinicalData: any): string[] {
+function extractRiskFactors(message: string, _clinicalData: any): string[] {
   const riskFactors: string[] = [];
   
   const patterns = [

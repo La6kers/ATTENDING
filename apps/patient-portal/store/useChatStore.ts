@@ -93,13 +93,13 @@ const PHASE_CONFIG: Record<DetailedAssessmentPhase, PhaseConfig> = {
   },
   demographics: {
     question: 'Thanks! To help us provide better care, could you confirm your date of birth?',
-    nextPhase: 'chief_complaint',
+    nextPhase: 'chiefComplaint',
   },
-  chief_complaint: {
+  chiefComplaint: {
     question: 'What brings you in today? Please describe your main concern or symptoms.',
-    nextPhase: 'hpi_onset',
+    nextPhase: 'hpiOnset',
   },
-  hpi_onset: {
+  hpiOnset: {
     question: 'When did this start? Was it sudden or gradual?',
     quickReplies: [
       { id: 'today', text: 'Today', value: 'Started today' },
@@ -108,13 +108,13 @@ const PHASE_CONFIG: Record<DetailedAssessmentPhase, PhaseConfig> = {
       { id: 'week', text: 'About a week', value: 'Started about a week ago' },
       { id: 'longer', text: 'More than a week', value: 'Started more than a week ago' },
     ],
-    nextPhase: 'hpi_location',
+    nextPhase: 'hpiLocation',
   },
-  hpi_location: {
+  hpiLocation: {
     question: 'Where exactly is the problem located? Does it stay in one place or move around?',
-    nextPhase: 'hpi_duration',
+    nextPhase: 'hpiDuration',
   },
-  hpi_duration: {
+  hpiDuration: {
     question: 'When the symptoms occur, how long do they last?',
     quickReplies: [
       { id: 'seconds', text: 'Seconds', value: 'Lasts seconds' },
@@ -123,13 +123,13 @@ const PHASE_CONFIG: Record<DetailedAssessmentPhase, PhaseConfig> = {
       { id: 'constant', text: 'Constant', value: 'Constant/continuous' },
       { id: 'comes_goes', text: 'Comes and goes', value: 'Intermittent' },
     ],
-    nextPhase: 'hpi_character',
+    nextPhase: 'hpiCharacter',
   },
-  hpi_character: {
+  hpiCharacter: {
     question: "How would you describe what you're feeling? (e.g., sharp, dull, throbbing, burning, aching)",
-    nextPhase: 'hpi_severity',
+    nextPhase: 'hpiSeverity',
   },
-  hpi_severity: {
+  hpiSeverity: {
     question: 'On a scale of 0-10, with 10 being the worst, how would you rate the severity?',
     quickReplies: [
       { id: 's1', text: '1-3 Mild', value: '2' },
@@ -138,21 +138,33 @@ const PHASE_CONFIG: Record<DetailedAssessmentPhase, PhaseConfig> = {
       { id: 's4', text: '8-9 Severe', value: '9', variant: 'warning' },
       { id: 's5', text: '10 Worst ever', value: '10', variant: 'danger' },
     ],
-    nextPhase: 'hpi_aggravating',
+    nextPhase: 'hpiTiming',
   },
-  hpi_aggravating: {
+  hpiTiming: {
+    question: 'Is it constant or does it come and go? When is it worse?',
+    nextPhase: 'hpiContext',
+  },
+  hpiContext: {
+    question: 'What were you doing when this started? Any triggering events?',
+    nextPhase: 'hpiModifying',
+  },
+  hpiModifying: {
+    question: 'What makes it worse or better? (movement, rest, medications, etc.)',
+    nextPhase: 'hpiAggravating',
+  },
+  hpiAggravating: {
     question: 'What makes it worse? (movement, eating, breathing, lying down, etc.)',
-    nextPhase: 'hpi_relieving',
+    nextPhase: 'hpiRelieving',
   },
-  hpi_relieving: {
+  hpiRelieving: {
     question: 'What makes it better? (rest, medication, position change, etc.)',
-    nextPhase: 'hpi_associated',
+    nextPhase: 'hpiAssociated',
   },
-  hpi_associated: {
+  hpiAssociated: {
     question: 'Are you experiencing any other symptoms along with this? (nausea, fever, dizziness, etc.)',
     nextPhase: 'medications',
   },
-  review_of_systems: {
+  reviewOfSystems: {
     question: 'Let me ask about other body systems. Have you had any recent issues with vision, hearing, breathing, heart, digestion, urination, or skin?',
     nextPhase: 'medications',
   },
@@ -164,34 +176,51 @@ const PHASE_CONFIG: Record<DetailedAssessmentPhase, PhaseConfig> = {
   allergies: {
     question: 'Do you have any known allergies to medications, foods, or environmental factors?',
     quickReplies: [{ id: 'nkda', text: 'No known allergies', value: 'NKDA - No known drug allergies' }],
-    nextPhase: 'medical_history',
+    nextPhase: 'medicalHistory',
   },
-  medical_history: {
+  medicalHistory: {
     question: 'Do you have any chronic medical conditions or past medical history I should know about?',
     quickReplies: [{ id: 'none', text: 'No significant history', value: 'No significant past medical history' }],
-    nextPhase: 'social_history',
+    nextPhase: 'socialHistory',
   },
-  social_history: {
+  socialHistory: {
     question: 'A few lifestyle questions: Do you use tobacco, alcohol, or other substances?',
     quickReplies: [
       { id: 'none', text: 'None', value: 'No tobacco, alcohol, or drug use' },
       { id: 'former', text: 'Former smoker', value: 'Former tobacco use' },
       { id: 'social', text: 'Social drinker', value: 'Social alcohol use only' },
     ],
-    nextPhase: 'family_history',
+    nextPhase: 'familyHistory',
   },
-  family_history: {
+  familyHistory: {
     question: 'Is there any significant family medical history? (heart disease, cancer, diabetes, etc.)',
     quickReplies: [{ id: 'none', text: 'None known', value: 'No significant family history' }],
+    nextPhase: 'riskAssessment',
+  },
+  riskAssessment: {
+    question: 'Is there anything else you think is important for your healthcare provider to know?',
+    quickReplies: [{ id: 'nothing', text: 'Nothing else', value: 'No additional information' }],
     nextPhase: 'summary',
   },
   summary: {
     question: "Thank you for providing this information. Let me summarize what you've shared, then we'll send this to your healthcare provider for review.",
+    nextPhase: 'providerHandoff',
+  },
+  providerHandoff: {
+    question: 'Your assessment is being reviewed by our clinical team. Please stay available for any follow-up questions.',
+    nextPhase: 'complete',
+  },
+  emergency: {
+    question: '🚨 EMERGENCY: Please call 911 immediately. Your symptoms indicate a potential medical emergency.',
     nextPhase: 'complete',
   },
   complete: {
     question: 'Your assessment has been submitted. A provider will review your information shortly. If your condition worsens or you experience any emergency symptoms, please call 911 immediately.',
     nextPhase: 'complete',
+  },
+  completed: {
+    question: 'Your assessment has been completed. Thank you for using COMPASS.',
+    nextPhase: 'completed',
   },
 };
 
@@ -314,35 +343,42 @@ export const useChatStore = create<ChatState>()(
               case 'demographics':
                 state.assessmentData.dateOfBirth = content;
                 break;
-              case 'chief_complaint':
+              case 'chiefComplaint':
                 state.assessmentData.chiefComplaint = content;
                 break;
-              case 'hpi_onset':
+              case 'hpiOnset':
                 state.assessmentData.hpi.onset = content;
                 break;
-              case 'hpi_location':
+              case 'hpiLocation':
                 state.assessmentData.hpi.location = content;
                 break;
-              case 'hpi_duration':
+              case 'hpiDuration':
                 state.assessmentData.hpi.duration = content;
                 break;
-              case 'hpi_character':
+              case 'hpiCharacter':
                 state.assessmentData.hpi.character = content;
                 break;
-              case 'hpi_severity': {
+              case 'hpiSeverity': {
                 const severity = parseInt(content) || 5;
                 state.assessmentData.hpi.severity = severity;
                 state.urgencyScore = calculateUrgencyScore(state.redFlags, severity);
                 state.urgencyLevel = determineUrgencyLevel(state.urgencyScore, false);
                 break;
               }
-              case 'hpi_aggravating':
+              case 'hpiTiming':
+                state.assessmentData.hpi.timing = content;
+                break;
+              case 'hpiContext':
+                // Store context in associated symptoms or a dedicated field
+                break;
+              case 'hpiModifying':
+              case 'hpiAggravating':
                 state.assessmentData.hpi.aggravating = [content];
                 break;
-              case 'hpi_relieving':
+              case 'hpiRelieving':
                 state.assessmentData.hpi.relieving = [content];
                 break;
-              case 'hpi_associated':
+              case 'hpiAssociated':
                 state.assessmentData.hpi.associated = content.split(',').map((s) => s.trim());
                 break;
               case 'medications':
@@ -351,13 +387,13 @@ export const useChatStore = create<ChatState>()(
               case 'allergies':
                 state.assessmentData.allergies = content.toLowerCase().includes('no') ? ['NKDA'] : [content];
                 break;
-              case 'medical_history':
+              case 'medicalHistory':
                 state.assessmentData.medicalHistory = content.toLowerCase().includes('no') ? [] : [content];
                 break;
-              case 'social_history':
+              case 'socialHistory':
                 state.assessmentData.socialHistory = { smoking: content };
                 break;
-              case 'family_history':
+              case 'familyHistory':
                 state.assessmentData.familyHistory = content.toLowerCase().includes('no') ? [] : [content];
                 break;
             }

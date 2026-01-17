@@ -11,6 +11,40 @@
 export * from './types';
 
 // =============================================================================
+// CLINICAL TYPES - Explicit exports for common usage
+// =============================================================================
+export {
+  // Allergy types and helpers
+  type AllergyInfo,
+  isAllergyInfo,
+  normalizeAllergy,
+  getAllergenName,
+  normalizeAllergies,
+  getAllergenNames,
+  
+  // Patient context (canonical definition)
+  type PatientContext,
+  
+  // Priority types
+  type OrderPriority,
+  PRIORITY_CONFIG,
+  
+  // Recommendation types
+  type RecommendationCategory,
+  RECOMMENDATION_CATEGORY_CONFIGS,
+  groupRecommendationsByCategory,
+  isActionableCategory,
+  
+  // Base types for creating catalog-specific types
+  type BaseCatalogItem,
+  type BaseSelectedItem,
+  type BaseAIRecommendation,
+} from './types/clinical.types';
+
+// Re-export UrgencyLevel from chat.types (canonical source)
+export { type UrgencyLevel, URGENCY_CONFIG } from './types/chat.types';
+
+// =============================================================================
 // SERVICES
 // =============================================================================
 export {
@@ -96,6 +130,7 @@ export * from './auth';
 // =============================================================================
 // CLINICAL CATALOGS
 // Export with explicit names to avoid conflicts
+// Note: PatientContext and OrderPriority are already exported from types/clinical.types
 // =============================================================================
 export {
   // Lab catalog
@@ -135,14 +170,12 @@ export {
   getProvidersBySpecialty,
   getPreferredProviders,
   generateReferralRecommendations,
-  // Types from catalogs
+  // Types from catalogs (excluding PatientContext and OrderPriority - already exported above)
   type LabTest,
   type LabPanel,
   type ImagingStudy,
   type Medication as MedicationCatalogItem,
   type DrugInteraction,
-  type PatientContext,
-  type OrderPriority,
   type Specialty,
   type SpecialtyCategory,
   type ReferralProvider,

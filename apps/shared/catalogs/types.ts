@@ -2,24 +2,45 @@
 // Shared Clinical Catalog Types
 // apps/shared/catalogs/types.ts
 //
-// Unified types for all clinical ordering catalogs
+// Types specific to clinical catalogs (labs, imaging, medications)
+// Re-exports unified types from clinical.types.ts
 // ============================================================
 
 // =============================================================================
-// Recommendation Category (local definition for workspace compatibility)
+// Re-export core types from clinical.types.ts (Single Source of Truth)
 // =============================================================================
 
-/**
- * Recommendation urgency categories for AI-powered suggestions
- * Canonical definition - used across all ordering workflows
- */
-export type RecommendationCategory = 'critical' | 'recommended' | 'consider' | 'avoid' | 'not-indicated';
+export {
+  // Allergy types and helpers
+  type AllergyInfo,
+  isAllergyInfo,
+  normalizeAllergy,
+  getAllergenName,
+  normalizeAllergies,
+  getAllergenNames,
+  
+  // Patient context
+  type PatientContext,
+  
+  // Priority types
+  type OrderPriority,
+  PRIORITY_CONFIG,
+  
+  // Recommendation types
+  type RecommendationCategory,
+  RECOMMENDATION_CATEGORY_CONFIGS,
+  groupRecommendationsByCategory,
+  isActionableCategory,
+  
+  // Base types
+  type BaseCatalogItem,
+  type BaseSelectedItem,
+  type BaseAIRecommendation,
+} from '../types/clinical.types';
 
 // =============================================================================
-// Common Enums
+// Drug Schedule Type
 // =============================================================================
-
-export type OrderPriority = 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE';
 
 export type DrugSchedule = 'none' | 'OTC' | 'RX' | 'I' | 'II' | 'III' | 'IV' | 'V';
 
@@ -36,7 +57,7 @@ export interface LabTest {
   name: string;
   description: string;
   category: LabCategory;
-  defaultPriority: OrderPriority;
+  defaultPriority: 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE';
   cost: number;
   turnaroundHours: number;
   requiresFasting?: boolean;
@@ -68,7 +89,7 @@ export interface ImagingStudy {
   description: string;
   modality: ImagingModality;
   bodyPart: string;
-  defaultPriority: OrderPriority;
+  defaultPriority: 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE';
   cost: number;
   durationMinutes: number;
   radiationDose?: string;
@@ -145,44 +166,18 @@ export interface ReferralSpecialty {
 }
 
 // =============================================================================
-// Unified Patient Context
-// =============================================================================
-
-export interface PatientContext {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
-  mrn: string;
-  chiefComplaint: string;
-  allergies: Array<{ allergen: string; reaction: string; severity: 'mild' | 'moderate' | 'severe' }> | string[];
-  currentMedications?: string[];
-  medicalHistory?: string[];
-  redFlags: string[];
-  weight?: number;
-  creatinine?: number;
-  gfr?: number;
-  pregnant?: boolean;
-  breastfeeding?: boolean;
-  // Additional fields used by some stores
-  primaryDiagnosis?: string;
-  insurancePlan?: string;
-  pcp?: string;
-}
-
-// =============================================================================
-// AI Recommendation Types (category type is re-exported from clinical-types above)
+// Generic AI Recommendation Type
 // =============================================================================
 
 export interface AIRecommendation<T = string> {
   id: string;
   itemCode: T;
   itemName: string;
-  priority: OrderPriority;
+  priority: 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE';
   rationale: string;
   clinicalEvidence: string[];
   confidence: number;
-  category: RecommendationCategory;
+  category: 'critical' | 'recommended' | 'consider' | 'avoid' | 'not-indicated';
   redFlagRelated?: boolean;
   warningMessage?: string;
 }

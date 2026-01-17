@@ -124,9 +124,9 @@ const InfoRow: React.FC<{
 const TagDisplay: React.FC<{
   items: string[];
   emptyText: string;
-  color?: 'purple' | 'blue' | 'red' | 'green';
+  color?: 'purple' | 'blue' | 'red' | 'green' | 'gray';
 }> = ({ items, emptyText, color = 'gray' }) => {
-  const colors = {
+  const colors: Record<string, string> = {
     purple: 'bg-purple-50 text-purple-700',
     blue: 'bg-blue-50 text-blue-700',
     red: 'bg-red-50 text-red-700',

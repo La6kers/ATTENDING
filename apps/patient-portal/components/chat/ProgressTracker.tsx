@@ -15,33 +15,17 @@ import {
   FileText,
   Activity,
 } from 'lucide-react';
+import { type DetailedAssessmentPhase } from '@attending/shared';
 
-type AssessmentPhase = 
-  | 'welcome'
-  | 'demographics'
-  | 'chief_complaint'
-  | 'hpi_onset'
-  | 'hpi_location'
-  | 'hpi_duration'
-  | 'hpi_character'
-  | 'hpi_severity'
-  | 'hpi_aggravating'
-  | 'hpi_relieving'
-  | 'hpi_associated'
-  | 'review_of_systems'
-  | 'medications'
-  | 'allergies'
-  | 'medical_history'
-  | 'social_history'
-  | 'family_history'
-  | 'summary'
-  | 'complete';
+// Use the shared DetailedAssessmentPhase type
+type AssessmentPhase = DetailedAssessmentPhase;
 
 interface ProgressTrackerProps {
   currentPhase: AssessmentPhase;
 }
 
 // Group phases into sections for cleaner display
+// Using camelCase to match shared DetailedAssessmentPhase
 const PROGRESS_SECTIONS = [
   {
     id: 'intro',
@@ -51,10 +35,10 @@ const PROGRESS_SECTIONS = [
     description: 'Basic information',
   },
   {
-    id: 'chief_complaint',
+    id: 'chiefComplaint',
     label: 'Chief Complaint',
     icon: Stethoscope,
-    phases: ['chief_complaint'],
+    phases: ['chiefComplaint'],
     description: 'Main concern',
   },
   {
@@ -62,14 +46,14 @@ const PROGRESS_SECTIONS = [
     label: 'History of Illness',
     icon: Activity,
     phases: [
-      'hpi_onset', 
-      'hpi_location', 
-      'hpi_duration', 
-      'hpi_character', 
-      'hpi_severity',
-      'hpi_aggravating',
-      'hpi_relieving',
-      'hpi_associated'
+      'hpiOnset', 
+      'hpiLocation', 
+      'hpiDuration', 
+      'hpiCharacter', 
+      'hpiSeverity',
+      'hpiAggravating',
+      'hpiRelieving',
+      'hpiAssociated'
     ],
     description: 'Symptom details',
   },
@@ -84,7 +68,7 @@ const PROGRESS_SECTIONS = [
     id: 'history',
     label: 'Medical History',
     icon: FileText,
-    phases: ['medical_history', 'social_history', 'family_history'],
+    phases: ['medicalHistory', 'socialHistory', 'familyHistory'],
     description: 'Past & family history',
   },
   {

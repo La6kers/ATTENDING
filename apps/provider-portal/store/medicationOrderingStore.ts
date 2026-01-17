@@ -248,7 +248,11 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
           const allergenName = typeof allergy === 'string' ? allergy : allergy.allergen;
           const allergyObj: DrugAllergy = typeof allergy === 'string' 
             ? { allergen: allergy, reaction: 'Unknown', severity: 'moderate' }
-            : allergy;
+            : { 
+                allergen: allergy.allergen, 
+                reaction: allergy.reaction || 'Unknown', 
+                severity: allergy.severity || 'moderate' 
+              };
           
           // Direct match
           if (

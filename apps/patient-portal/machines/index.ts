@@ -5,15 +5,14 @@
 
 export { 
   assessmentMachine,
-  type AssessmentMachine,
   type AssessmentPhase,
   type AssessmentEvent,
   type AssessmentContext,
-  type Demographics,
+  type UrgencyLevel,
   type HPIData,
-  type Medication,
-  type Allergy,
-  type ReviewOfSystems,
-  type SocialHistory,
+  type MedicationEntry,
+  type AllergyEntry,
   type RedFlag,
+  type ChatMessage,
+  type VitalSigns,
 } from './assessmentMachine';

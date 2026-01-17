@@ -18,27 +18,42 @@
 /**
  * Detailed assessment phases used in COMPASS chat flow.
  * Uses camelCase to match XState assessment machine states.
+ * 
+ * NOTE: This is a comprehensive union of all phases used across:
+ * - XState assessment machine (patient-portal/machines/assessmentMachine.ts)
+ * - Chat stores and UI components
  */
 export type DetailedAssessmentPhase =
   | 'welcome'
   | 'demographics'
   | 'chiefComplaint'
+  // HPI phases - different naming conventions exist
   | 'hpiOnset'
   | 'hpiLocation'
   | 'hpiDuration'
   | 'hpiCharacter'
   | 'hpiSeverity'
-  | 'hpiAggravating'
-  | 'hpiRelieving'
-  | 'hpiAssociated'
+  | 'hpiTiming'        // Used by XState machine
+  | 'hpiContext'       // Used by XState machine
+  | 'hpiModifying'     // Used by XState machine
+  | 'hpiAggravating'   // Alternative naming
+  | 'hpiRelieving'     // Alternative naming
+  | 'hpiAssociated'    // Alternative naming
+  // Review of systems
   | 'reviewOfSystems'
+  // Medical history phases
   | 'medications'
   | 'allergies'
   | 'medicalHistory'
   | 'socialHistory'
   | 'familyHistory'
+  | 'riskAssessment'   // Used by XState machine
+  // Summary and completion
   | 'summary'
-  | 'complete';
+  | 'providerHandoff'  // Used by XState machine
+  | 'emergency'        // Used by XState machine
+  | 'complete'
+  | 'completed';       // Used by XState machine
 
 /**
  * High-level assessment phases for progress tracking and provider view.
@@ -63,6 +78,9 @@ export const PHASE_CATEGORY_MAP: Record<DetailedAssessmentPhase, HighLevelAssess
   hpiDuration: 'hpi-development',
   hpiCharacter: 'hpi-development',
   hpiSeverity: 'hpi-development',
+  hpiTiming: 'hpi-development',
+  hpiContext: 'hpi-development',
+  hpiModifying: 'hpi-development',
   hpiAggravating: 'hpi-development',
   hpiRelieving: 'hpi-development',
   hpiAssociated: 'hpi-development',
@@ -72,8 +90,12 @@ export const PHASE_CATEGORY_MAP: Record<DetailedAssessmentPhase, HighLevelAssess
   medicalHistory: 'medical-history',
   socialHistory: 'medical-history',
   familyHistory: 'medical-history',
+  riskAssessment: 'risk-stratification',
   summary: 'clinical-summary',
+  providerHandoff: 'clinical-summary',
+  emergency: 'clinical-summary',
   complete: 'clinical-summary',
+  completed: 'clinical-summary',
 };
 
 /**
@@ -88,17 +110,24 @@ export const PHASE_PROGRESS: Record<DetailedAssessmentPhase, number> = {
   hpiDuration: 25,
   hpiCharacter: 30,
   hpiSeverity: 35,
+  hpiTiming: 38,
+  hpiContext: 41,
+  hpiModifying: 44,
   hpiAggravating: 40,
   hpiRelieving: 45,
   hpiAssociated: 50,
   reviewOfSystems: 55,
-  medications: 65,
-  allergies: 70,
-  medicalHistory: 75,
-  socialHistory: 80,
-  familyHistory: 85,
-  summary: 95,
+  medications: 60,
+  allergies: 65,
+  medicalHistory: 70,
+  socialHistory: 75,
+  familyHistory: 80,
+  riskAssessment: 85,
+  summary: 90,
+  providerHandoff: 95,
+  emergency: 100,
   complete: 100,
+  completed: 100,
 };
 
 // =============================================================================

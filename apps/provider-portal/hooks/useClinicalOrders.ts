@@ -14,33 +14,14 @@ import { useImagingOrderingStore, type SelectedStudy } from '@/store/imagingOrde
 import { useMedicationOrderingStore, type SelectedMedication } from '@/store/medicationOrderingStore';
 import { useReferralOrderingStore, type SelectedReferral } from '@/store/referralOrderingStore';
 import { useClinicalSafety } from './useClinicalSafety';
-import type { PatientContext as SharedPatientContext, OrderPriority } from '@attending/shared/catalogs';
+import type { PatientContext, OrderPriority } from '@attending/shared/catalogs';
 
 // =============================================================================
 // Types
 // =============================================================================
 
-// Flexible patient context that can come from different stores
-type PatientContext = SharedPatientContext | {
-  id: string;
-  name: string;
-  age: number;
-  gender: string;
-  mrn: string;
-  chiefComplaint: string;
-  allergies: string[];
-  redFlags: string[];
-  primaryDiagnosis?: string;
-  insurancePlan?: string;
-  pcp?: string;
-  currentMedications?: string[];
-  medicalHistory?: string[];
-  weight?: number;
-  creatinine?: number;
-  gfr?: number;
-  pregnant?: boolean;
-  breastfeeding?: boolean;
-};
+// Re-export for convenience - use the canonical shared type
+export type { PatientContext };
 
 export type OrderType = 'lab' | 'imaging' | 'medication' | 'referral';
 

@@ -107,7 +107,11 @@ export default function MedicationsPage() {
   const normalizedAllergies: DrugAllergy[] = patientContext?.allergies?.map(a => 
     typeof a === 'string' 
       ? { allergen: a, reaction: 'Unknown', severity: 'moderate' as const }
-      : a
+      : { 
+          allergen: a.allergen, 
+          reaction: a.reaction || 'Unknown', 
+          severity: a.severity || 'moderate' 
+        }
   ) || [];
 
   // Handlers
