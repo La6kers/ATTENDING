@@ -1,6 +1,23 @@
 // Shared components index
 // apps/provider-portal/components/shared/index.ts
 
+// ============================================================================
+// New Standardized Components
+// ============================================================================
+
+export { default as PageHeader, ModeToggle, FilterToggle } from './PageHeader';
+export type { PageHeaderProps, ModeToggleProps, FilterToggleProps } from './PageHeader';
+
+export { default as ContextBanner } from './ContextBanner';
+export type { ContextBannerProps, PatientInfo, ContextType } from './ContextBanner';
+
+export { default as TabNavigation, TabPanel } from './TabNavigation';
+export type { TabNavigationProps, TabItem, TabPanelProps } from './TabNavigation';
+
+// ============================================================================
+// Existing Components
+// ============================================================================
+
 export { default as QuickActionsBar } from './QuickActionsBar';
 export type { QuickActionsBarProps } from './QuickActionsBar';
 

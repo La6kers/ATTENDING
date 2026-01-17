@@ -21,6 +21,7 @@ import {
   LogOut,
   HelpCircle,
   User,
+  Users,
 } from 'lucide-react';
 import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
 import { NotificationCenter } from '@/components/shared';
@@ -44,7 +45,7 @@ const Navigation = () => {
       fetchAssessments();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount, assessments.length and fetchAssessments are stable
+  }, []); // Only run on mount
 
   // Close user menu on outside click
   useEffect(() => {
@@ -68,7 +69,8 @@ const Navigation = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      // Search goes to assessments with query param
+      router.push(`/assessments?search=${encodeURIComponent(searchQuery)}`);
       setShowSearch(false);
       setSearchQuery('');
     }
@@ -77,6 +79,7 @@ const Navigation = () => {
   const urgentCount = getUrgentCount();
   const pendingCount = getPendingCount();
 
+  // All navigation items with verified routes
   const navigationItems = [
     { name: 'Dashboard', href: '/', icon: Home },
     { 
@@ -86,11 +89,11 @@ const Navigation = () => {
       badge: urgentCount > 0 ? urgentCount : (pendingCount > 0 ? pendingCount : null),
       badgeColor: urgentCount > 0 ? 'bg-red-500' : 'bg-amber-500'
     },
-    { name: 'Patient Assessment', href: '/patient-assessment', icon: Stethoscope },
     { name: 'Inbox', href: '/inbox', icon: Inbox },
-    { name: 'Imaging', href: '/imaging', icon: FileImage },
     { name: 'Labs', href: '/labs', icon: TestTube },
+    { name: 'Imaging', href: '/imaging', icon: FileImage },
     { name: 'Medications', href: '/medications', icon: Pill },
+    { name: 'Referrals', href: '/referrals', icon: Users },
     { name: 'Treatment Plans', href: '/treatment-plans', icon: ClipboardList },
   ];
 
@@ -105,7 +108,7 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 glass-nav z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo and Brand - Using purple gradient */}
+          {/* Logo and Brand */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
               <div className="w-9 h-9 bg-brand-gradient rounded-xl flex items-center justify-center shadow-md">
@@ -227,30 +230,37 @@ const Navigation = () => {
                     <p className="text-sm text-gray-500">Family Medicine</p>
                   </div>
                   <div className="py-2">
-                    <Link
-                      href="/profile"
-                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700"
-                      onClick={() => setShowUserMenu(false)}
+                    {/* These link to dashboard for now - stub pages can be created later */}
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        alert('Profile settings coming soon!');
+                      }}
+                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700 w-full text-left"
                     >
                       <User className="w-4 h-4" />
                       My Profile
-                    </Link>
-                    <Link
-                      href="/settings"
-                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700"
-                      onClick={() => setShowUserMenu(false)}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        alert('Settings coming soon!');
+                      }}
+                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700 w-full text-left"
                     >
                       <Settings className="w-4 h-4" />
                       Settings
-                    </Link>
-                    <Link
-                      href="/help"
-                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700"
-                      onClick={() => setShowUserMenu(false)}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        window.open('https://docs.attending.ai', '_blank');
+                      }}
+                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-700 w-full text-left"
                     >
                       <HelpCircle className="w-4 h-4" />
                       Help & Support
-                    </Link>
+                    </button>
                   </div>
                   <div className="border-t py-2">
                     <button
@@ -336,7 +346,8 @@ const Navigation = () => {
           </div>
         </div>
       )}
-    {/* Notification Center Panel */}
+
+      {/* Notification Center Panel */}
       <NotificationCenter
         isOpen={showNotificationCenter}
         onClose={() => setShowNotificationCenter(false)}

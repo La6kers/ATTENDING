@@ -7,12 +7,9 @@ import { useRouter } from 'next/router';
 import { 
   CheckCircle, 
   Clock, 
-  Phone, 
   Home, 
-  FileText, 
   AlertCircle,
-  Calendar,
-  MessageSquare
+  Calendar
 } from 'lucide-react';
 
 export default function AssessmentCompletePage() {

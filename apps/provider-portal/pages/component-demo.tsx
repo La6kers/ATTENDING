@@ -26,7 +26,6 @@ import {
   CardHeader,
   CardContent,
   CardFooter,
-  ClinicalCard,
   FindingCard,
   DiagnosisCard,
   type StatusValue,

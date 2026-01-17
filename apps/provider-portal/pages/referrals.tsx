@@ -13,12 +13,13 @@ import {
   Filter
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { QuickActionsBar, PatientBanner, SimpleCriticalAlert, useToast } from '@/components/shared';
+import { QuickActionsBar, SimpleCriticalAlert, useToast } from '@/components/shared';
 import { ReferralOrderingPanel } from '@/components/referral-ordering';
-import type { PatientContext } from '@/store/referralOrderingStore';
+import type { PatientContext as StorePatientContext } from '@/store/referralOrderingStore';
+import type { PatientContext as PanelPatientContext } from '@/components/referral-ordering/types';
 
 // Mock patient context - in production, this would come from the assessment or patient selection
-const getMockPatientContext = (patientId?: string): PatientContext => ({
+const getMockPatientContext = (patientId?: string): StorePatientContext => ({
   id: patientId || 'pat-001',
   name: 'Maria Santos',
   age: 42,
@@ -36,12 +37,23 @@ export default function ReferralsPage() {
   const router = useRouter();
   const { patientId, encounterId } = router.query;
   
-  const [patientContext, setPatientContext] = useState<PatientContext | null>(null);
+  const [patientContext, setPatientContext] = useState<StorePatientContext | null>(null);
   const [activeTab, setActiveTab] = useState<'new' | 'pending' | 'history'>('new');
   const [pendingReferrals, setPendingReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [alertDismissed, setAlertDismissed] = useState(false);
   const toast = useToast();
+
+  // Normalize patient context for ReferralOrderingPanel (convert allergies to string[])
+  const normalizedPatientContext: PanelPatientContext | null = patientContext ? {
+    ...patientContext,
+    allergies: patientContext.allergies?.map(a => 
+      typeof a === 'string' ? a : a.allergen
+    ) || [],
+    insurancePlan: patientContext.insurancePlan || '',
+    pcp: patientContext.pcp || '',
+    redFlags: patientContext.redFlags || [],
+  } : null;
 
   useEffect(() => {
     // Load patient context
@@ -196,9 +208,9 @@ export default function ReferralsPage() {
 
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 py-6">
-          {activeTab === 'new' && (
+          {activeTab === 'new' && normalizedPatientContext && (
             <ReferralOrderingPanel
-              patientContext={patientContext}
+              patientContext={normalizedPatientContext}
               encounterId={encounterId as string || 'enc-001'}
               onOrderComplete={handleOrderComplete}
             />

@@ -24,7 +24,7 @@ interface LabCatalogBrowserProps {
 }
 
 // Category configuration for filter tabs
-const LAB_CATEGORY_TABS: FilterTab<LabCategory | 'all'>[] = [
+const LAB_CATEGORY_TABS: FilterTab[] = [
   { id: 'all', label: 'All' },
   { id: 'hematology', label: 'Hematology' },
   { id: 'chemistry', label: 'Chemistry' },
@@ -55,12 +55,17 @@ export const LabCatalogBrowser: React.FC<LabCatalogBrowserProps> = ({
   }, {} as Record<string, LabTest[]>);
 
   // Build tabs with counts, filtering out empty categories
-  const tabsWithCounts: FilterTab<LabCategory | 'all'>[] = LAB_CATEGORY_TABS
+  const tabsWithCounts: FilterTab[] = LAB_CATEGORY_TABS
     .filter(tab => tab.id === 'all' || catalogByCategory[tab.id]?.length > 0)
     .map(tab => ({
       ...tab,
       count: tab.id === 'all' ? catalog.length : catalogByCategory[tab.id]?.length || 0,
     }));
+
+  // Handler wrapper for type safety
+  const handleCategoryChange = (tabId: string) => {
+    onCategoryChange(tabId as LabCategory | 'all');
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -76,7 +81,7 @@ export const LabCatalogBrowser: React.FC<LabCatalogBrowserProps> = ({
         <FilterTabs
           tabs={tabsWithCounts}
           activeTab={categoryFilter}
-          onTabChange={onCategoryChange}
+          onTabChange={handleCategoryChange}
         />
       </div>
 
@@ -91,9 +96,9 @@ export const LabCatalogBrowser: React.FC<LabCatalogBrowserProps> = ({
       <div className="p-4 max-h-[600px] overflow-y-auto space-y-3">
         {catalog.length === 0 ? (
           <EmptyState
-            icon={Filter}
+            icon={<Filter className="w-12 h-12" />}
             title="No tests found"
-            subtitle="Try adjusting your search or filters"
+            description="Try adjusting your search or filters"
           />
         ) : (
           catalog.map((test) => {

@@ -155,15 +155,19 @@ export interface PatientContext {
   gender: string;
   mrn: string;
   chiefComplaint: string;
-  allergies: Array<{ allergen: string; reaction: string; severity: 'mild' | 'moderate' | 'severe' }>;
-  currentMedications: string[];
-  medicalHistory: string[];
+  allergies: Array<{ allergen: string; reaction: string; severity: 'mild' | 'moderate' | 'severe' }> | string[];
+  currentMedications?: string[];
+  medicalHistory?: string[];
   redFlags: string[];
   weight?: number;
   creatinine?: number;
   gfr?: number;
   pregnant?: boolean;
   breastfeeding?: boolean;
+  // Additional fields used by some stores
+  primaryDiagnosis?: string;
+  insurancePlan?: string;
+  pcp?: string;
 }
 
 // =============================================================================

@@ -3,7 +3,6 @@
 // apps/provider-portal/components/referral-ordering/ReferralCard.tsx
 // ============================================================
 
-import { useState } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -12,19 +11,13 @@ import {
   Send,
   Sparkles,
   AlertTriangle,
-  Building2,
-  Clock,
-  Shield,
   UserPlus,
   Star,
 } from 'lucide-react';
 import type {
   AIReferralRecommendation,
   SelectedReferral,
-  Provider,
   ReferralUrgency,
-  URGENCY_CONFIG,
-  CATEGORY_CONFIG,
 } from './types';
 
 interface ReferralCardProps {

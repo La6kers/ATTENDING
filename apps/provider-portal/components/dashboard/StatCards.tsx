@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Users, MessageSquare, Activity, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { Activity, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
 

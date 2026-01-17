@@ -59,7 +59,7 @@ const severityConfig = {
 
 export const DrugInteractionAlert: React.FC<DrugInteractionAlertProps> = ({
   interactions,
-  onDismiss,
+  onDismiss: _onDismiss,
 }) => {
   const [expandedIds, setExpandedIds] = React.useState<Set<string>>(new Set());
 

@@ -42,20 +42,19 @@ async function getReferral(id: string, req: NextApiRequest, res: NextApiResponse
                 gender: true,
                 phone: true,
                 email: true,
-                insuranceProvider: true,
-                insurancePolicyNumber: true,
+                insuranceId: true,
+                insuranceName: true,
               } 
             },
           },
         },
-        referredBy: { 
+        referringProvider: { 
           select: { 
             id: true, 
             name: true, 
             npi: true, 
             specialty: true,
             phone: true,
-            fax: true,
           } 
         },
       },
@@ -91,35 +90,33 @@ async function updateReferral(id: string, req: NextApiRequest, res: NextApiRespo
     const {
       urgency,
       reason,
-      clinicalQuestion,
-      clinicalHistory,
-      preferredProviderId,
-      preferredProviderName,
-      attachedDocuments,
+      specificQuestions,
+      clinicalSummary,
+      preferredProvider,
+      preferredFacility,
       notes,
       status,
-      scheduledDate,
-      scheduledProviderId,
-      priorAuthStatus,
-      priorAuthNumber,
+      appointmentDate,
+      appointmentTime,
+      preAuthStatus,
+      preAuthNumber,
     } = req.body;
     
-    const updateData: any = { updatedAt: new Date() };
+    const updateData: Record<string, unknown> = {};
     
-    // Only update provided fields
+    // Only update provided fields that exist in the schema
     if (urgency !== undefined) updateData.urgency = urgency;
     if (reason !== undefined) updateData.reason = reason;
-    if (clinicalQuestion !== undefined) updateData.clinicalQuestion = clinicalQuestion;
-    if (clinicalHistory !== undefined) updateData.clinicalHistory = clinicalHistory;
-    if (preferredProviderId !== undefined) updateData.preferredProviderId = preferredProviderId;
-    if (preferredProviderName !== undefined) updateData.preferredProviderName = preferredProviderName;
-    if (attachedDocuments !== undefined) updateData.attachedDocuments = JSON.stringify(attachedDocuments);
+    if (specificQuestions !== undefined) updateData.specificQuestions = specificQuestions;
+    if (clinicalSummary !== undefined) updateData.clinicalSummary = clinicalSummary;
+    if (preferredProvider !== undefined) updateData.preferredProvider = preferredProvider;
+    if (preferredFacility !== undefined) updateData.preferredFacility = preferredFacility;
     if (notes !== undefined) updateData.notes = notes;
     if (status !== undefined) updateData.status = status;
-    if (scheduledDate !== undefined) updateData.scheduledDate = new Date(scheduledDate);
-    if (scheduledProviderId !== undefined) updateData.scheduledProviderId = scheduledProviderId;
-    if (priorAuthStatus !== undefined) updateData.priorAuthStatus = priorAuthStatus;
-    if (priorAuthNumber !== undefined) updateData.priorAuthNumber = priorAuthNumber;
+    if (appointmentDate !== undefined) updateData.appointmentDate = new Date(appointmentDate);
+    if (appointmentTime !== undefined) updateData.appointmentTime = appointmentTime;
+    if (preAuthStatus !== undefined) updateData.preAuthStatus = preAuthStatus;
+    if (preAuthNumber !== undefined) updateData.preAuthNumber = preAuthNumber;
     
     const referral = await prisma.referral.update({
       where: { id },
@@ -130,7 +127,7 @@ async function updateReferral(id: string, req: NextApiRequest, res: NextApiRespo
             patient: { select: { firstName: true, lastName: true, mrn: true } },
           },
         },
-        referredBy: { select: { name: true, npi: true } },
+        referringProvider: { select: { name: true, npi: true } },
       },
     });
     
@@ -139,9 +136,9 @@ async function updateReferral(id: string, req: NextApiRequest, res: NextApiRespo
       await prisma.notification.create({
         data: {
           userId: session.user.id,
-          type: 'INFO',
+          type: 'SYSTEM',
           title: `Referral ${status === 'SCHEDULED' ? 'Scheduled' : 'Updated'}`,
-          message: `Referral to ${referral.specialtyName} has been ${status.toLowerCase()}`,
+          message: `Referral to ${referral.specialty} has been ${status.toLowerCase()}`,
           priority: status === 'SCHEDULED' ? 'NORMAL' : 'LOW',
           relatedType: 'Referral',
           relatedId: referral.id,
@@ -199,10 +196,7 @@ async function cancelReferral(id: string, req: NextApiRequest, res: NextApiRespo
       where: { id },
       data: { 
         status: 'CANCELLED',
-        cancelledAt: new Date(),
-        cancelledBy: session.user.id,
-        cancellationReason: reason || 'Cancelled by provider',
-        updatedAt: new Date(),
+        notes: `Cancelled: ${reason || 'Cancelled by provider'}`,
       },
     });
     

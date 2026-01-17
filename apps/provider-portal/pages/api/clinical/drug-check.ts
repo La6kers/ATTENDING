@@ -7,11 +7,10 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { 
-  DrugInteractionChecker,
-  type InteractionCheckResult,
+  drugInteractionChecker,
+  type DrugCheckResult,
   type DrugInteraction,
-  type SeverityLevel,
-  type AllergyEntry
+  type AllergyAlert
 } from '@attending/clinical-services';
 
 interface DrugCheckRequest {
@@ -32,14 +31,14 @@ interface DrugCheckResponse {
     interactions: Array<{
       drug1: string;
       drug2: string;
-      severity: SeverityLevel;
+      severity: string;
       clinicalEffect: string;
       management: string;
     }>;
     criticalInteractions: Array<{
       drug1: string;
       drug2: string;
-      severity: SeverityLevel;
+      severity: string;
       clinicalEffect: string;
       management: string;
     }>;
@@ -56,29 +55,43 @@ interface DrugCheckResponse {
   timestamp: string;
 }
 
-function validateRequest(body: any): { valid: boolean; errors: string[] } {
+function validateRequest(body: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
-  if (!body.medications || !Array.isArray(body.medications)) {
+  if (!body || typeof body !== 'object') {
+    errors.push('Request body is required');
+    return { valid: false, errors };
+  }
+  
+  const bodyObj = body as Record<string, unknown>;
+  
+  if (!bodyObj.medications || !Array.isArray(bodyObj.medications)) {
     errors.push('medications is required and must be an array');
   }
   
-  if (body.medications && body.medications.length === 0) {
+  if (bodyObj.medications && Array.isArray(bodyObj.medications) && bodyObj.medications.length === 0) {
     errors.push('medications array cannot be empty');
   }
   
   return { valid: errors.length === 0, errors };
 }
 
-function determineOverallRiskLevel(result: InteractionCheckResult): 'low' | 'moderate' | 'high' | 'critical' {
-  if (result.criticalInteractions.some(i => i.severity === 'contraindicated')) {
+function determineOverallRiskLevel(result: DrugCheckResult): 'low' | 'moderate' | 'high' | 'critical' {
+  // Check for contraindicated interactions
+  if (result.interactions.some(i => i.severity === 'contraindicated')) {
     return 'critical';
   }
-  if (result.criticalInteractions.some(i => i.severity === 'severe')) {
+  // Check for major interactions
+  if (result.interactions.some(i => i.severity === 'major')) {
     return 'high';
   }
+  // Check for moderate interactions
   if (result.interactions.some(i => i.severity === 'moderate')) {
     return 'moderate';
+  }
+  // Check for allergy alerts
+  if (result.allergyAlerts.length > 0) {
+    return result.allergyAlerts.some(a => a.severity === 'severe') ? 'high' : 'moderate';
   }
   return 'low';
 }
@@ -88,8 +101,17 @@ function transformInteraction(interaction: DrugInteraction) {
     drug1: interaction.drug1,
     drug2: interaction.drug2,
     severity: interaction.severity,
-    clinicalEffect: interaction.clinicalEffect,
+    clinicalEffect: interaction.description,
     management: interaction.management,
+  };
+}
+
+function transformAllergyAlert(alert: AllergyAlert) {
+  return {
+    drug: alert.drug,
+    allergen: alert.allergen,
+    riskLevel: alert.severity,
+    notes: alert.crossReactivity ? 'Cross-reactivity possible' : undefined,
   };
 }
 
@@ -131,36 +153,48 @@ export default async function handler(
       ...(body.includeCurrentMedications || [])
     ];
     
-    // Convert allergies to expected format
-    const allergies: AllergyEntry[] = (body.allergies || []).map(a => ({
-      allergen: a.allergen,
-      reaction: a.reaction || 'Unknown reaction',
-      severity: a.severity || 'moderate',
-    }));
+    // Convert allergies to string array for the checker
+    const allergyStrings = (body.allergies || []).map(a => a.allergen);
     
-    // Check interactions and allergies
-    const checker = new DrugInteractionChecker();
-    const result = checker.checkAll(allMedications, allergies);
+    // Check interactions and allergies using the singleton checker
+    const result = drugInteractionChecker.check({
+      medications: allMedications,
+      allergies: allergyStrings,
+    });
     
     // Transform for response
     const transformedInteractions = result.interactions.map(transformInteraction);
-    const transformedCritical = result.criticalInteractions.map(transformInteraction);
     
-    const transformedAllergyAlerts = result.allergyAlerts.map(a => ({
-      drug: a.drug,
-      allergen: a.allergen,
-      riskLevel: a.riskLevel,
-      notes: a.crossReactivity?.notes,
-    }));
+    // Separate critical (major/contraindicated) from non-critical
+    const criticalInteractions = result.interactions
+      .filter(i => i.severity === 'major' || i.severity === 'contraindicated')
+      .map(transformInteraction);
+    
+    const transformedAllergyAlerts = result.allergyAlerts.map(transformAllergyAlert);
     
     const riskLevel = determineOverallRiskLevel(result);
     
+    // Generate recommendations based on results
+    const recommendations: string[] = [];
+    if (result.contraindications.length > 0) {
+      recommendations.push(...result.contraindications);
+    }
+    if (result.warnings.length > 0) {
+      recommendations.push(...result.warnings);
+    }
+    if (criticalInteractions.length > 0) {
+      recommendations.push('Review critical drug interactions before prescribing');
+    }
+    if (transformedAllergyAlerts.length > 0) {
+      recommendations.push('Patient has allergy alerts - verify safety before prescribing');
+    }
+    
     // Log critical interactions for safety monitoring
-    if (result.criticalInteractions.length > 0) {
+    if (criticalInteractions.length > 0) {
       console.error('[CRITICAL DRUG INTERACTION]', {
         timestamp: new Date().toISOString(),
         medications: allMedications,
-        criticalInteractions: result.criticalInteractions,
+        criticalInteractions,
       });
     }
     
@@ -168,7 +202,7 @@ export default async function handler(
       timestamp: new Date().toISOString(),
       medicationCount: allMedications.length,
       interactionCount: result.interactions.length,
-      criticalCount: result.criticalInteractions.length,
+      criticalCount: criticalInteractions.length,
       allergyAlertCount: result.allergyAlerts.length,
       riskLevel,
     });
@@ -176,12 +210,12 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       data: {
-        hasInteractions: result.hasInteractions,
+        hasInteractions: result.interactions.length > 0,
         hasAllergyAlerts: result.allergyAlerts.length > 0,
         interactions: transformedInteractions,
-        criticalInteractions: transformedCritical,
+        criticalInteractions,
         allergyAlerts: transformedAllergyAlerts,
-        recommendations: result.recommendations,
+        recommendations,
         riskLevel,
       },
       timestamp: new Date().toISOString(),

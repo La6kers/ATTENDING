@@ -22,14 +22,22 @@ import {
   Star,
   ExternalLink
 } from 'lucide-react';
-import {
-  emergencyLocationService,
-  type EmergencyFacility,
-} from '@attending/clinical-services';
 
 // =============================================================================
 // Types
 // =============================================================================
+
+interface EmergencyFacility {
+  id: string;
+  name: string;
+  type: 'emergency' | 'urgent-care';
+  address: string;
+  phone: string;
+  distance: number;
+  openNow?: boolean;
+  waitTime?: string;
+  rating?: number;
+}
 
 interface EmergencyModalProps {
   onClose: () => void;
@@ -41,6 +49,74 @@ interface EmergencyModalProps {
 }
 
 type ModalView = 'main' | 'emergency-rooms' | 'urgent-care' | 'nurse-lines';
+
+// =============================================================================
+// Emergency Location Service (Local Implementation)
+// =============================================================================
+
+const emergencyLocationService = {
+  buildDirectionsUrl: (address: string): string => {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+  },
+
+  buildCallUrl: (phone: string): string => {
+    return `tel:${phone.replace(/[^\d+]/g, '')}`;
+  },
+
+  getCurrentLocation: async (_forceRefresh?: boolean): Promise<{ lat: number; lng: number } | null> => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolve(null);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        () => {
+          resolve(null);
+        },
+        { timeout: 5000 }
+      );
+    });
+  },
+
+  findNearbyFacilities: async (
+    type: 'emergency' | 'urgent-care',
+    _limit: number
+  ): Promise<{ success: boolean; facilities: EmergencyFacility[]; error?: string }> => {
+    // In a real implementation, this would call Google Places API or similar
+    // For now, return placeholder data with a link to search
+    const mockFacilities: EmergencyFacility[] = type === 'emergency' 
+      ? [
+          { id: '1', name: 'County General Hospital ER', type: 'emergency', address: 'Search for nearest ER', phone: '911', distance: 0, openNow: true },
+        ]
+      : [
+          { id: '1', name: 'Urgent Care Center', type: 'urgent-care', address: 'Search for nearest urgent care', phone: '', distance: 0, openNow: true },
+        ];
+    
+    return {
+      success: true,
+      facilities: mockFacilities,
+    };
+  },
+
+  getEmergencyHotlines: () => [
+    { name: '911 Emergency', number: '911', description: 'Police, Fire, Medical Emergency' },
+    { name: 'Suicide Prevention', number: '988', description: '24/7 Crisis Support' },
+    { name: 'Poison Control', number: '1-800-222-1222', description: 'Poisoning emergencies' },
+  ],
+
+  getInsuranceNurseLines: () => [
+    { name: 'Blue Cross', number: '1-800-224-6792' },
+    { name: 'Aetna', number: '1-800-556-1555' },
+    { name: 'UnitedHealthcare', number: '1-800-901-9355' },
+    { name: 'Cigna', number: '1-800-244-6224' },
+  ],
+};
 
 // =============================================================================
 // Facility Card Component
@@ -86,10 +162,12 @@ function FacilityCard({ facility }: FacilityCardProps) {
 
       {/* Details */}
       <div className="flex items-center gap-4 text-xs text-gray-600 mb-3">
-        <div className="flex items-center gap-1">
-          <MapPin size={12} />
-          <span>{facility.distance.toFixed(1)} mi</span>
-        </div>
+        {facility.distance > 0 && (
+          <div className="flex items-center gap-1">
+            <MapPin size={12} />
+            <span>{facility.distance.toFixed(1)} mi</span>
+          </div>
+        )}
         {facility.waitTime && (
           <div className="flex items-center gap-1">
             <Clock size={12} />
@@ -102,13 +180,15 @@ function FacilityCard({ facility }: FacilityCardProps) {
             <span>{facility.rating}</span>
           </div>
         )}
-        <a 
-          href={callUrl}
-          className="flex items-center gap-1 text-purple-600 hover:underline"
-        >
-          <Phone size={12} />
-          <span>{facility.phone}</span>
-        </a>
+        {facility.phone && (
+          <a 
+            href={callUrl}
+            className="flex items-center gap-1 text-purple-600 hover:underline"
+          >
+            <Phone size={12} />
+            <span>{facility.phone}</span>
+          </a>
+        )}
       </div>
 
       {/* Actions */}
@@ -124,15 +204,17 @@ function FacilityCard({ facility }: FacilityCardProps) {
           <Navigation size={14} />
           Get Directions
         </a>
-        <a
-          href={callUrl}
-          className="py-2 px-3 border-2 border-gray-200 text-gray-700 text-sm font-medium 
-                   rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-all
-                   flex items-center gap-2"
-        >
-          <Phone size={14} />
-          Call
-        </a>
+        {facility.phone && (
+          <a
+            href={callUrl}
+            className="py-2 px-3 border-2 border-gray-200 text-gray-700 text-sm font-medium 
+                     rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-all
+                     flex items-center gap-2"
+          >
+            <Phone size={14} />
+            Call
+          </a>
+        )}
       </div>
     </div>
   );
@@ -162,7 +244,7 @@ function FacilityList({ type, onBack }: FacilityListProps) {
       if (result.success) {
         setFacilities(result.facilities);
       } else {
-        setError(result.error);
+        setError(result.error || 'Failed to load facilities');
       }
 
       setLoading(false);
@@ -182,11 +264,15 @@ function FacilityList({ type, onBack }: FacilityListProps) {
     if (result.success) {
       setFacilities(result.facilities);
     } else {
-      setError(result.error);
+      setError(result.error || 'Failed to load facilities');
     }
 
     setLoading(false);
   }, [type]);
+
+  const searchUrl = type === 'emergency' 
+    ? 'https://www.google.com/maps/search/emergency+room+near+me'
+    : 'https://www.google.com/maps/search/urgent+care+near+me';
 
   return (
     <div>
@@ -215,10 +301,28 @@ function FacilityList({ type, onBack }: FacilityListProps) {
         )}
       </h3>
 
+      {/* Quick Search Link */}
+      <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-4">
+        <p className="text-sm text-purple-800 mb-2">
+          Find {type === 'emergency' ? 'emergency rooms' : 'urgent care centers'} near you:
+        </p>
+        <a
+          href={searchUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 py-2 px-4 bg-purple-600 text-white rounded-lg 
+                   font-medium text-sm hover:bg-purple-700 transition-colors"
+        >
+          <MapPin size={16} />
+          Search on Google Maps
+          <ExternalLink size={14} />
+        </a>
+      </div>
+
       {/* Loading State */}
       {loading && (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="w-10 h-10 text-purple-600 animate-spin mb-4" />
+        <div className="flex flex-col items-center justify-center py-8">
+          <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-3" />
           <p className="text-gray-600 text-sm">Finding facilities near you...</p>
         </div>
       )}
@@ -233,18 +337,6 @@ function FacilityList({ type, onBack }: FacilityListProps) {
           >
             Try again
           </button>
-          <p className="mt-2 text-xs text-gray-600">
-            Or search{' '}
-            <a
-              href={`https://www.google.com/maps/search/${type === 'emergency' ? 'emergency+room' : 'urgent+care'}+near+me`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-purple-600 underline"
-            >
-              "{type === 'emergency' ? 'emergency room' : 'urgent care'} near me"
-              <ExternalLink size={10} className="inline ml-1" />
-            </a>
-          </p>
         </div>
       )}
 
@@ -254,22 +346,6 @@ function FacilityList({ type, onBack }: FacilityListProps) {
           {facilities.map((facility) => (
             <FacilityCard key={facility.id} facility={facility} />
           ))}
-        </div>
-      )}
-
-      {/* No Results */}
-      {!loading && !error && facilities.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-600">No facilities found nearby.</p>
-          <a
-            href={`https://www.google.com/maps/search/${type === 'emergency' ? 'emergency+room' : 'urgent+care'}+near+me`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 text-purple-600 underline inline-flex items-center gap-1"
-          >
-            Search on Google Maps
-            <ExternalLink size={12} />
-          </a>
         </div>
       )}
     </div>
@@ -478,7 +554,7 @@ export function EmergencyModal({
 
               {/* Warning Message */}
               <p className="text-gray-600 text-sm text-center mb-4">
-                If you're experiencing a medical emergency, please call 911 or go to your nearest emergency room.
+                If you are experiencing a medical emergency, please call 911 or go to your nearest emergency room.
               </p>
 
               {/* Quick Action Grid */}

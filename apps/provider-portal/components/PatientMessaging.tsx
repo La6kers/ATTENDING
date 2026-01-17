@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Clock, AlertTriangle, CheckCircle, User, FileText } from 'lucide-react';
+import { MessageCircle, Clock, AlertTriangle, User } from 'lucide-react';
 
 interface ProviderMessage {
   id: string;

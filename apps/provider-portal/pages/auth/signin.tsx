@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useState } from 'react';
-import { signIn, getProviders } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { Stethoscope, AlertCircle, Loader2 } from 'lucide-react';
@@ -39,7 +39,7 @@ export default function SignInPage() {
       } else if (result?.url) {
         router.push(result.url);
       }
-    } catch (error) {
+    } catch (_error) {
       setErrorMessage('An error occurred. Please try again.');
       setIsLoading(false);
     }

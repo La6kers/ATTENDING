@@ -11,7 +11,7 @@ import { useRouter } from 'next/router';
 import { useChatStore } from '../../store/useChatStore';
 import { ChatContainer } from '../../components/chat/ChatContainer';
 import { useWebSocket } from '../../hooks/useWebSocket';
-import { CheckCircle, Wifi, WifiOff, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle, WifiOff, Clock, AlertCircle } from 'lucide-react';
 
 export default function CompassChatPage() {
   const router = useRouter();

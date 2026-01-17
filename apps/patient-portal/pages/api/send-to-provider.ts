@@ -69,7 +69,7 @@ export default function handler(
         existingMessages.unshift(providerMessage);
         localStorage.setItem('providerMessages', JSON.stringify(existingMessages.slice(0, 50))); // Keep last 50 messages
       }
-    } catch (storageError) {
+    } catch (_storageError) {
       console.log('Note: Local storage not available (running on server)');
     }
 

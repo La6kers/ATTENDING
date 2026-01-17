@@ -21,7 +21,6 @@ import {
   AlertTriangle,
   MessageSquare,
   FileText,
-  Activity,
 } from 'lucide-react';
 
 // Types

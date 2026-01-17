@@ -2,12 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { useAssessmentQueueStore, PatientAssessment } from '@/store/assessmentQueueStore';
-import { Diagnosis } from '@/types/medical';
+import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
+import type { Diagnosis } from '@/types/medical';
 import { 
   ArrowLeft, 
   AlertTriangle, 
-  Clock, 
   User, 
   Heart, 
   Activity, 
@@ -22,7 +21,6 @@ import {
   Send,
   Save,
   AlertCircle,
-  Info,
   ChevronDown,
   ChevronUp,
   Plus,

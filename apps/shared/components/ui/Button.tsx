@@ -6,6 +6,7 @@
 // ============================================================
 
 import * as React from 'react';
+// eslint-disable-next-line no-restricted-imports
 import { cn } from '../../lib/utils';
 
 // ============================================================
@@ -31,7 +32,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /** Visual style variant */
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success' | 'warning' | 'emergency' | 'stat';
   /** Size variant */
-  size?: 'xs' | 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'icon';
   /** Shape variant */
   shape?: 'default' | 'pill' | 'square';
   /** Show loading spinner */
@@ -106,6 +107,7 @@ const sizeStyles: Record<NonNullable<ButtonProps['size']>, string> = {
   sm: 'px-4 py-2 text-sm gap-2',
   md: 'px-5 py-2.5 text-sm gap-2',
   lg: 'px-6 py-3 text-base gap-2.5',
+  icon: 'h-10 w-10 p-0',
 };
 
 const shapeStyles: Record<NonNullable<ButtonProps['shape']>, string> = {

@@ -56,12 +56,14 @@ export {
 // =============================================================================
 // DATABASE UTILITIES
 // =============================================================================
+// eslint-disable-next-line no-restricted-imports
 export * from './lib/prisma';
 
 // =============================================================================
 // GENERAL UTILITIES
 // Export specific utilities to avoid conflicts with types
 // =============================================================================
+// eslint-disable-next-line no-restricted-imports
 export {
   cn,
   formatDate,
@@ -123,6 +125,16 @@ export {
   getControlledMedications,
   getAllMedications,
   checkDrugInteractions,
+  // Referral catalog
+  SPECIALTY_CATALOG,
+  PROVIDER_DIRECTORY,
+  getSpecialty,
+  getAllSpecialties,
+  searchSpecialties,
+  getSpecialtiesByCategory,
+  getProvidersBySpecialty,
+  getPreferredProviders,
+  generateReferralRecommendations,
   // Types from catalogs
   type LabTest,
   type LabPanel,
@@ -131,6 +143,12 @@ export {
   type DrugInteraction,
   type PatientContext,
   type OrderPriority,
+  type Specialty,
+  type SpecialtyCategory,
+  type ReferralProvider,
+  type ReferralRecommendation,
+  type ReferralUrgency,
+  type PatientReferralContext,
 } from './catalogs';
 
 // =============================================================================

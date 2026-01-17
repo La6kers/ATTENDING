@@ -77,7 +77,7 @@ async function getTreatmentPlan(id: string, req: NextApiRequest, res: NextApiRes
       };
       
       return res.status(200).json(parsedPlan);
-    } catch (prismaError) {
+    } catch (_prismaError) {
       // Model doesn't exist, return mock
       console.log('TreatmentPlan model not found');
       return res.status(200).json({
@@ -105,7 +105,7 @@ async function getTreatmentPlan(id: string, req: NextApiRequest, res: NextApiRes
   }
 }
 
-async function updateTreatmentPlan(id: string, req: NextApiRequest, res: NextApiResponse, session: any) {
+async function updateTreatmentPlan(id: string, req: NextApiRequest, res: NextApiResponse, _session: any) {
   try {
     const {
       diagnoses,
@@ -172,8 +172,8 @@ async function updateTreatmentPlan(id: string, req: NextApiRequest, res: NextApi
       };
       
       return res.status(200).json(parsedPlan);
-    } catch (prismaError: any) {
-      if (prismaError?.code === 'P2025') {
+    } catch (_prismaError: any) {
+      if (_prismaError?.code === 'P2025') {
         return res.status(404).json({ error: 'Treatment plan not found' });
       }
       // Model doesn't exist
@@ -190,7 +190,7 @@ async function updateTreatmentPlan(id: string, req: NextApiRequest, res: NextApi
   }
 }
 
-async function deleteTreatmentPlan(id: string, req: NextApiRequest, res: NextApiResponse, session: any) {
+async function deleteTreatmentPlan(id: string, _req: NextApiRequest, res: NextApiResponse, _session: any) {
   try {
     try {
       await prisma.treatmentPlan.delete({
@@ -198,8 +198,8 @@ async function deleteTreatmentPlan(id: string, req: NextApiRequest, res: NextApi
       });
       
       return res.status(200).json({ success: true, message: 'Treatment plan deleted' });
-    } catch (prismaError: any) {
-      if (prismaError?.code === 'P2025') {
+    } catch (_prismaError: any) {
+      if (_prismaError?.code === 'P2025') {
         return res.status(404).json({ error: 'Treatment plan not found' });
       }
       console.log('TreatmentPlan model not found');

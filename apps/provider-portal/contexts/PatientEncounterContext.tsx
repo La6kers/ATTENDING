@@ -381,5 +381,3 @@ export function usePatientEncounter(): PatientEncounterState {
   return context;
 }
 
-// Export types
-export type { PatientEncounterState };

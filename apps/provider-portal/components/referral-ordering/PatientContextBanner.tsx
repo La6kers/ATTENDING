@@ -3,7 +3,7 @@
 // apps/provider-portal/components/referral-ordering/PatientContextBanner.tsx
 // ============================================================
 
-import { AlertTriangle, User, Shield, FileText } from 'lucide-react';
+import { AlertTriangle, User, Shield } from 'lucide-react';
 import type { PatientContext } from './types';
 
 interface PatientContextBannerProps {

@@ -7,11 +7,7 @@ import Link from 'next/link';
 import {
   Bell,
   X,
-  Check,
-  AlertTriangle,
-  Clock,
   MessageSquare,
-  FileText,
   TestTube,
   FileImage,
   Pill,

@@ -3,7 +3,7 @@
 // apps/provider-portal/components/referral-ordering/AIRecommendationsPanel.tsx
 // ============================================================
 
-import { Sparkles, AlertTriangle, ChevronRight, Loader2 } from 'lucide-react';
+import { Sparkles, AlertTriangle, Loader2 } from 'lucide-react';
 import type { AIReferralRecommendation, Specialty } from './types';
 
 interface AIRecommendationsPanelProps {
@@ -15,7 +15,12 @@ interface AIRecommendationsPanelProps {
   onRemoveRecommendation: (specialtyCode: string) => void;
 }
 
-const CATEGORY_STYLES = {
+const CATEGORY_STYLES: Record<string, {
+  border: string;
+  bg: string;
+  badge: string;
+  icon: string;
+}> = {
   critical: {
     border: 'border-l-red-500',
     bg: 'bg-red-50',
@@ -33,6 +38,18 @@ const CATEGORY_STYLES = {
     bg: 'bg-gray-50',
     badge: 'bg-gray-100 text-gray-700',
     icon: 'text-gray-600',
+  },
+  avoid: {
+    border: 'border-l-orange-500',
+    bg: 'bg-orange-50',
+    badge: 'bg-orange-100 text-orange-700',
+    icon: 'text-orange-600',
+  },
+  'not-indicated': {
+    border: 'border-l-gray-300',
+    bg: 'bg-gray-50',
+    badge: 'bg-gray-100 text-gray-500',
+    icon: 'text-gray-400',
   },
   new: {
     border: 'border-l-purple-500',
@@ -176,7 +193,7 @@ function RecommendationCard({
   onAdd: () => void;
   onRemove: () => void;
 }) {
-  const categoryStyle = CATEGORY_STYLES[recommendation.category];
+  const categoryStyle = CATEGORY_STYLES[recommendation.category] || CATEGORY_STYLES.consider;
   const urgencyStyle = URGENCY_STYLES[recommendation.urgency];
 
   return (

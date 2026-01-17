@@ -243,26 +243,32 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
 
         const newAlerts: AllergyAlert[] = [];
 
-        for (const allergy of patientContext.allergies) {
+        for (const allergy of patientContext.allergies || []) {
+          // Normalize allergy to extract allergen name and build DrugAllergy object
+          const allergenName = typeof allergy === 'string' ? allergy : allergy.allergen;
+          const allergyObj: DrugAllergy = typeof allergy === 'string' 
+            ? { allergen: allergy, reaction: 'Unknown', severity: 'moderate' }
+            : allergy;
+          
           // Direct match
           if (
-            med.genericName.toLowerCase().includes(allergy.allergen.toLowerCase()) ||
-            med.brandName.toLowerCase().includes(allergy.allergen.toLowerCase())
+            med.genericName.toLowerCase().includes(allergenName.toLowerCase()) ||
+            med.brandName.toLowerCase().includes(allergenName.toLowerCase())
           ) {
             newAlerts.push({ 
               medication: medId, 
-              allergy: { ...allergy, crossReactivity: [] }, 
+              allergy: { ...allergyObj, crossReactivity: [] }, 
               crossReactivity: false 
             });
           }
           
           // Penicillin cross-reactivity
-          if (allergy.allergen.toLowerCase() === 'penicillin') {
+          if (allergenName.toLowerCase() === 'penicillin') {
             if (med.genericName.toLowerCase().includes('amoxicillin') ||
                 med.genericName.toLowerCase().includes('ampicillin')) {
               newAlerts.push({ 
                 medication: medId, 
-                allergy: { ...allergy, crossReactivity: ['amoxicillin', 'ampicillin'] }, 
+                allergy: { ...allergyObj, crossReactivity: ['amoxicillin', 'ampicillin'] }, 
                 crossReactivity: true 
               });
             }

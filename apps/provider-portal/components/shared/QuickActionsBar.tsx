@@ -12,15 +12,15 @@ import {
   FileImage,
   Users,
   Calendar,
-  BookOpen,
+  Activity,
   AlertTriangle,
   ChevronUp,
   ChevronDown,
-  FileText,
+  Inbox,
 } from 'lucide-react';
 
 export interface QuickActionsBarProps {
-  currentPage?: 'dashboard' | 'labs' | 'imaging' | 'medications' | 'referrals' | 'treatment' | 'diagnosis';
+  currentPage?: 'dashboard' | 'labs' | 'imaging' | 'medications' | 'referrals' | 'treatment' | 'diagnosis' | 'inbox' | 'assessments';
   patientId?: string;
   encounterId?: string;
   showBackButton?: boolean;
@@ -43,13 +43,15 @@ interface QuickActionItem {
   dataAction: string;
 }
 
+// All links verified to match actual pages in /pages directory
 const quickActions: QuickActionItem[] = [
   { id: 'labs', label: 'Order Labs', icon: TestTube, href: '/labs', emoji: '🧪', dataAction: 'order-labs' },
   { id: 'medications', label: 'E-Prescribe', icon: Pill, href: '/medications', emoji: '💊', dataAction: 'prescribe' },
   { id: 'imaging', label: 'Order Imaging', icon: FileImage, href: '/imaging', emoji: '🔍', dataAction: 'imaging' },
   { id: 'referrals', label: 'Refer', icon: Users, href: '/referrals', emoji: '👥', dataAction: 'referral' },
-  { id: 'treatment', label: 'Schedule Follow-up', icon: Calendar, href: '/treatment-plans', emoji: '📅', dataAction: 'followup' },
-  { id: 'education', label: 'Patient Education', icon: BookOpen, href: '#', emoji: '📚', dataAction: 'education' },
+  { id: 'treatment', label: 'Treatment Plan', icon: Calendar, href: '/treatment-plans', emoji: '📅', dataAction: 'treatment' },
+  { id: 'inbox', label: 'Inbox', icon: Inbox, href: '/inbox', emoji: '📥', dataAction: 'inbox' },
+  { id: 'assessments', label: 'Assessments', icon: Activity, href: '/assessments', emoji: '📋', dataAction: 'assessments' },
 ];
 
 const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
@@ -57,7 +59,7 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
   patientId,
   encounterId,
   showBackButton = true,
-  backButtonLabel = 'Back to Diagnosis',
+  backButtonLabel = 'Back to Assessments',
   backButtonHref = '/assessments',
   showEmergencyButton = false,
   onEmergencyProtocol,
@@ -86,6 +88,12 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
     }
   };
 
+  // Filter out current page from quick actions
+  // Also limit to most relevant actions (not all 7)
+  const relevantActions = quickActions
+    .filter(action => action.id !== currentPage)
+    .slice(0, 5); // Show max 5 quick actions
+
   return (
     <div className={`quick-actions-bar ${className}`}>
       {/* Back Button - HTML prototype style */}
@@ -101,19 +109,17 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
       )}
 
       {/* Quick Action Buttons - HTML prototype style with emojis */}
-      {quickActions
-        .filter(action => action.id !== currentPage)
-        .map((action) => (
-          <Link
-            key={action.id}
-            href={buildHref(action.href)}
-            className="quick-action"
-            data-action={action.dataAction}
-          >
-            <span className="text-base">{action.emoji}</span>
-            <span>{action.label}</span>
-          </Link>
-        ))}
+      {relevantActions.map((action) => (
+        <Link
+          key={action.id}
+          href={buildHref(action.href)}
+          className="quick-action"
+          data-action={action.dataAction}
+        >
+          <span className="text-base">{action.emoji}</span>
+          <span>{action.label}</span>
+        </Link>
+      ))}
 
       {/* Spacer */}
       <div className="flex-1" />
@@ -138,16 +144,6 @@ const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
           )}
         </button>
       )}
-
-      {/* Review Chart Button */}
-      <button
-        onClick={() => router.push(buildHref('/chart'))}
-        className="quick-action"
-        data-action="chart"
-      >
-        <FileText className="w-4 h-4" />
-        <span className="hidden sm:inline">Review Complete Chart</span>
-      </button>
 
       {/* Emergency Protocol Button - HTML prototype style */}
       {showEmergencyButton && (

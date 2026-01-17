@@ -13,11 +13,8 @@ import {
   ArrowLeft, 
   RotateCcw, 
   AlertTriangle,
-  MessageSquare,
   User,
   Bot,
-  Loader2,
-  ChevronDown
 } from 'lucide-react';
 import { assessmentMachine } from '@/machines/assessmentMachine';
 import { EmergencyModal } from './EmergencyModal';
@@ -131,7 +128,7 @@ const PHASE_QUESTIONS: Record<string, {
 
 export const AssessmentChat: React.FC<AssessmentChatProps> = ({
   patientName = 'there',
-  onComplete,
+  onComplete: _onComplete,
   onEmergency,
 }) => {
   const [state, send] = useMachine(assessmentMachine);
@@ -145,13 +142,13 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
     currentPhase, 
     messages, 
     redFlags, 
-    urgencyLevel, 
+    urgencyLevel: _urgencyLevel, 
     isEmergency,
     emergencyType,
     progressPercent,
     patientName: contextPatientName,
-    chiefComplaint,
-    hpiData,
+    chiefComplaint: _chiefComplaint,
+    hpiData: _hpiData,
   } = state.context;
 
   // For compatibility - component uses 'demographics' but machine uses direct fields
@@ -451,13 +448,19 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
       {/* Emergency Modal */}
       <EmergencyModal
         isOpen={isEmergency}
-        emergencyType={emergencyType}
-        redFlags={redFlags}
+        emergencyType={emergencyType || 'Medical Emergency'}
+        symptoms={redFlags.map(rf => typeof rf === 'string' ? rf : rf.symptom)}
         patientName={demographics?.firstName}
-        onDismiss={() => send({ type: 'DISMISS_EMERGENCY' })}
+        onClose={() => send({ type: 'DISMISS_EMERGENCY' })}
         onCall911={() => {
           send({ type: 'CALL_911' });
           onEmergency?.(emergencyType || 'Unknown');
+        }}
+        onFindER={() => {
+          // Open maps to find nearby ER
+          if (typeof window !== 'undefined') {
+            window.open('https://www.google.com/maps/search/emergency+room+near+me', '_blank');
+          }
         }}
         onContinueAssessment={() => {
           send({ type: 'DISMISS_EMERGENCY' });

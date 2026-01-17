@@ -9,7 +9,7 @@ import { useProviderChatStore, ChatMessage } from '@/store/providerChatStore';
 import { format, isToday, isYesterday } from 'date-fns';
 
 const MessageThread: React.FC = () => {
-  const { getActiveMessages, isTyping, activeConversationId } = useProviderChatStore();
+  const { getActiveMessages, isTyping, activeConversationId: _activeConversationId } = useProviderChatStore();
   const messages = getActiveMessages();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

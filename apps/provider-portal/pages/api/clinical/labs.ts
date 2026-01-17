@@ -8,10 +8,9 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { 
-  LabRecommender, 
+  labRecommender, 
   type LabRecommendation,
   type LabBundle,
-  type RecommendationResult
 } from '@attending/clinical-services';
 
 // Types
@@ -28,6 +27,7 @@ interface LabRequest {
   };
   existingConditions?: string[];
   patientAge?: number;
+  patientGender?: string;
 }
 
 interface TransformedRecommendation {
@@ -36,10 +36,7 @@ interface TransformedRecommendation {
   category: string;
   priority: string;
   rationale: string;
-  confidence: number;
-  specimenType: string;
-  turnaroundTime: string;
-  estimatedCost?: number;
+  bundle?: string;
 }
 
 interface LabResponse {
@@ -50,7 +47,6 @@ interface LabResponse {
     urgentTests: TransformedRecommendation[];
     statCount: number;
     routineCount: number;
-    totalEstimatedCost: number;
     orderingSummary: string;
     clinicalContext: string;
   };
@@ -58,15 +54,25 @@ interface LabResponse {
   timestamp: string;
 }
 
-function validateRequest(body: any): { valid: boolean; errors: string[] } {
+function validateRequest(body: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
-  if (!body.chiefComplaint || typeof body.chiefComplaint !== 'string') {
+  if (!body || typeof body !== 'object') {
+    errors.push('Request body is required');
+    return { valid: false, errors };
+  }
+  
+  const bodyObj = body as Record<string, unknown>;
+  
+  if (!bodyObj.chiefComplaint || typeof bodyObj.chiefComplaint !== 'string') {
     errors.push('chiefComplaint is required and must be a string');
   }
   
-  if (body.patientAge && (body.patientAge < 0 || body.patientAge > 150)) {
-    errors.push('patientAge must be between 0-150');
+  if (bodyObj.patientAge !== undefined) {
+    const age = bodyObj.patientAge as number;
+    if (age < 0 || age > 150) {
+      errors.push('patientAge must be between 0-150');
+    }
   }
   
   return { valid: errors.length === 0, errors };
@@ -74,15 +80,12 @@ function validateRequest(body: any): { valid: boolean; errors: string[] } {
 
 function transformRecommendation(rec: LabRecommendation): TransformedRecommendation {
   return {
-    testCode: rec.test.code,
-    testName: rec.test.name,
-    category: rec.test.category,
+    testCode: rec.testCode,
+    testName: rec.testName,
+    category: rec.category,
     priority: rec.priority,
     rationale: rec.rationale,
-    confidence: rec.confidence,
-    specimenType: rec.test.specimenType,
-    turnaroundTime: rec.test.turnaroundTime,
-    estimatedCost: rec.test.cost,
+    bundle: rec.bundle,
   };
 }
 
@@ -123,52 +126,53 @@ export default async function handler(
     if (body.symptoms) allSymptoms.push(...body.symptoms);
     if (body.redFlags) allSymptoms.push(...body.redFlags);
     
-    // Build context
-    const context: { age?: number; comorbidities?: string[]; vitalSigns?: Record<string, number> } = {};
-    if (body.patientAge) context.age = body.patientAge;
-    if (body.existingConditions) context.comorbidities = body.existingConditions;
-    if (body.vitalSigns) {
-      context.vitalSigns = {
-        heartRate: body.vitalSigns.heartRate,
-        bloodPressure: body.vitalSigns.bloodPressure,
-        temperature: body.vitalSigns.temperature,
-        oxygenSaturation: body.vitalSigns.oxygenSaturation,
-      };
-    }
-    
-    // Get recommendations
-    const recommender = new LabRecommender();
-    const result: RecommendationResult = recommender.recommend(allSymptoms, context);
+    // Get recommendations using the singleton recommender
+    const recommendations = labRecommender.getRecommendations({
+      chiefComplaint: body.chiefComplaint,
+      symptoms: allSymptoms,
+      age: body.patientAge || 0,
+      gender: body.patientGender || 'unknown',
+      medicalHistory: body.existingConditions,
+      redFlags: body.redFlags,
+    });
     
     // Transform recommendations
-    const transformedRecs = result.individualTests.map(transformRecommendation);
-    const transformedUrgent = result.urgentTests.map(transformRecommendation);
+    const transformedRecs = recommendations.map(transformRecommendation);
+    
+    // Separate urgent (STAT) tests
+    const urgentTests = transformedRecs.filter(r => r.priority === 'STAT');
     
     // Count by priority
-    const statCount = result.individualTests.filter(r => r.priority === 'STAT').length;
-    const routineCount = result.individualTests.filter(r => r.priority === 'Routine').length;
+    const statCount = urgentTests.length;
+    const routineCount = transformedRecs.filter(r => r.priority === 'ROUTINE').length;
+    
+    // Get bundles that were recommended
+    const bundleIds = [...new Set(recommendations.filter(r => r.bundle).map(r => r.bundle!))];
+    const bundles = bundleIds.map(id => labRecommender.getBundle(id)).filter((b): b is LabBundle => b !== undefined);
     
     // Generate clinical context
-    const clinicalContext = generateClinicalContext(body, result);
+    const clinicalContext = generateClinicalContext(body, transformedRecs, bundles);
+    
+    // Generate ordering summary
+    const orderingSummary = generateOrderingSummary(transformedRecs, bundles);
     
     console.log('[AUDIT] Lab recommendations:', {
       timestamp: new Date().toISOString(),
       chiefComplaint: body.chiefComplaint,
-      bundleCount: result.bundles.length,
-      testCount: result.individualTests.length,
-      urgentCount: result.urgentTests.length,
+      bundleCount: bundles.length,
+      testCount: transformedRecs.length,
+      urgentCount: urgentTests.length,
     });
     
     return res.status(200).json({
       success: true,
       data: {
         recommendations: transformedRecs,
-        bundles: result.bundles,
-        urgentTests: transformedUrgent,
+        bundles,
+        urgentTests,
         statCount,
         routineCount,
-        totalEstimatedCost: result.estimatedCost,
-        orderingSummary: result.orderingSummary,
+        orderingSummary,
         clinicalContext,
       },
       timestamp: new Date().toISOString(),
@@ -184,7 +188,11 @@ export default async function handler(
   }
 }
 
-function generateClinicalContext(request: LabRequest, result: RecommendationResult): string {
+function generateClinicalContext(
+  request: LabRequest, 
+  recommendations: TransformedRecommendation[],
+  bundles: LabBundle[]
+): string {
   const parts: string[] = [];
   
   parts.push(`Patient presents with ${request.chiefComplaint}.`);
@@ -193,13 +201,37 @@ function generateClinicalContext(request: LabRequest, result: RecommendationResu
     parts.push(`Red flags identified: ${request.redFlags.join(', ')}.`);
   }
   
-  if (result.bundles.length > 0) {
-    parts.push(`Recommended bundles: ${result.bundles.map(b => b.name).join(', ')}.`);
+  if (bundles.length > 0) {
+    parts.push(`Recommended bundles: ${bundles.map(b => b.name).join(', ')}.`);
   }
   
-  if (result.urgentTests.length > 0) {
-    parts.push(`STAT: ${result.urgentTests.length} time-sensitive tests recommended.`);
+  const urgentCount = recommendations.filter(r => r.priority === 'STAT').length;
+  if (urgentCount > 0) {
+    parts.push(`STAT: ${urgentCount} time-sensitive tests recommended.`);
   }
   
   return parts.join(' ');
+}
+
+function generateOrderingSummary(
+  recommendations: TransformedRecommendation[],
+  bundles: LabBundle[]
+): string {
+  const parts: string[] = [];
+  
+  if (bundles.length > 0) {
+    parts.push(`Lab bundles: ${bundles.map(b => b.name).join(', ')}`);
+  }
+  
+  const statTests = recommendations.filter(r => r.priority === 'STAT');
+  if (statTests.length > 0) {
+    parts.push(`STAT orders: ${statTests.map(t => t.testName).join(', ')}`);
+  }
+  
+  const routineTests = recommendations.filter(r => r.priority === 'ROUTINE');
+  if (routineTests.length > 0) {
+    parts.push(`Routine orders: ${routineTests.map(t => t.testName).join(', ')}`);
+  }
+  
+  return parts.join('. ') || 'No lab orders recommended.';
 }

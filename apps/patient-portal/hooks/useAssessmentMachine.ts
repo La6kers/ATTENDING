@@ -152,7 +152,8 @@ export function useAssessmentMachine() {
     }
     
     // Add current phase question if not at welcome
-    if (currentPhase !== 'welcome' && currentPhase !== 'idle') {
+    // Note: 'idle' is a machine state, not a phase value - currentPhase starts at 'welcome'
+    if (currentPhase !== 'welcome') {
       msgs.push({
         id: `phase-${currentPhase}`,
         role: 'assistant',

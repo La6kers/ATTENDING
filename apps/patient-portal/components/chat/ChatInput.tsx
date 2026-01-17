@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Mic, MicOff, Paperclip, Loader2 } from 'lucide-react';
+import { Send, Mic, MicOff, Loader2 } from 'lucide-react';
 
 interface ChatInputProps {
   onSend: (message: string) => void;

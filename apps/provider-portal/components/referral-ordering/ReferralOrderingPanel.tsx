@@ -3,12 +3,9 @@
 // apps/provider-portal/components/referral-ordering/ReferralOrderingPanel.tsx
 // ============================================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  UserPlus,
   Search,
-  ChevronDown,
-  ChevronRight,
   Plus,
 } from 'lucide-react';
 import { useReferralOrderingStore } from '@/store/referralOrderingStore';
@@ -29,7 +26,6 @@ import type {
   ReferralUrgency,
   ActiveReferral,
   ReferralStatusUpdate,
-  COMMON_REFERRALS,
 } from './types';
 
 // Default common referrals

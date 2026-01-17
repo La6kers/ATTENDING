@@ -27,7 +27,8 @@ const RED_FLAG_PATTERNS = [
 ];
 
 // Phase transitions and questions
-const PHASE_QUESTIONS: Record<AssessmentPhase, string[]> = {
+// Phase questions - used for reference, potentially for future AI prompt construction
+const _PHASE_QUESTIONS: Record<AssessmentPhase, string[]> = {
   'chief-complaint': [
     'What brings you in today? Please describe your main concern.',
   ],
@@ -105,7 +106,7 @@ export default async function handler(
   }
 
   try {
-    const { sessionId, message, currentPhase, clinicalData, messageHistory } = req.body as ChatRequest;
+    const { message, currentPhase, clinicalData, messageHistory } = req.body as ChatRequest;
 
     // Detect red flags in user message
     const detectedRedFlags = detectRedFlags(message);
@@ -183,7 +184,7 @@ function calculateUrgency(redFlags: string[], clinicalData: any): UrgencyLevel {
 }
 
 // Extract clinical data from message
-function extractClinicalData(message: string, phase: AssessmentPhase, existing: any): Partial<HistoryOfPresentIllness> {
+function extractClinicalData(message: string, _phase: AssessmentPhase, _existing: any): Partial<HistoryOfPresentIllness> {
   const extraction: Partial<HistoryOfPresentIllness> = {};
   const lowerMessage = message.toLowerCase();
 

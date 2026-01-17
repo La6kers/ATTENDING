@@ -6,7 +6,7 @@
 // ============================================================
 
 import React from 'react';
-import { Brain, AlertTriangle, ShieldAlert, Pill, DollarSign, Clock } from 'lucide-react';
+import { Brain, AlertTriangle, ShieldAlert, Pill, DollarSign } from 'lucide-react';
 import type { Medication, SelectedMedication, PrescriptionPriority, DrugSchedule } from '../../store/medicationOrderingStore';
 
 interface MedicationCardProps {

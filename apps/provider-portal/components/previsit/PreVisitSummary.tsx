@@ -19,17 +19,13 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  Phone,
   FileText,
   Play,
   AlertCircle,
   Activity,
-  Thermometer,
   Heart,
   Wind,
-  Droplets,
   Check,
-  X,
   Minus,
   Plus,
   Shield,
@@ -138,7 +134,7 @@ const VitalBadge: React.FC<{
   alertId?: string;
   isAcknowledged?: boolean;
   onAcknowledge?: (id: string) => void;
-}> = ({ label, value, status, icon, alertId, isAcknowledged, onAcknowledge }) => {
+}> = ({ label: _label, value, status, icon, alertId, isAcknowledged, onAcknowledge }) => {
   const isPulsing = (status === 'critical' || status === 'high' || status === 'elevated' || status === 'tachycardia' || status === 'fever') && !isAcknowledged;
   
   const statusStyles = {

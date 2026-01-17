@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useEffect } from 'react';
-import { X, MessageCircle, AlertTriangle, Users } from 'lucide-react';
+import { X, MessageCircle, Users } from 'lucide-react';
 import { useProviderChatStore } from '@/store/providerChatStore';
 import ConversationList from './ConversationList';
 import MessageThread from './MessageThread';

@@ -2,7 +2,6 @@ import React from 'react';
 import { useClinicalHub } from '@/store/useClinicalHub';
 import { ClinicalMessage, getPriorityClass, getScoreClass, getTypeIcon, checkVitalAbnormal } from '@/lib/clinicalMockData';
 import { cn } from '@attending/shared/lib/utils';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Props {
   message: ClinicalMessage;

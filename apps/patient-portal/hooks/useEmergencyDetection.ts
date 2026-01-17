@@ -6,25 +6,20 @@
 // Triggers immediate alerts for life-threatening conditions.
 // =============================================================================
 
-import { useCallback, useState, useRef, useEffect } from 'react';
-import {
-  redFlagEvaluator,
-  emergencyLocationService,
-  type RedFlagMatch,
-  type EvaluationResult,
-  type UrgencyLevel,
-  type EmergencyFacility,
-} from '@attending/clinical-services';
+import { useCallback, useState, useRef } from 'react';
+import { redFlagEvaluator, type RedFlagResult } from '@attending/clinical-services';
 
 // =============================================================================
 // Types
 // =============================================================================
 
+export type UrgencyLevel = 'critical' | 'emergent' | 'urgent' | 'standard' | 'none';
+
 export interface EmergencyAlert {
   id: string;
   timestamp: Date;
   urgency: UrgencyLevel;
-  matches: RedFlagMatch[];
+  redFlags: string[];
   message: string;
   call911: boolean;
   instructions: string[];
@@ -33,8 +28,7 @@ export interface EmergencyAlert {
 export interface EmergencyState {
   isEmergency: boolean;
   alert: EmergencyAlert | null;
-  nearestFacility: EmergencyFacility | null;
-  detectionHistory: EvaluationResult[];
+  detectionHistory: RedFlagResult[];
 }
 
 // =============================================================================
@@ -77,6 +71,19 @@ const EMERGENCY_INSTRUCTIONS: Record<UrgencyLevel, string[]> = {
 };
 
 // =============================================================================
+// Helper to map severity to urgency level
+// =============================================================================
+
+function severityToUrgency(severity: 'warning' | 'urgent' | 'critical'): UrgencyLevel {
+  switch (severity) {
+    case 'critical': return 'critical';
+    case 'urgent': return 'emergent';
+    case 'warning': return 'urgent';
+    default: return 'standard';
+  }
+}
+
+// =============================================================================
 // Hook Implementation
 // =============================================================================
 
@@ -84,7 +91,6 @@ export function useEmergencyDetection() {
   const [emergencyState, setEmergencyState] = useState<EmergencyState>({
     isEmergency: false,
     alert: null,
-    nearestFacility: null,
     detectionHistory: [],
   });
   
@@ -92,17 +98,13 @@ export function useEmergencyDetection() {
   const hasShownAlert = useRef<Set<string>>(new Set());
 
   /**
-   * Evaluate a single message for emergency symptoms
+   * Evaluate a message for emergency symptoms using clinical-services
    */
-  const evaluateMessage = useCallback((message: string): EvaluationResult => {
-    return redFlagEvaluator.evaluateNarrative(message);
-  }, []);
-
-  /**
-   * Evaluate accumulated symptoms from the assessment
-   */
-  const evaluateSymptoms = useCallback((symptoms: string[]): EvaluationResult => {
-    return redFlagEvaluator.evaluate(symptoms);
+  const evaluateMessage = useCallback((message: string): RedFlagResult => {
+    return redFlagEvaluator.evaluate({
+      symptoms: [message],
+      chiefComplaint: message,
+    });
   }, []);
 
   /**
@@ -112,41 +114,12 @@ export function useEmergencyDetection() {
   const processMessage = useCallback((
     message: string,
     accumulatedSymptoms: string[] = []
-  ): { isEmergency: boolean; result: EvaluationResult } => {
-    // Evaluate the current message
-    const messageResult = redFlagEvaluator.evaluateNarrative(message);
-    
-    // Also evaluate accumulated symptoms
-    const symptomResult = accumulatedSymptoms.length > 0 
-      ? redFlagEvaluator.evaluate(accumulatedSymptoms)
-      : { hasRedFlags: false, matches: [], highestUrgency: 'none' as UrgencyLevel, recommendations: [] };
-    
-    // Merge results
-    const allMatches = [...messageResult.matches, ...symptomResult.matches];
-    const uniqueMatches = allMatches.reduce((acc, match) => {
-      if (!acc.find(m => m.pattern.id === match.pattern.id)) {
-        acc.push(match);
-      }
-      return acc;
-    }, [] as RedFlagMatch[]);
-    
-    // Determine highest urgency
-    const urgencyOrder: UrgencyLevel[] = ['critical', 'emergent', 'urgent', 'standard', 'none'];
-    const highestUrgency = uniqueMatches.reduce((highest, match) => {
-      const currentIndex = urgencyOrder.indexOf(match.pattern.urgency);
-      const highestIndex = urgencyOrder.indexOf(highest);
-      return currentIndex < highestIndex ? match.pattern.urgency : highest;
-    }, 'none' as UrgencyLevel);
-    
-    const result: EvaluationResult = {
-      hasRedFlags: uniqueMatches.length > 0,
-      matches: uniqueMatches,
-      highestUrgency,
-      recommendations: [...new Set([
-        ...messageResult.recommendations,
-        ...symptomResult.recommendations
-      ])],
-    };
+  ): { isEmergency: boolean; result: RedFlagResult } => {
+    // Evaluate using clinical-services
+    const result = redFlagEvaluator.evaluate({
+      symptoms: [message, ...accumulatedSymptoms],
+      chiefComplaint: message,
+    });
     
     // Update detection history
     setEmergencyState(prev => ({
@@ -154,25 +127,35 @@ export function useEmergencyDetection() {
       detectionHistory: [...prev.detectionHistory, result],
     }));
     
-    // Check if this is a new emergency
-    const isEmergency = highestUrgency === 'critical' || highestUrgency === 'emergent';
+    // Check if this is an emergency
+    const isEmergency = result.isEmergency;
     
-    if (isEmergency) {
+    if (isEmergency && result.redFlags.length > 0) {
       // Create unique key for this set of red flags
-      const alertKey = uniqueMatches.map(m => m.pattern.id).sort().join('|');
+      const alertKey = result.redFlags.map(rf => rf.id).sort().join('|');
       
       // Only show alert if we haven't shown it before
       if (!hasShownAlert.current.has(alertKey)) {
         hasShownAlert.current.add(alertKey);
         
+        // Find highest urgency
+        const highestSeverity = result.redFlags.reduce((highest, rf) => {
+          const order = ['warning', 'urgent', 'critical'];
+          const currentIdx = order.indexOf(rf.severity);
+          const highestIdx = order.indexOf(highest);
+          return currentIdx > highestIdx ? rf.severity : highest;
+        }, 'warning' as 'warning' | 'urgent' | 'critical');
+        
+        const urgency = severityToUrgency(highestSeverity);
+        
         const alert: EmergencyAlert = {
           id: `emergency-${++alertIdCounter.current}`,
           timestamp: new Date(),
-          urgency: highestUrgency,
-          matches: uniqueMatches,
-          message: EMERGENCY_MESSAGES[highestUrgency],
-          call911: highestUrgency === 'critical',
-          instructions: EMERGENCY_INSTRUCTIONS[highestUrgency],
+          urgency,
+          redFlags: result.redFlags.map(rf => rf.symptom),
+          message: EMERGENCY_MESSAGES[urgency],
+          call911: urgency === 'critical',
+          instructions: EMERGENCY_INSTRUCTIONS[urgency],
         };
         
         setEmergencyState(prev => ({
@@ -180,9 +163,6 @@ export function useEmergencyDetection() {
           isEmergency: true,
           alert,
         }));
-        
-        // Try to get nearest emergency facility
-        findNearestEmergencyFacility();
       }
     }
     
@@ -190,25 +170,7 @@ export function useEmergencyDetection() {
   }, []);
 
   /**
-   * Find nearest emergency facility using geolocation
-   */
-  const findNearestEmergencyFacility = useCallback(async () => {
-    try {
-      const result = await emergencyLocationService.findNearestFacility();
-      if (result.success && result.facility) {
-        setEmergencyState(prev => ({
-          ...prev,
-          nearestFacility: result.facility!,
-        }));
-      }
-    } catch (error) {
-      console.error('Failed to find nearest emergency facility:', error);
-    }
-  }, []);
-
-  /**
    * Acknowledge and dismiss emergency alert
-   * (User has seen it and taken action)
    */
   const acknowledgeAlert = useCallback(() => {
     setEmergencyState(prev => ({
@@ -226,13 +188,12 @@ export function useEmergencyDetection() {
     setEmergencyState({
       isEmergency: false,
       alert: null,
-      nearestFacility: null,
       detectionHistory: [],
     });
   }, []);
 
   /**
-   * Check if specific symptom keywords indicate emergency
+   * Quick check for emergency keywords
    */
   const checkSymptomKeywords = useCallback((text: string): {
     isEmergency: boolean;
@@ -264,16 +225,13 @@ export function useEmergencyDetection() {
     emergencyState,
     isEmergency: emergencyState.isEmergency,
     currentAlert: emergencyState.alert,
-    nearestFacility: emergencyState.nearestFacility,
     
     // Actions
     evaluateMessage,
-    evaluateSymptoms,
     processMessage,
     acknowledgeAlert,
     resetEmergencyState,
     checkSymptomKeywords,
-    findNearestEmergencyFacility,
   };
 }
 
@@ -284,25 +242,16 @@ export function useEmergencyDetection() {
 export function evaluateForEmergency(
   message: string,
   symptoms: string[] = []
-): { isEmergency: boolean; urgency: UrgencyLevel; matches: RedFlagMatch[] } {
-  const messageResult = redFlagEvaluator.evaluateNarrative(message);
-  const symptomResult = symptoms.length > 0 
-    ? redFlagEvaluator.evaluate(symptoms)
-    : { hasRedFlags: false, matches: [], highestUrgency: 'none' as UrgencyLevel };
-  
-  const allMatches = [...messageResult.matches, ...symptomResult.matches];
-  const urgencyOrder: UrgencyLevel[] = ['critical', 'emergent', 'urgent', 'standard', 'none'];
-  
-  const highestUrgency = allMatches.reduce((highest, match) => {
-    const currentIndex = urgencyOrder.indexOf(match.pattern.urgency);
-    const highestIndex = urgencyOrder.indexOf(highest);
-    return currentIndex < highestIndex ? match.pattern.urgency : highest;
-  }, 'none' as UrgencyLevel);
+): { isEmergency: boolean; urgencyScore: number; redFlags: string[] } {
+  const result = redFlagEvaluator.evaluate({
+    symptoms: [message, ...symptoms],
+    chiefComplaint: message,
+  });
   
   return {
-    isEmergency: highestUrgency === 'critical' || highestUrgency === 'emergent',
-    urgency: highestUrgency,
-    matches: allMatches,
+    isEmergency: result.isEmergency,
+    urgencyScore: result.urgencyScore,
+    redFlags: result.redFlags.map(rf => rf.symptom),
   };
 }
 

@@ -82,16 +82,16 @@ export default async function handler(
     const estimatedReviewTime = calculateEstimatedReviewTime(queuePosition, submissionData.urgencyLevel);
 
     // Store assessment (in production, this would go to a database)
-    const assessment = {
+    const _assessment = {
       id: assessmentId,
       ...submissionData,
       status: submissionData.urgencyLevel === 'high' ? 'urgent' : 'pending',
       submittedAt: new Date().toISOString(),
     };
 
-    // Log for development
+    // Log for development (assessment stored for future database integration)
     console.log('New assessment submitted:', {
-      id: assessmentId,
+      id: _assessment.id,
       patient: submissionData.patientName,
       urgency: submissionData.urgencyLevel,
       redFlags: submissionData.redFlags.length,

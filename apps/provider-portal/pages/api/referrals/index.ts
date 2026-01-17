@@ -18,7 +18,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'GET') {
-    return getReferrals(req, res, session);
+    return getReferrals(req, res);
   } else if (req.method === 'POST') {
     return createReferral(req, res, session);
   }
@@ -27,7 +27,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
 
-async function getReferrals(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function getReferrals(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { 
       encounterId, 
@@ -74,7 +74,7 @@ async function getReferrals(req: NextApiRequest, res: NextApiResponse, session: 
         limit: parseInt(String(limit)),
         offset: parseInt(String(offset)),
       });
-    } catch (prismaError) {
+    } catch (_prismaError) {
       console.log('Referral model query failed, returning mock data');
       return res.status(200).json({
         referrals: getMockReferrals(),
@@ -106,7 +106,7 @@ async function createReferral(req: NextApiRequest, res: NextApiResponse, session
     preferredProviderId,
     clinicalQuestion,
     relevantHistory,
-    attachedDocuments,
+    attachedDocuments: _attachedDocuments,
     priorAuthRequired,
   } = validation.data;
 
@@ -152,7 +152,7 @@ async function createReferral(req: NextApiRequest, res: NextApiResponse, session
       }
       
       return res.status(201).json(referral);
-    } catch (prismaError) {
+    } catch (_prismaError) {
       console.log('Referral model not found, returning mock response');
       const mockReferral = {
         id: `ref-${Date.now()}`,

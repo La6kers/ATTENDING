@@ -3,23 +3,84 @@
 // apps/patient-portal/hooks/useCompassAPI.ts
 //
 // React hook for COMPASS patient portal API interactions
-// Uses the @attending/api-client package
 // ============================================================
 
-import { useState, useCallback, useEffect } from 'react';
-import { 
-  AttendingApiClient, 
-  ApiError,
-  Assessment,
-  AssessmentSummary,
-  CreateAssessmentRequest,
-  UpdateAssessmentRequest,
-  RedFlagResult,
-  TriageResult,
-} from '@attending/api-client';
+import { useState, useCallback } from 'react';
 
 // =============================================================================
-// Types
+// Types (defined locally to avoid missing package dependency)
+// =============================================================================
+
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
+export interface Assessment {
+  id: string;
+  patientId: string;
+  status: 'in_progress' | 'pending' | 'in_review' | 'completed';
+  chiefComplaint?: string;
+  hpiData?: Record<string, any>;
+  reviewOfSystems?: Record<string, string[]>;
+  medicalHistory?: string[];
+  medications?: string[];
+  allergies?: string[];
+  socialHistory?: Record<string, string>;
+  redFlags?: string[];
+  urgencyLevel?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AssessmentSummary {
+  id: string;
+  chiefComplaint: string;
+  status: string;
+  urgencyLevel: string;
+  createdAt: string;
+}
+
+export interface CreateAssessmentRequest {
+  patientId: string;
+  chiefComplaint?: string;
+}
+
+export interface UpdateAssessmentRequest {
+  chiefComplaint?: string;
+  hpiData?: Record<string, any>;
+  reviewOfSystems?: Record<string, string[]>;
+  medicalHistory?: string[];
+  medications?: string[];
+  allergies?: string[];
+  socialHistory?: Record<string, string>;
+}
+
+export interface RedFlagResult {
+  hasRedFlags: boolean;
+  redFlags: Array<{
+    symptom: string;
+    severity: 'warning' | 'urgent' | 'critical';
+    category: string;
+  }>;
+  recommendedAction: string;
+}
+
+export interface TriageResult {
+  urgencyLevel: 'standard' | 'moderate' | 'high' | 'emergency';
+  score: number;
+  recommendations: string[];
+}
+
+// =============================================================================
+// Hook Types
 // =============================================================================
 
 export interface UseCompassAPIOptions {
@@ -58,10 +119,46 @@ export interface CompassAPIActions {
 }
 
 // =============================================================================
+// API Helper Functions
+// =============================================================================
+
+async function apiFetch<T>(
+  url: string,
+  options: RequestInit = {},
+  onUnauthorized?: () => void
+): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+  if (response.status === 401) {
+    onUnauthorized?.();
+    throw new ApiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError(
+      errorData.message || `Request failed with status ${response.status}`,
+      response.status,
+      errorData.code
+    );
+  }
+
+  return response.json();
+}
+
+// =============================================================================
 // Hook Implementation
 // =============================================================================
 
 export function useCompassAPI(options: UseCompassAPIOptions = {}): CompassAPIState & CompassAPIActions {
+  const baseUrl = options.baseUrl || '/api';
+  
   const [state, setState] = useState<CompassAPIState>({
     isLoading: false,
     error: null,
@@ -69,13 +166,6 @@ export function useCompassAPI(options: UseCompassAPIOptions = {}): CompassAPISta
     triageResult: null,
     redFlagResult: null,
   });
-
-  // Create API client instance
-  const [client] = useState(() => new AttendingApiClient({
-    baseUrl: options.baseUrl || '/api',
-    onError: options.onError,
-    onUnauthorized: options.onUnauthorized,
-  }));
 
   // Helper to set loading state
   const setLoading = useCallback((isLoading: boolean) => {
@@ -94,67 +184,100 @@ export function useCompassAPI(options: UseCompassAPIOptions = {}): CompassAPISta
   const createAssessment = useCallback(async (request: CreateAssessmentRequest): Promise<Assessment> => {
     setLoading(true);
     try {
-      const assessment = await client.assessments.create(request);
+      const assessment = await apiFetch<Assessment>(
+        `${baseUrl}/patient/assessments`,
+        {
+          method: 'POST',
+          body: JSON.stringify(request),
+        },
+        options.onUnauthorized
+      );
       setState(prev => ({ ...prev, assessment, isLoading: false, error: null }));
       return assessment;
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to create assessment';
       setError(message);
+      options.onError?.(error instanceof ApiError ? error : new ApiError(message, 500));
       throw error;
     }
-  }, [client, setLoading, setError]);
+  }, [baseUrl, setLoading, setError, options]);
 
   const updateAssessment = useCallback(async (id: string, updates: UpdateAssessmentRequest): Promise<Assessment> => {
     setLoading(true);
     try {
-      const assessment = await client.assessments.update(id, updates);
+      const assessment = await apiFetch<Assessment>(
+        `${baseUrl}/patient/assessments/${id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(updates),
+        },
+        options.onUnauthorized
+      );
       setState(prev => ({ ...prev, assessment, isLoading: false, error: null }));
       return assessment;
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to update assessment';
       setError(message);
+      options.onError?.(error instanceof ApiError ? error : new ApiError(message, 500));
       throw error;
     }
-  }, [client, setLoading, setError]);
+  }, [baseUrl, setLoading, setError, options]);
 
   const submitAssessment = useCallback(async (id: string): Promise<Assessment> => {
     setLoading(true);
     try {
-      const assessment = await client.assessments.submit(id);
+      const assessment = await apiFetch<Assessment>(
+        `${baseUrl}/patient/assessments/${id}/submit`,
+        {
+          method: 'POST',
+        },
+        options.onUnauthorized
+      );
       setState(prev => ({ ...prev, assessment, isLoading: false, error: null }));
       return assessment;
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to submit assessment';
       setError(message);
+      options.onError?.(error instanceof ApiError ? error : new ApiError(message, 500));
       throw error;
     }
-  }, [client, setLoading, setError]);
+  }, [baseUrl, setLoading, setError, options]);
 
   const getAssessment = useCallback(async (id: string): Promise<Assessment> => {
     setLoading(true);
     try {
-      const assessment = await client.assessments.get(id);
+      const assessment = await apiFetch<Assessment>(
+        `${baseUrl}/patient/assessments/${id}`,
+        {},
+        options.onUnauthorized
+      );
       setState(prev => ({ ...prev, assessment, isLoading: false, error: null }));
       return assessment;
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to get assessment';
       setError(message);
+      options.onError?.(error instanceof ApiError ? error : new ApiError(message, 500));
       throw error;
     }
-  }, [client, setLoading, setError]);
+  }, [baseUrl, setLoading, setError, options]);
 
   const getPatientHistory = useCallback(async (patientId: string): Promise<AssessmentSummary[]> => {
     setLoading(true);
     try {
-      const history = await client.assessments.getPatientHistory(patientId);
+      const response = await apiFetch<{ assessments: AssessmentSummary[] }>(
+        `${baseUrl}/patient/assessments?patientId=${patientId}`,
+        {},
+        options.onUnauthorized
+      );
       setLoading(false);
-      return history;
+      return response.assessments || [];
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to get patient history';
       setError(message);
+      options.onError?.(error instanceof ApiError ? error : new ApiError(message, 500));
       throw error;
     }
-  }, [client, setLoading, setError]);
+  }, [baseUrl, setLoading, setError, options]);
 
   const evaluateRedFlags = useCallback(async (data: {
     chiefComplaint: string;
@@ -163,19 +286,23 @@ export function useCompassAPI(options: UseCompassAPIOptions = {}): CompassAPISta
   }): Promise<RedFlagResult> => {
     setLoading(true);
     try {
-      const result = await client.clinical.evaluateRedFlags({
-        chiefComplaint: data.chiefComplaint,
-        symptoms: data.symptoms,
-        age: data.age,
-      });
+      const result = await apiFetch<RedFlagResult>(
+        `${baseUrl}/clinical/red-flags`,
+        {
+          method: 'POST',
+          body: JSON.stringify(data),
+        },
+        options.onUnauthorized
+      );
       setState(prev => ({ ...prev, redFlagResult: result, isLoading: false, error: null }));
       return result;
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to evaluate red flags';
       setError(message);
+      options.onError?.(error instanceof ApiError ? error : new ApiError(message, 500));
       throw error;
     }
-  }, [client, setLoading, setError]);
+  }, [baseUrl, setLoading, setError, options]);
 
   const getTriage = useCallback(async (data: {
     chiefComplaint: string;
@@ -184,24 +311,35 @@ export function useCompassAPI(options: UseCompassAPIOptions = {}): CompassAPISta
   }): Promise<TriageResult> => {
     setLoading(true);
     try {
-      const result = await client.clinical.getTriage({
-        chiefComplaint: data.chiefComplaint,
-        symptoms: data.symptoms,
-        age: data.age,
-      });
+      const result = await apiFetch<TriageResult>(
+        `${baseUrl}/clinical/triage`,
+        {
+          method: 'POST',
+          body: JSON.stringify(data),
+        },
+        options.onUnauthorized
+      );
       setState(prev => ({ ...prev, triageResult: result, isLoading: false, error: null }));
       return result;
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to get triage';
       setError(message);
+      options.onError?.(error instanceof ApiError ? error : new ApiError(message, 500));
       throw error;
     }
-  }, [client, setLoading, setError]);
+  }, [baseUrl, setLoading, setError, options]);
 
   const saveProgress = useCallback(async (id: string, data: UpdateAssessmentRequest): Promise<Assessment> => {
     // Don't show loading for auto-save
     try {
-      const assessment = await client.assessments.saveProgress(id, data);
+      const assessment = await apiFetch<Assessment>(
+        `${baseUrl}/patient/assessments/${id}`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(data),
+        },
+        options.onUnauthorized
+      );
       setState(prev => ({ ...prev, assessment }));
       return assessment;
     } catch (error) {
@@ -209,7 +347,7 @@ export function useCompassAPI(options: UseCompassAPIOptions = {}): CompassAPISta
       console.warn('Auto-save failed:', error);
       throw error;
     }
-  }, [client]);
+  }, [baseUrl, options]);
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));

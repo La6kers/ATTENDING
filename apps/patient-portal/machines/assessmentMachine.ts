@@ -353,14 +353,17 @@ export const assessmentMachine = createMachine({
       on: {
         START: {
           target: 'welcome',
-          actions: assign({
-            sessionId: () => generateSessionId(),
-            patientName: (_, event) => event.patientName,
-            patientId: (_, event) => event.patientId || `patient-${Date.now()}`,
-            startTime: () => new Date().toISOString(),
-            currentPhase: () => 'welcome' as AssessmentPhase,
-            phaseHistory: () => ['welcome'] as AssessmentPhase[],
-            progressPercent: () => 0
+          actions: assign((_ctx, event) => {
+            const startEvent = event as { type: 'START'; patientName: string; patientId?: string };
+            return {
+              sessionId: generateSessionId(),
+              patientName: startEvent.patientName,
+              patientId: startEvent.patientId || `patient-${Date.now()}`,
+              startTime: new Date().toISOString(),
+              currentPhase: 'welcome' as AssessmentPhase,
+              phaseHistory: ['welcome'] as AssessmentPhase[],
+              progressPercent: 0
+            };
           })
         }
       }
@@ -395,11 +398,14 @@ export const assessmentMachine = createMachine({
       on: {
         SUBMIT_DEMOGRAPHICS: {
           target: 'chiefComplaint',
-          actions: assign({
-            dateOfBirth: (_, event) => event.data.dateOfBirth,
-            gender: (_, event) => event.data.gender,
-            contactPhone: (_, event) => event.data.contactPhone,
-            phaseHistory: (ctx) => [...ctx.phaseHistory, 'chiefComplaint'] as AssessmentPhase[]
+          actions: assign((_ctx, event) => {
+            const submitEvent = event as { type: 'SUBMIT_DEMOGRAPHICS'; data: { dateOfBirth: string; gender: string; contactPhone?: string } };
+            return {
+              dateOfBirth: submitEvent.data.dateOfBirth,
+              gender: submitEvent.data.gender,
+              contactPhone: submitEvent.data.contactPhone,
+              phaseHistory: [..._ctx.phaseHistory, 'chiefComplaint'] as AssessmentPhase[]
+            };
           })
         },
         SKIP: {

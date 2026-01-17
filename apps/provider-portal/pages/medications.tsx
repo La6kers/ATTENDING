@@ -19,6 +19,7 @@ import {
   type PatientContext,
   type PharmacyInfo,
   type PrescriptionPriority,
+  type DrugAllergy,
 } from '../store/medicationOrderingStore';
 import { User, Building2, Phone, Clock, MapPin } from 'lucide-react';
 
@@ -101,6 +102,13 @@ export default function MedicationsPage() {
   const controlledCount = getControlledCount();
   const blackBoxWarnings = hasBlackBoxWarnings();
   const selectedIds = new Set(selectedMedications.keys());
+
+  // Transform allergies to DrugAllergy[] format for AllergyAlert component
+  const normalizedAllergies: DrugAllergy[] = patientContext?.allergies?.map(a => 
+    typeof a === 'string' 
+      ? { allergen: a, reaction: 'Unknown', severity: 'moderate' as const }
+      : a
+  ) || [];
 
   // Handlers
   const handleToggleMedication = (medId: string) => {
@@ -236,7 +244,7 @@ export default function MedicationsPage() {
               {patientContext && (
                 <AllergyAlert
                   allergyAlerts={allergyAlerts}
-                  patientAllergies={patientContext.allergies}
+                  patientAllergies={normalizedAllergies}
                 />
               )}
 
@@ -290,7 +298,7 @@ export default function MedicationsPage() {
               )}
 
               {/* Patient Current Medications */}
-              {patientContext && patientContext.currentMedications.length > 0 && (
+              {patientContext && patientContext.currentMedications && patientContext.currentMedications.length > 0 && (
                 <div className="bg-white rounded-lg shadow-sm p-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">

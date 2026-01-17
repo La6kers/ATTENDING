@@ -14,7 +14,7 @@ import AIInsights from '../components/dashboard/AIInsights';
 import QuickAccess from '../components/dashboard/QuickAccess';
 import RecentAssessments from '../components/dashboard/RecentAssessments';
 import PatientMessaging from '../components/PatientMessaging';
-import { Users, MessageSquare, Video, Settings } from 'lucide-react';
+import { Users, MessageSquare, Video } from 'lucide-react';
 
 // Import CSS for react-grid-layout (add to _app.tsx for production)
 import 'react-grid-layout/css/styles.css';

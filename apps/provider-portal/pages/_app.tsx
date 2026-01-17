@@ -19,7 +19,7 @@ import type { AppProps } from 'next/app'
 import { SessionProvider, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import Navigation from '@/components/layout/Navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { 
   connectWebSocket, 
   disconnectWebSocket, 
@@ -233,10 +233,6 @@ function AppContent({ Component, pageProps }: { Component: AppProps['Component']
           isOpen={showEmergencyModal}
           onClose={() => setShowEmergencyModal(false)}
           patientName="Current Patient"
-          onProtocolSelect={(protocol) => {
-            toastContext.info(`Emergency Protocol: ${protocol.name}`, 'Protocol activated')
-            setShowEmergencyModal(false)
-          }}
         />
       )}
     </div>

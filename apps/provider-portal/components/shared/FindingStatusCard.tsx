@@ -69,10 +69,14 @@ const FindingStatusCard: React.FC<FindingStatusCardProps> = ({
       <div className="finding-header">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {finding.aiSuggested && (
-            <Brain className="w-4 h-4 text-purple-500 flex-shrink-0" title="AI Suggested" />
+            <span title="AI Suggested">
+              <Brain className="w-4 h-4 text-purple-500 flex-shrink-0" aria-hidden="true" />
+            </span>
           )}
           {finding.critical && (
-            <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" title="Critical Finding" />
+            <span title="Critical Finding">
+              <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" aria-hidden="true" />
+            </span>
           )}
           <span className="finding-text truncate">{finding.text}</span>
           {finding.source && (

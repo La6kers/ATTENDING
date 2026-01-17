@@ -16,6 +16,7 @@ import {
 import {
   useImagingOrderingStore,
   IMAGING_CATALOG,
+  type OrderPriority,
 } from '../store/imagingOrderingStore';
 import {
   FileImage,
@@ -27,11 +28,9 @@ import {
   AlertTriangle,
   Clock,
   CheckCircle,
-  Settings,
   Calendar,
   Monitor,
   Waves,
-  Zap,
 } from 'lucide-react';
 
 // Sample patient context - in production this would come from assessment selection
@@ -110,6 +109,14 @@ export default function Imaging() {
   const hasContrast = hasContrastStudies();
   const radiationTotal = getRadiationTotal();
 
+  // Transform patient context for PatientBanner (normalize allergies to strings)
+  const patientForBanner = patientContext ? {
+    ...patientContext,
+    allergies: patientContext.allergies?.map(a => 
+      typeof a === 'string' ? a : a.allergen
+    ),
+  } : null;
+
   // Convert Map to Set for component compatibility
   const selectedCodes = new Set(selectedStudies.keys());
 
@@ -125,7 +132,7 @@ export default function Imaging() {
   // Handle single AI recommendation add
   const handleAddSingleRecommendation = (
     studyCode: string,
-    priority: 'STAT' | 'URGENT' | 'ROUTINE',
+    priority: OrderPriority,
     rationale: string
   ) => {
     addStudy(studyCode, { priority, rationale, aiRecommended: true });
@@ -218,8 +225,8 @@ export default function Imaging() {
             onEmergencyProtocol={() => {
               // Auto-select STAT imaging for emergency protocol
               aiRecommendations
-                .filter(r => r.category === 'critical' || r.category === 'strongly-recommended')
-                .forEach(r => r.studies?.forEach((study: any) => addStudy(study.studyCode, { priority: 'STAT', aiRecommended: true })));
+                .filter(r => r.category === 'recommended')
+                .forEach(r => addStudy(r.studyCode, { priority: 'STAT', aiRecommended: true, rationale: r.rationale }));
               toast.warning('Emergency Protocol Activated', 'STAT imaging auto-selected');
             }}
           />
@@ -232,8 +239,8 @@ export default function Imaging() {
               actionLabel="Auto-Select STAT Imaging"
               onAction={() => {
                 aiRecommendations
-                  .filter(r => r.category === 'critical' || r.category === 'strongly-recommended')
-                  .forEach(r => r.studies?.forEach((study: any) => addStudy(study.studyCode, { priority: 'STAT', aiRecommended: true })));
+                  .filter(r => r.category === 'recommended')
+                  .forEach(r => addStudy(r.studyCode, { priority: 'STAT', aiRecommended: true, rationale: r.rationale }));
                 toast.success('STAT Imaging Selected', 'Critical imaging studies have been added to your order');
                 setAlertDismissed(true);
               }}
@@ -247,9 +254,9 @@ export default function Imaging() {
               {/* Left Column - Study Selection */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Patient Context Banner - Using shared component */}
-                {patientContext && (
+                {patientForBanner && (
                   <PatientBanner
-                    patient={patientContext}
+                    patient={patientForBanner}
                     accentColor="blue"
                     showRedFlags={true}
                     showSafetyInfo={true}

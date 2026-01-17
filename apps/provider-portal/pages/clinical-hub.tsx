@@ -118,7 +118,7 @@ const DEMO_ORDERS = {
 };
 
 export default function ClinicalHubPage() {
-  const router = useRouter();
+  const _router = useRouter();
   // const { assessmentId, patientId } = router.query; // Available for future use
   
   const [patient] = useState(DEMO_PATIENT);

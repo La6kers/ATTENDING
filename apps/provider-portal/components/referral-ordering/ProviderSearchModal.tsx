@@ -3,7 +3,7 @@
 // apps/provider-portal/components/referral-ordering/ProviderSearchModal.tsx
 // ============================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   X,
   Search,
@@ -45,9 +45,13 @@ export function ProviderSearchModal({
   const [filterInNetwork, setFilterInNetwork] = useState(true);
   const [sortBy, setSortBy] = useState<'rating' | 'availability' | 'name'>('rating');
 
+  // Use ref to avoid stale closure and prevent unnecessary re-renders
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
+
   useEffect(() => {
     if (isOpen) {
-      onSearch(specialtyCode, insurance);
+      onSearchRef.current(specialtyCode, insurance);
     }
   }, [isOpen, specialtyCode, insurance]);
 

@@ -21,8 +21,6 @@ import {
   Calendar,
   MapPin,
   Heart,
-  Pill,
-  AlertTriangle,
   Bell,
   Shield,
   ChevronRight,

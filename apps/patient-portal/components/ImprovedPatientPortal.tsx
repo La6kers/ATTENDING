@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { 
   MessageCircle, Calendar, FileText, Activity, Bell, User, Heart, Clock,
-  AlertCircle, ChevronRight, Send, Shield, Stethoscope, Phone, AlertTriangle,
-  Pill, ChevronDown, Eye, EyeOff, Settings, LogOut, Zap, TrendingUp,
-  Loader2, CheckCircle, XCircle, Info, Thermometer, Droplet, Wind
+  ChevronRight, Send, Shield, Stethoscope, Phone, ChevronDown, Zap, TrendingUp,
+  CheckCircle, Info, Thermometer, AlertTriangle, Pill
 } from 'lucide-react';
 
 // Types
@@ -24,7 +23,7 @@ interface ChatContext {
 const ImprovedPatientPortal = () => {
   const router = useRouter();
   // Enhanced state management
-  const [user, setUser] = useState({
+  const [user, _setUser] = useState({
     name: "Sarah Johnson",
     id: "PT-2024-0892",
     photoUrl: null,
@@ -34,7 +33,7 @@ const ImprovedPatientPortal = () => {
 
   const [sessionTimeout, setSessionTimeout] = useState(900); // 15 minutes
   const [showEmergencyOptions, setShowEmergencyOptions] = useState(false);
-  const [aiConsent, setAiConsent] = useState(true);
+  const [aiConsent, _setAiConsent] = useState(true);
   const [chatContext, setChatContext] = useState<ChatContext>({
     messages: [],
     medicalContext: {},
@@ -57,7 +56,7 @@ const ImprovedPatientPortal = () => {
   // Emergency keyword detection
   const EMERGENCY_KEYWORDS = ['chest pain', 'can\'t breathe', 'bleeding', 'unconscious', 'stroke', 'heart attack'];
   
-  const checkUrgency = (message: string) => {
+  const _checkUrgency = (message: string) => {
     const lowerMessage = message.toLowerCase();
     return EMERGENCY_KEYWORDS.some(keyword => lowerMessage.includes(keyword));
   };
@@ -86,7 +85,7 @@ const ImprovedPatientPortal = () => {
   };
 
   const [activeView, setActiveView] = useState('dashboard');
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const [chatInput, setChatInput] = useState('');
 
   // COMPASS Chat Integration

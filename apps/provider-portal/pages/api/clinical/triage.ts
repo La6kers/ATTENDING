@@ -7,7 +7,7 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { TriageClassifier, type TriageInput, type TriageResult } from '@attending/clinical-services';
+import { triageClassifier, type TriageInput, type TriageResult } from '@attending/clinical-services';
 
 // Types
 interface TriageRequest {
@@ -35,28 +35,35 @@ interface TriageResponse {
 }
 
 // Validate request body
-function validateRequest(body: any): { valid: boolean; errors: string[] } {
+function validateRequest(body: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
-  if (!body.chiefComplaint || typeof body.chiefComplaint !== 'string') {
+  if (!body || typeof body !== 'object') {
+    errors.push('Request body is required');
+    return { valid: false, errors };
+  }
+  
+  const bodyObj = body as Record<string, unknown>;
+  
+  if (!bodyObj.chiefComplaint || typeof bodyObj.chiefComplaint !== 'string') {
     errors.push('chiefComplaint is required and must be a string');
   }
   
-  if (body.vitalSigns) {
-    const vs = body.vitalSigns;
-    if (vs.heartRate && (vs.heartRate < 0 || vs.heartRate > 300)) {
-      errors.push('heartRate must be between 0-300');
+  if (bodyObj.vitalSigns && typeof bodyObj.vitalSigns === 'object') {
+    const vs = bodyObj.vitalSigns as Record<string, unknown>;
+    if (vs.heartRate !== undefined && (typeof vs.heartRate !== 'number' || vs.heartRate < 0 || vs.heartRate > 300)) {
+      errors.push('heartRate must be a number between 0-300');
     }
-    if (vs.oxygenSaturation && (vs.oxygenSaturation < 0 || vs.oxygenSaturation > 100)) {
-      errors.push('oxygenSaturation must be between 0-100');
+    if (vs.oxygenSaturation !== undefined && (typeof vs.oxygenSaturation !== 'number' || vs.oxygenSaturation < 0 || vs.oxygenSaturation > 100)) {
+      errors.push('oxygenSaturation must be a number between 0-100');
     }
-    if (vs.painLevel && (vs.painLevel < 0 || vs.painLevel > 10)) {
-      errors.push('painLevel must be between 0-10');
+    if (vs.painLevel !== undefined && (typeof vs.painLevel !== 'number' || vs.painLevel < 0 || vs.painLevel > 10)) {
+      errors.push('painLevel must be a number between 0-10');
     }
   }
   
-  if (body.patientAge && (body.patientAge < 0 || body.patientAge > 150)) {
-    errors.push('patientAge must be between 0-150');
+  if (bodyObj.patientAge !== undefined && (typeof bodyObj.patientAge !== 'number' || bodyObj.patientAge < 0 || bodyObj.patientAge > 150)) {
+    errors.push('patientAge must be a number between 0-150');
   }
   
   return { valid: errors.length === 0, errors };
@@ -66,19 +73,19 @@ function validateRequest(body: any): { valid: boolean; errors: string[] } {
 function mapToTriageInput(body: TriageRequest): TriageInput {
   return {
     chiefComplaint: body.chiefComplaint,
-    vitalSigns: body.vitalSigns ? {
+    vitals: body.vitalSigns ? {
       heartRate: body.vitalSigns.heartRate,
-      systolicBP: body.vitalSigns.systolicBP,
-      diastolicBP: body.vitalSigns.diastolicBP,
+      bloodPressure: body.vitalSigns.systolicBP ? {
+        systolic: body.vitalSigns.systolicBP,
+        diastolic: body.vitalSigns.diastolicBP || 80,
+      } : undefined,
       respiratoryRate: body.vitalSigns.respiratoryRate,
       temperature: body.vitalSigns.temperature,
       oxygenSaturation: body.vitalSigns.oxygenSaturation,
       painLevel: body.vitalSigns.painLevel,
     } : undefined,
-    patientAge: body.patientAge,
+    age: body.patientAge,
     symptoms: body.symptoms || [],
-    redFlags: body.redFlags || [],
-    mentalStatus: body.mentalStatus,
   };
 }
 
@@ -117,16 +124,16 @@ export default async function handler(
     // Map to classifier input
     const input = mapToTriageInput(req.body);
     
-    // Initialize classifier and classify
-    const classifier = new TriageClassifier();
-    const result = classifier.classify(input);
+    // Classify using the singleton classifier
+    const result = triageClassifier.classify(input);
     
     // Log for audit trail (in production, this would go to a proper audit service)
     console.log('[AUDIT] Triage classification:', {
       timestamp: new Date().toISOString(),
       chiefComplaint: input.chiefComplaint,
       esiLevel: result.esiLevel,
-      disposition: result.disposition,
+      category: result.category,
+      recommendedDisposition: result.recommendedDisposition,
     });
     
     return res.status(200).json({

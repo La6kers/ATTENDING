@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { 
-  FileImage, Clock, DollarSign, AlertTriangle, Send, X, Loader2,
+  FileImage, Clock, AlertTriangle, Send, X, Loader2,
   Zap, Shield, FileText, Monitor, Waves, Radio, Heart
 } from 'lucide-react';
 import type { SelectedStudy, ImagingPriority, ImagingModality } from '../../store/imagingOrderingStore';

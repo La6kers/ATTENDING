@@ -3,14 +3,10 @@
 // apps/provider-portal/components/referral-ordering/ReferralStatusSidebar.tsx
 // ============================================================
 
-import { useState } from 'react';
 import {
   CheckCircle,
-  Clock,
   Calendar,
-  AlertTriangle,
   FileText,
-  ExternalLink,
   RefreshCw,
   ChevronRight,
 } from 'lucide-react';
@@ -45,7 +41,7 @@ export function ReferralStatusSidebar({
         </h3>
         
         <div className="space-y-3">
-          {statusUpdates.map((update, index) => (
+          {statusUpdates.map((update, _index) => (
             <div key={update.id} className="flex items-start gap-3">
               <div className={`
                 w-3 h-3 rounded-full mt-1 flex-shrink-0

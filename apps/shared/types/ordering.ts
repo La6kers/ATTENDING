@@ -124,7 +124,7 @@ export interface LabPanel {
   commonIndications: string[];
 }
 
-export interface SelectedLab extends BaseSelectedItem<LabTest> {}
+export type SelectedLab = BaseSelectedItem<LabTest>;
 
 export interface AILabRecommendation extends BaseAIRecommendation {
   type: 'lab';
@@ -326,6 +326,7 @@ export interface ClinicalStoreConfig<
   TItem extends BaseCatalogItem,
   TSelectedItem extends BaseSelectedItem<TItem>,
   TRecommendation extends BaseAIRecommendation,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TCategory extends string
 > {
   name: string;

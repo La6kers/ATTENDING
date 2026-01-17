@@ -17,6 +17,28 @@ import { IMAGING_CATALOG } from '../catalogs/imaging';
 import { MEDICATION_CATALOG } from '../catalogs/medications';
 
 // =============================================================================
+// Helper Functions
+// =============================================================================
+
+/** 
+ * Normalize allergies from mixed format to string array 
+ * Handles both string[] and {allergen, reaction, severity}[] formats
+ */
+function normalizeAllergies(allergies: PatientContext['allergies']): string[] {
+  if (!allergies) return [];
+  return allergies.map(a => typeof a === 'string' ? a : a.allergen);
+}
+
+/**
+ * Check if any allergy matches a search term
+ */
+function hasAllergyMatch(allergies: PatientContext['allergies'], searchTerm: string): boolean {
+  const normalizedAllergies = normalizeAllergies(allergies);
+  const lowerSearch = searchTerm.toLowerCase();
+  return normalizedAllergies.some(a => a.toLowerCase().includes(lowerSearch));
+}
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -310,9 +332,9 @@ export class ClinicalRecommendationService {
         if (!study) continue;
         
         // Check contrast allergy
-        if (study.contrast && patient.allergies.some(a => 
-          a.allergen.toLowerCase().includes('contrast') || 
-          a.allergen.toLowerCase().includes('iodine')
+        if (study.contrast && (
+          hasAllergyMatch(patient.allergies, 'contrast') || 
+          hasAllergyMatch(patient.allergies, 'iodine')
         )) {
           continue; // Skip contrast studies for allergic patients
         }
@@ -339,11 +361,14 @@ export class ClinicalRecommendationService {
         const medication = MEDICATION_CATALOG[med.id];
         if (!medication) continue;
         
-        // Check contraindications
-        const hasContraindication = medication.contraindications.some(ci =>
-          patient.medicalHistory.some(h => h.toLowerCase().includes(ci.toLowerCase())) ||
-          patient.allergies.some(a => a.allergen.toLowerCase().includes(ci.toLowerCase()))
-        );
+        // Check contraindications against medical history and allergies
+        const medicalHistory = patient.medicalHistory || [];
+        const hasContraindication = medication.contraindications.some(ci => {
+          const ciLower = ci.toLowerCase();
+          const historyMatch = medicalHistory.some(h => h.toLowerCase().includes(ciLower));
+          const allergyMatch = hasAllergyMatch(patient.allergies, ci);
+          return historyMatch || allergyMatch;
+        });
         if (hasContraindication) continue;
         
         // Check pregnancy

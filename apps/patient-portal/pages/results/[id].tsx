@@ -19,13 +19,10 @@ import {
   CheckCircle,
   AlertTriangle,
   User,
-  Calendar,
   FileText,
   Pill,
   Activity,
-  MessageSquare,
   Download,
-  Share2,
   Printer,
   ChevronDown,
   ChevronUp,
@@ -218,7 +215,7 @@ export default function AssessmentResultPage() {
         } else {
           setError('Failed to load assessment');
         }
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to load assessment');
       } finally {
         setLoading(false);

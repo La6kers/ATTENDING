@@ -236,7 +236,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         limit: parseInt(String(limit)),
         offset: parseInt(String(offset))
       });
-    } catch (prismaError) {
+    } catch (_prismaError) {
       // Database not available, use mock data
       console.log('ProviderDirectory model not found, using mock data');
       

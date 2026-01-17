@@ -14,16 +14,18 @@ import {
   redFlagEvaluator,
   triageClassifier,
   drugInteractionChecker,
-  clinicalProtocolService,
+  clinicalProtocolEngine,
   labRecommender,
-  type RedFlagMatch,
-  type EvaluationResult,
+  type RedFlagInput,
+  type RedFlagResult,
+  type RedFlag,
+  type TriageInput,
   type TriageResult,
-  type VitalSigns,
-  type PatientContext,
-  type InteractionCheckResult,
-  type ClinicalProtocol,
-  type RecommendationResult,
+  type DrugCheckInput,
+  type DrugCheckResult,
+  type ProtocolResult,
+  type LabRecommendation,
+  type LabRecommenderInput,
 } from '@attending/clinical-services';
 
 // =============================================================================
@@ -31,7 +33,7 @@ import {
 // =============================================================================
 
 export interface ClinicalSafetyResult {
-  redFlags: EvaluationResult;
+  redFlags: RedFlagResult;
   triage: TriageResult | null;
   hasEmergency: boolean;
   hasCritical: boolean;
@@ -40,11 +42,21 @@ export interface ClinicalSafetyResult {
 export interface PatientPresentation {
   symptoms: string[];
   chiefComplaint: string;
-  vitalSigns?: VitalSigns;
+  vitalSigns?: {
+    heartRate?: number;
+    bloodPressure?: { systolic: number; diastolic: number };
+    temperature?: number;
+    respiratoryRate?: number;
+    oxygenSaturation?: number;
+    painLevel?: number;
+  };
   age?: number;
   painLevel?: number;
   mentalStatus?: 'normal' | 'altered' | 'unresponsive';
 }
+
+// Re-export types for consumers
+export type { RedFlagResult, RedFlag, TriageResult, DrugCheckResult, ProtocolResult, LabRecommendation };
 
 // =============================================================================
 // Hook Implementation
@@ -55,16 +67,22 @@ export function useClinicalSafety() {
    * Evaluate symptoms for red flags (emergency conditions)
    * CRITICAL: This should be called whenever patient symptoms are updated
    */
-  const evaluateRedFlags = useCallback((symptoms: string[]): EvaluationResult => {
-    return redFlagEvaluator.evaluate(symptoms);
+  const evaluateRedFlags = useCallback((symptoms: string[]): RedFlagResult => {
+    return redFlagEvaluator.evaluate({
+      symptoms,
+      chiefComplaint: symptoms.join(', '),
+    });
   }, []);
 
   /**
    * Evaluate a text narrative for red flags
    * Useful for free-text chief complaint parsing
    */
-  const evaluateNarrative = useCallback((narrative: string): EvaluationResult => {
-    return redFlagEvaluator.evaluateNarrative(narrative);
+  const evaluateNarrative = useCallback((narrative: string): RedFlagResult => {
+    return redFlagEvaluator.evaluate({
+      symptoms: [],
+      chiefComplaint: narrative,
+    });
   }, []);
 
   /**
@@ -75,16 +93,14 @@ export function useClinicalSafety() {
   const classifyTriage = useCallback((
     presentation: PatientPresentation
   ): TriageResult => {
-    const context: PatientContext = {
-      age: presentation.age,
+    const input: TriageInput = {
       chiefComplaint: presentation.chiefComplaint,
       symptoms: presentation.symptoms,
-      vitalSigns: presentation.vitalSigns,
-      painLevel: presentation.painLevel,
-      mentalStatus: presentation.mentalStatus,
+      vitals: presentation.vitalSigns,
+      age: presentation.age,
     };
     
-    return triageClassifier.classify(context);
+    return triageClassifier.classify(input);
   }, []);
 
   /**
@@ -95,36 +111,14 @@ export function useClinicalSafety() {
     presentation: PatientPresentation
   ): ClinicalSafetyResult => {
     // Evaluate red flags from symptoms and chief complaint
-    const symptomFlags = redFlagEvaluator.evaluate(presentation.symptoms);
-    const narrativeFlags = redFlagEvaluator.evaluateNarrative(presentation.chiefComplaint);
-    
-    // Merge red flag results
-    const allMatches = [...symptomFlags.matches, ...narrativeFlags.matches];
-    const uniqueMatches = allMatches.reduce((acc, match) => {
-      const existing = acc.find(m => m.pattern.id === match.pattern.id);
-      if (!existing || match.confidence > existing.confidence) {
-        return [...acc.filter(m => m.pattern.id !== match.pattern.id), match];
-      }
-      return acc;
-    }, [] as RedFlagMatch[]);
-    
-    // Determine highest urgency from red flags
-    const urgencyOrder = ['critical', 'emergent', 'urgent', 'standard', 'none'] as const;
-    const highestUrgency = uniqueMatches.reduce((highest, match) => {
-      const currentIndex = urgencyOrder.indexOf(match.pattern.urgency);
-      const highestIndex = urgencyOrder.indexOf(highest);
-      return currentIndex < highestIndex ? match.pattern.urgency : highest;
-    }, 'none' as typeof urgencyOrder[number]);
-    
-    const redFlags: EvaluationResult = {
-      hasRedFlags: uniqueMatches.length > 0,
-      matches: uniqueMatches,
-      highestUrgency,
-      recommendations: [...new Set([
-        ...symptomFlags.recommendations,
-        ...narrativeFlags.recommendations
-      ])],
+    const redFlagInput: RedFlagInput = {
+      symptoms: presentation.symptoms,
+      chiefComplaint: presentation.chiefComplaint,
+      vitals: presentation.vitalSigns,
+      age: presentation.age,
     };
+    
+    const redFlags = redFlagEvaluator.evaluate(redFlagInput);
     
     // Classify triage
     const triage = classifyTriage(presentation);
@@ -132,8 +126,8 @@ export function useClinicalSafety() {
     return {
       redFlags,
       triage,
-      hasEmergency: highestUrgency === 'critical' || highestUrgency === 'emergent',
-      hasCritical: highestUrgency === 'critical',
+      hasEmergency: redFlags.isEmergency,
+      hasCritical: redFlags.redFlags.some(rf => rf.severity === 'critical'),
     };
   }, [classifyTriage]);
 
@@ -144,8 +138,10 @@ export function useClinicalSafety() {
   const checkDrugInteractions = useCallback((
     currentMedications: string[],
     newMedication: string
-  ): InteractionCheckResult => {
-    return drugInteractionChecker.checkInteractions(currentMedications, newMedication);
+  ): DrugCheckResult => {
+    return drugInteractionChecker.check({
+      medications: [...currentMedications, newMedication],
+    });
   }, []);
 
   /**
@@ -154,8 +150,11 @@ export function useClinicalSafety() {
   const checkAllergies = useCallback((
     medication: string,
     allergies: string[]
-  ): InteractionCheckResult => {
-    return drugInteractionChecker.checkAllergies(medication, allergies);
+  ): DrugCheckResult => {
+    return drugInteractionChecker.check({
+      medications: [medication],
+      allergies,
+    });
   }, []);
 
   /**
@@ -167,17 +166,22 @@ export function useClinicalSafety() {
     currentMedications: string[],
     allergies: string[]
   ): {
-    interactions: InteractionCheckResult;
-    allergyRisk: InteractionCheckResult;
+    interactions: DrugCheckResult;
+    allergyRisk: DrugCheckResult;
     isSafe: boolean;
   } => {
-    const interactions = drugInteractionChecker.checkInteractions(currentMedications, medication);
-    const allergyRisk = drugInteractionChecker.checkAllergies(medication, allergies);
+    const interactions = drugInteractionChecker.check({
+      medications: [...currentMedications, medication],
+    });
+    const allergyRisk = drugInteractionChecker.check({
+      medications: [medication],
+      allergies,
+    });
     
     const hasSevereInteraction = interactions.interactions.some(
-      i => i.severity === 'severe' || i.severity === 'contraindicated'
+      i => i.severity === 'major' || i.severity === 'contraindicated'
     );
-    const hasAllergyRisk = allergyRisk.hasInteractions;
+    const hasAllergyRisk = allergyRisk.allergyAlerts.length > 0;
     
     return {
       interactions,
@@ -192,17 +196,18 @@ export function useClinicalSafety() {
    */
   const getProtocol = useCallback((
     protocolId: string
-  ): ClinicalProtocol | undefined => {
-    return clinicalProtocolService.getProtocol(protocolId);
+  ): ProtocolResult | null => {
+    return clinicalProtocolEngine.getProtocol(protocolId);
   }, []);
 
   /**
    * Search protocols by keyword
    */
   const searchProtocols = useCallback((
-    query: string
-  ): ClinicalProtocol[] => {
-    return clinicalProtocolService.searchProtocols(query);
+    _query: string
+  ): ProtocolResult[] => {
+    // Return all protocols since there's no search method - consumer can filter
+    return clinicalProtocolEngine.getAllProtocols();
   }, []);
 
   /**
@@ -211,8 +216,14 @@ export function useClinicalSafety() {
   const getLabRecommendations = useCallback((
     symptoms: string[],
     context?: { age?: number; sex?: 'male' | 'female' }
-  ): RecommendationResult => {
-    return labRecommender.recommend(symptoms, context);
+  ): LabRecommendation[] => {
+    const input: LabRecommenderInput = {
+      symptoms,
+      chiefComplaint: symptoms.join(', '),
+      age: context?.age || 0,
+      gender: context?.sex || 'unknown',
+    };
+    return labRecommender.getRecommendations(input);
   }, []);
 
   // Return all clinical safety functions
@@ -257,15 +268,20 @@ export function useClinicalSafety() {
 // =============================================================================
 
 export const clinicalSafety = {
-  evaluateRedFlags: (symptoms: string[]) => redFlagEvaluator.evaluate(symptoms),
-  evaluateNarrative: (narrative: string) => redFlagEvaluator.evaluateNarrative(narrative),
-  classifyTriage: (context: PatientContext) => triageClassifier.classify(context),
+  evaluateRedFlags: (symptoms: string[]) => redFlagEvaluator.evaluate({ symptoms, chiefComplaint: symptoms.join(', ') }),
+  evaluateNarrative: (narrative: string) => redFlagEvaluator.evaluate({ symptoms: [], chiefComplaint: narrative }),
+  classifyTriage: (input: TriageInput) => triageClassifier.classify(input),
   checkDrugInteractions: (meds: string[], newMed: string) => 
-    drugInteractionChecker.checkInteractions(meds, newMed),
+    drugInteractionChecker.check({ medications: [...meds, newMed] }),
   checkAllergies: (med: string, allergies: string[]) => 
-    drugInteractionChecker.checkAllergies(med, allergies),
-  getProtocol: (id: string) => clinicalProtocolService.getProtocol(id),
-  getLabRecommendations: (symptoms: string[]) => labRecommender.recommend(symptoms),
+    drugInteractionChecker.check({ medications: [med], allergies }),
+  getProtocol: (id: string) => clinicalProtocolEngine.getProtocol(id),
+  getLabRecommendations: (symptoms: string[]) => labRecommender.getRecommendations({ 
+    symptoms, 
+    chiefComplaint: symptoms.join(', '), 
+    age: 0, 
+    gender: 'unknown' 
+  }),
 };
 
 export default useClinicalSafety;

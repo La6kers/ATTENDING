@@ -7,21 +7,20 @@ import { requireAuth, createAuditLog } from '@/lib/api/auth';
 import { 
   CreateImagingOrderSchema, 
   validate, 
-  type CreateImagingOrder 
 } from '@attending/shared/schemas';
 
-async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function handler(req: NextApiRequest, res: NextApiResponse, _session: any) {
   if (req.method === 'GET') {
-    return getImagingOrders(req, res, session);
+    return getImagingOrders(req, res);
   } else if (req.method === 'POST') {
-    return createImagingOrder(req, res, session);
+    return createImagingOrder(req, res, _session);
   }
   
   res.setHeader('Allow', ['GET', 'POST']);
   return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
 
-async function getImagingOrders(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function getImagingOrders(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { encounterId, patientId, status, priority, studyType, limit = '50', offset = '0' } = req.query;
     

@@ -5,6 +5,13 @@
 // Barrel exports for all custom hooks
 // =============================================================================
 
+// Patient Context - Shared patient selection state
+export { 
+  usePatientContext,
+  usePatientContextStore,
+  type PatientContext,
+} from './usePatientContext';
+
 // Clinical Safety - Red flags, triage, drug interactions
 export { 
   useClinicalSafety,
@@ -30,3 +37,6 @@ export { default as useNotifications } from './useNotifications';
 
 // WebSocket Communication
 export { default as useWebSocket } from './useWebSocket';
+
+// Keyboard Shortcuts
+export { default as useKeyboardShortcuts } from './useKeyboardShortcuts';

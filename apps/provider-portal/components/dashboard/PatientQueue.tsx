@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { Clock, AlertTriangle, User, Brain, ChevronRight, ExternalLink } from 'lucide-react';
+import { Clock, Brain, ChevronRight, ExternalLink } from 'lucide-react';
 
 interface Patient {
   id: string;

@@ -8,8 +8,8 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { 
-  ClinicalProtocolService, 
-  type ClinicalProtocol 
+  clinicalProtocolEngine, 
+  type ProtocolResult 
 } from '@attending/clinical-services';
 
 interface ProtocolApiRequest {
@@ -23,8 +23,8 @@ interface ProtocolApiRequest {
 interface ProtocolResponse {
   success: boolean;
   data?: {
-    protocol: ClinicalProtocol;
-    relatedProtocols?: ClinicalProtocol[];
+    protocol: ProtocolResult;
+    relatedProtocols?: ProtocolResult[];
     references: string[];
     lastUpdated: string;
   };
@@ -33,43 +33,43 @@ interface ProtocolResponse {
 }
 
 const PROTOCOL_ALIASES: Record<string, string> = {
-  'mi': 'protocol-acs',
-  'myocardial infarction': 'protocol-acs',
-  'heart attack': 'protocol-acs',
-  'stemi': 'protocol-acs',
-  'nstemi': 'protocol-acs',
-  'acute coronary syndrome': 'protocol-acs',
-  'acs': 'protocol-acs',
-  'chest pain cardiac': 'protocol-acs',
-  'cva': 'protocol-stroke',
-  'cerebrovascular accident': 'protocol-stroke',
-  'stroke': 'protocol-stroke',
-  'tia': 'protocol-stroke',
-  'sepsis': 'protocol-sepsis',
-  'septic shock': 'protocol-sepsis',
-  'severe sepsis': 'protocol-sepsis',
-  'respiratory': 'protocol-respiratory',
-  'respiratory failure': 'protocol-respiratory',
-  'dka': 'protocol-dka',
-  'diabetic ketoacidosis': 'protocol-dka',
-  'pe': 'protocol-pe',
-  'pulmonary embolism': 'protocol-pe',
-  'trauma': 'protocol-trauma',
+  'mi': 'acs',
+  'myocardial infarction': 'acs',
+  'heart attack': 'acs',
+  'stemi': 'acs',
+  'nstemi': 'acs',
+  'acute coronary syndrome': 'acs',
+  'chest pain cardiac': 'acs',
+  'cva': 'stroke',
+  'cerebrovascular accident': 'stroke',
+  'tia': 'stroke',
+  'septic shock': 'sepsis',
+  'severe sepsis': 'sepsis',
+  'respiratory failure': 'respiratory',
+  'diabetic ketoacidosis': 'dka',
+  'pulmonary embolism': 'pe',
 };
 
-function normalizeConditionToProtocolId(condition: string): string {
+function normalizeCondition(condition: string): string {
   const lower = condition.toLowerCase().trim();
-  return PROTOCOL_ALIASES[lower] || `protocol-${lower.replace(/\s+/g, '-')}`;
+  return PROTOCOL_ALIASES[lower] || lower.replace(/\s+/g, '-');
 }
 
-function validateRequest(body: any): { valid: boolean; errors: string[] } {
+function validateRequest(body: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
-  if (!body.condition || typeof body.condition !== 'string') {
+  if (!body || typeof body !== 'object') {
+    errors.push('Request body is required');
+    return { valid: false, errors };
+  }
+  
+  const bodyObj = body as Record<string, unknown>;
+  
+  if (!bodyObj.condition || typeof bodyObj.condition !== 'string') {
     errors.push('condition is required and must be a string');
   }
   
-  if (body.severity && !['mild', 'moderate', 'severe', 'critical'].includes(body.severity)) {
+  if (bodyObj.severity && !['mild', 'moderate', 'severe', 'critical'].includes(bodyObj.severity as string)) {
     errors.push('severity must be mild, moderate, severe, or critical');
   }
   
@@ -93,8 +93,8 @@ export default async function handler(
   if (req.method === 'GET') {
     requestData = {
       condition: req.query.condition as string,
-      severity: req.query.severity as any,
-      setting: req.query.setting as any,
+      severity: req.query.severity as ProtocolApiRequest['severity'],
+      setting: req.query.setting as ProtocolApiRequest['setting'],
       patientAge: req.query.patientAge ? parseInt(req.query.patientAge as string) : undefined,
     };
   } else if (req.method === 'POST') {
@@ -117,23 +117,13 @@ export default async function handler(
       });
     }
     
-    const protocolId = normalizeConditionToProtocolId(requestData.condition);
+    const normalizedCondition = normalizeCondition(requestData.condition);
     
-    const protocolService = new ClinicalProtocolService();
-    
-    // Try to get protocol by ID
-    let protocol = protocolService.getProtocol(protocolId);
-    
-    // If not found by ID, try searching by symptoms
-    if (!protocol) {
-      const matchingProtocols = protocolService.findMatchingProtocols([requestData.condition]);
-      if (matchingProtocols.length > 0) {
-        protocol = matchingProtocols[0];
-      }
-    }
+    // Try to get protocol using the singleton engine
+    const protocol = clinicalProtocolEngine.getProtocol(normalizedCondition);
     
     if (!protocol) {
-      const allProtocols = protocolService.getAllProtocols();
+      const allProtocols = clinicalProtocolEngine.getAllProtocols();
       const availableNames = allProtocols.map(p => p.name).join(', ');
       
       return res.status(404).json({
@@ -143,16 +133,17 @@ export default async function handler(
       });
     }
     
-    // Get related protocols from same category
-    const relatedProtocols = protocolService.getProtocolsByCategory(protocol.category)
-      .filter(p => p.id !== protocol!.id)
+    // Get all protocols for potential related protocols
+    const allProtocols = clinicalProtocolEngine.getAllProtocols();
+    const relatedProtocols = allProtocols
+      .filter(p => p.protocolId !== protocol.protocolId)
       .slice(0, 3);
     
     console.log('[AUDIT] Protocol retrieved:', {
       timestamp: new Date().toISOString(),
       condition: requestData.condition,
       severity: requestData.severity,
-      protocolId: protocol.id,
+      protocolId: protocol.protocolId,
       protocolName: protocol.name,
     });
     
@@ -161,8 +152,8 @@ export default async function handler(
       data: {
         protocol,
         relatedProtocols: relatedProtocols.length > 0 ? relatedProtocols : undefined,
-        references: protocol.references || [],
-        lastUpdated: protocol.lastUpdated || new Date().toISOString(),
+        references: [protocol.source],
+        lastUpdated: protocol.lastUpdated,
       },
       timestamp: new Date().toISOString(),
     });

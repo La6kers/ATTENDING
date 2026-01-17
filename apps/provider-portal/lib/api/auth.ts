@@ -1,7 +1,7 @@
 // NextAuth Configuration
 // apps/provider-portal/lib/api/auth.ts
 
-import type { NextAuthOptions, User } from 'next-auth';
+import type { NextAuthOptions, User as _User } from 'next-auth';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -138,7 +138,7 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account: _account }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -158,7 +158,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
 
-    async signIn({ user, account, profile }) {
+    async signIn({ user: _user, account, profile }) {
       // For Azure AD, create/update user in our database
       if (account?.provider === 'azure-ad' && profile?.email) {
         try {

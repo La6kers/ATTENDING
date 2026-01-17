@@ -7,10 +7,10 @@
 
 import React, { useState } from 'react';
 import { 
-  ShoppingCart, Trash2, AlertTriangle, CheckCircle, Loader2, 
+  ShoppingCart, Trash2, AlertTriangle, Loader2, 
   DollarSign, Pill, ShieldAlert, FileText, Edit2, Send
 } from 'lucide-react';
-import type { SelectedMedication, PharmacyInfo, PrescriptionPriority, DosageForm } from '../../store/medicationOrderingStore';
+import type { SelectedMedication, PharmacyInfo } from '../../store/medicationOrderingStore';
 
 interface MedicationOrderSummaryProps {
   selectedMedications: SelectedMedication[];

@@ -146,7 +146,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   });
 }
 
-async function handlePost(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function handlePost(req: NextApiRequest, res: NextApiResponse, _session: any) {
   const { patientId, assessmentId } = req.body;
 
   if (!patientId) {

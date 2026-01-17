@@ -35,7 +35,7 @@ export default async function handler(
     return res.status(405).end();
   }
 
-  const startTime = Date.now();
+  const _startTime = Date.now();
   
   let dbStatus: 'ok' | 'error' = 'ok';
   let dbLatency: number | undefined;

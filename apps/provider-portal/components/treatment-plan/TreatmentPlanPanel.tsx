@@ -18,7 +18,8 @@ import {
   Save,
   Send,
   FileText,
-  Printer
+  Printer,
+  Clock
 } from 'lucide-react';
 import { useTreatmentPlanStore } from '@/store/treatmentPlanStore';
 import type { 
@@ -129,7 +130,7 @@ export function TreatmentPlanPanel({
     try {
       await submitPlan();
       onSubmit?.();
-    } catch (err) {
+    } catch (_err) {
       // Validation errors are shown in UI
     }
   };

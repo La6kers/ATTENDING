@@ -12,7 +12,6 @@ import { requireAuth, createAuditLog } from '@/lib/api/auth';
 import { 
   CreateLabOrderSchema, 
   validate, 
-  type CreateLabOrder 
 } from '@attending/shared/schemas';
 import {
   labRecommender,
@@ -39,12 +38,12 @@ interface LabOrderResponse {
 // Main Handler
 // =============================================================================
 
-async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function handler(req: NextApiRequest, res: NextApiResponse, _session: any) {
   switch (req.method) {
     case 'GET':
-      return getLabOrders(req, res, session);
+      return getLabOrders(req, res);
     case 'POST':
-      return createLabOrder(req, res, session);
+      return createLabOrder(req, res, _session);
     default:
       res.setHeader('Allow', ['GET', 'POST']);
       return res.status(405).json({ error: `Method ${req.method} not allowed` });
@@ -55,7 +54,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
 // GET - List Lab Orders
 // =============================================================================
 
-async function getLabOrders(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function getLabOrders(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { 
       encounterId, 
@@ -112,27 +111,31 @@ async function getLabOrders(req: NextApiRequest, res: NextApiResponse, session: 
         where: { id: String(encounterId) },
         include: {
           patient: true,
-          assessments: {
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-          },
+          patientAssessment: true,
         },
       });
       
-      if (encounter?.assessments[0]) {
-        const assessment = encounter.assessments[0];
+      if (encounter?.patientAssessment) {
+        const assessment = encounter.patientAssessment;
         const symptoms = (assessment as any).symptoms || [];
         
         // Get AI-powered lab recommendations
-        const recommendations = labRecommender.recommend(symptoms, {
-          age: calculateAge(encounter.patient.dateOfBirth),
-          sex: encounter.patient.gender?.toLowerCase() as 'male' | 'female' | undefined,
+        const recommendations = labRecommender.getRecommendations({
+          chiefComplaint: (assessment as any).chiefComplaint || '',
+          symptoms,
+          age: calculateAge(encounter.patient.dateOfBirth) || 0,
+          gender: encounter.patient.gender || 'unknown',
         });
         
+        // Group by priority/category
+        const criticalRecs = recommendations.filter(r => r.priority === 'STAT');
+        const recommendedRecs = recommendations.filter(r => r.category === 'critical' || r.category === 'recommended');
+        const considerRecs = recommendations.filter(r => r.category !== 'critical' && r.category !== 'recommended');
+        
         response.recommendations = {
-          critical: recommendations.critical || [],
-          recommended: recommendations.recommended || [],
-          consider: recommendations.consider || [],
+          critical: criticalRecs,
+          recommended: recommendedRecs,
+          consider: considerRecs,
         };
       }
     }
@@ -171,10 +174,7 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
       where: { id: encounterId },
       include: { 
         patient: true,
-        assessments: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
+        patientAssessment: true,
       },
     });
     
@@ -183,19 +183,17 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
     }
     
     // Get latest assessment for clinical context
-    const assessment = encounter.assessments[0];
+    const assessment = encounter.patientAssessment;
     const symptoms = (assessment as any)?.symptoms || [];
     const chiefComplaint = (assessment as any)?.chiefComplaint || indication;
     
     // CLINICAL SAFETY CHECK: Evaluate for red flags
-    const redFlagResult = redFlagEvaluator.evaluate(symptoms);
-    const narrativeResult = redFlagEvaluator.evaluateNarrative(chiefComplaint);
+    const redFlagResult = redFlagEvaluator.evaluate({
+      symptoms,
+      chiefComplaint,
+    });
     
-    const hasEmergencyRedFlags = 
-      redFlagResult.highestUrgency === 'critical' || 
-      redFlagResult.highestUrgency === 'emergent' ||
-      narrativeResult.highestUrgency === 'critical' ||
-      narrativeResult.highestUrgency === 'emergent';
+    const hasEmergencyRedFlags = redFlagResult.isEmergency;
     
     // If emergency red flags detected, auto-upgrade to STAT if not already
     let effectivePriority = priority;
@@ -203,23 +201,26 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
     
     if (hasEmergencyRedFlags && priority !== 'STAT') {
       effectivePriority = 'STAT';
-      priorityUpgradeReason = `Auto-upgraded to STAT due to emergency indicators: ${[
-        ...redFlagResult.matches,
-        ...narrativeResult.matches
-      ].map(m => m.pattern.name).join(', ')}`;
+      priorityUpgradeReason = `Auto-upgraded to STAT due to emergency indicators: ${redFlagResult.redFlags.map(rf => rf.message).join(', ')}`;
     }
     
     // Get AI recommendations for additional labs to suggest
-    const recommendations = labRecommender.recommend(symptoms, {
-      age: calculateAge(encounter.patient.dateOfBirth),
-      sex: encounter.patient.gender?.toLowerCase() as 'male' | 'female' | undefined,
+    const recommendations = labRecommender.getRecommendations({
+      chiefComplaint,
+      symptoms,
+      age: calculateAge(encounter.patient.dateOfBirth) || 0,
+      gender: encounter.patient.gender || 'unknown',
     });
+    
+    // Separate critical from other recommendations
+    const criticalRecs = recommendations.filter(r => r.priority === 'STAT');
+    const recommendedRecs = recommendations.filter(r => r.priority !== 'STAT');
     
     // Check if any critical recommended labs are missing from the order
     const orderedTestCodes = tests.map(t => t.code);
-    const missingCriticalLabs = recommendations.critical?.filter(
-      rec => !orderedTestCodes.includes(rec.test?.code)
-    ) || [];
+    const missingCriticalLabs = criticalRecs.filter(
+      rec => !orderedTestCodes.includes(rec.testCode)
+    );
     
     // Create lab orders for each test
     const labOrders = await Promise.all(
@@ -281,7 +282,7 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
         originalPriority: priority,
         priorityUpgraded: !!priorityUpgradeReason,
         priorityUpgradeReason,
-        redFlagsDetected: redFlagResult.matches.map(m => m.pattern.name),
+        redFlagsDetected: redFlagResult.redFlags.map(rf => rf.message),
         patientContext: {
           patientId: encounter.patient.id,
           symptoms,
@@ -297,14 +298,11 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
       clinicalDecisionSupport: {
         priorityUpgraded: !!priorityUpgradeReason,
         priorityUpgradeReason,
-        redFlagsDetected: [
-          ...redFlagResult.matches,
-          ...narrativeResult.matches
-        ],
+        redFlagsDetected: redFlagResult.redFlags,
         missingCriticalLabs,
         recommendations: {
-          critical: recommendations.critical,
-          recommended: recommendations.recommended,
+          critical: criticalRecs,
+          recommended: recommendedRecs,
         },
       },
     });

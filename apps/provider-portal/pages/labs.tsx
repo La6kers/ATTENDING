@@ -30,7 +30,6 @@ import {
   AlertTriangle,
   TrendingUp,
   CheckCircle,
-  Settings,
 } from 'lucide-react';
 
 // Sample patient context - in production this would come from assessment selection
@@ -105,6 +104,14 @@ export default function Labs() {
   const statCount = getStatCount();
   const fastingRequired = getFastingRequired();
 
+  // Transform patient context for PatientBanner (normalize allergies to strings)
+  const patientForBanner = patientContext ? {
+    ...patientContext,
+    allergies: patientContext.allergies?.map(a => 
+      typeof a === 'string' ? a : a.allergen
+    ),
+  } : null;
+
   // Convert Map to Set for component compatibility
   const selectedCodes = new Set(selectedLabs.keys());
 
@@ -120,7 +127,7 @@ export default function Labs() {
   // Handle single AI recommendation add
   const handleAddSingleRecommendation = (
     testCode: string,
-    priority: 'STAT' | 'ASAP' | 'ROUTINE',
+    priority: 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE',
     rationale: string
   ) => {
     addLab(testCode, { priority, rationale, aiRecommended: true });
@@ -129,7 +136,7 @@ export default function Labs() {
   // Handle order submission
   const handleSubmit = async () => {
     try {
-      const loadingId = toast.loading('Submitting lab orders...');
+      toast.loading('Submitting lab orders...');
       const orderIds = await submitOrder('encounter-demo-001');
       toast.success('Lab orders submitted successfully!', `Order IDs: ${orderIds.join(', ')}`);
       console.log('Lab order submitted:', orderIds);
@@ -213,8 +220,8 @@ export default function Labs() {
             onEmergencyProtocol={() => {
               // Auto-select STAT labs for emergency protocol
               aiRecommendations
-                .filter(r => r.category === 'critical' || r.category === 'strongly-recommended')
-                .forEach(r => r.labs.forEach(lab => addLab(lab.testCode, { priority: 'STAT', aiRecommended: true })));
+                .filter(r => r.category === 'recommended')
+                .forEach(r => addLab(r.testCode, { priority: 'STAT', aiRecommended: true, rationale: r.rationale }));
               toast.warning('Emergency Protocol Activated', 'STAT labs auto-selected');
             }}
           />
@@ -227,8 +234,8 @@ export default function Labs() {
               actionLabel="Auto-Select STAT Labs"
               onAction={() => {
                 aiRecommendations
-                  .filter(r => r.category === 'critical' || r.category === 'strongly-recommended')
-                  .forEach(r => r.labs?.forEach(lab => addLab(lab.testCode, { priority: 'STAT', aiRecommended: true })));
+                  .filter(r => r.category === 'recommended')
+                  .forEach(r => addLab(r.testCode, { priority: 'STAT', aiRecommended: true, rationale: r.rationale }));
                 toast.success('STAT Labs Selected', 'Critical labs have been added to your order');
                 setAlertDismissed(true);
               }}
@@ -242,9 +249,9 @@ export default function Labs() {
               {/* Left Column - Lab Selection */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Patient Context Banner - Using shared component */}
-                {patientContext && (
+                {patientForBanner && (
                   <PatientBanner
-                    patient={patientContext}
+                    patient={patientForBanner}
                     accentColor="green"
                     showRedFlags={true}
                     showActions={true}

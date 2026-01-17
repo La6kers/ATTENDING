@@ -282,7 +282,7 @@ export function withApiMiddleware(
   handler: AuthenticatedHandler
 ): NextApiHandler {
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    const startTime = Date.now();
+    const _startTime = Date.now();
     
     // Rate limiting
     if (options.rateLimit) {

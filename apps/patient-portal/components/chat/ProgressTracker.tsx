@@ -8,15 +8,12 @@
 import React from 'react';
 import { 
   CheckCircle2, 
-  Circle, 
   User, 
   Stethoscope, 
   Pill, 
   AlertTriangle,
   FileText,
   Activity,
-  Heart,
-  Users
 } from 'lucide-react';
 
 type AssessmentPhase = 

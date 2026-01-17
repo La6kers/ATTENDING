@@ -42,7 +42,12 @@ const modalityIcons: Record<ImagingModality, React.ReactNode> = {
 };
 
 // Base modality configuration
-const MODALITY_TABS: FilterTab<ImagingModality | 'all'>[] = [
+interface ModalityTab extends FilterTab {
+  id: ImagingModality | 'all';
+  icon?: React.ReactNode;
+}
+
+const MODALITY_TABS: ModalityTab[] = [
   { id: 'all', label: 'All' },
   { id: 'CT', label: 'CT', icon: modalityIcons.CT },
   { id: 'MRI', label: 'MRI', icon: modalityIcons.MRI },
@@ -73,12 +78,17 @@ export const ImagingCatalogBrowser: React.FC<ImagingCatalogBrowserProps> = ({
   }, {} as Record<string, ImagingStudy[]>);
 
   // Build tabs with counts, filtering out empty modalities
-  const tabsWithCounts: FilterTab<ImagingModality | 'all'>[] = MODALITY_TABS
+  const tabsWithCounts: ModalityTab[] = MODALITY_TABS
     .filter(tab => tab.id === 'all' || catalogByModality[tab.id]?.length > 0)
     .map(tab => ({
       ...tab,
       count: tab.id === 'all' ? catalog.length : catalogByModality[tab.id]?.length || 0,
     }));
+
+  // Handler wrapper for type safety
+  const handleModalityChange = (tabId: string) => {
+    onModalityChange(tabId as ImagingModality | 'all');
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -94,7 +104,7 @@ export const ImagingCatalogBrowser: React.FC<ImagingCatalogBrowserProps> = ({
         <FilterTabs
           tabs={tabsWithCounts}
           activeTab={modalityFilter}
-          onTabChange={onModalityChange}
+          onTabChange={handleModalityChange}
         />
       </div>
 
@@ -109,9 +119,9 @@ export const ImagingCatalogBrowser: React.FC<ImagingCatalogBrowserProps> = ({
       <div className="p-4 max-h-[600px] overflow-y-auto space-y-3">
         {catalog.length === 0 ? (
           <EmptyState
-            icon={Filter}
+            icon={<Filter className="w-12 h-12" />}
             title="No studies found"
-            subtitle="Try adjusting your search or filters"
+            description="Try adjusting your search or filters"
           />
         ) : (
           catalog.map((study) => {

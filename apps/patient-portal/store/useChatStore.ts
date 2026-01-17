@@ -25,7 +25,6 @@ import {
   type HPIData,
   type AssessmentData,
   createMessage,
-  generateMessageId,
   generateSessionId,
   createAssessmentData,
   createRedFlag,
@@ -33,19 +32,6 @@ import {
   determineUrgencyLevel,
   getPhaseProgress,
 } from '../../shared/types/chat.types';
-
-// Import clinical services for red flag detection
-// Note: If @attending/clinical-services is not available, falls back to inline detection
-let evaluateRedFlags: ((input: { symptoms: string[] }) => { redFlags: Array<{ symptom: string; severity: string; category?: string }> }) | null = null;
-
-try {
-  // Dynamic import to handle if package not available
-  const clinicalServices = require('@attending/clinical-services');
-  evaluateRedFlags = clinicalServices.evaluateRedFlags;
-} catch {
-  // Fallback will use inline detection
-  console.warn('Clinical services package not available, using inline red flag detection');
-}
 
 // Re-export types for components
 export type { DetailedAssessmentPhase as AssessmentPhase, UrgencyLevel, QuickReply, ChatMessage, RedFlag, HPIData, AssessmentData };
@@ -84,27 +70,9 @@ function detectRedFlagsInline(text: string): RedFlag[] {
 }
 
 /**
- * Detect red flags using clinical-services package or fallback.
+ * Detect red flags using inline pattern matching.
  */
 function detectRedFlags(text: string): RedFlag[] {
-  // Try clinical services first
-  if (evaluateRedFlags) {
-    try {
-      const result = evaluateRedFlags({ symptoms: [text] });
-      return result.redFlags.map((rf) =>
-        createRedFlag(
-          rf.symptom,
-          rf.severity as 'warning' | 'urgent' | 'critical',
-          text,
-          rf.category
-        )
-      );
-    } catch (error) {
-      console.error('Clinical services red flag evaluation failed:', error);
-    }
-  }
-
-  // Fallback to inline detection
   return detectRedFlagsInline(text);
 }
 
@@ -312,7 +280,7 @@ export const useChatStore = create<ChatState>()(
         // Send Message
         // =======================================================================
         sendMessage: async (content: string) => {
-          const { currentPhase, redFlags, assessmentData } = get();
+          const { currentPhase } = get();
 
           // Add user message
           const userMessage = createMessage('user', content, { phase: currentPhase });
@@ -361,12 +329,13 @@ export const useChatStore = create<ChatState>()(
               case 'hpi_character':
                 state.assessmentData.hpi.character = content;
                 break;
-              case 'hpi_severity':
+              case 'hpi_severity': {
                 const severity = parseInt(content) || 5;
                 state.assessmentData.hpi.severity = severity;
                 state.urgencyScore = calculateUrgencyScore(state.redFlags, severity);
                 state.urgencyLevel = determineUrgencyLevel(state.urgencyScore, false);
                 break;
+              }
               case 'hpi_aggravating':
                 state.assessmentData.hpi.aggravating = [content];
                 break;

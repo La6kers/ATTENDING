@@ -121,9 +121,12 @@ export interface BaseClinicalStoreState<
 // Base Clinical Store Actions
 // =============================================================================
 
+// Note: TRecommendation and TCategory are included for type consistency with ClinicalStore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface BaseClinicalStoreActions<
   TItem extends BaseCatalogItem,
   TSelectedItem extends BaseSelectedItem<TItem>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TRecommendation extends BaseAIRecommendation,
   TCategory extends string
 > {

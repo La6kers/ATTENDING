@@ -23,7 +23,7 @@ export default async function handler(
   }
 
   const { id: conversationId } = req.query;
-  const { messageIds } = req.body;
+  const { messageIds: _messageIds } = req.body;
 
   if (!conversationId || typeof conversationId !== 'string') {
     return res.status(400).json({ error: 'Conversation ID is required' });

@@ -6,20 +6,18 @@
 // ============================================================
 
 import React from 'react';
-import { Brain, AlertTriangle, CheckCircle, HelpCircle, ShieldCheck } from 'lucide-react';
+import { Brain, AlertTriangle, CheckCircle, HelpCircle, ShieldCheck, XCircle } from 'lucide-react';
 import { 
   GradientHeader, 
   LoadingState, 
-  EmptyState,
   PriorityBadge,
-  AIBadge,
   ConfidenceIndicator,
 } from '@attending/ui-primitives';
 import { 
   type RecommendationCategory,
   RECOMMENDATION_CATEGORY_CONFIGS,
   groupRecommendationsByCategory,
-} from '@attending/clinical-types';
+} from '../shared/recommendation-utils';
 import type { AILabRecommendation } from '../../store/labOrderingStore';
 
 interface AIRecommendationsPanelProps {
@@ -27,7 +25,7 @@ interface AIRecommendationsPanelProps {
   isLoading: boolean;
   selectedCodes: Set<string>;
   onAddCategory: (category: 'critical' | 'recommended' | 'consider') => void;
-  onAddSingle: (testCode: string, priority: 'STAT' | 'ASAP' | 'ROUTINE', rationale: string) => void;
+  onAddSingle: (testCode: string, priority: 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE', rationale: string) => void;
 }
 
 // Category icons mapping
@@ -35,7 +33,8 @@ const categoryIcons: Record<RecommendationCategory, React.ComponentType<{ classN
   critical: AlertTriangle,
   recommended: CheckCircle,
   consider: HelpCircle,
-  'not-indicated': HelpCircle,
+  'not-indicated': XCircle,
+  avoid: XCircle,
 };
 
 export const AIRecommendationsPanel: React.FC<AIRecommendationsPanelProps> = ({
@@ -77,7 +76,7 @@ export const AIRecommendationsPanel: React.FC<AIRecommendationsPanelProps> = ({
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       {/* Header */}
       <GradientHeader
-        module="ai"
+        module="labs"
         icon={Brain}
         title="BioMistral AI Recommendations"
         subtitle={`${recommendations.length} tests recommended based on clinical presentation`}

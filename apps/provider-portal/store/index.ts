@@ -41,10 +41,15 @@ export {
 // Referral Orders
 export { 
   useReferralOrderingStore,
+  SPECIALTY_CATALOG,
+  PROVIDER_DIRECTORY,
   type Specialty,
-  type Provider as ReferralProvider,
+  type SpecialtyCategory,
+  type ReferralProvider,
+  type ReferralRecommendation,
+  type ReferralUrgency,
   type SelectedReferral,
-  type AIReferralRecommendation,
+  type PatientContext as ReferralPatientContext,
 } from './referralOrderingStore';
 
 // =============================================================================

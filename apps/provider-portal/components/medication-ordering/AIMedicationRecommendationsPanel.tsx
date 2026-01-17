@@ -6,7 +6,7 @@
 // ============================================================
 
 import React from 'react';
-import { Brain, AlertTriangle, CheckCircle, Plus, Loader2, ShieldCheck, Ban, Pill } from 'lucide-react';
+import { Brain, AlertTriangle, CheckCircle, Plus, Loader2, Ban, Pill } from 'lucide-react';
 import type { AIMedicationRecommendation, PrescriptionPriority } from '../../store/medicationOrderingStore';
 
 interface AIMedicationRecommendationsPanelProps {

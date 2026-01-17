@@ -8,4 +8,7 @@
 
 // Re-export from shared package
 export { prisma } from '@attending/shared/lib/prisma';
-export default { prisma: () => import('@attending/shared/lib/prisma').then(m => m.prisma) };
+
+// Named export for lazy loading
+const prismaLoader = { prisma: () => import('@attending/shared/lib/prisma').then(m => m.prisma) };
+export default prismaLoader;

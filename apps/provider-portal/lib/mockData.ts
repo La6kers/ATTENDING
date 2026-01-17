@@ -125,7 +125,7 @@ export function generateMockMessages(count: number = 20): Message[] {
   const messages: Message[] = [];
   const types: MessageType[] = ['email', 'lab', 'phone', 'refill'];
   const priorities: MessagePriority[] = ['urgent', 'high', 'normal', 'low'];
-  const statuses: MessageStatus[] = ['unread', 'read'];
+  const _statuses: MessageStatus[] = ['unread', 'read'];
 
   for (let i = 0; i < count; i++) {
     const type = types[Math.floor(Math.random() * types.length)];

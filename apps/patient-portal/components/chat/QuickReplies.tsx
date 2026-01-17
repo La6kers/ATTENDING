@@ -14,7 +14,7 @@ export function QuickReplies({ options, onSelect }: QuickRepliesProps) {
   if (!options || options.length === 0) return null;
 
   // Group options by category if available
-  const hasCategories = options.some(opt => opt.category);
+  const _hasCategories = options.some(opt => opt.category);
   
   return (
     <div className="px-6 py-4 bg-gradient-to-b from-gray-50 to-white border-t border-gray-200">
@@ -41,7 +41,7 @@ export function QuickReplies({ options, onSelect }: QuickRepliesProps) {
           >
             <span className="flex items-center gap-2">
               {getOptionIcon(option)}
-              {option.label}
+              {option.text}
             </span>
           </button>
         ))}
@@ -58,7 +58,7 @@ export function QuickReplies({ options, onSelect }: QuickRepliesProps) {
 // Get button styling based on option type
 function getButtonStyle(option: QuickReply): string {
   // Special styling for certain buttons
-  if (option.id === 'submit' || option.label.includes('Submit')) {
+  if (option.id === 'submit' || option.text.includes('Submit')) {
     return `
       bg-gradient-to-r from-green-500 to-emerald-600 
       text-white border-green-600
@@ -66,7 +66,7 @@ function getButtonStyle(option: QuickReply): string {
     `;
   }
   
-  if (option.id === 'none' || option.label.toLowerCase().includes('no ')) {
+  if (option.id === 'none' || option.text.toLowerCase().includes('no ')) {
     return `
       bg-gray-50 text-gray-600 border-gray-200
       hover:bg-gray-100 hover:border-gray-300
@@ -75,7 +75,7 @@ function getButtonStyle(option: QuickReply): string {
 
   if (option.category === 'severity') {
     // Severity scale styling
-    const value = parseInt(option.value);
+    const value = parseInt(option.value || '0');
     if (value >= 8) {
       return `bg-red-50 text-red-700 border-red-200 hover:bg-red-100 hover:border-red-300`;
     } else if (value >= 6) {
@@ -101,7 +101,7 @@ function getOptionIcon(option: QuickReply): React.ReactNode {
   if (option.id === 'edit') {
     return <span>✏️</span>;
   }
-  if (option.id === 'none' || option.label.toLowerCase().includes('no ')) {
+  if (option.id === 'none' || option.text.toLowerCase().includes('no ')) {
     return <span>—</span>;
   }
   return null;

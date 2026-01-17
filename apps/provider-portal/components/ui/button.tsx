@@ -18,11 +18,10 @@ export {
   type StatusValue,
 } from '../../../shared/components/ui/Button';
 
-// Legacy export for backward compatibility with existing code
-import { Button } from '../../../shared/components/ui/Button';
-import { cva, type VariantProps } from 'class-variance-authority';
+// Legacy buttonVariants export for backward compatibility
+// Some components may still import this directly
+import { cva } from 'class-variance-authority';
 
-// Keep the old buttonVariants for any code that still uses it
 const buttonVariants = cva(
   'inline-flex items-center justify-center rounded-full text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none',
   {

@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { patientId, context } = req.body as { patientId: string; context: PatientContext };
+    const { patientId: _patientId, context } = req.body as { patientId: string; context: PatientContext };
 
     if (!context || !context.chiefComplaint) {
       return res.status(400).json({ error: 'Patient context with chief complaint is required' });

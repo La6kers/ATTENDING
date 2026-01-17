@@ -108,7 +108,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse<AssessmentsRe
 
 // POST /api/patient/assessments - Create new assessment
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
-  const { chiefComplaint, urgencyLevel, clinicalData, redFlags } = req.body;
+  const { chiefComplaint, urgencyLevel, clinicalData: _clinicalData, redFlags: _redFlags } = req.body;
 
   if (!chiefComplaint) {
     return res.status(400).json({ error: 'Chief complaint is required' });

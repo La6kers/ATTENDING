@@ -8,10 +8,9 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { 
-  RedFlagEvaluator, 
-  type EvaluationResult,
-  type RedFlagMatch,
-  type UrgencyLevel
+  redFlagEvaluator, 
+  type RedFlagResult,
+  type RedFlag
 } from '@attending/clinical-services';
 
 // Types
@@ -34,18 +33,20 @@ interface RedFlagRequest {
   progression?: 'improving' | 'stable' | 'worsening' | 'rapidly-worsening';
 }
 
+type UrgencyLevel = 'critical' | 'warning' | 'urgent' | 'moderate' | 'low';
+
 interface RedFlagResponseData {
   hasRedFlags: boolean;
   urgencyLevel: UrgencyLevel;
+  urgencyScore: number;
   redFlags: Array<{
+    id: string;
     category: string;
-    pattern: string;
     symptom: string;
-    severity: UrgencyLevel;
-    matchedKeywords: string[];
-    confidence: number;
-    immediateAction: string;
-    timeFrame: string;
+    severity: string;
+    message: string;
+    recommendation: string;
+    immediateAction?: string;
   }>;
   immediateActions: string[];
   escalationRequired: boolean;
@@ -69,79 +70,105 @@ export const config = {
   },
 };
 
-function validateRequest(body: any): { valid: boolean; errors: string[] } {
+function validateRequest(body: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   
-  if (!body.symptoms && !body.chiefComplaint) {
+  if (!body || typeof body !== 'object') {
+    errors.push('Request body is required');
+    return { valid: false, errors };
+  }
+  
+  const bodyObj = body as Record<string, unknown>;
+  
+  if (!bodyObj.symptoms && !bodyObj.chiefComplaint) {
     errors.push('Either symptoms array or chiefComplaint is required');
   }
   
-  if (body.symptoms && !Array.isArray(body.symptoms)) {
+  if (bodyObj.symptoms && !Array.isArray(bodyObj.symptoms)) {
     errors.push('symptoms must be an array');
   }
   
   return { valid: errors.length === 0, errors };
 }
 
-// Transform RedFlagMatch to our API response format
-function transformMatch(match: RedFlagMatch): RedFlagResponseData['redFlags'][0] {
+// Transform RedFlag to our API response format
+function transformRedFlag(flag: RedFlag) {
   return {
-    category: match.flag.category,
-    pattern: match.flag.pattern,
-    symptom: match.flag.pattern, // Use pattern as symptom description
-    severity: match.flag.urgencyLevel,
-    matchedKeywords: match.matchedKeywords,
-    confidence: match.confidence,
-    immediateAction: match.flag.immediateAction,
-    timeFrame: match.flag.timeFrame,
+    id: flag.id,
+    category: flag.category,
+    symptom: flag.symptom,
+    severity: flag.severity,
+    message: flag.message,
+    recommendation: flag.recommendation,
+    immediateAction: flag.immediateAction,
   };
 }
 
-function generateImmediateActions(matches: RedFlagMatch[]): string[] {
+function determineUrgencyLevel(result: RedFlagResult): UrgencyLevel {
+  if (result.isEmergency || result.redFlags.some(rf => rf.severity === 'critical')) {
+    return 'critical';
+  }
+  if (result.urgencyScore >= 50) {
+    return 'urgent';
+  }
+  if (result.urgencyScore >= 25) {
+    return 'moderate';
+  }
+  return 'low';
+}
+
+function generateImmediateActions(redFlags: RedFlag[]): string[] {
   const actions: string[] = [];
-  const categories = new Set(matches.map(m => m.flag.category));
+  const categories = new Set(redFlags.map(rf => rf.category));
   
-  if (matches.some(m => m.flag.urgencyLevel === 'critical')) {
+  if (redFlags.some(rf => rf.severity === 'critical')) {
     actions.push('ACTIVATE RAPID RESPONSE or CALL CODE');
     actions.push('Ensure IV access and continuous monitoring');
     actions.push('Prepare for emergent intervention');
   }
   
-  if (categories.has('Cardiovascular')) {
+  if (categories.has('cardiovascular')) {
     actions.push('Obtain 12-lead ECG immediately');
     actions.push('Establish cardiac monitoring');
     actions.push('Prepare for troponin, BNP, D-dimer');
   }
   
-  if (categories.has('Neurological')) {
+  if (categories.has('neurological')) {
     actions.push('Perform NIH Stroke Scale assessment');
     actions.push('Note time of symptom onset (last known well)');
     actions.push('Prepare for emergent neuroimaging');
   }
   
-  if (categories.has('Respiratory')) {
+  if (categories.has('respiratory')) {
     actions.push('Apply supplemental oxygen if SpO2 < 94%');
     actions.push('Prepare for ABG and chest imaging');
     actions.push('Have intubation equipment ready');
   }
   
-  if (categories.has('Infectious')) {
+  if (categories.has('infectious')) {
     actions.push('Initiate sepsis bundle within 1 hour');
     actions.push('Blood cultures x2 before antibiotics');
     actions.push('Lactate level STAT');
     actions.push('30 mL/kg crystalloid if hypotensive');
   }
   
-  if (categories.has('Psychiatric')) {
+  if (categories.has('psychiatric')) {
     actions.push('Initiate 1:1 observation');
     actions.push('Remove all potential weapons/ligatures');
     actions.push('Contact psychiatry for emergent evaluation');
   }
   
-  if (categories.has('Allergic')) {
+  if (categories.has('allergic')) {
     actions.push('Prepare epinephrine (0.3-0.5 mg IM)');
     actions.push('Establish large-bore IV access');
     actions.push('Prepare for airway management');
+  }
+  
+  // Add recommendations from the red flags themselves
+  for (const flag of redFlags) {
+    if (flag.immediateAction && !actions.includes(flag.immediateAction)) {
+      actions.push(flag.immediateAction);
+    }
   }
   
   return [...new Set(actions)];
@@ -151,10 +178,8 @@ function getDisposition(urgencyLevel: UrgencyLevel): string {
   switch (urgencyLevel) {
     case 'critical':
       return 'Immediate bedside evaluation - Resuscitation bay';
-    case 'emergent':
-      return 'Urgent bedside evaluation - High acuity area';
     case 'urgent':
-      return 'Priority evaluation - Monitored bed';
+      return 'Urgent bedside evaluation - High acuity area';
     case 'moderate':
       return 'Standard evaluation - Treatment area';
     default:
@@ -166,43 +191,31 @@ function getTimeToAction(urgencyLevel: UrgencyLevel): string {
   switch (urgencyLevel) {
     case 'critical':
       return 'Immediate - Physician at bedside NOW';
-    case 'emergent':
-      return 'Within 10 minutes';
     case 'urgent':
-      return 'Within 30 minutes';
+      return 'Within 10 minutes';
     case 'moderate':
-      return 'Within 60 minutes';
+      return 'Within 30 minutes';
     default:
-      return 'Within 120 minutes';
+      return 'Within 60 minutes';
   }
 }
 
-function getEmergencyProtocol(matches: RedFlagMatch[]): string | undefined {
-  const categories = new Set(matches.map(m => m.flag.category));
+function getEmergencyProtocol(redFlags: RedFlag[]): string | undefined {
+  const categories = new Set(redFlags.map(rf => rf.category));
   
-  if (categories.has('Cardiovascular')) {
-    const hasChestPain = matches.some(m => 
-      m.matchedKeywords.some(kw => kw.toLowerCase().includes('chest'))
-    );
-    if (hasChestPain) return 'STEMI/ACS Protocol';
+  if (categories.has('cardiovascular')) {
+    return 'STEMI/ACS Protocol';
   }
   
-  if (categories.has('Neurological')) {
-    const hasStrokeSymptoms = matches.some(m => 
-      m.matchedKeywords.some(kw => 
-        kw.toLowerCase().includes('stroke') || 
-        kw.toLowerCase().includes('weakness') ||
-        kw.toLowerCase().includes('speech')
-      )
-    );
-    if (hasStrokeSymptoms) return 'Stroke Alert Protocol';
+  if (categories.has('neurological')) {
+    return 'Stroke Alert Protocol';
   }
   
-  if (categories.has('Infectious')) return 'Sepsis Bundle Protocol';
-  if (categories.has('Allergic')) return 'Anaphylaxis Protocol';
+  if (categories.has('infectious')) return 'Sepsis Bundle Protocol';
+  if (categories.has('allergic')) return 'Anaphylaxis Protocol';
   
-  if (categories.has('Respiratory')) {
-    if (matches.some(m => m.flag.urgencyLevel === 'critical')) {
+  if (categories.has('respiratory')) {
+    if (redFlags.some(rf => rf.severity === 'critical')) {
       return 'Respiratory Failure Protocol';
     }
   }
@@ -247,42 +260,61 @@ export default async function handler(
       allSymptoms.unshift(body.chiefComplaint);
     }
     
-    // Initialize evaluator and evaluate
-    const evaluator = new RedFlagEvaluator('high');
-    const result: EvaluationResult = evaluator.evaluateMultiple(allSymptoms);
+    // Evaluate using the singleton evaluator
+    const result: RedFlagResult = redFlagEvaluator.evaluate({
+      symptoms: allSymptoms,
+      chiefComplaint: body.chiefComplaint || allSymptoms.join(', '),
+      vitals: body.vitalSigns ? {
+        heartRate: body.vitalSigns.heartRate,
+        bloodPressure: body.vitalSigns.systolicBP ? {
+          systolic: body.vitalSigns.systolicBP,
+          diastolic: body.vitalSigns.diastolicBP || 80,
+        } : undefined,
+        respiratoryRate: body.vitalSigns.respiratoryRate,
+        temperature: body.vitalSigns.temperature,
+        oxygenSaturation: body.vitalSigns.oxygenSaturation,
+        painLevel: body.vitalSigns.painLevel,
+      } : undefined,
+      age: body.patientAge,
+      medicalHistory: body.medicalHistory,
+    });
     
-    // Transform matches to API format
-    const transformedRedFlags = result.matches.map(transformMatch);
+    // Transform red flags to API format
+    const transformedRedFlags = result.redFlags.map(transformRedFlag);
+    
+    // Determine urgency level
+    const urgencyLevel = determineUrgencyLevel(result);
     
     // Generate response
-    const immediateActions = generateImmediateActions(result.matches);
-    const disposition = getDisposition(result.highestUrgency);
-    const timeToAction = getTimeToAction(result.highestUrgency);
-    const emergencyProtocol = getEmergencyProtocol(result.matches);
+    const immediateActions = generateImmediateActions(result.redFlags);
+    const disposition = getDisposition(urgencyLevel);
+    const timeToAction = getTimeToAction(urgencyLevel);
+    const emergencyProtocol = getEmergencyProtocol(result.redFlags);
     
-    const escalationRequired = result.requiresImmediateEscalation;
+    const escalationRequired = result.isEmergency;
     const escalationReason = escalationRequired 
-      ? `${result.matches.length} red flag(s) detected: ${result.matches.map(m => m.flag.pattern).join(', ')}`
+      ? `${result.redFlags.length} red flag(s) detected: ${result.redFlags.map(rf => rf.message).join(', ')}`
       : undefined;
     
     // Audit logging
     console.log('[AUDIT] Red flag evaluation:', {
       timestamp: new Date().toISOString(),
       hasRedFlags: result.hasRedFlags,
-      urgencyLevel: result.highestUrgency,
-      redFlagCount: result.matches.length,
-      categories: [...new Set(result.matches.map(m => m.flag.category))],
+      urgencyLevel,
+      urgencyScore: result.urgencyScore,
+      redFlagCount: result.redFlags.length,
+      categories: [...new Set(result.redFlags.map(rf => rf.category))],
       escalationRequired,
       emergencyProtocol,
     });
     
-    if (result.highestUrgency === 'critical') {
+    if (urgencyLevel === 'critical') {
       console.error('[CRITICAL RED FLAG]', {
         timestamp: new Date().toISOString(),
-        matches: result.matches.map(m => ({
-          pattern: m.flag.pattern,
-          category: m.flag.category,
-          action: m.flag.immediateAction,
+        redFlags: result.redFlags.map(rf => ({
+          symptom: rf.symptom,
+          category: rf.category,
+          message: rf.message,
         })),
         immediateActions,
       });
@@ -292,7 +324,8 @@ export default async function handler(
       success: true,
       data: {
         hasRedFlags: result.hasRedFlags,
-        urgencyLevel: result.highestUrgency,
+        urgencyLevel,
+        urgencyScore: result.urgencyScore,
         redFlags: transformedRedFlags,
         immediateActions,
         escalationRequired,

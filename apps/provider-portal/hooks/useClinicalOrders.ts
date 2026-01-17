@@ -14,11 +14,33 @@ import { useImagingOrderingStore, type SelectedStudy } from '@/store/imagingOrde
 import { useMedicationOrderingStore, type SelectedMedication } from '@/store/medicationOrderingStore';
 import { useReferralOrderingStore, type SelectedReferral } from '@/store/referralOrderingStore';
 import { useClinicalSafety } from './useClinicalSafety';
-import type { PatientContext, OrderPriority } from '@attending/shared/catalogs';
+import type { PatientContext as SharedPatientContext, OrderPriority } from '@attending/shared/catalogs';
 
 // =============================================================================
 // Types
 // =============================================================================
+
+// Flexible patient context that can come from different stores
+type PatientContext = SharedPatientContext | {
+  id: string;
+  name: string;
+  age: number;
+  gender: string;
+  mrn: string;
+  chiefComplaint: string;
+  allergies: string[];
+  redFlags: string[];
+  primaryDiagnosis?: string;
+  insurancePlan?: string;
+  pcp?: string;
+  currentMedications?: string[];
+  medicalHistory?: string[];
+  weight?: number;
+  creatinine?: number;
+  gfr?: number;
+  pregnant?: boolean;
+  breastfeeding?: boolean;
+};
 
 export type OrderType = 'lab' | 'imaging' | 'medication' | 'referral';
 
@@ -193,48 +215,67 @@ export function useClinicalOrders() {
     const contraindications: SafetyValidation['contraindications'] = [];
     
     const selectedMeds = Array.from(state.medications.selected.values());
-    const medNames = selectedMeds.map(m => m.medication.name);
-    const patientAllergies = state.patientContext?.allergies || [];
+    const medNames = selectedMeds.map(m => m.medication.genericName);
+    
+    // Normalize allergies to string array (can be string[] or {allergen, reaction, severity}[])
+    const rawAllergies = state.patientContext?.allergies || [];
+    const patientAllergies: string[] = rawAllergies.map((a: string | { allergen: string }) => 
+      typeof a === 'string' ? a : a.allergen
+    );
+    
     const currentMeds = state.patientContext?.currentMedications || [];
     
     // Check each new medication
     for (const selected of selectedMeds) {
-      const medName = selected.medication.name;
+      const medName = selected.medication.genericName;
       
       // Check against patient allergies
-      const allergyCheck = checkMedicationSafety(
+      const safetyCheck = checkMedicationSafety(
         medName,
         currentMeds,
         patientAllergies
       );
       
-      if (!allergyCheck.isSafe) {
-        // Allergy risks
-        if (allergyCheck.allergyRisk.hasInteractions) {
-          allergyCheck.allergyRisk.interactions.forEach(interaction => {
-            errors.push(`${medName}: Potential allergic reaction - ${interaction.description}`);
+      if (!safetyCheck.isSafe) {
+        // Allergy risks (allergyAlerts is an array)
+        if (safetyCheck.allergyRisk.allergyAlerts && safetyCheck.allergyRisk.allergyAlerts.length > 0) {
+          safetyCheck.allergyRisk.allergyAlerts.forEach(alert => {
+            errors.push(`${medName}: Potential allergic reaction - ${alert.message}`);
             contraindications.push({
               medication: medName,
-              reason: interaction.description,
+              reason: alert.message,
             });
           });
         }
         
-        // Drug interactions
-        if (allergyCheck.interactions.hasInteractions) {
-          allergyCheck.interactions.interactions.forEach(interaction => {
+        // Drug interactions (interactions is an array of DrugInteraction)
+        if (safetyCheck.interactions.interactions && safetyCheck.interactions.interactions.length > 0) {
+          safetyCheck.interactions.interactions.forEach(interaction => {
             const severity = interaction.severity;
-            if (severity === 'severe' || severity === 'contraindicated') {
+            if (severity === 'major' || severity === 'contraindicated') {
               errors.push(`${medName}: ${interaction.description}`);
             } else {
               warnings.push(`${medName}: ${interaction.description}`);
             }
             drugInteractions.push({
-              drugs: interaction.drugs as [string, string],
+              drugs: [interaction.drug1, interaction.drug2],
               severity: interaction.severity,
               description: interaction.description,
             });
           });
+        }
+        
+        // Add any contraindications from the result
+        if (safetyCheck.interactions.contraindications) {
+          safetyCheck.interactions.contraindications.forEach(ci => {
+            errors.push(`${medName}: ${ci}`);
+            contraindications.push({ medication: medName, reason: ci });
+          });
+        }
+        
+        // Add any warnings from the result
+        if (safetyCheck.interactions.warnings) {
+          safetyCheck.interactions.warnings.forEach(w => warnings.push(`${medName}: ${w}`));
         }
       }
     }
@@ -243,18 +284,18 @@ export function useClinicalOrders() {
     for (let i = 0; i < medNames.length; i++) {
       for (let j = i + 1; j < medNames.length; j++) {
         const result = checkDrugInteractions([medNames[i]], medNames[j]);
-        if (result.hasInteractions) {
+        if (result.interactions && result.interactions.length > 0) {
           result.interactions.forEach(interaction => {
             if (!drugInteractions.find(
-              d => d.drugs.includes(medNames[i]) && d.drugs.includes(medNames[j])
+              d => d.drugs.includes(interaction.drug1) && d.drugs.includes(interaction.drug2)
             )) {
-              if (interaction.severity === 'severe' || interaction.severity === 'contraindicated') {
+              if (interaction.severity === 'major' || interaction.severity === 'contraindicated') {
                 errors.push(`Interaction: ${medNames[i]} + ${medNames[j]} - ${interaction.description}`);
               } else {
                 warnings.push(`Interaction: ${medNames[i]} + ${medNames[j]} - ${interaction.description}`);
               }
               drugInteractions.push({
-                drugs: [medNames[i], medNames[j]],
+                drugs: [interaction.drug1, interaction.drug2],
                 severity: interaction.severity,
                 description: interaction.description,
               });
@@ -312,7 +353,7 @@ export function useClinicalOrders() {
         hasSTAT: state.medications.hasSTAT,
         items: Array.from(state.medications.selected.values()).map(m => ({
           id: m.medication.id,
-          name: m.medication.name,
+          name: m.medication.genericName,
           priority: m.priority,
         })),
       });
@@ -382,7 +423,7 @@ export function useClinicalOrders() {
       
       // Submit medications
       if (state.medications.count > 0) {
-        const medIds = await medStore.submitOrder(encounterId);
+        const medIds = await medStore.submitPrescriptions(encounterId);
         results.medications = medIds;
       }
       

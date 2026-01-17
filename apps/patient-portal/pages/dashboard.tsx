@@ -17,7 +17,6 @@ import {
   Plus,
   FileText,
   Clock,
-  AlertTriangle,
   CheckCircle,
   ChevronRight,
   Activity,
@@ -201,7 +200,7 @@ const QuickStats: React.FC<{ assessments: Assessment[] }> = ({ assessments }) =>
 // ============================================================================
 
 export default function PatientDashboard() {
-  const router = useRouter();
+  const _router = useRouter(); // Reserved for navigation
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);

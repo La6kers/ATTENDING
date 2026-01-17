@@ -7,6 +7,11 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "env": ["DATABASE_URL", "NEXTAUTH_SECRET", "NEXTAUTH_URL"]
     },
+    "@attending/shared#build": {
+      "dependsOn": [],
+      "outputs": [],
+      "cache": true
+    },
     "dev": {
       "cache": false,
       "persistent": true

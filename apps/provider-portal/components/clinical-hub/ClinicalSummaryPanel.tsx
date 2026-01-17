@@ -157,7 +157,7 @@ const Timeline: React.FC<{ messages: ClinicalMessage[] }> = ({ messages }) => {
   return (
     <div className="relative pl-5">
       <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-      {sortedMessages.map((msg, idx) => (
+      {sortedMessages.map((msg, _idx) => (
         <div key={msg.id} className="relative mb-3 text-[11px]">
           <div className={cn(
             "absolute -left-3 top-1.5 w-2 h-2 rounded-full border-2 border-white",

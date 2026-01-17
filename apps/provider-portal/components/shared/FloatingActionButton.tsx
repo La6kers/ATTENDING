@@ -13,7 +13,6 @@ import {
   Pill,
   Users,
   AlertTriangle,
-  MessageSquare,
 } from 'lucide-react';
 
 export interface FABAction {

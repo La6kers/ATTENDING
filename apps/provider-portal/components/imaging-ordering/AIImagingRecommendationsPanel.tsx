@@ -17,11 +17,11 @@ import {
   ConfidenceIndicator,
   WarningBanner,
 } from '@attending/ui-primitives';
-import { 
+import {
   type RecommendationCategory,
   RECOMMENDATION_CATEGORY_CONFIGS,
   groupRecommendationsByCategory,
-} from '@attending/clinical-types';
+} from '../shared/recommendation-utils';
 import type { AIImagingRecommendation, ImagingModality, ImagingPriority } from '../../store/imagingOrderingStore';
 
 interface AIImagingRecommendationsPanelProps {
@@ -38,6 +38,7 @@ const categoryIcons: Record<RecommendationCategory, React.ComponentType<{ classN
   recommended: CheckCircle,
   consider: HelpCircle,
   'not-indicated': XCircle,
+  avoid: XCircle,
 };
 
 // Modality icons for display
@@ -160,7 +161,7 @@ export const AIImagingRecommendationsPanel: React.FC<AIImagingRecommendationsPan
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium text-gray-900">{rec.studyName}</span>
                             <span className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded flex items-center gap-1">
-                              {modalityIcons[rec.modality]}
+                              {modalityIcons[rec.modality as ImagingModality]}
                               {rec.modality}
                             </span>
                             {rec.redFlagRelated && (

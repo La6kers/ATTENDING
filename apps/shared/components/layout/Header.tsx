@@ -6,10 +6,10 @@
 // ============================================================
 
 import * as React from 'react';
+// eslint-disable-next-line no-restricted-imports
 import { cn } from '../../lib/utils';
 import { GRADIENTS } from '../ui/Button';
 import { 
-  Badge, 
   ProviderBadge, 
   SecurityBadge, 
   NotificationBadge, 

@@ -17,7 +17,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'GET') {
-    return getTreatmentPlans(req, res, session);
+    return getTreatmentPlans(req, res);
   } else if (req.method === 'POST') {
     return createTreatmentPlan(req, res, session);
   }
@@ -26,7 +26,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
 
-async function getTreatmentPlans(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function getTreatmentPlans(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { 
       encounterId, 
@@ -83,7 +83,7 @@ async function getTreatmentPlans(req: NextApiRequest, res: NextApiResponse, sess
         limit: parseInt(String(limit)),
         offset: parseInt(String(offset)),
       });
-    } catch (prismaError) {
+    } catch (_prismaError) {
       // Model doesn't exist yet
       console.log('TreatmentPlan model not found, returning mock data');
       return res.status(200).json({
@@ -175,7 +175,7 @@ async function createTreatmentPlan(req: NextApiRequest, res: NextApiResponse, se
         patientEducation,
         returnPrecautions,
       });
-    } catch (prismaError) {
+    } catch (_prismaError) {
       // Model doesn't exist yet
       console.log('TreatmentPlan model not found, returning mock response');
       const mockPlan = {

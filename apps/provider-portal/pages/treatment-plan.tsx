@@ -8,7 +8,6 @@ import {
   ClipboardList, 
   ArrowLeft, 
   CheckCircle,
-  Clock,
   FileText,
   AlertTriangle
 } from 'lucide-react';
@@ -55,7 +54,7 @@ export default function TreatmentPlanPage() {
   const { patientId, encounterId } = router.query;
   
   const [patientContext, setPatientContext] = useState<PatientContext | null>(null);
-  const [orders, setOrders] = useState(getMockOrders());
+  const [orders] = useState(getMockOrders());
   const [savedPlans, setSavedPlans] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'current' | 'drafts' | 'completed'>('current');
   const [loading, setLoading] = useState(true);

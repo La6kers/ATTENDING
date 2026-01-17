@@ -8,9 +8,6 @@
 // Types
 export * from './types';
 
-// Re-export RECOMMENDATION_CATEGORY_CONFIGS for easier access
-export { RECOMMENDATION_CATEGORY_CONFIGS } from './types';
-
 // Lab Catalog
 export {
   LAB_CATALOG,
@@ -46,3 +43,22 @@ export {
   getAllMedications,
   checkDrugInteractions,
 } from './medications';
+
+// Referral Catalog
+export {
+  SPECIALTY_CATALOG,
+  PROVIDER_DIRECTORY,
+  getSpecialty,
+  getAllSpecialties,
+  searchSpecialties,
+  getSpecialtiesByCategory,
+  getProvidersBySpecialty,
+  getPreferredProviders,
+  generateReferralRecommendations,
+  type Specialty,
+  type SpecialtyCategory,
+  type ReferralProvider,
+  type ReferralRecommendation,
+  type ReferralUrgency,
+  type PatientReferralContext,
+} from './referrals';

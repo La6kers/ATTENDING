@@ -5,7 +5,8 @@
 
 export type ReferralUrgency = 'STAT' | 'URGENT' | 'ROUTINE' | 'ELECTIVE';
 export type ReferralStatus = 'DRAFT' | 'PENDING' | 'SENT' | 'RECEIVED' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'DENIED';
-export type ReferralCategory = 'critical' | 'recommended' | 'consider' | 'new';
+// Aligned with RecommendationCategory from shared catalogs
+export type ReferralCategory = 'critical' | 'recommended' | 'consider' | 'avoid' | 'not-indicated' | 'new';
 
 export interface Specialty {
   code: string;
@@ -159,6 +160,16 @@ export const CATEGORY_CONFIG: Record<ReferralCategory, {
   consider: {
     label: 'Consider',
     borderColor: 'border-l-gray-400',
+    bgColor: 'bg-gray-50',
+  },
+  avoid: {
+    label: 'Avoid',
+    borderColor: 'border-l-orange-500',
+    bgColor: 'bg-orange-50',
+  },
+  'not-indicated': {
+    label: 'Not Indicated',
+    borderColor: 'border-l-gray-300',
     bgColor: 'bg-gray-50',
   },
   new: {

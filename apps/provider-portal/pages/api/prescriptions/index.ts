@@ -5,18 +5,18 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/api/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
 
-async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function handler(req: NextApiRequest, res: NextApiResponse, _session: any) {
   if (req.method === 'GET') {
-    return getPrescriptions(req, res, session);
+    return getPrescriptions(req, res);
   } else if (req.method === 'POST') {
-    return createPrescription(req, res, session);
+    return createPrescription(req, res, _session);
   }
   
   res.setHeader('Allow', ['GET', 'POST']);
   return res.status(405).json({ error: `Method ${req.method} not allowed` });
 }
 
-async function getPrescriptions(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function getPrescriptions(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { encounterId, patientId, status, limit = '50', offset = '0' } = req.query;
     
@@ -139,7 +139,7 @@ async function createPrescription(req: NextApiRequest, res: NextApiResponse, ses
     await prisma.notification.create({
       data: {
         userId: session.user.id,
-        type: 'INFO',
+        type: 'SYSTEM',
         title: 'Prescription Created',
         message: `Prescription for ${medicationName} ${strength} created`,
         priority: 'NORMAL',

@@ -6,7 +6,7 @@
 // ============================================================
 
 import React from 'react';
-import { Package, Plus, Check, DollarSign, Clock } from 'lucide-react';
+import { Package, Plus, Check, DollarSign } from 'lucide-react';
 import type { LabPanel, SelectedLab } from '../../store/labOrderingStore';
 
 interface LabPanelsSelectorProps {

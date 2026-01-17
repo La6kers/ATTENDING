@@ -6,7 +6,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-export const Sidebar: FC<SidebarProps> = ({ onClose }) => {
+export const Sidebar: FC<SidebarProps> = ({ onClose: _onClose }) => {
   return (
     <div className="flex h-full flex-col border-r border-slate-200 bg-slate-50">
       <div className="border-b border-slate-200 p-6">

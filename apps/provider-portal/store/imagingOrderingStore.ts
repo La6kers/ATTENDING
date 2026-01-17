@@ -37,9 +37,6 @@ export type AIImagingRecommendation = ImagingRecommendation; // Alias for compon
 export type { ImagingRecommendation };
 export { IMAGING_CATALOG };
 
-// Re-export recommendation type with alias for component compatibility
-export type { ImagingRecommendation as AIImagingRecommendation } from '@attending/shared/services/ClinicalRecommendationService';
-
 // =============================================================================
 // Store-specific Types
 // =============================================================================
@@ -138,10 +135,11 @@ export const useImagingOrderingStore = create<ImagingOrderingState>()(
         
         // Check for contrast allergy and suggest alternative
         const { patientContext } = get();
-        if (study.contrast && patientContext?.allergies.some(a => 
-          a.allergen.toLowerCase().includes('contrast') || 
-          a.allergen.toLowerCase().includes('iodine')
-        )) {
+        if (study.contrast && patientContext?.allergies?.some(a => {
+          const allergenName = typeof a === 'string' ? a : a.allergen;
+          return allergenName.toLowerCase().includes('contrast') || 
+                 allergenName.toLowerCase().includes('iodine');
+        })) {
           const alternative = getNonContrastAlternative(studyCode);
           if (alternative) {
             console.warn(`Patient has contrast allergy. Consider ${alternative.code} instead.`);

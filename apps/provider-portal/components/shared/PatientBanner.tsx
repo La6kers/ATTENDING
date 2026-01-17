@@ -7,7 +7,6 @@ import Link from 'next/link';
 import {
   AlertTriangle,
   FileText,
-  Clock,
   ChevronUp,
   ChevronDown,
   Activity,
@@ -29,6 +28,7 @@ export interface PatientContext {
   gfr?: number;
   pregnant?: boolean;
   insurancePlan?: string;
+  assessmentId?: string;
 }
 
 export interface PatientBannerProps {
@@ -76,6 +76,14 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
 
   const hasRedFlags = showRedFlags && patient.redFlags && patient.redFlags.length > 0;
 
+  // Build assessment link - the main patient view that exists
+  const getAssessmentLink = () => {
+    if (patient.assessmentId) {
+      return `/assessments/${patient.assessmentId}`;
+    }
+    return `/assessments?patientId=${patient.id}`;
+  };
+
   return (
     <div
       className={`patient-bar border-l-4 ${accentBorders[accentColor]} ${
@@ -115,7 +123,7 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
           {/* Chief Complaint */}
           <p className="text-sm text-gray-700 mt-1">
             <strong className="text-gray-500">Chief Complaint:</strong>{' '}
-            "{patient.chiefComplaint}"
+            &ldquo;{patient.chiefComplaint}&rdquo;
           </p>
 
           {/* Red Flags - HTML prototype style */}
@@ -163,8 +171,9 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
       {/* Action Buttons - HTML prototype style */}
       {showActions && (
         <div className="patient-action-buttons flex items-center gap-2 flex-shrink-0">
+          {/* View Assessment - Links to actual assessments page */}
           <Link
-            href={`/patients/${patient.id}/chart`}
+            href={getAssessmentLink()}
             className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
                        text-gray-700 bg-white border-2 border-gray-200 rounded-lg 
                        hover:border-purple-400 hover:bg-purple-50 
@@ -172,7 +181,7 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
                        transition-all duration-200"
           >
             <FileText className="w-4 h-4" />
-            <span className="hidden md:inline">Review Complete Chart</span>
+            <span className="hidden md:inline">View Assessment</span>
           </Link>
 
           {onToggleAll && (
@@ -198,15 +207,16 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
             </button>
           )}
 
+          {/* Treatment Plan - Links to actual treatment-plans page */}
           <Link
-            href={`/patients/${patient.id}/timeline`}
+            href={`/treatment-plans?patientId=${patient.id}`}
             className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
                        text-white bg-gradient-to-r from-purple-600 to-indigo-600 
                        rounded-lg hover:-translate-y-0.5 hover:shadow-lg
                        transition-all duration-200"
           >
             <Activity className="w-4 h-4" />
-            <span className="hidden md:inline">Patient Timeline</span>
+            <span className="hidden md:inline">Treatment Plan</span>
           </Link>
         </div>
       )}

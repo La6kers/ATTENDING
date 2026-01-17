@@ -176,14 +176,14 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
   patientName,
   onClose,
   onCall911,
-  onFindER,
+  onFindER: _onFindER,
   onContinueAssessment,
   onNotifyProvider
 }) => {
   const [showERFinder, setShowERFinder] = useState(false);
   const [nearbyERs, setNearbyERs] = useState<NearbyER[]>([]);
   const [isLoadingERs, setIsLoadingERs] = useState(false);
-  const [countdown, setCountdown] = useState<number | null>(null);
+  const [_countdown, _setCountdown] = useState<number | null>(null);
 
   const config = EMERGENCY_CONFIGS[emergencyType] || EMERGENCY_CONFIGS.default;
 
@@ -215,7 +215,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
             osc2.start();
             osc2.stop(audioContext.currentTime + 0.3);
           }, 400);
-        } catch (e) {
+        } catch (_e) {
           console.log('Audio alert not available');
         }
       }

@@ -7,34 +7,36 @@
 // - Provider Portal
 // - Chat stores
 // - UI components
+//
+// UPDATED: Standardized to camelCase to match XState machine
 // ============================================================
 
 // =============================================================================
-// Assessment Phases - Detailed 18-Phase Flow
+// Assessment Phases - Detailed 18-Phase Flow (camelCase)
 // =============================================================================
 
 /**
  * Detailed assessment phases used in COMPASS chat flow.
- * These map to the XState assessment machine states.
+ * Uses camelCase to match XState assessment machine states.
  */
 export type DetailedAssessmentPhase =
   | 'welcome'
   | 'demographics'
-  | 'chief_complaint'
-  | 'hpi_onset'
-  | 'hpi_location'
-  | 'hpi_duration'
-  | 'hpi_character'
-  | 'hpi_severity'
-  | 'hpi_aggravating'
-  | 'hpi_relieving'
-  | 'hpi_associated'
-  | 'review_of_systems'
+  | 'chiefComplaint'
+  | 'hpiOnset'
+  | 'hpiLocation'
+  | 'hpiDuration'
+  | 'hpiCharacter'
+  | 'hpiSeverity'
+  | 'hpiAggravating'
+  | 'hpiRelieving'
+  | 'hpiAssociated'
+  | 'reviewOfSystems'
   | 'medications'
   | 'allergies'
-  | 'medical_history'
-  | 'social_history'
-  | 'family_history'
+  | 'medicalHistory'
+  | 'socialHistory'
+  | 'familyHistory'
   | 'summary'
   | 'complete';
 
@@ -55,21 +57,21 @@ export type HighLevelAssessmentPhase =
 export const PHASE_CATEGORY_MAP: Record<DetailedAssessmentPhase, HighLevelAssessmentPhase> = {
   welcome: 'chief-complaint',
   demographics: 'chief-complaint',
-  chief_complaint: 'chief-complaint',
-  hpi_onset: 'hpi-development',
-  hpi_location: 'hpi-development',
-  hpi_duration: 'hpi-development',
-  hpi_character: 'hpi-development',
-  hpi_severity: 'hpi-development',
-  hpi_aggravating: 'hpi-development',
-  hpi_relieving: 'hpi-development',
-  hpi_associated: 'hpi-development',
-  review_of_systems: 'review-of-systems',
+  chiefComplaint: 'chief-complaint',
+  hpiOnset: 'hpi-development',
+  hpiLocation: 'hpi-development',
+  hpiDuration: 'hpi-development',
+  hpiCharacter: 'hpi-development',
+  hpiSeverity: 'hpi-development',
+  hpiAggravating: 'hpi-development',
+  hpiRelieving: 'hpi-development',
+  hpiAssociated: 'hpi-development',
+  reviewOfSystems: 'review-of-systems',
   medications: 'medical-history',
   allergies: 'medical-history',
-  medical_history: 'medical-history',
-  social_history: 'medical-history',
-  family_history: 'medical-history',
+  medicalHistory: 'medical-history',
+  socialHistory: 'medical-history',
+  familyHistory: 'medical-history',
   summary: 'clinical-summary',
   complete: 'clinical-summary',
 };
@@ -80,21 +82,21 @@ export const PHASE_CATEGORY_MAP: Record<DetailedAssessmentPhase, HighLevelAssess
 export const PHASE_PROGRESS: Record<DetailedAssessmentPhase, number> = {
   welcome: 0,
   demographics: 5,
-  chief_complaint: 10,
-  hpi_onset: 15,
-  hpi_location: 20,
-  hpi_duration: 25,
-  hpi_character: 30,
-  hpi_severity: 35,
-  hpi_aggravating: 40,
-  hpi_relieving: 45,
-  hpi_associated: 50,
-  review_of_systems: 55,
+  chiefComplaint: 10,
+  hpiOnset: 15,
+  hpiLocation: 20,
+  hpiDuration: 25,
+  hpiCharacter: 30,
+  hpiSeverity: 35,
+  hpiAggravating: 40,
+  hpiRelieving: 45,
+  hpiAssociated: 50,
+  reviewOfSystems: 55,
   medications: 65,
   allergies: 70,
-  medical_history: 75,
-  social_history: 80,
-  family_history: 85,
+  medicalHistory: 75,
+  socialHistory: 80,
+  familyHistory: 85,
   summary: 95,
   complete: 100,
 };
@@ -177,6 +179,7 @@ export type MessageRole = 'user' | 'assistant' | 'system';
 
 /**
  * Metadata attached to chat messages.
+ * phase now uses standardized DetailedAssessmentPhase (camelCase)
  */
 export interface MessageMetadata {
   phase?: DetailedAssessmentPhase;
@@ -426,4 +429,36 @@ export function getPhaseProgress(phase: DetailedAssessmentPhase): number {
  */
 export function getPhaseCategory(phase: DetailedAssessmentPhase): HighLevelAssessmentPhase {
   return PHASE_CATEGORY_MAP[phase] || 'chief-complaint';
+}
+
+// =============================================================================
+// Legacy Compatibility - Snake Case Mapping
+// =============================================================================
+
+/**
+ * @deprecated Use DetailedAssessmentPhase instead
+ * Maps snake_case phase names to camelCase for legacy support
+ */
+export const LEGACY_PHASE_MAP: Record<string, DetailedAssessmentPhase> = {
+  'chief_complaint': 'chiefComplaint',
+  'hpi_onset': 'hpiOnset',
+  'hpi_location': 'hpiLocation',
+  'hpi_duration': 'hpiDuration',
+  'hpi_character': 'hpiCharacter',
+  'hpi_severity': 'hpiSeverity',
+  'hpi_aggravating': 'hpiAggravating',
+  'hpi_relieving': 'hpiRelieving',
+  'hpi_associated': 'hpiAssociated',
+  'review_of_systems': 'reviewOfSystems',
+  'medical_history': 'medicalHistory',
+  'social_history': 'socialHistory',
+  'family_history': 'familyHistory',
+};
+
+/**
+ * @deprecated Use phase directly
+ * Converts legacy snake_case phase to camelCase
+ */
+export function normalizePhaseName(phase: string): DetailedAssessmentPhase {
+  return LEGACY_PHASE_MAP[phase] || (phase as DetailedAssessmentPhase);
 }

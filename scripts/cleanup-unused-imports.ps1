@@ -1,128 +1,251 @@
 # ============================================================
-# Remove Unused Imports Script
+# ATTENDING AI - Unused Import Cleanup Script
 # scripts/cleanup-unused-imports.ps1
 #
-# This script removes commonly unused imports identified
-# in the build output. Run after fix-imports.ps1
+# Cleans up unused imports from provider-portal components
+# Run from project root: .\scripts\cleanup-unused-imports.ps1
 # ============================================================
 
-Write-Host "Starting unused import cleanup..." -ForegroundColor Cyan
+param(
+    [switch]$DryRun = $false
+)
 
-# Files and their unused imports (from build output analysis)
-$unusedImports = @{
-    # Pages
-    "apps/provider-portal/pages/assessments/[id].tsx" = @("PatientAssessment", "Clock", "Info")
-    "apps/provider-portal/pages/auth/signin.tsx" = @("getProviders")
-    "apps/provider-portal/pages/clinical-hub.tsx" = @("useEffect", "Activity", "Clock", "TrendingUp", "ChevronRight", "FileText")
-    "apps/provider-portal/pages/component-demo.tsx" = @("ClinicalCard")
-    "apps/provider-portal/pages/imaging.tsx" = @("Settings", "Zap")
-    "apps/provider-portal/pages/index.tsx" = @("AlertTriangle", "Clock", "Keyboard")
-    "apps/provider-portal/pages/labs.tsx" = @("Settings")
-    "apps/provider-portal/pages/patient-assessment.tsx" = @("ChevronDown", "ChevronUp")
-    "apps/provider-portal/pages/referrals.tsx" = @("PatientBanner")
-    "apps/provider-portal/pages/treatment-plan.tsx" = @("Clock")
-    "apps/provider-portal/pages/_app.tsx" = @("useCallback")
-    
-    # Components - Chat
-    "apps/provider-portal/components/chat/ChatPanel.tsx" = @("AlertTriangle")
-    
-    # Components - Dashboard
-    "apps/provider-portal/components/dashboard/PatientQueue.tsx" = @("AlertTriangle")
-    "apps/provider-portal/components/dashboard/StatCards.tsx" = @("Users", "MessageSquare")
-    
-    # Components - Imaging
-    "apps/provider-portal/components/imaging-ordering/ImagingOrderSummary.tsx" = @("DollarSign")
-    
-    # Components - Lab Ordering
-    "apps/provider-portal/components/lab-ordering/AIRecommendationsPanel.tsx" = @("EmptyState", "AIBadge")
-    "apps/provider-portal/components/lab-ordering/LabOrderSummary.tsx" = @("LabPriority")
-    "apps/provider-portal/components/lab-ordering/LabPanelsSelector.tsx" = @("Clock")
-    
-    # Components - Layout
-    "apps/provider-portal/components/layout/Header.tsx" = @("Activity")
-    "apps/provider-portal/components/layout/Navigation.tsx" = @("Users", "Calendar", "BarChart3", "MessageSquare")
-    
-    # Components - Medication
-    "apps/provider-portal/components/medication-ordering/AIMedicationRecommendationsPanel.tsx" = @("ShieldCheck")
-    "apps/provider-portal/components/medication-ordering/MedicationCard.tsx" = @("Clock")
-    "apps/provider-portal/components/medication-ordering/MedicationOrderSummary.tsx" = @("CheckCircle", "PrescriptionPriority", "DosageForm")
-    
-    # Components - Referral
-    "apps/provider-portal/components/referral-ordering/AIRecommendationsPanel.tsx" = @("ChevronRight")
-    "apps/provider-portal/components/referral-ordering/PatientContextBanner.tsx" = @("FileText")
-    "apps/provider-portal/components/referral-ordering/ReferralCard.tsx" = @("useState", "Building2", "Clock", "Shield", "Provider", "URGENCY_CONFIG", "CATEGORY_CONFIG")
-    "apps/provider-portal/components/referral-ordering/ReferralOrderingPanel.tsx" = @("useCallback", "UserPlus", "ChevronDown", "ChevronRight", "COMMON_REFERRALS")
-    "apps/provider-portal/components/referral-ordering/ReferralStatusSidebar.tsx" = @("useState", "Clock", "AlertTriangle", "ExternalLink")
-    
-    # Components - Shared
-    "apps/provider-portal/components/shared/EmergencyProtocolModal.tsx" = @("Ambulance", "Heart")
-    "apps/provider-portal/components/shared/FloatingActionButton.tsx" = @("MessageSquare")
-    "apps/provider-portal/components/shared/NotificationCenter.tsx" = @("Check", "AlertTriangle", "Clock", "FileText")
-    "apps/provider-portal/components/shared/PatientBanner.tsx" = @("Clock")
-    
-    # Components - Treatment Plan
-    "apps/provider-portal/components/treatment-plan/TreatmentPlanPanel.tsx" = @("ChevronDown", "ChevronRight", "TreatmentProtocol")
-    
-    # Components - UI
-    "apps/provider-portal/components/ui/button.tsx" = @("Button", "VariantProps")
-    
-    # Components - Other
-    "apps/provider-portal/components/PatientMessaging.tsx" = @("CheckCircle", "FileText")
-    
-    # API Routes
-    "apps/provider-portal/pages/api/clinical/drug-check.ts" = @("DrugInteractionResult")
-    "apps/provider-portal/pages/api/clinical/red-flags.ts" = @("RedFlagResult")
-    "apps/provider-portal/pages/api/imaging/index.ts" = @("CreateImagingOrder")
-    "apps/provider-portal/pages/api/labs/index.ts" = @("CreateLabOrder")
-    
-    # Lib
-    "apps/provider-portal/lib/api/auth.ts" = @("User")
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+Set-Location $ProjectRoot
+
+Write-Host "======================================" -ForegroundColor Cyan
+Write-Host "ATTENDING AI - Unused Import Cleanup" -ForegroundColor Cyan
+Write-Host "======================================" -ForegroundColor Cyan
+
+if ($DryRun) {
+    Write-Host "DRY RUN MODE - No files will be modified" -ForegroundColor Yellow
 }
 
-$filesProcessed = 0
-$importsRemoved = 0
+# Define cleanup patterns for each file
+$cleanupPatterns = @(
+    @{
+        Path = "apps/provider-portal/components/lab-ordering/AIRecommendationsPanel.tsx"
+        Patterns = @(
+            @{ Find = "import { EmptyState } from '@attending/ui-primitives';`r?`n"; Replace = "" },
+            @{ Find = ", AIBadge"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/lab-ordering/LabOrderSummary.tsx"
+        Patterns = @(
+            @{ Find = ", LabPriority"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/lab-ordering/LabPanelsSelector.tsx"
+        Patterns = @(
+            @{ Find = ", Clock"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/layout/Header.tsx"
+        Patterns = @(
+            @{ Find = "`r?`n\s*Activity,"; Replace = "" },
+            @{ Find = "Activity,\s*"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/medication-ordering/AIMedicationRecommendationsPanel.tsx"
+        Patterns = @(
+            @{ Find = ", ShieldCheck"; Replace = "" },
+            @{ Find = "ShieldCheck, "; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/medication-ordering/DrugInteractionAlert.tsx"
+        Patterns = @(
+            @{ Find = "onDismiss,"; Replace = "_onDismiss," }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/medication-ordering/MedicationCard.tsx"
+        Patterns = @(
+            @{ Find = ", Clock"; Replace = "" },
+            @{ Find = "Clock, "; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/medication-ordering/MedicationOrderSummary.tsx"
+        Patterns = @(
+            @{ Find = ", CheckCircle"; Replace = "" },
+            @{ Find = ", PrescriptionPriority"; Replace = "" },
+            @{ Find = ", DosageForm"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/PatientMessaging.tsx"
+        Patterns = @(
+            @{ Find = ", CheckCircle"; Replace = "" },
+            @{ Find = ", FileText"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/previsit/PreVisitSummary.tsx"
+        Patterns = @(
+            @{ Find = "`r?`n\s*Phone,"; Replace = "" },
+            @{ Find = "Phone,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*Thermometer,"; Replace = "" },
+            @{ Find = "Thermometer,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*Droplets,"; Replace = "" },
+            @{ Find = "Droplets,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*X,"; Replace = "" },
+            @{ Find = "\bX,\s*"; Replace = "" },
+            @{ Find = "\(label\)"; Replace = "(_label)" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/referral-ordering/AIRecommendationsPanel.tsx"
+        Patterns = @(
+            @{ Find = ", ChevronRight"; Replace = "" },
+            @{ Find = "ChevronRight, "; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/referral-ordering/PatientContextBanner.tsx"
+        Patterns = @(
+            @{ Find = ", FileText"; Replace = "" },
+            @{ Find = "FileText, "; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/referral-ordering/ProviderSearchModal.tsx"
+        # This is a react-hooks/exhaustive-deps warning, not an unused import
+        # Requires manual fix to add useCallback or add dependency
+        Patterns = @()
+    },
+    @{
+        Path = "apps/provider-portal/components/referral-ordering/ReferralStatusSidebar.tsx"
+        Patterns = @(
+            @{ Find = "import { useState } from 'react';`r?`n"; Replace = "" },
+            @{ Find = "useState, "; Replace = "" },
+            @{ Find = ", useState"; Replace = "" },
+            @{ Find = "`r?`n\s*Clock,"; Replace = "" },
+            @{ Find = "Clock,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*AlertTriangle,"; Replace = "" },
+            @{ Find = "AlertTriangle,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*ExternalLink,"; Replace = "" },
+            @{ Find = "ExternalLink,\s*"; Replace = "" },
+            @{ Find = "\(referral, index\)"; Replace = "(referral, _index)" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/shared/EmergencyProtocolModal.tsx"
+        Patterns = @(
+            @{ Find = "`r?`n\s*Ambulance,"; Replace = "" },
+            @{ Find = "Ambulance,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*Heart,"; Replace = "" },
+            @{ Find = "Heart,\s*"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/shared/FloatingActionButton.tsx"
+        Patterns = @(
+            @{ Find = "`r?`n\s*MessageSquare,"; Replace = "" },
+            @{ Find = "MessageSquare,\s*"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/shared/NotificationCenter.tsx"
+        Patterns = @(
+            @{ Find = "`r?`n\s*Check,"; Replace = "" },
+            @{ Find = "Check,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*AlertTriangle,"; Replace = "" },
+            @{ Find = "AlertTriangle,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*Clock,"; Replace = "" },
+            @{ Find = "Clock,\s*"; Replace = "" },
+            @{ Find = "`r?`n\s*FileText,"; Replace = "" },
+            @{ Find = "FileText,\s*"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/components/shared/PatientBanner.tsx"
+        Patterns = @(
+            @{ Find = "`r?`n\s*Clock,"; Replace = "" },
+            @{ Find = "Clock,\s*"; Replace = "" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/lib/api/auth.ts"
+        Patterns = @(
+            @{ Find = ", User\b"; Replace = ", _User" },
+            @{ Find = "User, "; Replace = "_User, " },
+            @{ Find = "\(account\)"; Replace = "(_account)" },
+            @{ Find = "\(user\)"; Replace = "(_user)" }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/lib/api/middleware.ts"
+        Patterns = @(
+            @{ Find = "const startTime = "; Replace = "const _startTime = " }
+        )
+    },
+    @{
+        Path = "apps/provider-portal/lib/mockData.ts"
+        Patterns = @(
+            @{ Find = "const statuses = "; Replace = "const _statuses = " }
+        )
+    }
+)
 
-foreach ($filePath in $unusedImports.Keys) {
-    $fullPath = Join-Path $PSScriptRoot ".." $filePath
+$totalFiles = 0
+$totalChanges = 0
+
+foreach ($item in $cleanupPatterns) {
+    $filePath = Join-Path $ProjectRoot $item.Path
     
-    if (-not (Test-Path $fullPath)) {
-        Write-Host "  Skipping (not found): $filePath" -ForegroundColor Yellow
+    if (-not (Test-Path $filePath)) {
+        Write-Host "  [SKIP] File not found: $($item.Path)" -ForegroundColor Yellow
         continue
     }
     
-    $content = Get-Content $fullPath -Raw
-    $originalContent = $content
-    $imports = $unusedImports[$filePath]
-    
-    foreach ($import in $imports) {
-        # Remove from named imports: { X, Y, Z } or { X }
-        # Pattern: Remove ", X" or "X, " or standalone "X" in import braces
-        $content = $content -replace ",\s*$import(?=\s*[,}])", ""  # Remove ", X"
-        $content = $content -replace "$import\s*,\s*", ""         # Remove "X, "
-        $content = $content -replace "{\s*$import\s*}", "{ }"     # Remove sole import
+    if ($item.Patterns.Count -eq 0) {
+        Write-Host "  [SKIP] No patterns for: $($item.Path)" -ForegroundColor DarkGray
+        continue
     }
     
-    # Clean up empty imports like: import { } from '...'
-    $content = $content -replace "import\s*{\s*}\s*from\s*['""][^'""]+['""];\s*\n?", ""
+    $content = Get-Content $filePath -Raw
+    $originalContent = $content
+    $changeCount = 0
     
-    # Clean up double commas and trailing commas in imports
-    $content = $content -replace ",\s*,", ","
-    $content = $content -replace ",(\s*})", '$1'
-    $content = $content -replace "({\s*),", '$1'
+    foreach ($pattern in $item.Patterns) {
+        $newContent = $content -replace $pattern.Find, $pattern.Replace
+        if ($newContent -ne $content) {
+            $changeCount++
+            $content = $newContent
+        }
+    }
     
-    if ($content -ne $originalContent) {
-        Set-Content $fullPath $content -NoNewline
-        $filesProcessed++
-        $importsRemoved += $imports.Count
-        Write-Host "  Cleaned: $filePath ($($imports.Count) imports)" -ForegroundColor Green
+    if ($changeCount -gt 0) {
+        $totalFiles++
+        $totalChanges += $changeCount
+        
+        if ($DryRun) {
+            Write-Host "  [WOULD FIX] $($item.Path) - $changeCount changes" -ForegroundColor Cyan
+        } else {
+            Set-Content $filePath $content -NoNewline
+            Write-Host "  [FIXED] $($item.Path) - $changeCount changes" -ForegroundColor Green
+        }
+    } else {
+        Write-Host "  [OK] $($item.Path) - no changes needed" -ForegroundColor DarkGray
     }
 }
 
-Write-Host "`n============================================" -ForegroundColor Cyan
-Write-Host "Unused import cleanup complete!" -ForegroundColor Green
-Write-Host "Files processed: $filesProcessed" -ForegroundColor White
-Write-Host "Imports removed: $importsRemoved" -ForegroundColor White
-Write-Host "============================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "======================================" -ForegroundColor Cyan
+Write-Host "Summary" -ForegroundColor Cyan
+Write-Host "======================================" -ForegroundColor Cyan
+Write-Host "Files modified: $totalFiles"
+Write-Host "Total changes: $totalChanges"
 
-Write-Host "`nNote: Some unused variables may need manual review." -ForegroundColor Yellow
-Write-Host "Run 'npm run lint' to see remaining issues." -ForegroundColor White
+if ($DryRun) {
+    Write-Host ""
+    Write-Host "Run without -DryRun to apply changes" -ForegroundColor Yellow
+} else {
+    Write-Host ""
+    Write-Host "Done! Run 'npm run build:provider' to verify build." -ForegroundColor Green
+}

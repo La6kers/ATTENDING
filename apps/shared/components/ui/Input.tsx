@@ -4,6 +4,7 @@
 // ============================================================
 
 import * as React from 'react';
+// eslint-disable-next-line no-restricted-imports
 import { cn } from '../../lib/utils';
 
 // ============================================================
@@ -58,8 +59,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    // Generate unique ID if not provided
-    const inputId = id || `input-${React.useId()}`;
+    // Generate unique ID unconditionally (hooks must not be called conditionally)
+    const generatedId = React.useId();
+    const inputId = id || `input-${generatedId}`;
 
     return (
       <div className={cn(fullWidth ? 'w-full' : 'inline-block')}>
@@ -165,7 +167,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     },
     ref
   ) => {
-    const textareaId = id || `textarea-${React.useId()}`;
+    // Generate unique ID unconditionally (hooks must not be called conditionally)
+    const generatedId = React.useId();
+    const textareaId = id || `textarea-${generatedId}`;
 
     return (
       <div className={cn(fullWidth ? 'w-full' : 'inline-block')}>

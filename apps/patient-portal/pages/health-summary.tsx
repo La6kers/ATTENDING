@@ -18,13 +18,8 @@ import {
   FileText,
   Pill,
   AlertTriangle,
-  Activity,
-  Calendar,
   ChevronRight,
-  Filter,
   Search,
-  Clock,
-  CheckCircle,
   Heart,
   Stethoscope,
 } from 'lucide-react';

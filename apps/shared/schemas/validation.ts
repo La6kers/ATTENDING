@@ -11,7 +11,7 @@ import type { NextApiResponse } from 'next';
  */
 export class ValidationError extends Error {
   public readonly issues: z.ZodIssue[];
-  public readonly flatErrors: { fieldErrors: Record<string, string[]>; formErrors: string[] };
+  public readonly flatErrors: z.typeToFlattenedError<unknown, string>;
   
   constructor(zodError: ZodError) {
     super('Validation failed');
