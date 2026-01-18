@@ -6,7 +6,7 @@ export default function PatientPortalHome() {
   return (
     <>
       <Head>
-        <title>ATTENDING Patient Portal</title>
+        <title>ATTENDING AI - Patient Portal</title>
         <meta name="description" content="Secure patient portal for medical care" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>

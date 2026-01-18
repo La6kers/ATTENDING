@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { 
   MessageCircle, Calendar, FileText, Activity, Bell, User, Heart, Clock,
-  ChevronRight, Send, Shield, Stethoscope, Phone, ChevronDown, Zap, TrendingUp,
+  ChevronRight, Send, Shield, Phone, ChevronDown, Zap, TrendingUp,
   CheckCircle, Info, Thermometer, AlertTriangle, Pill
 } from 'lucide-react';
 
@@ -207,12 +207,9 @@ const ImprovedPatientPortal = () => {
       <header className="bg-white/95 backdrop-blur-md shadow-sm border-b border-purple-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Stethoscope className="h-8 w-8 text-purple-600 mr-3" />
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">ATTENDING Patient Portal</h1>
-                <p className="text-xs text-gray-500">Secure Patient Portal</p>
-              </div>
+            <div className="flex items-center space-x-3">
+              <h1 className="text-xl font-bold text-brand-gradient">ATTENDING AI</h1>
+              <span className="text-sm font-medium text-purple-600 border-l border-gray-300 pl-3">Patient Portal</span>
             </div>
             
             <div className="flex items-center space-x-4">

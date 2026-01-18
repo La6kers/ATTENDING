@@ -14,7 +14,6 @@ import {
   User,
   Users,
   HelpCircle,
-  Stethoscope,
   X,
   Check,
   Clock,
@@ -189,17 +188,14 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className={`header bg-gradient-to-r from-purple-600 via-purple-600 to-indigo-600 text-white ${className}`}>
+    <header className={`header text-white ${className}`} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                <Stethoscope className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold">ATTENDING</h1>
-              <span className="header-badge bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
+              <h1 className="text-2xl font-bold text-white">ATTENDING AI</h1>
+              <span className="text-sm font-medium text-white/80 border-l border-white/30 pl-3">
                 Provider Portal
               </span>
             </Link>

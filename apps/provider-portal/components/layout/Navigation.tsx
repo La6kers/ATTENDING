@@ -9,7 +9,6 @@ import {
   X,
   Bell,
   Search,
-  Stethoscope,
   FileImage,
   TestTube,
   Pill,
@@ -111,14 +110,11 @@ const Navigation = () => {
           {/* Logo and Brand */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-9 h-9 bg-brand-gradient rounded-xl flex items-center justify-center shadow-md">
-                <Stethoscope className="w-5 h-5 text-white" />
-              </div>
               <span className="text-2xl font-bold text-brand-gradient">
-                ATTENDING
+                ATTENDING AI
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-gradient text-white shadow-sm">
-                AI Health
+              <span className="text-sm font-medium text-purple-600 border-l border-gray-300 pl-3">
+                Provider Portal
               </span>
             </Link>
           </div>
