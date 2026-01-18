@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FC, useState } from 'react';
 import { Sidebar } from './Sidebar';
-import { MainContent } from './MainContent';
+import { EnhancedMainContent } from './EnhancedMainContent';
 import { Menu, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useInbox } from '../../store/useInbox';
@@ -12,8 +12,8 @@ export const InboxLayout: FC = () => {
   const { currentMessage } = useInbox();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 to-purple-600 p-2 sm:p-5">
-      <div className="container mx-auto h-[calc(100vh-2.5rem)] max-w-7xl overflow-hidden rounded-2xl bg-white/95 shadow-xl backdrop-blur-xl">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 p-2 sm:p-4">
+      <div className="container mx-auto h-[calc(100vh-2rem)] max-w-7xl overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="relative flex h-full">
           {/* Mobile sidebar toggle */}
           <Button
@@ -28,19 +28,16 @@ export const InboxLayout: FC = () => {
           {/* Sidebar */}
           <div
             className={cn(
-              'absolute inset-0 z-40 w-80 transform bg-white/95 transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0',
+              'absolute inset-0 z-40 w-80 transform bg-white transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 border-r border-gray-200',
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             )}
           >
             <Sidebar onClose={() => setSidebarOpen(false)} />
           </div>
 
-          {/* Main content with animation */}
-          <div className={cn(
-            'flex-1 transition-all duration-200',
-            currentMessage ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'
-          )}>
-            <MainContent />
+          {/* Main content */}
+          <div className="flex-1 overflow-hidden">
+            <EnhancedMainContent />
           </div>
 
           {/* Overlay for mobile sidebar */}

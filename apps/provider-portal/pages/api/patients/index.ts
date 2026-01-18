@@ -1,119 +1,82 @@
-// ============================================================
-// ATTENDING AI - Patients API Route
+// =============================================================================
+// ATTENDING AI - Patients API
 // apps/provider-portal/pages/api/patients/index.ts
 //
-// List patients with search and filtering
-// ============================================================
+// Returns patient data from the centralized mock repository
+// =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@attending/shared/lib/prisma';
-import { Prisma } from '@prisma/client';
+import {
+  getAllPatients,
+  getPatientById,
+  searchPatients,
+  getStatistics,
+} from '@/lib/mockData';
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    res.setHeader('Allow', ['GET']);
-    return res.status(405).json({ error: `Method ${req.method} not allowed` });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    const { search, limit = '50', offset = '0' } = req.query;
+  const { id, search, stats } = req.query;
 
-    // Build where clause for search
-    const where: Prisma.PatientWhereInput = {
-      isActive: true,
-    };
+  // Get statistics
+  if (stats === 'true') {
+    return res.status(200).json(getStatistics());
+  }
 
-    if (search && typeof search === 'string') {
-      where.OR = [
-        { firstName: { contains: search, mode: 'insensitive' } },
-        { lastName: { contains: search, mode: 'insensitive' } },
-        { mrn: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search } },
-      ];
+  // Get single patient by ID
+  if (id && typeof id === 'string') {
+    const patient = getPatientById(id);
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
     }
-
-    const [patients, total] = await Promise.all([
-      prisma.patient.findMany({
-        where,
-        include: {
-          allergies: {
-            where: { isActive: true },
-            select: {
-              allergen: true,
-              severity: true,
-            },
-          },
-          conditions: {
-            where: { status: 'ACTIVE' },
-            select: {
-              name: true,
-              icdCode: true,
-            },
-          },
-          assessments: {
-            orderBy: { submittedAt: 'desc' },
-            take: 1,
-            select: {
-              id: true,
-              status: true,
-              urgencyLevel: true,
-              chiefComplaint: true,
-              submittedAt: true,
-            },
-          },
-        },
-        orderBy: [
-          { lastName: 'asc' },
-          { firstName: 'asc' },
-        ],
-        take: parseInt(limit as string),
-        skip: parseInt(offset as string),
-      }),
-      prisma.patient.count({ where }),
-    ]);
-
-    const transformed = patients.map(p => ({
-      id: p.id,
-      mrn: p.mrn,
-      name: `${p.firstName} ${p.lastName}`,
-      firstName: p.firstName,
-      lastName: p.lastName,
-      dateOfBirth: p.dateOfBirth.toISOString().split('T')[0],
-      age: calculateAge(p.dateOfBirth),
-      gender: p.gender,
-      phone: p.phone,
-      email: p.email,
-      address: p.address ? `${p.address}, ${p.city}, ${p.state} ${p.zipCode}` : null,
-      allergies: p.allergies.map(a => a.allergen),
-      allergySeverities: p.allergies.map(a => ({ allergen: a.allergen, severity: a.severity })),
-      conditions: p.conditions.map(c => c.name),
-      latestAssessment: p.assessments[0] || null,
-      hasActiveAssessment: p.assessments[0] && 
-        ['PENDING', 'URGENT', 'IN_REVIEW'].includes(p.assessments[0].status),
-    }));
-
-    return res.status(200).json({
-      patients: transformed,
-      total,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string),
-    });
-  } catch (error) {
-    console.error('API Error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(200).json(patient);
   }
+
+  // Search patients
+  if (search && typeof search === 'string') {
+    const results = searchPatients(search);
+    return res.status(200).json({ 
+      patients: results.map(transformPatient), 
+      total: results.length 
+    });
+  }
+
+  // Get all patients
+  const patients = getAllPatients();
+  return res.status(200).json({ 
+    patients: patients.map(transformPatient), 
+    total: patients.length 
+  });
 }
 
-function calculateAge(dateOfBirth: Date): number {
-  const today = new Date();
-  let age = today.getFullYear() - dateOfBirth.getFullYear();
-  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
-    age--;
-  }
-  return age;
+function transformPatient(p: ReturnType<typeof getAllPatients>[0]) {
+  return {
+    id: p.id,
+    mrn: p.mrn,
+    name: `${p.firstName} ${p.lastName}`,
+    firstName: p.firstName,
+    lastName: p.lastName,
+    dateOfBirth: p.dateOfBirth,
+    age: p.age,
+    gender: p.gender,
+    phone: p.phone,
+    email: p.email,
+    insurancePlan: p.insurancePlan,
+    allergies: p.allergies.map(a => a.allergen),
+    allergySeverities: p.allergies,
+    conditions: p.medicalHistory,
+    medications: p.medications,
+    avatarColor: p.avatarColor,
+    latestAssessment: p.currentAssessment ? {
+      id: p.currentAssessment.id,
+      status: p.currentAssessment.status,
+      urgencyLevel: p.currentAssessment.urgencyLevel,
+      chiefComplaint: p.currentAssessment.chiefComplaint,
+      submittedAt: p.currentAssessment.submittedAt,
+      redFlagCount: p.currentAssessment.redFlags.length,
+    } : null,
+    hasActiveAssessment: p.currentAssessment && p.currentAssessment.status === 'pending',
+  };
 }

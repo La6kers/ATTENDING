@@ -1,8 +1,8 @@
 import { NextPage } from 'next';
-import { InboxLayout } from '@/components/inbox/InboxLayout';
+import { ProviderInbox } from '@/components/inbox/ProviderInbox';
 
 const InboxPage: NextPage = () => {
-  return <InboxLayout />;
+  return <ProviderInbox />;
 };
 
 export default InboxPage;

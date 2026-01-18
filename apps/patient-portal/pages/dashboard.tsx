@@ -23,6 +23,8 @@ import {
   Calendar,
   Bell,
   User,
+  UserPlus,
+  MessageSquare,
 } from 'lucide-react';
 
 // Types
@@ -405,11 +407,25 @@ export default function PatientDashboard() {
                 <p className="text-xs text-gray-500">View your health history</p>
               </button>
             </Link>
+            <Link href="/referrals">
+              <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all">
+                <UserPlus className="w-6 h-6 text-purple-600 mb-2" />
+                <p className="font-medium text-gray-900">My Referrals</p>
+                <p className="text-xs text-gray-500">Track specialist visits</p>
+              </button>
+            </Link>
             <Link href="/profile">
               <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all">
                 <User className="w-6 h-6 text-purple-600 mb-2" />
                 <p className="font-medium text-gray-900">Profile</p>
                 <p className="text-xs text-gray-500">Manage your info</p>
+              </button>
+            </Link>
+            <Link href="/chat">
+              <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all">
+                <MessageSquare className="w-6 h-6 text-purple-600 mb-2" />
+                <p className="font-medium text-gray-900">New Assessment</p>
+                <p className="text-xs text-gray-500">Start a health check</p>
               </button>
             </Link>
           </section>
