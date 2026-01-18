@@ -319,8 +319,8 @@ export const ProviderInbox: React.FC = () => {
         </div>
       </div>
 
-      {/* Action Modal */}
-      {modalState.type && modalState.itemId && (
+      {/* Action Modal - Only for forward/reassign, not complete */}
+      {modalState.type && modalState.type !== 'complete' && modalState.itemId && (
         <ActionModal
           isOpen={true}
           type={modalState.type}
