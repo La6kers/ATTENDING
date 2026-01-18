@@ -15,11 +15,10 @@ import {
   Inbox,
   ScanLine,
 } from 'lucide-react';
-import type { LucideProps } from 'lucide-react';
 import type { CategoryType, CategoryCount } from './types';
 import { categoryConfig, theme } from './theme';
 
-const iconMap: Record<CategoryType, React.ComponentType<LucideProps>> = {
+const iconMap: Record<CategoryType, React.ComponentType<{ className?: string }>> = {
   encounters: Stethoscope,
   phone: Phone,
   charts: FileText,
@@ -152,8 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }}
                     />
                     <IconComponent
-                      className="w-5 h-5"
-                      style={{ color: isActive ? 'white' : theme.purple[400] }}
+                      className={`w-5 h-5 ${isActive ? 'text-white' : 'text-purple-400'}`}
                     />
                     <span className="font-medium">{config.label}</span>
                   </div>

@@ -261,3 +261,68 @@ export function generateMockMessages(count: number = 20): Message[] {
 
   return messages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
+
+// =============================================================================
+// Appointment Data
+// =============================================================================
+
+interface Patient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  mrn: string;
+  age: number;
+  gender: 'Male' | 'Female' | 'Other';
+  avatarColor: string;
+  insurancePlan: string;
+  currentAssessment?: {
+    id: string;
+    urgencyLevel: 'routine' | 'urgent' | 'emergent';
+    chiefComplaint: string;
+    redFlags: string[];
+    status: 'pending' | 'completed';
+  };
+}
+
+interface Appointment {
+  id: string;
+  scheduledAt: Date;
+  duration: number;
+  type: 'Office Visit' | 'Follow-up' | 'Annual Wellness' | 'Urgent' | 'New Patient';
+  status: 'scheduled' | 'checked-in' | 'in-progress' | 'completed' | 'cancelled';
+  reason: string;
+  provider: string;
+  patient: Patient;
+}
+
+const mockPatients: Patient[] = [
+  { id: 'P001', firstName: 'Emily', lastName: 'Chen', mrn: 'MRN-2024-001', age: 49, gender: 'Female', avatarColor: '#7c3aed', insurancePlan: 'Blue Cross PPO', currentAssessment: { id: 'A001', urgencyLevel: 'routine', chiefComplaint: 'Diabetes follow-up', redFlags: [], status: 'completed' } },
+  { id: 'P002', firstName: 'Robert', lastName: 'Martinez', mrn: 'MRN-2024-002', age: 66, gender: 'Male', avatarColor: '#2563eb', insurancePlan: 'Medicare', currentAssessment: { id: 'A002', urgencyLevel: 'urgent', chiefComplaint: 'Chest pain', redFlags: ['History of CAD', 'Chest pain at rest'], status: 'completed' } },
+  { id: 'P003', firstName: 'Sarah', lastName: 'Johnson', mrn: 'MRN-2024-003', age: 34, gender: 'Female', avatarColor: '#db2777', insurancePlan: 'Aetna HMO' },
+  { id: 'P004', firstName: 'Michael', lastName: 'Thompson', mrn: 'MRN-2024-004', age: 32, gender: 'Male', avatarColor: '#059669', insurancePlan: 'United Healthcare' },
+  { id: 'P005', firstName: 'Patricia', lastName: 'Anderson', mrn: 'MRN-2024-005', age: 62, gender: 'Female', avatarColor: '#d97706', insurancePlan: 'Cigna PPO', currentAssessment: { id: 'A003', urgencyLevel: 'routine', chiefComplaint: 'Annual physical', redFlags: [], status: 'pending' } },
+];
+
+const generateTodaysAppointments = (): Appointment[] => {
+  const today = new Date();
+  today.setHours(8, 0, 0, 0);
+  
+  const appointments: Appointment[] = [
+    { id: 'APT001', scheduledAt: new Date(today.getTime()), duration: 30, type: 'Follow-up', status: 'completed', reason: 'Diabetes management', provider: 'Dr. Thomas Reed', patient: mockPatients[0] },
+    { id: 'APT002', scheduledAt: new Date(today.getTime() + 30 * 60000), duration: 30, type: 'Urgent', status: 'in-progress', reason: 'Chest pain evaluation', provider: 'Dr. Thomas Reed', patient: mockPatients[1] },
+    { id: 'APT003', scheduledAt: new Date(today.getTime() + 60 * 60000), duration: 20, type: 'Office Visit', status: 'checked-in', reason: 'Migraine consultation', provider: 'Dr. Thomas Reed', patient: mockPatients[2] },
+    { id: 'APT004', scheduledAt: new Date(today.getTime() + 90 * 60000), duration: 30, type: 'Follow-up', status: 'scheduled', reason: 'Anxiety follow-up', provider: 'Dr. Thomas Reed', patient: mockPatients[3] },
+    { id: 'APT005', scheduledAt: new Date(today.getTime() + 120 * 60000), duration: 45, type: 'Annual Wellness', status: 'scheduled', reason: 'Annual physical', provider: 'Dr. Thomas Reed', patient: mockPatients[4] },
+  ];
+  
+  return appointments;
+};
+
+export function getTodaysAppointments(): Appointment[] {
+  return generateTodaysAppointments();
+}
+
+export function getAppointmentsForDateRange(start: Date, end: Date): Appointment[] {
+  const appointments = generateTodaysAppointments();
+  return appointments.filter(appt => appt.scheduledAt >= start && appt.scheduledAt <= end);
+}
