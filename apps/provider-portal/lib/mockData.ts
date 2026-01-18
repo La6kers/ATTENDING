@@ -1,4 +1,4 @@
-import { Message, MessagePriority, MessageStatus, MessageType, PatientDetails } from '../store/useInbox';
+import { Message, MessagePriority, MessageType, PatientDetails } from '../store/useInbox';
 
 const patientNames = [
   'Emily Chen', 'Robert Martinez', 'Sarah Johnson', 'Michael Thompson', 'Patricia Anderson',
@@ -80,8 +80,8 @@ const symptomReportMessages = [
   `Hi Dr. Reed,\n\nI've been feeling dizzy when I stand up quickly. It started about a week ago. I'm not sure if it's related to my blood pressure medication that was increased last month.\n\nCan you advise? Should I stop taking it?\n\nBest regards`,
 ];
 
-// Refill request messages
-const refillRequestMessages = [
+// Refill request messages (kept for future use)
+const _refillRequestMessages = [
   `Dr. Reed,\n\nI'm running low on my Metformin and need a refill. I have about a week's supply left.\n\nCould you please send a refill to my CVS pharmacy?\n\nThank you!`,
   
   `Hi,\n\nI need refills on my medications:\n- Lisinopril 20mg\n- Atorvastatin 40mg\n\nI use Walgreens on Main Street. I'm also almost out of my blood pressure medication.\n\nThanks!`,
@@ -135,7 +135,7 @@ function generatePatientDetails(index: number): PatientDetails {
 
 function generateMessageContent(type: MessageType, index: number): string {
   switch (type) {
-    case 'email':
+    case 'email': {
       // Rotate through different message types
       if (index % 4 === 0) {
         return labRequestMessages[index % labRequestMessages.length];
@@ -143,20 +143,25 @@ function generateMessageContent(type: MessageType, index: number): string {
         return symptomReportMessages[index % symptomReportMessages.length];
       }
       return labRequestMessages[(index + 2) % labRequestMessages.length];
+    }
     
-    case 'phone':
+    case 'phone': {
       return `Phone message received at ${new Date().toLocaleTimeString()}\n\nPatient called regarding: ${phoneMessages[index % phoneMessages.length]}\n\nPatient requested a callback at their preferred number ending in -${Math.floor(Math.random() * 9000) + 1000}.\n\nUrgency level: ${index % 3 === 0 ? 'High - patient waiting' : 'Normal'}\n\nAdditional notes: Patient ${index % 2 === 0 ? 'needs response today' : 'can wait until tomorrow'}.`;
+    }
     
-    case 'lab':
+    case 'lab': {
       const patientDetails = generatePatientDetails(index);
       return `Lab Results Summary\n\n${labResults[index % labResults.length]}\n\nOrdered by: Dr. Thomas Reed\nCollection Date: ${new Date(Date.now() - 86400000 * 2).toLocaleDateString()}\nReceived: ${new Date().toLocaleDateString()}\n\nPatient: ${patientDetails.name}\nMRN: ${patientDetails.mrn}\n\nKey Findings:\n- ${index % 2 === 0 ? 'Some values outside normal range - review recommended' : 'Most values within normal limits'}\n- ${index % 3 === 0 ? 'Trend improving from previous results' : 'Stable compared to last visit'}\n\nAction Required: ${index % 2 === 0 ? 'Review and contact patient' : 'File in chart, routine follow-up'}`;
+    }
     
-    case 'refill':
+    case 'refill': {
       const patientInfo = generatePatientDetails(index);
       return `Prescription Refill Request\n\nPatient: ${patientInfo.name}\nMRN: ${patientInfo.mrn}\nPharmacy: ${index % 2 === 0 ? 'CVS Pharmacy' : 'Walgreens'} #${Math.floor(Math.random() * 900) + 100}\n\nMedications requested:\n${medications[index % medications.length].map(med => `• ${med}`).join('\n')}\n\nLast filled: ${new Date(Date.now() - 86400000 * 25).toLocaleDateString()}\nRefills remaining: ${Math.floor(Math.random() * 2)}\n\nLast office visit: ${patientInfo.lastVisit}\nActive conditions: ${conditions[index % conditions.length].join(', ')}\n\nPharmacy notes: ${index % 2 === 0 ? 'Patient has been on this medication for 2+ years' : 'Standard refill request'}`;
+    }
     
-    case 'biomistral-assessment':
+    case 'biomistral-assessment': {
       return `BioMistral-7B Clinical Assessment\n\nThis patient completed a pre-visit assessment via COMPASS.\n\nChief Complaint: ${emailSubjects[index % emailSubjects.length]}\n\nSummary: Patient reports ongoing concerns related to their chronic conditions. Vital signs were self-reported as stable.\n\nRecommendation: Review assessment and prepare for upcoming visit.`;
+    }
     
     default:
       return 'Message content';

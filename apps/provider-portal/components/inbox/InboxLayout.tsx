@@ -9,7 +9,7 @@ import { cn } from '@attending/shared/lib/utils';
 
 export const InboxLayout: FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { currentMessage } = useInbox();
+  const { currentMessage: _currentMessage } = useInbox();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-indigo-700 p-2 sm:p-4">

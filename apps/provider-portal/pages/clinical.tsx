@@ -233,7 +233,7 @@ const PrevisitSummaryTab: React.FC<{ patient: PatientContextData }> = ({ patient
 // Labs Tab (Simplified)
 // =============================================================================
 
-const LabsTab: React.FC<{ patient: PatientContextData }> = ({ patient }) => {
+const LabsTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patient }) => {
   const [selectedLabs, setSelectedLabs] = useState<string[]>(['cbc', 'bmp', 'esr']);
 
   const labPanels = [
@@ -326,7 +326,7 @@ const LabsTab: React.FC<{ patient: PatientContextData }> = ({ patient }) => {
 // Imaging Tab (Simplified)
 // =============================================================================
 
-const ImagingTab: React.FC<{ patient: PatientContextData }> = ({ patient }) => {
+const ImagingTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patient }) => {
   const [selectedStudy, setSelectedStudy] = useState<string | null>('ct-head');
 
   const studies = [
@@ -402,7 +402,7 @@ const ImagingTab: React.FC<{ patient: PatientContextData }> = ({ patient }) => {
 // Placeholder Tabs
 // =============================================================================
 
-const MedicationsTab: React.FC<{ patient: PatientContextData }> = ({ patient }) => (
+const MedicationsTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patient }) => (
   <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
     <Pill className="w-12 h-12 text-gray-300 mx-auto mb-4" />
     <h3 className="text-lg font-semibold text-gray-900 mb-2">E-Prescribe Module</h3>
@@ -413,7 +413,7 @@ const MedicationsTab: React.FC<{ patient: PatientContextData }> = ({ patient }) 
   </div>
 );
 
-const ReferralsTab: React.FC<{ patient: PatientContextData }> = ({ patient }) => (
+const ReferralsTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patient }) => (
   <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
     <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
     <h3 className="text-lg font-semibold text-gray-900 mb-2">Specialty Referrals</h3>
@@ -424,7 +424,7 @@ const ReferralsTab: React.FC<{ patient: PatientContextData }> = ({ patient }) =>
   </div>
 );
 
-const TreatmentTab: React.FC<{ patient: PatientContextData }> = ({ patient }) => (
+const TreatmentTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patient }) => (
   <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
     <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
     <h3 className="text-lg font-semibold text-gray-900 mb-2">Treatment Plan</h3>

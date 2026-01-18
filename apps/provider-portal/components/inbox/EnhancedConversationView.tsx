@@ -91,7 +91,7 @@ const analyzeMessageIntent = (content: string): DetectedIntent[] => {
   return intents;
 };
 
-const getPatientContext = (patientId: string): PatientContext => {
+const getPatientContext = (_patientId: string): PatientContext => {
   return {
     recentVisits: [
       { date: 'Oct 15, 2024', reason: 'Diabetes Follow-up', provider: 'Dr. Reed' },

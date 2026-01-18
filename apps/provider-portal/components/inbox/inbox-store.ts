@@ -377,19 +377,23 @@ export const useInboxStore = create<InboxState & InboxActions>()(
           filtered.sort((a, b) => {
             let comparison = 0;
             switch (sortOptions.field) {
-              case 'timestamp':
+              case 'timestamp': {
                 comparison = new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
                 break;
-              case 'priority':
+              }
+              case 'priority': {
                 const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
                 comparison = priorityOrder[a.priority] - priorityOrder[b.priority];
                 break;
-              case 'patientName':
+              }
+              case 'patientName': {
                 comparison = a.patientName.localeCompare(b.patientName);
                 break;
-              case 'status':
+              }
+              case 'status': {
                 comparison = a.status.localeCompare(b.status);
                 break;
+              }
             }
             return sortOptions.direction === 'desc' ? -comparison : comparison;
           });
