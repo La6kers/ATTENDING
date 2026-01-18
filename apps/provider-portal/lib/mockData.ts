@@ -326,3 +326,66 @@ export function getAppointmentsForDateRange(start: Date, end: Date): Appointment
   const appointments = generateTodaysAppointments();
   return appointments.filter(appt => appt.scheduledAt >= start && appt.scheduledAt <= end);
 }
+
+// =============================================================================
+// Assessment Data
+// =============================================================================
+
+export type AssessmentStatus = 'pending' | 'in_progress' | 'completed' | 'reviewed';
+export type UrgencyLevel = 'routine' | 'urgent' | 'emergent';
+
+interface Assessment {
+  id: string;
+  patientId: string;
+  status: AssessmentStatus;
+  urgencyLevel: UrgencyLevel;
+  chiefComplaint: string;
+  redFlags: string[];
+  symptoms: string[];
+  duration: string;
+  createdAt: Date;
+  completedAt?: Date;
+  patient: Patient;
+}
+
+interface PatientFull extends Patient {
+  allergies: string[];
+  medications: string[];
+  medicalHistory: string[];
+}
+
+const mockPatientsFull: PatientFull[] = [
+  { id: 'P001', firstName: 'Emily', lastName: 'Chen', mrn: 'MRN-2024-001', age: 49, gender: 'Female', avatarColor: '#7c3aed', insurancePlan: 'Blue Cross PPO', allergies: ['Penicillin'], medications: ['Metformin 1000mg BID', 'Lisinopril 20mg daily'], medicalHistory: ['Type 2 Diabetes', 'Hypertension'] },
+  { id: 'P002', firstName: 'Robert', lastName: 'Martinez', mrn: 'MRN-2024-002', age: 66, gender: 'Male', avatarColor: '#2563eb', insurancePlan: 'Medicare', allergies: ['Sulfa'], medications: ['Aspirin 81mg daily', 'Metoprolol 50mg BID'], medicalHistory: ['CAD', 'Prior MI', 'Hypertension'] },
+  { id: 'P003', firstName: 'Sarah', lastName: 'Johnson', mrn: 'MRN-2024-003', age: 34, gender: 'Female', avatarColor: '#db2777', insurancePlan: 'Aetna HMO', allergies: [], medications: ['Sumatriptan 100mg PRN'], medicalHistory: ['Migraines'] },
+  { id: 'P004', firstName: 'Michael', lastName: 'Thompson', mrn: 'MRN-2024-004', age: 32, gender: 'Male', avatarColor: '#059669', insurancePlan: 'United Healthcare', allergies: [], medications: ['Sertraline 100mg daily'], medicalHistory: ['GAD', 'Depression'] },
+  { id: 'P005', firstName: 'Patricia', lastName: 'Anderson', mrn: 'MRN-2024-005', age: 62, gender: 'Female', avatarColor: '#d97706', insurancePlan: 'Cigna PPO', allergies: ['NSAIDs'], medications: ['Acetaminophen PRN'], medicalHistory: ['Osteoarthritis', 'CKD Stage 2'] },
+];
+
+const mockAssessments: Assessment[] = [
+  { id: 'A001', patientId: 'P001', status: 'completed', urgencyLevel: 'routine', chiefComplaint: 'Diabetes follow-up', redFlags: [], symptoms: ['Increased thirst', 'Fatigue'], duration: '2 weeks', createdAt: new Date(Date.now() - 86400000), completedAt: new Date(Date.now() - 3600000), patient: mockPatientsFull[0] },
+  { id: 'A002', patientId: 'P002', status: 'completed', urgencyLevel: 'urgent', chiefComplaint: 'Chest pain', redFlags: ['History of CAD', 'Chest pain at rest', 'Diaphoresis'], symptoms: ['Chest pressure', 'Shortness of breath', 'Sweating'], duration: '2 hours', createdAt: new Date(Date.now() - 7200000), completedAt: new Date(Date.now() - 3600000), patient: mockPatientsFull[1] },
+  { id: 'A003', patientId: 'P003', status: 'in_progress', urgencyLevel: 'routine', chiefComplaint: 'Severe headache', redFlags: [], symptoms: ['Throbbing headache', 'Nausea', 'Light sensitivity'], duration: '6 hours', createdAt: new Date(Date.now() - 1800000), patient: mockPatientsFull[2] },
+  { id: 'A004', patientId: 'P004', status: 'pending', urgencyLevel: 'routine', chiefComplaint: 'Anxiety follow-up', redFlags: [], symptoms: ['Worry', 'Sleep difficulty'], duration: 'Ongoing', createdAt: new Date(Date.now() - 900000), patient: mockPatientsFull[3] },
+  { id: 'A005', patientId: 'P005', status: 'reviewed', urgencyLevel: 'routine', chiefComplaint: 'Annual physical', redFlags: [], symptoms: [], duration: 'N/A', createdAt: new Date(Date.now() - 172800000), completedAt: new Date(Date.now() - 86400000), patient: mockPatientsFull[4] },
+];
+
+export function getAllAssessments(): Assessment[] {
+  return mockAssessments;
+}
+
+export function getAssessmentsByStatus(status: AssessmentStatus): Assessment[] {
+  return mockAssessments.filter(a => a.status === status);
+}
+
+export function getAssessmentsByUrgency(urgency: UrgencyLevel): Assessment[] {
+  return mockAssessments.filter(a => a.urgencyLevel === urgency);
+}
+
+export function getUrgentAssessments(): Assessment[] {
+  return mockAssessments.filter(a => a.urgencyLevel === 'urgent' || a.urgencyLevel === 'emergent');
+}
+
+export function getPatientById(patientId: string): PatientFull | undefined {
+  return mockPatientsFull.find(p => p.id === patientId);
+}
