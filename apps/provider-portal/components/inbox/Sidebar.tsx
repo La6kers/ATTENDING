@@ -15,10 +15,11 @@ import {
   Inbox,
   ScanLine,
 } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
 import type { CategoryType, CategoryCount } from './types';
 import { categoryConfig, theme } from './theme';
 
-const iconMap: Record<CategoryType, React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<CategoryType, React.ComponentType<LucideProps>> = {
   encounters: Stethoscope,
   phone: Phone,
   charts: FileText,
