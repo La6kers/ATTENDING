@@ -3,7 +3,7 @@
 // apps/provider-portal/components/inbox/Sidebar.tsx
 // =============================================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Phone,
   FileText,
@@ -41,16 +41,46 @@ const sections: SidebarSection[] = [
 ];
 
 interface SidebarProps {
-  activeCategory: CategoryType;
-  onCategoryChange: (category: CategoryType) => void;
-  counts: Record<CategoryType, CategoryCount>;
+  activeCategory?: CategoryType;
+  onCategoryChange?: (category: CategoryType) => void;
+  counts?: Record<CategoryType, CategoryCount>;
+  onClose?: () => void;
 }
 
+// Default empty counts
+const defaultCounts: Record<CategoryType, CategoryCount> = {
+  encounters: { total: 5, unread: 3, urgent: 1 },
+  phone: { total: 8, unread: 4, urgent: 0 },
+  charts: { total: 12, unread: 2, urgent: 0 },
+  messages: { total: 15, unread: 6, urgent: 2 },
+  refills: { total: 7, unread: 3, urgent: 0 },
+  labs: { total: 10, unread: 5, urgent: 1 },
+  imaging: { total: 4, unread: 2, urgent: 0 },
+  incomplete: { total: 3, unread: 1, urgent: 0 },
+};
+
 export const Sidebar: React.FC<SidebarProps> = ({
-  activeCategory,
+  activeCategory: propActiveCategory = 'encounters',
   onCategoryChange,
-  counts,
+  counts = defaultCounts,
+  onClose,
 }) => {
+  // Use internal state if no external control provided
+  const [internalCategory, setInternalCategory] = useState<CategoryType>(propActiveCategory);
+  const activeCategory = onCategoryChange ? propActiveCategory : internalCategory;
+  
+  const handleCategoryChange = (category: CategoryType) => {
+    if (onCategoryChange) {
+      onCategoryChange(category);
+    } else {
+      setInternalCategory(category);
+    }
+    // Close mobile sidebar after selection
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
     <aside
       className="w-60 text-white flex flex-col flex-shrink-0"
@@ -94,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               return (
                 <button
                   key={categoryId}
-                  onClick={() => onCategoryChange(categoryId)}
+                  onClick={() => handleCategoryChange(categoryId)}
                   className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 text-sm transition-all duration-200"
                   style={{
                     background: isActive ? theme.gradient.primary : 'transparent',
