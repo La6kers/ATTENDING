@@ -107,13 +107,13 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 glass-nav z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo and Brand */}
+          {/* Logo and Brand - ATTENDING AI | Provider Portal on same line with purple background pill */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center gap-3">
               <span className="text-2xl font-bold text-brand-gradient">
                 ATTENDING AI
               </span>
-              <span className="text-sm font-medium text-purple-600 border-l border-gray-300 pl-3">
+              <span className="px-3 py-1 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full shadow-sm">
                 Provider Portal
               </span>
             </Link>
