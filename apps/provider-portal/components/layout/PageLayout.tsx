@@ -2,10 +2,12 @@
 // Standardized page layout wrapper combining all common elements
 // apps/provider-portal/components/layout/PageLayout.tsx
 
-import React, { ReactNode } from 'react';
-import { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import React from 'react';
+import type { LucideIcon } from 'lucide-react';
 import PageHeader, { ModeToggle, FilterToggle } from '../shared/PageHeader';
-import ContextBanner, { PatientInfo, ContextType } from '../shared/ContextBanner';
+import type { PatientInfo, ContextType } from '../shared/ContextBanner';
+import ContextBanner from '../shared/ContextBanner';
 import QuickActionsBar from '../shared/QuickActionsBar';
 import { SimpleCriticalAlert } from '../shared';
 

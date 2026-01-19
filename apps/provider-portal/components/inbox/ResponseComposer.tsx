@@ -1,4 +1,5 @@
-import { FC, useState } from 'react';
+import type { FC} from 'react';
+import { useState } from 'react';
 import { useInbox } from '@/store/useInbox';
 import { Send, Sparkles, Paperclip, Clock } from 'lucide-react';
 import { Button } from '../ui/button';

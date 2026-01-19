@@ -1,7 +1,8 @@
 // Assessment Queue Page - Lists all COMPASS assessments for provider review
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { useAssessmentQueueStore, PatientAssessment } from '@/store/assessmentQueueStore';
+import type { PatientAssessment } from '@/store/assessmentQueueStore';
+import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
 import { 
   Clock, 
   AlertTriangle, 

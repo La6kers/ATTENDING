@@ -8,9 +8,22 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['node_modules', 'dist', '.next'],
+    // FIXED: Only include .test files, exclude .spec files (Playwright E2E)
+    include: [
+      '**/*.test.{ts,tsx}',
+      '**/__tests__/**/*.{ts,tsx}',
+    ],
+    exclude: [
+      'node_modules',
+      'dist',
+      '.next',
+      '**/*.spec.ts',       // Exclude Playwright E2E tests
+      '**/*.spec.tsx',      // Exclude Playwright E2E tests
+      '**/e2e/**',          // Exclude e2e directory
+      '**/playwright/**',   // Exclude playwright directories
+    ],
     setupFiles: ['./vitest.setup.ts'],
+    testTimeout: 10000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -21,6 +34,7 @@ export default defineConfig({
         '**/*.spec.ts',
         '**/*.config.*',
         '.next/',
+        '**/e2e/**',
       ],
     },
   },

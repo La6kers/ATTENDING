@@ -1,22 +1,24 @@
 // ============================================================
 // Enhanced Dashboard with Resizable/Reorderable Cards
-// apps/provider-portal/pages/index.resizable.tsx
+// apps/provider-portal/pages/index.tsx
 //
-// Copy this to index.tsx to enable the resizable grid feature
+// Updated to use @attending/ui-primitives design tokens
 // ============================================================
 
 import React, { useState } from 'react';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
-import { DashboardGrid, DashboardCardConfig } from '../components/dashboard/DashboardGrid';
+import type { DashboardCardConfig } from '../components/dashboard/DashboardGrid';
+import { DashboardGrid } from '../components/dashboard/DashboardGrid';
 import StatCards from '../components/dashboard/StatCards';
 import PatientQueue from '../components/dashboard/PatientQueue';
 import AIInsights from '../components/dashboard/AIInsights';
 import QuickAccess from '../components/dashboard/QuickAccess';
 import RecentAssessments from '../components/dashboard/RecentAssessments';
 import PatientMessaging from '../components/PatientMessaging';
-import { Users, MessageSquare, Video } from 'lucide-react';
+import { Users, MessageSquare, Video, X } from 'lucide-react';
+import { Button, Card, Avatar, cn } from '@attending/ui-primitives';
 
-// Import CSS for react-grid-layout (add to _app.tsx for production)
+// Import CSS for react-grid-layout
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -54,31 +56,33 @@ const statusColors: Record<string, string> = {
 const TeamPanel: React.FC = () => (
   <div className="h-full">
     <div className="flex items-center justify-between mb-4">
-      <span className="text-sm text-gray-500">{teamMembers.filter(m => m.status !== 'offline').length} active</span>
-      <button className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 transition-colors flex items-center gap-2">
-        <Video className="w-4 h-4" />
+      <span className="text-sm text-gray-500">
+        {teamMembers.filter(m => m.status !== 'offline').length} active
+      </span>
+      <Button variant="secondary" size="sm" leftIcon={<Video className="w-4 h-4" />}>
         Team Huddle
-      </button>
+      </Button>
     </div>
     <div className="space-y-2">
       {teamMembers.map(member => (
         <div
           key={member.id}
-          className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-3 p-2 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
         >
           <div className="relative">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium text-xs">
-              {member.initials}
-            </div>
+            <Avatar name={member.name} size="sm" />
             <span
-              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${statusColors[member.status]} rounded-full border-2 border-white`}
+              className={cn(
+                'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white',
+                statusColors[member.status]
+              )}
             />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-900 text-sm">{member.name}</p>
             <p className="text-xs text-gray-500">{member.role}</p>
           </div>
-          <button className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded transition-colors">
+          <button className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
             <MessageSquare className="w-4 h-4" />
           </button>
         </div>
@@ -86,6 +90,43 @@ const TeamPanel: React.FC = () => (
     </div>
   </div>
 );
+
+// ============================================================
+// Status Badge Component
+// ============================================================
+
+interface StatusIndicatorProps {
+  label: string;
+  color: 'green' | 'indigo' | 'purple';
+  pulse?: boolean;
+}
+
+const StatusIndicator: React.FC<StatusIndicatorProps> = ({ label, color, pulse = true }) => {
+  const colorClasses = {
+    green: 'bg-green-100 text-green-800',
+    indigo: 'bg-indigo-100 text-indigo-800',
+    purple: 'bg-purple-100 text-purple-800',
+  };
+  const dotColors = {
+    green: 'bg-green-400',
+    indigo: 'bg-indigo-400',
+    purple: 'bg-purple-400',
+  };
+
+  return (
+    <span className={cn(
+      'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium',
+      colorClasses[color]
+    )}>
+      <span className={cn(
+        'w-2 h-2 rounded-full mr-2',
+        dotColors[color],
+        pulse && 'animate-pulse'
+      )} />
+      {label}
+    </span>
+  );
+};
 
 // ============================================================
 // Dashboard Card Configurations
@@ -154,7 +195,7 @@ const getDashboardCards = (): DashboardCardConfig[] => [
 // Main Dashboard Component
 // ============================================================
 
-export default function ResizableDashboard() {
+export default function ProviderDashboard() {
   const [showTeamPanel, setShowTeamPanel] = useState(false);
   const onlineCount = teamMembers.filter(m => m.status === 'online' || m.status === 'busy').length;
   const cards = getDashboardCards();
@@ -176,17 +217,19 @@ export default function ResizableDashboard() {
                 {/* Team Collaboration Indicator */}
                 <button
                   onClick={() => setShowTeamPanel(!showTeamPanel)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors"
+                  className={cn(
+                    'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium',
+                    'bg-purple-100 text-purple-800 hover:bg-purple-200 transition-colors'
+                  )}
                 >
                   <div className="flex -space-x-2">
                     {teamMembers.slice(0, 3).map(member => (
                       <div
                         key={member.id}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 border-purple-100 ${
-                          member.status === 'online' ? 'bg-green-500 text-white' :
-                          member.status === 'busy' ? 'bg-red-500 text-white' :
-                          'bg-gray-400 text-white'
-                        }`}
+                        className={cn(
+                          'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 border-purple-100 text-white',
+                          statusColors[member.status]
+                        )}
                         title={`${member.name} - ${member.status}`}
                       >
                         {member.initials}
@@ -196,14 +239,8 @@ export default function ResizableDashboard() {
                   <span>{onlineCount} online</span>
                 </button>
 
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                  COMPASS Active
-                </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                  <span className="w-2 h-2 bg-indigo-400 rounded-full mr-2 animate-pulse"></span>
-                  BioMistral-7B
-                </span>
+                <StatusIndicator label="COMPASS Active" color="green" />
+                <StatusIndicator label="BioMistral-7B" color="indigo" />
               </div>
             </div>
           </div>
@@ -212,11 +249,14 @@ export default function ResizableDashboard() {
         {/* Floating Team Panel */}
         {showTeamPanel && (
           <>
-            <div 
-              className="fixed inset-0 z-40"
+            <div
+              className="fixed inset-0 z-40 bg-black/10"
               onClick={() => setShowTeamPanel(false)}
             />
-            <div className="fixed top-20 right-6 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 animate-slide-down">
+            <Card
+              variant="elevated"
+              className="fixed top-20 right-6 w-80 z-50 animate-slide-down"
+            >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                   <Users className="w-5 h-5 text-purple-600" />
@@ -224,13 +264,13 @@ export default function ResizableDashboard() {
                 </h3>
                 <button
                   onClick={() => setShowTeamPanel(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  ×
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               <TeamPanel />
-            </div>
+            </Card>
           </>
         )}
 

@@ -73,7 +73,7 @@ export const LabCatalogBrowser: React.FC<LabCatalogBrowserProps> = ({
       <div className="p-4 border-b bg-gray-50">
         <SearchInput
           value={searchQuery}
-          onChange={onSearchChange}
+          onSearch={onSearchChange}
           placeholder="Search labs by name, code, or description..."
           className="mb-3"
         />

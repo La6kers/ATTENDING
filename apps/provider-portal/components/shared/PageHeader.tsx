@@ -2,8 +2,9 @@
 // Standardized page header matching HTML prototype design
 // apps/provider-portal/components/shared/PageHeader.tsx
 
-import React, { ReactNode } from 'react';
-import { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import React from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 export interface PageHeaderAction {
   label: string;

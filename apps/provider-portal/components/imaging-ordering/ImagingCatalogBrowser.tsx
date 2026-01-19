@@ -96,7 +96,7 @@ export const ImagingCatalogBrowser: React.FC<ImagingCatalogBrowserProps> = ({
       <div className="p-4 border-b bg-gray-50">
         <SearchInput
           value={searchQuery}
-          onChange={onSearchChange}
+          onSearch={onSearchChange}
           placeholder="Search studies by name, body part, or description..."
           className="mb-3"
         />

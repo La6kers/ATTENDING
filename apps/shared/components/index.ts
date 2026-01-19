@@ -28,6 +28,41 @@ export {
   type RedFlag,
 } from './chat';
 
+// Clinical Components - Domain-specific healthcare components
+export {
+  PatientBanner,
+  PriorityBadge,
+  AIBadge,
+  OrderCard,
+  AIRecommendationsPanel,
+  ClinicalFindingCard,
+  OrderSummary,
+  CollapsibleSection,
+  QuickActionsBar,
+  createLabOrderActions,
+  createImagingOrderActions,
+  createMedicationOrderActions,
+  PRIORITY_CONFIG,
+  RECOMMENDATION_CONFIG,
+  type PatientInfo,
+  type PatientVitals,
+  type PatientBannerProps,
+  type PriorityBadgeProps,
+  type AIBadgeProps,
+  type OrderItem,
+  type OrderCardProps,
+  type AIRecommendation,
+  type AIRecommendationsPanelProps,
+  type ClinicalFinding,
+  type ClinicalFindingCardProps,
+  type OrderSummaryProps,
+  type CollapsibleSectionProps,
+  type OrderPriority,
+  type RecommendationCategory,
+  type QuickAction,
+  type QuickActionsBarProps,
+} from './clinical';
+
 // Error Handling Components
 export * from './errors';
 

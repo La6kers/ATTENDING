@@ -1,4 +1,5 @@
-import React, { FC } from 'react';
+import type { FC } from 'react';
+import React from 'react';
 import { useInbox } from '@/store/useInbox';
 import { cn } from '@attending/shared/lib/utils';
 import { Mail, TestTube, Phone, Pill, AlertCircle, Clock } from 'lucide-react';

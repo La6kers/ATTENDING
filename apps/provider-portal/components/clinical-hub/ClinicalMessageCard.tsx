@@ -1,6 +1,7 @@
 import React from 'react';
 import { useClinicalHub } from '@/store/useClinicalHub';
-import { ClinicalMessage, getPriorityClass, getScoreClass, getTypeIcon, checkVitalAbnormal } from '@/lib/clinicalMockData';
+import type { ClinicalMessage} from '@/lib/clinicalMockData';
+import { getPriorityClass, getScoreClass, getTypeIcon, checkVitalAbnormal } from '@/lib/clinicalMockData';
 import { cn } from '@attending/shared/lib/utils';
 
 interface Props {

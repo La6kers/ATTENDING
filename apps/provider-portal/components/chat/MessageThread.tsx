@@ -5,7 +5,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import { AlertTriangle, Check, CheckCheck, Clock } from 'lucide-react';
-import { useProviderChatStore, ChatMessage } from '@/store/providerChatStore';
+import type { ChatMessage } from '@/store/providerChatStore';
+import { useProviderChatStore } from '@/store/providerChatStore';
 import { format, isToday, isYesterday } from 'date-fns';
 
 const MessageThread: React.FC = () => {

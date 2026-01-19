@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
 import { ConversationView } from './ConversationView';
 import { ResponseComposer } from './ResponseComposer';

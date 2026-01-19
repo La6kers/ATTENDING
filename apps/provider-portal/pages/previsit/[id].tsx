@@ -8,7 +8,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { PreVisitSummary, PreVisitData } from '@/components/previsit';
+import type { PreVisitData } from '@/components/previsit';
+import { PreVisitSummary } from '@/components/previsit';
 
 // ============================================================
 // Mock Data - Replace with API call

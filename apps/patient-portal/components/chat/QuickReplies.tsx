@@ -2,7 +2,7 @@
 // apps/patient-portal/components/chat/QuickReplies.tsx
 
 import React from 'react';
-import { QuickReply } from '../../store/useChatStore';
+import type { QuickReply } from '../../store/useChatStore';
 import { ChevronRight } from 'lucide-react';
 
 interface QuickRepliesProps {

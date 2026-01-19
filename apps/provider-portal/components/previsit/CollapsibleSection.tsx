@@ -3,7 +3,8 @@
 // apps/provider-portal/components/previsit/CollapsibleSection.tsx
 // ============================================================
 
-import React, { useState, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Check, Clock } from 'lucide-react';
 
 export interface CollapsibleSectionProps {

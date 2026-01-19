@@ -1,15 +1,51 @@
 // ============================================================
 // UI Components Index - @attending/shared
 // apps/shared/components/ui/index.ts
+//
+// SINGLE ENTRY POINT for all UI components
+// Most components are re-exported from @attending/ui-primitives
+// with additional clinical-specific extensions
 // ============================================================
 
-// Button components
+// ============================================================
+// DESIGN TOKENS (from ui-primitives)
+// ============================================================
+export {
+  colors,
+  gradients,
+  shadows,
+  spacing,
+  typography,
+  borderRadius,
+  transitions,
+  zIndex,
+  breakpoints,
+  priorityConfig,
+  recommendationConfig,
+  urgencyConfig,
+  moduleConfig,
+  designTokens,
+  type OrderPriority,
+  type RecommendationCategory,
+  type UrgencyLevel,
+  type ModuleType,
+} from '@attending/ui-primitives';
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+export { cn } from '@attending/ui-primitives';
+
+// ============================================================
+// BUTTON COMPONENTS
+// ============================================================
 export {
   Button,
   QuickActionButton,
   FloatingActionButton,
   StatusToggle,
   GRADIENTS,
+  // Note: gradients is exported from design tokens above, not duplicated here
   type ButtonProps,
   type QuickActionButtonProps,
   type FloatingActionButtonProps,
@@ -17,9 +53,13 @@ export {
   type StatusValue,
 } from './Button';
 
-// Badge components
+// ============================================================
+// BADGE COMPONENTS
+// ============================================================
 export {
   Badge,
+  PriorityBadge,
+  AIBadge,
   NotificationBadge,
   UrgencyBadge,
   TriageBadge,
@@ -30,7 +70,7 @@ export {
   type BadgeProps,
   type NotificationBadgeProps,
   type UrgencyBadgeProps,
-  type UrgencyLevel,
+  type UrgencyLevel as BadgeUrgencyLevel,
   type TriageBadgeProps,
   type ESILevel,
   type StatusBadgeProps,
@@ -41,7 +81,9 @@ export {
   type AvatarProps,
 } from './Badge';
 
-// Card components
+// ============================================================
+// CARD COMPONENTS
+// ============================================================
 export {
   Card,
   CardHeader,
@@ -51,15 +93,83 @@ export {
   FindingCard,
   DiagnosisCard,
   type CardProps,
-  type CardHeaderProps,
   type ClinicalCardProps,
   type FindingCardProps,
   type FindingStatus,
   type DiagnosisCardProps,
 } from './Card';
 
-// Input component
-export { Input, type InputProps } from './Input';
+// ============================================================
+// MODAL COMPONENTS
+// ============================================================
+export {
+  Modal,
+  EmergencyModal,
+  ConfirmModal,
+  GuidelinesModal,
+  type ModalProps,
+  type EmergencyModalProps,
+  type ConfirmModalProps,
+  type GuidelinesModalProps,
+} from './Modal';
 
-// Spinner component
-export { Spinner, type SpinnerProps } from './Spinner';
+// ============================================================
+// TOAST COMPONENTS
+// ============================================================
+export {
+  ToastProvider,
+  ToastContainer,
+  useToast,
+  useToastActions,
+  type Toast,
+  type ToastType,
+  type ToastContextType,
+} from './Toast';
+
+// ============================================================
+// COLLAPSIBLE COMPONENTS
+// ============================================================
+export {
+  Collapsible,
+  OrderCategoryCollapsible,
+  ClinicalSectionCollapsible,
+  Accordion,
+  AccordionItem,
+  type CollapsibleProps,
+  type OrderCategoryCollapsibleProps,
+  type OrderCategoryPriority,
+  type ClinicalSectionCollapsibleProps,
+  type AccordionProps,
+  type AccordionItemProps,
+} from './Collapsible';
+
+// ============================================================
+// FORM COMPONENTS
+// ============================================================
+export { Input, SearchInput, type InputProps, type SearchInputProps } from './Input';
+
+// ============================================================
+// FEEDBACK COMPONENTS
+// ============================================================
+export { Spinner, LoadingState, type SpinnerProps, type LoadingStateProps } from './Spinner';
+
+// ============================================================
+// ADDITIONAL UI PRIMITIVES (direct re-exports)
+// ============================================================
+export {
+  EmptyState,
+  ConfidenceIndicator,
+  GradientHeader,
+  WarningBanner,
+  FilterTabs,
+  Avatar,
+  PatientBanner,
+  type EmptyStateProps,
+  type ConfidenceIndicatorProps,
+  type GradientHeaderProps,
+  type WarningBannerProps,
+  type FilterTab,
+  type FilterTabsProps,
+  type AvatarProps as PrimitiveAvatarProps,
+  type PatientBannerProps,
+} from '@attending/ui-primitives';

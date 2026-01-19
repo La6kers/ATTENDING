@@ -3,7 +3,7 @@
 // apps/provider-portal/components/inbox/theme.ts
 // =============================================================================
 
-import { CategoryType } from './types';
+import type { CategoryType } from './types';
 
 export const theme = {
   gradient: {

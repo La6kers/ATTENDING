@@ -1,4 +1,4 @@
-import { Message, MessagePriority, MessageType, PatientDetails } from '../store/useInbox';
+import type { Message, MessagePriority, MessageType, PatientDetails } from '../store/useInbox';
 
 const patientNames = [
   'Emily Chen', 'Robert Martinez', 'Sarah Johnson', 'Michael Thompson', 'Patricia Anderson',

@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
 import { AIAssistant } from './AIAssistant';
 import { MedicationAnalysis } from './MedicationAnalysis';

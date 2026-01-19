@@ -5,7 +5,8 @@
 
 import React from 'react';
 import { AlertTriangle, Clock, CheckCircle, User } from 'lucide-react';
-import { useProviderChatStore, ChatConversation } from '@/store/providerChatStore';
+import type { ChatConversation } from '@/store/providerChatStore';
+import { useProviderChatStore } from '@/store/providerChatStore';
 import { formatDistanceToNow } from 'date-fns';
 
 const ConversationList: React.FC = () => {

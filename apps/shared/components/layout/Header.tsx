@@ -62,6 +62,27 @@ export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 // ============================================================
+// PORTAL BADGE COMPONENT (Local to Header)
+// ============================================================
+
+interface PortalBadgeProps {
+  type: 'provider' | 'patient';
+}
+
+const PortalBadge: React.FC<PortalBadgeProps> = ({ type }) => (
+  <span
+    className={cn(
+      'inline-flex items-center px-2.5 py-1 text-sm font-medium rounded-full',
+      type === 'provider'
+        ? 'bg-purple-100 text-purple-700'
+        : 'bg-blue-100 text-blue-700'
+    )}
+  >
+    {type === 'provider' ? 'Provider Portal' : 'Patient Portal'}
+  </span>
+);
+
+// ============================================================
 // HEADER COMPONENT
 // ============================================================
 
@@ -104,13 +125,13 @@ export const Header: React.FC<HeaderProps> = ({
         >
           ATTENDING
         </h1>
-        <ProviderBadge label={portalType === 'provider' ? 'Provider Portal' : 'Patient Portal'} />
+        <PortalBadge type={portalType} />
       </div>
 
       {/* Right Side: Security, Team, Notifications, User */}
       <div className="flex items-center gap-5">
         {/* Security Badge */}
-        {showSecurityBadge && <SecurityBadge />}
+        {showSecurityBadge && <SecurityBadge type="hipaa" />}
 
         {/* Team Presence */}
         {teamViewers.length > 0 && (
@@ -138,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <BellIcon className="w-5 h-5 text-purple-700" />
           {notificationCount > 0 && (
-            <NotificationBadge count={notificationCount} offset={{ top: -4, right: -4 }} />
+            <NotificationBadge count={notificationCount} />
           )}
         </button>
 

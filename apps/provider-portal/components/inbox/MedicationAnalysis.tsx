@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 import { Pill, AlertTriangle, Info } from 'lucide-react';
 
 interface MedicationAnalysisProps {

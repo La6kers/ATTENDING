@@ -4,12 +4,11 @@
 //
 // End-to-end tests for clinical decision support workflows.
 // Uses Playwright for browser automation.
+//
+// FIXED: Uses baseURL from playwright.config.ts instead of hardcoded URL
 // =============================================================================
 
 import { test, expect } from '@playwright/test';
-
-// Configuration
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 // =============================================================================
 // PROVIDER PORTAL E2E TESTS
@@ -17,7 +16,8 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 test.describe('Provider Portal', () => {
   
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL);
+    // Uses baseURL from playwright.config.ts (http://localhost:3002)
+    await page.goto('/');
   });
 
   test.describe('Dashboard', () => {
@@ -38,12 +38,12 @@ test.describe('Provider Portal', () => {
     });
 
     test('should display AI recommendations panel', async ({ page }) => {
-      await page.goto(`${BASE_URL}/labs`);
+      await page.goto('/labs');
       await expect(page.locator('text=AI Recommendations, text=BioMistral, [data-testid="ai-recommendations"]')).toBeVisible({ timeout: 10000 });
     });
 
     test('should allow selecting lab tests', async ({ page }) => {
-      await page.goto(`${BASE_URL}/labs`);
+      await page.goto('/labs');
       
       // Wait for lab catalog to load
       await page.waitForSelector('[data-testid="lab-catalog"], .lab-catalog', { timeout: 10000 });
@@ -61,7 +61,7 @@ test.describe('Provider Portal', () => {
     });
 
     test('should display drug interaction warnings', async ({ page }) => {
-      await page.goto(`${BASE_URL}/medications`);
+      await page.goto('/medications');
       
       // Interaction checker should be visible
       await expect(page.locator('text=Drug Interaction, text=Safety Check, [data-testid="drug-check"]')).toBeVisible({ timeout: 10000 });
@@ -83,7 +83,7 @@ test.describe('Clinical Decision Support', () => {
 
   test.describe('Triage Classification', () => {
     test('should display triage information for patient', async ({ page }) => {
-      await page.goto(`${BASE_URL}/patient-assessment`);
+      await page.goto('/patient-assessment');
       
       // Should show triage/ESI information
       await expect(page.locator('text=Triage, text=ESI, text=Priority, [data-testid="triage-level"]')).toBeVisible({ timeout: 10000 });
@@ -92,7 +92,7 @@ test.describe('Clinical Decision Support', () => {
 
   test.describe('Red Flag Alerts', () => {
     test('should display red flag warnings prominently', async ({ page }) => {
-      await page.goto(`${BASE_URL}/patient-assessment`);
+      await page.goto('/patient-assessment');
       
       // Red flag alerts should be visible if present
       const redFlagAlert = page.locator('[data-testid="red-flag-alert"], .red-flag-alert, .warning-banner');
@@ -105,7 +105,7 @@ test.describe('Clinical Decision Support', () => {
 
   test.describe('Protocol Display', () => {
     test('should show clinical protocols when condition selected', async ({ page }) => {
-      await page.goto(`${BASE_URL}/treatment-plan`);
+      await page.goto('/treatment-plan');
       
       // Protocol information should be accessible
       await expect(page.locator('text=Protocol, text=Guidelines, [data-testid="protocol-panel"]')).toBeVisible({ timeout: 10000 });
@@ -119,7 +119,7 @@ test.describe('Clinical Decision Support', () => {
 test.describe('Accessibility', () => {
   
   test('should have no critical accessibility violations on dashboard', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     
     // Check for basic accessibility features
     await expect(page.locator('main, [role="main"]')).toBeVisible();
@@ -129,7 +129,7 @@ test.describe('Accessibility', () => {
   });
 
   test('should support keyboard navigation', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     
     // Tab through interactive elements
     await page.keyboard.press('Tab');
@@ -140,7 +140,7 @@ test.describe('Accessibility', () => {
   });
 
   test('should have proper heading hierarchy', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     
     // Should have h1 element
     await expect(page.locator('h1')).toBeVisible();
@@ -154,7 +154,7 @@ test.describe('Responsive Design', () => {
   
   test('should display correctly on tablet', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
-    await page.goto(BASE_URL);
+    await page.goto('/');
     
     // Should still show main navigation
     await expect(page.locator('nav, [role="navigation"], .sidebar')).toBeVisible();
@@ -162,7 +162,7 @@ test.describe('Responsive Design', () => {
 
   test('should display correctly on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto(BASE_URL);
+    await page.goto('/');
     
     // Main content should still be visible
     await expect(page.locator('main, [role="main"]')).toBeVisible();
@@ -175,17 +175,17 @@ test.describe('Responsive Design', () => {
 test.describe('Error Handling', () => {
   
   test('should handle 404 gracefully', async ({ page }) => {
-    await page.goto(`${BASE_URL}/nonexistent-page`);
+    await page.goto('/nonexistent-page');
     
     // Should show error page or redirect
     const is404 = await page.locator('text=404, text=Not Found, text=Page not found').count() > 0;
-    const isRedirected = page.url() !== `${BASE_URL}/nonexistent-page`;
+    const isRedirected = !page.url().includes('/nonexistent-page');
     
     expect(is404 || isRedirected).toBeTruthy();
   });
 
   test('should handle API errors gracefully', async ({ page }) => {
-    await page.goto(`${BASE_URL}/labs`);
+    await page.goto('/labs');
     
     // Mock API failure
     await page.route('**/api/clinical/**', route => {
@@ -213,7 +213,7 @@ test.describe('Performance', () => {
   test('should load dashboard within acceptable time', async ({ page }) => {
     const startTime = Date.now();
     
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
     
     const loadTime = Date.now() - startTime;
     
@@ -224,7 +224,7 @@ test.describe('Performance', () => {
   test('should load lab ordering page within acceptable time', async ({ page }) => {
     const startTime = Date.now();
     
-    await page.goto(`${BASE_URL}/labs`, { waitUntil: 'domcontentloaded' });
+    await page.goto('/labs', { waitUntil: 'domcontentloaded' });
     
     const loadTime = Date.now() - startTime;
     

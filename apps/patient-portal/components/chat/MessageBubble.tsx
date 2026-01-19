@@ -2,7 +2,7 @@
 // apps/patient-portal/components/chat/MessageBubble.tsx
 
 import React from 'react';
-import { ChatMessage } from '../../store/useChatStore';
+import type { ChatMessage } from '../../store/useChatStore';
 import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
 interface MessageBubbleProps {

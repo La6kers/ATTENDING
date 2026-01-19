@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { FC, useState } from 'react';
+import type { FC} from 'react';
+import { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { EnhancedMainContent } from './EnhancedMainContent';
 import { Menu, X } from 'lucide-react';

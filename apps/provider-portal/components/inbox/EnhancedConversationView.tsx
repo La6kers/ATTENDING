@@ -26,7 +26,7 @@ import {
   Stethoscope,
   ClipboardList,
 } from 'lucide-react';
-import { Message } from '@/store/useInbox';
+import type { Message } from '@/store/useInbox';
 
 // Types
 interface LabResult {

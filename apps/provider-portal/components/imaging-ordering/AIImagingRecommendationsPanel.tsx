@@ -95,7 +95,7 @@ export const AIImagingRecommendationsPanel: React.FC<AIImagingRecommendationsPan
       {/* Header */}
       <GradientHeader
         module="imaging"
-        icon={Brain}
+        icon={<Brain className="w-5 h-5 text-white" />}
         title="BioMistral AI Imaging Recommendations"
         subtitle={`${indicatedCount} studies recommended based on clinical presentation`}
       />

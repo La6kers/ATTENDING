@@ -1,0 +1,309 @@
+/* ============================================================
+   ATTENDING AI - Unified Design System
+   apps/shared/styles/design-system.css
+   
+   SINGLE SOURCE OF TRUTH for all visual styling across:
+   - Provider Portal (ATTENDING)
+   - Patient Portal (COMPASS)
+   - All clinical modules
+   
+   Consolidated from 10+ HTML prototype files (~8,000+ lines → ~500 lines)
+   ============================================================ */
+
+/* ============================================================
+   CSS VARIABLES - Design Tokens
+   ============================================================ */
+
+:root {
+  /* ========================================
+     BRAND COLORS - ATTENDING AI
+     ======================================== */
+  --brand-primary: #667eea;
+  --brand-secondary: #764ba2;
+  --brand-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #5a6fd6 0%, #6a4292 100%);
+  --brand-gradient-extended: linear-gradient(135deg, #4c51bf 0%, #553c9a 25%, #6b46c1 50%, #7c3aed 75%, #8b5cf6 100%);
+  --brand-gradient-subtle: linear-gradient(135deg, hsl(270 50% 98%) 0%, hsl(280 40% 97%) 50%, hsl(270 45% 96%) 100%);
+  
+  /* Brand alpha variants */
+  --brand-alpha-5: rgba(102, 126, 234, 0.05);
+  --brand-alpha-10: rgba(102, 126, 234, 0.1);
+  --brand-alpha-20: rgba(102, 126, 234, 0.2);
+  --brand-alpha-30: rgba(102, 126, 234, 0.3);
+  
+  /* ========================================
+     CLINICAL STATUS COLORS
+     ======================================== */
+  --status-critical: #ef4444;
+  --status-critical-dark: #dc2626;
+  --status-critical-light: #fef2f2;
+  --status-critical-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  
+  --status-warning: #f59e0b;
+  --status-warning-dark: #d97706;
+  --status-warning-light: #fffbeb;
+  --status-warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  
+  --status-success: #22c55e;
+  --status-success-dark: #16a34a;
+  --status-success-light: #f0fdf4;
+  --status-success-gradient: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  
+  --status-info: #3b82f6;
+  --status-info-dark: #2563eb;
+  --status-info-light: #eff6ff;
+  --status-info-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  
+  /* Order Priority Colors */
+  --priority-stat: #f97316;
+  --priority-stat-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  --priority-urgent: #f59e0b;
+  --priority-asap: #eab308;
+  --priority-routine: #6b7280;
+  
+  /* ========================================
+     NEUTRAL PALETTE
+     ======================================== */
+  --neutral-0: #ffffff;
+  --neutral-50: #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1e293b;
+  --neutral-900: #0f172a;
+  
+  /* ========================================
+     TYPOGRAPHY
+     ======================================== */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  
+  /* ========================================
+     SPACING
+     ======================================== */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  
+  /* Legacy aliases */
+  --space-xs: var(--space-1);
+  --space-sm: var(--space-2);
+  --space-md: var(--space-4);
+  --space-lg: var(--space-6);
+  --space-xl: var(--space-8);
+  --space-2xl: var(--space-12);
+  
+  /* ========================================
+     BORDER RADIUS
+     ======================================== */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+  
+  /* ========================================
+     SHADOWS
+     ======================================== */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+  
+  --shadow-brand: 0 4px 14px rgba(102, 126, 234, 0.25);
+  --shadow-brand-hover: 0 8px 20px rgba(102, 126, 234, 0.35);
+  --shadow-critical: 0 4px 14px rgba(239, 68, 68, 0.25);
+  
+  /* ========================================
+     TRANSITIONS
+     ======================================== */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+  
+  /* ========================================
+     Z-INDEX SCALE
+     ======================================== */
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-popover: 60;
+  --z-tooltip: 70;
+  --z-toast: 80;
+  --z-emergency: 100;
+  
+  /* ========================================
+     GLASS MORPHISM
+     ======================================== */
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-bg-light: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(139, 92, 246, 0.1);
+  --glass-blur: blur(10px);
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseCritical {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+@keyframes pulseBrand {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(102, 126, 234, 0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in { animation: fadeIn var(--transition-base); }
+.animate-slide-up { animation: slideUp var(--transition-slow); }
+.animate-slide-down { animation: slideDown var(--transition-slow); }
+.animate-scale-in { animation: scaleIn var(--transition-base); }
+.animate-pulse-critical { animation: pulseCritical 1.5s infinite; }
+.animate-pulse-brand { animation: pulseBrand 2s infinite; }
+.animate-spin { animation: spin 1s linear infinite; }
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--neutral-100) 25%, var(--neutral-200) 50%, var(--neutral-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ============================================================
+   GLASS MORPHISM UTILITIES
+   ============================================================ */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================================
+   CLINICAL STATUS UTILITIES
+   ============================================================ */
+
+.priority-stat {
+  background: var(--status-critical-light);
+  color: var(--status-critical);
+  border: 1px solid var(--status-critical);
+}
+
+.priority-urgent {
+  background: var(--status-warning-light);
+  color: var(--status-warning-dark);
+  border: 1px solid var(--status-warning);
+}
+
+.priority-routine {
+  background: var(--neutral-100);
+  color: var(--neutral-600);
+  border: 1px solid var(--neutral-300);
+}
+
+.alert-critical {
+  background: linear-gradient(135deg, var(--status-critical-light) 0%, #fee2e2 100%);
+  border: 2px solid var(--status-critical);
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, var(--status-warning-light) 0%, #fef3c7 100%);
+  border: 2px solid var(--status-warning);
+}
+
+.alert-success {
+  background: linear-gradient(135deg, var(--status-success-light) 0%, #dcfce7 100%);
+  border: 2px solid var(--status-success);
+}
+
+.alert-info {
+  background: linear-gradient(135deg, var(--status-info-light) 0%, #dbeafe 100%);
+  border: 2px solid var(--status-info);
+}
+
+/* ============================================================
+   CARD UTILITIES
+   ============================================================ */
+
+.card-clinical {
+  background: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--neutral-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-clinical.critical {
+  border-left: 4px solid var(--status-critical);
+  animation: pulseCritical 1.5s ease-in-out infinite;
+}
+
+.card-clinical.warning {
+  border-left: 4px solid var(--status-warning);
+}

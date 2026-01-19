@@ -1,5 +1,7 @@
 // Referrals Page
 // apps/provider-portal/pages/referrals.tsx
+//
+// Updated to use @attending/ui-primitives design tokens
 
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
@@ -17,6 +19,7 @@ import { QuickActionsBar, SimpleCriticalAlert, useToast } from '@/components/sha
 import { ReferralOrderingPanel } from '@/components/referral-ordering';
 import type { PatientContext as StorePatientContext } from '@/store/referralOrderingStore';
 import type { PatientContext as PanelPatientContext } from '@/components/referral-ordering/types';
+import { Button, Card, Badge, cn, gradients } from '@attending/ui-primitives';
 
 // Mock patient context - in production, this would come from the assessment or patient selection
 const getMockPatientContext = (patientId?: string): StorePatientContext => ({
@@ -99,12 +102,12 @@ export default function ReferralsPage() {
 
       <div className="min-h-screen">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="text-white" style={{ background: gradients.referrals }}>
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="flex items-center gap-4 mb-4">
               <button 
                 onClick={() => router.back()}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-xl transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -113,28 +116,28 @@ export default function ReferralsPage() {
                   <UserPlus className="w-7 h-7" />
                   Specialty Referrals
                 </h1>
-                <p className="text-purple-200 mt-1">
+                <p className="text-white/80 mt-1">
                   Order and manage specialist referrals
                 </p>
               </div>
             </div>
 
             {/* Patient Banner */}
-            <div className="bg-white/10 rounded-xl p-4 mt-4">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mt-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-lg">{patientContext.name}</p>
-                  <p className="text-purple-200 text-sm">
+                  <p className="text-white/80 text-sm">
                     {patientContext.age}yo {patientContext.gender} | MRN: {patientContext.mrn}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-purple-200">Insurance</p>
+                  <p className="text-sm text-white/80">Insurance</p>
                   <p className="font-medium">{patientContext.insurancePlan}</p>
                 </div>
               </div>
               {patientContext.redFlags.length > 0 && (
-                <div className="mt-3 flex items-center gap-2 bg-red-500/20 rounded-lg px-3 py-2">
+                <div className="mt-3 flex items-center gap-2 bg-red-500/20 rounded-xl px-3 py-2">
                   <AlertTriangle className="w-4 h-4 text-red-200" />
                   <span className="text-sm text-red-100">
                     Red Flags: {patientContext.redFlags.join(', ')}
@@ -188,18 +191,17 @@ export default function ReferralsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
+                    className={cn(
+                      'flex items-center gap-2 px-4 py-3 border-b-2 transition-colors',
                       activeTab === tab.id
                         ? 'border-purple-600 text-purple-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    )}
                   >
                     <Icon className="w-4 h-4" />
                     {tab.label}
                     {tab.count !== undefined && tab.count > 0 && (
-                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">
-                        {tab.count}
-                      </span>
+                      <Badge variant="primary" size="sm">{tab.count}</Badge>
                     )}
                   </button>
                 );
@@ -221,38 +223,39 @@ export default function ReferralsPage() {
           {activeTab === 'pending' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Pending Referrals</h2>
-                <button className="flex items-center gap-2 text-sm text-gray-600">
-                  <Filter className="w-4 h-4" />
+                <h2 className="text-lg font-semibold text-gray-900">Pending Referrals</h2>
+                <Button variant="ghost" size="sm" leftIcon={<Filter className="w-4 h-4" />}>
                   Filter
-                </button>
+                </Button>
               </div>
               
               {loading ? (
                 <div className="text-center py-8 text-gray-500">Loading...</div>
               ) : pendingReferrals.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl border">
+                <Card variant="bordered" className="text-center py-12">
                   <Clock className="w-12 h-12 mx-auto text-gray-400 mb-3" />
                   <p className="text-gray-500">No pending referrals</p>
-                </div>
+                </Card>
               ) : (
                 <div className="space-y-3">
                   {pendingReferrals.map(ref => (
-                    <div key={ref.id} className="bg-white rounded-xl border p-4">
+                    <Card key={ref.id} variant="default" hoverable>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">{ref.specialtyName}</p>
+                          <p className="font-medium text-gray-900">{ref.specialtyName}</p>
                           <p className="text-sm text-gray-500">{ref.clinicalQuestion}</p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          ref.urgency === 'STAT' ? 'bg-red-100 text-red-700' :
-                          ref.urgency === 'URGENT' ? 'bg-orange-100 text-orange-700' :
-                          'bg-blue-100 text-blue-700'
-                        }`}>
+                        <Badge
+                          variant={
+                            ref.urgency === 'STAT' ? 'danger' :
+                            ref.urgency === 'URGENT' ? 'warning' : 'info'
+                          }
+                          size="md"
+                        >
                           {ref.urgency}
-                        </span>
+                        </Badge>
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
               )}
@@ -260,10 +263,10 @@ export default function ReferralsPage() {
           )}
 
           {activeTab === 'history' && (
-            <div className="text-center py-12 bg-white rounded-xl border">
+            <Card variant="bordered" className="text-center py-12">
               <CheckCircle className="w-12 h-12 mx-auto text-gray-400 mb-3" />
               <p className="text-gray-500">Referral history will appear here</p>
-            </div>
+            </Card>
           )}
         </div>
       </div>

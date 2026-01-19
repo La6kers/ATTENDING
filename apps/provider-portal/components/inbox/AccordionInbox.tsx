@@ -28,7 +28,8 @@ import {
   CheckCircle,
   Activity,
 } from 'lucide-react';
-import { Message, useInbox } from '@/store/useInbox';
+import type { Message} from '@/store/useInbox';
+import { useInbox } from '@/store/useInbox';
 
 // =============================================================================
 // Types

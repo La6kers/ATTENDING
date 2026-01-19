@@ -39,20 +39,34 @@
     "db:studio": "npx prisma studio --schema=prisma/schema.prisma",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:reset": "npx prisma migrate reset --force --schema=prisma/schema.prisma",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "cd apps/provider-portal && npx playwright test",
+    "test:e2e:ui": "cd apps/provider-portal && npx playwright test --ui",
+    "test:all": "npm run test:run && npm run test:e2e",
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "typecheck:all": "npm run typecheck --workspaces --if-present",
     "start:provider": "npm run start --workspace=apps/provider-portal",
     "start:patient": "npm run start --workspace=apps/patient-portal"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
+    "@typescript-eslint/parser": "^8.53.0",
+    "@vitejs/plugin-react": "^5.1.2",
     "concurrently": "^8.2.0",
-    "rimraf": "^5.0.0",
-    "turbo": "^2.0.0",
-    "typescript": "^5.3.3",
+    "jsdom": "^27.4.0",
     "prisma": "^5.0.0",
+    "rimraf": "^5.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
-    "@types/node": "^20.10.0"
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.17"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0"

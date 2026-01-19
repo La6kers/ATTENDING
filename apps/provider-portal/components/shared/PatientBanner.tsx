@@ -1,6 +1,8 @@
 // PatientBanner.tsx
-// Unified patient context banner for all ordering pages - HTML Prototype Style
+// Unified patient context banner for all ordering pages
 // apps/provider-portal/components/shared/PatientBanner.tsx
+//
+// Updated to use @attending/ui-primitives design tokens
 
 import React from 'react';
 import Link from 'next/link';
@@ -11,6 +13,7 @@ import {
   ChevronDown,
   Activity,
 } from 'lucide-react';
+import { gradients, cn } from '@attending/ui-primitives';
 
 export interface PatientContext {
   id: string;
@@ -42,18 +45,19 @@ export interface PatientBannerProps {
   className?: string;
 }
 
-const accentBorders = {
+// Use gradients from ui-primitives
+const accentGradients: Record<string, string> = {
+  purple: gradients.brand,
+  blue: gradients.labs,
+  green: gradients.referrals,
+  indigo: gradients.imaging,
+};
+
+const accentBorders: Record<string, string> = {
   purple: 'border-l-purple-500',
   blue: 'border-l-blue-500',
   green: 'border-l-green-500',
   indigo: 'border-l-indigo-500',
-};
-
-const avatarGradients = {
-  purple: 'from-purple-500 to-indigo-600',
-  blue: 'from-blue-500 to-indigo-600',
-  green: 'from-green-500 to-teal-600',
-  indigo: 'from-indigo-500 to-purple-600',
 };
 
 const PatientBanner: React.FC<PatientBannerProps> = ({
@@ -76,7 +80,7 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
 
   const hasRedFlags = showRedFlags && patient.redFlags && patient.redFlags.length > 0;
 
-  // Build assessment link - the main patient view that exists
+  // Build assessment link
   const getAssessmentLink = () => {
     if (patient.assessmentId) {
       return `/assessments/${patient.assessmentId}`;
@@ -86,25 +90,30 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
 
   return (
     <div
-      className={`patient-bar border-l-4 ${accentBorders[accentColor]} ${
-        hasRedFlags ? 'animate-pulse-banner' : ''
-      } ${className}`}
+      className={cn(
+        // Base styles using design tokens pattern
+        'rounded-2xl p-5 shadow-md border-l-4',
+        'bg-gradient-to-r from-white to-gray-50',
+        'animate-slide-down',
+        accentBorders[accentColor],
+        hasRedFlags && 'animate-pulse-banner',
+        className
+      )}
     >
       {/* Patient Info Section */}
-      <div className="flex items-center gap-4 flex-1 min-w-0">
-        {/* Avatar - HTML prototype style */}
+      <div className="flex items-center gap-4 flex-1 min-w-0 flex-wrap md:flex-nowrap">
+        {/* Avatar */}
         <div
-          className={`patient-avatar bg-gradient-to-br ${avatarGradients[accentColor]}`}
+          className="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0"
+          style={{ background: accentGradients[accentColor] }}
         >
           {initials}
         </div>
 
         {/* Details */}
         <div className="flex-1 min-w-0">
-          <div className="patient-details">
-            <h2>{patient.name}</h2>
-          </div>
-          <div className="patient-meta flex items-center flex-wrap gap-2">
+          <h2 className="text-xl font-semibold text-gray-900">{patient.name}</h2>
+          <div className="flex items-center flex-wrap gap-2 text-sm text-gray-500 mt-0.5">
             <span>{patient.age} y/o {patient.gender}</span>
             <span>•</span>
             <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">
@@ -121,14 +130,14 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
           </div>
 
           {/* Chief Complaint */}
-          <p className="text-sm text-gray-700 mt-1">
+          <p className="text-sm text-gray-700 mt-1.5">
             <strong className="text-gray-500">Chief Complaint:</strong>{' '}
             &ldquo;{patient.chiefComplaint}&rdquo;
           </p>
 
-          {/* Red Flags - HTML prototype style */}
+          {/* Red Flags */}
           {hasRedFlags && (
-            <div className="flex items-center gap-2 mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2 mt-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 animate-critical-pulse">
               <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
               <span className="text-sm text-red-700 font-medium">
                 Red Flags: {patient.redFlags!.join(' • ')}
@@ -140,26 +149,25 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
           {showSafetyInfo && (
             <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-600">
               {patient.weight && (
-                <span className="bg-gray-50 px-2 py-1 rounded">
+                <span className="bg-gray-100 px-2 py-1 rounded-lg">
                   Weight: {patient.weight} kg
                 </span>
               )}
               {patient.creatinine && (
-                <span className="bg-gray-50 px-2 py-1 rounded">
+                <span className="bg-gray-100 px-2 py-1 rounded-lg">
                   Creatinine: {patient.creatinine} mg/dL
                 </span>
               )}
               {patient.gfr && (
-                <span className={`px-2 py-1 rounded ${
-                  patient.gfr < 30 
-                    ? 'bg-red-50 text-red-700 font-medium' 
-                    : 'bg-gray-50'
-                }`}>
+                <span className={cn(
+                  'px-2 py-1 rounded-lg',
+                  patient.gfr < 30 ? 'bg-red-100 text-red-700 font-medium' : 'bg-gray-100'
+                )}>
                   GFR: {patient.gfr}
                 </span>
               )}
               {patient.allergies && patient.allergies.length > 0 && (
-                <span className="bg-amber-50 text-amber-700 px-2 py-1 rounded">
+                <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-lg">
                   ⚠️ Allergies: {patient.allergies.join(', ')}
                 </span>
               )}
@@ -168,17 +176,19 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
         </div>
       </div>
 
-      {/* Action Buttons - HTML prototype style */}
+      {/* Action Buttons */}
       {showActions && (
-        <div className="patient-action-buttons flex items-center gap-2 flex-shrink-0">
-          {/* View Assessment - Links to actual assessments page */}
+        <div className="flex items-center gap-2 flex-shrink-0 mt-4 md:mt-0">
+          {/* View Assessment */}
           <Link
             href={getAssessmentLink()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
-                       text-gray-700 bg-white border-2 border-gray-200 rounded-lg 
-                       hover:border-purple-400 hover:bg-purple-50 
-                       hover:-translate-y-0.5 hover:shadow-md
-                       transition-all duration-200"
+            className={cn(
+              'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium',
+              'text-gray-700 bg-white border-2 border-gray-200 rounded-xl',
+              'hover:border-purple-400 hover:bg-purple-50',
+              'hover:-translate-y-0.5 hover:shadow-md',
+              'transition-all duration-200'
+            )}
           >
             <FileText className="w-4 h-4" />
             <span className="hidden md:inline">View Assessment</span>
@@ -187,11 +197,13 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
           {onToggleAll && (
             <button
               onClick={onToggleAll}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
-                         text-gray-700 bg-white border-2 border-gray-200 rounded-lg 
-                         hover:border-purple-400 hover:bg-purple-50 
-                         hover:-translate-y-0.5 hover:shadow-md
-                         transition-all duration-200"
+              className={cn(
+                'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium',
+                'text-gray-700 bg-white border-2 border-gray-200 rounded-xl',
+                'hover:border-purple-400 hover:bg-purple-50',
+                'hover:-translate-y-0.5 hover:shadow-md',
+                'transition-all duration-200'
+              )}
             >
               {allCollapsed ? (
                 <>
@@ -207,13 +219,16 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
             </button>
           )}
 
-          {/* Treatment Plan - Links to actual treatment-plans page */}
+          {/* Treatment Plan */}
           <Link
             href={`/treatment-plans?patientId=${patient.id}`}
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
-                       text-white bg-gradient-to-r from-purple-600 to-indigo-600 
-                       rounded-lg hover:-translate-y-0.5 hover:shadow-lg
-                       transition-all duration-200"
+            className={cn(
+              'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium',
+              'text-white rounded-xl',
+              'hover:-translate-y-0.5 hover:shadow-lg',
+              'transition-all duration-200'
+            )}
+            style={{ background: gradients.brand }}
           >
             <Activity className="w-4 h-4" />
             <span className="hidden md:inline">Treatment Plan</span>

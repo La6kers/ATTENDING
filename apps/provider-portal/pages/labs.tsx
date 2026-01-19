@@ -2,7 +2,7 @@
 // Labs Page - Refactored to use labOrderingStore
 // pages/labs.tsx
 //
-// Full integration with Zustand store and modular components
+// Updated to use @attending/ui-primitives design tokens
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
@@ -31,6 +31,7 @@ import {
   TrendingUp,
   CheckCircle,
 } from 'lucide-react';
+import { Button, Card, Badge, cn, gradients } from '@attending/ui-primitives';
 
 // Sample patient context - in production this would come from assessment selection
 const DEMO_PATIENT_CONTEXT = {
@@ -48,6 +49,40 @@ const DEMO_PATIENT_CONTEXT = {
 
 type ViewMode = 'order' | 'results';
 type OrderTab = 'ai' | 'panels' | 'catalog';
+
+// ============================================================
+// Stat Card Component (reusable)
+// ============================================================
+
+interface StatCardProps {
+  label: string;
+  value: number | string;
+  color: 'yellow' | 'red' | 'orange' | 'green';
+  icon: React.ReactNode;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ label, value, color, icon }) => {
+  const colorStyles = {
+    yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
+    red: { bg: 'bg-red-100', text: 'text-red-600' },
+    orange: { bg: 'bg-orange-100', text: 'text-orange-600' },
+    green: { bg: 'bg-green-100', text: 'text-green-600' },
+  };
+
+  return (
+    <Card variant="default" className="p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-600">{label}</p>
+          <p className={cn('text-2xl font-bold mt-1', colorStyles[color].text)}>{value}</p>
+        </div>
+        <div className={cn('p-3 rounded-xl', colorStyles[color].bg)}>
+          {icon}
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 export default function Labs() {
   const [viewMode, setViewMode] = useState<ViewMode>('order');
@@ -152,9 +187,12 @@ export default function Labs() {
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ background: gradients.labs }}
+                >
                   <TestTube className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -169,35 +207,37 @@ export default function Labs() {
 
               <div className="flex items-center gap-3">
                 {/* Cost Toggle */}
-                <label className="flex items-center gap-2 text-sm text-gray-600">
+                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={showCosts}
                     onChange={(e) => setShowCosts(e.target.checked)}
-                    className="rounded text-indigo-600 focus:ring-indigo-500"
+                    className="rounded text-purple-600 focus:ring-purple-500"
                   />
                   Show Costs
                 </label>
 
                 {/* View Mode Toggle */}
-                <div className="flex rounded-lg border border-gray-300 p-1">
+                <div className="flex rounded-xl border border-gray-200 p-1 bg-gray-50">
                   <button
                     onClick={() => setViewMode('order')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={cn(
+                      'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
                       viewMode === 'order'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                        ? 'bg-white text-purple-700 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    )}
                   >
                     Order Labs
                   </button>
                   <button
                     onClick={() => setViewMode('results')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={cn(
+                      'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
                       viewMode === 'results'
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                        ? 'bg-white text-purple-700 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    )}
                   >
                     View Results
                   </button>
@@ -259,55 +299,54 @@ export default function Labs() {
                 )}
 
                 {/* Tab Navigation */}
-                <div className="bg-white rounded-lg shadow-sm">
-                  <div className="border-b">
+                <Card variant="default" noPadding>
+                  <div className="border-b border-gray-200">
                     <div className="flex">
                       <button
                         onClick={() => setActiveTab('ai')}
-                        className={`flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors ${
+                        className={cn(
+                          'flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors',
                           activeTab === 'ai'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+                            ? 'border-purple-600 text-purple-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        )}
                       >
                         <Brain className="w-4 h-4" />
                         AI Recommendations
                         {aiRecommendations.length > 0 && (
-                          <span className="bg-indigo-100 text-indigo-700 text-xs px-2 py-0.5 rounded-full">
-                            {aiRecommendations.length}
-                          </span>
+                          <Badge variant="primary" size="sm">{aiRecommendations.length}</Badge>
                         )}
                       </button>
                       <button
                         onClick={() => setActiveTab('panels')}
-                        className={`flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors ${
+                        className={cn(
+                          'flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors',
                           activeTab === 'panels'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+                            ? 'border-purple-600 text-purple-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        )}
                       >
                         <Package className="w-4 h-4" />
                         Lab Panels
                       </button>
                       <button
                         onClick={() => setActiveTab('catalog')}
-                        className={`flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors ${
+                        className={cn(
+                          'flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors',
                           activeTab === 'catalog'
-                            ? 'border-indigo-600 text-indigo-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
+                            ? 'border-purple-600 text-purple-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        )}
                       >
                         <Search className="w-4 h-4" />
                         Full Catalog
-                        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">
-                          {Object.keys(LAB_CATALOG).length}
-                        </span>
+                        <Badge variant="default" size="sm">{Object.keys(LAB_CATALOG).length}</Badge>
                       </button>
                     </div>
                   </div>
 
                   {/* Tab Content */}
-                  <div className="p-0">
+                  <div>
                     {activeTab === 'ai' && (
                       <AIRecommendationsPanel
                         recommendations={aiRecommendations}
@@ -341,7 +380,7 @@ export default function Labs() {
                       />
                     )}
                   </div>
-                </div>
+                </Card>
               </div>
 
               {/* Right Column - Order Summary */}
@@ -374,7 +413,7 @@ export default function Labs() {
 }
 
 // ============================================================
-// Lab Results View Component (kept inline for simplicity)
+// Lab Results View Component
 // ============================================================
 
 function LabResultsView() {
@@ -382,85 +421,64 @@ function LabResultsView() {
     <>
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Results</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">12</p>
-            </div>
-            <div className="bg-yellow-100 p-3 rounded-lg">
-              <TestTube className="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Critical Values</p>
-              <p className="text-2xl font-bold text-red-600 mt-1">3</p>
-            </div>
-            <div className="bg-red-100 p-3 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-red-600" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Abnormal Results</p>
-              <p className="text-2xl font-bold text-orange-600 mt-1">8</p>
-            </div>
-            <div className="bg-orange-100 p-3 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Today's Results</p>
-              <p className="text-2xl font-bold text-green-600 mt-1">24</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
+        <StatCard
+          label="Pending Results"
+          value={12}
+          color="yellow"
+          icon={<TestTube className="w-6 h-6 text-yellow-600" />}
+        />
+        <StatCard
+          label="Critical Values"
+          value={3}
+          color="red"
+          icon={<AlertTriangle className="w-6 h-6 text-red-600" />}
+        />
+        <StatCard
+          label="Abnormal Results"
+          value={8}
+          color="orange"
+          icon={<TrendingUp className="w-6 h-6 text-orange-600" />}
+        />
+        <StatCard
+          label="Today's Results"
+          value={24}
+          color="green"
+          icon={<CheckCircle className="w-6 h-6 text-green-600" />}
+        />
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+      <Card variant="default" className="mb-6">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Search className="w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search labs..."
-              className="border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500"
+              className="border-gray-300 rounded-xl text-sm focus:ring-purple-500 focus:border-purple-500 px-4 py-2"
             />
           </div>
-          <select className="border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
+          <select className="border-gray-300 rounded-xl text-sm focus:ring-purple-500 focus:border-purple-500 px-4 py-2">
             <option>All Tests</option>
             <option>Chemistry</option>
             <option>Hematology</option>
             <option>Microbiology</option>
             <option>Immunology</option>
           </select>
-          <select className="border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500">
+          <select className="border-gray-300 rounded-xl text-sm focus:ring-purple-500 focus:border-purple-500 px-4 py-2">
             <option>All Results</option>
             <option>Critical Only</option>
             <option>Abnormal Only</option>
             <option>Normal</option>
           </select>
-          <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-            <Filter className="w-4 h-4 mr-2" />
+          <Button variant="outline" size="sm" leftIcon={<Filter className="w-4 h-4" />}>
             More Filters
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Results Table */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+      <Card variant="default" noPadding className="overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -509,15 +527,13 @@ function LabResultsView() {
                 <div className="text-sm text-gray-900">Today, 3:45 PM</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                  Critical High
-                </span>
+                <Badge variant="danger" size="sm">Critical High</Badge>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+                <button className="text-purple-600 hover:text-purple-900 mr-3 p-1 rounded hover:bg-purple-50">
                   <Eye className="w-4 h-4" />
                 </button>
-                <button className="text-gray-600 hover:text-gray-900">
+                <button className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
                   <Download className="w-4 h-4" />
                 </button>
               </td>
@@ -544,15 +560,13 @@ function LabResultsView() {
                 <div className="text-sm text-gray-900">Today, 2:15 PM</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
-                  Abnormal High
-                </span>
+                <Badge variant="warning" size="sm">Abnormal High</Badge>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+                <button className="text-purple-600 hover:text-purple-900 mr-3 p-1 rounded hover:bg-purple-50">
                   <Eye className="w-4 h-4" />
                 </button>
-                <button className="text-gray-600 hover:text-gray-900">
+                <button className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
                   <Download className="w-4 h-4" />
                 </button>
               </td>
@@ -579,22 +593,20 @@ function LabResultsView() {
                 <div className="text-sm text-gray-900">Today, 11:30 AM</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                  Normal
-                </span>
+                <Badge variant="success" size="sm">Normal</Badge>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+                <button className="text-purple-600 hover:text-purple-900 mr-3 p-1 rounded hover:bg-purple-50">
                   <Eye className="w-4 h-4" />
                 </button>
-                <button className="text-gray-600 hover:text-gray-900">
+                <button className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
                   <Download className="w-4 h-4" />
                 </button>
               </td>
             </tr>
           </tbody>
         </table>
-      </div>
+      </Card>
     </>
   );
 }

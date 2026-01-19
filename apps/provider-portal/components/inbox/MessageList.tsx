@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { FC, useMemo, useEffect } from 'react';
+import type { FC} from 'react';
+import { useMemo, useEffect } from 'react';
 import { useInbox } from '../../store/useInbox';
 import type { Message } from '../../store/useInbox';
 import { cn } from '@attending/shared/lib/utils';

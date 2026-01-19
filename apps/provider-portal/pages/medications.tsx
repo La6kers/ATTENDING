@@ -2,7 +2,7 @@
 // Medications Page - Refactored to use Zustand Store
 // pages/medications.tsx
 //
-// Provider portal medication ordering with AI recommendations
+// Updated to use @attending/ui-primitives design tokens
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
@@ -21,7 +21,8 @@ import {
   type PrescriptionPriority,
   type DrugAllergy,
 } from '../store/medicationOrderingStore';
-import { User, Building2, Phone, Clock, MapPin } from 'lucide-react';
+import { User, Building2, Phone, Clock, MapPin, Printer, FileText } from 'lucide-react';
+import { Button, Card, Badge, Avatar, gradients } from '@attending/ui-primitives';
 
 // Sample patient context - in production, this would come from patient selection
 const samplePatientContext: PatientContext = {
@@ -150,46 +151,43 @@ export default function MedicationsPage() {
       <div className="min-h-screen">
         {/* Patient Banner */}
         {patientContext && (
-          <div className="bg-white shadow-sm mx-6 mt-6 rounded-2xl p-6">
+          <Card variant="default" className="mx-6 mt-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold">
-                  {patientContext.name.split(' ').map(n => n[0]).join('')}
-                </div>
+                <Avatar name={patientContext.name} size="xl" />
                 <div>
                   <h2 className="text-2xl font-semibold text-gray-900">{patientContext.name}</h2>
                   <p className="text-gray-600">
                     {patientContext.age} y/o {patientContext.gender} • MRN: {patientContext.mrn}
                     {patientContext.weight && ` • ${patientContext.weight}kg`}
                   </p>
-                  <p className="text-sm text-indigo-600 mt-1">
+                  <p className="text-sm text-purple-600 mt-1">
                     Chief Complaint: {patientContext.chiefComplaint}
                   </p>
                 </div>
               </div>
               <div className="flex gap-3">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => setViewMode(viewMode === 'prescribe' ? 'review' : 'prescribe')}
-                  className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full hover:bg-indigo-100 transition-colors"
+                  leftIcon={<FileText className="w-4 h-4" />}
                 >
                   {viewMode === 'prescribe' ? 'Review Current Meds' : 'New Prescription'}
-                </button>
-                <button className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full hover:shadow-lg transition-all flex items-center gap-2">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                    <rect x="6" y="14" width="12" height="8"></rect>
-                  </svg>
+                </Button>
+                <Button
+                  variant="primary"
+                  leftIcon={<Printer className="w-4 h-4" />}
+                >
                   Print Med List
-                </button>
+                </Button>
               </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Error Display */}
         {error && (
-          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800">
             <strong>Error:</strong> {error}
           </div>
         )}
@@ -254,58 +252,67 @@ export default function MedicationsPage() {
 
               {/* Pharmacy Information */}
               {preferredPharmacy && (
-                <div className="bg-white rounded-lg shadow-sm p-4">
+                <Card variant="default">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-green-600" />
+                    <div
+                      className="w-8 h-8 rounded-xl flex items-center justify-center"
+                      style={{ background: gradients.referrals }}
+                    >
+                      <Building2 className="w-5 h-5 text-white" />
                     </div>
                     Preferred Pharmacy
                   </h3>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm"
+                        style={{ background: gradients.referrals }}
+                      >
                         CVS
                       </div>
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-900">{preferredPharmacy.name}</h4>
-                        <p className="text-sm text-gray-600">
-                          {preferredPharmacy.isPreferred && 'Primary Pharmacy'}
-                          {preferredPharmacy.acceptsEprescribe && ' • E-Prescribe Enabled'}
-                        </p>
+                        <div className="flex gap-2 mt-1">
+                          {preferredPharmacy.isPreferred && (
+                            <Badge variant="primary" size="sm">Primary</Badge>
+                          )}
+                          {preferredPharmacy.acceptsEprescribe && (
+                            <Badge variant="success" size="sm">E-Prescribe</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-2">
-                      <p className="flex items-center gap-2">
+                    <div className="bg-gray-50 rounded-xl p-3 text-sm space-y-2">
+                      <p className="flex items-center gap-2 text-gray-600">
                         <MapPin className="w-4 h-4 text-gray-400" />
                         {preferredPharmacy.address}
                       </p>
-                      <p className="flex items-center gap-2">
+                      <p className="flex items-center gap-2 text-gray-600">
                         <Phone className="w-4 h-4 text-gray-400" />
                         {preferredPharmacy.phone}
                       </p>
-                      <p className="flex items-center gap-2">
+                      <p className="flex items-center gap-2 text-gray-600">
                         <Clock className="w-4 h-4 text-gray-400" />
                         {preferredPharmacy.hours}
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <button className="flex-1 px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm font-medium">
+                      <Button variant="secondary" size="sm" fullWidth>
                         Change Pharmacy
-                      </button>
-                      <button className="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center justify-center gap-1">
-                        <Phone className="w-4 h-4" />
+                      </Button>
+                      <Button variant="primary" size="sm" fullWidth leftIcon={<Phone className="w-4 h-4" />}>
                         Call
-                      </button>
+                      </Button>
                     </div>
                   </div>
-                </div>
+                </Card>
               )}
 
               {/* Patient Current Medications */}
               {patientContext && patientContext.currentMedications && patientContext.currentMedications.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm p-4">
+                <Card variant="default">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
                       <User className="w-5 h-5 text-blue-600" />
                     </div>
                     Current Medications
@@ -314,16 +321,16 @@ export default function MedicationsPage() {
                     {patientContext.currentMedications.map((med, idx) => (
                       <div
                         key={idx}
-                        className="bg-gray-50 rounded-lg p-2 text-sm text-gray-700"
+                        className="bg-gray-50 rounded-xl p-3 text-sm text-gray-700"
                       >
                         {med}
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 mt-3">
                     * AI recommendations consider interactions with current medications
                   </p>
-                </div>
+                </Card>
               )}
             </div>
           </div>

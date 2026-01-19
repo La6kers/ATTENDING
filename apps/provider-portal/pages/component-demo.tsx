@@ -210,7 +210,7 @@ export default function ComponentDemoPage() {
                     <div className="flex flex-wrap gap-2">
                       <Badge variant="default">Default</Badge>
                       <Badge variant="primary">Primary</Badge>
-                      <Badge variant="primary" gradient>Primary Gradient</Badge>
+                      <Badge variant="primary">Primary</Badge>
                       <Badge variant="success">Success</Badge>
                       <Badge variant="warning">Warning</Badge>
                       <Badge variant="danger">Danger</Badge>
@@ -219,9 +219,9 @@ export default function ComponentDemoPage() {
                   <div>
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Urgency Badges</h4>
                     <div className="flex flex-wrap gap-2">
-                      <UrgencyBadge urgency="routine" />
-                      <UrgencyBadge urgency="urgent" />
-                      <UrgencyBadge urgency="stat" />
+                      <UrgencyBadge urgency="low" />
+                      <UrgencyBadge urgency="moderate" />
+                      <UrgencyBadge urgency="high" />
                       <UrgencyBadge urgency="critical" />
                     </div>
                   </div>
@@ -239,9 +239,9 @@ export default function ComponentDemoPage() {
                     <h4 className="text-sm font-medium text-gray-700 mb-2">Status Badges</h4>
                     <div className="flex flex-wrap gap-2">
                       <StatusBadge status="pending" />
-                      <StatusBadge status="in_progress" />
+                      <StatusBadge status="active" />
                       <StatusBadge status="completed" />
-                      <StatusBadge status="urgent" />
+                      <StatusBadge status="cancelled" />
                     </div>
                   </div>
                 </div>
@@ -290,7 +290,7 @@ export default function ComponentDemoPage() {
               <CardHeader 
                 title="Clinical Findings Demo" 
                 subtitle="Interactive finding status with red flag detection"
-                actions={<Badge variant="primary" gradient>Migraine Workup</Badge>}
+                actions={<Badge variant="primary">Migraine Workup</Badge>}
               />
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -356,11 +356,12 @@ export default function ComponentDemoPage() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex flex-wrap gap-3 items-center">
-                    <ProviderBadge />
-                    <ProviderBadge label="Patient Portal" />
+                    <ProviderBadge role="physician" name="Dr. Smith" />
+                    <ProviderBadge role="nurse" name="RN Williams" />
+                    <ProviderBadge role="resident" />
                   </div>
                   <div>
-                    <SecurityBadge />
+                    <SecurityBadge type="hipaa" />
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-600">Team viewing:</span>

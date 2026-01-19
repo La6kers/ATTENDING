@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import type { FC } from 'react';
 import { useInbox } from '@/store/useInbox';
 import { Brain, AlertCircle, CheckCircle, Info, Activity } from 'lucide-react';
 import { cn } from '@attending/shared/lib/utils';

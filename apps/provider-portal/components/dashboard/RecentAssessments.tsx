@@ -3,7 +3,8 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { useAssessmentQueueStore, PatientAssessment } from '@/store/assessmentQueueStore';
+import type { PatientAssessment } from '@/store/assessmentQueueStore';
+import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
 import { 
   Clock, 
   AlertTriangle, 

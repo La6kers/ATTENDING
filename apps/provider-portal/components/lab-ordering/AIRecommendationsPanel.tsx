@@ -77,7 +77,7 @@ export const AIRecommendationsPanel: React.FC<AIRecommendationsPanelProps> = ({
       {/* Header */}
       <GradientHeader
         module="labs"
-        icon={Brain}
+        icon={<Brain className="w-5 h-5 text-white" />}
         title="BioMistral AI Recommendations"
         subtitle={`${recommendations.length} tests recommended based on clinical presentation`}
       />

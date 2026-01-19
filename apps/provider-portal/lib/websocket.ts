@@ -9,8 +9,10 @@
 // - Provider presence
 // ============================================================
 
-import { io, Socket } from 'socket.io-client';
-import { useAssessmentQueueStore, PatientAssessment } from '@/store/assessmentQueueStore';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
+import type { PatientAssessment } from '@/store/assessmentQueueStore';
+import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
 
 // Types for WebSocket events
 interface AssessmentNotification {

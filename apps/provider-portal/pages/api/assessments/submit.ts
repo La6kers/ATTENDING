@@ -3,7 +3,7 @@
 // This is the main integration point between Patient Portal (COMPASS) and Provider Portal
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { ClinicalSummary, UrgencyLevel, Diagnosis } from '@/types/medical';
+import type { ClinicalSummary, UrgencyLevel, Diagnosis } from '@/types/medical';
 
 // Response types
 interface SubmitAssessmentRequest {

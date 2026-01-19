@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useClinicalHub } from '@/store/useClinicalHub';
-import { ClinicalMessage } from '@/lib/clinicalMockData';
+import type { ClinicalMessage } from '@/lib/clinicalMockData';
 import { cn } from '@attending/shared/lib/utils';
 
 export const ClinicalSummaryPanel: React.FC = () => {

@@ -6,8 +6,10 @@
 // Persists layout to localStorage for user preferences
 // ============================================================
 
-import React, { useState, useCallback, useMemo, ReactNode } from 'react';
-import GridLayout, { Layout } from 'react-grid-layout';
+import type { ReactNode } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
+import type { Layout } from 'react-grid-layout';
+import GridLayout from 'react-grid-layout';
 import { GripVertical, Maximize2, Minimize2, X, RotateCcw, Lock, Unlock } from 'lucide-react';
 
 // ============================================================

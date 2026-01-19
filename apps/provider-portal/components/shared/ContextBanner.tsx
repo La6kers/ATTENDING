@@ -2,7 +2,8 @@
 // Unified context banner for patient selection OR "All Items" display
 // apps/provider-portal/components/shared/ContextBanner.tsx
 
-import React, { ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
