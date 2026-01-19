@@ -2,7 +2,8 @@
 // Enhanced Dashboard with Resizable/Reorderable Cards
 // apps/provider-portal/pages/index.tsx
 //
-// Updated to use @attending/ui-primitives design tokens
+// FIXED: Header layout - ATTENDING AI and Provider Portal on same line
+// FIXED: Patient queue compact view for 3-4 patients visible
 // ============================================================
 
 import React, { useState } from 'react';
@@ -15,7 +16,7 @@ import AIInsights from '../components/dashboard/AIInsights';
 import QuickAccess from '../components/dashboard/QuickAccess';
 import RecentAssessments from '../components/dashboard/RecentAssessments';
 import PatientMessaging from '../components/PatientMessaging';
-import { Users, MessageSquare, Video, X } from 'lucide-react';
+import { Users, MessageSquare, Video, X, Brain } from 'lucide-react';
 import { Button, Card, Avatar, cn } from '@attending/ui-primitives';
 
 // Import CSS for react-grid-layout
@@ -203,16 +204,28 @@ export default function ProviderDashboard() {
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
+        {/* Header - FIXED: ATTENDING AI and Provider Portal on same line, evenly distributed */}
         <div className="bg-white shadow-sm border-b sticky top-0 z-30">
           <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            {/* Main Header Row - Title Left, Status Right */}
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Provider Dashboard</h1>
-                <p className="mt-0.5 text-sm text-gray-500">
-                  Welcome back, Dr. Reed. Drag cards to rearrange, resize from corners.
-                </p>
+              {/* Left: ATTENDING AI + Provider Portal on same line */}
+              <div className="flex items-center gap-3">
+                {/* Logo/Brand */}
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Brain className="w-6 h-6 text-white" />
+                  </div>
+                  {/* ATTENDING AI and Provider Portal - Same Line, Evenly Distributed */}
+                  <div className="flex items-baseline gap-3">
+                    <h1 className="text-xl font-bold text-gray-900">ATTENDING AI</h1>
+                    <span className="text-gray-300">|</span>
+                    <span className="text-lg font-semibold text-gray-600">Provider Portal</span>
+                  </div>
+                </div>
               </div>
+              
+              {/* Right: Status Indicators and Team */}
               <div className="flex items-center space-x-3">
                 {/* Team Collaboration Indicator */}
                 <button
@@ -243,6 +256,11 @@ export default function ProviderDashboard() {
                 <StatusIndicator label="BioMistral-7B" color="indigo" />
               </div>
             </div>
+            
+            {/* Subtitle Row */}
+            <p className="mt-1 text-sm text-gray-500">
+              Welcome back, Dr. Reed. Drag cards to rearrange, resize from corners.
+            </p>
           </div>
         </div>
 
