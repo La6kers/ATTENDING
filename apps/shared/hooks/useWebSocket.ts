@@ -1,305 +1,434 @@
 // ============================================================
-// WebSocket Hook - @attending/shared
+// ATTENDING AI - WebSocket Client Hook
 // apps/shared/hooks/useWebSocket.ts
 //
-// Unified WebSocket hook for both Provider and Patient portals
-// Handles connection, events, and automatic reconnection
+// Real-time communication hook for patient-provider connection
+// Revolutionary Feature: Live emergency alerts & assessment sync
 // ============================================================
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-// ============================================================
-// TYPES
-// ============================================================
+// =============================================================================
+// Types
+// =============================================================================
+
+export interface User {
+  id: string;
+  socketId: string;
+  type: 'provider' | 'patient';
+  name: string;
+  role?: string;
+  connectedAt: Date;
+  lastSeen: Date;
+  currentPatientId?: string;
+  sessionId?: string;
+}
+
+export interface Message {
+  id: string;
+  fromId: string;
+  toId: string;
+  content: string;
+  type: 'text' | 'system' | 'alert' | 'clinical';
+  timestamp: Date;
+  metadata?: Record<string, any>;
+}
+
+export interface EmergencyAlert {
+  id: string;
+  patientId: string;
+  patientName: string;
+  sessionId: string;
+  type: string;
+  urgencyLevel: 'critical' | 'emergent' | 'urgent';
+  symptoms: string[];
+  redFlags: string[];
+  location?: { lat: number; lng: number };
+  timestamp: Date;
+  acknowledged: boolean;
+  acknowledgedBy?: string;
+  acknowledgedAt?: Date;
+}
+
+export interface AssessmentUpdate {
+  sessionId: string;
+  patientId: string;
+  phase: string;
+  progressPercent: number;
+  urgencyLevel: string;
+  redFlagCount: number;
+  timestamp: Date;
+}
+
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
 
 export interface WebSocketConfig {
-  /** WebSocket server URL (defaults to NEXT_PUBLIC_WS_URL or localhost:3003) */
   url?: string;
-  /** User role - provider or patient */
-  role: 'provider' | 'patient';
-  /** User ID */
+  userType: 'provider' | 'patient';
   userId: string;
-  /** User display name */
   userName: string;
-  /** Auto-connect on mount (default: true) */
+  userRole?: string;
+  sessionId?: string;
   autoConnect?: boolean;
-  /** Enable reconnection (default: true) */
-  reconnection?: boolean;
-  /** Max reconnection attempts (default: 5) */
-  reconnectionAttempts?: number;
-  /** Reconnection delay in ms (default: 3000) */
-  reconnectionDelay?: number;
+  reconnectAttempts?: number;
+  reconnectDelay?: number;
+  onEmergencyAlert?: (alert: EmergencyAlert) => void;
+  onMessage?: (message: Message) => void;
+  onAssessmentUpdate?: (update: AssessmentUpdate) => void;
+  onPresenceUpdate?: (users: User[]) => void;
+  onProviderConnected?: (data: { providerId: string; name: string }) => void;
+  onQueuePosition?: (position: number) => void;
 }
 
-export interface WebSocketState {
+export interface WebSocketHook {
+  // State
+  status: ConnectionStatus;
   isConnected: boolean;
-  isConnecting: boolean;
+  activeUsers: User[];
+  activeEmergencies: EmergencyAlert[];
+  queuePosition: number | null;
   error: string | null;
-  reconnectAttempts: number;
-}
-
-export interface WebSocketActions {
+  
+  // Actions
   connect: () => void;
   disconnect: () => void;
-  emit: <T = any>(event: string, data: T) => void;
-  on: <T = any>(event: string, callback: (data: T) => void) => () => void;
-  off: (event: string, callback?: (...args: any[]) => void) => void;
+  sendMessage: (toId: string, content: string, metadata?: Record<string, any>) => void;
+  triggerEmergency: (alert: Omit<EmergencyAlert, 'id' | 'timestamp' | 'acknowledged'>) => void;
+  acknowledgeEmergency: (emergencyId: string) => void;
+  sendAssessmentUpdate: (update: Omit<AssessmentUpdate, 'timestamp'>) => void;
+  viewPatient: (patientId: string) => void;
+  requestProvider: () => void;
 }
 
-// ============================================================
-// HOOK IMPLEMENTATION
-// ============================================================
+// =============================================================================
+// Hook Implementation
+// =============================================================================
 
-export function useWebSocket(config: WebSocketConfig): WebSocketState & WebSocketActions & { socket: Socket | null } {
+export function useWebSocket(config: WebSocketConfig): WebSocketHook {
+  const {
+    url = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001',
+    userType,
+    userId,
+    userName,
+    userRole,
+    sessionId,
+    autoConnect = true,
+    reconnectAttempts = 5,
+    reconnectDelay = 3000,
+    onEmergencyAlert,
+    onMessage,
+    onAssessmentUpdate,
+    onPresenceUpdate,
+    onProviderConnected,
+    onQueuePosition,
+  } = config;
+
+  const [status, setStatus] = useState<ConnectionStatus>('disconnected');
+  const [activeUsers, setActiveUsers] = useState<User[]>([]);
+  const [activeEmergencies, setActiveEmergencies] = useState<EmergencyAlert[]>([]);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const socketRef = useRef<Socket | null>(null);
-  const callbacksRef = useRef<Map<string, Set<(...args: any[]) => void>>>(new Map());
-  
-  const [state, setState] = useState<WebSocketState>({
-    isConnected: false,
-    isConnecting: false,
-    error: null,
-    reconnectAttempts: 0,
-  });
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Get WebSocket URL from config or environment
-  const wsUrl = config.url || process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3003';
-
-  // =====================================================
-  // CONNECT
-  // =====================================================
+  // Connect to WebSocket server
   const connect = useCallback(() => {
-    if (socketRef.current?.connected) {
-      console.log('[WS] Already connected');
-      return;
-    }
+    if (socketRef.current?.connected) return;
 
-    if (state.isConnecting) {
-      console.log('[WS] Connection already in progress');
-      return;
-    }
+    setStatus('connecting');
+    setError(null);
 
-    console.log('[WS] Connecting to:', wsUrl);
-    setState(s => ({ ...s, isConnecting: true, error: null }));
-
-    const queryParams = config.role === 'provider'
-      ? { role: 'provider', providerId: config.userId, providerName: config.userName }
-      : { role: 'patient', patientId: config.userId, patientName: config.userName };
-
-    socketRef.current = io(wsUrl, {
+    const socket = io(url, {
       transports: ['websocket', 'polling'],
-      autoConnect: true,
-      reconnection: config.reconnection !== false,
-      reconnectionAttempts: config.reconnectionAttempts ?? 5,
-      reconnectionDelay: config.reconnectionDelay ?? 3000,
+      reconnection: true,
+      reconnectionAttempts: reconnectAttempts,
+      reconnectionDelay: reconnectDelay,
       timeout: 10000,
-      query: queryParams,
     });
 
-    // Connection successful
-    socketRef.current.on('connect', () => {
-      console.log('[WS] Connected successfully');
-      setState({
-        isConnected: true,
-        isConnecting: false,
-        error: null,
-        reconnectAttempts: 0,
+    // Connection events
+    socket.on('connect', () => {
+      console.log('[WebSocket] Connected:', socket.id);
+      setStatus('connected');
+      setError(null);
+      reconnectAttemptsRef.current = 0;
+
+      // Join as provider or patient
+      if (userType === 'provider') {
+        socket.emit('provider:join', {
+          providerId: userId,
+          name: userName,
+          role: userRole || 'Physician',
+        });
+      } else {
+        socket.emit('patient:join', {
+          patientId: userId,
+          name: userName,
+          sessionId: sessionId || `session-${Date.now()}`,
+        });
+      }
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('[WebSocket] Disconnected:', reason);
+      setStatus('disconnected');
+
+      if (reason === 'io server disconnect') {
+        // Server disconnected, try to reconnect
+        socket.connect();
+      }
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('[WebSocket] Connection error:', err);
+      setStatus('error');
+      setError(`Connection failed: ${err.message}`);
+    });
+
+    socket.io.on('reconnect_attempt', () => {
+      setStatus('reconnecting');
+      reconnectAttemptsRef.current++;
+    });
+
+    socket.io.on('reconnect', () => {
+      console.log('[WebSocket] Reconnected');
+      setStatus('connected');
+      reconnectAttemptsRef.current = 0;
+    });
+
+    socket.io.on('reconnect_failed', () => {
+      setStatus('error');
+      setError('Failed to reconnect after multiple attempts');
+    });
+
+    // Presence updates
+    socket.on('presence-update', (users: User[]) => {
+      setActiveUsers(users);
+      onPresenceUpdate?.(users);
+    });
+
+    // Emergency alerts
+    socket.on('emergency:new', (alert: EmergencyAlert) => {
+      console.log('[WebSocket] Emergency alert:', alert);
+      setActiveEmergencies(prev => [...prev, alert]);
+      onEmergencyAlert?.(alert);
+
+      // Play audio alert for providers
+      if (userType === 'provider') {
+        playEmergencySound(alert.urgencyLevel);
+      }
+    });
+
+    socket.on('emergency:acknowledged', (data: { emergencyId: string; acknowledgedBy: string }) => {
+      setActiveEmergencies(prev =>
+        prev.map(e =>
+          e.id === data.emergencyId
+            ? { ...e, acknowledged: true, acknowledgedBy: data.acknowledgedBy, acknowledgedAt: new Date() }
+            : e
+        )
+      );
+    });
+
+    // Messages
+    socket.on('patient:message-received', (message: Message) => {
+      onMessage?.(message);
+    });
+
+    socket.on('provider:message-received', (message: Message) => {
+      onMessage?.(message);
+    });
+
+    // Assessment updates (for providers)
+    socket.on('patient:assessment-updated', (update: AssessmentUpdate) => {
+      onAssessmentUpdate?.(update);
+    });
+
+    // Patient-specific events
+    if (userType === 'patient') {
+      socket.on('provider:connected', (data: { providerId: string; name: string }) => {
+        console.log('[WebSocket] Provider connected:', data);
+        onProviderConnected?.(data);
       });
 
-      // Emit join event
-      socketRef.current?.emit(`${config.role}:join`, {
-        [`${config.role}Id`]: config.userId,
-        [`${config.role}Name`]: config.userName,
-        timestamp: new Date().toISOString(),
-      });
-    });
-
-    // Disconnection
-    socketRef.current.on('disconnect', (reason) => {
-      console.log('[WS] Disconnected:', reason);
-      setState(s => ({ ...s, isConnected: false }));
-    });
-
-    // Connection error
-    socketRef.current.on('connect_error', (error) => {
-      console.error('[WS] Connection error:', error.message);
-      setState(s => ({
-        ...s,
-        isConnecting: false,
-        error: error.message,
-        reconnectAttempts: s.reconnectAttempts + 1,
-      }));
-    });
-
-    // Reconnection attempt
-    socketRef.current.on('reconnect_attempt', (attemptNumber) => {
-      console.log('[WS] Reconnection attempt:', attemptNumber);
-      setState(s => ({ ...s, reconnectAttempts: attemptNumber }));
-    });
-
-    // Reconnection successful
-    socketRef.current.on('reconnect', () => {
-      console.log('[WS] Reconnected');
-      setState(s => ({ ...s, isConnected: true, reconnectAttempts: 0 }));
-    });
-
-    // Reconnection failed
-    socketRef.current.on('reconnect_failed', () => {
-      console.error('[WS] Reconnection failed');
-      setState(s => ({
-        ...s,
-        isConnecting: false,
-        error: 'Failed to reconnect after multiple attempts',
-      }));
-    });
-
-    // Ping/pong for keep-alive
-    socketRef.current.on('ping', () => {
-      socketRef.current?.emit('pong', { timestamp: Date.now() });
-    });
-
-  }, [wsUrl, config.role, config.userId, config.userName, config.reconnection, config.reconnectionAttempts, config.reconnectionDelay, state.isConnecting]);
-
-  // =====================================================
-  // DISCONNECT
-  // =====================================================
-  const disconnect = useCallback(() => {
-    if (socketRef.current) {
-      console.log('[WS] Disconnecting...');
-      socketRef.current.emit(`${config.role}:leave`);
-      socketRef.current.disconnect();
-      socketRef.current = null;
-      setState({
-        isConnected: false,
-        isConnecting: false,
-        error: null,
-        reconnectAttempts: 0,
+      socket.on('queue-position', (position: number) => {
+        setQueuePosition(position);
+        onQueuePosition?.(position);
       });
     }
-  }, [config.role]);
 
-  // =====================================================
-  // EMIT EVENT
-  // =====================================================
-  const emit = useCallback(<T = any>(event: string, data: T) => {
-    if (socketRef.current?.connected) {
-      socketRef.current.emit(event, data);
-    } else {
-      console.warn('[WS] Cannot emit - not connected');
+    // Patient connection/disconnection (for providers)
+    if (userType === 'provider') {
+      socket.on('patient:connected', (user: User) => {
+        setActiveUsers(prev => [...prev.filter(u => u.id !== user.id), user]);
+        onPresenceUpdate?.([...activeUsers.filter(u => u.id !== user.id), user]);
+      });
+
+      socket.on('patient:disconnected', (data: { patientId: string }) => {
+        setActiveUsers(prev => prev.filter(u => u.id !== data.patientId));
+      });
     }
-  }, []);
 
-  // =====================================================
-  // SUBSCRIBE TO EVENT
-  // =====================================================
-  const on = useCallback(<T = any>(event: string, callback: (data: T) => void) => {
-    // Track callback for cleanup
-    if (!callbacksRef.current.has(event)) {
-      callbacksRef.current.set(event, new Set());
-    }
-    callbacksRef.current.get(event)!.add(callback);
+    // Error handling
+    socket.on('error', (err: { code: string; message: string }) => {
+      console.error('[WebSocket] Error:', err);
+      setError(err.message);
+    });
 
-    // Subscribe
-    socketRef.current?.on(event, callback);
+    // Keep-alive
+    const pingInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit('ping');
+      }
+    }, 30000);
 
-    // Return unsubscribe function
+    socket.on('pong', () => {
+      // Connection is alive
+    });
+
+    socketRef.current = socket;
+
     return () => {
-      socketRef.current?.off(event, callback);
-      callbacksRef.current.get(event)?.delete(callback);
+      clearInterval(pingInterval);
+      socket.disconnect();
     };
-  }, []);
+  }, [url, userType, userId, userName, userRole, sessionId, reconnectAttempts, reconnectDelay,
+      onEmergencyAlert, onMessage, onAssessmentUpdate, onPresenceUpdate, onProviderConnected, onQueuePosition, activeUsers]);
 
-  // =====================================================
-  // UNSUBSCRIBE FROM EVENT
-  // =====================================================
-  const off = useCallback((event: string, callback?: (...args: any[]) => void) => {
-    if (callback) {
-      socketRef.current?.off(event, callback);
-      callbacksRef.current.get(event)?.delete(callback);
-    } else {
-      socketRef.current?.off(event);
-      callbacksRef.current.delete(event);
+  // Disconnect
+  const disconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
     }
+    socketRef.current?.disconnect();
+    setStatus('disconnected');
   }, []);
 
-  // =====================================================
-  // AUTO-CONNECT ON MOUNT
-  // =====================================================
+  // Send message
+  const sendMessage = useCallback((toId: string, content: string, metadata?: Record<string, any>) => {
+    if (!socketRef.current?.connected) {
+      console.warn('[WebSocket] Not connected, cannot send message');
+      return;
+    }
+
+    if (userType === 'provider') {
+      socketRef.current.emit('provider:message', {
+        patientId: toId,
+        content,
+        metadata,
+      });
+    } else {
+      socketRef.current.emit('patient:message', {
+        content,
+        metadata,
+      });
+    }
+  }, [userType]);
+
+  // Trigger emergency
+  const triggerEmergency = useCallback((alert: Omit<EmergencyAlert, 'id' | 'timestamp' | 'acknowledged'>) => {
+    if (!socketRef.current?.connected) {
+      console.warn('[WebSocket] Not connected, cannot trigger emergency');
+      return;
+    }
+
+    socketRef.current.emit('patient:emergency', alert);
+  }, []);
+
+  // Acknowledge emergency
+  const acknowledgeEmergency = useCallback((emergencyId: string) => {
+    if (!socketRef.current?.connected) return;
+
+    socketRef.current.emit('provider:acknowledge-emergency', { emergencyId });
+  }, []);
+
+  // Send assessment update
+  const sendAssessmentUpdate = useCallback((update: Omit<AssessmentUpdate, 'timestamp'>) => {
+    if (!socketRef.current?.connected) return;
+
+    socketRef.current.emit('patient:assessment-update', update);
+  }, []);
+
+  // View patient (provider only)
+  const viewPatient = useCallback((patientId: string) => {
+    if (!socketRef.current?.connected || userType !== 'provider') return;
+
+    socketRef.current.emit('provider:view-patient', { patientId });
+  }, [userType]);
+
+  // Request provider (patient only)
+  const requestProvider = useCallback(() => {
+    if (!socketRef.current?.connected || userType !== 'patient') return;
+
+    socketRef.current.emit('patient:request-provider');
+  }, [userType]);
+
+  // Auto-connect on mount
   useEffect(() => {
-    if (config.autoConnect !== false && config.userId) {
+    if (autoConnect) {
       connect();
     }
 
     return () => {
       disconnect();
     };
-  }, [config.userId]); // Only reconnect if userId changes
+  }, [autoConnect, connect, disconnect]);
 
   return {
-    ...state,
-    socket: socketRef.current,
+    status,
+    isConnected: status === 'connected',
+    activeUsers,
+    activeEmergencies,
+    queuePosition,
+    error,
     connect,
     disconnect,
-    emit,
-    on,
-    off,
+    sendMessage,
+    triggerEmergency,
+    acknowledgeEmergency,
+    sendAssessmentUpdate,
+    viewPatient,
+    requestProvider,
   };
 }
 
-// ============================================================
-// TYPED EVENT HELPERS
-// ============================================================
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
-// Provider-specific events
-export interface ProviderWSEvents {
-  'assessment:new': {
-    assessment: any;
-    timestamp: string;
-    source: 'compass' | 'api' | 'webhook';
-  };
-  'assessment:urgent': {
-    assessmentId: string;
-    patientName: string;
-    chiefComplaint: string;
-    redFlags: string[];
-    urgencyScore: number;
-    timestamp: string;
-  };
-  'assessment:status-updated': {
-    assessmentId: string;
-    newStatus: string;
-    updatedBy: string;
-    timestamp: string;
-  };
-  'assessment:assigned': {
-    assessmentId: string;
-    patientName: string;
-  };
-  'provider:online': {
-    providerId: string;
-    providerName: string;
-    status: string;
-  };
-  'provider:offline': {
-    providerId: string;
-  };
-  'queue:status': {
-    assessments: any[];
-    providers: number;
-  };
-}
+function playEmergencySound(urgency: 'critical' | 'emergent' | 'urgent') {
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
 
-// Patient-specific events
-export interface PatientWSEvents {
-  'assessment:submitted': {
-    success: boolean;
-    assessmentId: string;
-    queuePosition: number;
-  };
-  'assessment:reviewed': {
-    assessmentId: string;
-    providerName: string;
-  };
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    // Different tones for different urgency levels
+    const frequencies = {
+      critical: [880, 1100, 880, 1100], // Alternating high tones
+      emergent: [660, 880, 660],
+      urgent: [440, 550],
+    };
+
+    const freq = frequencies[urgency];
+    let time = audioContext.currentTime;
+
+    freq.forEach((f, i) => {
+      oscillator.frequency.setValueAtTime(f, time + i * 0.2);
+    });
+
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + freq.length * 0.2);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + freq.length * 0.2);
+  } catch (e) {
+    console.warn('[WebSocket] Could not play emergency sound:', e);
+  }
 }
 
 export default useWebSocket;

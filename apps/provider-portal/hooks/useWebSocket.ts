@@ -1,9 +1,12 @@
 // =============================================================================
-// ATTENDING AI - WebSocket Hook for Provider Portal
+// ATTENDING AI - Enhanced WebSocket Hook for Provider Portal
 // apps/provider-portal/hooks/useWebSocket.ts
 //
-// Real-time WebSocket connection with audio alerts for critical notifications.
-// Integrates with the unified provider store for state management.
+// Revolutionary Real-Time Features:
+// - Emergency alert propagation with audio
+// - Live assessment queue updates
+// - Provider presence/collaboration
+// - Critical lab and imaging notifications
 // =============================================================================
 
 import { useEffect, useRef, useCallback, useState } from 'react';
@@ -18,23 +21,63 @@ export type NotificationType =
   | 'assessment:new'
   | 'assessment:urgent'
   | 'assessment:status-updated'
+  | 'emergency:alert'
   | 'red-flag:detected'
   | 'lab:critical'
   | 'lab:ready'
+  | 'imaging:ready'
   | 'message:received'
   | 'provider:online'
   | 'provider:offline'
   | 'server:shutdown';
 
 export interface WebSocketConfig {
-  url: string;
+  url?: string;
   providerId: string;
   providerName: string;
+  specialty?: string;
   autoConnect?: boolean;
   enableAudioAlerts?: boolean;
   onConnect?: () => void;
   onDisconnect?: () => void;
   onError?: (error: Error) => void;
+  onEmergency?: (alert: EmergencyAlert) => void;
+}
+
+export interface EmergencyAlert {
+  id: string;
+  patientId: string;
+  patientName: string;
+  sessionId: string;
+  type: string;
+  urgencyLevel: 'critical' | 'emergent' | 'urgent';
+  symptoms: string[];
+  redFlags: string[];
+  location?: { lat: number; lng: number };
+  timestamp: Date;
+  requiresAcknowledgment: boolean;
+  audioAlert: boolean;
+}
+
+export interface AssessmentUpdate {
+  sessionId: string;
+  patientId: string;
+  patientName?: string;
+  phase: string;
+  progressPercent: number;
+  urgencyLevel: string;
+  redFlagCount: number;
+  chiefComplaint?: string;
+  timestamp: Date;
+}
+
+export interface ProviderPresence {
+  providerId: string;
+  name: string;
+  specialty?: string;
+  status: 'online' | 'busy' | 'away';
+  lastActive: Date;
+  currentPatient?: string;
 }
 
 export interface WebSocketState {
@@ -42,20 +85,19 @@ export interface WebSocketState {
   isConnecting: boolean;
   error: string | null;
   lastEventTime: string | null;
+  activeProviders: ProviderPresence[];
+  pendingEmergencies: EmergencyAlert[];
 }
 
 // ============================================================================
-// Audio Alert Manager
+// Audio Alert Manager - Enhanced
 // ============================================================================
 
 class AudioAlertManager {
   private audioContext: AudioContext | null = null;
   private enabled: boolean = true;
-  private alertSounds: Record<string, AudioBuffer | null> = {
-    critical: null,
-    urgent: null,
-    standard: null,
-  };
+  private alertSounds: Record<string, AudioBuffer | null> = {};
+  private isPlaying: boolean = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -66,32 +108,50 @@ class AudioAlertManager {
   private async initAudioContext() {
     try {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      // Generate simple alert tones
-      this.alertSounds.critical = await this.generateTone(880, 0.3, 3); // High A, 3 beeps
-      this.alertSounds.urgent = await this.generateTone(660, 0.2, 2);   // E, 2 beeps
-      this.alertSounds.standard = await this.generateTone(440, 0.15, 1); // A, 1 beep
+      
+      // Critical: Loud, rapid 4-tone alert
+      this.alertSounds.critical = await this.generateTone([880, 988, 880, 988], [0.15, 0.15, 0.15, 0.15], 0.5);
+      
+      // Emergency: Escalating 3-tone alert  
+      this.alertSounds.emergency = await this.generateTone([660, 770, 880], [0.2, 0.2, 0.3], 0.4);
+      
+      // Urgent: 2-tone attention getter
+      this.alertSounds.urgent = await this.generateTone([660, 550], [0.2, 0.2], 0.3);
+      
+      // Standard: Single soft tone
+      this.alertSounds.standard = await this.generateTone([440], [0.15], 0.2);
+      
     } catch (error) {
-      console.warn('Audio context initialization failed:', error);
+      console.warn('[AudioAlert] Initialization failed:', error);
     }
   }
 
-  private async generateTone(frequency: number, duration: number, repeats: number): Promise<AudioBuffer | null> {
+  private async generateTone(
+    frequencies: number[], 
+    durations: number[], 
+    volume: number
+  ): Promise<AudioBuffer | null> {
     if (!this.audioContext) return null;
 
     const sampleRate = this.audioContext.sampleRate;
-    const totalDuration = (duration + 0.1) * repeats; // duration + gap between beeps
-    const buffer = this.audioContext.createBuffer(1, sampleRate * totalDuration, sampleRate);
+    const totalDuration = durations.reduce((a, b) => a + b, 0) + (durations.length - 1) * 0.05;
+    const buffer = this.audioContext.createBuffer(1, Math.ceil(sampleRate * totalDuration), sampleRate);
     const data = buffer.getChannelData(0);
 
-    for (let r = 0; r < repeats; r++) {
-      const startSample = Math.floor(r * (duration + 0.1) * sampleRate);
-      const endSample = Math.floor(startSample + duration * sampleRate);
+    let currentSample = 0;
+    
+    for (let i = 0; i < frequencies.length; i++) {
+      const freq = frequencies[i];
+      const dur = durations[i];
+      const numSamples = Math.floor(dur * sampleRate);
       
-      for (let i = startSample; i < endSample; i++) {
-        const t = (i - startSample) / sampleRate;
-        const envelope = Math.sin(Math.PI * t / duration); // Fade in/out
-        data[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * 0.3;
+      for (let j = 0; j < numSamples; j++) {
+        const t = j / sampleRate;
+        const envelope = Math.sin(Math.PI * j / numSamples); // Smooth envelope
+        data[currentSample + j] = Math.sin(2 * Math.PI * freq * t) * envelope * volume;
       }
+      
+      currentSample += numSamples + Math.floor(0.05 * sampleRate); // Gap between tones
     }
 
     return buffer;
@@ -101,23 +161,46 @@ class AudioAlertManager {
     this.enabled = enabled;
   }
 
-  async play(type: 'critical' | 'urgent' | 'standard') {
-    if (!this.enabled || !this.audioContext || !this.alertSounds[type]) {
+  async play(type: 'critical' | 'emergency' | 'urgent' | 'standard', repeat: number = 1) {
+    if (!this.enabled || !this.audioContext || !this.alertSounds[type] || this.isPlaying) {
       return;
     }
 
+    this.isPlaying = true;
+
     try {
-      // Resume audio context if suspended (browser autoplay policy)
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
       }
 
-      const source = this.audioContext.createBufferSource();
-      source.buffer = this.alertSounds[type];
-      source.connect(this.audioContext.destination);
-      source.start();
+      for (let r = 0; r < repeat; r++) {
+        const source = this.audioContext.createBufferSource();
+        source.buffer = this.alertSounds[type];
+        source.connect(this.audioContext.destination);
+        source.start();
+        
+        // Wait for sound to finish plus a small gap
+        await new Promise(resolve => setTimeout(resolve, (source.buffer?.duration || 0.5) * 1000 + 200));
+      }
     } catch (error) {
-      console.warn('Audio playback failed:', error);
+      console.warn('[AudioAlert] Playback failed:', error);
+    } finally {
+      this.isPlaying = false;
+    }
+  }
+
+  // Play emergency alert with escalation
+  async playEmergency(urgencyLevel: 'critical' | 'emergent' | 'urgent') {
+    switch (urgencyLevel) {
+      case 'critical':
+        await this.play('critical', 3);
+        break;
+      case 'emergent':
+        await this.play('emergency', 2);
+        break;
+      case 'urgent':
+        await this.play('urgent', 1);
+        break;
     }
   }
 }
@@ -130,14 +213,28 @@ export function useWebSocket(config: WebSocketConfig) {
   const socketRef = useRef<Socket | null>(null);
   const audioManagerRef = useRef<AudioAlertManager | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttempts = 5;
+  const maxReconnectAttempts = 10;
 
   const [state, setState] = useState<WebSocketState>({
     isConnected: false,
     isConnecting: false,
     error: null,
     lastEventTime: null,
+    activeProviders: [],
+    pendingEmergencies: [],
   });
+
+  const {
+    url = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001',
+    providerId,
+    providerName,
+    specialty,
+    autoConnect = true,
+    onConnect,
+    onDisconnect,
+    onError,
+    onEmergency,
+  } = config;
 
   // Store actions
   const {
@@ -157,34 +254,112 @@ export function useWebSocket(config: WebSocketConfig) {
     };
   }, []);
 
-  // Sync audio alerts enabled with store
+  // Sync audio enabled with store
   useEffect(() => {
-    if (audioManagerRef.current) {
-      audioManagerRef.current.setEnabled(audioAlertsEnabled);
-    }
+    audioManagerRef.current?.setEnabled(audioAlertsEnabled);
   }, [audioAlertsEnabled]);
 
-  // Handle incoming events
+  // Handle emergency alerts
+  const handleEmergencyAlert = useCallback((alert: EmergencyAlert) => {
+    console.log('[WS] 🚨 EMERGENCY ALERT:', alert.type, alert.urgencyLevel);
+    
+    // Add to pending emergencies
+    setState(prev => ({
+      ...prev,
+      pendingEmergencies: [...prev.pendingEmergencies, alert],
+    }));
+
+    // Play audio alert based on urgency
+    if (alert.audioAlert) {
+      audioManagerRef.current?.playEmergency(alert.urgencyLevel);
+    }
+
+    // Add to notifications
+    addNotification({
+      type: 'escalation',
+      title: `🚨 ${alert.urgencyLevel.toUpperCase()} EMERGENCY`,
+      message: `${alert.patientName}: ${alert.type} - ${alert.symptoms.join(', ')}`,
+      assessmentId: alert.sessionId,
+      urgency: 'critical',
+    });
+
+    // Callback for custom handling
+    onEmergency?.(alert);
+
+    // Browser notification if permitted
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        new Notification(`🚨 EMERGENCY: ${alert.patientName}`, {
+          body: `${alert.type}: ${alert.redFlags.join(', ')}`,
+          icon: '/icons/emergency.png',
+          tag: alert.id,
+          requireInteraction: true,
+        });
+      }
+    }
+  }, [addNotification, onEmergency]);
+
+  // Handle assessment updates
+  const handleAssessmentUpdate = useCallback((update: AssessmentUpdate) => {
+    console.log('[WS] Assessment update:', update.sessionId, update.phase, `${update.progressPercent}%`);
+    
+    // Update or add assessment in queue
+    const assessmentData = {
+      id: update.sessionId,
+      patientId: update.patientId,
+      patientName: update.patientName,
+      chiefComplaint: update.chiefComplaint,
+      phase: update.phase,
+      progressPercent: update.progressPercent,
+      urgencyLevel: update.urgencyLevel,
+      redFlagCount: update.redFlagCount,
+      timestamp: update.timestamp,
+    };
+
+    // Check if this is a new assessment or update
+    updateAssessment(update.sessionId, assessmentData);
+
+    // If high urgency, play alert
+    if (update.urgencyLevel === 'critical' || update.urgencyLevel === 'emergent') {
+      if (update.redFlagCount > 0) {
+        audioManagerRef.current?.play('urgent');
+      }
+    }
+
+    setState(prev => ({ ...prev, lastEventTime: new Date().toISOString() }));
+  }, [updateAssessment]);
+
+  // Handle other events
   const handleEvent = useCallback((eventType: string, data: any) => {
     setState(prev => ({ ...prev, lastEventTime: new Date().toISOString() }));
 
     switch (eventType) {
-      case 'assessment:new':
-        addAssessment(data.assessment);
-        if (data.assessment.urgencyLevel === 'critical' || data.assessment.urgencyLevel === 'emergent') {
-          audioManagerRef.current?.play('urgent');
-        }
+      case 'patient:connected':
+        console.log('[WS] Patient connected:', data.name);
+        addAssessment({
+          id: data.sessionId || data.id,
+          patientId: data.id,
+          patientName: data.name,
+          status: 'waiting',
+          urgencyLevel: 'routine',
+          connectedAt: new Date().toISOString(),
+        });
         break;
 
-      case 'assessment:urgent':
+      case 'patient:disconnected':
+        console.log('[WS] Patient disconnected:', data.patientId);
+        updateAssessment(data.patientId, { status: 'disconnected' });
+        break;
+
+      case 'patient:message-received':
         addNotification({
-          type: 'escalation',
-          title: '🚨 URGENT Assessment',
-          message: `${data.patientName}: ${data.chiefComplaint}`,
-          assessmentId: data.assessmentId,
-          urgency: 'critical',
+          type: 'message',
+          title: 'Patient Message',
+          message: data.content?.substring(0, 100) || 'New message',
+          assessmentId: data.fromId,
+          urgency: 'routine',
         });
-        audioManagerRef.current?.play('critical');
+        audioManagerRef.current?.play('standard');
         break;
 
       case 'red-flag:detected':
@@ -207,14 +382,10 @@ export function useWebSocket(config: WebSocketConfig) {
         audioManagerRef.current?.play('critical');
         break;
 
-      case 'assessment:status-updated':
-        updateAssessment(data.assessmentId, { status: data.newStatus });
-        break;
-
       case 'lab:critical':
         addNotification({
           type: 'red-flag',
-          title: '🔬 CRITICAL Lab Result',
+          title: '🔬 CRITICAL Lab',
           message: `${data.patientName}: ${data.testName} = ${data.value}`,
           assessmentId: data.assessmentId,
           urgency: 'critical',
@@ -225,7 +396,7 @@ export function useWebSocket(config: WebSocketConfig) {
       case 'lab:ready':
         addNotification({
           type: 'system',
-          title: 'Lab Result Ready',
+          title: 'Lab Ready',
           message: `${data.patientName}: ${data.testName}`,
           assessmentId: data.assessmentId,
           urgency: data.isAbnormal ? 'urgent' : 'routine',
@@ -235,24 +406,22 @@ export function useWebSocket(config: WebSocketConfig) {
         }
         break;
 
-      case 'message:received':
+      case 'imaging:ready':
         addNotification({
-          type: 'message',
-          title: 'New Message',
-          message: `${data.senderName}: ${data.preview}`,
+          type: 'system',
+          title: 'Imaging Ready',
+          message: `${data.patientName}: ${data.studyType}`,
           assessmentId: data.assessmentId,
-          urgency: 'routine',
+          urgency: data.isStat ? 'urgent' : 'routine',
         });
-        audioManagerRef.current?.play('standard');
         break;
 
-      case 'provider:online':
-      case 'provider:offline':
-        // Could update a provider list in store
+      case 'presence-update':
+        setState(prev => ({ ...prev, activeProviders: data }));
         break;
 
       case 'server:shutdown':
-        setState(prev => ({ ...prev, error: 'Server is shutting down' }));
+        setState(prev => ({ ...prev, error: 'Server shutting down' }));
         break;
     }
   }, [addAssessment, updateAssessment, addRedFlag, addNotification]);
@@ -263,39 +432,42 @@ export function useWebSocket(config: WebSocketConfig) {
 
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
-    const socket = io(config.url, {
-      query: {
+    const socket = io(url, {
+      auth: {
         role: 'provider',
-        providerId: config.providerId,
-        providerName: config.providerName,
+        providerId,
+        providerName,
+        specialty,
       },
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: maxReconnectAttempts,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
+      timeout: 10000,
     });
 
+    // Connection events
     socket.on('connect', () => {
-      console.log('[WS] Connected to notification server');
+      console.log('[WS] Connected to server');
       setState(prev => ({ ...prev, isConnected: true, isConnecting: false, error: null }));
       setConnectionStatus(true);
       reconnectAttemptsRef.current = 0;
       
-      // Register as provider
       socket.emit('provider:join', {
-        providerId: config.providerId,
-        providerName: config.providerName,
+        providerId,
+        name: providerName,
+        role: specialty || 'Provider',
       });
 
-      config.onConnect?.();
+      onConnect?.();
     });
 
     socket.on('disconnect', (reason) => {
       console.log('[WS] Disconnected:', reason);
       setState(prev => ({ ...prev, isConnected: false }));
       setConnectionStatus(false);
-      config.onDisconnect?.();
+      onDisconnect?.();
     });
 
     socket.on('connect_error', (error) => {
@@ -306,37 +478,54 @@ export function useWebSocket(config: WebSocketConfig) {
         setState(prev => ({ 
           ...prev, 
           isConnecting: false, 
-          error: 'Failed to connect to notification server' 
+          error: 'Failed to connect. Please check your connection.' 
         }));
       }
       
-      config.onError?.(error);
+      onError?.(error);
     });
 
-    // Event handlers
-    socket.on('assessment:new', (data) => handleEvent('assessment:new', data));
-    socket.on('assessment:urgent', (data) => handleEvent('assessment:urgent', data));
-    socket.on('assessment:status-updated', (data) => handleEvent('assessment:status-updated', data));
-    socket.on('assessment:being-viewed', (data) => handleEvent('assessment:being-viewed', data));
+    socket.on('reconnect', (attemptNumber) => {
+      console.log('[WS] Reconnected after', attemptNumber, 'attempts');
+      reconnectAttemptsRef.current = 0;
+    });
+
+    // Emergency alerts (CRITICAL)
+    socket.on('emergency:alert', handleEmergencyAlert);
+    socket.on('emergency:new', handleEmergencyAlert);
+    socket.on('emergency:acknowledged', (data) => {
+      console.log('[WS] Emergency acknowledged:', data.alertId);
+      setState(prev => ({
+        ...prev,
+        pendingEmergencies: prev.pendingEmergencies.filter(e => e.id !== data.alertId),
+      }));
+    });
+
+    // Assessment events
+    socket.on('patient:connected', (data) => handleEvent('patient:connected', data));
+    socket.on('patient:disconnected', (data) => handleEvent('patient:disconnected', data));
+    socket.on('patient:assessment-updated', handleAssessmentUpdate);
+    socket.on('patient:message-received', (data) => handleEvent('patient:message-received', data));
+
+    // Clinical events
     socket.on('red-flag:detected', (data) => handleEvent('red-flag:detected', data));
     socket.on('lab:critical', (data) => handleEvent('lab:critical', data));
     socket.on('lab:ready', (data) => handleEvent('lab:ready', data));
-    socket.on('message:received', (data) => handleEvent('message:received', data));
-    socket.on('provider:online', (data) => handleEvent('provider:online', data));
-    socket.on('provider:offline', (data) => handleEvent('provider:offline', data));
+    socket.on('imaging:ready', (data) => handleEvent('imaging:ready', data));
+
+    // Presence events
+    socket.on('presence-update', (data) => handleEvent('presence-update', data));
+
+    // Server events
     socket.on('server:shutdown', (data) => handleEvent('server:shutdown', data));
 
-    // Queue status on initial connect
-    socket.on('queue:status', (data) => {
-      if (data.assessments) {
-        data.assessments.forEach((assessment: any) => {
-          addAssessment(assessment);
-        });
-      }
-    });
-
     socketRef.current = socket;
-  }, [config, handleEvent, setConnectionStatus, addAssessment]);
+
+    // Store globally for debugging
+    if (typeof window !== 'undefined') {
+      (window as any).__attendingSocket = socket;
+    }
+  }, [url, providerId, providerName, specialty, handleEmergencyAlert, handleAssessmentUpdate, handleEvent, setConnectionStatus, onConnect, onDisconnect, onError]);
 
   // Disconnect
   const disconnect = useCallback(() => {
@@ -346,52 +535,81 @@ export function useWebSocket(config: WebSocketConfig) {
       socketRef.current = null;
       setState(prev => ({ ...prev, isConnected: false }));
       setConnectionStatus(false);
+      
+      if (typeof window !== 'undefined') {
+        delete (window as any).__attendingSocket;
+      }
     }
   }, [setConnectionStatus]);
 
-  // Send event
+  // Emit event
   const emit = useCallback((event: string, data: any) => {
     if (socketRef.current?.connected) {
       socketRef.current.emit(event, data);
-    } else {
-      console.warn('[WS] Cannot emit, not connected');
+      return true;
     }
+    console.warn('[WS] Cannot emit, not connected');
+    return false;
   }, []);
 
-  // Auto-connect on mount
+  // Acknowledge emergency
+  const acknowledgeEmergency = useCallback((alertId: string) => {
+    emit('provider:acknowledge-emergency', { emergencyId: alertId });
+    setState(prev => ({
+      ...prev,
+      pendingEmergencies: prev.pendingEmergencies.filter(e => e.id !== alertId),
+    }));
+  }, [emit]);
+
+  // View patient
+  const viewPatient = useCallback((patientId: string) => {
+    emit('provider:view-patient', { patientId });
+  }, [emit]);
+
+  // Send message to patient
+  const sendMessage = useCallback((patientId: string, content: string) => {
+    return emit('provider:message', { patientId, content });
+  }, [emit]);
+
+  // Set provider status
+  const setStatus = useCallback((status: 'online' | 'busy' | 'away') => {
+    emit('provider:status', { status });
+  }, [emit]);
+
+  // Auto-connect
   useEffect(() => {
-    if (config.autoConnect !== false) {
+    if (autoConnect) {
       connect();
+    }
+
+    // Request notification permission
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
     }
 
     return () => {
       disconnect();
     };
-  }, [config.autoConnect, connect, disconnect]);
-
-  // Set status (online/busy/away)
-  const setStatus = useCallback((status: 'online' | 'busy' | 'away') => {
-    emit('provider:status', { status });
-  }, [emit]);
-
-  // Notify viewing assessment
-  const notifyViewing = useCallback((assessmentId: string) => {
-    emit('assessment:viewing', { assessmentId });
-  }, [emit]);
-
-  // Update assessment status
-  const updateStatus = useCallback((assessmentId: string, newStatus: string) => {
-    emit('assessment:status-change', { assessmentId, newStatus });
-  }, [emit]);
+  }, [autoConnect, connect, disconnect]);
 
   return {
+    // State
     ...state,
+    
+    // Connection
     connect,
     disconnect,
+    
+    // Actions
     emit,
+    acknowledgeEmergency,
+    viewPatient,
+    sendMessage,
     setStatus,
-    notifyViewing,
-    updateStatus,
+    
+    // Socket reference
     socket: socketRef.current,
   };
 }

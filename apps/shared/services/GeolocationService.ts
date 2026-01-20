@@ -1,294 +1,389 @@
+// ============================================================
+// ATTENDING AI - Enhanced Geolocation Service
 // apps/shared/services/GeolocationService.ts
-// Geolocation Service for COMPASS Emergency Features
-// Provides location services for emergency response and nearby facility lookup
+//
+// GPS-based emergency facility finder with real mapping APIs
+// Revolutionary Feature: Instant emergency room navigation
+// ============================================================
 
-import type { UserLocation, EmergencyFacility } from '../types';
-
-// ================================
-// TYPES
-// ================================
-
-export interface GeolocationConfig {
-  enableHighAccuracy?: boolean;
-  timeout?: number;
-  maximumAge?: number;
+export interface Coordinates {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
 }
 
-export type LocationCallback = (location: UserLocation) => void;
-export type ErrorCallback = (error: GeolocationPositionError | Error) => void;
+export interface EmergencyFacility {
+  id: string;
+  name: string;
+  type: 'emergency' | 'urgent-care' | 'hospital' | 'clinic';
+  address: string;
+  phone: string;
+  distance: number; // miles
+  duration?: number; // minutes
+  coordinates: Coordinates;
+  openNow?: boolean;
+  open24Hours?: boolean;
+  waitTime?: string;
+  rating?: number;
+  placeId?: string;
+}
 
-// ================================
-// GEOLOCATION SERVICE
-// ================================
+export interface NurseHotline {
+  name: string;
+  number: string;
+  description?: string;
+  availability?: string;
+}
+
+export interface LocationResult {
+  success: boolean;
+  coordinates?: Coordinates;
+  error?: string;
+}
+
+export interface FacilitySearchResult {
+  success: boolean;
+  facilities: EmergencyFacility[];
+  userLocation?: Coordinates;
+  error?: string;
+}
+
+// =============================================================================
+// Haversine Distance Calculation
+// =============================================================================
+
+function toRadians(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
+
+export function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+  
+  return Math.round(distance * 100) / 100; // Round to 2 decimal places
+}
+
+// =============================================================================
+// Geolocation Service
+// =============================================================================
 
 class GeolocationServiceClass {
-  private static instance: GeolocationServiceClass;
-  private watchId: number | null = null;
-  private lastKnownLocation: UserLocation | null = null;
-  private config: GeolocationConfig = {
-    enableHighAccuracy: true,
-    timeout: 10000,
-    maximumAge: 60000, // 1 minute cache
-  };
+  private cachedLocation: Coordinates | null = null;
+  private cacheTimestamp: number = 0;
+  private readonly CACHE_DURATION = 60000; // 1 minute
 
-  private constructor() {}
-
-  static getInstance(): GeolocationServiceClass {
-    if (!GeolocationServiceClass.instance) {
-      GeolocationServiceClass.instance = new GeolocationServiceClass();
-    }
-    return GeolocationServiceClass.instance;
-  }
-
-  /**
-   * Configure geolocation options
-   */
-  configure(config: Partial<GeolocationConfig>): void {
-    this.config = { ...this.config, ...config };
-  }
-
-  /**
-   * Check if geolocation is available
-   */
-  isAvailable(): boolean {
-    return typeof navigator !== 'undefined' && 'geolocation' in navigator;
-  }
-
-  /**
-   * Get current position
-   */
-  getCurrentPosition(
-    onSuccess: LocationCallback,
-    onError?: ErrorCallback
-  ): void {
-    if (!this.isAvailable()) {
-      if (onError) {
-        onError(new Error('Geolocation is not supported by this browser'));
-      }
-      return;
+  // Get current location with caching
+  async getCurrentLocation(forceRefresh = false): Promise<LocationResult> {
+    // Return cached location if valid
+    if (
+      !forceRefresh &&
+      this.cachedLocation &&
+      Date.now() - this.cacheTimestamp < this.CACHE_DURATION
+    ) {
+      return { success: true, coordinates: this.cachedLocation };
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const location = this.positionToUserLocation(position);
-        this.lastKnownLocation = location;
-        onSuccess(location);
-      },
-      (error) => {
-        console.error('[GeolocationService] Error getting position:', error);
-        if (onError) {
-          onError(error);
+    // Check if geolocation is available
+    if (!navigator.geolocation) {
+      return {
+        success: false,
+        error: 'Geolocation is not supported by your browser',
+      };
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coordinates: Coordinates = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          };
+          
+          this.cachedLocation = coordinates;
+          this.cacheTimestamp = Date.now();
+          
+          resolve({ success: true, coordinates });
+        },
+        (error) => {
+          let errorMessage = 'Failed to get location';
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location access denied. Please enable location services.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out.';
+              break;
+          }
+          
+          resolve({ success: false, error: errorMessage });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: this.CACHE_DURATION,
         }
-      },
-      {
-        enableHighAccuracy: this.config.enableHighAccuracy,
-        timeout: this.config.timeout,
-        maximumAge: this.config.maximumAge,
-      }
-    );
-  }
-
-  /**
-   * Get current position as a Promise
-   */
-  async getCurrentPositionAsync(): Promise<UserLocation> {
-    return new Promise((resolve, reject) => {
-      this.getCurrentPosition(resolve, reject);
+      );
     });
   }
 
-  /**
-   * Watch position changes
-   */
-  watchPosition(
-    onSuccess: LocationCallback,
-    onError?: ErrorCallback
-  ): () => void {
-    if (!this.isAvailable()) {
-      if (onError) {
-        onError(new Error('Geolocation is not supported by this browser'));
-      }
-      return () => {};
-    }
-
-    // Clear any existing watch
-    this.stopWatching();
-
-    this.watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const location = this.positionToUserLocation(position);
-        this.lastKnownLocation = location;
-        onSuccess(location);
-      },
-      (error) => {
-        console.error('[GeolocationService] Watch error:', error);
-        if (onError) {
-          onError(error);
-        }
-      },
-      {
-        enableHighAccuracy: this.config.enableHighAccuracy,
-        timeout: this.config.timeout,
-        maximumAge: this.config.maximumAge,
-      }
-    );
-
-    return () => this.stopWatching();
-  }
-
-  /**
-   * Stop watching position
-   */
-  stopWatching(): void {
-    if (this.watchId !== null) {
-      navigator.geolocation.clearWatch(this.watchId);
-      this.watchId = null;
-    }
-  }
-
-  /**
-   * Get last known location (if available)
-   */
-  getLastKnownLocation(): UserLocation | null {
-    return this.lastKnownLocation;
-  }
-
-  // ================================
-  // EMERGENCY FACILITIES
-  // ================================
-
-  /**
-   * Find nearby emergency facilities
-   * Note: In production, this would call a real API
-   */
+  // Find nearby emergency facilities
   async findNearbyFacilities(
-    location: UserLocation,
-    type?: 'emergency-room' | 'urgent-care' | 'hospital'
-  ): Promise<EmergencyFacility[]> {
-    // In production, this would call Google Places API, Yelp, or a healthcare-specific API
-    // For now, return mock data
+    type: 'emergency' | 'urgent-care' | 'all' = 'all',
+    limit: number = 5,
+    radiusMiles: number = 25
+  ): Promise<FacilitySearchResult> {
+    // Get user location first
+    const locationResult = await this.getCurrentLocation();
     
-    const mockFacilities: EmergencyFacility[] = [
-      {
-        type: 'emergency-room',
-        name: 'UCHealth University of Colorado Hospital',
-        address: '12605 E 16th Ave, Aurora, CO 80045',
-        phone: '(720) 848-0000',
-        distance: 2.3,
-        waitTime: '15 min',
-        coordinates: {
-          latitude: location.latitude + 0.01,
-          longitude: location.longitude + 0.01,
-        },
-      },
-      {
-        type: 'urgent-care',
-        name: 'UCHealth Urgent Care - Anschutz',
-        address: '1635 Aurora Ct, Aurora, CO 80045',
-        phone: '(720) 848-9500',
-        distance: 1.8,
-        waitTime: '25 min',
-        coordinates: {
-          latitude: location.latitude - 0.005,
-          longitude: location.longitude + 0.008,
-        },
-      },
-      {
-        type: 'emergency-room',
-        name: 'Children\'s Hospital Colorado',
-        address: '13123 E 16th Ave, Aurora, CO 80045',
-        phone: '(720) 777-1234',
-        distance: 2.8,
-        waitTime: '30 min',
-        coordinates: {
-          latitude: location.latitude + 0.015,
-          longitude: location.longitude - 0.01,
-        },
-      },
-      {
-        type: 'hospital',
-        name: 'Denver Health Medical Center',
-        address: '777 Bannock St, Denver, CO 80204',
-        phone: '(303) 436-6000',
-        distance: 8.5,
-        waitTime: '45 min',
-        coordinates: {
-          latitude: location.latitude - 0.05,
-          longitude: location.longitude - 0.03,
-        },
-      },
-    ];
-
-    // Filter by type if specified
-    let facilities = type 
-      ? mockFacilities.filter(f => f.type === type)
-      : mockFacilities;
-
-    // Sort by distance
-    facilities = facilities.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-
-    return facilities;
-  }
-
-  /**
-   * Get directions URL to a facility
-   */
-  getDirectionsUrl(
-    from: UserLocation,
-    to: { latitude: number; longitude: number } | string
-  ): string {
-    const origin = `${from.latitude},${from.longitude}`;
-    
-    if (typeof to === 'string') {
-      // Address string
-      return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${encodeURIComponent(to)}`;
-    } else {
-      // Coordinates
-      const destination = `${to.latitude},${to.longitude}`;
-      return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+    if (!locationResult.success || !locationResult.coordinates) {
+      return {
+        success: false,
+        facilities: [],
+        error: locationResult.error || 'Could not determine your location',
+      };
     }
+
+    const { latitude, longitude } = locationResult.coordinates;
+
+    // Try Google Places API if available
+    if (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+      return this.searchWithGooglePlaces(latitude, longitude, type, limit, radiusMiles);
+    }
+
+    // Fallback to generating search URLs
+    return this.generateSearchFallback(latitude, longitude, type);
   }
 
-  /**
-   * Calculate distance between two points (Haversine formula)
-   */
-  calculateDistance(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number {
-    const R = 3959; // Earth's radius in miles
-    const dLat = this.toRad(lat2 - lat1);
-    const dLon = this.toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRad(lat1)) *
-        Math.cos(this.toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
+  // Google Places API search
+  private async searchWithGooglePlaces(
+    lat: number,
+    lng: number,
+    type: 'emergency' | 'urgent-care' | 'all',
+    limit: number,
+    radiusMiles: number
+  ): Promise<FacilitySearchResult> {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const radiusMeters = radiusMiles * 1609.34;
 
-  // ================================
-  // PRIVATE HELPERS
-  // ================================
+    const searchTypes = type === 'all' 
+      ? ['hospital', 'health'] 
+      : type === 'emergency' 
+        ? ['hospital'] 
+        : ['health'];
 
-  private positionToUserLocation(position: GeolocationPosition): UserLocation {
+    const facilities: EmergencyFacility[] = [];
+
+    for (const searchType of searchTypes) {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?` +
+          `location=${lat},${lng}&radius=${radiusMeters}&type=${searchType}&` +
+          `keyword=${type === 'urgent-care' ? 'urgent care' : 'emergency room'}&key=${apiKey}`
+        );
+
+        if (!response.ok) continue;
+
+        const data = await response.json();
+
+        if (data.results) {
+          data.results.forEach((place: any) => {
+            const distance = calculateDistance(
+              lat, lng,
+              place.geometry.location.lat,
+              place.geometry.location.lng
+            );
+
+            facilities.push({
+              id: place.place_id,
+              name: place.name,
+              type: place.types.includes('hospital') ? 'emergency' : 'urgent-care',
+              address: place.vicinity || place.formatted_address,
+              phone: '', // Requires Place Details API call
+              distance,
+              coordinates: {
+                latitude: place.geometry.location.lat,
+                longitude: place.geometry.location.lng,
+              },
+              openNow: place.opening_hours?.open_now,
+              rating: place.rating,
+              placeId: place.place_id,
+            });
+          });
+        }
+      } catch (error) {
+        console.error('[Geolocation] Google Places error:', error);
+      }
+    }
+
+    // Sort by distance and limit
+    facilities.sort((a, b) => a.distance - b.distance);
+    
     return {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      accuracy: position.coords.accuracy,
-      timestamp: new Date(position.timestamp).toISOString(),
+      success: true,
+      facilities: facilities.slice(0, limit),
+      userLocation: { latitude: lat, longitude: lng },
     };
   }
 
-  private toRad(deg: number): number {
-    return deg * (Math.PI / 180);
+  // Fallback with search URLs
+  private generateSearchFallback(
+    lat: number,
+    lng: number,
+    type: 'emergency' | 'urgent-care' | 'all'
+  ): FacilitySearchResult {
+    const searchQuery = type === 'urgent-care' 
+      ? 'urgent care near me' 
+      : type === 'emergency'
+        ? 'emergency room near me'
+        : 'hospital near me';
+
+    // Generate a helpful fallback facility with search link
+    const facilities: EmergencyFacility[] = [
+      {
+        id: 'search-google',
+        name: `Search ${type === 'urgent-care' ? 'Urgent Care' : 'Emergency Rooms'} Near You`,
+        type: type === 'urgent-care' ? 'urgent-care' : 'emergency',
+        address: 'Click to open Google Maps',
+        phone: '',
+        distance: 0,
+        coordinates: { latitude: lat, longitude: lng },
+      },
+    ];
+
+    return {
+      success: true,
+      facilities,
+      userLocation: { latitude: lat, longitude: lng },
+    };
+  }
+
+  // Build Google Maps directions URL
+  buildDirectionsUrl(
+    destination: string | Coordinates,
+    travelMode: 'driving' | 'walking' | 'transit' = 'driving'
+  ): string {
+    const destParam = typeof destination === 'string'
+      ? encodeURIComponent(destination)
+      : `${destination.latitude},${destination.longitude}`;
+
+    return `https://www.google.com/maps/dir/?api=1&destination=${destParam}&travelmode=${travelMode}`;
+  }
+
+  // Build Apple Maps directions URL
+  buildAppleMapsUrl(
+    destination: string | Coordinates,
+    travelMode: 'driving' | 'walking' | 'transit' = 'driving'
+  ): string {
+    const modeMap = { driving: 'd', walking: 'w', transit: 'r' };
+    
+    const destParam = typeof destination === 'string'
+      ? encodeURIComponent(destination)
+      : `${destination.latitude},${destination.longitude}`;
+
+    return `https://maps.apple.com/?daddr=${destParam}&dirflg=${modeMap[travelMode]}`;
+  }
+
+  // Build phone call URL
+  buildCallUrl(phoneNumber: string): string {
+    // Clean the phone number
+    const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+    return `tel:${cleaned}`;
+  }
+
+  // Build SMS URL
+  buildSmsUrl(phoneNumber: string, body?: string): string {
+    const cleaned = phoneNumber.replace(/[^\d+]/g, '');
+    const bodyParam = body ? `?body=${encodeURIComponent(body)}` : '';
+    return `sms:${cleaned}${bodyParam}`;
+  }
+
+  // Get emergency hotlines
+  getEmergencyHotlines(): NurseHotline[] {
+    return [
+      {
+        name: '911 Emergency',
+        number: '911',
+        description: 'Police, Fire, Medical Emergency',
+        availability: '24/7',
+      },
+      {
+        name: 'Suicide & Crisis Lifeline',
+        number: '988',
+        description: 'Mental health crisis support',
+        availability: '24/7',
+      },
+      {
+        name: 'Poison Control',
+        number: '1-800-222-1222',
+        description: 'Poisoning emergencies',
+        availability: '24/7',
+      },
+      {
+        name: 'Domestic Violence Hotline',
+        number: '1-800-799-7233',
+        description: 'Domestic abuse support',
+        availability: '24/7',
+      },
+    ];
+  }
+
+  // Get insurance nurse lines
+  getInsuranceNurseLines(): NurseHotline[] {
+    return [
+      { name: 'Blue Cross Blue Shield', number: '1-800-224-6792' },
+      { name: 'Aetna', number: '1-800-556-1555' },
+      { name: 'UnitedHealthcare', number: '1-800-901-9355' },
+      { name: 'Cigna', number: '1-800-244-6224' },
+      { name: 'Humana', number: '1-800-622-9529' },
+      { name: 'Kaiser Permanente', number: '1-800-454-8000' },
+      { name: 'Anthem', number: '1-800-224-6792' },
+    ];
+  }
+
+  // Detect if on mobile device
+  isMobileDevice(): boolean {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  }
+
+  // Get best maps app URL based on device
+  getBestMapsUrl(destination: string | Coordinates): string {
+    if (this.isMobileDevice() && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      return this.buildAppleMapsUrl(destination);
+    }
+    return this.buildDirectionsUrl(destination);
+  }
+
+  // Open directions in appropriate app
+  openDirections(destination: string | Coordinates): void {
+    const url = this.getBestMapsUrl(destination);
+    window.open(url, '_blank');
+  }
+
+  // Call phone number
+  callNumber(phoneNumber: string): void {
+    window.location.href = this.buildCallUrl(phoneNumber);
   }
 }
 
 // Export singleton instance
-export const GeolocationService = GeolocationServiceClass.getInstance();
+export const GeolocationService = new GeolocationServiceClass();
 export default GeolocationService;
