@@ -128,6 +128,42 @@ export * from './stores';
 export * from './auth';
 
 // =============================================================================
+// AUDIT LOGGING (HIPAA Compliant)
+// =============================================================================
+export {
+  auditLog,
+  auditPHIAccess,
+  auditEmergencyEvent,
+  auditSecurityEvent,
+  auditLogWithContext,
+  createAuditContext,
+  queryAuditLogs,
+  getPatientAccessHistory,
+  getUserActivityLog,
+  AuditActions,
+  type AuditLogEntry,
+  type AuditContext,
+  type AuditQueryOptions,
+  type AuditAction,
+} from './lib/audit';
+
+// =============================================================================
+// API AUTH WRAPPERS
+// =============================================================================
+export {
+  withApiAuth,
+  withProviderAuth,
+  withClinicalAuth,
+  withAdminAuth,
+  withPatientAuth,
+  type AuthenticatedUser,
+  type AuthenticatedRequest,
+  type AuthenticatedApiHandler,
+  type WithApiAuthOptions,
+  type UserRole,
+} from './lib/auth/withApiAuth';
+
+// =============================================================================
 // CLINICAL CATALOGS
 // Export with explicit names to avoid conflicts
 // Note: PatientContext and OrderPriority are already exported from types/clinical.types
