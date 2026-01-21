@@ -1,100 +1,109 @@
-// Health Check API
+// ============================================================
+// Health Check API Endpoint
 // apps/provider-portal/pages/api/health.ts
 //
-// Used by load balancers, Kubernetes probes, and monitoring systems
+// Kubernetes-compatible health/readiness probe
+// ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/api/prisma';
 
-interface HealthResponse {
+interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
   timestamp: string;
   version: string;
   uptime: number;
   checks: {
-    database: 'ok' | 'error';
-    memory: 'ok' | 'warning' | 'error';
-  };
-  details?: {
-    dbLatency?: number;
-    memoryUsage?: {
-      heapUsed: number;
-      heapTotal: number;
-      percentage: number;
-    };
-    error?: string;
+    database: HealthCheck;
+    memory: HealthCheck;
+    [key: string]: HealthCheck;
   };
 }
 
+interface HealthCheck {
+  status: 'pass' | 'fail' | 'warn';
+  latency?: number;
+  message?: string;
+}
+
+const startTime = Date.now();
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<HealthResponse>
+  res: NextApiResponse<HealthStatus>
 ) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).end();
   }
 
-  const _startTime = Date.now();
-  
-  let dbStatus: 'ok' | 'error' = 'ok';
-  let dbLatency: number | undefined;
-  let dbError: string | undefined;
-
-  // Check database connectivity
-  try {
-    const dbStart = Date.now();
-    await prisma.$queryRaw`SELECT 1`;
-    dbLatency = Date.now() - dbStart;
-  } catch (error) {
-    dbStatus = 'error';
-    dbError = error instanceof Error ? error.message : 'Database connection failed';
-  }
-
-  // Check memory usage
-  const memoryUsage = process.memoryUsage();
-  const heapPercentage = (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100;
-  let memoryStatus: 'ok' | 'warning' | 'error' = 'ok';
-  
-  if (heapPercentage > 90) {
-    memoryStatus = 'error';
-  } else if (heapPercentage > 75) {
-    memoryStatus = 'warning';
-  }
-
-  // Determine overall status
-  let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-  
-  if (dbStatus === 'error') {
-    status = 'unhealthy';
-  } else if (memoryStatus === 'error') {
-    status = 'unhealthy';
-  } else if (memoryStatus === 'warning') {
-    status = 'degraded';
-  }
-
-  const response: HealthResponse = {
-    status,
-    timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0',
-    uptime: process.uptime(),
-    checks: {
-      database: dbStatus,
-      memory: memoryStatus,
-    },
-    details: {
-      dbLatency,
-      memoryUsage: {
-        heapUsed: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-        heapTotal: Math.round(memoryUsage.heapTotal / 1024 / 1024),
-        percentage: Math.round(heapPercentage),
-      },
-      ...(dbError && { error: dbError }),
-    },
+  const checks: HealthStatus['checks'] = {
+    database: await checkDatabase(),
+    memory: checkMemory(),
   };
 
-  // Return appropriate status code
-  const statusCode = status === 'healthy' ? 200 : status === 'degraded' ? 200 : 503;
+  // Determine overall status
+  const statuses = Object.values(checks).map(c => c.status);
+  let overallStatus: HealthStatus['status'] = 'healthy';
   
-  return res.status(statusCode).json(response);
+  if (statuses.includes('fail')) {
+    overallStatus = 'unhealthy';
+  } else if (statuses.includes('warn')) {
+    overallStatus = 'degraded';
+  }
+
+  const healthStatus: HealthStatus = {
+    status: overallStatus,
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    uptime: Math.floor((Date.now() - startTime) / 1000),
+    checks,
+  };
+
+  const statusCode = overallStatus === 'unhealthy' ? 503 : 200;
+  
+  res.status(statusCode).json(healthStatus);
+}
+
+async function checkDatabase(): Promise<HealthCheck> {
+  const start = Date.now();
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return {
+      status: 'pass',
+      latency: Date.now() - start,
+    };
+  } catch (error: any) {
+    return {
+      status: 'fail',
+      latency: Date.now() - start,
+      message: error.message,
+    };
+  }
+}
+
+function checkMemory(): HealthCheck {
+  const used = process.memoryUsage();
+  const heapUsedMB = Math.round(used.heapUsed / 1024 / 1024);
+  const heapTotalMB = Math.round(used.heapTotal / 1024 / 1024);
+  const usagePercent = (used.heapUsed / used.heapTotal) * 100;
+
+  if (usagePercent > 90) {
+    return {
+      status: 'fail',
+      message: `Memory usage critical: ${heapUsedMB}MB / ${heapTotalMB}MB (${usagePercent.toFixed(1)}%)`,
+    };
+  }
+  
+  if (usagePercent > 75) {
+    return {
+      status: 'warn',
+      message: `Memory usage high: ${heapUsedMB}MB / ${heapTotalMB}MB (${usagePercent.toFixed(1)}%)`,
+    };
+  }
+
+  return {
+    status: 'pass',
+    message: `${heapUsedMB}MB / ${heapTotalMB}MB (${usagePercent.toFixed(1)}%)`,
+  };
 }
