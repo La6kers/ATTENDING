@@ -1,0 +1,184 @@
+# ============================================================
+# ATTENDING AI - WebSocket Service Kubernetes Deployment
+# infrastructure/k8s/websocket-service.yaml
+# ============================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: websocket-config
+  namespace: attending-ai
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  CORS_ORIGINS: "https://provider.attending.ai,https://compass.attending.ai"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocket-service
+  namespace: attending-ai
+  labels:
+    app: websocket-service
+    component: backend
+    tier: realtime
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: websocket-service
+  template:
+    metadata:
+      labels:
+        app: websocket-service
+        component: backend
+        tier: realtime
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3003"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: attending-ai-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+      
+      containers:
+      - name: websocket-service
+        image: ghcr.io/la6kers/attending/websocket:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 3003
+          name: ws
+          protocol: TCP
+        
+        envFrom:
+        - configMapRef:
+            name: websocket-config
+        
+        env:
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: provider-portal-secrets
+              key: REDIS_URL
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: provider-portal-secrets
+              key: NEXTAUTH_SECRET
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: websocket-service
+            topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: websocket-service
+  namespace: attending-ai
+  labels:
+    app: websocket-service
+  annotations:
+    # Enable sticky sessions for WebSocket connections
+    service.beta.kubernetes.io/azure-load-balancer-tcp-idle-timeout: "30"
+spec:
+  type: ClusterIP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  ports:
+  - port: 80
+    targetPort: 3003
+    protocol: TCP
+    name: ws
+  selector:
+    app: websocket-service
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: websocket-hpa
+  namespace: attending-ai
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: websocket-service
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: websocket-pdb
+  namespace: attending-ai
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: websocket-service
