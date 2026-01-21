@@ -3,5 +3,13 @@
 // apps/provider-portal/components/analytics/index.ts
 // ============================================================
 
-export { AnalyticsDashboard } from './AnalyticsDashboard';
-export { BillingCodingPanel } from './BillingCodingPanel';
+export { ExecutiveAnalytics } from './ExecutiveAnalytics';
+export type {
+  TimeRange,
+  MetricTrend,
+  KPIMetric,
+  ProviderMetrics,
+  DepartmentMetrics,
+  QualityMeasure,
+  ChartDataPoint,
+} from './ExecutiveAnalytics';
