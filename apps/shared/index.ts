@@ -72,9 +72,12 @@ export {
 
 export {
   GeolocationService,
-  type GeolocationConfig,
-  type LocationCallback,
-  type ErrorCallback,
+  calculateDistance,
+  type Coordinates,
+  type EmergencyFacility,
+  type NurseHotline,
+  type LocationResult,
+  type FacilitySearchResult,
 } from './services/GeolocationService';
 
 // =============================================================================

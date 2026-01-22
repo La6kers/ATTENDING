@@ -16,7 +16,6 @@ export {
   type DifferentialDiagnosisResult,
   type AIServiceConfig,
   type ProviderFeedback,
-  type MedicalEntity,
 } from './differentialDiagnosis';
 
 // Default export

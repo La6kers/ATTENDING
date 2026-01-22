@@ -44,7 +44,7 @@ export class SessionManager {
       createdAt: new Date(session.createdAt),
       expiresAt: new Date(session.expiresAt),
       lastActivityAt: new Date(),
-      extensionCount: 0,
+      extensionCount: session.extensionCount ?? 0,
     };
     this.status = 'active';
     this.startTimers();

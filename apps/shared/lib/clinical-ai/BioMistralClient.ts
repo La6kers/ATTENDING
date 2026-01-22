@@ -68,7 +68,7 @@ export class BioMistralClient {
         treatmentPlan,
         clinicalSummary: this.generateClinicalSummary(redFlagEvaluation, differentialDiagnosis, treatmentPlan),
         disclaimer: this.getDisclaimer(),
-        processingTime: Date.now() - startTime,
+        processingTime: Math.max(1, Date.now() - startTime),
         modelInfo: {
           name: this.config.model,
           version: '1.0.0',
@@ -609,7 +609,7 @@ export class BioMistralClient {
       redFlagEvaluation,
       clinicalSummary: `EMERGENCY: ${redFlagEvaluation.summary}. Immediate intervention required.`,
       disclaimer: this.getDisclaimer(),
-      processingTime: Date.now() - startTime,
+      processingTime: Math.max(1, Date.now() - startTime),
       modelInfo: {
         name: this.config.model,
         version: '1.0.0',

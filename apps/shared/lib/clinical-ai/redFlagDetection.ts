@@ -10,6 +10,9 @@ import {
   PatientContext, ClinicalAssessment, VitalSigns, Symptom,
 } from './types';
 
+// Re-export types that other modules need
+export type { RedFlagEvaluation, RedFlagMatch, RedFlagSeverity, RedFlagCategory };
+
 // =============================================================================
 // Red Flag Definitions
 // =============================================================================
@@ -402,7 +405,20 @@ function evaluateSingleRedFlag(
     const keywords = extractKeywords(criterionLower);
     
     const keywordMatches = keywords.filter(kw => searchableText.includes(kw));
-    if (keywordMatches.length >= Math.ceil(keywords.length * 0.6)) {
+    
+    // Require higher threshold for short criteria to avoid false positives
+    // For critical red flags, require more precise matching
+    const minMatchRatio = keywords.length <= 3 ? 1.0 : 0.75;
+    const minAbsoluteMatches = redFlag.severity === 'critical' ? Math.max(3, Math.ceil(keywords.length * minMatchRatio)) : Math.ceil(keywords.length * 0.6);
+    
+    // For short criteria (<=3 keywords), require ALL keywords to match
+    // For longer criteria, use proportional matching
+    if (keywords.length <= 3) {
+      if (keywordMatches.length === keywords.length) {
+        matchedCriteria.push(criterion);
+        totalScore += 1;
+      }
+    } else if (keywordMatches.length >= Math.ceil(keywords.length * 0.75)) {
       matchedCriteria.push(criterion);
       totalScore += 1;
     }

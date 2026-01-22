@@ -130,10 +130,11 @@ interface SessionWarningProps {
 
 export function SessionWarning({ warningThreshold = 5 * 60 * 1000, children }: SessionWarningProps): JSX.Element | null {
   const { sessionStatus, sessionTimeRemaining, sessionTimeRemainingFormatted, extendSession } = useAuth();
+  const canExtend = sessionStatus === 'active' || sessionStatus === 'expiring';
   const shouldShow = sessionStatus === 'expiring' || (sessionStatus === 'active' && sessionTimeRemaining <= warningThreshold);
   if (!shouldShow) return null;
 
-  if (children) return <>{children({ timeRemaining: sessionTimeRemaining, timeRemainingFormatted: sessionTimeRemainingFormatted, extendSession, canExtend: sessionStatus !== 'expired' })}</>;
+  if (children) return <>{children({ timeRemaining: sessionTimeRemaining, timeRemainingFormatted: sessionTimeRemainingFormatted, extendSession, canExtend })}</>;
 
   return (
     <div className="fixed bottom-4 right-4 bg-yellow-100 border border-yellow-400 rounded-lg p-4 shadow-lg z-50">

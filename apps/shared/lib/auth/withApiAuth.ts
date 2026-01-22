@@ -121,9 +121,12 @@ export function withApiAuth(
         const authModule = await import('@attending/shared/auth');
         authOptions = authModule.authOptions;
       } catch {
-        // Fallback for provider portal
-        const authModule = await import('../../../provider-portal/pages/api/auth/[...nextauth]');
-        authOptions = authModule.authOptions;
+        // Auth options not available - this shouldn't happen in properly configured apps
+        console.error('[withApiAuth] Failed to load auth options. Check your auth configuration.');
+        return res.status(500).json({
+          error: 'Authentication configuration error',
+          code: 'AUTH_CONFIG_ERROR',
+        });
       }
       
       // Get session

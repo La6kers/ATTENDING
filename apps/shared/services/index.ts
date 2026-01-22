@@ -26,9 +26,12 @@ export {
 // Geolocation Service
 export { 
   GeolocationService,
-  type GeolocationConfig,
-  type LocationCallback,
-  type ErrorCallback,
+  calculateDistance,
+  type Coordinates,
+  type EmergencyFacility,
+  type NurseHotline,
+  type LocationResult,
+  type FacilitySearchResult,
 } from './GeolocationService';
 
 // Clinical Recommendation Service - AI-powered recommendations

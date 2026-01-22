@@ -46,7 +46,8 @@
     "socket.io-client": "^4.7.0",
     "next-auth": "^4.24.0",
     "xstate": "^4.38.0",
-    "@xstate/react": "^3.2.0"
+    "@xstate/react": "^3.2.0",
+    "lucide-react": "^0.263.1"
   },
   "peerDependenciesMeta": {
     "react": { "optional": false },

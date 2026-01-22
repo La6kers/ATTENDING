@@ -9,10 +9,12 @@
 export { 
   useWebSocket, 
   type WebSocketConfig, 
-  type WebSocketState,
-  type WebSocketActions,
-  type ProviderWSEvents,
-  type PatientWSEvents,
+  type WebSocketHook,
+  type User,
+  type Message,
+  type EmergencyAlert,
+  type AssessmentUpdate,
+  type ConnectionStatus,
 } from './useWebSocket';
 
 // Local storage hook for persistence

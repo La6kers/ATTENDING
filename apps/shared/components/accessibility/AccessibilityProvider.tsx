@@ -677,7 +677,7 @@ const AccessibilitySettingsPanel: React.FC = () => {
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-slate-200 bg-slate-50">
           <button
-            onClick={() => setSettings(DEFAULT_SETTINGS)}
+            onClick={() => updateSettings(DEFAULT_SETTINGS)}
             className="px-4 py-2 text-slate-600 hover:text-slate-800 transition-colors"
           >
             Reset to defaults
