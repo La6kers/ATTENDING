@@ -1,0 +1,321 @@
+# ATTENDING AI - Frontend CI/CD Pipeline
+# Builds, tests, and deploys the Next.js frontend applications
+
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+
+env:
+  NODE_VERSION: '20.x'
+  PNPM_VERSION: '8'
+
+jobs:
+  # ==========================================================================
+  # BUILD AND TEST
+  # ==========================================================================
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Run unit tests
+        run: pnpm test:ci
+        env:
+          CI: true
+
+      - name: Build all apps
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_SIGNALR_URL: ${{ secrets.NEXT_PUBLIC_SIGNALR_URL }}
+
+      - name: Upload Provider Portal build
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-portal-build
+          path: apps/provider-portal/.next
+          retention-days: 5
+
+      - name: Upload Patient Portal build
+        uses: actions/upload-artifact@v4
+        with:
+          name: patient-portal-build
+          path: apps/patient-portal/.next
+          retention-days: 5
+
+  # ==========================================================================
+  # E2E TESTS
+  # ==========================================================================
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Download Provider Portal build
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-portal-build
+          path: apps/provider-portal/.next
+
+      - name: Run E2E tests
+        run: pnpm test:e2e
+        env:
+          CI: true
+          PLAYWRIGHT_TEST_BASE_URL: http://localhost:3000
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/provider-portal/playwright-report
+          retention-days: 30
+
+  # ==========================================================================
+  # SECURITY SCANNING
+  # ==========================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run npm audit
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  # ==========================================================================
+  # DEPLOY PROVIDER PORTAL TO STAGING
+  # ==========================================================================
+  deploy-provider-staging:
+    name: Deploy Provider Portal (Staging)
+    runs-on: ubuntu-latest
+    needs: [build, e2e]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.attendingai.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-portal-build
+          path: apps/provider-portal/.next
+
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PROVIDER }}
+          working-directory: ./apps/provider-portal
+          alias-domains: staging.attendingai.com
+
+  # ==========================================================================
+  # DEPLOY PATIENT PORTAL TO STAGING
+  # ==========================================================================
+  deploy-patient-staging:
+    name: Deploy Patient Portal (Staging)
+    runs-on: ubuntu-latest
+    needs: [build, e2e]
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://patient-staging.attendingai.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: patient-portal-build
+          path: apps/patient-portal/.next
+
+      - name: Deploy to Vercel (Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PATIENT }}
+          working-directory: ./apps/patient-portal
+          alias-domains: patient-staging.attendingai.com
+
+  # ==========================================================================
+  # DEPLOY PROVIDER PORTAL TO PRODUCTION
+  # ==========================================================================
+  deploy-provider-production:
+    name: Deploy Provider Portal (Production)
+    runs-on: ubuntu-latest
+    needs: [build, e2e, security]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://app.attendingai.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-portal-build
+          path: apps/provider-portal/.next
+
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PROVIDER }}
+          vercel-args: '--prod'
+          working-directory: ./apps/provider-portal
+          alias-domains: app.attendingai.com
+
+      - name: Notify deployment
+        uses: slackapi/slack-github-action@v1
+        if: always()
+        with:
+          payload: |
+            {
+              "text": "Provider Portal deployment to production: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*ATTENDING AI Provider Portal Deployment*\n*Status:* ${{ job.status }}\n*URL:* https://app.attendingai.com\n*Commit:* ${{ github.sha }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # ==========================================================================
+  # DEPLOY PATIENT PORTAL TO PRODUCTION
+  # ==========================================================================
+  deploy-patient-production:
+    name: Deploy Patient Portal (Production)
+    runs-on: ubuntu-latest
+    needs: [build, e2e, security]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://patient.attendingai.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: patient-portal-build
+          path: apps/patient-portal/.next
+
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_PATIENT }}
+          vercel-args: '--prod'
+          working-directory: ./apps/patient-portal
+          alias-domains: patient.attendingai.com

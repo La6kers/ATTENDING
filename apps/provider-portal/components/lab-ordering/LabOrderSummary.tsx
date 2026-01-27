@@ -60,11 +60,13 @@ export const LabOrderSummary: React.FC<LabOrderSummaryProps> = ({
     );
   }
 
-  // Group labs by category
-  const labsByCategory = selectedLabs.reduce((acc, lab) => {
-    const category = lab.test.category;
+  // Group labs by category - use lab.lab (primary) or lab.test (backward compat)
+  const labsByCategory = selectedLabs.reduce((acc, selectedLab) => {
+    const labData = selectedLab.lab || selectedLab.test;
+    if (!labData) return acc;
+    const category = labData.category;
     if (!acc[category]) acc[category] = [];
-    acc[category].push(lab);
+    acc[category].push(selectedLab);
     return acc;
   }, {} as Record<string, SelectedLab[]>);
 
@@ -152,27 +154,31 @@ export const LabOrderSummary: React.FC<LabOrderSummaryProps> = ({
                   {category}
                 </h4>
                 <div className="space-y-1">
-                  {labs.map((lab) => (
-                    <div
-                      key={lab.test.code}
-                      className="flex items-center justify-between bg-gray-50 p-2 rounded"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-900">{lab.test.name}</span>
-                        <PriorityBadge priority={lab.priority as 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE'} size="sm" />
-                        {lab.aiRecommended && <AIBadge size="sm" />}
+                  {labs.map((selectedLab) => {
+                    const labData = selectedLab.lab || selectedLab.test;
+                    if (!labData) return null;
+                    return (
+                      <div
+                        key={labData.code}
+                        className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-900">{labData.name}</span>
+                          <PriorityBadge priority={selectedLab.priority as 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE'} size="sm" />
+                          {selectedLab.aiRecommended && <AIBadge size="sm" />}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-500">${labData.cost}</span>
+                          <button
+                            onClick={() => onRemoveLab(labData.code)}
+                            className="text-gray-400 hover:text-red-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-gray-500">${lab.test.cost}</span>
-                        <button
-                          onClick={() => onRemoveLab(lab.test.code)}
-                          className="text-gray-400 hover:text-red-600"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}

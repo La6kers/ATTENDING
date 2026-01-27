@@ -1,8 +1,6 @@
 // ClinicalAlertBanner.tsx
-// Clinical decision support alert banner
+// Clinical decision support alert banner - click anywhere to dismiss
 // apps/provider-portal/components/shared/ClinicalAlertBanner.tsx
-//
-// Updated to use @attending/ui-primitives design tokens
 
 import React from 'react';
 import { AlertTriangle, X, ChevronRight, Bell, Info, AlertCircle } from 'lucide-react';
@@ -28,7 +26,6 @@ export interface ClinicalAlertBannerProps {
   className?: string;
 }
 
-// Alert styles using design tokens
 const alertStyles = {
   critical: {
     container: 'bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300',
@@ -36,7 +33,6 @@ const alertStyles = {
     title: 'text-red-900',
     message: 'text-red-700',
     button: 'bg-red-600 hover:bg-red-700 text-white',
-    animation: 'animate-critical-pulse',
   },
   warning: {
     container: 'bg-gradient-to-r from-amber-50 to-yellow-100 border-2 border-amber-300',
@@ -44,7 +40,6 @@ const alertStyles = {
     title: 'text-amber-900',
     message: 'text-amber-700',
     button: 'bg-amber-600 hover:bg-amber-700 text-white',
-    animation: '',
   },
   info: {
     container: 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300',
@@ -52,11 +47,9 @@ const alertStyles = {
     title: 'text-blue-900',
     message: 'text-blue-700',
     button: 'bg-blue-600 hover:bg-blue-700 text-white',
-    animation: '',
   },
 };
 
-// Icon mapping by type
 const alertIcons = {
   critical: AlertTriangle,
   warning: AlertCircle,
@@ -71,11 +64,7 @@ const ClinicalAlertBanner: React.FC<ClinicalAlertBannerProps> = ({
   maxVisible = 3,
   className = '',
 }) => {
-  // Filter to show only unacknowledged alerts, limited to maxVisible
-  const visibleAlerts = alerts
-    .filter(a => !a.acknowledged)
-    .slice(0, maxVisible);
-
+  const visibleAlerts = alerts.filter(a => !a.acknowledged).slice(0, maxVisible);
   if (visibleAlerts.length === 0) return null;
 
   const remainingCount = alerts.filter(a => !a.acknowledged).length - visibleAlerts.length;
@@ -89,34 +78,31 @@ const ClinicalAlertBanner: React.FC<ClinicalAlertBannerProps> = ({
         return (
           <div
             key={alert.id}
+            onClick={() => onDismiss?.(alert.id)}
             className={cn(
-              'rounded-xl p-4 flex items-start gap-3 animate-slide-down',
-              styles.container,
-              styles.animation
+              'rounded-xl p-4 flex items-start gap-3 cursor-pointer',
+              'transition-all hover:opacity-90 active:scale-[0.99]',
+              styles.container
             )}
             role="alert"
+            title="Click anywhere to dismiss"
           >
-            {/* Icon */}
-            <div className="flex-shrink-0 mt-0.5">
-              <Icon className={cn('w-6 h-6', styles.icon)} />
-            </div>
-
-            {/* Content */}
+            <Icon className={cn('w-6 h-6 flex-shrink-0 mt-0.5', styles.icon)} />
             <div className="flex-1 min-w-0">
-              <h4 className={cn('font-semibold text-base', styles.title)}>
+              <h4 className={cn('font-semibold', styles.title)}>
                 {alert.type === 'critical' && '⚠️ '}
                 {alert.title}
               </h4>
               <p className={cn('text-sm mt-1', styles.message)}>{alert.message}</p>
-
-              {/* Action button */}
               {alert.action && alert.actionLabel && (
                 <button
-                  onClick={() => onAction?.(alert.id, alert.action!)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAction?.(alert.id, alert.action!);
+                  }}
                   className={cn(
                     'mt-3 px-4 py-2 rounded-lg text-sm font-medium',
-                    'inline-flex items-center gap-2 transition-all duration-200',
-                    'hover:-translate-y-0.5 hover:shadow-md',
+                    'inline-flex items-center gap-2 transition-colors',
                     styles.button
                   )}
                 >
@@ -125,45 +111,21 @@ const ClinicalAlertBanner: React.FC<ClinicalAlertBannerProps> = ({
                 </button>
               )}
             </div>
-
-            {/* Dismiss/Acknowledge buttons */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {onAcknowledge && (
-                <button
-                  onClick={() => onAcknowledge(alert.id)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
-                  title="Acknowledge"
-                >
-                  <Bell className="w-4 h-4" />
-                </button>
-              )}
-              {onDismiss && (
-                <button
-                  onClick={() => onDismiss(alert.id)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-lg transition-colors"
-                  title="Dismiss"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+            <X className="w-5 h-5 text-gray-400 flex-shrink-0" />
           </div>
         );
       })}
 
-      {/* Show more indicator */}
       {remainingCount > 0 && (
-        <div className="text-center">
-          <button className="text-sm text-gray-500 hover:text-gray-700 hover:underline">
-            +{remainingCount} more alert{remainingCount > 1 ? 's' : ''}
-          </button>
-        </div>
+        <p className="text-center text-sm text-gray-500">
+          +{remainingCount} more alert{remainingCount > 1 ? 's' : ''}
+        </p>
       )}
     </div>
   );
 };
 
-// Simplified Critical Alert Banner for quick use
+// SimpleCriticalAlert - Click anywhere to dismiss
 export interface SimpleCriticalAlertProps {
   title: string;
   message: string;
@@ -176,52 +138,41 @@ export interface SimpleCriticalAlertProps {
 export const SimpleCriticalAlert: React.FC<SimpleCriticalAlertProps> = ({
   title,
   message,
-  actionLabel = 'View Emergency Protocol',
+  actionLabel,
   onAction,
   onDismiss,
   className = '',
-}) => {
-  const styles = alertStyles.critical;
-
-  return (
-    <div
-      className={cn(
-        'rounded-xl p-4 flex items-start gap-3 animate-slide-down',
-        styles.container,
-        styles.animation,
-        className
-      )}
-      role="alert"
-    >
-      <AlertTriangle className={cn('w-6 h-6 flex-shrink-0 mt-0.5', styles.icon)} />
-      <div className="flex-1">
-        <h4 className={cn('font-semibold text-base', styles.title)}>⚠️ {title}</h4>
-        <p className={cn('text-sm mt-1', styles.message)}>{message}</p>
-        {onAction && (
-          <button
-            onClick={onAction}
-            className={cn(
-              'mt-3 px-4 py-2 rounded-lg text-sm font-medium',
-              'inline-flex items-center gap-2 transition-all duration-200',
-              'hover:-translate-y-0.5 hover:shadow-md',
-              styles.button
-            )}
-          >
-            {actionLabel}
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-      {onDismiss && (
+}) => (
+  <div
+    onClick={onDismiss}
+    className={cn(
+      'rounded-xl p-4 flex items-start gap-3 cursor-pointer',
+      'bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300',
+      'transition-all hover:opacity-90 active:scale-[0.99]',
+      className
+    )}
+    role="alert"
+    title="Click anywhere to dismiss"
+  >
+    <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+    <div className="flex-1">
+      <h4 className="font-semibold text-red-900">⚠️ {title}</h4>
+      <p className="text-sm mt-1 text-red-700">{message}</p>
+      {onAction && actionLabel && (
         <button
-          onClick={onDismiss}
-          className="p-2 text-red-400 hover:text-red-600 hover:bg-white/50 rounded-lg transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAction();
+          }}
+          className="mt-3 px-4 py-2 rounded-lg text-sm font-medium bg-red-600 hover:bg-red-700 text-white inline-flex items-center gap-2"
         >
-          <X className="w-5 h-5" />
+          {actionLabel}
+          <ChevronRight className="w-4 h-4" />
         </button>
       )}
     </div>
-  );
-};
+    <X className="w-5 h-5 text-red-400 flex-shrink-0" />
+  </div>
+);
 
 export default ClinicalAlertBanner;

@@ -144,7 +144,11 @@ export function VoiceInput({
     recognitionRef.current = recognition;
 
     return () => {
-      try { recognitionRef.current?.stop(); } catch (e) {}
+      try {
+        recognitionRef.current?.stop();
+      } catch (_e) {
+        // Recognition may already be stopped
+      }
     };
   }, [hasSpeechRecognition, language, continuous, autoSubmit, onTranscript, onError, onListeningChange]);
 
@@ -174,8 +178,8 @@ export function VoiceInput({
         animationRef.current = requestAnimationFrame(updateLevels);
       };
       updateLevels();
-    } catch (err) {
-      console.error('[VoiceInput] Audio visualization error:', err);
+    } catch (_err) {
+      console.error('[VoiceInput] Audio visualization error:', _err);
     }
   }, [showWaveform]);
 
@@ -200,7 +204,7 @@ export function VoiceInput({
       try {
         recognitionRef.current.start();
         startAudioVisualization();
-      } catch (err) {
+      } catch (_err) {
         setError('Failed to start voice recognition');
       }
     } else {
@@ -237,7 +241,7 @@ export function VoiceInput({
 
             const { text } = await response.json();
             if (text) onTranscript(text, true);
-          } catch (err) {
+          } catch (_err) {
             setError('Failed to transcribe audio');
             onError?.('Failed to transcribe audio');
           } finally {
@@ -250,8 +254,9 @@ export function VoiceInput({
         setIsListening(true);
         onListeningChange?.(true);
         startAudioVisualization();
-      } catch (err: any) {
-        if (err.name === 'NotAllowedError') {
+      } catch (err: unknown) {
+        const error = err as { name?: string };
+        if (error.name === 'NotAllowedError') {
           setError('Microphone access denied');
           setPermissionGranted(false);
         } else {
@@ -264,7 +269,11 @@ export function VoiceInput({
 
   const stopListening = useCallback(() => {
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-    try { recognitionRef.current?.stop(); } catch (e) {}
+    try {
+      recognitionRef.current?.stop();
+    } catch (_e) {
+      // Recognition may already be stopped
+    }
     if (mediaRecorderRef.current?.state !== 'inactive') mediaRecorderRef.current?.stop();
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -276,10 +285,18 @@ export function VoiceInput({
   }, [stopAudioVisualization, onListeningChange]);
 
   const toggleListening = useCallback(() => {
-    isListening ? stopListening() : startListening();
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
   }, [isListening, startListening, stopListening]);
 
-  useEffect(() => () => stopListening(), [stopListening]);
+  useEffect(() => {
+    return () => {
+      stopListening();
+    };
+  }, [stopListening]);
 
   const renderWaveform = () => {
     if (!showWaveform || audioLevels.length === 0) return null;

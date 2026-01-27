@@ -39,35 +39,52 @@
     "schema": "../../prisma/schema.prisma"
   },
   "peerDependencies": {
+    "@prisma/client": "^5.0.0",
+    "@xstate/react": "^3.2.0",
+    "lucide-react": "^0.263.1",
+    "next-auth": "^4.24.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@prisma/client": "^5.0.0",
-    "zustand": "^5.0.0",
     "socket.io-client": "^4.7.0",
-    "next-auth": "^4.24.0",
     "xstate": "^4.38.0",
-    "@xstate/react": "^3.2.0",
-    "lucide-react": "^0.263.1"
+    "zustand": "^5.0.0"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": false },
-    "react-dom": { "optional": false },
-    "zustand": { "optional": true },
-    "@prisma/client": { "optional": true },
-    "socket.io-client": { "optional": true },
-    "next-auth": { "optional": true },
-    "xstate": { "optional": true },
-    "@xstate/react": { "optional": true }
+    "react": {
+      "optional": false
+    },
+    "react-dom": {
+      "optional": false
+    },
+    "zustand": {
+      "optional": true
+    },
+    "@prisma/client": {
+      "optional": true
+    },
+    "socket.io-client": {
+      "optional": true
+    },
+    "next-auth": {
+      "optional": true
+    },
+    "xstate": {
+      "optional": true
+    },
+    "@xstate/react": {
+      "optional": true
+    }
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.2.0",
     "immer": "^10.1.1",
+    "tailwind-merge": "^2.2.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "lucide-react": "^0.263.1",
     "typescript": "^5.3.3"
   }
 }

@@ -1,6 +1,8 @@
 // ============================================================
 // Pre-Visit Summary - Collapsible Section Component
 // apps/provider-portal/components/previsit/CollapsibleSection.tsx
+//
+// Updated to use white cards matching dashboard style
 // ============================================================
 
 import type { ReactNode } from 'react';
@@ -20,23 +22,20 @@ export interface CollapsibleSectionProps {
 const statusConfig = {
   pending: {
     label: 'Pending Review',
-    bgColor: 'bg-amber-50',
+    bgColor: 'bg-amber-100',
     textColor: 'text-amber-700',
-    borderColor: 'border-amber-200',
     icon: Clock,
   },
   reviewed: {
     label: 'Reviewed',
-    bgColor: 'bg-green-50',
+    bgColor: 'bg-green-100',
     textColor: 'text-green-700',
-    borderColor: 'border-green-200',
     icon: Check,
   },
   flagged: {
     label: 'Flagged',
-    bgColor: 'bg-red-50',
+    bgColor: 'bg-red-100',
     textColor: 'text-red-700',
-    borderColor: 'border-red-200',
     icon: Clock,
   },
 };
@@ -44,7 +43,7 @@ const statusConfig = {
 const priorityConfig = {
   urgent: 'border-l-red-500',
   high: 'border-l-amber-500',
-  normal: 'border-l-gray-300',
+  normal: 'border-l-purple-300',
 };
 
 export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -61,7 +60,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   const StatusIcon = statusInfo.icon;
 
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-200 border-l-4 ${priorityConfig[priority]} overflow-hidden mb-4`}>
+    <div className={`bg-white rounded-2xl shadow-lg border-l-4 ${priorityConfig[priority]} overflow-hidden mb-4`}>
       {/* Header */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -71,7 +70,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             {title}
             {badge !== undefined && (
-              <span className="ml-2 px-2 py-0.5 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+              <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-sm font-medium rounded-full">
                 {badge}
               </span>
             )}
@@ -108,7 +107,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
                 e.stopPropagation();
                 onMarkReviewed();
               }}
-              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+              className="text-sm text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1 transition-colors"
             >
               <Check className="w-4 h-4" />
               Mark as Reviewed

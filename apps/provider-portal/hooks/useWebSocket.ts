@@ -304,16 +304,16 @@ export function useWebSocket(config: WebSocketConfig) {
     console.log('[WS] Assessment update:', update.sessionId, update.phase, `${update.progressPercent}%`);
     
     // Update or add assessment in queue
+    // Map the string urgencyLevel to our UrgencyLevel type
+    const mappedUrgency = (['critical', 'emergent', 'urgent', 'routine'].includes(update.urgencyLevel)
+      ? update.urgencyLevel
+      : 'routine') as 'critical' | 'emergent' | 'urgent' | 'routine';
+
     const assessmentData = {
       id: update.sessionId,
-      patientId: update.patientId,
-      patientName: update.patientName,
       chiefComplaint: update.chiefComplaint,
-      phase: update.phase,
-      progressPercent: update.progressPercent,
-      urgencyLevel: update.urgencyLevel,
-      redFlagCount: update.redFlagCount,
-      timestamp: update.timestamp,
+      urgencyLevel: mappedUrgency,
+      updatedAt: update.timestamp.toISOString ? update.timestamp.toISOString() : new Date().toISOString(),
     };
 
     // Check if this is a new assessment or update
@@ -336,19 +336,28 @@ export function useWebSocket(config: WebSocketConfig) {
     switch (eventType) {
       case 'patient:connected':
         console.log('[WS] Patient connected:', data.name);
-        addAssessment({
-          id: data.sessionId || data.id,
-          patientId: data.id,
-          patientName: data.name,
-          status: 'waiting',
-          urgencyLevel: 'routine',
-          connectedAt: new Date().toISOString(),
+        // Note: addAssessment expects a full Assessment object
+        // This is just a notification - the full assessment will come from the server
+        addNotification({
+          type: 'new-patient',
+          title: 'New Patient Connected',
+          message: `${data.name} has started an assessment`,
+          assessmentId: data.sessionId || data.id,
+          urgency: 'routine',
         });
         break;
 
       case 'patient:disconnected':
         console.log('[WS] Patient disconnected:', data.patientId);
-        updateAssessment(data.patientId, { status: 'disconnected' });
+        // 'disconnected' is not a valid status, use 'waiting' or remove
+        // For now, just log it - the server should handle status updates
+        addNotification({
+          type: 'system',
+          title: 'Patient Disconnected',
+          message: `Patient ${data.patientId} has disconnected`,
+          assessmentId: data.patientId,
+          urgency: 'routine',
+        });
         break;
 
       case 'patient:message-received':

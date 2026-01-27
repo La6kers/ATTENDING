@@ -1,0 +1,267 @@
+using System.Diagnostics;
+using System.Security.Claims;
+using System.Text.Json;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using ATTENDING.Domain.Interfaces;
+
+namespace ATTENDING.Orders.Api.Middleware;
+
+/// <summary>
+/// Global exception handling middleware
+/// </summary>
+public class ExceptionMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionMiddleware> _logger;
+    private readonly IHostEnvironment _environment;
+
+    public ExceptionMiddleware(
+        RequestDelegate next,
+        ILogger<ExceptionMiddleware> logger,
+        IHostEnvironment environment)
+    {
+        _next = next;
+        _logger = logger;
+        _environment = environment;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            await _next(context);
+        }
+        catch (ValidationException ex)
+        {
+            await HandleValidationExceptionAsync(context, ex);
+        }
+        catch (Exception ex)
+        {
+            await HandleExceptionAsync(context, ex);
+        }
+    }
+
+    private async Task HandleValidationExceptionAsync(HttpContext context, ValidationException ex)
+    {
+        _logger.LogWarning(ex, "Validation failed for request {Path}", context.Request.Path);
+
+        var errors = ex.Errors
+            .GroupBy(e => e.PropertyName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(e => e.ErrorMessage).ToArray());
+
+        var problemDetails = new ValidationProblemDetails(errors)
+        {
+            Title = "Validation Failed",
+            Status = StatusCodes.Status400BadRequest,
+            Detail = "One or more validation errors occurred.",
+            Instance = context.Request.Path
+        };
+
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        context.Response.ContentType = "application/problem+json";
+
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    }
+
+    private async Task HandleExceptionAsync(HttpContext context, Exception ex)
+    {
+        var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        _logger.LogError(ex, "Unhandled exception for request {Path}. TraceId: {TraceId}",
+            context.Request.Path, traceId);
+
+        var problemDetails = new ProblemDetails
+        {
+            Title = "An error occurred",
+            Status = StatusCodes.Status500InternalServerError,
+            Instance = context.Request.Path,
+            Extensions = { ["traceId"] = traceId }
+        };
+
+        // Include stack trace in development
+        if (_environment.IsDevelopment())
+        {
+            problemDetails.Detail = ex.ToString();
+        }
+        else
+        {
+            problemDetails.Detail = "An unexpected error occurred. Please try again later.";
+        }
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/problem+json";
+
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    }
+}
+
+/// <summary>
+/// Audit logging middleware for HIPAA compliance
+/// </summary>
+public class AuditMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<AuditMiddleware> _logger;
+
+    // Paths that should be audited
+    private static readonly string[] AuditablePaths = new[]
+    {
+        "/api/v1/laborders",
+        "/api/v1/imagingorders",
+        "/api/v1/medications",
+        "/api/v1/referrals",
+        "/api/v1/assessments",
+        "/api/v1/patients"
+    };
+
+    public AuditMiddleware(RequestDelegate next, ILogger<AuditMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context, IAuditService auditService)
+    {
+        var path = context.Request.Path.Value?.ToLower() ?? "";
+        
+        // Check if this request should be audited
+        if (!ShouldAudit(context.Request))
+        {
+            await _next(context);
+            return;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        var originalBodyStream = context.Response.Body;
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            context.Response.Body = memoryStream;
+
+            await _next(context);
+
+            stopwatch.Stop();
+
+            // Log the request
+            await LogRequestAsync(context, auditService, stopwatch.ElapsedMilliseconds);
+
+            // Copy the response back
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            await memoryStream.CopyToAsync(originalBodyStream);
+        }
+        finally
+        {
+            context.Response.Body = originalBodyStream;
+        }
+    }
+
+    private static bool ShouldAudit(HttpRequest request)
+    {
+        var path = request.Path.Value?.ToLower() ?? "";
+        
+        // Always audit state-changing operations
+        if (request.Method is "POST" or "PUT" or "PATCH" or "DELETE")
+        {
+            return AuditablePaths.Any(p => path.StartsWith(p));
+        }
+
+        // Audit GET requests to patient data
+        if (request.Method == "GET" && path.Contains("/patient"))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private async Task LogRequestAsync(HttpContext context, IAuditService auditService, long elapsedMs)
+    {
+        var userId = GetUserId(context);
+        var patientId = ExtractPatientId(context);
+
+        var entry = new AuditEntry
+        {
+            UserId = userId ?? "anonymous",
+            Action = $"{context.Request.Method} {context.Request.Path}",
+            EntityType = ExtractEntityType(context.Request.Path.Value ?? ""),
+            EntityId = ExtractEntityId(context.Request.Path.Value ?? ""),
+            PatientId = patientId,
+            IpAddress = GetClientIp(context),
+            UserAgent = context.Request.Headers["User-Agent"].ToString(),
+            Details = new Dictionary<string, object>
+            {
+                ["statusCode"] = context.Response.StatusCode,
+                ["elapsedMs"] = elapsedMs
+            }
+        };
+
+        try
+        {
+            await auditService.LogAsync(entry);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to write audit log");
+        }
+    }
+
+    private static string? GetUserId(HttpContext context)
+    {
+        return context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+               context.User.FindFirst("sub")?.Value ??
+               context.User.FindFirst("oid")?.Value;
+    }
+
+    private static string? ExtractPatientId(HttpContext context)
+    {
+        // Try to get patient ID from route
+        if (context.Request.RouteValues.TryGetValue("patientId", out var patientId))
+        {
+            return patientId?.ToString();
+        }
+
+        // Try to get from query string
+        if (context.Request.Query.TryGetValue("patientId", out var queryPatientId))
+        {
+            return queryPatientId.FirstOrDefault();
+        }
+
+        return null;
+    }
+
+    private static string ExtractEntityType(string path)
+    {
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length >= 3)
+        {
+            return segments[2]; // e.g., "laborders" from "/api/v1/laborders/..."
+        }
+        return "unknown";
+    }
+
+    private static string ExtractEntityId(string path)
+    {
+        var segments = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length >= 4 && Guid.TryParse(segments[3], out _))
+        {
+            return segments[3];
+        }
+        return string.Empty;
+    }
+
+    private static string GetClientIp(HttpContext context)
+    {
+        // Check X-Forwarded-For header first (for load balancers/proxies)
+        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(forwardedFor))
+        {
+            return forwardedFor.Split(',')[0].Trim();
+        }
+
+        return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+}

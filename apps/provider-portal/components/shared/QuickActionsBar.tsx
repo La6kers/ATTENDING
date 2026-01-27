@@ -45,10 +45,10 @@ interface QuickActionItem {
 
 // All links verified to match actual pages in /pages directory
 const quickActions: QuickActionItem[] = [
-  { id: 'labs', label: 'Order Labs', icon: TestTube, href: '/labs', emoji: '🧪', dataAction: 'order-labs' },
-  { id: 'medications', label: 'E-Prescribe', icon: Pill, href: '/medications', emoji: '💊', dataAction: 'prescribe' },
-  { id: 'imaging', label: 'Order Imaging', icon: FileImage, href: '/imaging', emoji: '🔍', dataAction: 'imaging' },
-  { id: 'referrals', label: 'Refer', icon: Users, href: '/referrals', emoji: '👥', dataAction: 'referral' },
+  { id: 'labs', label: 'Lab Orders', icon: TestTube, href: '/labs', emoji: '🧪', dataAction: 'order-labs' },
+  { id: 'medications', label: 'Medication Orders', icon: Pill, href: '/medications', emoji: '💊', dataAction: 'prescribe' },
+  { id: 'imaging', label: 'Imaging Orders', icon: FileImage, href: '/imaging', emoji: '🔍', dataAction: 'imaging' },
+  { id: 'referrals', label: 'Referral Orders', icon: Users, href: '/referrals', emoji: '👥', dataAction: 'referral' },
   { id: 'treatment', label: 'Treatment Plan', icon: Calendar, href: '/treatment-plans', emoji: '📅', dataAction: 'treatment' },
   { id: 'inbox', label: 'Inbox', icon: Inbox, href: '/inbox', emoji: '📥', dataAction: 'inbox' },
   { id: 'assessments', label: 'Assessments', icon: Activity, href: '/assessments', emoji: '📋', dataAction: 'assessments' },

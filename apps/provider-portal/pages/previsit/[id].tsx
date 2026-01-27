@@ -4,6 +4,7 @@
 //
 // Dynamic page showing pre-visit intelligence for a patient
 // Accessed when clicking on a patient in the queue/list
+// UPDATED: Fixed broken links and placeholder implementations
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
@@ -157,7 +158,8 @@ export default function PreVisitPage() {
 
   // Action handlers
   const handleStartEncounter = () => {
-    router.push(`/patient-assessment?patientId=${id}`);
+    // Navigate to diagnosis selection page (visit workflow)
+    router.push(`/visit/${id}`);
   };
 
   const handleOrderLabs = () => {
@@ -177,19 +179,32 @@ export default function PreVisitPage() {
   };
 
   const handleScheduleFollowup = () => {
-    // TODO: Implement scheduling modal
-    alert('Schedule follow-up functionality coming soon');
+    // Navigate to schedule page with follow-up parameters
+    const patientName = preVisitData?.patient 
+      ? `${preVisitData.patient.firstName} ${preVisitData.patient.lastName}`
+      : '';
+    router.push(`/schedule?action=new&patientId=${id}&patientName=${encodeURIComponent(patientName)}&type=followup`);
   };
 
   const handleEmergencyProtocol = () => {
-    // Trigger emergency protocol modal
-    // This could dispatch to a global state or show a modal
-    alert('Emergency Protocol activated - implement EmergencyProtocolModal integration');
+    // Store emergency context and navigate to visit with emergency flag
+    if (preVisitData) {
+      sessionStorage.setItem('emergencyPatient', JSON.stringify({
+        id,
+        name: `${preVisitData.patient.firstName} ${preVisitData.patient.lastName}`,
+        mrn: preVisitData.patient.mrn,
+        chiefComplaint: preVisitData.chiefComplaint.summary,
+        redFlags: preVisitData.riskAssessment.factors.map(f => f.description),
+        vitals: preVisitData.vitals,
+      }));
+    }
+    // Navigate to visit workflow with emergency mode
+    router.push(`/visit/${id}?emergency=true`);
   };
 
   const handleReviewChart = () => {
-    // Navigate to full chart review
-    router.push(`/patient/${id}/chart`);
+    // FIXED: Navigate to correct patient chart path
+    router.push(`/patients/${id}`);
   };
 
   // Loading state

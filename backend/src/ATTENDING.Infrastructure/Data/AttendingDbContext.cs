@@ -1,0 +1,196 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using ATTENDING.Domain.Entities;
+using ATTENDING.Domain.Interfaces;
+
+namespace ATTENDING.Infrastructure.Data;
+
+/// <summary>
+/// Entity Framework Core DbContext for ATTENDING AI
+/// </summary>
+public class AttendingDbContext : DbContext, IUnitOfWork
+{
+    private IDbContextTransaction? _currentTransaction;
+
+    public AttendingDbContext(DbContextOptions<AttendingDbContext> options) 
+        : base(options)
+    {
+    }
+
+    #region DbSets
+
+    // Identity
+    public DbSet<User> Users => Set<User>();
+    
+    // Clinical
+    public DbSet<Patient> Patients => Set<Patient>();
+    public DbSet<Encounter> Encounters => Set<Encounter>();
+    public DbSet<Allergy> Allergies => Set<Allergy>();
+    public DbSet<MedicalCondition> MedicalConditions => Set<MedicalCondition>();
+    
+    // Orders
+    public DbSet<LabOrder> LabOrders => Set<LabOrder>();
+    public DbSet<LabResult> LabResults => Set<LabResult>();
+    public DbSet<ImagingOrder> ImagingOrders => Set<ImagingOrder>();
+    public DbSet<ImagingResult> ImagingResults => Set<ImagingResult>();
+    public DbSet<MedicationOrder> MedicationOrders => Set<MedicationOrder>();
+    public DbSet<Referral> Referrals => Set<Referral>();
+    
+    // Assessments
+    public DbSet<PatientAssessment> Assessments => Set<PatientAssessment>();
+    public DbSet<AssessmentSymptom> AssessmentSymptoms => Set<AssessmentSymptom>();
+    public DbSet<AssessmentResponse> AssessmentResponses => Set<AssessmentResponse>();
+    
+    // Audit
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+
+    #endregion
+
+    #region Configuration
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Apply all configurations from the assembly
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendingDbContext).Assembly);
+
+        // Configure schemas
+        modelBuilder.HasDefaultSchema("clinical");
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        // Configure all string properties to use nvarchar
+        configurationBuilder.Properties<string>()
+            .HaveMaxLength(500);
+
+        // Configure all DateTime properties
+        configurationBuilder.Properties<DateTime>()
+            .HaveColumnType("datetime2");
+    }
+
+    #endregion
+
+    #region IUnitOfWork Implementation
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        // Process domain events before saving
+        var domainEntities = ChangeTracker.Entries<IAggregateRoot>()
+            .Where(e => e.Entity is LabOrder or ImagingOrder or MedicationOrder or Referral or PatientAssessment)
+            .Select(e => e.Entity)
+            .ToList();
+
+        // Domain events could be dispatched here to an event bus
+        // For now, we just clear them after save
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        // Clear domain events after successful save
+        foreach (var entity in domainEntities)
+        {
+            switch (entity)
+            {
+                case LabOrder lo: lo.ClearDomainEvents(); break;
+                case ImagingOrder io: io.ClearDomainEvents(); break;
+                case MedicationOrder mo: mo.ClearDomainEvents(); break;
+                case Referral r: r.ClearDomainEvents(); break;
+                case PatientAssessment pa: pa.ClearDomainEvents(); break;
+            }
+        }
+
+        return result;
+    }
+
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_currentTransaction != null)
+        {
+            return;
+        }
+
+        _currentTransaction = await Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await SaveChangesAsync(cancellationToken);
+            
+            if (_currentTransaction != null)
+            {
+                await _currentTransaction.CommitAsync(cancellationToken);
+            }
+        }
+        catch
+        {
+            await RollbackTransactionAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            if (_currentTransaction != null)
+            {
+                _currentTransaction.Dispose();
+                _currentTransaction = null;
+            }
+        }
+    }
+
+    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (_currentTransaction != null)
+            {
+                await _currentTransaction.RollbackAsync(cancellationToken);
+            }
+        }
+        finally
+        {
+            if (_currentTransaction != null)
+            {
+                _currentTransaction.Dispose();
+                _currentTransaction = null;
+            }
+        }
+    }
+
+    #endregion
+
+    #region Overrides for Audit
+
+    public override int SaveChanges()
+    {
+        UpdateAuditFields();
+        return base.SaveChanges();
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        UpdateAuditFields();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        UpdateAuditFields();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void UpdateAuditFields()
+    {
+        var entries = ChangeTracker.Entries<BaseEntity>();
+
+        foreach (var entry in entries)
+        {
+            if (entry.State == EntityState.Modified)
+            {
+                entry.Entity.SetModified();
+            }
+        }
+    }
+
+    #endregion
+}

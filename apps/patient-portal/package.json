@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@attending/shared": "*",
     "@attending/clinical-services": "*",
+    "@attending/shared": "*",
     "@prisma/client": "^5.0.0",
     "@xstate/react": "^3.2.2",
     "immer": "^10.1.1",
@@ -23,17 +23,20 @@
     "next-auth": "^4.24.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "xstate": "^4.38.0",
     "socket.io-client": "^4.7.2",
+    "xstate": "^4.38.0",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@types/formidable": "^3.4.6",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.2.35",
+    "form-data": "^4.0.5",
+    "formidable": "^3.5.4",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"

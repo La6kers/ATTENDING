@@ -7,7 +7,8 @@
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { IncomingForm, File } from 'formidable';
+import { IncomingForm } from 'formidable';
+import type { File } from 'formidable';
 import fs from 'fs';
 
 // Disable default body parser for file uploads

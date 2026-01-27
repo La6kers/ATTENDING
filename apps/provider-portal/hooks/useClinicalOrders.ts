@@ -306,11 +306,14 @@ export function useClinicalOrders() {
         type: 'lab',
         count: state.labs.count,
         hasSTAT: state.labs.hasSTAT,
-        items: Array.from(state.labs.selected.values()).map(l => ({
-          id: l.test.code,
-          name: l.test.name,
-          priority: l.priority,
-        })),
+        items: Array.from(state.labs.selected.values()).map(l => {
+          const labData = l.lab || l.test;
+          return {
+            id: labData?.code || 'unknown',
+            name: labData?.name || 'Unknown',
+            priority: l.priority,
+          };
+        }),
       });
     }
     
@@ -393,7 +396,9 @@ export function useClinicalOrders() {
       // Submit labs
       if (state.labs.count > 0) {
         const labIds = await labStore.submitOrder(encounterId);
-        results.labs = labIds;
+        if (Array.isArray(labIds)) {
+          results.labs = labIds;
+        }
       }
       
       // Submit imaging

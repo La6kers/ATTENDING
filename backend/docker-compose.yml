@@ -1,0 +1,112 @@
+# ATTENDING AI - Docker Compose
+# Development and local testing configuration
+
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: attending-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=AttendingDev123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "AttendingDev123!" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - attending-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: attending-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - attending-network
+
+  # Orders API
+  orders-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: attending-orders-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__AttendingDb=Server=sqlserver;Database=ATTENDING;User Id=sa;Password=AttendingDev123!;TrustServerCertificate=True;MultipleActiveResultSets=true
+      - ConnectionStrings__Redis=redis:6379
+      - AzureAdB2C__Instance=https://attendingai.b2clogin.com
+      - AzureAdB2C__Domain=attendingai.onmicrosoft.com
+      - AzureAdB2C__ClientId=your-client-id
+      - Cors__AllowedOrigins__0=http://localhost:3000
+      - Cors__AllowedOrigins__1=http://localhost:3001
+    ports:
+      - "5000:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - attending-network
+
+  # BioMistral AI (Ollama)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: attending-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    networks:
+      - attending-network
+    # Note: After starting, run: docker exec attending-ollama ollama pull biomistral
+
+  # Seq (Structured Logging)
+  seq:
+    image: datalust/seq:latest
+    container_name: attending-seq
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "5341:80"    # UI
+      - "5342:5341"  # Ingestion
+    volumes:
+      - seq-data:/data
+    networks:
+      - attending-network
+
+volumes:
+  sqlserver-data:
+  redis-data:
+  ollama-data:
+  seq-data:
+
+networks:
+  attending-network:
+    driver: bridge

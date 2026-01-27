@@ -500,7 +500,9 @@ export const SmartScheduling: React.FC = () => {
       
       slots.push({
         time: currentTime,
-        availability: bookedAppt ? 'booked' : (bookedAppt?.noShowProbability || 0) > 0.2 ? 'overbookable' : 'available',
+        availability: bookedAppt 
+          ? ((bookedAppt.noShowProbability || 0) > 0.2 ? 'overbookable' : 'booked') 
+          : 'available',
         appointment: bookedAppt,
         aiScore: bookedAppt ? undefined : Math.floor(Math.random() * 30) + 70,
       });

@@ -168,7 +168,7 @@ export const DetailedFeedbackModal: React.FC<{
   const [feedback, setFeedback] = useState<FeedbackData>({
     recommendationId: recommendation.id,
     rating: initialRating === 'up' ? 'accurate' : initialRating === 'down' ? 'inaccurate' : null,
-    quickRating: initialRating,
+    quickRating: initialRating ?? null,
     wouldRecommendToColleague: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);

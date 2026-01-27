@@ -4,6 +4,7 @@
 // =============================================================================
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import {
   ChevronDown,
   ChevronRight,
@@ -20,6 +21,7 @@ import {
   Stethoscope,
   AlertOctagon,
   Phone,
+  FileText,
 } from 'lucide-react';
 import type { InboxItem, ResponseTemplate } from './types';
 import { theme, categoryConfig, getPurpleGradientStyle } from './theme';
@@ -243,6 +245,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
   onForward,
   onReassign,
 }) => {
+  const router = useRouter();
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(['symptoms']));
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [response, setResponse] = useState('');
@@ -386,6 +389,16 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push(`/previsit/${item.patientId || item.id}`)}
+            className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-colors font-semibold"
+            style={{ background: 'rgba(255,255,255,0.9)', color: theme.purple[700] }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'white')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.9)')}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Open Pre-Visit
+          </button>
           <button
             onClick={onForward}
             className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-colors"

@@ -22,5 +22,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "../shared/**/*.ts"],
-  "exclude": ["node_modules", "__tests__", "e2e", "*.test.ts", "*.spec.ts", "vitest.config.ts", "vitest.setup.ts", "../shared/vitest.config.ts", "../shared/vitest.setup.ts", "../shared/**/*.test.ts", "../shared/**/*.spec.ts"]
+  "exclude": ["node_modules", "__tests__", "e2e", "*.test.ts", "*.spec.ts", "vitest.config.ts", "vitest.setup.ts", "../shared/vitest.config.ts", "../shared/vitest.setup.ts", "../shared/**/*.test.ts", "../shared/**/*.spec.ts", "**/_archived/**", "**/archived/**", "pages/_archived/**", "store/_archived/**"]
 }

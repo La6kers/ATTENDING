@@ -1,27 +1,24 @@
-// Referrals Page
-// apps/provider-portal/pages/referrals.tsx
-//
-// Updated to use @attending/ui-primitives design tokens
+// ============================================================
+// Referral Orders Page - Streamlined with consistent full-page gradient
+// pages/referrals.tsx
+// ============================================================
 
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { 
-  UserPlus, 
-  ArrowLeft, 
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Filter
+  UserPlus, ArrowLeft, Home, CheckCircle, AlertTriangle, Clock, Filter
 } from 'lucide-react';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { QuickActionsBar, SimpleCriticalAlert, useToast } from '@/components/shared';
+import { SimpleCriticalAlert, useToast } from '@/components/shared';
 import { ReferralOrderingPanel } from '@/components/referral-ordering';
 import type { PatientContext as StorePatientContext } from '@/store/referralOrderingStore';
 import type { PatientContext as PanelPatientContext } from '@/components/referral-ordering/types';
-import { Button, Card, Badge, cn, gradients } from '@attending/ui-primitives';
 
-// Mock patient context - in production, this would come from the assessment or patient selection
+const theme = {
+  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+};
+
 const getMockPatientContext = (patientId?: string): StorePatientContext => ({
   id: patientId || 'pat-001',
   name: 'Maria Santos',
@@ -49,22 +46,17 @@ export default function ReferralsPage() {
   const [alertDismissed, setAlertDismissed] = useState(false);
   const toast = useToast();
 
-  // Normalize patient context for ReferralOrderingPanel (convert allergies to string[])
   const normalizedPatientContext: PanelPatientContext | null = patientContext ? {
     ...patientContext,
-    allergies: patientContext.allergies?.map(a => 
-      typeof a === 'string' ? a : a.allergen
-    ) || [],
+    allergies: patientContext.allergies?.map(a => typeof a === 'string' ? a : a.allergen) || [],
     insurancePlan: patientContext.insurancePlan || '',
     pcp: patientContext.pcp || '',
     redFlags: patientContext.redFlags || [],
   } : null;
 
   useEffect(() => {
-    // Load patient context
     setPatientContext(getMockPatientContext(patientId as string));
     
-    // Load pending referrals
     fetch('/api/referrals?status=PENDING')
       .then(res => res.json())
       .then(data => {
@@ -75,201 +67,170 @@ export default function ReferralsPage() {
   }, [patientId]);
 
   const handleOrderComplete = (referralIds: string[]) => {
-    toast.success('Referrals submitted successfully!', `${referralIds.length} referral(s) sent`);
-    // Refresh pending referrals
+    toast.success('Referrals submitted!', `${referralIds.length} referral(s) sent`);
     fetch('/api/referrals?status=PENDING')
       .then(res => res.json())
-      .then(data => {
-        setPendingReferrals(data.referrals || []);
-      });
+      .then(data => setPendingReferrals(data.referrals || []));
   };
 
   if (!patientContext) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading patient information...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: theme.gradient }}>
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading...</p>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <Head>
-        <title>Specialty Referrals | ATTENDING AI</title>
+        <title>Referral Orders | ATTENDING AI</title>
       </Head>
 
-      <div className="min-h-screen">
+      <div className="min-h-screen" style={{ background: theme.gradient }}>
         {/* Header */}
-        <div className="text-white" style={{ background: gradients.referrals }}>
-          <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="flex items-center gap-4 mb-4">
-              <button 
-                onClick={() => router.back()}
-                className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold flex items-center gap-3">
-                  <UserPlus className="w-7 h-7" />
-                  Specialty Referrals
-                </h1>
-                <p className="text-white/80 mt-1">
-                  Order and manage specialist referrals
-                </p>
-              </div>
-            </div>
-
-            {/* Patient Banner */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mt-4">
-              <div className="flex items-center justify-between">
+        <header className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button onClick={() => router.back()} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <Link href="/" className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+                  <Home className="w-5 h-5" />
+                </Link>
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <UserPlus className="w-6 h-6 text-white" />
+                </div>
                 <div>
-                  <p className="font-semibold text-lg">{patientContext.name}</p>
-                  <p className="text-white/80 text-sm">
-                    {patientContext.age}yo {patientContext.gender} | MRN: {patientContext.mrn}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-white/80">Insurance</p>
-                  <p className="font-medium">{patientContext.insurancePlan}</p>
+                  <h1 className="text-xl font-bold text-white">Referral Orders</h1>
+                  <p className="text-purple-200 text-sm">Order and manage specialist referrals</p>
                 </div>
               </div>
-              {patientContext.redFlags.length > 0 && (
-                <div className="mt-3 flex items-center gap-2 bg-red-500/20 rounded-xl px-3 py-2">
-                  <AlertTriangle className="w-4 h-4 text-red-200" />
-                  <span className="text-sm text-red-100">
-                    Red Flags: {patientContext.redFlags.join(', ')}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Quick Actions Bar */}
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <QuickActionsBar
-            currentPage="referrals"
-            patientId={patientContext.id}
-            encounterId={encounterId as string}
-            showBackButton={false}
-            showEmergencyButton={patientContext.redFlags && patientContext.redFlags.length > 0}
-            onEmergencyProtocol={() => {
-              toast.warning('Emergency Protocol Activated', 'Consider urgent neurology/neurosurgery referral');
-            }}
-          />
+        <main className="max-w-7xl mx-auto px-6 py-6">
+          {/* Patient Banner */}
+          <div className="bg-white rounded-2xl p-5 shadow-lg mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold">
+                  {patientContext.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{patientContext.name}</h3>
+                  <p className="text-sm text-gray-500">{patientContext.age}yo {patientContext.gender} • {patientContext.mrn}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Insurance</p>
+                <p className="font-medium text-gray-900">{patientContext.insurancePlan}</p>
+              </div>
+            </div>
+            {patientContext.chiefComplaint && (
+              <p className="mt-3 text-sm text-gray-600">{patientContext.chiefComplaint}</p>
+            )}
+          </div>
 
-          {/* Critical Alert Banner - Shows when patient has red flags */}
+          {/* Critical Alert - Click to dismiss */}
           {patientContext.redFlags && patientContext.redFlags.length > 0 && !alertDismissed && (
             <SimpleCriticalAlert
               title="Critical Red Flags Detected"
-              message={`Patient has ${patientContext.redFlags.length} red flag${patientContext.redFlags.length > 1 ? 's' : ''}: ${patientContext.redFlags.join(', ')}. Consider urgent specialty referral.`}
+              message={`${patientContext.redFlags.length} red flag(s): ${patientContext.redFlags.join(', ')}. Consider urgent specialty referral.`}
               actionLabel="View Emergency Protocol"
               onAction={() => {
                 toast.info('Emergency Protocol', 'Consider urgent neurology or neurosurgery referral');
                 setAlertDismissed(true);
               }}
               onDismiss={() => setAlertDismissed(true)}
-              className="mt-4"
+              className="mb-6"
             />
           )}
-        </div>
 
-        {/* Tabs */}
-        <div className="bg-white border-b shadow-sm">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="flex gap-1">
+          {/* Tabs */}
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="flex border-b">
               {[
                 { id: 'new', label: 'New Referral', icon: UserPlus },
                 { id: 'pending', label: 'Pending', icon: Clock, count: pendingReferrals.length },
                 { id: 'history', label: 'History', icon: CheckCircle },
-              ].map(tab => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={cn(
-                      'flex items-center gap-2 px-4 py-3 border-b-2 transition-colors',
-                      activeTab === tab.id
-                        ? 'border-purple-600 text-purple-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    )}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
-                    {tab.count !== undefined && tab.count > 0 && (
-                      <Badge variant="primary" size="sm">{tab.count}</Badge>
-                    )}
-                  </button>
-                );
-              })}
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as 'new' | 'pending' | 'history')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-purple-600 text-purple-600 bg-purple-50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${
+                      activeTab === tab.id ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
-          </div>
-        </div>
 
-        {/* Content */}
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          {activeTab === 'new' && normalizedPatientContext && (
-            <ReferralOrderingPanel
-              patientContext={normalizedPatientContext}
-              encounterId={encounterId as string || 'enc-001'}
-              onOrderComplete={handleOrderComplete}
-            />
-          )}
+            <div className="p-6">
+              {activeTab === 'new' && normalizedPatientContext && (
+                <ReferralOrderingPanel
+                  patientContext={normalizedPatientContext}
+                  encounterId={encounterId as string || 'enc-001'}
+                  onOrderComplete={handleOrderComplete}
+                />
+              )}
 
-          {activeTab === 'pending' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Pending Referrals</h2>
-                <Button variant="ghost" size="sm" leftIcon={<Filter className="w-4 h-4" />}>
-                  Filter
-                </Button>
-              </div>
-              
-              {loading ? (
-                <div className="text-center py-8 text-gray-500">Loading...</div>
-              ) : pendingReferrals.length === 0 ? (
-                <Card variant="bordered" className="text-center py-12">
-                  <Clock className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                  <p className="text-gray-500">No pending referrals</p>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {pendingReferrals.map(ref => (
-                    <Card key={ref.id} variant="default" hoverable>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">{ref.specialtyName}</p>
-                          <p className="text-sm text-gray-500">{ref.clinicalQuestion}</p>
+              {activeTab === 'pending' && (
+                <div className="space-y-4">
+                  {loading ? (
+                    <div className="text-center py-8 text-gray-500">Loading...</div>
+                  ) : pendingReferrals.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Clock className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                      <p className="text-gray-500">No pending referrals</p>
+                    </div>
+                  ) : (
+                    pendingReferrals.map(ref => (
+                      <div key={ref.id} className="p-4 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900">{ref.specialtyName}</p>
+                            <p className="text-sm text-gray-500">{ref.clinicalQuestion}</p>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                            ref.urgency === 'STAT' ? 'bg-red-100 text-red-700' :
+                            ref.urgency === 'URGENT' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {ref.urgency}
+                          </span>
                         </div>
-                        <Badge
-                          variant={
-                            ref.urgency === 'STAT' ? 'danger' :
-                            ref.urgency === 'URGENT' ? 'warning' : 'info'
-                          }
-                          size="md"
-                        >
-                          {ref.urgency}
-                        </Badge>
                       </div>
-                    </Card>
-                  ))}
+                    ))
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'history' && (
+                <div className="text-center py-12">
+                  <CheckCircle className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-gray-500">Referral history will appear here</p>
                 </div>
               )}
             </div>
-          )}
-
-          {activeTab === 'history' && (
-            <Card variant="bordered" className="text-center py-12">
-              <CheckCircle className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-              <p className="text-gray-500">Referral history will appear here</p>
-            </Card>
-          )}
-        </div>
+          </div>
+        </main>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

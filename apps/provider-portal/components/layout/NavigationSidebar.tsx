@@ -68,10 +68,11 @@ import {
 // TYPES
 // ============================================================
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface NavItem {
   id: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<any>;
   href?: string;
   badge?: string | number;
   badgeColor?: 'red' | 'amber' | 'green' | 'blue' | 'purple';

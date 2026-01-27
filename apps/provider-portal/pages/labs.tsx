@@ -1,12 +1,16 @@
 // ============================================================
-// Labs Page - Refactored to use labOrderingStore
+// Lab Orders Page - Streamlined with consistent full-page gradient
 // pages/labs.tsx
-//
-// Updated to use @attending/ui-primitives design tokens
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
-import DashboardLayout from '../components/dashboard/DashboardLayout';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
+import {
+  TestTube, Brain, Package, Search, Filter, AlertTriangle,
+  CheckCircle, ArrowLeft, Home, RefreshCw, X
+} from 'lucide-react';
 import { QuickActionsBar, PatientBanner, SimpleCriticalAlert, useToast } from '../components/shared';
 import {
   LabCatalogBrowser,
@@ -19,22 +23,12 @@ import {
   LAB_CATALOG,
   LAB_PANELS,
 } from '../store/labOrderingStore';
-import {
-  TestTube,
-  Brain,
-  Package,
-  Search,
-  Eye,
-  Download,
-  Filter,
-  AlertTriangle,
-  TrendingUp,
-  CheckCircle,
-} from 'lucide-react';
-import { Button, Card, Badge, cn, gradients } from '@attending/ui-primitives';
 
-// Sample patient context - in production this would come from assessment selection
-const DEMO_PATIENT_CONTEXT = {
+const theme = {
+  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+};
+
+const DEMO_PATIENT = {
   id: 'patient-001',
   name: 'Sarah Johnson',
   age: 34,
@@ -50,194 +44,116 @@ const DEMO_PATIENT_CONTEXT = {
 type ViewMode = 'order' | 'results';
 type OrderTab = 'ai' | 'panels' | 'catalog';
 
-// ============================================================
-// Stat Card Component (reusable)
-// ============================================================
-
-interface StatCardProps {
-  label: string;
-  value: number | string;
-  color: 'yellow' | 'red' | 'orange' | 'green';
-  icon: React.ReactNode;
-}
-
-const StatCard: React.FC<StatCardProps> = ({ label, value, color, icon }) => {
-  const colorStyles = {
-    yellow: { bg: 'bg-yellow-100', text: 'text-yellow-600' },
-    red: { bg: 'bg-red-100', text: 'text-red-600' },
-    orange: { bg: 'bg-orange-100', text: 'text-orange-600' },
-    green: { bg: 'bg-green-100', text: 'text-green-600' },
-  };
-
-  return (
-    <Card variant="default" className="p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{label}</p>
-          <p className={cn('text-2xl font-bold mt-1', colorStyles[color].text)}>{value}</p>
-        </div>
-        <div className={cn('p-3 rounded-xl', colorStyles[color].bg)}>
-          {icon}
-        </div>
-      </div>
-    </Card>
-  );
-};
-
 export default function Labs() {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>('order');
   const [activeTab, setActiveTab] = useState<OrderTab>('ai');
   const [showCosts, setShowCosts] = useState(true);
   const [alertDismissed, setAlertDismissed] = useState(false);
   const toast = useToast();
 
-  // Zustand store
   const {
-    // State
-    patientContext,
-    selectedLabs,
-    aiRecommendations,
-    isLoadingRecommendations,
-    searchQuery,
-    categoryFilter,
-    clinicalIndication,
-    specialInstructions,
-    submitting,
-    error,
-    // Actions
-    setPatientContext,
-    addLab,
-    addPanel,
-    removeLab,
-    updateLabPriority,
-    setClinicalIndication,
-    setSpecialInstructions,
-    setSearchQuery,
-    setCategoryFilter,
-    addAIRecommendedLabs,
-    submitOrder,
-    clearOrder,
-    // Computed
-    getSelectedLabsArray,
-    getFilteredCatalog,
-    getTotalCost,
-    getStatCount,
-    getFastingRequired,
+    patientContext, selectedLabs, aiRecommendations, isLoadingRecommendations,
+    searchQuery, categoryFilter, clinicalIndication, specialInstructions, submitting, error,
+    setPatientContext, addLab, addPanel, removeLab, updateLabPriority,
+    setClinicalIndication, setSpecialInstructions, setSearchQuery, setCategoryFilter,
+    addAIRecommendedLabs, submitOrder, clearOrder,
+    getSelectedLabsArray, getFilteredCatalog, getTotalCost, getStatCount, getFastingRequired,
   } = useLabOrderingStore();
 
-  // Load demo patient on mount (in production, this would come from route/context)
   useEffect(() => {
-    if (!patientContext) {
-      setPatientContext(DEMO_PATIENT_CONTEXT);
-    }
+    if (!patientContext) setPatientContext(DEMO_PATIENT);
   }, [patientContext, setPatientContext]);
 
-  // Get computed values
   const selectedLabsArray = getSelectedLabsArray();
   const filteredCatalog = getFilteredCatalog();
   const totalCost = getTotalCost();
   const statCount = getStatCount();
   const fastingRequired = getFastingRequired();
 
-  // Transform patient context for PatientBanner (normalize allergies to strings)
   const patientForBanner = patientContext ? {
     ...patientContext,
-    allergies: patientContext.allergies?.map(a => 
-      typeof a === 'string' ? a : a.allergen
-    ),
+    allergies: patientContext.allergies?.map(a => typeof a === 'string' ? a : a.allergen),
   } : null;
 
-  // Convert Map to Set for component compatibility
   const selectedCodes = new Set(selectedLabs.keys());
 
-  // Handle lab toggle
   const handleToggleLab = (code: string) => {
-    if (selectedLabs.has(code)) {
-      removeLab(code);
-    } else {
-      addLab(code);
-    }
+    selectedLabs.has(code) ? removeLab(code) : addLab(code);
   };
 
-  // Handle single AI recommendation add
-  const handleAddSingleRecommendation = (
-    testCode: string,
-    priority: 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE',
-    rationale: string
-  ) => {
-    addLab(testCode, { priority, rationale, aiRecommended: true });
-  };
-
-  // Handle order submission
   const handleSubmit = async () => {
     try {
       toast.loading('Submitting lab orders...');
       const orderIds = await submitOrder('encounter-demo-001');
-      toast.success('Lab orders submitted successfully!', `Order IDs: ${orderIds.join(', ')}`);
-      console.log('Lab order submitted:', orderIds);
+      toast.success('Lab orders submitted!', `Order IDs: ${Array.isArray(orderIds) ? orderIds.join(', ') : orderIds}`);
     } catch (err) {
-      toast.error('Failed to submit lab orders', 'Please try again or contact support.');
-      console.error('Failed to submit order:', err);
+      toast.error('Failed to submit', 'Please try again.');
     }
   };
 
+  const handleEmergencyProtocol = () => {
+    aiRecommendations
+      .filter(r => r.category === 'recommended')
+      .forEach(r => addLab(r.labCode, { priority: 'STAT', aiRecommended: true, rationale: r.rationale }));
+    toast.warning('Emergency Protocol', 'STAT labs auto-selected');
+    setAlertDismissed(true);
+  };
+
   return (
-    <DashboardLayout>
-      <div className="min-h-screen">
+    <>
+      <Head>
+        <title>Lab Orders | ATTENDING AI</title>
+      </Head>
+
+      <div className="min-h-screen" style={{ background: theme.gradient }}>
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between flex-wrap gap-4">
+        <header className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-40">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{ background: gradients.labs }}
-                >
-                  <TestTube className="w-7 h-7 text-white" />
+                <button onClick={() => router.back()} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <Link href="/" className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+                  <Home className="w-5 h-5" />
+                </Link>
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <TestTube className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Laboratory Orders</h1>
-                  <p className="text-sm text-gray-500">
-                    {viewMode === 'order'
-                      ? `Ordering for ${patientContext?.name || 'Select Patient'}`
-                      : 'View lab results and trends'}
+                  <h1 className="text-xl font-bold text-white">Lab Orders</h1>
+                  <p className="text-purple-200 text-sm">
+                    {viewMode === 'order' ? `Ordering for ${patientContext?.name || 'Select Patient'}` : 'View results'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Cost Toggle */}
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-purple-200 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={showCosts}
                     onChange={(e) => setShowCosts(e.target.checked)}
-                    className="rounded text-purple-600 focus:ring-purple-500"
+                    className="rounded text-purple-600"
                   />
                   Show Costs
                 </label>
 
-                {/* View Mode Toggle */}
-                <div className="flex rounded-xl border border-gray-200 p-1 bg-gray-50">
+                <div className="flex bg-white/10 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('order')}
-                    className={cn(
-                      'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                      viewMode === 'order'
-                        ? 'bg-white text-purple-700 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    )}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === 'order' ? 'bg-white text-purple-700' : 'text-white hover:bg-white/10'
+                    }`}
                   >
                     Order Labs
                   </button>
                   <button
                     onClick={() => setViewMode('results')}
-                    className={cn(
-                      'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                      viewMode === 'results'
-                        ? 'bg-white text-purple-700 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    )}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === 'results' ? 'bg-white text-purple-700' : 'text-white hover:bg-white/10'
+                    }`}
                   >
                     View Results
                   </button>
@@ -245,42 +161,18 @@ export default function Labs() {
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Quick Actions Bar - Cross-page navigation */}
-          <QuickActionsBar
-            currentPage="labs"
-            patientId={patientContext?.id}
-            showBackButton={true}
-            backButtonLabel="Back to Diagnosis"
-            backButtonHref="/assessments"
-            showEmergencyButton={patientContext?.redFlags && patientContext.redFlags.length > 0}
-            onEmergencyProtocol={() => {
-              // Auto-select STAT labs for emergency protocol
-              aiRecommendations
-                .filter(r => r.category === 'recommended')
-                .forEach(r => addLab(r.testCode, { priority: 'STAT', aiRecommended: true, rationale: r.rationale }));
-              toast.warning('Emergency Protocol Activated', 'STAT labs auto-selected');
-            }}
-          />
-
-          {/* Critical Alert Banner - Shows when patient has red flags */}
+        <main className="max-w-7xl mx-auto px-6 py-6">
+          {/* Critical Alert - Click to dismiss */}
           {patientContext?.redFlags && patientContext.redFlags.length > 0 && !alertDismissed && (
             <SimpleCriticalAlert
               title="Critical Red Flags Detected"
-              message={`Patient has ${patientContext.redFlags.length} red flag${patientContext.redFlags.length > 1 ? 's' : ''}: ${patientContext.redFlags.join(', ')}. Consider STAT lab orders.`}
+              message={`${patientContext.redFlags.length} red flag(s): ${patientContext.redFlags.join(', ')}. Consider STAT lab orders.`}
               actionLabel="Auto-Select STAT Labs"
-              onAction={() => {
-                aiRecommendations
-                  .filter(r => r.category === 'recommended')
-                  .forEach(r => addLab(r.testCode, { priority: 'STAT', aiRecommended: true, rationale: r.rationale }));
-                toast.success('STAT Labs Selected', 'Critical labs have been added to your order');
-                setAlertDismissed(true);
-              }}
+              onAction={handleEmergencyProtocol}
               onDismiss={() => setAlertDismissed(true)}
-              className="mb-4"
+              className="mb-6"
             />
           )}
 
@@ -288,75 +180,70 @@ export default function Labs() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Lab Selection */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Patient Context Banner - Using shared component */}
+                {/* Patient Banner */}
                 {patientForBanner && (
-                  <PatientBanner
-                    patient={patientForBanner}
-                    accentColor="green"
-                    showRedFlags={true}
-                    showActions={true}
-                  />
+                  <div className="bg-white rounded-2xl p-5 shadow-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold">
+                        {patientForBanner.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{patientForBanner.name}</h3>
+                        <p className="text-sm text-gray-500">{patientForBanner.age}yo {patientForBanner.gender} • {patientForBanner.mrn}</p>
+                      </div>
+                      {patientForBanner.allergies && patientForBanner.allergies.length > 0 && (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 border border-red-200 rounded-lg">
+                          <AlertTriangle className="w-4 h-4 text-red-600" />
+                          <span className="text-sm text-red-700 font-medium">
+                            {patientForBanner.allergies.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-3 text-sm text-gray-600">{patientForBanner.chiefComplaint}</p>
+                  </div>
                 )}
 
                 {/* Tab Navigation */}
-                <Card variant="default" noPadding>
-                  <div className="border-b border-gray-200">
-                    <div className="flex">
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                  <div className="flex border-b">
+                    {[
+                      { id: 'ai', label: 'AI Recommendations', icon: Brain, count: aiRecommendations.length },
+                      { id: 'panels', label: 'Lab Panels', icon: Package },
+                      { id: 'catalog', label: 'Full Catalog', icon: Search, count: Object.keys(LAB_CATALOG).length },
+                    ].map((tab) => (
                       <button
-                        onClick={() => setActiveTab('ai')}
-                        className={cn(
-                          'flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors',
-                          activeTab === 'ai'
-                            ? 'border-purple-600 text-purple-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        )}
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as OrderTab)}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                          activeTab === tab.id
+                            ? 'border-purple-600 text-purple-600 bg-purple-50'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
                       >
-                        <Brain className="w-4 h-4" />
-                        AI Recommendations
-                        {aiRecommendations.length > 0 && (
-                          <Badge variant="primary" size="sm">{aiRecommendations.length}</Badge>
+                        <tab.icon className="w-4 h-4" />
+                        {tab.label}
+                        {tab.count !== undefined && (
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${
+                            activeTab === tab.id ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {tab.count}
+                          </span>
                         )}
                       </button>
-                      <button
-                        onClick={() => setActiveTab('panels')}
-                        className={cn(
-                          'flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors',
-                          activeTab === 'panels'
-                            ? 'border-purple-600 text-purple-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        )}
-                      >
-                        <Package className="w-4 h-4" />
-                        Lab Panels
-                      </button>
-                      <button
-                        onClick={() => setActiveTab('catalog')}
-                        className={cn(
-                          'flex items-center gap-2 px-6 py-4 border-b-2 font-medium text-sm transition-colors',
-                          activeTab === 'catalog'
-                            ? 'border-purple-600 text-purple-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        )}
-                      >
-                        <Search className="w-4 h-4" />
-                        Full Catalog
-                        <Badge variant="default" size="sm">{Object.keys(LAB_CATALOG).length}</Badge>
-                      </button>
-                    </div>
+                    ))}
                   </div>
 
-                  {/* Tab Content */}
-                  <div>
+                  <div className="p-4">
                     {activeTab === 'ai' && (
                       <AIRecommendationsPanel
                         recommendations={aiRecommendations}
                         isLoading={isLoadingRecommendations}
                         selectedCodes={selectedCodes}
                         onAddCategory={addAIRecommendedLabs}
-                        onAddSingle={handleAddSingleRecommendation}
+                        onAddSingle={(code, priority, rationale) => addLab(code, { priority, rationale, aiRecommended: true })}
                       />
                     )}
-
                     {activeTab === 'panels' && (
                       <LabPanelsSelector
                         panels={LAB_PANELS}
@@ -365,7 +252,6 @@ export default function Labs() {
                         onAddPanel={addPanel}
                       />
                     )}
-
                     {activeTab === 'catalog' && (
                       <LabCatalogBrowser
                         catalog={filteredCatalog}
@@ -380,11 +266,11 @@ export default function Labs() {
                       />
                     )}
                   </div>
-                </Card>
+                </div>
               </div>
 
               {/* Right Column - Order Summary */}
-              <div className="space-y-6">
+              <div>
                 <LabOrderSummary
                   selectedLabs={selectedLabsArray}
                   totalCost={totalCost}
@@ -403,210 +289,100 @@ export default function Labs() {
               </div>
             </div>
           ) : (
-            /* Results View */
             <LabResultsView />
           )}
-        </div>
+        </main>
       </div>
-    </DashboardLayout>
+    </>
   );
 }
 
-// ============================================================
-// Lab Results View Component
-// ============================================================
-
 function LabResultsView() {
   return (
-    <>
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          label="Pending Results"
-          value={12}
-          color="yellow"
-          icon={<TestTube className="w-6 h-6 text-yellow-600" />}
-        />
-        <StatCard
-          label="Critical Values"
-          value={3}
-          color="red"
-          icon={<AlertTriangle className="w-6 h-6 text-red-600" />}
-        />
-        <StatCard
-          label="Abnormal Results"
-          value={8}
-          color="orange"
-          icon={<TrendingUp className="w-6 h-6 text-orange-600" />}
-        />
-        <StatCard
-          label="Today's Results"
-          value={24}
-          color="green"
-          icon={<CheckCircle className="w-6 h-6 text-green-600" />}
-        />
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: 'Pending', value: 12, color: 'amber' },
+          { label: 'Critical', value: 3, color: 'red' },
+          { label: 'Abnormal', value: 8, color: 'orange' },
+          { label: 'Today', value: 24, color: 'green' },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+            <p className="text-purple-200 text-sm">{stat.label}</p>
+            <p className={`text-2xl font-bold text-${stat.color}-400`}>{stat.value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Filters */}
-      <Card variant="default" className="mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Search className="w-5 h-5 text-gray-400" />
+      {/* Results Table */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-4 border-b flex items-center gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search labs..."
-              className="border-gray-300 rounded-xl text-sm focus:ring-purple-500 focus:border-purple-500 px-4 py-2"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
             />
           </div>
-          <select className="border-gray-300 rounded-xl text-sm focus:ring-purple-500 focus:border-purple-500 px-4 py-2">
-            <option>All Tests</option>
-            <option>Chemistry</option>
-            <option>Hematology</option>
-            <option>Microbiology</option>
-            <option>Immunology</option>
-          </select>
-          <select className="border-gray-300 rounded-xl text-sm focus:ring-purple-500 focus:border-purple-500 px-4 py-2">
+          <select className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200">
             <option>All Results</option>
             <option>Critical Only</option>
             <option>Abnormal Only</option>
-            <option>Normal</option>
           </select>
-          <Button variant="outline" size="sm" leftIcon={<Filter className="w-4 h-4" />}>
-            More Filters
-          </Button>
         </div>
-      </Card>
 
-      {/* Results Table */}
-      <Card variant="default" noPadding className="overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="w-full">
+          <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Patient
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Test Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Result
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Reference Range
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date/Time
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
+              <th className="px-4 py-3">Patient</th>
+              <th className="px-4 py-3">Test</th>
+              <th className="px-4 py-3">Result</th>
+              <th className="px-4 py-3">Reference</th>
+              <th className="px-4 py-3">Status</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {/* Sample critical result */}
-            <tr className="hover:bg-gray-50 bg-red-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div>
-                  <div className="text-sm font-medium text-gray-900">John Doe</div>
-                  <div className="text-sm text-gray-500">MRN: 123456</div>
-                </div>
+          <tbody className="divide-y">
+            <tr className="bg-red-50">
+              <td className="px-4 py-3">
+                <p className="font-medium">John Doe</p>
+                <p className="text-sm text-gray-500">MRN: 123456</p>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">Troponin I</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-semibold text-red-600">2.5 ng/mL ↑↑</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-500">&lt; 0.04 ng/mL</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">Today, 3:45 PM</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <Badge variant="danger" size="sm">Critical High</Badge>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button className="text-purple-600 hover:text-purple-900 mr-3 p-1 rounded hover:bg-purple-50">
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
-                  <Download className="w-4 h-4" />
-                </button>
+              <td className="px-4 py-3">Troponin I</td>
+              <td className="px-4 py-3 font-semibold text-red-600">2.5 ng/mL ↑↑</td>
+              <td className="px-4 py-3 text-gray-500">&lt; 0.04 ng/mL</td>
+              <td className="px-4 py-3">
+                <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Critical</span>
               </td>
             </tr>
-            
-            {/* Sample abnormal result */}
-            <tr className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div>
-                  <div className="text-sm font-medium text-gray-900">Sarah Johnson</div>
-                  <div className="text-sm text-gray-500">MRN: 789012</div>
-                </div>
+            <tr>
+              <td className="px-4 py-3">
+                <p className="font-medium">Sarah Johnson</p>
+                <p className="text-sm text-gray-500">MRN: 789012</p>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">TSH</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-semibold text-orange-600">8.2 mIU/L ↑</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-500">0.4-4.0 mIU/L</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">Today, 2:15 PM</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <Badge variant="warning" size="sm">Abnormal High</Badge>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button className="text-purple-600 hover:text-purple-900 mr-3 p-1 rounded hover:bg-purple-50">
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
-                  <Download className="w-4 h-4" />
-                </button>
+              <td className="px-4 py-3">TSH</td>
+              <td className="px-4 py-3 font-semibold text-orange-600">8.2 mIU/L ↑</td>
+              <td className="px-4 py-3 text-gray-500">0.4-4.0 mIU/L</td>
+              <td className="px-4 py-3">
+                <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">Abnormal</span>
               </td>
             </tr>
-
-            {/* Sample normal result */}
-            <tr className="hover:bg-gray-50">
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div>
-                  <div className="text-sm font-medium text-gray-900">Mike Wilson</div>
-                  <div className="text-sm text-gray-500">MRN: 345678</div>
-                </div>
+            <tr>
+              <td className="px-4 py-3">
+                <p className="font-medium">Mike Wilson</p>
+                <p className="text-sm text-gray-500">MRN: 345678</p>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">CBC with Diff</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-green-600">Within Normal Limits</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-500">See Report</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900">Today, 11:30 AM</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <Badge variant="success" size="sm">Normal</Badge>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button className="text-purple-600 hover:text-purple-900 mr-3 p-1 rounded hover:bg-purple-50">
-                  <Eye className="w-4 h-4" />
-                </button>
-                <button className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100">
-                  <Download className="w-4 h-4" />
-                </button>
+              <td className="px-4 py-3">CBC with Diff</td>
+              <td className="px-4 py-3 text-green-600">Normal</td>
+              <td className="px-4 py-3 text-gray-500">See Report</td>
+              <td className="px-4 py-3">
+                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Normal</span>
               </td>
             </tr>
           </tbody>
         </table>
-      </Card>
-    </>
+      </div>
+    </div>
   );
 }

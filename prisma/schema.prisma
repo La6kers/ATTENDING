@@ -1,5 +1,5 @@
 // ATTENDING AI - Complete Database Schema
-// PostgreSQL with Prisma ORM
+// SQLite for local development (switchable to PostgreSQL for production)
 // Run: npx prisma migrate dev --name init
 
 generator client {
@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -20,7 +20,7 @@ model User {
   name          String?
   image         String?
   password      String?
-  role          UserRole  @default(PROVIDER)
+  role          String    @default("PROVIDER")
   specialty     String?
   npi           String?   @unique
   department    String?
@@ -46,26 +46,18 @@ model User {
   @@index([role])
 }
 
-enum UserRole {
-  ADMIN
-  PROVIDER
-  NURSE
-  STAFF
-  PATIENT
-}
-
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -139,8 +131,8 @@ model Allergy {
   patientId   String
   allergen    String
   reaction    String?
-  severity    AllergySeverity @default(MILD)
-  type        AllergyType @default(DRUG)
+  severity    String   @default("MILD")
+  type        String   @default("DRUG")
   onsetDate   DateTime?
   isActive    Boolean  @default(true)
   notes       String?
@@ -152,27 +144,13 @@ model Allergy {
   @@index([patientId])
 }
 
-enum AllergySeverity {
-  MILD
-  MODERATE
-  SEVERE
-  LIFE_THREATENING
-}
-
-enum AllergyType {
-  DRUG
-  FOOD
-  ENVIRONMENTAL
-  OTHER
-}
-
 model MedicalCondition {
   id          String   @id @default(cuid())
   patientId   String
   name        String
   icdCode     String?
   onsetDate   DateTime?
-  status      ConditionStatus @default(ACTIVE)
+  status      String   @default("ACTIVE")
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -180,13 +158,6 @@ model MedicalCondition {
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
   @@index([patientId])
-}
-
-enum ConditionStatus {
-  ACTIVE
-  RESOLVED
-  INACTIVE
-  RECURRENCE
 }
 
 model PatientMedication {
@@ -246,8 +217,8 @@ model Encounter {
   id              String   @id @default(cuid())
   patientId       String
   providerId      String
-  status          EncounterStatus @default(SCHEDULED)
-  visitType       VisitType @default(OFFICE_VISIT)
+  status          String   @default("SCHEDULED")
+  visitType       String   @default("OFFICE_VISIT")
   chiefComplaint  String?
   scheduledAt     DateTime?
   startedAt       DateTime?
@@ -255,9 +226,9 @@ model Encounter {
   location        String?
   roomNumber      String?
   reasonForVisit  String?
-  clinicalNotes   String?  @db.Text
-  assessment      String?  @db.Text
-  plan            String?  @db.Text
+  clinicalNotes   String?
+  assessment      String?
+  plan            String?
   followUpDate    DateTime?
   followUpNotes   String?
   billingCode     String?
@@ -280,29 +251,6 @@ model Encounter {
   @@index([scheduledAt])
 }
 
-enum EncounterStatus {
-  SCHEDULED
-  CHECKED_IN
-  ROOMED
-  IN_PROGRESS
-  PENDING_RESULTS
-  PENDING_REVIEW
-  COMPLETED
-  CANCELLED
-  NO_SHOW
-}
-
-enum VisitType {
-  OFFICE_VISIT
-  TELEHEALTH
-  URGENT_CARE
-  FOLLOW_UP
-  ANNUAL_PHYSICAL
-  PROCEDURE
-  CONSULTATION
-  EMERGENCY
-}
-
 model EncounterDiagnosis {
   id          String   @id @default(cuid())
   encounterId String
@@ -311,7 +259,7 @@ model EncounterDiagnosis {
   probability Float?
   isPrimary   Boolean  @default(false)
   isConfirmed Boolean  @default(false)
-  evidence    String[] @default([])
+  evidence    String   @default("[]")
   notes       String?
   createdAt   DateTime @default(now())
 
@@ -335,39 +283,39 @@ model PatientAssessment {
   hpiDuration       String?
   hpiCharacter      String?
   hpiSeverity       Int?
-  hpiAggravating    String[]  @default([])
-  hpiRelieving      String[]  @default([])
-  hpiAssociated     String[]  @default([])
+  hpiAggravating    String   @default("[]")
+  hpiRelieving      String   @default("[]")
+  hpiAssociated     String   @default("[]")
   hpiTiming         String?
   
-  reviewOfSystems   Json?
-  medications       String[]  @default([])
-  allergies         String[]  @default([])
-  medicalHistory    String[]  @default([])
-  surgicalHistory   String[]  @default([])
+  reviewOfSystems   String?
+  medications       String   @default("[]")
+  allergies         String   @default("[]")
+  medicalHistory    String   @default("[]")
+  surgicalHistory   String   @default("[]")
   familyHistory     String?
-  socialHistory     Json?
+  socialHistory     String?
   
-  urgencyLevel      UrgencyLevel @default(STANDARD)
-  urgencyScore      Int          @default(0)
-  redFlags          String[]     @default([])
-  riskFactors       String[]     @default([])
+  urgencyLevel      String   @default("STANDARD")
+  urgencyScore      Int      @default(0)
+  redFlags          String   @default("[]")
+  riskFactors       String   @default("[]")
   
-  differentialDx    Json?
-  aiRecommendations String[]  @default([])
-  clinicalPearls    String[]  @default([])
+  differentialDx    String?
+  aiRecommendations String   @default("[]")
+  clinicalPearls    String   @default("[]")
   
-  status            AssessmentStatus @default(IN_PROGRESS)
+  status            String   @default("IN_PROGRESS")
   submittedAt       DateTime?
   reviewedAt        DateTime?
   completedAt       DateTime?
   
-  providerNotes     String?   @db.Text
-  confirmedDiagnoses Json?
-  icdCodes          String[]  @default([])
-  treatmentPlan     String?   @db.Text
+  providerNotes     String?
+  confirmedDiagnoses String?
+  icdCodes          String   @default("[]")
+  treatmentPlan     String?
   followUpInstructions String?
-  ordersPlaced      String[]  @default([])
+  ordersPlaced      String   @default("[]")
   
   compassVersion    String?
   aiModelUsed       String?
@@ -384,23 +332,6 @@ model PatientAssessment {
   @@index([submittedAt])
 }
 
-enum UrgencyLevel {
-  STANDARD
-  MODERATE
-  HIGH
-  EMERGENCY
-}
-
-enum AssessmentStatus {
-  IN_PROGRESS
-  PENDING
-  URGENT
-  IN_REVIEW
-  COMPLETED
-  FOLLOW_UP
-  CANCELLED
-}
-
 // ============== ORDERS ==============
 
 model LabOrder {
@@ -410,8 +341,8 @@ model LabOrder {
   testCode      String
   testName      String
   category      String?
-  priority      OrderPriority @default(ROUTINE)
-  status        OrderStatus @default(PENDING)
+  priority      String   @default("ROUTINE")
+  status        String   @default("PENDING")
   indication    String?
   specialInstructions String?
   specimenType  String?
@@ -458,8 +389,8 @@ model ImagingOrder {
   studyName     String
   bodyPart      String?
   laterality    String?
-  priority      OrderPriority @default(ROUTINE)
-  status        OrderStatus @default(PENDING)
+  priority      String   @default("ROUTINE")
+  status        String   @default("PENDING")
   indication    String
   clinicalHistory String?
   contrast      Boolean  @default(false)
@@ -470,9 +401,9 @@ model ImagingOrder {
   scheduledAt   DateTime?
   performedAt   DateTime?
   readAt        DateTime?
-  report        String?  @db.Text
+  report        String?
   impression    String?
-  findings      String?  @db.Text
+  findings      String?
   radiologist   String?
   facility      String?
   notes         String?
@@ -500,8 +431,8 @@ model MedicationOrder {
   refills         Int?      @default(0)
   indication      String?
   instructions    String?
-  status          OrderStatus @default(PENDING)
-  priority        OrderPriority @default(ROUTINE)
+  status          String   @default("PENDING")
+  priority        String   @default("ROUTINE")
   isControlled    Boolean   @default(false)
   deaSchedule     String?
   pharmacy        String?
@@ -529,7 +460,7 @@ model DrugInteraction {
   id              String   @id @default(cuid())
   medicationOrderId String
   interactingDrug String
-  severity        InteractionSeverity
+  severity        String
   description     String
   mechanism       String?
   management      String?
@@ -543,31 +474,6 @@ model DrugInteraction {
   @@index([medicationOrderId])
 }
 
-enum InteractionSeverity {
-  MINOR
-  MODERATE
-  MAJOR
-  CONTRAINDICATED
-}
-
-enum OrderPriority {
-  ROUTINE
-  URGENT
-  STAT
-  ASAP
-}
-
-enum OrderStatus {
-  PENDING
-  ORDERED
-  IN_PROGRESS
-  COLLECTED
-  RESULTED
-  COMPLETED
-  CANCELLED
-  ON_HOLD
-}
-
 // ============== REFERRALS ==============
 
 model Referral {
@@ -575,10 +481,10 @@ model Referral {
   encounterId     String
   referringProviderId String
   specialty       String
-  urgency         OrderPriority @default(ROUTINE)
-  status          ReferralStatus @default(PENDING)
+  urgency         String   @default("ROUTINE")
+  status          String   @default("PENDING")
   reason          String
-  clinicalSummary String?  @db.Text
+  clinicalSummary String?
   specificQuestions String?
   preferredProvider String?
   preferredFacility String?
@@ -587,8 +493,8 @@ model Referral {
   preAuthNumber   String?
   appointmentDate DateTime?
   appointmentTime String?
-  consultNote     String?  @db.Text
-  recommendations String?  @db.Text
+  consultNote     String?
+  recommendations String?
   followUpNeeded  Boolean  @default(false)
   orderedAt       DateTime @default(now())
   sentAt          DateTime?
@@ -605,25 +511,15 @@ model Referral {
   @@index([specialty])
 }
 
-enum ReferralStatus {
-  PENDING
-  SENT
-  RECEIVED
-  SCHEDULED
-  COMPLETED
-  CANCELLED
-  DENIED
-}
-
 // ============== NOTIFICATIONS ==============
 
 model Notification {
   id            String   @id @default(cuid())
   userId        String
-  type          NotificationType
+  type          String
   title         String
   message       String
-  priority      NotificationPriority @default(NORMAL)
+  priority      String   @default("NORMAL")
   isRead        Boolean  @default(false)
   readAt        DateTime?
   relatedType   String?
@@ -640,25 +536,6 @@ model Notification {
   @@index([createdAt])
 }
 
-enum NotificationType {
-  URGENT_ASSESSMENT
-  NEW_ASSESSMENT
-  LAB_RESULT
-  CRITICAL_VALUE
-  MESSAGE
-  APPOINTMENT
-  TASK
-  SYSTEM
-  ALERT
-}
-
-enum NotificationPriority {
-  LOW
-  NORMAL
-  HIGH
-  CRITICAL
-}
-
 // ============== EMERGENCY EVENTS ==============
 
 model EmergencyEvent {
@@ -667,10 +544,10 @@ model EmergencyEvent {
   patientId       String?
   eventType       String
   triggeredBy     String
-  severity        EmergencySeverity
+  severity        String
   protocol        String
-  autoOrders      String[] @default([])
-  location        Json?
+  autoOrders      String   @default("[]")
+  location        String?
   acknowledgedAt  DateTime?
   acknowledgedBy  String?
   resolvedAt      DateTime?
@@ -684,13 +561,6 @@ model EmergencyEvent {
   @@index([createdAt])
 }
 
-enum EmergencySeverity {
-  WARNING
-  URGENT
-  CRITICAL
-  LIFE_THREATENING
-}
-
 // ============== AUDIT LOGGING ==============
 
 model AuditLog {
@@ -699,7 +569,7 @@ model AuditLog {
   action      String
   entityType  String
   entityId    String?
-  changes     Json?
+  changes     String?
   ipAddress   String?
   userAgent   String?
   sessionId   String?
@@ -721,16 +591,16 @@ model ClinicalProtocol {
   id            String   @id @default(cuid())
   name          String
   condition     String
-  triggerCriteria Json
-  recommendedActions Json
-  labOrders     Json?
-  imagingOrders Json?
-  medications   Json?
-  referrals     Json?
-  patientEducation Json?
+  triggerCriteria String
+  recommendedActions String
+  labOrders     String?
+  imagingOrders String?
+  medications   String?
+  referrals     String?
+  patientEducation String?
   followUp      String?
   evidenceLevel String?
-  references    String[]  @default([])
+  references    String   @default("[]")
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -743,19 +613,18 @@ model PatientEducationMaterial {
   id          String   @id @default(cuid())
   title       String
   category    String
-  content     String   @db.Text
+  content     String
   format      String   @default("text")
   url         String?
   language    String   @default("en")
   readingLevel String?
-  conditions  String[] @default([])
-  keywords    String[] @default([])
+  conditions  String   @default("[]")
+  keywords    String   @default("[]")
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([category])
-  @@index([conditions])
 }
 
 // ============== TREATMENT PLANS ==============
@@ -765,19 +634,19 @@ model TreatmentPlan {
   encounterId           String   @unique
   patientId             String
   providerId            String
-  diagnoses             Json     @default("[]")
+  diagnoses             String   @default("[]")
   chiefComplaint        String?
-  clinicalSummary       String?  @db.Text
-  labOrderIds           Json     @default("[]")
-  imagingOrderIds       Json     @default("[]")
-  prescriptionIds       Json     @default("[]")
-  referralIds           Json     @default("[]")
-  followUpSchedule      Json     @default("[]")
-  patientEducation      Json     @default("[]")
-  returnPrecautions     Json     @default("[]")
-  additionalInstructions String? @db.Text
+  clinicalSummary       String?
+  labOrderIds           String   @default("[]")
+  imagingOrderIds       String   @default("[]")
+  prescriptionIds       String   @default("[]")
+  referralIds           String   @default("[]")
+  followUpSchedule      String   @default("[]")
+  patientEducation      String   @default("[]")
+  returnPrecautions     String   @default("[]")
+  additionalInstructions String?
   protocolApplied       String?
-  status                TreatmentPlanStatus @default(DRAFT)
+  status                String   @default("DRAFT")
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   approvedBy            String?
@@ -786,14 +655,6 @@ model TreatmentPlan {
   @@index([patientId])
   @@index([providerId])
   @@index([status])
-}
-
-enum TreatmentPlanStatus {
-  DRAFT
-  PENDING_REVIEW
-  APPROVED
-  EXECUTED
-  MODIFIED
 }
 
 // ============== PROVIDER DIRECTORY ==============
@@ -810,7 +671,7 @@ model ProviderDirectory {
   fax                  String?
   npi                  String?  @unique
   acceptingNew         Boolean  @default(true)
-  insurancesAccepted   Json     @default("[]")
+  insurancesAccepted   String   @default("[]")
   nextAvailableRoutine String?
   nextAvailableUrgent  String?
   rating               Float?

@@ -3,17 +3,18 @@
 // apps/provider-portal/components/previsit/PreVisitSummary.tsx
 //
 // Comprehensive pre-visit intelligence display matching the
-// HTML prototype layout with full functionality integration
+// dashboard purple gradient theme with WHITE cards
 // ============================================================
 
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import {
   AlertTriangle,
   Clock,
   FlaskConical,
   Pill,
-  Image as ImageIcon,
+  ImageIcon,
   UserPlus,
   Calendar,
   BookOpen,
@@ -29,9 +30,20 @@ import {
   Minus,
   Plus,
   Shield,
-  Stethoscope,
+  Brain,
+  Home,
+  Bell,
+  Settings,
 } from 'lucide-react';
 import CollapsibleSection from './CollapsibleSection';
+
+// ============================================================
+// Theme - Matching Dashboard
+// ============================================================
+
+const theme = {
+  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+};
 
 // ============================================================
 // Types
@@ -185,24 +197,42 @@ const VitalBadge: React.FC<{
 const QuickActionButton: React.FC<{
   icon: React.ReactNode;
   label: string;
+  href?: string;
   onClick?: () => void;
   variant?: 'default' | 'primary' | 'danger';
-}> = ({ icon, label, onClick, variant = 'default' }) => {
+}> = ({ icon, label, href, onClick, variant = 'default' }) => {
   const variants = {
-    default: 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300',
-    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600',
+    default: 'bg-gray-50 hover:bg-purple-50 text-gray-700 border-gray-200 hover:border-purple-300 hover:text-purple-700',
+    primary: 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600',
     danger: 'bg-red-600 hover:bg-red-700 text-white border-red-600',
   };
+
+  const content = (
+    <>
+      <div className={`p-2 rounded-lg ${variant === 'default' ? 'bg-purple-100 text-purple-600' : 'bg-white/20'}`}>
+        {icon}
+      </div>
+      <span className="text-xs font-medium whitespace-nowrap">{label}</span>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl border transition-all hover:-translate-y-1 ${variants[variant]} shadow-sm hover:shadow-md`}
+      >
+        {content}
+      </Link>
+    );
+  }
 
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl border transition-all ${variants[variant]} shadow-sm hover:shadow`}
+      className={`flex flex-col items-center gap-2 px-4 py-3 rounded-xl border transition-all hover:-translate-y-1 ${variants[variant]} shadow-sm hover:shadow-md`}
     >
-      <div className="p-2 rounded-lg bg-opacity-10 bg-current">
-        {icon}
-      </div>
-      <span className="text-xs font-medium whitespace-nowrap">{label}</span>
+      {content}
     </button>
   );
 };
@@ -256,12 +286,12 @@ const ActionItemRow: React.FC<{
         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
           item.completed 
             ? 'bg-green-500 border-green-500 text-white' 
-            : 'border-gray-300 hover:border-indigo-500'
+            : 'border-gray-300 hover:border-purple-500'
         }`}
       >
         {item.completed && <Check className="w-3 h-3" />}
       </button>
-      <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-500' : 'text-gray-700'}`}>
+      <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-400' : 'text-gray-700'}`}>
         {item.description}
       </span>
       <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${priorityBadge[item.priority]}`}>
@@ -278,16 +308,13 @@ const ActionItemRow: React.FC<{
 export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
   data,
   onStartEncounter,
-  onOrderLabs,
-  onOrderImaging,
-  onPrescribe,
-  onRefer,
-  onScheduleFollowup,
   onEmergencyProtocol,
   onReviewChart,
   onNavigatePatient,
 }) => {
   const router = useRouter();
+  const patientId = data.patient.id;
+  
   const [allExpanded, setAllExpanded] = useState(true);
   const [sectionStatus, setSectionStatus] = useState<Record<string, 'pending' | 'reviewed'>>({
     chiefComplaint: 'pending',
@@ -298,8 +325,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
     actionItems: 'pending',
   });
   const [actionItems, setActionItems] = useState(data.actionItems);
-  
-  // Track acknowledged (no longer pulsing) alerts
   const [acknowledgedAlerts, setAcknowledgedAlerts] = useState<Set<string>>(new Set());
 
   const acknowledgeAlert = useCallback((alertId: string) => {
@@ -326,62 +351,77 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
   const { patient, vitals, chiefComplaint, riskAssessment } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Bar */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
+    <div className="min-h-screen" style={{ background: theme.gradient }}>
+      {/* Header Bar - Matching Dashboard */}
+      <header className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Left - Logo & Title */}
+            {/* Left - Back & Logo */}
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                title="Go Back"
               >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
+              <Link
+                href="/"
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                title="Dashboard"
+              >
+                <Home className="w-5 h-5" />
+              </Link>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Stethoscope className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900">ATTENDING</h1>
-                  <p className="text-xs text-gray-500">Pre-Visit Intelligence</p>
+                  <h1 className="text-lg font-bold text-white">ATTENDING AI</h1>
+                  <p className="text-xs text-purple-200">Pre-Visit Intelligence</p>
                 </div>
               </div>
             </div>
 
             {/* Center - Time */}
             <div className="hidden md:flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2 text-gray-600">
+              <div className="flex items-center gap-2 text-purple-200">
                 <Clock className="w-4 h-4" />
                 <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
-              <div className="text-gray-400">|</div>
-              <div className="text-indigo-600 font-medium">
+              <div className="text-purple-300">|</div>
+              <div className="text-white font-medium">
                 Next: {data.appointment.time} Appointment
               </div>
             </div>
 
-            {/* Right - Navigation */}
+            {/* Right - Navigation & Actions */}
             <div className="flex items-center gap-2">
+              <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors relative">
+                <Bell className="w-5 h-5" />
+              </button>
+              <Link href="/settings" className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
+                <Settings className="w-5 h-5" />
+              </Link>
+              <div className="w-px h-8 bg-white/20 mx-2" />
               <button
                 onClick={() => onNavigatePatient?.('prev')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
                 title="Previous patient"
               >
-                <ChevronLeft className="w-5 h-5 text-gray-600" />
+                <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={() => onNavigatePatient?.('next')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
                 title="Next patient"
               >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Critical Alert Banner */}
       {data.criticalAlert && (
@@ -420,13 +460,13 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Patient Header Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+        {/* Patient Header Card - WHITE */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex flex-col lg:flex-row lg:items-start gap-6">
             {/* Patient Info */}
             <div className="flex items-start gap-4 flex-1">
               {/* Avatar */}
-              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">
                 {patient.firstName[0]}{patient.lastName[0]}
               </div>
               
@@ -473,37 +513,37 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
               </div>
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Using Links to correct pages */}
             <div className="flex flex-wrap gap-2 lg:gap-3">
               <QuickActionButton
                 icon={<FlaskConical className="w-5 h-5" />}
                 label="Order Labs"
-                onClick={onOrderLabs}
+                href={`/labs?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<Pill className="w-5 h-5" />}
                 label="E-Prescribe"
-                onClick={onPrescribe}
+                href={`/medications?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<ImageIcon className="w-5 h-5" />}
                 label="Order Imaging"
-                onClick={onOrderImaging}
+                href={`/imaging?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<UserPlus className="w-5 h-5" />}
                 label="Refer Specialist"
-                onClick={onRefer}
+                href={`/referrals?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<Calendar className="w-5 h-5" />}
                 label="Schedule Follow-up"
-                onClick={onScheduleFollowup}
+                href={`/scheduling?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<BookOpen className="w-5 h-5" />}
                 label="Patient Education"
-                onClick={() => {}}
+                href={`/help?patientId=${patientId}`}
               />
             </div>
           </div>
@@ -514,14 +554,14 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setAllExpanded(false)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Minus className="w-4 h-4" />
               Collapse All
             </button>
             <button
               onClick={() => setAllExpanded(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />
               Expand All
@@ -529,7 +569,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
             {acknowledgedAlerts.size > 0 && (
               <button
                 onClick={() => setAcknowledgedAlerts(new Set())}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-600 hover:text-amber-800 hover:bg-amber-50 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 rounded-lg transition-colors"
               >
                 <AlertTriangle className="w-4 h-4" />
                 Reset Alerts ({acknowledgedAlerts.size})
@@ -545,7 +585,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               allReviewed
                 ? 'bg-green-100 text-green-700 cursor-default'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-white text-purple-700 hover:bg-purple-50 shadow-md'
             }`}
           >
             <Check className="w-4 h-4" />
@@ -553,7 +593,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
           </button>
         </div>
 
-        {/* Collapsible Sections */}
+        {/* Collapsible Sections - WHITE CARDS */}
         <div className="space-y-4">
           {/* Chief Complaint & History */}
           <CollapsibleSection
@@ -564,7 +604,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
             onMarkReviewed={() => markSectionReviewed('chiefComplaint')}
           >
             <div className="pt-4 space-y-4">
-              {/* Patient Quote */}
               {chiefComplaint.patientQuote && (
                 <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4">
                   <p className="text-indigo-900 font-medium italic">
@@ -578,8 +617,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                 </div>
               )}
               
-              {/* Detailed History */}
-              <div className="prose prose-sm max-w-none text-gray-700">
+              <div className="text-gray-700 text-sm leading-relaxed">
                 <p>{chiefComplaint.details}</p>
               </div>
             </div>
@@ -628,7 +666,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
             onMarkReviewed={() => markSectionReviewed('vitals')}
           >
             <div className="pt-4 grid grid-cols-2 md:grid-cols-5 gap-4">
-              {/* Blood Pressure */}
               <div className="text-center p-4 bg-gray-50 rounded-xl">
                 <div className={`text-2xl font-bold ${
                   vitals.bloodPressure.status === 'normal' ? 'text-green-600' :
@@ -640,7 +677,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                 <div className="text-sm text-gray-500 mt-1">Blood Pressure</div>
               </div>
 
-              {/* Heart Rate */}
               <div className="text-center p-4 bg-gray-50 rounded-xl">
                 <div className={`text-2xl font-bold ${
                   vitals.heartRate.status === 'normal' ? 'text-green-600' :
@@ -653,7 +689,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                 <div className="text-sm text-gray-500 mt-1">Heart Rate</div>
               </div>
 
-              {/* Temperature */}
               <div className="text-center p-4 bg-gray-50 rounded-xl">
                 <div className={`text-2xl font-bold ${
                   vitals.temperature.status === 'normal' ? 'text-green-600' :
@@ -665,7 +700,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                 <div className="text-sm text-gray-500 mt-1">Temperature</div>
               </div>
 
-              {/* Resp Rate */}
               <div className="text-center p-4 bg-gray-50 rounded-xl">
                 <div className={`text-2xl font-bold ${
                   vitals.respRate.status === 'normal' ? 'text-green-600' : 'text-amber-600'
@@ -675,7 +709,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                 <div className="text-sm text-gray-500 mt-1">Resp Rate</div>
               </div>
 
-              {/* O2 Sat */}
               <div className="text-center p-4 bg-gray-50 rounded-xl">
                 <div className={`text-2xl font-bold ${
                   vitals.oxygenSat.status === 'normal' ? 'text-green-600' :
@@ -698,7 +731,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
             onMarkReviewed={() => markSectionReviewed('riskAssessment')}
           >
             <div className="pt-4">
-              {/* Risk Level Badge */}
               <div 
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold mb-4 transition-all ${
                   riskAssessment.level === 'low' ? 'bg-green-100 text-green-800' :
@@ -709,15 +741,12 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                   (riskAssessment.level === 'high' || riskAssessment.level === 'critical') && !isAlertAcknowledged('risk-level')
                     ? 'animate-pulse cursor-pointer hover:opacity-80'
                     : ''
-                } ${
-                  isAlertAcknowledged('risk-level') ? 'opacity-75' : ''
                 }`}
                 onClick={() => {
                   if ((riskAssessment.level === 'high' || riskAssessment.level === 'critical') && !isAlertAcknowledged('risk-level')) {
                     acknowledgeAlert('risk-level');
                   }
                 }}
-                title={(riskAssessment.level === 'high' || riskAssessment.level === 'critical') && !isAlertAcknowledged('risk-level') ? 'Click to acknowledge' : ''}
               >
                 <Shield className="w-5 h-5" />
                 {riskAssessment.level.toUpperCase()} RISK - {riskAssessment.summary}
@@ -726,7 +755,6 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                 )}
               </div>
 
-              {/* Risk Factors */}
               <ul className="space-y-2">
                 {riskAssessment.factors.map((factor) => (
                   <li key={factor.id} className="flex items-start gap-2 text-gray-700">
@@ -789,7 +817,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
               <div className="flex items-center gap-3">
                 <button
                   onClick={onStartEncounter}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-medium shadow-lg transition-all"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg transition-all"
                 >
                   <Play className="w-5 h-5" />
                   Start Encounter
