@@ -93,6 +93,7 @@ model VerificationToken {
 model Patient {
   id              String    @id @default(cuid())
   mrn             String    @unique
+  fhirId          String?   @unique
   firstName       String
   lastName        String
   middleName      String?
@@ -110,18 +111,25 @@ model Patient {
   insuranceName   String?
   primaryProviderId String?
   preferredLanguage String?  @default("en")
+  lastFhirSync    DateTime?
+  fhirVendor      String?
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  encounters      Encounter[]
-  allergies       Allergy[]
-  medications     PatientMedication[]
-  conditions      MedicalCondition[]
-  assessments     PatientAssessment[]
-  vitals          VitalSigns[]
+  encounters        Encounter[]
+  allergies         Allergy[]
+  medications       PatientMedication[]
+  conditions        MedicalCondition[]
+  assessments       PatientAssessment[]
+  vitals            VitalSigns[]
+  fhirLabResults    FhirLabResult[]
+  fhirConditions    FhirCondition[]
+  fhirMedications   FhirMedication[]
+  fhirVitalSigns    FhirVitalSign[]
 
   @@index([mrn])
+  @@index([fhirId])
   @@index([lastName, firstName])
   @@index([dateOfBirth])
 }
@@ -133,7 +141,9 @@ model Allergy {
   reaction    String?
   severity    String   @default("MILD")
   type        String   @default("DRUG")
+  status      String   @default("ACTIVE")
   onsetDate   DateTime?
+  fhirId      String?
   isActive    Boolean  @default(true)
   notes       String?
   createdAt   DateTime @default(now())
@@ -141,7 +151,9 @@ model Allergy {
 
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
+  @@unique([patientId, allergen])
   @@index([patientId])
+  @@index([fhirId])
 }
 
 model MedicalCondition {
@@ -684,4 +696,141 @@ model ProviderDirectory {
   @@index([subspecialty])
   @@index([acceptingNew])
   @@index([preferred])
+}
+
+// ============== FHIR INTEGRATION ==============
+
+model FhirConnection {
+  id           String   @id @default(cuid())
+  providerId   String
+  vendor       String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime
+  patientId    String?
+  encounterId  String?
+  scope        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([providerId, vendor])
+  @@index([providerId])
+}
+
+model OAuthState {
+  id        String   @id @default(cuid())
+  state     String   @unique
+  context   String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([state])
+  @@index([expiresAt])
+}
+
+model FhirLabResult {
+  id             String   @id @default(cuid())
+  patientId      String
+  testName       String
+  testCode       String?
+  value          String
+  unit           String?
+  referenceRange String?
+  interpretation String?
+  status         String   @default("FINAL")
+  collectedAt    DateTime
+  resultedAt     DateTime
+  performedBy    String?
+  notes          String?
+  fhirId         String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([testCode])
+  @@index([fhirId])
+}
+
+model FhirCondition {
+  id           String    @id @default(cuid())
+  patientId    String
+  name         String
+  icdCode      String?
+  status       String    @default("ACTIVE")
+  onsetDate    DateTime?
+  recordedDate DateTime
+  notes        String?
+  fhirId       String?   @unique
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([icdCode])
+  @@index([fhirId])
+}
+
+model FhirMedication {
+  id             String    @id @default(cuid())
+  patientId      String
+  medicationName String
+  genericName    String?
+  dosage         String?
+  frequency      String?
+  route          String?
+  status         String    @default("ACTIVE")
+  prescribedDate DateTime
+  prescriber     String?
+  startDate      DateTime?
+  endDate        DateTime?
+  notes          String?
+  fhirId         String?   @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([fhirId])
+}
+
+model FhirVitalSign {
+  id         String   @id @default(cuid())
+  patientId  String
+  type       String
+  value      String
+  unit       String?
+  systolic   Int?
+  diastolic  Int?
+  recordedAt DateTime
+  recordedBy String?
+  fhirId     String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([type])
+  @@index([fhirId])
+}
+
+model FhirEncounter {
+  id             String    @id @default(cuid())
+  patientId      String
+  status         String
+  type           String?
+  class          String?
+  startTime      DateTime
+  endTime        DateTime?
+  reasonForVisit String?
+  fhirId         String?   @unique
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([patientId])
+  @@index([fhirId])
 }
