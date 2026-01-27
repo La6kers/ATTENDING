@@ -24,10 +24,10 @@ Write-Host ""
 # Helper Functions
 # =============================================================================
 
-function Write-Success { param($msg) Write-Host "✓ $msg" -ForegroundColor Green }
-function Write-Warning { param($msg) Write-Host "⚠ $msg" -ForegroundColor Yellow }
-function Write-Error { param($msg) Write-Host "✗ $msg" -ForegroundColor Red }
-function Write-Info { param($msg) Write-Host "ℹ $msg" -ForegroundColor Cyan }
+function Write-Success { param($msg) Write-Host "[OK] $msg" -ForegroundColor Green }
+function Write-Warn { param($msg) Write-Host "[WARN] $msg" -ForegroundColor Yellow }
+function Write-Err { param($msg) Write-Host "[ERROR] $msg" -ForegroundColor Red }
+function Write-Info { param($msg) Write-Host "[INFO] $msg" -ForegroundColor Cyan }
 
 # =============================================================================
 # Check Prerequisites
@@ -40,12 +40,12 @@ try {
     $nodeVersion = (node -v) -replace 'v', ''
     $nodeMajor = [int]($nodeVersion.Split('.')[0])
     if ($nodeMajor -lt 18) {
-        Write-Error "Node.js 18+ required. Current: v$nodeVersion"
+        Write-Err "Node.js 18+ required. Current: v$nodeVersion"
         exit 1
     }
     Write-Success "Node.js v$nodeVersion"
 } catch {
-    Write-Error "Node.js is not installed. Please install Node.js 18+"
+    Write-Err "Node.js is not installed. Please install Node.js 18+"
     Write-Info "Download from: https://nodejs.org/"
     exit 1
 }
@@ -55,7 +55,7 @@ try {
     $npmVersion = npm -v
     Write-Success "npm v$npmVersion"
 } catch {
-    Write-Error "npm is not installed"
+    Write-Err "npm is not installed"
     exit 1
 }
 
@@ -64,20 +64,20 @@ try {
     $gitVersion = (git --version) -replace 'git version ', ''
     Write-Success "Git $gitVersion"
 } catch {
-    Write-Warning "Git not found - version control unavailable"
+    Write-Warn "Git not found - version control unavailable"
 }
 
 # Ollama (optional)
 $ollamaInstalled = $false
 if (-not $SkipOllama) {
     try {
-        $ollamaVersion = ollama --version 2>$null
-        if ($ollamaVersion) {
+        $ollamaTest = ollama --version 2>$null
+        if ($ollamaTest) {
             Write-Success "Ollama installed"
             $ollamaInstalled = $true
         }
     } catch {
-        Write-Warning "Ollama not installed (AI features will use rule-based fallback)"
+        Write-Warn "Ollama not installed (AI features will use rule-based fallback)"
     }
 }
 
@@ -108,7 +108,7 @@ if (-not (Test-Path $envLocal)) {
         
         Write-Success "Created .env.local with secure secret"
     } else {
-        Write-Warning ".env.example not found, skipping environment setup"
+        Write-Warn ".env.example not found, skipping environment setup"
     }
 } else {
     Write-Info ".env.local already exists, skipping"
@@ -126,7 +126,7 @@ try {
     npm install 2>&1 | Out-Null
     Write-Success "Dependencies installed"
 } catch {
-    Write-Error "Failed to install dependencies: $_"
+    Write-Err "Failed to install dependencies: $_"
     exit 1
 }
 
@@ -158,11 +158,11 @@ try {
             npx prisma db seed 2>&1 | Out-Null
             Write-Success "Database seeded"
         } catch {
-            Write-Warning "Seeding skipped (may already be seeded)"
+            Write-Warn "Seeding skipped (may already be seeded)"
         }
     }
 } catch {
-    Write-Error "Database setup failed: $_"
+    Write-Err "Database setup failed: $_"
 }
 
 Write-Host ""
@@ -184,12 +184,12 @@ if ($ollamaInstalled -and -not $SkipOllama) {
             ollama pull biomistral:7b 2>&1 | Out-Null
             Write-Success "BioMistral model installed"
         } catch {
-            Write-Warning "Could not download BioMistral, trying mistral..."
+            Write-Warn "Could not download BioMistral, trying mistral..."
             try {
                 ollama pull mistral:7b 2>&1 | Out-Null
                 Write-Success "Mistral model installed as fallback"
             } catch {
-                Write-Warning "Model download failed - AI will use rule-based fallback"
+                Write-Warn "Model download failed - AI will use rule-based fallback"
             }
         }
     }
@@ -206,7 +206,7 @@ if ($ollamaInstalled -and -not $SkipOllama) {
     }
 } elseif (-not $SkipOllama) {
     Write-Host ""
-    Write-Warning "Ollama not installed - using rule-based AI fallback"
+    Write-Warn "Ollama not installed - using rule-based AI fallback"
     Write-Info "To enable full AI features:"
     Write-Info "  1. Install Ollama: winget install Ollama.Ollama"
     Write-Info "  2. Run: ollama pull biomistral:7b"
@@ -224,7 +224,7 @@ if ($Mode -eq "prod") {
         npm run build 2>&1 | Out-Null
         Write-Success "Production build complete"
     } catch {
-        Write-Error "Build failed: $_"
+        Write-Err "Build failed: $_"
         exit 1
     }
     Write-Host ""
@@ -236,12 +236,11 @@ if ($Mode -eq "prod") {
 
 Write-Host "Running health checks..." -ForegroundColor White
 
-# Database check
-try {
-    $result = npx prisma db execute --stdin 2>&1 <<< "SELECT 1"
-    Write-Success "Database connection OK"
-} catch {
-    Write-Warning "Database connection check failed"
+# Database check - use a simple test
+if (Test-Path "prisma\dev.db") {
+    Write-Success "Database file exists"
+} else {
+    Write-Warn "Database file not found - run 'npx prisma migrate dev'"
 }
 
 # Ollama check
@@ -250,7 +249,7 @@ if ($ollamaInstalled) {
         $response = Invoke-WebRequest -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 2 -ErrorAction SilentlyContinue
         Write-Success "Ollama API OK"
     } catch {
-        Write-Warning "Ollama API not responding"
+        Write-Warn "Ollama API not responding"
     }
 }
 
