@@ -25,6 +25,9 @@ import {
   User,
   UserPlus,
   MessageSquare,
+  Heart,
+  FlaskConical,
+  Building,
 } from 'lucide-react';
 
 // Types
@@ -398,6 +401,26 @@ export default function PatientDashboard() {
             )}
           </section>
 
+          {/* Care Resources Banner */}
+          <section className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-xl p-4 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Heart className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Care Resources Available</h3>
+                  <p className="text-sm text-rose-100">Community support & research opportunities</p>
+                </div>
+              </div>
+              <Link href="/care-resources">
+                <button className="px-4 py-2 bg-white text-rose-600 rounded-lg text-sm font-medium">
+                  View
+                </button>
+              </Link>
+            </div>
+          </section>
+
           {/* Quick Links */}
           <section className="grid grid-cols-2 gap-3">
             <Link href="/health-summary">
@@ -407,11 +430,12 @@ export default function PatientDashboard() {
                 <p className="text-xs text-gray-500">View your health history</p>
               </button>
             </Link>
-            <Link href="/referrals">
-              <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all">
-                <UserPlus className="w-6 h-6 text-purple-600 mb-2" />
-                <p className="font-medium text-gray-900">My Referrals</p>
-                <p className="text-xs text-gray-500">Track specialist visits</p>
+            <Link href="/care-resources">
+              <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all relative">
+                <Heart className="w-6 h-6 text-purple-600 mb-2" />
+                <p className="font-medium text-gray-900">Care Resources</p>
+                <p className="text-xs text-gray-500">Support & trials</p>
+                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full"></span>
               </button>
             </Link>
             <Link href="/profile">

@@ -1,45 +1,42 @@
+// =============================================================================
+// ATTENDING AI - Services Index
 // apps/shared/services/index.ts
-// Shared Services for ATTENDING AI Platform
+//
+// Central export for all ATTENDING AI services
+// =============================================================================
 
-// Assessment Submission
-export * from './assessmentSubmission';
+// Clinical Intelligence Services
+export { AmbientScribeService, ambientScribeService } from './ai-scribe/AmbientScribeService';
+export { DeteriorationAlertService, deteriorationAlertService } from './predictive-alerts/DeteriorationAlertService';
+export { DiagnosticSolverService, diagnosticSolverService } from './diagnostic-solver/DiagnosticSolverService';
+export { ImageAnalysisService, imageAnalysisService } from './clinical-imaging/ImageAnalysisService';
 
-// COMPASS Bridge - Real-time communication between portals
-export { 
-  CompassBridge,
-  type AssessmentEventType,
-  type AssessmentEvent,
-  type AssessmentEventCallback,
-  type CompassBridgeConfig,
-} from './CompassBridge';
+// Workflow Optimization Services
+export { SmartInboxService, smartInboxService } from './smart-inbox/SmartInboxService';
+export { CareGapsService, careGapsService } from './care-gaps/CareGapsService';
+export { SmartSchedulingService, smartSchedulingService } from './smart-scheduling/SmartSchedulingService';
+export { PeerConsultService, peerConsultService } from './peer-consult/PeerConsultService';
 
-// Notification Service
-export { 
-  NotificationService,
-  type NotificationType,
-  type NotificationOptions,
-  type CompassNotificationOptions,
-  type NotificationCallback,
-  type NotificationServiceConfig,
-} from './NotificationService';
+// Patient Engagement Services
+export { MedicationBuddyService, medicationBuddyService } from './patient-engagement/MedicationBuddyService';
+export { HealthCoachingService, healthCoachingService } from './patient-engagement/HealthCoachingService';
+export { FamilyHealthHubService, familyHealthHubService } from './patient-engagement/FamilyHealthHubService';
+export { PostDischargeConciergeService, postDischargeConciergeService } from './patient-engagement/PostDischargeConciergeService';
 
-// Geolocation Service
-export { 
-  GeolocationService,
-  calculateDistance,
-  type Coordinates,
-  type EmergencyFacility,
-  type NurseHotline,
-  type LocationResult,
-  type FacilitySearchResult,
-} from './GeolocationService';
+// Specialized Care Services
+export { MentalHealthService, mentalHealthService } from './mental-health/MentalHealthService';
+export { SocialSupportService, socialSupportService } from './social-support/SocialSupportService';
+export { EndOfLifeService, endOfLifeService } from './end-of-life/EndOfLifeService';
 
-// Clinical Recommendation Service - AI-powered recommendations
-export {
-  ClinicalRecommendationService,
-  clinicalRecommendationService,
-  type LabRecommendation,
-  type ImagingRecommendation,
-  type MedicationRecommendation,
-  type RecommendationResult,
-} from './ClinicalRecommendationService';
+// Platform Services
+export { MedicalInterpreterService, medicalInterpreterService } from './interpreter/MedicalInterpreterService';
+export { PopulationHealthService, populationHealthService } from './population-health/PopulationHealthService';
+export { WearablesService, wearablesService } from './wearables/WearablesService';
+
+// Previously built services
+export { ClinicalDecisionEngine, clinicalDecisionEngine } from './clinical-decision/ClinicalDecisionEngine';
+export { SmartOrderAssistant, smartOrderAssistant } from './smart-order/SmartOrderAssistant';
+export { ClinicalTrialMatcher, clinicalTrialMatcher } from './clinical-trials/ClinicalTrialMatcher';
+export { MedicationOptimizer, medicationOptimizer } from './medication-optimizer/MedicationOptimizer';
+export { CareCoordinationHub, careCoordinationHub } from './care-coordination/CareCoordinationHub';
+export { SDOHService, sdohService } from './sdoh/SDOHService';

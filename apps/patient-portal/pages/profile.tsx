@@ -29,6 +29,8 @@ import {
   X,
   LogOut,
   Users,
+  AlertTriangle,
+  Car,
 } from 'lucide-react';
 
 // ============================================================================
@@ -449,6 +451,46 @@ export default function ProfilePage() {
                 onChange={(v) => handleSavePreferences('smsReminders', v)}
               />
             </div>
+          </ProfileSection>
+
+          {/* Emergency Access Settings */}
+          <ProfileSection
+            title="Emergency Medical Access"
+            icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
+          >
+            <div className="bg-red-50 rounded-lg p-3 mb-3">
+              <p className="text-sm text-red-800">
+                Enable crash detection and first responder access to your critical medical information in emergencies.
+              </p>
+            </div>
+            <Link href="/emergency-settings">
+              <button className="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 rounded-lg px-2 -mx-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <Car className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-900 block">Configure Emergency Access</span>
+                    <span className="text-xs text-gray-500">Crash detection, PIN, contacts</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </button>
+            </Link>
+            <Link href="/emergency-access?mode=preview">
+              <button className="w-full flex items-center justify-between py-3 text-left hover:bg-gray-50 rounded-lg px-2 -mx-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <Heart className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-900 block">Preview Medical ID</span>
+                    <span className="text-xs text-gray-500">See what first responders will see</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
+              </button>
+            </Link>
           </ProfileSection>
 
           {/* Security & Privacy */}

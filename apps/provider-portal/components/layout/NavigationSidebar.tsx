@@ -106,7 +106,8 @@ export const navigationSections: NavSection[] = [
     id: 'clinical-ai',
     label: 'Clinical AI',
     items: [
-      { id: 'copilot', label: 'AI Copilot', icon: Brain, href: '/copilot', isAI: true, isNew: true },
+      { id: 'interventions', label: 'AI Interventions Hub', icon: Sparkles, href: '/interventions', isAI: true, isNew: true, badge: 7, badgeColor: 'purple' as const },
+      { id: 'copilot', label: 'AI Copilot', icon: Brain, href: '/copilot', isAI: true },
       { id: 'ambient', label: 'Ambient Documentation', icon: Mic, href: '/ambient', isAI: true },
       { id: 'image-analysis', label: 'Image Analysis', icon: ImageIcon, href: '/image-analysis', isAI: true },
       { id: 'decision-support', label: 'Decision Support', icon: Calculator, href: '/decision-support' },
@@ -116,9 +117,11 @@ export const navigationSections: NavSection[] = [
     id: 'care-management',
     label: 'Care Management',
     items: [
-      { id: 'care-coordination', label: 'Care Coordination', icon: Heart, href: '/care-coordination' },
+      { id: 'care-coordination', label: 'Care Coordination', icon: Heart, href: '/interventions?module=coordination' },
       { id: 'pathways', label: 'Clinical Pathways', icon: GitBranch, href: '/pathways' },
-      { id: 'sdoh', label: 'Social Care (SDOH)', icon: Home, href: '/sdoh' },
+      { id: 'sdoh', label: 'Social Care (SDOH)', icon: Home, href: '/interventions?module=sdoh' },
+      { id: 'med-optimizer', label: 'Medication Optimizer', icon: Pill, href: '/interventions?module=medications', isAI: true },
+      { id: 'clinical-trials', label: 'Clinical Trials', icon: Activity, href: '/interventions?module=trials' },
       { id: 'patient-companion', label: 'Patient Companion', icon: UserCircle, href: '/patient-companion' },
     ],
   },

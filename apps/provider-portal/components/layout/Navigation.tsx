@@ -21,6 +21,9 @@ import {
   HelpCircle,
   User,
   Users,
+  Brain,
+  Sparkles,
+  Zap,
 } from 'lucide-react';
 import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
 import { NotificationCenter } from '@/components/shared';
@@ -94,6 +97,13 @@ const Navigation = () => {
     { name: 'Medications', href: '/medications', icon: Pill },
     { name: 'Referrals', href: '/referrals', icon: Users },
     { name: 'Treatment Plans', href: '/treatment-plans', icon: ClipboardList },
+    { 
+      name: 'AI Interventions', 
+      href: '/interventions', 
+      icon: Zap,
+      badge: 7,
+      badgeColor: 'bg-purple-500'
+    },
   ];
 
   const isActive = (path: string) => {

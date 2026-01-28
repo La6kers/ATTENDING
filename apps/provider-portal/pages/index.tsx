@@ -31,6 +31,10 @@ import {
   LogOut,
   Calendar,
   TrendingUp,
+  Zap,
+  Heart,
+  Sparkles,
+  DollarSign,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -335,6 +339,13 @@ export default function ProviderDashboard() {
                   description="Prescribe and manage medications"
                   href="/medications"
                 />
+                <QuickActionCard
+                  icon={<Zap className="w-6 h-6" />}
+                  title="AI Interventions"
+                  description="Clinical recommendations & care optimization"
+                  href="/interventions"
+                  badge={7}
+                />
               </div>
             </div>
 
@@ -366,26 +377,89 @@ export default function ProviderDashboard() {
             </div>
           </div>
 
-          {/* AI Insights Banner */}
-          <div className="mt-8 bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-purple-400 to-pink-400">
-                <Brain className="w-8 h-8 text-white" />
+          {/* AI Interventions Summary */}
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* AI Insights Banner */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-400 to-pink-400">
+                  <Brain className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-white mb-1">AI Clinical Insights</h3>
+                  <p className="text-purple-200 text-sm">
+                    2 patients have red flags that require immediate attention. 
+                    3 assessments have AI-generated differential diagnoses ready for review.
+                  </p>
+                </div>
+                <Link
+                  href="/inbox"
+                  className="px-5 py-2.5 bg-white text-purple-700 rounded-xl font-medium hover:bg-purple-50 transition-colors flex items-center gap-2"
+                >
+                  Review Now
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-white mb-1">AI Clinical Insights</h3>
-                <p className="text-purple-200 text-sm">
-                  2 patients have red flags that require immediate attention. 
-                  3 assessments have AI-generated differential diagnoses ready for review.
-                </p>
+            </div>
+
+            {/* Interventions Summary */}
+            <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 backdrop-blur-sm rounded-2xl p-6 border border-purple-300/30">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500">
+                    <Zap className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Clinical Interventions</h3>
+                </div>
+                <Link
+                  href="/interventions"
+                  className="text-purple-200 hover:text-white text-sm flex items-center gap-1 transition-colors"
+                >
+                  View All
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
               </div>
-              <Link
-                href="/inbox"
-                className="px-5 py-2.5 bg-white text-purple-700 rounded-xl font-medium hover:bg-purple-50 transition-colors flex items-center gap-2"
-              >
-                Review Now
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+              <div className="grid grid-cols-4 gap-3">
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-white">5</p>
+                  <p className="text-xs text-purple-200">Recommendations</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-amber-300">2</p>
+                  <p className="text-xs text-purple-200">Safety Alerts</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-green-300">$385</p>
+                  <p className="text-xs text-purple-200">Savings/mo</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-pink-300">3</p>
+                  <p className="text-xs text-purple-200">Trial Matches</p>
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Link
+                  href="/interventions?module=recommendations"
+                  className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm text-center transition-colors"
+                >
+                  <Brain className="w-4 h-4 inline mr-1" />
+                  Recommendations
+                </Link>
+                <Link
+                  href="/interventions?module=medications"
+                  className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm text-center transition-colors"
+                >
+                  <Pill className="w-4 h-4 inline mr-1" />
+                  Med Optimizer
+                </Link>
+                <Link
+                  href="/interventions?module=trials"
+                  className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm text-center transition-colors"
+                >
+                  <FlaskConical className="w-4 h-4 inline mr-1" />
+                  Trials
+                </Link>
+              </div>
             </div>
           </div>
         </main>
