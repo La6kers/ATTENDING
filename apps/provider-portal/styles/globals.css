@@ -1012,6 +1012,128 @@ body {
 }
 
 /* ========================================
+   CLINICAL DOCUMENTATION TYPOGRAPHY
+   ======================================== */
+
+/* Professional clinical note font */
+.clinical-note {
+  font-family: 'Georgia', 'Times New Roman', 'Cambria', serif;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #1e293b;
+  letter-spacing: 0.01em;
+}
+
+.clinical-note-modern {
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #1e293b;
+}
+
+.clinical-note h1, .clinical-note h2, .clinical-note h3,
+.clinical-note-modern h1, .clinical-note-modern h2, .clinical-note-modern h3 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 600;
+  color: #0f172a;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+
+.clinical-note-section {
+  border-left: 3px solid #8b5cf6;
+  padding-left: 16px;
+  margin: 16px 0;
+}
+
+.clinical-note-header {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+/* AI Response Composer Styles */
+.ai-draft-preview {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #334155;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.ai-draft-preview p {
+  margin-bottom: 12px;
+}
+
+.ai-draft-preview strong {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.ai-suggestion-card {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(99, 102, 241, 0.08) 100%);
+  border: 2px solid rgba(139, 92, 246, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-suggestion-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+}
+
+.ai-suggestion-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+/* Message Composer Textarea */
+.message-composer-textarea {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #1e293b;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.message-composer-textarea:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+  outline: none;
+}
+
+.message-composer-textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* ========================================
    TOAST NOTIFICATIONS
    ======================================== */
 .toast-container {

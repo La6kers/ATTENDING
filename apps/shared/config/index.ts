@@ -4,3 +4,4 @@
 // =============================================================================
 
 export * from './biomistral.config';
+export * from './FeatureFlags';

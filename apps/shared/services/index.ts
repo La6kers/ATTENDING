@@ -40,3 +40,18 @@ export { ClinicalTrialMatcher, clinicalTrialMatcher } from './clinical-trials/Cl
 export { MedicationOptimizer, medicationOptimizer } from './medication-optimizer/MedicationOptimizer';
 export { CareCoordinationHub, careCoordinationHub } from './care-coordination/CareCoordinationHub';
 export { SDOHService, sdohService } from './sdoh/SDOHService';
+
+// =============================================================================
+// Plug-and-Play Architecture
+// =============================================================================
+
+// Service Registry - enables modular service management
+export * from './registry';
+export { getServiceRegistry, resetRegistry, ServiceRegistry } from './registry';
+
+// AI Provider Abstraction - swappable AI backends
+export * from './ai-providers';
+export { AIProviderFactory, getAIProvider, getCurrentProviderType } from './ai-providers';
+
+// Service Registration Bootstrap
+export { registerAllServices } from './registerServices';

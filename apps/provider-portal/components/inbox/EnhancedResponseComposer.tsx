@@ -367,6 +367,7 @@ export const EnhancedResponseComposer: React.FC<EnhancedResponseComposerProps> =
   const [isGenerating, setIsGenerating] = useState(false);
   const [showTemplates, setShowTemplates] = useState(true);
   const [pendingActions, setPendingActions] = useState<QuickAction[]>([]);
+  const [showAIDraft, setShowAIDraft] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -475,6 +476,74 @@ export const EnhancedResponseComposer: React.FC<EnhancedResponseComposerProps> =
         </div>
       )}
 
+      {/* AI Draft Suggestion Panel */}
+      {showAIDraft && templates.length > 0 && !response && (
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="ai-suggestion-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="ai-suggestion-badge">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI-Generated Draft
+              </div>
+              <button
+                onClick={() => setShowAIDraft(false)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="ai-draft-preview mb-4">
+              <div className="whitespace-pre-wrap">
+                {templates[0]?.content}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setResponse(templates[0]?.content || '');
+                  setPendingActions(templates[0]?.actions || []);
+                  setShowAIDraft(false);
+                  textareaRef.current?.focus();
+                }}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 
+                         bg-gradient-to-r from-purple-600 to-indigo-600 text-white 
+                         rounded-xl font-medium hover:shadow-lg transition-all"
+              >
+                <Check className="w-4 h-4" />
+                Use This Draft & Edit
+              </button>
+              <button
+                onClick={handleRegenerate}
+                disabled={isGenerating}
+                className="flex items-center gap-2 py-2.5 px-4 border-2 border-purple-200 
+                         text-purple-700 rounded-xl font-medium hover:bg-purple-50 transition-all"
+              >
+                <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                Regenerate
+              </button>
+            </div>
+
+            {templates[0]?.actions && templates[0].actions.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-purple-100">
+                <p className="text-xs text-purple-600 font-medium mb-2">Suggested Actions:</p>
+                <div className="flex flex-wrap gap-2">
+                  {templates[0].actions.map((action, i) => (
+                    <span key={i} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-purple-200 rounded-lg text-xs font-medium text-purple-700">
+                      {action.type === 'order_lab' && <Beaker className="w-3 h-3" />}
+                      {action.type === 'order_refill' && <Pill className="w-3 h-3" />}
+                      {action.type === 'schedule_appointment' && <Calendar className="w-3 h-3" />}
+                      {action.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Composer */}
       <div className="p-6">
         <div className="mb-4">
@@ -488,9 +557,9 @@ export const EnhancedResponseComposer: React.FC<EnhancedResponseComposerProps> =
             ref={textareaRef}
             value={response}
             onChange={(e) => setResponse(e.target.value)}
-            placeholder="Type your response or select a template above..."
-            className="w-full rounded-xl border border-gray-300 p-4 text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 resize-none"
-            rows={8}
+            placeholder="Type your response or use the AI-generated draft above..."
+            className="message-composer-textarea w-full resize-none"
+            rows={10}
           />
         </div>
 

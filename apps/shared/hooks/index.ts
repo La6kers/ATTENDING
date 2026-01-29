@@ -29,3 +29,24 @@ export {
   type NotificationOptions,
   type UseNotificationsReturn,
 } from './useNotifications';
+
+// Services, AI Provider, and Feature Flags hooks
+export {
+  ServicesProvider,
+  useServices,
+  useService,
+  useServiceAvailable,
+  useAIProvider,
+  useFeatureFlag,
+  useFeatureEvaluation,
+  useFeaturesByCategory,
+  useServicesByCategory,
+  useTier,
+  useSystemHealth,
+  FeatureGate,
+  TierGate,
+  ServiceGate,
+  UpgradePrompt,
+  type ServicesContextValue,
+  type ServicesProviderProps,
+} from './useServices';

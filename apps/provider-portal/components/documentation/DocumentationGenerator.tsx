@@ -331,9 +331,10 @@ export function DocumentationGenerator({
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
-                      className="w-full h-48 px-3 py-2 border border-gray-300 rounded-lg 
-                               focus:ring-2 focus:ring-purple-500 focus:border-transparent
-                               text-sm font-mono"
+                      className="w-full h-48 px-4 py-3 border-2 border-gray-200 rounded-xl 
+                               focus:ring-2 focus:ring-purple-500 focus:border-purple-400
+                               text-sm clinical-note-modern resize-none
+                               transition-all duration-200"
                     />
                     <div className="flex gap-2">
                       <button
@@ -353,8 +354,8 @@ export function DocumentationGenerator({
                     </div>
                   </div>
                 ) : section.content ? (
-                  <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-wrap font-mono">
-                    {section.content}
+                  <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg p-5 clinical-note-modern border border-gray-100">
+                    <div className="whitespace-pre-wrap">{section.content}</div>
                   </div>
                 ) : (
                   <div className="text-gray-400 text-sm italic">
@@ -527,64 +528,77 @@ function generateFullDocument(
   assessmentData: any,
   providerInfo: any
 ): string {
+  const currentDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  const currentTime = new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
   return `
-================================================================================
 CLINICAL ENCOUNTER DOCUMENTATION
-================================================================================
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PATIENT: ${assessmentData?.patientName || 'Unknown'}
-DATE OF SERVICE: ${new Date().toLocaleDateString()}
+DATE OF SERVICE: ${currentDate}
 PROVIDER: ${providerInfo?.name || 'Provider'}, ${providerInfo?.credentials || 'MD'}
 
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 SUBJECTIVE
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 
-CHIEF COMPLAINT: ${assessmentData?.chiefComplaint || 'Not documented'}
+CHIEF COMPLAINT:
+${assessmentData?.chiefComplaint || 'Not documented'}
 
 HISTORY OF PRESENT ILLNESS:
 ${hpi}
 
-MEDICATIONS:
-${assessmentData?.medications?.map((m: any) => `- ${m.name}`).join('\n') || 'None reported'}
+CURRENT MEDICATIONS:
+${assessmentData?.medications?.map((m: any) => `  • ${m.name}`).join('\n') || '  None reported'}
 
 ALLERGIES:
-${assessmentData?.allergies?.map((a: any) => `- ${a.allergen}`).join('\n') || 'NKA'}
+${assessmentData?.allergies?.map((a: any) => `  • ${a.allergen}`).join('\n') || '  No known allergies (NKA)'}
 
 REVIEW OF SYSTEMS:
 ${ros}
 
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 OBJECTIVE
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 
 VITAL SIGNS: Deferred (telehealth/pre-visit assessment)
 
 PHYSICAL EXAMINATION: [To be completed during encounter]
 
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 ASSESSMENT & PLAN
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 
 ${assessment}
 
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 MEDICAL DECISION MAKING
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 
 ${mdm?.justification || 'MDM not calculated'}
-E/M Level: ${mdm?.emLevel || 'N/A'} (${mdm?.suggestedCPT || 'N/A'})
 
-================================================================================
+E/M Level: ${mdm?.emLevel || 'N/A'} (CPT: ${mdm?.suggestedCPT || 'N/A'})
+
+───────────────────────────────────────────────────────────────────────────────
 ATTESTATION
-================================================================================
+───────────────────────────────────────────────────────────────────────────────
 
-I have reviewed the AI-assisted documentation and verified accuracy.
+I have reviewed the AI-assisted documentation and verified its accuracy.
 
-Electronically signed by: ${providerInfo?.name || 'Provider'}
-Date/Time: ${new Date().toLocaleString()}
+Electronically signed by: ${providerInfo?.name || 'Provider'}, ${providerInfo?.credentials || 'MD'}
+Date/Time: ${currentDate} at ${currentTime}
 
-================================================================================
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `.trim();
 }
 
