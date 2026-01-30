@@ -433,6 +433,21 @@ function evaluateSingleRedFlag(
   const matchedCriteria: string[] = [];
   let totalScore = 0;
 
+  // Skip critical red flags if all symptoms are explicitly mild
+  // This prevents false positives from common cold symptoms
+  if (redFlag.severity === 'critical') {
+    const hasMildPrefix = searchableText.includes('mild ') || searchableText.includes('minor ');
+    const hasNoSevereIndicators = !searchableText.includes('severe') && 
+      !searchableText.includes('sudden') && !searchableText.includes('crushing') &&
+      !searchableText.includes('radiating') && !searchableText.includes('worst');
+    const commonColdPattern = /\b(runny nose|nasal congestion|sneezing|common cold|cough)\b/i;
+    const isLikelyCommonCold = commonColdPattern.test(searchableText) && hasMildPrefix && hasNoSevereIndicators;
+    
+    if (isLikelyCommonCold) {
+      return null; // Don't flag common cold symptoms as critical
+    }
+  }
+
   // Expand searchable text with medical synonyms
   const expandedText = expandWithSynonyms(searchableText);
 
@@ -498,7 +513,9 @@ function evaluateSingleRedFlag(
   totalScore += demoMatches.length;
 
   // Determine if we have enough matches
-  const minMatches = redFlag.severity === 'critical' ? 1 : 2;
+  // Special case: pediatric fever is high severity but should trigger with 1 match
+  // Also, certain red flags should NOT match on mild symptoms alone
+  const minMatches = (redFlag.severity === 'critical' || redFlag.id === 'rf-pediatric-fever') ? 1 : 2;
   if (matchedCriteria.length >= minMatches) {
     const confidence = Math.min(0.95, 0.5 + (totalScore * 0.15));
     return {
@@ -517,12 +534,17 @@ function checkSingleTermMatch(criterion: string, expandedText: string): boolean 
   const singleTermTriggers = [
     { criterion: 'hematemesis', patterns: ['hematemesis', 'vomiting blood', 'bloody vomit', 'vomit blood'] },
     { criterion: 'melena', patterns: ['melena', 'black tarry', 'tarry stool', 'black stool'] },
-    { criterion: 'hemoptysis', patterns: ['hemoptysis', 'coughing blood', 'bloody sputum', 'cough blood'] },
-    { criterion: 'sudden onset shortness of breath', patterns: ['sudden shortness', 'sudden dyspnea', 'acute dyspnea', 'sudden difficulty breathing', 'suddenly short of breath', 'sudden onset dyspnea'] },
+    { criterion: 'hemoptysis', patterns: ['hemoptysis', 'coughing blood', 'bloody sputum', 'cough blood', 'coughing up blood'] },
+    { criterion: 'sudden onset shortness of breath', patterns: ['sudden shortness', 'sudden dyspnea', 'acute dyspnea', 'sudden difficulty breathing', 'suddenly short of breath', 'sudden onset dyspnea', 'sudden onset shortness'] },
+    { criterion: 'pleuritic', patterns: ['pleuritic', 'pleurisy', 'worse with breathing', 'worse with deep breath', 'pain with breathing'] },
   ];
   
   for (const trigger of singleTermTriggers) {
-    if (criterion.includes(trigger.criterion.split(' ')[0])) {
+    // Check if this criterion relates to this trigger
+    const criterionLower = criterion.toLowerCase();
+    const triggerKey = trigger.criterion.toLowerCase();
+    
+    if (criterionLower.includes(triggerKey) || triggerKey.includes(criterionLower.split(' ')[0])) {
       for (const pattern of trigger.patterns) {
         if (expandedText.includes(pattern)) {
           return true;

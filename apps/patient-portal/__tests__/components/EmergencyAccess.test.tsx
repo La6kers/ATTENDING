@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import React from 'react';
 
 // Mock router
@@ -305,30 +305,36 @@ describe('Medical Info Display', () => {
 // =============================================================================
 
 describe('Countdown Screen', () => {
+  // Simpler mock component that uses refs to track state for testing
   const MockCountdown: React.FC<{
     seconds: number;
     onCancel: () => void;
     onExpire: () => void;
   }> = ({ seconds, onCancel, onExpire }) => {
     const [countdown, setCountdown] = React.useState(seconds);
+    const onExpireRef = React.useRef(onExpire);
+    onExpireRef.current = onExpire;
 
     React.useEffect(() => {
-      if (countdown <= 0) {
-        onExpire();
-        return;
-      }
-
       const timer = setInterval(() => {
-        setCountdown(prev => prev - 1);
+        setCountdown(prev => {
+          const next = prev - 1;
+          if (next <= 0) {
+            clearInterval(timer);
+            // Use setTimeout to avoid calling during render
+            setTimeout(() => onExpireRef.current(), 0);
+          }
+          return next;
+        });
       }, 1000);
 
       return () => clearInterval(timer);
-    }, [countdown, onExpire]);
+    }, []); // Empty deps - only run once
 
     return (
       <div data-testid="countdown-screen">
         <h1>CRASH DETECTED</h1>
-        <div data-testid="countdown-timer">{countdown}</div>
+        <div data-testid="countdown-timer">{Math.max(0, countdown)}</div>
         <button onClick={onCancel} data-testid="cancel-button">
           I'M OKAY - CANCEL
         </button>
@@ -366,30 +372,40 @@ describe('Countdown Screen', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
-  it('should decrement countdown every second', async () => {
+  it('should decrement countdown every second', () => {
     render(<MockCountdown seconds={30} onCancel={() => {}} onExpire={() => {}} />);
     
     expect(screen.getByTestId('countdown-timer').textContent).toBe('30');
     
-    vi.advanceTimersByTime(1000);
-    await waitFor(() => {
-      expect(screen.getByTestId('countdown-timer').textContent).toBe('29');
+    act(() => {
+      vi.advanceTimersByTime(1000);
     });
+    expect(screen.getByTestId('countdown-timer').textContent).toBe('29');
     
-    vi.advanceTimersByTime(1000);
-    await waitFor(() => {
-      expect(screen.getByTestId('countdown-timer').textContent).toBe('28');
+    act(() => {
+      vi.advanceTimersByTime(1000);
     });
+    expect(screen.getByTestId('countdown-timer').textContent).toBe('28');
   });
 
-  it('should call onExpire when countdown reaches zero', async () => {
+  it('should call onExpire when countdown reaches zero', () => {
     const onExpire = vi.fn();
     render(<MockCountdown seconds={3} onCancel={() => {}} onExpire={onExpire} />);
     
-    vi.advanceTimersByTime(3000);
-    
-    await waitFor(() => {
-      expect(onExpire).toHaveBeenCalledTimes(1);
+    // Advance through the countdown
+    act(() => {
+      vi.advanceTimersByTime(1000); // 3 -> 2
     });
+    act(() => {
+      vi.advanceTimersByTime(1000); // 2 -> 1
+    });
+    act(() => {
+      vi.advanceTimersByTime(1000); // 1 -> 0 (triggers onExpire via setTimeout)
+    });
+    act(() => {
+      vi.advanceTimersByTime(10); // Let the setTimeout fire
+    });
+    
+    expect(onExpire).toHaveBeenCalledTimes(1);
   });
 });
