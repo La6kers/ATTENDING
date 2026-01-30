@@ -78,3 +78,27 @@ export {
   ProtectedRoute, RequirePermission, RequireRole, RequirePrescribing, SessionWarning, AuthStatusIndicator,
   withAuth, withPermission, withRole, withPrescribing,
 } from './ProtectedRoute';
+
+// Secure Session (HIPAA-compliant session management)
+export {
+  createSecureSession,
+  getSecureSession,
+  getSessionById,
+  getSecureUserId,
+  validateSession as validateSecureSession,
+  updateSessionActivity,
+  extendSession as extendSecureSession,
+  invalidateSession,
+  invalidateUserSessions,
+  getSessionInfo,
+  getSessionActivityLog,
+  createEncryptedSessionToken,
+  decryptSessionToken,
+  sessionConfig,
+} from './secureSession';
+
+export type {
+  SecureSession,
+  SessionValidation,
+  SessionActivity,
+} from './secureSession';
