@@ -7,12 +7,20 @@
 // re-export from ui (Badge component) to resolve the ambiguity.
 // =============================================================================
 
-// Chat Components (exclude UrgencyLevel to avoid conflict with ui/Badge)
+// Emergency Components (consolidated emergency modal)
+export {
+  EmergencyModal,
+  type EmergencyModalProps,
+  type EmergencyType,
+  type UrgencyLevel as EmergencyUrgencyLevel,
+  type EmergencyFacility,
+} from './emergency';
+
+// Chat Components (exclude EmergencyModal - use consolidated version above)
 export {
   MessageBubble,
   QuickReplies,
   ChatInput,
-  EmergencyModal,
   createMessage,
   formatMessageTime,
   generateMessageId,
@@ -20,7 +28,6 @@ export {
   type MessageBubbleProps,
   type QuickRepliesProps,
   type ChatInputProps,
-  type EmergencyModalProps,
   type ChatMessage,
   type QuickReply,
   type MessageRole,

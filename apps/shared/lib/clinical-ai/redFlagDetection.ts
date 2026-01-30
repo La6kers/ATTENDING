@@ -389,6 +389,40 @@ function buildSearchableText(
   return parts.join(' ');
 }
 
+// Medical term synonyms for better detection
+const MEDICAL_SYNONYMS: Record<string, string[]> = {
+  'hematemesis': ['vomiting blood', 'bloody vomit', 'blood vomit', 'vomit blood', 'throwing up blood'],
+  'melena': ['black tarry stools', 'black stools', 'tarry stools', 'dark stools', 'black stool'],
+  'hemoptysis': ['coughing blood', 'coughing up blood', 'bloody sputum', 'blood sputum', 'spitting blood'],
+  'dyspnea': ['shortness of breath', 'difficulty breathing', 'breathing difficulty', 'short of breath', 'breathless', 'can\'t breathe', 'trouble breathing'],
+  'syncope': ['fainting', 'fainted', 'passed out', 'loss of consciousness', 'blacked out'],
+  'diaphoresis': ['sweating', 'sweaty', 'cold sweat', 'profuse sweating'],
+  'cad': ['coronary artery disease', 'heart disease', 'cardiac history', 'heart problems', 'previous mi', 'prior heart attack', 'stent', 'cabg', 'bypass'],
+  'dvt': ['deep vein thrombosis', 'blood clot leg', 'leg clot'],
+  'altered mental status': ['confused', 'confusion', 'disoriented', 'lethargic', 'drowsy', 'not alert', 'ams'],
+  'fever': ['febrile', 'high temperature', 'temp elevated', 'pyrexia'],
+  'infant': ['baby', 'newborn', 'neonate'],
+};
+
+function expandWithSynonyms(text: string): string {
+  let expanded = text.toLowerCase();
+  
+  // Add synonyms to searchable text
+  for (const [term, synonyms] of Object.entries(MEDICAL_SYNONYMS)) {
+    for (const synonym of synonyms) {
+      if (expanded.includes(synonym)) {
+        expanded += ` ${term}`;
+      }
+    }
+    // Also check if the term itself is present to add synonyms
+    if (expanded.includes(term)) {
+      expanded += ` ${synonyms.join(' ')}`;
+    }
+  }
+  
+  return expanded;
+}
+
 function evaluateSingleRedFlag(
   redFlag: RedFlag,
   searchableText: string,
@@ -399,17 +433,27 @@ function evaluateSingleRedFlag(
   const matchedCriteria: string[] = [];
   let totalScore = 0;
 
+  // Expand searchable text with medical synonyms
+  const expandedText = expandWithSynonyms(searchableText);
+
   // Check text-based criteria
   for (const criterion of redFlag.triggerCriteria) {
     const criterionLower = criterion.toLowerCase();
-    const keywords = extractKeywords(criterionLower);
+    const expandedCriterion = expandWithSynonyms(criterionLower);
+    const keywords = extractKeywords(expandedCriterion);
     
-    const keywordMatches = keywords.filter(kw => searchableText.includes(kw));
+    // Check both original and expanded text
+    const keywordMatches = keywords.filter(kw => 
+      expandedText.includes(kw) || searchableText.includes(kw)
+    );
     
-    // Require higher threshold for short criteria to avoid false positives
-    // For critical red flags, require more precise matching
-    const minMatchRatio = keywords.length <= 3 ? 1.0 : 0.75;
-    const minAbsoluteMatches = redFlag.severity === 'critical' ? Math.max(3, Math.ceil(keywords.length * minMatchRatio)) : Math.ceil(keywords.length * 0.6);
+    // Special handling for single medical terms (hematemesis, melena, etc.)
+    const singleTermMatch = checkSingleTermMatch(criterionLower, expandedText);
+    if (singleTermMatch) {
+      matchedCriteria.push(criterion);
+      totalScore += 1;
+      continue;
+    }
     
     // For short criteria (<=3 keywords), require ALL keywords to match
     // For longer criteria, use proportional matching
@@ -418,9 +462,26 @@ function evaluateSingleRedFlag(
         matchedCriteria.push(criterion);
         totalScore += 1;
       }
-    } else if (keywordMatches.length >= Math.ceil(keywords.length * 0.75)) {
+    } else if (keywordMatches.length >= Math.ceil(keywords.length * 0.6)) {
       matchedCriteria.push(criterion);
       totalScore += 1;
+    }
+  }
+
+  // Special check for CAD + chest pain combination
+  if (redFlag.id === 'rf-chest-pain-cardiac') {
+    const hasCAD = patientContext.medicalHistory?.conditions.some(c => {
+      const cl = c.toLowerCase();
+      return cl.includes('cad') || cl.includes('coronary') || cl.includes('heart disease') ||
+             cl.includes('mi') || cl.includes('stent') || cl.includes('cabg') ||
+             cl.includes('bypass') || cl.includes('angina');
+    });
+    const hasChestPain = expandedText.includes('chest') && 
+      (expandedText.includes('pain') || expandedText.includes('pressure') || expandedText.includes('discomfort'));
+    
+    if (hasCAD && hasChestPain && !matchedCriteria.includes('history of CAD with new chest pain')) {
+      matchedCriteria.push('history of CAD with new chest pain');
+      totalScore += 2; // Higher weight for this combination
     }
   }
 
@@ -432,7 +493,7 @@ function evaluateSingleRedFlag(
   }
 
   // Check demographic criteria
-  const demoMatches = checkDemographicCriteria(redFlag, patientContext);
+  const demoMatches = checkDemographicCriteria(redFlag, patientContext, vitals);
   matchedCriteria.push(...demoMatches);
   totalScore += demoMatches.length;
 
@@ -449,6 +510,28 @@ function evaluateSingleRedFlag(
   }
 
   return null;
+}
+
+function checkSingleTermMatch(criterion: string, expandedText: string): boolean {
+  // Check for single medical terms that should trigger immediately
+  const singleTermTriggers = [
+    { criterion: 'hematemesis', patterns: ['hematemesis', 'vomiting blood', 'bloody vomit', 'vomit blood'] },
+    { criterion: 'melena', patterns: ['melena', 'black tarry', 'tarry stool', 'black stool'] },
+    { criterion: 'hemoptysis', patterns: ['hemoptysis', 'coughing blood', 'bloody sputum', 'cough blood'] },
+    { criterion: 'sudden onset shortness of breath', patterns: ['sudden shortness', 'sudden dyspnea', 'acute dyspnea', 'sudden difficulty breathing', 'suddenly short of breath', 'sudden onset dyspnea'] },
+  ];
+  
+  for (const trigger of singleTermTriggers) {
+    if (criterion.includes(trigger.criterion.split(' ')[0])) {
+      for (const pattern of trigger.patterns) {
+        if (expandedText.includes(pattern)) {
+          return true;
+        }
+      }
+    }
+  }
+  
+  return false;
 }
 
 function extractKeywords(text: string): string[] {
@@ -509,14 +592,32 @@ function checkVitalSignCriteria(redFlag: RedFlag, vitals: VitalSigns): string[] 
   return matches;
 }
 
-function checkDemographicCriteria(redFlag: RedFlag, patientContext: PatientContext): string[] {
+function checkDemographicCriteria(
+  redFlag: RedFlag,
+  patientContext: PatientContext,
+  vitals?: VitalSigns
+): string[] {
   const matches: string[] = [];
   const { demographics } = patientContext;
 
-  // Pediatric considerations
-  if (redFlag.category === 'pediatric') {
-    if (demographics.ageUnit === 'days' || 
-        (demographics.ageUnit === 'months' && demographics.age < 2)) {
+  // Pediatric considerations - Febrile infant < 60 days
+  if (redFlag.id === 'rf-pediatric-fever') {
+    const isInfant = demographics.ageUnit === 'days' || 
+        (demographics.ageUnit === 'months' && demographics.age < 2);
+    
+    // Check for fever from vitals
+    let hasFever = false;
+    if (vitals?.temperature) {
+      const tempC = vitals.temperatureUnit === 'F' 
+        ? (vitals.temperature - 32) * 5/9 
+        : vitals.temperature;
+      hasFever = tempC >= 38.0;
+    }
+    
+    if (isInfant && hasFever) {
+      matches.push('infant < 60 days with temperature >= 38C (100.4F)');
+    } else if (isInfant) {
+      // Still flag if infant appears ill even without confirmed fever
       matches.push('Age < 60 days');
     }
   }
@@ -539,6 +640,18 @@ function checkDemographicCriteria(redFlag: RedFlag, patientContext: PatientConte
     );
     if (immunocompromised) {
       matches.push('Immunocompromised status');
+    }
+  }
+
+  // DVT with respiratory symptoms check
+  if (redFlag.id === 'rf-pulmonary-embolism' && patientContext.medicalHistory) {
+    const hasDVT = patientContext.medicalHistory.conditions.some(c => 
+      c.toLowerCase().includes('dvt') ||
+      c.toLowerCase().includes('deep vein') ||
+      c.toLowerCase().includes('blood clot')
+    );
+    if (hasDVT) {
+      matches.push('Known DVT history');
     }
   }
 

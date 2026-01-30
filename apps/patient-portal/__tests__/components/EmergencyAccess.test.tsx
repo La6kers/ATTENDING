@@ -305,8 +305,6 @@ describe('Medical Info Display', () => {
 // =============================================================================
 
 describe('Countdown Screen', () => {
-  vi.useFakeTimers();
-
   const MockCountdown: React.FC<{
     seconds: number;
     onCancel: () => void;
@@ -339,7 +337,11 @@ describe('Countdown Screen', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllTimers();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should display initial countdown value', () => {
@@ -390,6 +392,4 @@ describe('Countdown Screen', () => {
       expect(onExpire).toHaveBeenCalledTimes(1);
     });
   });
-
-  vi.useRealTimers();
 });

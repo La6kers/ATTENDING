@@ -6,7 +6,7 @@
 // ============================================================
 
 import type { PatientContext, OrderPriority, RecommendationCategory } from '../stores/types';
-import { LAB_CATALOG, IMAGING_CATALOG, MEDICATION_CATALOG } from '../data/catalogs';
+import { LAB_CATALOG, IMAGING_CATALOG, MEDICATION_CATALOG } from '../catalogs';
 
 // =============================================================================
 // Types

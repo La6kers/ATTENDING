@@ -97,6 +97,16 @@ describe('CrashDetectionService', () => {
     });
 
     it('should merge partial config updates', () => {
+      // Reset to default config first to ensure clean state
+      crashDetectionService.saveConfig({
+        enabled: false,
+        threshold: 4.0,
+        cooldownMs: 60000,
+        countdownSeconds: 30,
+        notifyContacts: true,
+        autoCall911: false,
+      });
+
       crashDetectionService.saveConfig({ threshold: 3.5 });
       let config = crashDetectionService.getConfig();
       expect(config.threshold).toBe(3.5);
