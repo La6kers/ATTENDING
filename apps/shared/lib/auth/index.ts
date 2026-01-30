@@ -102,3 +102,27 @@ export type {
   SessionValidation,
   SessionActivity,
 } from './secureSession';
+
+// MFA (Multi-Factor Authentication)
+export {
+  generateMfaSecret,
+  generateTotp,
+  verifyTotp,
+  verifyMfaWithRateLimit,
+  setupMfa,
+  generateBackupCodes,
+  verifyBackupCode,
+  hashBackupCode,
+  hashBackupCodes,
+  isMfaRequired,
+  getMfaEnforcementStatus,
+  decryptMfaSecret,
+  mfaConfig,
+  MFA_REQUIRED_ROLES_LIST,
+} from './mfa';
+
+export type {
+  MfaSetup,
+  MfaVerification,
+  MfaConfig,
+} from './mfa';

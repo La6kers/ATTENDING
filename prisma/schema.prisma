@@ -1,13 +1,22 @@
 // ATTENDING AI - Complete Database Schema
-// SQLite for local development (switchable to PostgreSQL for production)
+// Production: PostgreSQL with encryption at rest
+// Development: SQLite for local testing
+// 
+// HIPAA Requirement: 164.312(a)(2)(iv) - Encryption and Decryption
+// Production database MUST have encryption at rest enabled
+//
 // Run: npx prisma migrate dev --name init
+// Production: npx prisma migrate deploy
 
 generator client {
   provider = "prisma-client-js"
 }
 
+// Use environment variable to switch between SQLite (dev) and PostgreSQL (prod)
+// Development: DATABASE_URL="file:./dev.db"
+// Production: DATABASE_URL="postgresql://user:pass@host:5432/attending?sslmode=require"
 datasource db {
-  provider = "sqlite"
+  provider = env("DATABASE_PROVIDER") // "sqlite" or "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -19,14 +28,19 @@ model User {
   emailVerified DateTime?
   name          String?
   image         String?
-  password      String?
-  role          String    @default("PROVIDER")
+  password      String?   // Hashed with bcrypt, never stored plain
+  role          String    @default("PROVIDER") // ADMIN, PROVIDER, NURSE, STAFF, PATIENT
   specialty     String?
-  npi           String?   @unique
+  npi           String?   @unique // National Provider Identifier
+  deaNumber     String?   // DEA number for controlled substances
   department    String?
   phone         String?
   isActive      Boolean   @default(true)
+  mfaEnabled    Boolean   @default(false)
+  mfaSecret     String?   // Encrypted TOTP secret
   lastLoginAt   DateTime?
+  failedLoginAttempts Int @default(0)
+  lockedUntil   DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -44,6 +58,7 @@ model User {
   @@index([email])
   @@index([npi])
   @@index([role])
+  @@index([isActive])
 }
 
 model Account {
@@ -71,13 +86,14 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  userAgent    String?
   ipAddress    String?
+  userAgent    String?
   createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([expires])
 }
 
 model VerificationToken {
@@ -91,131 +107,184 @@ model VerificationToken {
 // ============== PATIENTS ==============
 
 model Patient {
-  id              String    @id @default(cuid())
-  mrn             String    @unique
-  fhirId          String?   @unique
-  firstName       String
-  lastName        String
-  middleName      String?
-  dateOfBirth     DateTime
-  gender          String?
-  email           String?
-  phone           String?
-  address         String?
-  city            String?
-  state           String?
-  zipCode         String?
-  emergencyContact String?
-  emergencyPhone  String?
-  insuranceId     String?
-  insuranceName   String?
-  primaryProviderId String?
-  preferredLanguage String?  @default("en")
-  lastFhirSync    DateTime?
-  fhirVendor      String?
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  mrn                String    @unique // Medical Record Number
+  firstName          String
+  lastName           String
+  middleName         String?
+  dateOfBirth        DateTime
+  gender             String?
+  sex                String?
+  email              String?
+  phone              String?
+  address            String?
+  city               String?
+  state              String?
+  zipCode            String?
+  emergencyContact   String?
+  emergencyPhone     String?
+  insuranceProvider  String?
+  insurancePolicyNum String?
+  preferredLanguage  String    @default("en")
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   encounters        Encounter[]
   allergies         Allergy[]
-  medications       PatientMedication[]
-  conditions        MedicalCondition[]
+  conditions        Condition[]
+  medications       Medication[]
+  vitalSigns        VitalSign[]
+  labOrders         LabOrder[]
+  labResults        LabResult[]
+  imagingOrders     ImagingOrder[]
+  imagingResults    ImagingResult[]
+  medicationOrders  MedicationOrder[]
+  referrals         Referral[]
   assessments       PatientAssessment[]
-  vitals            VitalSigns[]
+  emergencyEvents   EmergencyEvent[]
+  treatmentPlans    TreatmentPlan[]
   fhirLabResults    FhirLabResult[]
   fhirConditions    FhirCondition[]
   fhirMedications   FhirMedication[]
   fhirVitalSigns    FhirVitalSign[]
+  clinicalNotes     ClinicalNote[]
 
   @@index([mrn])
-  @@index([fhirId])
   @@index([lastName, firstName])
   @@index([dateOfBirth])
+  @@index([isActive])
 }
+
+// ============== CLINICAL ENCOUNTERS ==============
+
+model Encounter {
+  id              String    @id @default(cuid())
+  patientId       String
+  providerId      String
+  facilityId      String?
+  encounterType   String    // OFFICE, TELEHEALTH, EMERGENCY, INPATIENT
+  status          String    @default("IN_PROGRESS") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  chiefComplaint  String?
+  startTime       DateTime  @default(now())
+  endTime         DateTime?
+  notes           String?
+  diagnosis       String?   // JSON array of diagnosis codes
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  patient          Patient            @relation(fields: [patientId], references: [id])
+  provider         User               @relation("ProviderEncounters", fields: [providerId], references: [id])
+  labOrders        LabOrder[]
+  imagingOrders    ImagingOrder[]
+  medicationOrders MedicationOrder[]
+  referrals        Referral[]
+  vitalSigns       VitalSign[]
+  treatmentPlans   TreatmentPlan[]
+  clinicalNotes    ClinicalNote[]
+
+  @@index([patientId])
+  @@index([providerId])
+  @@index([status])
+  @@index([startTime])
+}
+
+// ============== ALLERGIES ==============
 
 model Allergy {
-  id          String   @id @default(cuid())
-  patientId   String
-  allergen    String
-  reaction    String?
-  severity    String   @default("MILD")
-  type        String   @default("DRUG")
-  status      String   @default("ACTIVE")
-  onsetDate   DateTime?
-  fhirId      String?
-  isActive    Boolean  @default(true)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid())
+  patientId  String
+  allergen   String
+  reaction   String?
+  severity   String?   // MILD, MODERATE, SEVERE, LIFE_THREATENING
+  onsetDate  DateTime?
+  status     String    @default("ACTIVE") // ACTIVE, INACTIVE, RESOLVED
+  verifiedAt DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
-
-  @@unique([patientId, allergen])
-  @@index([patientId])
-  @@index([fhirId])
-}
-
-model MedicalCondition {
-  id          String   @id @default(cuid())
-  patientId   String
-  name        String
-  icdCode     String?
-  onsetDate   DateTime?
-  status      String   @default("ACTIVE")
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id])
 
   @@index([patientId])
+  @@index([allergen])
 }
 
-model PatientMedication {
-  id            String   @id @default(cuid())
+// ============== CONDITIONS / DIAGNOSES ==============
+
+model Condition {
+  id            String    @id @default(cuid())
   patientId     String
-  medicationName String
+  icdCode       String
+  description   String
+  status        String    @default("ACTIVE") // ACTIVE, RESOLVED, INACTIVE
+  onsetDate     DateTime?
+  abatementDate DateTime?
+  isPrimary     Boolean   @default(false)
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([patientId])
+  @@index([icdCode])
+  @@index([status])
+}
+
+// ============== MEDICATIONS ==============
+
+model Medication {
+  id            String    @id @default(cuid())
+  patientId     String
+  name          String
   genericName   String?
+  rxnormCode    String?
+  ndcCode       String?
   dose          String?
   frequency     String?
   route         String?
+  status        String    @default("ACTIVE") // ACTIVE, COMPLETED, DISCONTINUED, ON_HOLD
   startDate     DateTime?
   endDate       DateTime?
-  prescriber    String?
+  prescribedBy  String?
   pharmacy      String?
-  indication    String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id])
 
   @@index([patientId])
+  @@index([name])
+  @@index([status])
 }
 
-model VitalSigns {
-  id              String   @id @default(cuid())
-  patientId       String
-  encounterId     String?
-  systolic        Int?
-  diastolic       Int?
-  heartRate       Int?
-  respiratoryRate Int?
-  temperature     Float?
-  temperatureUnit String?  @default("F")
-  oxygenSaturation Int?
-  weight          Float?
-  weightUnit      String?  @default("lbs")
-  height          Float?
-  heightUnit      String?  @default("in")
-  painLevel       Int?
-  bloodGlucose    Int?
-  notes           String?
-  recordedAt      DateTime @default(now())
-  recordedBy      String?
+// ============== VITAL SIGNS ==============
 
-  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+model VitalSign {
+  id                    String   @id @default(cuid())
+  patientId             String
+  encounterId           String?
+  heartRate             Int?
+  bloodPressureSystolic Int?
+  bloodPressureDiastolic Int?
+  respiratoryRate       Int?
+  temperature           Float?
+  temperatureUnit       String   @default("F")
+  oxygenSaturation      Float?
+  weight                Float?
+  weightUnit            String   @default("lbs")
+  height                Float?
+  heightUnit            String   @default("in")
+  painLevel             Int?
+  bloodGlucose          Float?
+  notes                 String?
+  recordedAt            DateTime @default(now())
+  recordedBy            String?
+  createdAt             DateTime @default(now())
+
+  patient   Patient    @relation(fields: [patientId], references: [id])
   encounter Encounter? @relation(fields: [encounterId], references: [id])
 
   @@index([patientId])
@@ -223,614 +292,509 @@ model VitalSigns {
   @@index([recordedAt])
 }
 
-// ============== ENCOUNTERS ==============
+// ============== LAB ORDERS ==============
 
-model Encounter {
-  id              String   @id @default(cuid())
-  patientId       String
-  providerId      String
-  status          String   @default("SCHEDULED")
-  visitType       String   @default("OFFICE_VISIT")
-  chiefComplaint  String?
-  scheduledAt     DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  location        String?
-  roomNumber      String?
-  reasonForVisit  String?
-  clinicalNotes   String?
-  assessment      String?
-  plan            String?
-  followUpDate    DateTime?
-  followUpNotes   String?
-  billingCode     String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model LabOrder {
+  id                  String    @id @default(cuid())
+  patientId           String
+  providerId          String
+  encounterId         String?
+  orderNumber         String    @unique
+  status              String    @default("PENDING") // PENDING, COLLECTED, IN_PROGRESS, COMPLETED, CANCELLED
+  priority            String    @default("ROUTINE") // STAT, ASAP, ROUTINE, TIMED
+  tests               String    // JSON array of ordered tests
+  diagnosis           String?   // JSON array of diagnosis codes
+  indication          String?
+  specialInstructions String?
+  specimenType        String?
+  collectionDate      DateTime?
+  fasting             Boolean   @default(false)
+  orderedAt           DateTime  @default(now())
+  completedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  patient           Patient             @relation(fields: [patientId], references: [id])
-  provider          User                @relation("ProviderEncounters", fields: [providerId], references: [id])
-  vitals            VitalSigns[]
-  labOrders         LabOrder[]
-  imagingOrders     ImagingOrder[]
-  medicationOrders  MedicationOrder[]
-  referrals         Referral[]
-  diagnoses         EncounterDiagnosis[]
-  patientAssessment PatientAssessment?
+  patient   Patient     @relation(fields: [patientId], references: [id])
+  provider  User        @relation(fields: [providerId], references: [id])
+  encounter Encounter?  @relation(fields: [encounterId], references: [id])
+  results   LabResult[]
 
   @@index([patientId])
   @@index([providerId])
   @@index([status])
-  @@index([scheduledAt])
-}
-
-model EncounterDiagnosis {
-  id          String   @id @default(cuid())
-  encounterId String
-  name        String
-  icdCode     String?
-  probability Float?
-  isPrimary   Boolean  @default(false)
-  isConfirmed Boolean  @default(false)
-  evidence    String   @default("[]")
-  notes       String?
-  createdAt   DateTime @default(now())
-
-  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
-
-  @@index([encounterId])
-}
-
-// ============== COMPASS ASSESSMENTS ==============
-
-model PatientAssessment {
-  id                String    @id @default(cuid())
-  patientId         String
-  encounterId       String?   @unique
-  sessionId         String    @unique
-  assignedProviderId String?
-  
-  chiefComplaint    String
-  hpiOnset          String?
-  hpiLocation       String?
-  hpiDuration       String?
-  hpiCharacter      String?
-  hpiSeverity       Int?
-  hpiAggravating    String   @default("[]")
-  hpiRelieving      String   @default("[]")
-  hpiAssociated     String   @default("[]")
-  hpiTiming         String?
-  
-  reviewOfSystems   String?
-  medications       String   @default("[]")
-  allergies         String   @default("[]")
-  medicalHistory    String   @default("[]")
-  surgicalHistory   String   @default("[]")
-  familyHistory     String?
-  socialHistory     String?
-  
-  urgencyLevel      String   @default("STANDARD")
-  urgencyScore      Int      @default(0)
-  redFlags          String   @default("[]")
-  riskFactors       String   @default("[]")
-  
-  differentialDx    String?
-  aiRecommendations String   @default("[]")
-  clinicalPearls    String   @default("[]")
-  
-  status            String   @default("IN_PROGRESS")
-  submittedAt       DateTime?
-  reviewedAt        DateTime?
-  completedAt       DateTime?
-  
-  providerNotes     String?
-  confirmedDiagnoses String?
-  icdCodes          String   @default("[]")
-  treatmentPlan     String?
-  followUpInstructions String?
-  ordersPlaced      String   @default("[]")
-  
-  compassVersion    String?
-  aiModelUsed       String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  patient           Patient   @relation(fields: [patientId], references: [id])
-  encounter         Encounter? @relation(fields: [encounterId], references: [id])
-  assignedProvider  User?     @relation("AssignedProvider", fields: [assignedProviderId], references: [id])
-
-  @@index([patientId])
-  @@index([status])
-  @@index([urgencyLevel])
-  @@index([submittedAt])
-}
-
-// ============== ORDERS ==============
-
-model LabOrder {
-  id            String   @id @default(cuid())
-  encounterId   String
-  orderedById   String
-  testCode      String
-  testName      String
-  category      String?
-  priority      String   @default("ROUTINE")
-  status        String   @default("PENDING")
-  indication    String?
-  specialInstructions String?
-  specimenType  String?
-  collectionDate DateTime?
-  orderedAt     DateTime @default(now())
-  collectedAt   DateTime?
-  resultedAt    DateTime?
-  notes         String?
-
-  encounter   Encounter   @relation(fields: [encounterId], references: [id])
-  orderedBy   User        @relation(fields: [orderedById], references: [id])
-  results     LabResult[]
-
-  @@index([encounterId])
-  @@index([orderedById])
-  @@index([status])
-  @@index([priority])
+  @@index([orderedAt])
 }
 
 model LabResult {
-  id             String   @id @default(cuid())
-  labOrderId     String
-  analyte        String
-  value          String
-  unit           String?
+  id           String    @id @default(cuid())
+  patientId    String
+  labOrderId   String?
+  testCode     String
+  testName     String
+  loincCode    String?
+  value        String
+  unit         String?
   referenceRange String?
-  isAbnormal     Boolean  @default(false)
-  isCritical     Boolean  @default(false)
-  interpretation String?
-  resultedAt     DateTime @default(now())
-  verifiedBy     String?
-  notes          String?
+  interpretation String? // NORMAL, HIGH, LOW, CRITICAL_HIGH, CRITICAL_LOW
+  status       String    @default("FINAL") // PRELIMINARY, FINAL, CORRECTED
+  performedAt  DateTime?
+  reportedAt   DateTime  @default(now())
+  notes        String?
+  createdAt    DateTime  @default(now())
 
-  labOrder LabOrder @relation(fields: [labOrderId], references: [id], onDelete: Cascade)
+  patient  Patient   @relation(fields: [patientId], references: [id])
+  labOrder LabOrder? @relation(fields: [labOrderId], references: [id])
 
+  @@index([patientId])
   @@index([labOrderId])
+  @@index([testCode])
+  @@index([interpretation])
 }
+
+// ============== IMAGING ORDERS ==============
 
 model ImagingOrder {
-  id            String   @id @default(cuid())
-  encounterId   String
-  orderedById   String
-  studyType     String
-  studyName     String
-  bodyPart      String?
-  laterality    String?
-  priority      String   @default("ROUTINE")
-  status        String   @default("PENDING")
-  indication    String
-  clinicalHistory String?
-  contrast      Boolean  @default(false)
-  contrastType  String?
-  radiationDose String?
+  id                  String    @id @default(cuid())
+  patientId           String
+  providerId          String
+  encounterId         String?
+  orderNumber         String    @unique
+  status              String    @default("PENDING") // PENDING, SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  priority            String    @default("ROUTINE") // STAT, URGENT, ROUTINE
+  studyType           String    // X-RAY, CT, MRI, ULTRASOUND, etc.
+  studyName           String
+  bodyPart            String
+  laterality          String?   // LEFT, RIGHT, BILATERAL
+  indication          String
+  clinicalHistory     String?
+  contrast            Boolean   @default(false)
+  contrastType        String?
   specialInstructions String?
-  orderedAt     DateTime @default(now())
-  scheduledAt   DateTime?
-  performedAt   DateTime?
-  readAt        DateTime?
-  report        String?
-  impression    String?
-  findings      String?
-  radiologist   String?
-  facility      String?
-  notes         String?
+  diagnosis           String?   // JSON array
+  scheduledDate       DateTime?
+  orderedAt           DateTime  @default(now())
+  completedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  encounter Encounter @relation(fields: [encounterId], references: [id])
-  orderedBy User      @relation(fields: [orderedById], references: [id])
+  patient   Patient         @relation(fields: [patientId], references: [id])
+  provider  User            @relation(fields: [providerId], references: [id])
+  encounter Encounter?      @relation(fields: [encounterId], references: [id])
+  results   ImagingResult[]
 
-  @@index([encounterId])
-  @@index([orderedById])
+  @@index([patientId])
+  @@index([providerId])
   @@index([status])
+  @@index([orderedAt])
 }
+
+model ImagingResult {
+  id             String    @id @default(cuid())
+  patientId      String
+  imagingOrderId String?
+  studyType      String
+  studyName      String
+  findings       String
+  impression     String?
+  radiologistId  String?
+  status         String    @default("FINAL") // PRELIMINARY, FINAL, ADDENDUM
+  performedAt    DateTime?
+  reportedAt     DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+
+  patient      Patient       @relation(fields: [patientId], references: [id])
+  imagingOrder ImagingOrder? @relation(fields: [imagingOrderId], references: [id])
+
+  @@index([patientId])
+  @@index([imagingOrderId])
+}
+
+// ============== MEDICATION ORDERS ==============
 
 model MedicationOrder {
-  id              String   @id @default(cuid())
-  encounterId     String
-  orderedById     String
-  medicationName  String
-  genericName     String?
-  dose            String
-  doseUnit        String?
-  frequency       String
-  route           String
-  duration        String?
-  quantity        Int?
-  refills         Int?      @default(0)
-  indication      String?
-  instructions    String?
-  status          String   @default("PENDING")
-  priority        String   @default("ROUTINE")
-  isControlled    Boolean   @default(false)
-  deaSchedule     String?
-  pharmacy        String?
-  dispenseAsWritten Boolean @default(false)
-  priorAuthRequired Boolean @default(false)
-  priorAuthStatus String?
-  orderedAt       DateTime  @default(now())
-  startDate       DateTime?
-  endDate         DateTime?
-  discontinuedAt  DateTime?
-  discontinuedBy  String?
-  discontinueReason String?
-  notes           String?
+  id                   String    @id @default(cuid())
+  patientId            String
+  providerId           String
+  encounterId          String?
+  orderNumber          String    @unique
+  status               String    @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED, ON_HOLD
+  medicationName       String
+  genericName          String?
+  rxnormCode           String?
+  ndcCode              String?
+  dose                 String
+  doseUnit             String?
+  frequency            String
+  route                String
+  duration             String?
+  quantity             Int?
+  refills              Int       @default(0)
+  indication           String
+  instructions         String?
+  isControlled         Boolean   @default(false)
+  deaSchedule          String?   // II, III, IV, V
+  dispenseAsWritten    Boolean   @default(false)
+  substitutionAllowed  Boolean   @default(true)
+  priorAuthRequired    Boolean   @default(false)
+  priorAuthStatus      String?   // PENDING, APPROVED, DENIED
+  diagnosis            String?   // JSON array
+  pharmacy             String?
+  pharmacyNpi          String?
+  orderedAt            DateTime  @default(now())
+  discontinuedAt       DateTime?
+  discontinuedReason   String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  encounter      Encounter         @relation(fields: [encounterId], references: [id])
-  orderedBy      User              @relation(fields: [orderedById], references: [id])
-  interactions   DrugInteraction[] @relation("InteractingMedication")
+  patient   Patient    @relation(fields: [patientId], references: [id])
+  provider  User       @relation(fields: [providerId], references: [id])
+  encounter Encounter? @relation(fields: [encounterId], references: [id])
 
-  @@index([encounterId])
-  @@index([orderedById])
+  @@index([patientId])
+  @@index([providerId])
   @@index([status])
-}
-
-model DrugInteraction {
-  id              String   @id @default(cuid())
-  medicationOrderId String
-  interactingDrug String
-  severity        String
-  description     String
-  mechanism       String?
-  management      String?
-  acknowledged    Boolean  @default(false)
-  acknowledgedBy  String?
-  acknowledgedAt  DateTime?
-  createdAt       DateTime @default(now())
-
-  medicationOrder MedicationOrder @relation("InteractingMedication", fields: [medicationOrderId], references: [id], onDelete: Cascade)
-
-  @@index([medicationOrderId])
+  @@index([isControlled])
+  @@index([orderedAt])
 }
 
 // ============== REFERRALS ==============
 
 model Referral {
-  id              String   @id @default(cuid())
-  encounterId     String
-  referringProviderId String
-  specialty       String
-  urgency         String   @default("ROUTINE")
-  status          String   @default("PENDING")
-  reason          String
-  clinicalSummary String?
+  id                String    @id @default(cuid())
+  patientId         String
+  providerId        String
+  encounterId       String?
+  orderNumber       String    @unique
+  status            String    @default("PENDING") // PENDING, SENT, SCHEDULED, COMPLETED, CANCELLED
+  urgency           String    @default("ROUTINE") // STAT, URGENT, ROUTINE, ELECTIVE
+  specialty         String
+  subspecialty      String?
+  reason            String
+  clinicalSummary   String?
   specificQuestions String?
   preferredProvider String?
   preferredFacility String?
-  insurancePreAuth Boolean @default(false)
-  preAuthStatus   String?
-  preAuthNumber   String?
-  appointmentDate DateTime?
-  appointmentTime String?
-  consultNote     String?
-  recommendations String?
-  followUpNeeded  Boolean  @default(false)
-  orderedAt       DateTime @default(now())
-  sentAt          DateTime?
-  scheduledAt     DateTime?
-  completedAt     DateTime?
-  notes           String?
+  diagnosis         String?   // JSON array
+  insurancePreAuth  Boolean   @default(false)
+  preAuthStatus     String?
+  scheduledDate     DateTime?
+  orderedAt         DateTime  @default(now())
+  completedAt       DateTime?
+  consultNote       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  encounter        Encounter @relation(fields: [encounterId], references: [id])
-  referringProvider User     @relation(fields: [referringProviderId], references: [id])
+  patient   Patient    @relation(fields: [patientId], references: [id])
+  provider  User       @relation(fields: [providerId], references: [id])
+  encounter Encounter? @relation(fields: [encounterId], references: [id])
 
-  @@index([encounterId])
-  @@index([referringProviderId])
+  @@index([patientId])
+  @@index([providerId])
   @@index([status])
   @@index([specialty])
 }
 
-// ============== NOTIFICATIONS ==============
+// ============== PATIENT ASSESSMENTS (COMPASS) ==============
 
-model Notification {
-  id            String   @id @default(cuid())
-  userId        String
-  type          String
-  title         String
-  message       String
-  priority      String   @default("NORMAL")
-  isRead        Boolean  @default(false)
-  readAt        DateTime?
-  relatedType   String?
-  relatedId     String?
-  actionUrl     String?
-  expiresAt     DateTime?
-  createdAt     DateTime @default(now())
+model PatientAssessment {
+  id                 String    @id @default(cuid())
+  patientId          String
+  assignedProviderId String?
+  sessionId          String    @unique
+  status             String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, ABANDONED, EMERGENCY
+  phase              String    @default("GREETING")
+  chiefComplaint     String?
+  symptoms           String?   // JSON array
+  hpiNarrative       String?
+  reviewOfSystems    String?   // JSON object
+  medicalHistory     String?   // JSON array
+  medications        String?   // JSON array
+  allergies          String?   // JSON array
+  vitalSigns         String?   // JSON object
+  triageLevel        String?   // ESI 1-5 or custom
+  redFlagsDetected   String?   // JSON array of detected red flags
+  aiSummary          String?
+  aiDifferential     String?   // JSON array of differential diagnoses
+  conversation       String?   // JSON array of chat messages
+  startedAt          DateTime  @default(now())
+  completedAt        DateTime?
+  lastActivityAt     DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patient          Patient          @relation(fields: [patientId], references: [id])
+  assignedProvider User?            @relation("AssignedProvider", fields: [assignedProviderId], references: [id])
+  emergencyEvents  EmergencyEvent[]
 
-  @@index([userId])
-  @@index([isRead])
-  @@index([type])
-  @@index([createdAt])
+  @@index([patientId])
+  @@index([assignedProviderId])
+  @@index([status])
+  @@index([sessionId])
 }
 
 // ============== EMERGENCY EVENTS ==============
 
 model EmergencyEvent {
-  id              String   @id @default(cuid())
-  assessmentId    String?
-  patientId       String?
-  eventType       String
-  triggeredBy     String
-  severity        String
-  protocol        String
-  autoOrders      String   @default("[]")
-  location        String?
-  acknowledgedAt  DateTime?
-  acknowledgedBy  String?
-  resolvedAt      DateTime?
-  resolvedBy      String?
-  resolution      String?
-  notes           String?
-  createdAt       DateTime @default(now())
+  id                String   @id @default(cuid())
+  patientId         String
+  assessmentId      String?
+  eventType         String   // RED_FLAG, CRASH_DETECTION, MANUAL_TRIGGER
+  severity          String   // CRITICAL, HIGH, MODERATE
+  description       String
+  triggeredBy       String   // SYSTEM, PATIENT, PROVIDER
+  symptoms          String?  // JSON array
+  vitalSigns        String?  // JSON object
+  location          String?  // GPS coordinates or address
+  acknowledgedAt    DateTime?
+  acknowledgedBy    String?
+  resolvedAt        DateTime?
+  resolvedBy        String?
+  resolution        String?
+  notificationsSent String?  // JSON array of notifications sent
+  createdAt         DateTime @default(now())
 
-  @@index([assessmentId])
+  patient    Patient            @relation(fields: [patientId], references: [id])
+  assessment PatientAssessment? @relation(fields: [assessmentId], references: [id])
+
   @@index([patientId])
+  @@index([eventType])
+  @@index([severity])
   @@index([createdAt])
-}
-
-// ============== AUDIT LOGGING ==============
-
-model AuditLog {
-  id          String   @id @default(cuid())
-  userId      String?
-  action      String
-  entityType  String
-  entityId    String?
-  changes     String?
-  ipAddress   String?
-  userAgent   String?
-  sessionId   String?
-  success     Boolean  @default(true)
-  errorMessage String?
-  createdAt   DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([entityType, entityId])
-  @@index([action])
-  @@index([createdAt])
-}
-
-// ============== CLINICAL DECISION SUPPORT ==============
-
-model ClinicalProtocol {
-  id            String   @id @default(cuid())
-  name          String
-  condition     String
-  triggerCriteria String
-  recommendedActions String
-  labOrders     String?
-  imagingOrders String?
-  medications   String?
-  referrals     String?
-  patientEducation String?
-  followUp      String?
-  evidenceLevel String?
-  references    String   @default("[]")
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@index([condition])
-  @@index([isActive])
-}
-
-model PatientEducationMaterial {
-  id          String   @id @default(cuid())
-  title       String
-  category    String
-  content     String
-  format      String   @default("text")
-  url         String?
-  language    String   @default("en")
-  readingLevel String?
-  conditions  String   @default("[]")
-  keywords    String   @default("[]")
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([category])
 }
 
 // ============== TREATMENT PLANS ==============
 
 model TreatmentPlan {
-  id                    String   @id @default(cuid())
-  encounterId           String   @unique
-  patientId             String
-  providerId            String
-  diagnoses             String   @default("[]")
-  chiefComplaint        String?
-  clinicalSummary       String?
-  labOrderIds           String   @default("[]")
-  imagingOrderIds       String   @default("[]")
-  prescriptionIds       String   @default("[]")
-  referralIds           String   @default("[]")
-  followUpSchedule      String   @default("[]")
-  patientEducation      String   @default("[]")
-  returnPrecautions     String   @default("[]")
+  id                     String    @id @default(cuid())
+  patientId              String
+  encounterId            String
+  status                 String    @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CANCELLED
+  diagnosis              String    // JSON array of diagnoses
+  chiefComplaint         String?
+  clinicalSummary        String?
+  labOrders              String?   // JSON array
+  imagingOrders          String?   // JSON array
+  medicationOrders       String?   // JSON array
+  referralOrders         String?   // JSON array
+  followUpSchedule       String?   // JSON array
+  patientEducation       String?   // JSON array
+  returnPrecautions      String?   // JSON array
   additionalInstructions String?
-  protocolApplied       String?
-  status                String   @default("DRAFT")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  approvedBy            String?
-  approvedAt            DateTime?
+  approvedAt             DateTime?
+  approvedBy             String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  patient   Patient   @relation(fields: [patientId], references: [id])
+  encounter Encounter @relation(fields: [encounterId], references: [id])
 
   @@index([patientId])
-  @@index([providerId])
+  @@index([encounterId])
   @@index([status])
 }
 
-// ============== PROVIDER DIRECTORY ==============
+// ============== CLINICAL NOTES ==============
 
-model ProviderDirectory {
-  id                   String   @id @default(cuid())
-  name                 String
-  credentials          String
-  specialty            String
-  subspecialty         String?
-  organization         String
-  address              String
-  phone                String
-  fax                  String?
-  npi                  String?  @unique
-  acceptingNew         Boolean  @default(true)
-  insurancesAccepted   String   @default("[]")
-  nextAvailableRoutine String?
-  nextAvailableUrgent  String?
-  rating               Float?
-  preferred            Boolean  @default(false)
-  active               Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+model ClinicalNote {
+  id            String    @id @default(cuid())
+  patientId     String
+  encounterId   String
+  noteType      String    // PROGRESS, SOAP, H_AND_P, PROCEDURE, DISCHARGE
+  status        String    @default("DRAFT") // DRAFT, SIGNED, AMENDED, ADDENDUM
+  content       String    // Rich text or structured JSON
+  subjective    String?
+  objective     String?
+  assessment    String?
+  plan          String?
+  authorId      String
+  signedAt      DateTime?
+  signedBy      String?
+  amendedAt     DateTime?
+  amendments    String?   // JSON array of amendments
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  @@index([specialty])
-  @@index([subspecialty])
-  @@index([acceptingNew])
-  @@index([preferred])
-}
-
-// ============== FHIR INTEGRATION ==============
-
-model FhirConnection {
-  id           String   @id @default(cuid())
-  providerId   String
-  vendor       String
-  accessToken  String
-  refreshToken String?
-  expiresAt    DateTime
-  patientId    String?
-  encounterId  String?
-  scope        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@unique([providerId, vendor])
-  @@index([providerId])
-}
-
-model OAuthState {
-  id        String   @id @default(cuid())
-  state     String   @unique
-  context   String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([state])
-  @@index([expiresAt])
-}
-
-model FhirLabResult {
-  id             String   @id @default(cuid())
-  patientId      String
-  testName       String
-  testCode       String?
-  value          String
-  unit           String?
-  referenceRange String?
-  interpretation String?
-  status         String   @default("FINAL")
-  collectedAt    DateTime
-  resultedAt     DateTime
-  performedBy    String?
-  notes          String?
-  fhirId         String?  @unique
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient   Patient   @relation(fields: [patientId], references: [id])
+  encounter Encounter @relation(fields: [encounterId], references: [id])
 
   @@index([patientId])
-  @@index([testCode])
+  @@index([encounterId])
+  @@index([noteType])
+  @@index([status])
+}
+
+// ============== NOTIFICATIONS ==============
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  type        String    // EMERGENCY, RED_FLAG, LAB_RESULT, ORDER_UPDATE, SYSTEM
+  priority    String    @default("NORMAL") // CRITICAL, HIGH, NORMAL, LOW
+  title       String
+  message     String
+  data        String?   // JSON additional data
+  read        Boolean   @default(false)
+  readAt      DateTime?
+  actionUrl   String?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([read])
+  @@index([createdAt])
+}
+
+// ============== AUDIT LOG - HIPAA REQUIREMENT ==============
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  action       String   // Action performed (from AuditActions enum)
+  userId       String?  // Who performed the action
+  entityType   String   // Type of resource accessed
+  entityId     String?  // ID of resource accessed
+  changes      String?  // JSON: what was changed, includes patientId if PHI
+  ipAddress    String?  // Client IP address
+  userAgent    String?  // Client user agent
+  success      Boolean  @default(true)
+  errorMessage String?  // Error message if failed
+  createdAt    DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([action])
+  @@index([userId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([success])
+}
+
+// ============== FHIR INTEGRATION TABLES ==============
+
+model FhirLabResult {
+  id              String   @id @default(cuid())
+  patientId       String
+  fhirId          String   @unique // FHIR resource ID
+  fhirServerId    String   // Which FHIR server this came from
+  resourceType    String   @default("Observation")
+  rawResource     String   // Full FHIR JSON
+  testCode        String?
+  testName        String?
+  value           String?
+  unit            String?
+  interpretation  String?
+  effectiveDate   DateTime?
+  lastSyncedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  patient Patient @relation(fields: [patientId], references: [id])
+
+  @@index([patientId])
   @@index([fhirId])
+  @@index([fhirServerId])
 }
 
 model FhirCondition {
-  id           String    @id @default(cuid())
-  patientId    String
-  name         String
-  icdCode      String?
-  status       String    @default("ACTIVE")
-  onsetDate    DateTime?
-  recordedDate DateTime
-  notes        String?
-  fhirId       String?   @unique
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String   @id @default(cuid())
+  patientId       String
+  fhirId          String   @unique
+  fhirServerId    String
+  resourceType    String   @default("Condition")
+  rawResource     String
+  icdCode         String?
+  description     String?
+  status          String?
+  onsetDate       DateTime?
+  lastSyncedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id])
 
   @@index([patientId])
-  @@index([icdCode])
   @@index([fhirId])
 }
 
 model FhirMedication {
-  id             String    @id @default(cuid())
-  patientId      String
-  medicationName String
-  genericName    String?
-  dosage         String?
-  frequency      String?
-  route          String?
-  status         String    @default("ACTIVE")
-  prescribedDate DateTime
-  prescriber     String?
-  startDate      DateTime?
-  endDate        DateTime?
-  notes          String?
-  fhirId         String?   @unique
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id              String   @id @default(cuid())
+  patientId       String
+  fhirId          String   @unique
+  fhirServerId    String
+  resourceType    String   @default("MedicationRequest")
+  rawResource     String
+  medicationName  String?
+  dose            String?
+  status          String?
+  lastSyncedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id])
 
   @@index([patientId])
   @@index([fhirId])
 }
 
 model FhirVitalSign {
-  id         String   @id @default(cuid())
-  patientId  String
-  type       String
-  value      String
-  unit       String?
-  systolic   Int?
-  diastolic  Int?
-  recordedAt DateTime
-  recordedBy String?
-  fhirId     String?  @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default(cuid())
+  patientId       String
+  fhirId          String   @unique
+  fhirServerId    String
+  resourceType    String   @default("Observation")
+  rawResource     String
+  vitalType       String?  // heart-rate, blood-pressure, etc.
+  value           String?
+  unit            String?
+  effectiveDate   DateTime?
+  lastSyncedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient Patient @relation(fields: [patientId], references: [id])
 
   @@index([patientId])
-  @@index([type])
   @@index([fhirId])
+  @@index([vitalType])
 }
 
-model FhirEncounter {
-  id             String    @id @default(cuid())
-  patientId      String
-  status         String
-  type           String?
-  class          String?
-  startTime      DateTime
-  endTime        DateTime?
-  reasonForVisit String?
-  fhirId         String?   @unique
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+// ============== CLINICAL PROTOCOLS ==============
 
-  @@index([patientId])
-  @@index([fhirId])
+model ClinicalProtocol {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  description   String
+  version       String
+  category      String   // EMERGENCY, CHRONIC_DISEASE, PREVENTIVE, etc.
+  triggerRules  String   // JSON: conditions that trigger this protocol
+  actions       String   // JSON: recommended actions
+  evidenceLevel String?  // A, B, C, D
+  guidelineRef  String?  // Reference to clinical guideline
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+// ============== RED FLAG RULES ==============
+
+model RedFlagRule {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  description     String
+  category        String   // CARDIOVASCULAR, NEUROLOGICAL, RESPIRATORY, etc.
+  severity        String   // CRITICAL, HIGH, MODERATE
+  triggerCriteria String   // JSON: symptom patterns and thresholds
+  vitalThresholds String?  // JSON: vital sign thresholds
+  icdCodes        String?  // JSON: associated ICD-10 codes
+  recommendedAction String
+  timeframe       String   // IMMEDIATE, URGENT
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([severity])
+  @@index([isActive])
 }
