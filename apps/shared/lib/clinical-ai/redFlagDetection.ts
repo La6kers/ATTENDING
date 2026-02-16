@@ -374,6 +374,10 @@ function buildSearchableText(
     if (symptom.associatedSymptoms) {
       parts.push(...symptom.associatedSymptoms.map(s => s.toLowerCase()));
     }
+    // Also include aggravatedBy for pleuritic pain detection
+    if ((symptom as any).aggravatedBy) {
+      parts.push(...(symptom as any).aggravatedBy.map((s: string) => s.toLowerCase()));
+    }
   }
 
   // HPI
@@ -451,6 +455,11 @@ function evaluateSingleRedFlag(
   // Expand searchable text with medical synonyms
   const expandedText = expandWithSynonyms(searchableText);
 
+  // Direct symptom name matching for critical conditions
+  // Check if any symptom name directly matches a criterion keyword
+  const symptomNames = symptoms.map(s => s.name.toLowerCase());
+  const symptomQualities = symptoms.map(s => (s.quality || '').toLowerCase()).filter(q => q);
+  
   // Check text-based criteria
   for (const criterion of redFlag.triggerCriteria) {
     const criterionLower = criterion.toLowerCase();
@@ -461,6 +470,24 @@ function evaluateSingleRedFlag(
     const keywordMatches = keywords.filter(kw => 
       expandedText.includes(kw) || searchableText.includes(kw)
     );
+    
+    // Direct match: symptom name matches criterion exactly
+    if (symptomNames.some(name => criterionLower.includes(name) || name.includes(criterionLower.split(' ')[0]))) {
+      if (!matchedCriteria.includes(criterion)) {
+        matchedCriteria.push(criterion);
+        totalScore += 1;
+      }
+      continue;
+    }
+    
+    // Direct match: symptom quality matches criterion (e.g., "pleuritic" quality matches "pleuritic chest pain")
+    if (symptomQualities.some(quality => criterionLower.includes(quality))) {
+      if (!matchedCriteria.includes(criterion)) {
+        matchedCriteria.push(criterion);
+        totalScore += 1;
+      }
+      continue;
+    }
     
     // Special handling for single medical terms (hematemesis, melena, etc.)
     const singleTermMatch = checkSingleTermMatch(criterionLower, expandedText);
@@ -513,9 +540,11 @@ function evaluateSingleRedFlag(
   totalScore += demoMatches.length;
 
   // Determine if we have enough matches
-  // Special case: pediatric fever is high severity but should trigger with 1 match
-  // Also, certain red flags should NOT match on mild symptoms alone
-  const minMatches = (redFlag.severity === 'critical' || redFlag.id === 'rf-pediatric-fever') ? 1 : 2;
+  // Special case: certain high-severity conditions should trigger with 1 match
+  // - rf-pediatric-fever: febrile infant is a critical situation
+  // - rf-pulmonary-embolism: PE is life-threatening, isolated hemoptysis/pleuritic pain warrants workup
+  const singleMatchRedFlags = ['rf-pediatric-fever', 'rf-pulmonary-embolism'];
+  const minMatches = (redFlag.severity === 'critical' || singleMatchRedFlags.includes(redFlag.id)) ? 1 : 2;
   if (matchedCriteria.length >= minMatches) {
     const confidence = Math.min(0.95, 0.5 + (totalScore * 0.15));
     return {
