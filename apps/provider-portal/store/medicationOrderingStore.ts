@@ -208,7 +208,7 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
       generateAIRecommendations: () => {
         const { patientContext } = get();
         if (!patientContext) return;
-        set({ loadingRecommendations: true });
+        // Synchronous — no loading state needed (single tick)
         const recommendations = clinicalRecommendationService.generateMedicationRecommendations(patientContext);
         set({ aiRecommendations: recommendations, loadingRecommendations: false });
       },
@@ -270,10 +270,12 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
         if (medsArray.length === 0) throw new Error('No medications selected');
         set({ submitting: true, error: null });
 
-        try {
-          const rxIds: string[] = [];
+        const rxIds: string[] = [];
+        const failedIds: string[] = [];
+        let lastError: string | null = null;
 
-          for (const [_id, sel] of medsArray) {
+        for (const [medId, sel] of medsArray) {
+          try {
             const response = await fetch('/api/prescriptions', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -300,18 +302,35 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
             }
             const result = await response.json();
             rxIds.push(result.id);
+            // Remove successfully submitted item
+            set(state => {
+              delete state.selectedMedications[medId];
+              state.allergyAlerts = state.allergyAlerts.filter(a => a.medication !== medId);
+            });
+          } catch (err) {
+            failedIds.push(medId);
+            lastError = err instanceof Error ? err.message : 'Failed to submit prescription';
           }
-
-          set(state => { state.submitting = false; state.lastSubmittedRxIds = rxIds; });
-          get().clearOrder();
-          return rxIds;
-        } catch (error) {
-          set(state => {
-            state.submitting = false;
-            state.error = error instanceof Error ? error.message : 'Failed to submit prescriptions';
-          });
-          throw error;
         }
+
+        set(state => {
+          state.submitting = false;
+          state.lastSubmittedRxIds = rxIds;
+          if (failedIds.length > 0) {
+            state.error = `${rxIds.length} submitted, ${failedIds.length} failed: ${lastError}`;
+          }
+        });
+
+        // Only full-clear if everything succeeded
+        if (failedIds.length === 0) get().clearOrder();
+        // Re-check interactions for remaining meds
+        if (failedIds.length > 0) get().checkInteractions();
+
+        if (failedIds.length > 0 && rxIds.length === 0) {
+          throw new Error(lastError || 'All prescriptions failed');
+        }
+
+        return rxIds;
       },
 
       clearOrder: () => set(state => {

@@ -36,6 +36,9 @@ export {
 export {
   MEDICATION_CATALOG,
   DRUG_INTERACTIONS,
+  CROSS_REACTIVITY,
+  PREGNANCY_CONTRAINDICATED,
+  RENAL_ADJUSTMENT_DRUGS,
   getMedication,
   searchMedications,
   getMedicationsByCategory,

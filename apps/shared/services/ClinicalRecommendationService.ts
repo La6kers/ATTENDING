@@ -18,6 +18,15 @@ import { IMAGING_CATALOG } from '../catalogs/imaging';
 import { MEDICATION_CATALOG } from '../catalogs/medications';
 
 // =============================================================================
+// ID Generator (counter-based to avoid Date.now() collisions in sync loops)
+// =============================================================================
+
+let _recIdCounter = 0;
+function nextRecId(prefix: string): string {
+  return `rec_${prefix}_${Date.now()}_${++_recIdCounter}`;
+}
+
+// =============================================================================
 // Helper Functions
 // =============================================================================
 
@@ -315,7 +324,7 @@ export class ClinicalRecommendationService {
         if (!test) continue;
         
         labs.push({
-          id: `rec_${lab.code}_${Date.now()}`,
+          id: nextRecId(lab.code),
           itemCode: lab.code,
           itemName: test.name,
           testCode: lab.code,
@@ -344,7 +353,7 @@ export class ClinicalRecommendationService {
         }
         
         imaging.push({
-          id: `rec_${img.code}_${Date.now()}`,
+          id: nextRecId(img.code),
           itemCode: img.code,
           itemName: study.name,
           studyCode: img.code,
@@ -379,7 +388,7 @@ export class ClinicalRecommendationService {
         if (patient.pregnant && medication.pregnancyCategory === 'X') continue;
         
         medications.push({
-          id: `rec_${med.id}_${Date.now()}`,
+          id: nextRecId(med.id),
           itemCode: med.id,
           itemName: `${medication.genericName} (${medication.brandName})`,
           medicationId: med.id,
@@ -403,7 +412,7 @@ export class ClinicalRecommendationService {
       const test = LAB_CATALOG['HCG-U'];
       if (test) {
         labs.push({
-          id: `rec_HCG-U_${Date.now()}`,
+          id: nextRecId('HCG-U'),
           itemCode: 'HCG-U',
           itemName: test.name,
           testCode: 'HCG-U',

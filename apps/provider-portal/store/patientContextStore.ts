@@ -23,6 +23,7 @@ export interface PatientDemographics {
   age: number;
   gender: 'male' | 'female' | 'other';
   pregnancyStatus?: 'pregnant' | 'not_pregnant' | 'unknown';
+  breastfeeding?: boolean;
   preferredLanguage?: string;
   phone?: string;
   email?: string;
@@ -116,7 +117,30 @@ export interface InsuranceInfo {
   priorAuthRequired?: boolean;
 }
 
-// Format expected by AI services
+export interface LabResults {
+  creatinine?: number;
+  gfr?: number;
+  alt?: number;
+  ast?: number;
+  potassium?: number;
+  sodium?: number;
+  hemoglobin?: number;
+  hba1c?: number;
+  collectedAt?: string;
+}
+
+/**
+ * Format for BioMistral / external AI service API calls.
+ * Uses nested structure (demographics.age, demographics.gender).
+ *
+ * For ordering stores and ClinicalRecommendationService, use:
+ *   toOrderingContext() → OrderingContext (flat format: .age, .gender)
+ *
+ * For external AI API calls, use:
+ *   getPatientContext() → PatientContextForAI (nested format)
+ *
+ * @see OrderingContext in apps/shared/types/clinical.types.ts
+ */
 export interface PatientContextForAI {
   patientId: string;
   demographics: {
@@ -153,6 +177,7 @@ export interface PatientContextState {
   medications: PatientMedication[];
   conditions: PatientCondition[];
   insurance: InsuranceInfo | null;
+  labResults: LabResults | null;
   
   // Encounter data
   encounter: EncounterContext | null;
@@ -170,6 +195,7 @@ export interface PatientContextState {
   
   updateVitals: (vitals: Partial<PatientVitals>) => void;
   updateClinical: (clinical: Partial<ClinicalContext>) => void;
+  updateLabResults: (labs: Partial<LabResults>) => void;
   addRedFlag: (flag: string) => void;
   removeRedFlag: (flag: string) => void;
   
@@ -182,10 +208,10 @@ export interface PatientContextState {
   isPregnant: () => boolean;
   needsPregnancyTest: () => boolean;
   
-  // For API calls (formatted context)
+  /** Get nested format for external AI APIs (BioMistral). See PatientContextForAI. */
   getPatientContext: () => PatientContextForAI;
   
-  // Bridge to ordering stores (OrderingContext format)
+  /** Get flat format for ordering stores & ClinicalRecommendationService. See OrderingContext. */
   toOrderingContext: () => import('@attending/shared/catalogs').OrderingContext | null;
   
   // Reset
@@ -203,6 +229,7 @@ const initialState = {
   medications: [] as PatientMedication[],
   conditions: [] as PatientCondition[],
   insurance: null,
+  labResults: null,
   encounter: null,
   clinical: null,
   isLoading: false,
@@ -461,6 +488,13 @@ export const usePatientContextStore = create<PatientContextState>()(
           });
         },
         
+        updateLabResults: (labs: Partial<LabResults>) => {
+          set(state => {
+            state.labResults = { ...state.labResults, ...labs } as LabResults;
+            state.lastUpdated = new Date().toISOString();
+          });
+        },
+        
         addRedFlag: (flag: string) => {
           set(state => {
             if (!state.clinical) {
@@ -534,20 +568,23 @@ export const usePatientContextStore = create<PatientContextState>()(
         
         // =====================================================================
         // Get Context for AI Services
+        // Delegates to toOrderingContext() to avoid maintaining two parallel
+        // data formats. Adds AI-specific fields (vitals, symptoms, HPI) on top.
         // =====================================================================
         
         getPatientContext: (): PatientContextForAI => {
           const state = get();
+          const ordering = get().toOrderingContext();
           const d = state.demographics;
           
           return {
-            patientId: d?.id || '',
+            patientId: ordering?.id || d?.id || '',
             demographics: {
-              age: d?.age || 0,
-              gender: d?.gender || 'other',
+              age: ordering?.age || d?.age || 0,
+              gender: (ordering?.gender as 'male' | 'female' | 'other') || d?.gender || 'other',
               pregnancyStatus: d?.pregnancyStatus,
             },
-            chiefComplaint: state.encounter?.chiefComplaint || '',
+            chiefComplaint: ordering?.chiefComplaint || '',
             symptoms: state.clinical?.symptoms || [],
             vitals: state.vitals ? {
               bloodPressure: state.vitals.bloodPressure,
@@ -567,10 +604,8 @@ export const usePatientContextStore = create<PatientContextState>()(
               dose: m.dose,
               frequency: m.frequency,
             })),
-            medicalHistory: state.conditions
-              .filter(c => c.status === 'active')
-              .map(c => c.name),
-            redFlags: state.clinical?.redFlags,
+            medicalHistory: ordering?.medicalHistory || [],
+            redFlags: ordering?.redFlags || state.clinical?.redFlags,
           };
         },
         
@@ -583,6 +618,8 @@ export const usePatientContextStore = create<PatientContextState>()(
           const state = get();
           const d = state.demographics;
           if (!d) return null;
+          
+          const labs = state.labResults;
           
           return {
             id: d.id,
@@ -605,7 +642,17 @@ export const usePatientContextStore = create<PatientContextState>()(
               .filter(c => c.status === 'active')
               .map(c => c.name),
             pregnant: d.pregnancyStatus === 'pregnant',
+            breastfeeding: d.breastfeeding,
             insurancePlan: state.insurance?.insuranceName,
+            // Lab-derived dosing fields
+            creatinine: labs?.creatinine,
+            gfr: labs?.gfr,
+            renalFunction: (labs?.creatinine != null && labs?.gfr != null)
+              ? { creatinine: labs.creatinine, gfr: labs.gfr }
+              : undefined,
+            hepaticFunction: (labs?.alt != null && labs?.ast != null)
+              ? { alt: labs.alt, ast: labs.ast }
+              : undefined,
           };
         },
         
@@ -628,6 +675,7 @@ export const usePatientContextStore = create<PatientContextState>()(
           encounter: state.encounter,
           clinical: state.clinical,
           insurance: state.insurance,
+          labResults: state.labResults,
           lastUpdated: state.lastUpdated,
         }),
       }
@@ -649,6 +697,7 @@ export function usePatientContext() {
     conditions: state.conditions,
     encounter: state.encounter,
     clinical: state.clinical,
+    labResults: state.labResults,
     isLoading: state.isLoading,
     error: state.error,
     
@@ -657,12 +706,13 @@ export function usePatientContext() {
     loadEncounter: state.loadEncounter,
     loadFromAssessment: state.loadFromAssessment,
     updateVitals: state.updateVitals,
+    updateLabResults: state.updateLabResults,
     addRedFlag: state.addRedFlag,
     reset: state.reset,
     
-    // Computed
-    displayName: state.getPatientDisplayName(),
-    age: state.getPatientAge(),
+    // Computed — return functions, not invocations (Issue #9 fix)
+    getDisplayName: state.getPatientDisplayName,
+    getAge: state.getPatientAge,
     hasAllergy: state.hasAllergy,
     isPregnant: state.isPregnant,
     needsPregnancyTest: state.needsPregnancyTest,

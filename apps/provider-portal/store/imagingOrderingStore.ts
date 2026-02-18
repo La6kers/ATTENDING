@@ -190,7 +190,7 @@ export const useImagingOrderingStore = create<ImagingOrderingState>()(
       generateAIRecommendations: () => {
         const { patientContext } = get();
         if (!patientContext) return;
-        set({ loadingRecommendations: true });
+        // Synchronous — no loading state needed (single tick)
         const recommendations = clinicalRecommendationService.generateImagingRecommendations(patientContext);
         set({ aiRecommendations: recommendations, loadingRecommendations: false });
       },
@@ -211,10 +211,12 @@ export const useImagingOrderingStore = create<ImagingOrderingState>()(
         if (studiesArray.length === 0) throw new Error('No imaging studies selected');
         set({ submitting: true, error: null });
 
-        try {
-          const orderIds: string[] = [];
+        const orderIds: string[] = [];
+        const failedCodes: string[] = [];
+        let lastError: string | null = null;
 
-          for (const [_code, sel] of studiesArray) {
+        for (const [code, sel] of studiesArray) {
+          try {
             const response = await fetch('/api/imaging', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -238,18 +240,30 @@ export const useImagingOrderingStore = create<ImagingOrderingState>()(
             }
             const result = await response.json();
             orderIds.push(result.id);
+            // Remove successfully submitted item
+            set(state => { delete state.selectedStudies[code]; });
+          } catch (err) {
+            failedCodes.push(code);
+            lastError = err instanceof Error ? err.message : 'Failed to submit order';
           }
-
-          set(state => { state.submitting = false; state.lastSubmittedOrderIds = orderIds; });
-          get().clearOrder();
-          return orderIds;
-        } catch (error) {
-          set(state => {
-            state.submitting = false;
-            state.error = error instanceof Error ? error.message : 'Failed to submit order';
-          });
-          throw error;
         }
+
+        set(state => {
+          state.submitting = false;
+          state.lastSubmittedOrderIds = orderIds;
+          if (failedCodes.length > 0) {
+            state.error = `${orderIds.length} submitted, ${failedCodes.length} failed: ${lastError}`;
+          }
+        });
+
+        // Only full-clear if everything succeeded
+        if (failedCodes.length === 0) get().clearOrder();
+
+        if (failedCodes.length > 0 && orderIds.length === 0) {
+          throw new Error(lastError || 'All imaging orders failed');
+        }
+
+        return orderIds;
       },
 
       clearOrder: () => set(state => {

@@ -211,11 +211,13 @@ export const useReferralOrderingStore = create<ReferralOrderingState>()(
       submitReferrals: async (encounterId) => {
         set(state => { state.submitting = true; state.error = null; });
 
-        try {
-          const { selectedReferrals, patientContext } = get();
-          const referralIds: string[] = [];
+        const { selectedReferrals, patientContext } = get();
+        const referralIds: string[] = [];
+        const failedCodes: string[] = [];
+        let lastError: string | null = null;
 
-          for (const [_code, referral] of Object.entries(selectedReferrals)) {
+        for (const [code, referral] of Object.entries(selectedReferrals)) {
+          try {
             const response = await fetch('/api/referrals', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -239,24 +241,38 @@ export const useReferralOrderingStore = create<ReferralOrderingState>()(
             }
             const result = await response.json();
             referralIds.push(result.id);
+            // Remove successfully submitted item
+            set(state => { delete state.selectedReferrals[code]; });
+          } catch (err) {
+            failedCodes.push(code);
+            lastError = err instanceof Error ? err.message : 'Failed to submit referral';
           }
-
-          set(state => { state.submitting = false; state.lastSubmittedReferralIds = referralIds; });
-          get().clearOrder();
-          return referralIds;
-        } catch (error) {
-          set(state => {
-            state.submitting = false;
-            state.error = error instanceof Error ? error.message : 'Failed to submit referrals';
-          });
-          throw error;
         }
+
+        set(state => {
+          state.submitting = false;
+          state.lastSubmittedReferralIds = referralIds;
+          if (failedCodes.length > 0) {
+            state.error = `${referralIds.length} submitted, ${failedCodes.length} failed: ${lastError}`;
+          }
+        });
+
+        // Only full-clear if everything succeeded
+        if (failedCodes.length === 0) get().clearOrder();
+
+        if (failedCodes.length > 0 && referralIds.length === 0) {
+          throw new Error(lastError || 'All referrals failed');
+        }
+
+        return referralIds;
       },
 
       clearOrder: () => set(state => {
         state.selectedReferrals = {};
         state.aiRecommendations = [];
-        state.patientContext = null;
+        // NOTE: Do NOT clear patientContext here — it should outlive
+        // individual orders. The patient context is shared across all
+        // ordering stores and cleared only via reset or page navigation.
         state.error = null;
         state.searchQuery = '';
         state.categoryFilter = 'all';

@@ -2,170 +2,88 @@
 // Unified Clinical Ordering Types
 // apps/shared/types/ordering.ts
 //
-// REFACTORED: Imports canonical types from clinical.types.ts
-// instead of redefining them. Only adds ordering-specific types
-// (catalog items, selected items, store factory config).
+// FIXED: Re-exports ALL base types from canonical sources.
+// Only defines genuinely additive types (Selected*, AI*Recommendation,
+// Treatment*, ClinicalStoreConfig) that don't exist elsewhere.
 // ============================================================
 
 // =============================================================================
-// Re-export canonical types (single source of truth: clinical.types.ts)
+// Re-export canonical types — SINGLE SOURCE OF TRUTH
 // =============================================================================
 
+// Core ordering types (from clinical.types.ts)
 export type {
   OrderingContext,
   PatientContext,
   AllergyInfo,
   OrderPriority,
   RecommendationCategory,
+  BaseCatalogItem,
+  BaseSelectedItem,
+  BaseAIRecommendation,
 } from './clinical.types';
 
 export {
   PRIORITY_CONFIG,
   RECOMMENDATION_CATEGORY_CONFIGS,
+  isAllergyInfo,
+  normalizeAllergy,
+  getAllergenName,
+  normalizeAllergies,
+  getAllergenNames,
+  groupRecommendationsByCategory,
+  isActionableCategory,
 } from './clinical.types';
 
-// =============================================================================
-// AI Recommendation Base Type
-// =============================================================================
-
-import type { OrderPriority, RecommendationCategory } from './clinical.types';
-
-export interface BaseAIRecommendation {
-  id: string;
-  itemCode: string;
-  itemName: string;
-  priority: OrderPriority;
-  rationale: string;
-  clinicalEvidence: string[];
-  confidence: number;
-  category: RecommendationCategory;
-  redFlagRelated?: boolean;
-  warningMessage?: string;
-}
+// Domain catalog types (from catalogs/types.ts)
+export type {
+  LabCategory,
+  LabTest,
+  LabPanel,
+  ImagingModality,
+  ImagingStudy,
+  DrugSchedule,
+  DosageForm,
+  DrugCategory,
+  Medication,
+  DrugInteraction,
+  ReferralSpecialty as ReferralSpecialtyInfo,
+  AIRecommendation,
+  ClinicalCatalog,
+} from '../catalogs/types';
 
 // =============================================================================
-// Catalog Item Types
+// Import base types for extending
 // =============================================================================
 
-export interface BaseCatalogItem {
-  code: string;
-  name: string;
-  description: string;
-  category: string;
-  defaultPriority: OrderPriority;
-  cost: number | { generic: number; brand: number };
-}
+import type {
+  OrderPriority,
+  RecommendationCategory,
+  BaseCatalogItem,
+  BaseAIRecommendation,
+  BaseSelectedItem,
+  OrderingContext,
+} from './clinical.types';
 
-export interface BaseSelectedItem<T extends BaseCatalogItem = BaseCatalogItem> {
-  item: T;
-  priority: OrderPriority;
-  aiRecommended: boolean;
-  rationale?: string;
-}
+import type {
+  LabTest,
+  ImagingStudy,
+  ImagingModality,
+  Medication,
+  DosageForm,
+} from '../catalogs/types';
 
 // =============================================================================
-// Lab Types
+// Selected Item Types (genuinely additive — store-specific shapes)
 // =============================================================================
-
-export type LabCategory =
-  | 'hematology' | 'chemistry' | 'endocrine' | 'coagulation'
-  | 'microbiology' | 'urinalysis' | 'immunology' | 'toxicology' | 'other';
-
-export interface LabTest extends BaseCatalogItem {
-  category: LabCategory;
-  turnaroundHours: number;
-  requiresFasting?: boolean;
-  specimenType?: string;
-  cptCode?: string;
-  loincCode?: string;
-}
-
-export interface LabPanel {
-  id: string;
-  name: string;
-  abbreviation: string;
-  description: string;
-  tests: string[];
-  cost: number;
-  category: LabCategory;
-  commonIndications: string[];
-}
 
 export type SelectedLab = BaseSelectedItem<LabTest>;
-
-export interface AILabRecommendation extends BaseAIRecommendation {
-  type: 'lab';
-}
-
-// =============================================================================
-// Imaging Types
-// =============================================================================
-
-export type ImagingModality = 'CT' | 'MRI' | 'XRAY' | 'US' | 'NM' | 'FLUORO' | 'MAMMO' | 'DEXA';
-
-export interface ImagingStudy extends BaseCatalogItem {
-  modality: ImagingModality;
-  bodyPart: string;
-  durationMinutes: number;
-  radiationDose?: string;
-  contrast?: boolean;
-  contrastType?: string;
-  turnaroundHours: number;
-  contraindications?: string[];
-  preparation?: string;
-  cptCode?: string;
-}
 
 export interface SelectedStudy extends BaseSelectedItem<ImagingStudy> {
   laterality?: 'left' | 'right' | 'bilateral' | 'none';
   contrast: boolean;
   clinicalHistory?: string;
   specialInstructions?: string;
-}
-
-export interface AIImagingRecommendation extends BaseAIRecommendation {
-  type: 'imaging';
-  modality: ImagingModality;
-}
-
-// =============================================================================
-// Medication Types
-// =============================================================================
-
-export type DrugSchedule = 'OTC' | 'RX' | 'II' | 'III' | 'IV' | 'V';
-export type DosageForm =
-  | 'tablet' | 'capsule' | 'liquid' | 'injection'
-  | 'topical' | 'inhaler' | 'patch' | 'suppository' | 'drops' | 'spray';
-
-export type DrugCategory =
-  | 'analgesic' | 'antibiotic' | 'antihypertensive' | 'antidiabetic'
-  | 'anticoagulant' | 'antidepressant' | 'anxiolytic' | 'anticonvulsant'
-  | 'antihistamine' | 'antacid' | 'bronchodilator' | 'corticosteroid'
-  | 'diuretic' | 'lipid-lowering' | 'migraine' | 'muscle-relaxant'
-  | 'nsaid' | 'opioid' | 'proton-pump-inhibitor' | 'thyroid' | 'vitamin' | 'other';
-
-export interface Medication extends BaseCatalogItem {
-  brandName: string;
-  genericName: string;
-  category: DrugCategory;
-  schedule: DrugSchedule;
-  dosageForms: DosageForm[];
-  strengths: string[];
-  defaultStrength: string;
-  defaultForm: DosageForm;
-  defaultQuantity: number;
-  defaultDaysSupply: number;
-  defaultRefills: number;
-  maxRefills: number;
-  defaultDirections: string;
-  commonIndications: string[];
-  contraindications: string[];
-  blackBoxWarning?: string;
-  pregnancyCategory?: string;
-  requiresPriorAuth?: boolean;
-  isControlled: boolean;
-  cost: { generic: number; brand: number };
-  ndc?: string;
 }
 
 export interface SelectedMedication extends BaseSelectedItem<Medication> {
@@ -179,22 +97,25 @@ export interface SelectedMedication extends BaseSelectedItem<Medication> {
   dispenseAsWritten: boolean;
 }
 
+// =============================================================================
+// AI Recommendation Subtypes (extend base with domain-specific fields)
+// =============================================================================
+
+export interface AILabRecommendation extends BaseAIRecommendation {
+  type: 'lab';
+}
+
+export interface AIImagingRecommendation extends BaseAIRecommendation {
+  type: 'imaging';
+  modality: ImagingModality;
+}
+
 export interface AIMedicationRecommendation extends BaseAIRecommendation {
   type: 'medication';
   recommendationType: 'first-line' | 'alternative' | 'adjunct' | 'avoid';
   dosageRecommendation?: string;
   durationRecommendation?: string;
   monitoringRequired?: string[];
-}
-
-export interface DrugInteraction {
-  id: string;
-  drug1: string;
-  drug2: string;
-  severity: 'minor' | 'moderate' | 'major' | 'contraindicated';
-  description: string;
-  clinicalEffect: string;
-  management: string;
 }
 
 // =============================================================================
@@ -289,20 +210,17 @@ export interface TreatmentPlan {
 // Store Factory Types
 // =============================================================================
 
-import type { OrderingContext as OC } from './clinical.types';
-
 export interface ClinicalStoreConfig<
   TItem extends BaseCatalogItem,
   TSelectedItem extends BaseSelectedItem<TItem>,
   TRecommendation extends BaseAIRecommendation,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   TCategory extends string
 > {
   name: string;
   catalog: Record<string, TItem>;
   apiEndpoint: string;
-  generateRecommendations: (context: OC) => Promise<TRecommendation[]>;
+  generateRecommendations: (context: OrderingContext) => Promise<TRecommendation[]>;
   createSelectedItem: (item: TItem, options?: Partial<Omit<TSelectedItem, 'item'>>) => TSelectedItem;
-  transformForSubmit: (selectedItem: TSelectedItem, context: OC | null) => Record<string, unknown>;
+  transformForSubmit: (selectedItem: TSelectedItem, context: OrderingContext | null) => Record<string, unknown>;
   getItemSearchFields: (item: TItem) => string[];
 }

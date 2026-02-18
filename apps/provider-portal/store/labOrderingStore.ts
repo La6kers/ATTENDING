@@ -310,9 +310,7 @@ export const useLabOrderingStore = create<LabOrderingState>()(
         const { patientContext } = get();
         if (!patientContext) return;
 
-        set({ loadingRecommendations: true });
-
-        // Synchronous call — no async needed
+        // Synchronous — no loading state needed (single tick)
         const recommendations = clinicalRecommendationService.generateLabRecommendations(patientContext);
         const mapped: AIRecommendation[] = recommendations.map(r => ({
           labCode: r.testCode,

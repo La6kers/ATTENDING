@@ -375,52 +375,68 @@ export const MEDICATION_CATALOG: Record<string, Medication> = {
 };
 
 // =============================================================================
-// Drug Interactions Database
+// Drug Interactions Database — CANONICAL SOURCE
+// All interaction checking (app-level and package-level) should use this.
 // =============================================================================
 
 export const DRUG_INTERACTIONS: DrugInteraction[] = [
-  {
-    id: 'topiramate-ocp', drug1: 'topiramate', drug2: 'oral contraceptives',
-    severity: 'moderate',
-    description: 'Topiramate may decrease contraceptive effectiveness.',
-    clinicalEffect: 'Reduced contraceptive efficacy, pregnancy risk.',
-    management: 'Use additional contraception. Consider higher estrogen dose.'
-  },
-  {
-    id: 'nsaid-anticoagulant', drug1: 'ibuprofen', drug2: 'warfarin',
-    severity: 'major',
-    description: 'NSAIDs increase bleeding risk with anticoagulants.',
-    clinicalEffect: 'Increased GI bleeding and hemorrhagic events.',
-    management: 'Avoid if possible. Use acetaminophen. Monitor INR.'
-  },
-  {
-    id: 'ssri-triptan', drug1: 'sertraline', drug2: 'sumatriptan',
-    severity: 'moderate',
-    description: 'Serotonin syndrome risk with SSRI + triptan.',
-    clinicalEffect: 'Rare but potentially serious serotonin syndrome.',
-    management: 'Use with caution. Educate on serotonin syndrome symptoms.'
-  },
-  {
-    id: 'metformin-contrast', drug1: 'metformin', drug2: 'iodinated contrast',
-    severity: 'major',
-    description: 'Hold metformin before/after contrast procedures.',
-    clinicalEffect: 'Contrast-induced nephropathy with lactic acidosis risk.',
-    management: 'Hold 48h before and after. Check renal function before resuming.'
-  },
-  {
-    id: 'ace-potassium', drug1: 'lisinopril', drug2: 'potassium supplements',
-    severity: 'moderate',
-    description: 'ACE inhibitors can cause hyperkalemia.',
-    clinicalEffect: 'Risk of dangerous hyperkalemia.',
-    management: 'Monitor potassium. Avoid supplements unless indicated.'
-  },
-  {
-    id: 'benzo-opioid', drug1: 'lorazepam', drug2: 'tramadol',
-    severity: 'contraindicated',
-    description: 'Benzo + opioid increases fatal overdose risk.',
-    clinicalEffect: 'Profound sedation, respiratory depression, death.',
-    management: 'Avoid combination. If necessary, use lowest doses.'
-  },
+  // Anticoagulant interactions
+  { id: 'nsaid-warfarin', drug1: 'warfarin', drug2: 'ibuprofen', severity: 'major', description: 'Increased bleeding risk', clinicalEffect: 'GI bleeding, hemorrhagic events', management: 'Avoid combination, use acetaminophen instead' },
+  { id: 'warfarin-aspirin', drug1: 'warfarin', drug2: 'aspirin', severity: 'major', description: 'Increased bleeding risk', clinicalEffect: 'Hemorrhagic events', management: 'Monitor INR closely, consider dose adjustment' },
+  { id: 'warfarin-nsaid', drug1: 'warfarin', drug2: 'nsaid', severity: 'major', description: 'Increased bleeding risk', clinicalEffect: 'GI bleeding', management: 'Avoid if possible, monitor INR' },
+  // ACE/ARB + potassium
+  { id: 'ace-potassium', drug1: 'lisinopril', drug2: 'potassium', severity: 'moderate', description: 'Hyperkalemia risk', clinicalEffect: 'Risk of dangerous hyperkalemia', management: 'Monitor potassium levels' },
+  { id: 'ace-spironolactone', drug1: 'lisinopril', drug2: 'spironolactone', severity: 'major', description: 'Severe hyperkalemia risk', clinicalEffect: 'Life-threatening hyperkalemia', management: 'Monitor K+ frequently, consider alternative' },
+  // Metformin + contrast
+  { id: 'metformin-contrast', drug1: 'metformin', drug2: 'contrast', severity: 'major', description: 'Lactic acidosis risk', clinicalEffect: 'Contrast-induced nephropathy with lactic acidosis', management: 'Hold metformin 48h before/after contrast' },
+  // Serotonin syndrome
+  { id: 'ssri-tramadol', drug1: 'ssri', drug2: 'tramadol', severity: 'major', description: 'Serotonin syndrome risk', clinicalEffect: 'Potentially fatal serotonin toxicity', management: 'Avoid combination if possible' },
+  { id: 'ssri-maoi', drug1: 'ssri', drug2: 'maoi', severity: 'contraindicated', description: 'Serotonin syndrome — potentially fatal', clinicalEffect: 'Fatal serotonin toxicity', management: 'Absolute contraindication, 14-day washout required' },
+  { id: 'ssri-triptan', drug1: 'sertraline', drug2: 'sumatriptan', severity: 'moderate', description: 'Serotonin syndrome risk with SSRI + triptan', clinicalEffect: 'Rare but potentially serious serotonin syndrome', management: 'Use with caution. Educate on serotonin syndrome symptoms' },
+  // Statins
+  { id: 'statin-fibrate', drug1: 'statin', drug2: 'fibrate', severity: 'major', description: 'Increased rhabdomyolysis risk', clinicalEffect: 'Muscle breakdown, renal failure', management: 'Monitor CK levels, use lowest statin dose' },
+  // Cardiac
+  { id: 'digoxin-amiodarone', drug1: 'digoxin', drug2: 'amiodarone', severity: 'major', description: 'Increased digoxin toxicity', clinicalEffect: 'Bradycardia, nausea, arrhythmia', management: 'Reduce digoxin dose by 50%' },
+  // Methotrexate
+  { id: 'mtx-nsaid', drug1: 'methotrexate', drug2: 'nsaid', severity: 'major', description: 'Increased methotrexate toxicity', clinicalEffect: 'Bone marrow suppression, renal toxicity', management: 'Monitor methotrexate levels' },
+  // Lithium
+  { id: 'lithium-nsaid', drug1: 'lithium', drug2: 'nsaid', severity: 'major', description: 'Increased lithium levels', clinicalEffect: 'Lithium toxicity', management: 'Monitor lithium levels closely' },
+  // Fluoroquinolone
+  { id: 'cipro-theophylline', drug1: 'ciprofloxacin', drug2: 'theophylline', severity: 'major', description: 'Theophylline toxicity', clinicalEffect: 'Seizures, cardiac arrhythmias', management: 'Monitor theophylline levels, reduce dose' },
+  // Topiramate
+  { id: 'topiramate-ocp', drug1: 'topiramate', drug2: 'oral contraceptives', severity: 'moderate', description: 'Topiramate may decrease contraceptive effectiveness', clinicalEffect: 'Reduced contraceptive efficacy, pregnancy risk', management: 'Use additional contraception. Consider higher estrogen dose' },
+  // Opioid + benzo
+  { id: 'benzo-opioid', drug1: 'lorazepam', drug2: 'tramadol', severity: 'contraindicated', description: 'Benzo + opioid increases fatal overdose risk', clinicalEffect: 'Profound sedation, respiratory depression, death', management: 'Avoid combination. If necessary, use lowest doses' },
+];
+
+// =============================================================================
+// Cross-Reactivity Database
+// =============================================================================
+
+export const CROSS_REACTIVITY: Record<string, string[]> = {
+  penicillin: ['amoxicillin', 'ampicillin', 'piperacillin', 'nafcillin'],
+  sulfa: ['sulfamethoxazole', 'sulfasalazine', 'celecoxib', 'furosemide'],
+  cephalosporin: ['cephalexin', 'ceftriaxone', 'cefazolin', 'cefepime'],
+  nsaid: ['ibuprofen', 'naproxen', 'ketorolac', 'meloxicam', 'celecoxib'],
+};
+
+// =============================================================================
+// Pregnancy Category X Drugs (absolute contraindication)
+// =============================================================================
+
+export const PREGNANCY_CONTRAINDICATED: string[] = [
+  'warfarin', 'methotrexate', 'isotretinoin', 'valproic acid', 'valproate',
+  'atorvastatin', 'simvastatin', 'rosuvastatin', 'finasteride', 'dutasteride',
+  'misoprostol', 'thalidomide', 'leflunomide',
+];
+
+// =============================================================================
+// Renal Dose Adjustment Drugs (GFR < 30)
+// =============================================================================
+
+export const RENAL_ADJUSTMENT_DRUGS: string[] = [
+  'metformin', 'gabapentin', 'pregabalin', 'lithium', 'enoxaparin',
+  'allopurinol', 'baclofen', 'acyclovir', 'amoxicillin', 'ciprofloxacin',
 ];
 
 // =============================================================================

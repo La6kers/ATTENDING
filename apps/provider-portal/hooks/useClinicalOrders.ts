@@ -1,21 +1,25 @@
 // =============================================================================
-// ATTENDING AI — Unified Clinical Orders Hook (REFACTORED)
+// ATTENDING AI — Unified Clinical Orders Hook
 // apps/provider-portal/hooks/useClinicalOrders.ts
 //
-// CHANGES:
-//   • Map → Record references (stores now use Records)
-//   • Removed method alias references (submitReferral → submitReferrals)
+// FIXES:
+//   • Uses Zustand selectors (not full store subscriptions)
+//   • Record-based (stores use Records)
 //   • Uses OrderingContext canonical type
-//   • Removed l.lab || l.test backward compat (only l.lab now)
 // =============================================================================
 
 import { useCallback, useMemo } from 'react';
-import { useLabOrderingStore, type SelectedLab } from '@/store/labOrderingStore';
-import { useImagingOrderingStore, type SelectedStudy } from '@/store/imagingOrderingStore';
-import { useMedicationOrderingStore, type SelectedMedication } from '@/store/medicationOrderingStore';
-import { useReferralOrderingStore, type SelectedReferral } from '@/store/referralOrderingStore';
+import { useLabOrderingStore } from '@/store/labOrderingStore';
+import { useImagingOrderingStore } from '@/store/imagingOrderingStore';
+import { useMedicationOrderingStore } from '@/store/medicationOrderingStore';
+import { useReferralOrderingStore } from '@/store/referralOrderingStore';
 import { useClinicalSafety } from './useClinicalSafety';
 import type { OrderingContext, OrderPriority } from '@attending/shared/catalogs';
+
+import type { SelectedLab } from '@/store/labOrderingStore';
+import type { SelectedStudy } from '@/store/imagingOrderingStore';
+import type { SelectedMedication } from '@/store/medicationOrderingStore';
+import type { SelectedReferral } from '@/store/referralOrderingStore';
 
 // Re-export for convenience
 export type { OrderingContext };
@@ -50,89 +54,101 @@ export interface SafetyValidation {
 }
 
 // =============================================================================
-// Hook
+// Hook — uses selectors to minimize re-renders
 // =============================================================================
 
 export function useClinicalOrders() {
-  const labStore = useLabOrderingStore();
-  const imagingStore = useImagingOrderingStore();
-  const medStore = useMedicationOrderingStore();
-  const referralStore = useReferralOrderingStore();
+  // ── Selectors: subscribe only to fields we actually need ───
+  const selectedLabs = useLabOrderingStore(s => s.selectedLabs);
+  const labPatientCtx = useLabOrderingStore(s => s.patientContext);
+  const labSetCtx = useLabOrderingStore(s => s.setPatientContext);
+  const labGenRecs = useLabOrderingStore(s => s.generateAIRecommendations);
+  const labClear = useLabOrderingStore(s => s.clearOrder);
+  const labSubmit = useLabOrderingStore(s => s.submitOrder);
+
+  const selectedStudies = useImagingOrderingStore(s => s.selectedStudies);
+  const imgPatientCtx = useImagingOrderingStore(s => s.patientContext);
+  const imgSetCtx = useImagingOrderingStore(s => s.setPatientContext);
+  const imgGenRecs = useImagingOrderingStore(s => s.generateAIRecommendations);
+  const imgClear = useImagingOrderingStore(s => s.clearOrder);
+  const imgSubmit = useImagingOrderingStore(s => s.submitOrder);
+
+  const selectedMedications = useMedicationOrderingStore(s => s.selectedMedications);
+  const medPatientCtx = useMedicationOrderingStore(s => s.patientContext);
+  const medSetCtx = useMedicationOrderingStore(s => s.setPatientContext);
+  const medGenRecs = useMedicationOrderingStore(s => s.generateAIRecommendations);
+  const medClear = useMedicationOrderingStore(s => s.clearOrder);
+  const medSubmitRx = useMedicationOrderingStore(s => s.submitPrescriptions);
+
+  const selectedReferrals = useReferralOrderingStore(s => s.selectedReferrals);
+  const refPatientCtx = useReferralOrderingStore(s => s.patientContext);
+  const refSetCtx = useReferralOrderingStore(s => s.setPatientContext);
+  const refGenRecs = useReferralOrderingStore(s => s.generateAIRecommendations);
+  const refClear = useReferralOrderingStore(s => s.clearOrder);
+  const refSubmit = useReferralOrderingStore(s => s.submitReferrals);
+
   const { checkDrugInteractions, checkMedicationSafety } = useClinicalSafety();
 
   // ── Unified State ──────────────────────────────────────────
   const state = useMemo<ClinicalOrdersState>(() => {
-    const labsObj = labStore.selectedLabs;
-    const imagingObj = imagingStore.selectedStudies;
-    const medsObj = medStore.selectedMedications;
-    const refsObj = referralStore.selectedReferrals;
-
-    const labCount = Object.keys(labsObj).length;
-    const imgCount = Object.keys(imagingObj).length;
-    const medCount = Object.keys(medsObj).length;
-    const refCount = Object.keys(refsObj).length;
+    const labCount = Object.keys(selectedLabs).length;
+    const imgCount = Object.keys(selectedStudies).length;
+    const medCount = Object.keys(selectedMedications).length;
+    const refCount = Object.keys(selectedReferrals).length;
 
     return {
-      patientContext:
-        labStore.patientContext || imagingStore.patientContext ||
-        medStore.patientContext || referralStore.patientContext,
+      patientContext: labPatientCtx || imgPatientCtx || medPatientCtx || refPatientCtx,
       labs: {
-        selected: labsObj,
+        selected: selectedLabs,
         count: labCount,
-        hasSTAT: Object.values(labsObj).some(l => l.priority === 'STAT'),
+        hasSTAT: Object.values(selectedLabs).some(l => l.priority === 'STAT'),
       },
       imaging: {
-        selected: imagingObj,
+        selected: selectedStudies,
         count: imgCount,
-        hasSTAT: Object.values(imagingObj).some(s => s.priority === 'STAT'),
+        hasSTAT: Object.values(selectedStudies).some(s => s.priority === 'STAT'),
       },
       medications: {
-        selected: medsObj,
+        selected: selectedMedications,
         count: medCount,
-        hasSTAT: Object.values(medsObj).some(m => m.priority === 'STAT'),
+        hasSTAT: Object.values(selectedMedications).some(m => m.priority === 'STAT'),
       },
       referrals: {
-        selected: refsObj,
+        selected: selectedReferrals,
         count: refCount,
-        hasUrgent: Object.values(refsObj).some(
+        hasUrgent: Object.values(selectedReferrals).some(
           r => r.urgency === 'STAT' || r.urgency === 'URGENT',
         ),
       },
       totalOrders: labCount + imgCount + medCount + refCount,
       hasSafetyAlerts: false,
     };
-  }, [
-    labStore.selectedLabs, labStore.patientContext,
-    imagingStore.selectedStudies, imagingStore.patientContext,
-    medStore.selectedMedications, medStore.patientContext,
-    referralStore.selectedReferrals, referralStore.patientContext,
-  ]);
+  }, [selectedLabs, selectedStudies, selectedMedications, selectedReferrals,
+      labPatientCtx, imgPatientCtx, medPatientCtx, refPatientCtx]);
 
   // ── Set patient context for ALL stores at once ─────────────
   const setPatientContext = useCallback((context: OrderingContext) => {
-    labStore.setPatientContext(context);
-    imagingStore.setPatientContext(context);
-    medStore.setPatientContext(context);
-    referralStore.setPatientContext(context);
-  }, [labStore, imagingStore, medStore, referralStore]);
+    labSetCtx(context);
+    imgSetCtx(context);
+    medSetCtx(context);
+    refSetCtx(context);
+  }, [labSetCtx, imgSetCtx, medSetCtx, refSetCtx]);
 
   // ── Generate AI recommendations for all order types ────────
   const generateAllRecommendations = useCallback(() => {
-    // Labs, imaging, meds are now synchronous
-    labStore.generateAIRecommendations();
-    imagingStore.generateAIRecommendations();
-    medStore.generateAIRecommendations();
-    // Referrals still async (API call with fallback)
-    referralStore.generateAIRecommendations();
-  }, [labStore, imagingStore, medStore, referralStore]);
+    labGenRecs();
+    imgGenRecs();
+    medGenRecs();
+    refGenRecs();
+  }, [labGenRecs, imgGenRecs, medGenRecs, refGenRecs]);
 
   // ── Clear all orders ───────────────────────────────────────
   const clearAllOrders = useCallback(() => {
-    labStore.clearOrder();
-    imagingStore.clearOrder();
-    medStore.clearOrder();
-    referralStore.clearOrder();
-  }, [labStore, imagingStore, medStore, referralStore]);
+    labClear();
+    imgClear();
+    medClear();
+    refClear();
+  }, [labClear, imgClear, medClear, refClear]);
 
   // ── Medication Safety Validation ───────────────────────────
   const validateMedicationSafety = useCallback((): SafetyValidation => {
@@ -218,7 +234,6 @@ export function useClinicalOrders() {
         })),
       });
     }
-
     if (state.imaging.count > 0) {
       summaries.push({
         type: 'imaging',
@@ -229,7 +244,6 @@ export function useClinicalOrders() {
         })),
       });
     }
-
     if (state.medications.count > 0) {
       summaries.push({
         type: 'medication',
@@ -242,7 +256,6 @@ export function useClinicalOrders() {
         })),
       });
     }
-
     if (state.referrals.count > 0) {
       summaries.push({
         type: 'referral',
@@ -262,7 +275,6 @@ export function useClinicalOrders() {
     const results: { labs?: string[]; imaging?: string[]; medications?: string[]; referrals?: string[] } = {};
     const errors: string[] = [];
 
-    // Validate medications first
     if (state.medications.count > 0) {
       const validation = validateMedicationSafety();
       if (!validation.isValid) return { success: false, results: {}, errors: validation.errors };
@@ -270,34 +282,30 @@ export function useClinicalOrders() {
 
     try {
       if (state.labs.count > 0) {
-        const labIds = await labStore.submitOrder(encounterId);
+        const labIds = await labSubmit(encounterId);
         if (Array.isArray(labIds)) results.labs = labIds;
       }
       if (state.imaging.count > 0) {
-        results.imaging = await imagingStore.submitOrder(encounterId);
+        results.imaging = await imgSubmit(encounterId);
       }
       if (state.medications.count > 0) {
-        results.medications = await medStore.submitPrescriptions(encounterId);
+        results.medications = await medSubmitRx(encounterId);
       }
       if (state.referrals.count > 0) {
-        results.referrals = await referralStore.submitReferrals(encounterId);
+        results.referrals = await refSubmit(encounterId);
       }
       return { success: true, results };
     } catch (error) {
       errors.push(error instanceof Error ? error.message : 'Failed to submit orders');
       return { success: false, results, errors };
     }
-  }, [state, labStore, imagingStore, medStore, referralStore, validateMedicationSafety]);
+  }, [state, labSubmit, imgSubmit, medSubmitRx, refSubmit, validateMedicationSafety]);
 
   // ── Return ─────────────────────────────────────────────────
   return {
     state,
     patientContext: state.patientContext,
     totalOrders: state.totalOrders,
-    labs: labStore,
-    imaging: imagingStore,
-    medications: medStore,
-    referrals: referralStore,
     setPatientContext,
     generateAllRecommendations,
     clearAllOrders,
