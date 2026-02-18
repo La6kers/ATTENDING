@@ -1,25 +1,25 @@
 // =============================================================================
 // ATTENDING AI - Provider Inbox Page
 // apps/provider-portal/pages/inbox/index.tsx
+//
+// UPDATED: Uses ProviderShell for consistent layout
 // =============================================================================
 
 import type { NextPage } from 'next';
 import { ProviderInbox } from '@/components/inbox/ProviderInbox';
+import ProviderShell from '@/components/layout/ProviderShell';
 
 const InboxPage: NextPage = () => {
   return (
-    <div style={{ 
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      margin: 0,
-      padding: 0,
-      overflow: 'hidden'
-    }}>
-      <ProviderInbox />
-    </div>
+    <ProviderShell
+      currentPage="inbox"
+      contextBadge="Provider Inbox"
+      fullWidth
+    >
+      <div className="flex-1" style={{ height: 'calc(100vh - 112px)' }}>
+        <ProviderInbox />
+      </div>
+    </ProviderShell>
   );
 };
 

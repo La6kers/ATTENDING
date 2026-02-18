@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export interface QuickActionsBarProps {
-  currentPage?: 'dashboard' | 'labs' | 'imaging' | 'medications' | 'referrals' | 'treatment' | 'diagnosis' | 'inbox' | 'assessments';
+  currentPage?: 'dashboard' | 'labs' | 'imaging' | 'medications' | 'referrals' | 'treatment' | 'schedule' | 'diagnosis' | 'inbox' | 'assessments';
   patientId?: string;
   encounterId?: string;
   showBackButton?: boolean;
@@ -49,7 +49,8 @@ const quickActions: QuickActionItem[] = [
   { id: 'medications', label: 'Medication Orders', icon: Pill, href: '/medications', emoji: '💊', dataAction: 'prescribe' },
   { id: 'imaging', label: 'Imaging Orders', icon: FileImage, href: '/imaging', emoji: '🔍', dataAction: 'imaging' },
   { id: 'referrals', label: 'Referral Orders', icon: Users, href: '/referrals', emoji: '👥', dataAction: 'referral' },
-  { id: 'treatment', label: 'Treatment Plan', icon: Calendar, href: '/treatment-plans', emoji: '📅', dataAction: 'treatment' },
+  { id: 'treatment', label: 'Treatment Plan', icon: Calendar, href: '/treatment-plan', emoji: '📋', dataAction: 'treatment' },
+  { id: 'schedule', label: 'Schedule Follow-up', icon: Calendar, href: '/schedule', emoji: '📅', dataAction: 'schedule' },
   { id: 'inbox', label: 'Inbox', icon: Inbox, href: '/inbox', emoji: '📥', dataAction: 'inbox' },
   { id: 'assessments', label: 'Assessments', icon: Activity, href: '/assessments', emoji: '📋', dataAction: 'assessments' },
 ];

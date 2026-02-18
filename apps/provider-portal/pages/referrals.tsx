@@ -10,13 +10,14 @@ import { useRouter } from 'next/router';
 import { 
   UserPlus, ArrowLeft, Home, CheckCircle, AlertTriangle, Clock, Filter
 } from 'lucide-react';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { SimpleCriticalAlert, useToast } from '@/components/shared';
 import { ReferralOrderingPanel } from '@/components/referral-ordering';
 import type { PatientContext as StorePatientContext } from '@/store/referralOrderingStore';
 import type { PatientContext as PanelPatientContext } from '@/components/referral-ordering/types';
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 };
 
 const getMockPatientContext = (patientId?: string): StorePatientContext => ({
@@ -90,30 +91,7 @@ export default function ReferralsPage() {
         <title>Referral Orders | ATTENDING AI</title>
       </Head>
 
-      <div className="min-h-screen" style={{ background: theme.gradient }}>
-        {/* Header */}
-        <header className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button onClick={() => router.back()} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-                <Link href="/" className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                  <Home className="w-5 h-5" />
-                </Link>
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                  <UserPlus className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">Referral Orders</h1>
-                  <p className="text-purple-200 text-sm">Order and manage specialist referrals</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
+      <ProviderShell contextBadge="Referral Orders" currentPage="referrals">
         <main className="max-w-7xl mx-auto px-6 py-6">
           {/* Patient Banner */}
           <div className="bg-white rounded-2xl p-5 shadow-lg mb-6">
@@ -230,7 +208,7 @@ export default function ReferralsPage() {
             </div>
           </div>
         </main>
-      </div>
+      </ProviderShell>
     </>
   );
 }

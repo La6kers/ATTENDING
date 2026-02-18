@@ -26,24 +26,17 @@ import {
   ImageIcon,
   Pill,
   FileText,
-  Bell,
-  Settings,
-  LogOut,
-  Calendar,
   TrendingUp,
   Zap,
-  Heart,
-  Sparkles,
-  DollarSign,
 } from 'lucide-react';
-import { signOut } from 'next-auth/react';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 
 // =============================================================================
-// Theme - UPDATED to match login page gradient
+// Theme - Canonical brand gradient matching HTML prototypes
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 };
 
 // =============================================================================
@@ -224,51 +217,9 @@ export default function ProviderDashboard() {
         <title>Provider Dashboard | ATTENDING AI</title>
       </Head>
 
-      <div className="min-h-screen" style={{ background: theme.gradient }}>
-        {/* Header */}
-        <header className="bg-white/10 backdrop-blur-sm border-b border-white/20">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Brain className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">ATTENDING AI</h1>
-                  <p className="text-purple-200 text-sm">Provider Portal</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors relative">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center">
-                    3
-                  </span>
-                </button>
-                <Link href="/settings" className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                  <Settings className="w-5 h-5" />
-                </Link>
-                <div className="flex items-center gap-3 pl-4 border-l border-white/20">
-                  <div className="text-right">
-                    <p className="text-white font-medium text-sm">{userName}</p>
-                    <p className="text-purple-200 text-xs">{session?.user?.role || 'Provider'}</p>
-                  </div>
-                  <button
-                    onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-                    className="p-2 rounded-lg bg-white/10 hover:bg-red-500/50 text-white transition-colors"
-                    title="Sign out"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
+      <ProviderShell contextBadge="Dashboard" currentPage="dashboard">
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-[1440px] mx-auto px-4 lg:px-6 py-8">
           {/* Welcome Message */}
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-white mb-2">Welcome back, {userName.split(' ')[0]}!</h2>
@@ -462,8 +413,8 @@ export default function ProviderDashboard() {
               </div>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </ProviderShell>
     </>
   );
 }

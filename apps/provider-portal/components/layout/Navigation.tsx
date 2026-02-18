@@ -96,7 +96,7 @@ const Navigation = () => {
     { name: 'Imaging', href: '/imaging', icon: FileImage },
     { name: 'Medications', href: '/medications', icon: Pill },
     { name: 'Referrals', href: '/referrals', icon: Users },
-    { name: 'Treatment Plans', href: '/treatment-plans', icon: ClipboardList },
+    { name: 'Treatment Plan', href: '/treatment-plan', icon: ClipboardList },
     { 
       name: 'AI Interventions', 
       href: '/interventions', 

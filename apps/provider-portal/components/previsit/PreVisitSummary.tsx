@@ -11,15 +11,12 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import {
   AlertTriangle,
-  Clock,
   FlaskConical,
   Pill,
   ImageIcon,
   UserPlus,
   Calendar,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   Play,
   AlertCircle,
@@ -30,19 +27,16 @@ import {
   Minus,
   Plus,
   Shield,
-  Brain,
-  Home,
-  Bell,
-  Settings,
 } from 'lucide-react';
 import CollapsibleSection from './CollapsibleSection';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 
 // ============================================================
 // Theme - Matching Dashboard
 // ============================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 };
 
 // ============================================================
@@ -351,113 +345,23 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
   const { patient, vitals, chiefComplaint, riskAssessment } = data;
 
   return (
-    <div className="min-h-screen" style={{ background: theme.gradient }}>
-      {/* Header Bar - Matching Dashboard */}
-      <header className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Left - Back & Logo */}
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => router.back()}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                title="Go Back"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <Link
-                href="/"
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                title="Dashboard"
-              >
-                <Home className="w-5 h-5" />
-              </Link>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Brain className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-white">ATTENDING AI</h1>
-                  <p className="text-xs text-purple-200">Pre-Visit Intelligence</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Center - Time */}
-            <div className="hidden md:flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2 text-purple-200">
-                <Clock className="w-4 h-4" />
-                <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-              <div className="text-purple-300">|</div>
-              <div className="text-white font-medium">
-                Next: {data.appointment.time} Appointment
-              </div>
-            </div>
-
-            {/* Right - Navigation & Actions */}
-            <div className="flex items-center gap-2">
-              <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors relative">
-                <Bell className="w-5 h-5" />
-              </button>
-              <Link href="/settings" className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                <Settings className="w-5 h-5" />
-              </Link>
-              <div className="w-px h-8 bg-white/20 mx-2" />
-              <button
-                onClick={() => onNavigatePatient?.('prev')}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                title="Previous patient"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => onNavigatePatient?.('next')}
-                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                title="Next patient"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Critical Alert Banner */}
-      {data.criticalAlert && (
-        <div 
-          className={`bg-gradient-to-r from-red-600 to-red-700 text-white cursor-pointer transition-all ${
-            isAlertAcknowledged('critical-banner') ? 'opacity-90' : ''
-          }`}
-          onClick={() => acknowledgeAlert('critical-banner')}
-          title={isAlertAcknowledged('critical-banner') ? 'Alert acknowledged' : 'Click to acknowledge'}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0">
-                <AlertTriangle className={`w-6 h-6 ${isAlertAcknowledged('critical-banner') ? '' : 'animate-pulse'}`} />
-              </div>
-              <div className="flex-1">
-                <span className="font-bold">CRITICAL ALERT:</span>{' '}
-                <span>{data.criticalAlert.message}</span>
-                {isAlertAcknowledged('critical-banner') && (
-                  <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded">✓ Acknowledged</span>
-                )}
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEmergencyProtocol?.();
-                }}
-                className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors"
-              >
-                Emergency Protocol
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+    <ProviderShell
+      contextBadge="Pre-Visit Intelligence"
+      currentPage=""
+      patientNav={{
+        onPrev: () => onNavigatePatient?.('prev'),
+        onNext: () => onNavigatePatient?.('next'),
+      }}
+      criticalAlert={
+        data.criticalAlert
+          ? {
+              message: `CRITICAL ALERT: ${data.criticalAlert.message}`,
+              onAction: onEmergencyProtocol,
+              actionLabel: 'Emergency Protocol',
+            }
+          : undefined
+      }
+    >
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Patient Header Card - WHITE */}
@@ -538,7 +442,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
               <QuickActionButton
                 icon={<Calendar className="w-5 h-5" />}
                 label="Schedule Follow-up"
-                href={`/scheduling?patientId=${patientId}`}
+                href={`/schedule?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<BookOpen className="w-5 h-5" />}
@@ -845,7 +749,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
         {/* Bottom Padding for Fixed Footer */}
         <div className="h-24" />
       </div>
-    </div>
+    </ProviderShell>
   );
 };
 

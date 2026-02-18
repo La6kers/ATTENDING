@@ -8,9 +8,9 @@ import type { CategoryType } from './types';
 export const theme = {
   gradient: {
     // ATTENDING AI Standard Brand Gradient - Indigo/Violet
-    primary: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
-    sidebar: 'linear-gradient(180deg, #4c51bf 0%, #6b46c1 50%, #4c51bf 100%)',
-    header: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+    primary: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    sidebar: 'linear-gradient(180deg, #667eea 0%, #764ba2 50%, #667eea 100%)',
+    header: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   },
   purple: {
     50: '#faf5ff',

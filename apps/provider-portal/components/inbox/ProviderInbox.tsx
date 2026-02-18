@@ -9,9 +9,7 @@
 'use client';
 
 import React, { useEffect, useCallback, useState } from 'react';
-import { Search, RefreshCw, Inbox, Filter, SortAsc, AlertTriangle, ArrowLeft, Home } from 'lucide-react';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
+import { Search, RefreshCw, Inbox, Filter, SortAsc, AlertTriangle } from 'lucide-react';
 import { useInboxStore } from './inbox-store';
 import type { InboxItem, Provider, PriorityLevel } from './types';
 import { theme, categoryConfig, getPurpleGradientStyle } from './theme';
@@ -167,7 +165,6 @@ const generateMockItems = (): InboxItem[] => [
 // =============================================================================
 
 export const ProviderInbox: React.FC = () => {
-  const router = useRouter();
   const {
     items, activeCategory, expandedItemId, searchQuery, isLoading, isRefreshing, toast, modalState,
     setItems, setActiveCategory, setExpandedItem, setSearchQuery, setLoading, setRefreshing,
@@ -176,14 +173,6 @@ export const ProviderInbox: React.FC = () => {
 
   const [apiError, setApiError] = useState<string | null>(null);
   const [realAssessmentCount, setRealAssessmentCount] = useState(0);
-
-  const handleBack = () => {
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      router.back();
-    } else {
-      router.push('/');
-    }
-  };
 
   const fetchAssessments = useCallback(async (): Promise<InboxItem[]> => {
     try {
@@ -267,85 +256,60 @@ export const ProviderInbox: React.FC = () => {
   const expandedItem = items.find((item) => item.id === expandedItemId);
 
   return (
-    <div className="flex h-screen" style={getPurpleGradientStyle()}>
+    <div className="flex" style={{ minHeight: 'calc(100vh - 120px)' }}>
       <Sidebar activeCategory={activeCategory} onCategoryChange={setActiveCategory} counts={categoryCounts} />
 
-      <div className="flex-1 flex flex-col overflow-hidden m-3 ml-0">
-        <div className="rounded-t-2xl px-5 py-4 flex items-center justify-between text-white" style={{ ...getPurpleGradientStyle(), boxShadow: theme.shadow.md }}>
-          <div className="flex items-center gap-4">
-            {/* Back Button */}
-            <button
-              onClick={handleBack}
-              className="p-2 rounded-xl transition-all hover:scale-105"
-              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; }}
-              title="Go Back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-
-            {/* Dashboard Link */}
-            <Link
-              href="/"
-              className="p-2 rounded-xl transition-all hover:scale-105"
-              style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.2)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
-              title="Dashboard"
-            >
-              <Home className="w-5 h-5" />
-            </Link>
-
-            <div className="w-1.5 h-10 rounded-full" style={{ background: categoryAccent.accent }} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Category header bar */}
+        <div className="px-5 py-3 flex items-center justify-between bg-white/80 backdrop-blur-sm border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-8 rounded-full" style={{ background: categoryAccent.accent }} />
             <div>
-              <h2 className="font-bold text-xl">{categoryAccent.label}</h2>
-              <p className="text-sm" style={{ color: theme.purple[200] }}>
+              <h2 className="font-bold text-lg text-gray-900">{categoryAccent.label}</h2>
+              <p className="text-xs text-gray-500">
                 {categoryCounts[activeCategory]?.total || 0} items • {categoryCounts[activeCategory]?.unread || 0} unread
-                {categoryCounts[activeCategory]?.urgent > 0 && <span className="ml-2 text-red-300">• {categoryCounts[activeCategory].urgent} urgent</span>}
-                {activeCategory === 'encounters' && realAssessmentCount > 0 && <span className="ml-2 text-green-300">• {realAssessmentCount} COMPASS</span>}
+                {categoryCounts[activeCategory]?.urgent > 0 && <span className="ml-2 text-red-600 font-medium">• {categoryCounts[activeCategory].urgent} urgent</span>}
+                {activeCategory === 'encounters' && realAssessmentCount > 0 && <span className="ml-2 text-green-600 font-medium">• {realAssessmentCount} COMPASS</span>}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {apiError && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5' }} title={apiError}>
-                <AlertTriangle className="w-4 h-4" /><span>API Error</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs bg-red-50 text-red-700 border border-red-200" title={apiError}>
+                <AlertTriangle className="w-3.5 h-3.5" /><span>API Error</span>
               </div>
             )}
 
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: theme.purple[300] }} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search patients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 w-64 rounded-xl text-sm text-white placeholder-purple-300 transition-all"
-                style={{ background: 'rgba(255,255,255,0.15)', border: `1px solid ${theme.purple[400]}50`, outline: 'none' }}
-                onFocus={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.25)')}
-                onBlur={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.15)')}
+                className="pl-9 pr-4 py-2 w-56 rounded-xl text-sm border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all"
               />
             </div>
 
-            <button className="p-2 rounded-xl transition-colors" style={{ color: theme.purple[200] }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'white'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.purple[200]; }} title="Filter"><Filter className="w-5 h-5" /></button>
-            <button className="p-2 rounded-xl transition-colors" style={{ color: theme.purple[200] }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'white'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.purple[200]; }} title="Sort"><SortAsc className="w-5 h-5" /></button>
-            <button onClick={handleRefresh} className="p-2 rounded-xl transition-colors" style={{ color: theme.purple[200] }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'white'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.purple[200]; }} title="Refresh"><RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} /></button>
+            <button className="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors" title="Filter"><Filter className="w-4 h-4" /></button>
+            <button className="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors" title="Sort"><SortAsc className="w-4 h-4" /></button>
+            <button onClick={handleRefresh} className="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors" title="Refresh"><RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /></button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto rounded-b-2xl" style={{ background: theme.purple[100], boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.1)' }}>
+        {/* Message list */}
+        <div className="flex-1 overflow-y-auto bg-gray-50">
           {isLoading ? (
             <div className="p-12 text-center">
-              <RefreshCw className="w-8 h-8 animate-spin mx-auto" style={{ color: theme.purple[600] }} />
-              <p className="mt-3 font-medium" style={{ color: theme.purple[700] }}>Loading inbox...</p>
+              <RefreshCw className="w-8 h-8 animate-spin mx-auto text-purple-500" />
+              <p className="mt-3 font-medium text-gray-600">Loading inbox...</p>
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="p-12 text-center">
-              <Inbox className="w-16 h-16 mx-auto mb-4" style={{ color: theme.purple[300] }} />
-              <p className="font-medium text-lg" style={{ color: theme.purple[700] }}>No items in {categoryAccent.label.toLowerCase()}</p>
-              <p className="text-sm mt-1" style={{ color: theme.purple[500] }}>{searchQuery ? 'Try adjusting your search' : 'New items will appear here'}</p>
+              <Inbox className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <p className="font-medium text-lg text-gray-600">No items in {categoryAccent.label.toLowerCase()}</p>
+              <p className="text-sm mt-1 text-gray-400">{searchQuery ? 'Try adjusting your search' : 'New items will appear here'}</p>
             </div>
           ) : (
             filteredItems.map((item) => (

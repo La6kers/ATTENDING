@@ -1,234 +1,277 @@
 // =============================================================================
-// ATTENDING AI - Provider Inbox Expanded Panel
+// ATTENDING AI - Message Detail View (Redesigned Expanded Panel)
 // apps/provider-portal/components/inbox/ExpandedPanel.tsx
+//
+// Redesigned from cramped resizable sections to a clean, full-width layout:
+//   Zone 1: Patient message prominently displayed with context
+//   Zone 2: AI-generated clinical intelligence
+//   Zone 3: Pre-filled response composer
+//
+// Design principles:
+//   - No scrollbars on the main view
+//   - No blocking text
+//   - AI pre-fills the response based on message category
+//   - Provider can amend before sending
+//
+// Created: February 18, 2026
 // =============================================================================
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import {
-  ChevronDown,
-  ChevronRight,
   Forward,
   UserPlus,
-  ExternalLink,
+  FileText,
   AlertTriangle,
   Activity,
-  ClipboardList,
   Sparkles,
   Check,
-  GripVertical,
-  GripHorizontal,
-  Stethoscope,
-  AlertOctagon,
+  Send,
+  Edit3,
   Phone,
-  FileText,
+  Pill,
+  Heart,
+  FlaskConical,
+  X,
+  Brain,
+  Shield,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  Stethoscope,
+  Copy,
+  RotateCcw,
 } from 'lucide-react';
 import type { InboxItem, ResponseTemplate } from './types';
-import { theme, categoryConfig, getPurpleGradientStyle } from './theme';
+import { categoryConfig } from './theme';
 
-function generateAITemplates(item: InboxItem): ResponseTemplate[] {
-  const templates: ResponseTemplate[] = [];
+// =============================================================================
+// AI Response Generator — Generates intelligent, context-aware draft responses
+// =============================================================================
+
+function generateAIDraft(item: InboxItem): {
+  templates: ResponseTemplate[];
+  primaryDraft: string;
+  aiInsights: string[];
+  suggestedOrders: string[];
+  riskFlags: string[];
+} {
   const firstName = item.patientName.split(' ')[0];
+  const chart = item.chartData;
+  const insights: string[] = [];
+  const suggestedOrders: string[] = [];
+  const riskFlags: string[] = [];
+  const templates: ResponseTemplate[] = [];
+  let primaryDraft = '';
+
+  // Build insights from chart data
+  if (chart.conditions.length > 0) {
+    insights.push(`Active conditions: ${chart.conditions.join(', ')}`);
+  }
+  if (chart.medications.length > 0) {
+    insights.push(`Current medications: ${chart.medications.map(m => `${m.name} ${m.dose}`).join(', ')}`);
+  }
+  if (chart.allergies[0] !== 'NKDA') {
+    riskFlags.push(`Known allergies: ${chart.allergies.join(', ')}`);
+  }
+  if (chart.recentVitals.bp) {
+    const bp = chart.recentVitals.bp;
+    const parts = bp.split('/');
+    if (parts.length === 2 && parseInt(parts[0]) > 140) {
+      riskFlags.push(`Elevated BP on last visit: ${bp}`);
+    }
+  }
 
   switch (item.category) {
-    case 'phone':
+    case 'messages':
+      primaryDraft = `Dear ${firstName},\n\nThank you for reaching out to us. I've reviewed your message regarding ${item.chiefComplaint || item.subject?.replace('⚠️ ', '') || 'your concern'}.\n\n`;
+
+      if (item.symptoms && item.symptoms.length > 0) {
+        primaryDraft += `Based on what you've described, I'd like to address your concerns:\n\n`;
+        if (item.chiefComplaint?.toLowerCase().includes('fatigue') || item.chiefComplaint?.toLowerCase().includes('tired')) {
+          primaryDraft += `Fatigue can have many causes, and I want to make sure we evaluate this thoroughly. I'm ordering some blood work including a complete blood count (CBC), thyroid panel (TSH, Free T4), and a comprehensive metabolic panel to check for common causes.\n\nPlease schedule your lab work at your convenience — fasting is preferred but not required for most of these tests.\n\n`;
+          suggestedOrders.push('CBC with differential', 'TSH + Free T4', 'CMP', 'Vitamin D', 'Iron studies');
+        } else if (item.chiefComplaint?.toLowerCase().includes('lab') || item.chiefComplaint?.toLowerCase().includes('labs')) {
+          primaryDraft += `I'm placing an order for the labs you've requested. You can complete these at any Quest or LabCorp location with the attached order.\n\n`;
+          suggestedOrders.push('HbA1c', 'Lipid panel', 'CMP');
+        } else {
+          primaryDraft += `I'd like to discuss this further during your next visit. In the meantime, please don't hesitate to reach out if your symptoms worsen or you have additional concerns.\n\n`;
+        }
+      } else {
+        primaryDraft += `I'd like to schedule a follow-up to discuss this in more detail. Please contact our office to arrange a convenient time.\n\n`;
+      }
+
+      primaryDraft += `If you experience any worsening symptoms or new concerns before your appointment, please don't hesitate to contact us or visit your nearest urgent care.\n\nBest regards,\nDr. Thomas Reed\nFamily Medicine`;
+
       templates.push({
-        id: 'call',
-        title: '📞 Call Patient',
+        id: 'reply-detailed',
+        title: 'Detailed Reply',
+        category: 'communication',
+        confidence: 0.92,
+        reasoning: 'Comprehensive response addressing patient concerns with next steps',
+        content: primaryDraft,
+      });
+
+      templates.push({
+        id: 'reply-brief',
+        title: 'Brief Acknowledgment',
+        category: 'communication',
+        confidence: 0.85,
+        reasoning: 'Quick acknowledgment with follow-up scheduled',
+        content: `Dear ${firstName},\n\nThank you for your message. I've reviewed your concern and would like to discuss this at your upcoming appointment. If anything changes before then, please contact us.\n\nBest regards,\nDr. Reed`,
+      });
+
+      insights.push(`Last visit: ${chart.lastVisit.date} for ${chart.lastVisit.reason}`);
+      break;
+
+    case 'phone':
+      primaryDraft = `Call ${firstName} at ${item.callbackNumber}\n\nReason: ${item.chiefComplaint || item.subject}\n\nKey points to discuss:\n`;
+      if (item.symptoms) {
+        item.symptoms.forEach(s => { primaryDraft += `• ${s}\n`; });
+      }
+      primaryDraft += `\nChart reviewed prior to callback. ${chart.conditions.length > 0 ? `Active conditions: ${chart.conditions.join(', ')}` : ''}`;
+
+      templates.push({
+        id: 'call-notes',
+        title: '📞 Callback Notes',
         category: 'action',
         confidence: 0.95,
-        reasoning: 'Callback requested - patient awaiting response',
-        content: `Call ${firstName} at ${item.callbackNumber}`,
+        reasoning: 'Pre-generated callback preparation notes',
+        content: primaryDraft,
       });
       break;
-    case 'messages':
-      templates.push({
-        id: 'reply',
-        title: '✉️ Send Reply',
-        category: 'communication',
-        confidence: 0.9,
-        reasoning: 'Patient message requires response',
-        content: `Dear ${firstName},\n\nThank you for reaching out.\n\nBest regards,\nDr. Reed`,
-      });
-      break;
+
     case 'refills':
+      primaryDraft = `Refill approved: ${item.medication}\nSend to: ${item.pharmacy}\n\nPatient is compliant with medication regimen. No contraindications identified.`;
+
+      if (chart.conditions.some(c => c.includes('Diabetes'))) {
+        insights.push('Monitor A1c — consider recheck if >3 months since last');
+      }
+
       templates.push({
         id: 'approve',
         title: '✓ Approve Refill',
         category: 'approval',
         confidence: 0.95,
-        reasoning: 'Patient compliant, no contraindications',
-        content: `Approve ${item.medication} - send to ${item.pharmacy}`,
+        reasoning: `${item.medication} — patient compliant, no interactions detected`,
+        content: primaryDraft,
+      });
+
+      templates.push({
+        id: 'approve-note',
+        title: '✓ Approve + Message Patient',
+        category: 'approval',
+        confidence: 0.88,
+        reasoning: 'Approve with patient notification and next steps',
+        content: `Dear ${firstName},\n\nYour ${item.medication} refill has been approved and sent to ${item.pharmacy}. It should be ready for pickup within 24 hours.\n\nPlease remember to schedule your follow-up appointment for medication management.\n\nBest regards,\nDr. Reed`,
       });
       break;
+
     case 'labs':
+      if (item.labType === 'critical') {
+        riskFlags.push(`CRITICAL LAB VALUE: ${item.subject}`);
+        primaryDraft = `CRITICAL RESULT ACKNOWLEDGED\n\nResult: ${item.subject}\nPatient: ${item.patientName}\n\nAction taken: `;
+        suggestedOrders.push('Repeat stat labs', 'Renal panel');
+      } else {
+        primaryDraft = `Lab results reviewed and filed in chart.\n\nResults: ${item.subject}\n${item.labType === 'abnormal' ? '\nAbnormal values noted — will address at next visit.' : '\nAll values within normal range.'}`;
+      }
+
       templates.push({
-        id: 'review',
-        title: '✓ Results Reviewed',
+        id: 'review-file',
+        title: '✓ Review & File',
         category: 'documentation',
         confidence: 0.92,
-        reasoning: 'Standard lab review protocol',
-        content: 'Lab results reviewed and filed in chart.',
+        reasoning: item.labType === 'critical' ? 'Critical value requires acknowledgment and action' : 'Standard lab review',
+        content: primaryDraft,
+      });
+
+      templates.push({
+        id: 'review-notify',
+        title: '✓ Review & Notify Patient',
+        category: 'communication',
+        confidence: 0.88,
+        reasoning: 'Patient notification of results',
+        content: `Dear ${firstName},\n\nYour recent lab results are available. ${item.labType === 'normal' ? 'Everything looks good — all values are within normal range.' : 'I noticed some values that I\'d like to discuss with you. Please schedule a follow-up appointment at your earliest convenience.'}\n\nBest regards,\nDr. Reed`,
       });
       break;
+
     case 'imaging':
+      primaryDraft = `Imaging reviewed: ${item.imagingType}\nStatus: ${item.imagingStatus}\n\n${item.radiologistNote || 'Report reviewed and filed. Will discuss findings at next visit.'}`;
+
       templates.push({
-        id: 'review',
+        id: 'review-imaging',
         title: '✓ Imaging Reviewed',
         category: 'documentation',
         confidence: 0.9,
-        reasoning: 'Radiology report available',
-        content: 'Imaging reviewed. Will discuss with patient at next visit.',
+        reasoning: `${item.imagingType} results review`,
+        content: primaryDraft,
       });
       break;
+
     case 'charts':
+      primaryDraft = `Reviewed consultation note from ${item.fromProvider}.\n\nRecommendations noted and will be incorporated into the care plan.`;
+
       templates.push({
         id: 'acknowledge',
-        title: '✓ Acknowledge',
+        title: '✓ Acknowledge Note',
         category: 'documentation',
         confidence: 0.9,
-        reasoning: 'Consultant note requires acknowledgment',
-        content: `Reviewed ${item.fromProvider} note. Recommendations noted.`,
+        reasoning: `${item.fromProvider} consultation — review and acknowledge`,
+        content: primaryDraft,
       });
       break;
+
     case 'incomplete':
+      primaryDraft = `Chart reviewed and updated.\n\nMissing elements addressed:\n${(item.missingElements || []).map(e => `✓ ${e}`).join('\n')}`;
+
       templates.push({
-        id: 'sign',
+        id: 'sign-close',
         title: '✓ Sign & Close',
         category: 'completion',
         confidence: 0.95,
-        reasoning: 'Documentation complete, ready for signature',
-        content: 'Chart reviewed and signed.',
+        reasoning: 'All required elements completed',
+        content: primaryDraft,
       });
       break;
+
     case 'encounters':
+      primaryDraft = `Starting visit for ${item.patientName}\n\nChief Complaint: ${item.chiefComplaint}\n\n${item.symptoms ? 'Key findings:\n' + item.symptoms.map(s => `• ${s}`).join('\n') : ''}`;
+
       templates.push({
-        id: 'start',
+        id: 'start-visit',
         title: '▶️ Start Visit',
         category: 'action',
         confidence: 0.95,
-        reasoning: 'Patient ready in room',
-        content: `Starting visit - ${item.roomNumber}`,
+        reasoning: 'Patient ready — pre-visit summary available',
+        content: primaryDraft,
       });
       break;
   }
 
-  return templates;
+  return { templates, primaryDraft, aiInsights: insights, suggestedOrders, riskFlags };
 }
 
-interface ResizableSectionProps {
-  title: string;
-  icon: React.ReactNode;
-  badge?: string | number;
-  isOpen: boolean;
-  onToggle: () => void;
-  height: number;
-  onHeightChange: (height: number) => void;
-  accentColor: string;
-  children: React.ReactNode;
-}
+// =============================================================================
+// Sub-components
+// =============================================================================
 
-const ResizableSection: React.FC<ResizableSectionProps> = ({
-  title,
-  icon,
-  badge,
-  isOpen,
-  onToggle,
-  height,
-  onHeightChange,
-  accentColor,
-  children,
-}) => {
-  const isDragging = useRef(false);
-  const startY = useRef(0);
-  const startHeight = useRef(0);
+const InfoChip: React.FC<{ label: string; color?: string; bg?: string }> = ({
+  label, color = '#6d28d9', bg = '#ede9fe',
+}) => (
+  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium" style={{ color, background: bg }}>
+    {label}
+  </span>
+);
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging.current) return;
-      const newHeight = Math.max(60, Math.min(400, startHeight.current + (e.clientY - startY.current)));
-      onHeightChange(newHeight);
-    };
-
-    const handleMouseUp = () => {
-      isDragging.current = false;
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [onHeightChange]);
-
-  return (
-    <div
-      style={{
-        background: theme.purple[100],
-        borderBottom: `1px solid ${theme.purple[200]}`,
-        borderLeft: `3px solid ${accentColor}`,
-      }}
-    >
-      <button
-        onClick={onToggle}
-        className="w-full px-3 py-2.5 flex items-center justify-between transition-colors"
-        style={{ background: 'transparent' }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = theme.purple[200])}
-        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-      >
-        <div className="flex items-center gap-2">
-          <span style={{ color: isOpen ? theme.purple[700] : theme.purple[400] }}>
-            {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </span>
-          <span style={{ color: theme.purple[700] }}>{icon}</span>
-          <span className="font-semibold text-sm" style={{ color: theme.text.primary }}>
-            {title}
-          </span>
-          {badge !== undefined && (
-            <span
-              className="px-2 py-0.5 text-xs rounded-full font-medium"
-              style={{ background: theme.purple[200], color: theme.purple[700] }}
-            >
-              {badge}
-            </span>
-          )}
-        </div>
-      </button>
-
-      {isOpen && (
-        <>
-          <div
-            className="px-3 pb-3 overflow-y-auto"
-            style={{ height: `${height}px`, background: theme.purple[100] }}
-          >
-            {children}
-          </div>
-
-          <div
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              isDragging.current = true;
-              startY.current = e.clientY;
-              startHeight.current = height;
-              document.body.style.cursor = 'row-resize';
-              document.body.style.userSelect = 'none';
-            }}
-            className="h-2 cursor-row-resize flex items-center justify-center transition-colors"
-            style={{ background: theme.purple[200] }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = theme.purple[300])}
-            onMouseLeave={(e) => (e.currentTarget.style.background = theme.purple[200])}
-          >
-            <GripHorizontal className="w-4 h-4" style={{ color: theme.purple[500] }} />
-          </div>
-        </>
-      )}
-    </div>
-  );
+const ConfidenceBadge: React.FC<{ confidence: number }> = ({ confidence }) => {
+  const pct = Math.round(confidence * 100);
+  const color = pct >= 90 ? '#059669' : pct >= 75 ? '#d97706' : '#9ca3af';
+  return <span className="text-xs font-bold" style={{ color }}>{pct}% match</span>;
 };
+
+// =============================================================================
+// Main Component
+// =============================================================================
 
 interface ExpandedPanelProps {
   item: InboxItem;
@@ -246,540 +289,395 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
   onReassign,
 }) => {
   const router = useRouter();
-  const [openSections, setOpenSections] = useState<Set<string>>(new Set(['symptoms']));
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [response, setResponse] = useState('');
-  const [panelWidth, setPanelWidth] = useState(50);
-  const [totalHeight, setTotalHeight] = useState(400);
-  const [sectionHeights, setSectionHeights] = useState({
-    symptoms: 140,
-    chart: 140,
-    ai: 120,
-  });
-
-  const templates = generateAITemplates(item);
-  const chart = item.chartData;
   const categoryAccent = categoryConfig[item.category];
+  const chart = item.chartData;
 
-  const isDraggingH = useRef(false);
-  const isDraggingTotal = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const startY = useRef(0);
-  const startH = useRef(0);
+  const { templates, primaryDraft, aiInsights, suggestedOrders, riskFlags } = generateAIDraft(item);
+
+  const [response, setResponse] = useState(primaryDraft);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(templates[0]?.id || '');
+  const [isEditing, setIsEditing] = useState(false);
+  const [showAllInsights, setShowAllInsights] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDraggingH.current && containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
-        setPanelWidth(Math.min(70, Math.max(30, newWidth)));
-      }
-      if (isDraggingTotal.current) {
-        const newHeight = startH.current + (e.clientY - startY.current);
-        setTotalHeight(Math.max(250, Math.min(700, newHeight)));
-      }
-    };
+    if (primaryDraft) {
+      setResponse(primaryDraft);
+      setSelectedTemplateId(templates[0]?.id || '');
+      setIsEditing(false);
+    }
+  }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const handleMouseUp = () => {
-      isDraggingH.current = false;
-      isDraggingTotal.current = false;
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
+  const handleTemplateSelect = useCallback((template: ResponseTemplate) => {
+    setResponse(template.content);
+    setSelectedTemplateId(template.id);
+    setIsEditing(false);
   }, []);
 
-  const toggleSection = (section: string) => {
-    setOpenSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(section)) {
-        next.delete(section);
-      } else {
-        next.add(section);
-      }
-      return next;
-    });
-  };
+  const handleReset = useCallback(() => {
+    setResponse(primaryDraft);
+    setSelectedTemplateId(templates[0]?.id || '');
+    setIsEditing(false);
+  }, [primaryDraft, templates]);
 
-  const handleTemplateSelect = (template: ResponseTemplate) => {
-    setResponse(template.content);
-    setSelectedTemplate(template.id);
-  };
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(response);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch { /* noop */ }
+  }, [response]);
 
-  const getSectionTitle = (): string => {
-    switch (item.category) {
-      case 'incomplete':
-        return 'Missing Elements';
-      case 'encounters':
-        return 'Visit Information';
-      default:
-        return 'Presenting Symptoms';
-    }
-  };
+  const handleSend = useCallback(() => {
+    onComplete(response);
+  }, [response, onComplete]);
 
-  const getSectionIcon = (): React.ReactNode => {
-    switch (item.category) {
-      case 'incomplete':
-        return <AlertOctagon className="w-4 h-4" />;
-      case 'encounters':
-        return <Stethoscope className="w-4 h-4" />;
-      default:
-        return <Activity className="w-4 h-4" />;
-    }
-  };
+  const patientMessage = item.content || item.chiefComplaint || item.subject;
+  const messageTimestamp = new Date(item.timestamp).toLocaleString([], {
+    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
 
   return (
     <div
       style={{
         background: 'white',
-        borderBottom: `4px solid ${categoryAccent.accent}`,
-        boxShadow: theme.shadow.lg,
+        borderBottom: `3px solid ${categoryAccent.accent}`,
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
       }}
     >
-      {/* Header */}
+      {/* ─── Top Bar: Patient Identity + Actions ─── */}
       <div
-        className="px-4 py-3 flex items-center justify-between text-white"
-        style={getPurpleGradientStyle()}
+        className="px-6 py-3 flex items-center justify-between"
+        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
       >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-2 h-8 rounded-full"
-            style={{ background: categoryAccent.accent }}
-          />
-
-          <span className="font-semibold text-base">{item.patientName}</span>
-          <span style={{ color: theme.purple[200] }} className="text-sm">
-            {item.patientAge}y • {item.mrn}
-          </span>
-
-          {item.roomNumber && (
-            <span
-              className="px-2 py-1 text-xs rounded font-medium"
-              style={{ background: 'rgba(255,255,255,0.2)' }}
-            >
-              {item.roomNumber}
-            </span>
-          )}
-
-          {item.daysOpen !== undefined && (
-            <span
-              className="px-2 py-1 text-xs rounded font-medium"
-              style={{ background: 'rgba(255,255,255,0.2)' }}
-            >
-              {item.daysOpen}d open
-            </span>
-          )}
-
-          {chart.allergies[0] !== 'NKDA' && (
-            <span
-              className="px-2 py-1 text-xs rounded font-medium flex items-center gap-1"
-              style={{ background: 'rgba(239, 68, 68, 0.5)' }}
-            >
-              <AlertTriangle className="w-3 h-3" />
-              {chart.allergies.join(', ')}
-            </span>
-          )}
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
+            {item.patientName.split(' ').map(n => n[0]).join('')}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-white">{item.patientName}</span>
+              <span className="text-purple-200 text-sm">{item.patientAge}y • {item.mrn}</span>
+              {item.priority === 'urgent' && (
+                <span className="px-2 py-0.5 bg-red-500/80 text-white text-xs font-bold rounded animate-pulse">URGENT</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 text-purple-200 text-xs mt-0.5">
+              {chart.allergies[0] !== 'NKDA' && (
+                <span className="flex items-center gap-1 text-red-300">
+                  <AlertTriangle className="w-3 h-3" /> Allergies: {chart.allergies.join(', ')}
+                </span>
+              )}
+              {chart.conditions.length > 0 && (
+                <span>{chart.conditions.slice(0, 3).join(' • ')}</span>
+              )}
+            </div>
+          </div>
         </div>
-
         <div className="flex items-center gap-2">
           <button
             onClick={() => router.push(`/previsit/${item.patientId || item.id}`)}
-            className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-colors font-semibold"
-            style={{ background: 'rgba(255,255,255,0.9)', color: theme.purple[700] }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'white')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.9)')}
+            className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 font-semibold transition-all hover:scale-105"
+            style={{ background: 'rgba(255,255,255,0.95)', color: '#6d28d9' }}
           >
-            <FileText className="w-3.5 h-3.5" />
-            Open Pre-Visit
+            <FileText className="w-3.5 h-3.5" /> Full Chart
           </button>
-          <button
-            onClick={onForward}
-            className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-colors"
-            style={{ background: 'rgba(255,255,255,0.2)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.3)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
-          >
-            <Forward className="w-3.5 h-3.5" />
-            Forward
+          <button onClick={onForward} className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 text-white/90 hover:bg-white/20 transition-colors" style={{ background: 'rgba(255,255,255,0.15)' }}>
+            <Forward className="w-3.5 h-3.5" /> Forward
           </button>
-          <button
-            onClick={onReassign}
-            className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-colors"
-            style={{ background: 'rgba(255,255,255,0.2)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.3)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.2)')}
-          >
-            <UserPlus className="w-3.5 h-3.5" />
-            Reassign
+          <button onClick={onReassign} className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 text-white/90 hover:bg-white/20 transition-colors" style={{ background: 'rgba(255,255,255,0.15)' }}>
+            <UserPlus className="w-3.5 h-3.5" /> Reassign
           </button>
-          <button
-            className="px-2 py-1.5 transition-colors"
-            style={{ color: theme.purple[200] }}
-            title="Open in new window"
-          >
-            <ExternalLink className="w-4 h-4" />
+          <button onClick={onClose} className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Content Area */}
-      <div ref={containerRef} className="flex" style={{ height: `${totalHeight}px` }}>
-        {/* Left Panel */}
-        <div
-          style={{
-            width: `${panelWidth}%`,
-            borderRight: `1px solid ${theme.purple[200]}`,
-            overflow: 'auto',
-            background: theme.purple[50],
-          }}
-        >
-          {/* Symptoms/Info Section */}
-          <ResizableSection
-            title={getSectionTitle()}
-            icon={getSectionIcon()}
-            badge={item.symptoms?.length || item.missingElements?.length}
-            isOpen={openSections.has('symptoms')}
-            onToggle={() => toggleSection('symptoms')}
-            height={sectionHeights.symptoms}
-            onHeightChange={(h) => setSectionHeights((prev) => ({ ...prev, symptoms: h }))}
-            accentColor={categoryAccent.accent}
+      {/* ─── Risk Flags Banner ─── */}
+      {riskFlags.length > 0 && (
+        <div className="px-6 py-2.5 flex items-center gap-3 text-sm" style={{ background: '#fef2f2', borderBottom: '1px solid #fecaca' }}>
+          <Shield className="w-4 h-4 text-red-500 flex-shrink-0" />
+          <div className="flex flex-wrap gap-2">
+            {riskFlags.map((flag, i) => (
+              <span key={i} className="text-red-700 font-medium text-xs">{flag}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Three-Zone Content Layout ─── */}
+      <div className="flex">
+
+        {/* ═══ ZONE 1: Patient Message (35%) ═══ */}
+        <div className="w-[35%] p-5 border-r" style={{ borderColor: '#ede9fe' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2 h-2 rounded-full" style={{ background: categoryAccent.accent }} />
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: categoryAccent.accentDark }}>
+              {categoryAccent.label}
+            </span>
+            <span className="text-xs text-gray-400 ml-auto">{messageTimestamp}</span>
+          </div>
+
+          {/* Patient Message Card */}
+          <div
+            className="rounded-2xl p-5 mb-4"
+            style={{ background: 'linear-gradient(135deg, #faf5ff 0%, #eef2ff 100%)', border: '1px solid #e0e7ff' }}
           >
-            {item.missingElements && (
-              <ul className="space-y-1.5">
-                {item.missingElements.map((element, index) => (
-                  <li
-                    key={index}
-                    className="text-xs flex items-start gap-2"
-                    style={{ color: theme.text.primary }}
-                  >
-                    <span style={{ color: theme.purple[600] }}>□</span>
-                    {element}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {item.category === 'encounters' && (
-              <div
-                className="grid grid-cols-2 gap-3 text-xs mb-3 p-2.5 rounded-lg"
-                style={{ background: 'white', border: `1px solid ${theme.purple[200]}` }}
-              >
-                <div>
-                  <span style={{ color: theme.text.secondary }}>Room:</span>{' '}
-                  <span className="font-semibold" style={{ color: theme.purple[700] }}>
-                    {item.roomNumber}
-                  </span>
-                </div>
-                <div>
-                  <span style={{ color: theme.text.secondary }}>Wait:</span>{' '}
-                  <span className="font-semibold" style={{ color: theme.purple[700] }}>
-                    {item.waitTime}
-                  </span>
-                </div>
-                <div>
-                  <span style={{ color: theme.text.secondary }}>Type:</span>{' '}
-                  <span className="font-semibold" style={{ color: theme.purple[700] }}>
-                    {item.encounterType}
-                  </span>
-                </div>
-                <div>
-                  <span style={{ color: theme.text.secondary }}>Status:</span>{' '}
-                  <span className="font-semibold" style={{ color: theme.purple[700] }}>
-                    {item.encounterStatus}
-                  </span>
-                </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: categoryAccent.accent }}>
+                {item.patientName.split(' ').map(n => n[0]).join('')}
               </div>
-            )}
-
-            {item.symptoms && (
-              <ul className="space-y-1.5 mt-2">
-                {item.symptoms.map((symptom, index) => (
-                  <li
-                    key={index}
-                    className="text-xs flex items-start gap-2"
-                    style={{ color: theme.text.primary }}
-                  >
-                    <span style={{ color: theme.purple[600] }}>•</span>
-                    {symptom}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {item.callbackNumber && (
-              <div
-                className="mt-3 p-2.5 rounded-lg flex items-center justify-between"
-                style={{ background: 'white', border: `1px solid ${theme.purple[200]}` }}
-              >
-                <span
-                  className="text-sm font-medium flex items-center gap-2"
-                  style={{ color: theme.purple[700] }}
-                >
-                  <Phone className="w-4 h-4" />
-                  {item.callbackNumber}
-                </span>
-                <button
-                  className="px-3 py-1.5 text-white text-xs rounded-lg font-medium"
-                  style={{ background: theme.gradient.primary }}
-                >
-                  Call
-                </button>
-              </div>
-            )}
-
-            {item.content && (
-              <div
-                className="mt-3 p-2.5 rounded-lg text-xs"
-                style={{
-                  background: 'white',
-                  color: theme.text.secondary,
-                  border: `1px solid ${theme.purple[200]}`,
-                }}
-              >
-                {item.content}
-              </div>
-            )}
-          </ResizableSection>
-
-          {/* Chart Summary Section */}
-          <ResizableSection
-            title="Chart Summary"
-            icon={<ClipboardList className="w-4 h-4" />}
-            badge={chart.conditions.length}
-            isOpen={openSections.has('chart')}
-            onToggle={() => toggleSection('chart')}
-            height={sectionHeights.chart}
-            onHeightChange={(h) => setSectionHeights((prev) => ({ ...prev, chart: h }))}
-            accentColor={theme.purple[500]}
-          >
-            <div className="space-y-3">
               <div>
-                <div
-                  className="text-xs font-semibold mb-1.5"
-                  style={{ color: theme.purple[700] }}
-                >
-                  Active Problems
+                <div className="text-sm font-semibold text-gray-900">{item.patientName}</div>
+                <div className="text-xs text-gray-500">{item.subject?.replace('⚠️ ', '')}</div>
+              </div>
+            </div>
+            <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+              {patientMessage}
+            </div>
+            {item.symptoms && item.symptoms.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-indigo-100">
+                <div className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5" /> Reported Symptoms
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {chart.conditions.map((condition, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 text-xs rounded-lg"
-                      style={{
-                        background: theme.purple[100],
-                        color: theme.purple[700],
-                        border: `1px solid ${theme.purple[200]}`,
-                      }}
-                    >
-                      {condition}
-                    </span>
+                  {item.symptoms.map((symptom, i) => (
+                    <InfoChip key={i} label={symptom} />
                   ))}
                 </div>
               </div>
+            )}
+          </div>
 
-              <div>
-                <div
-                  className="text-xs font-semibold mb-1.5"
-                  style={{ color: theme.purple[700] }}
-                >
-                  Current Medications
-                </div>
-                {chart.medications.map((med, index) => (
-                  <div
-                    key={index}
-                    className="text-xs py-0.5"
-                    style={{ color: theme.text.secondary }}
-                  >
-                    {med.name} {med.dose} {med.frequency}
+          {/* Callback Number */}
+          {item.callbackNumber && (
+            <div className="flex items-center gap-3 p-3 rounded-xl mb-4" style={{ background: '#eff6ff', border: '1px solid #bfdbfe' }}>
+              <Phone className="w-5 h-5 text-blue-600" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-blue-900">{item.callbackNumber}</div>
+                <div className="text-xs text-blue-600">Callback requested</div>
+              </div>
+              <button className="px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                Call Now
+              </button>
+            </div>
+          )}
+
+          {/* Missing Elements (for incomplete charts) */}
+          {item.missingElements && item.missingElements.length > 0 && (
+            <div className="p-3 rounded-xl mb-4" style={{ background: '#fff7ed', border: '1px solid #fed7aa' }}>
+              <div className="text-xs font-semibold text-orange-700 mb-2">Missing Elements</div>
+              <div className="space-y-1">
+                {item.missingElements.map((el, i) => (
+                  <div key={i} className="text-xs text-orange-800 flex items-center gap-2">
+                    <span className="text-orange-400">□</span> {el}
                   </div>
                 ))}
               </div>
-
-              <div>
-                <div
-                  className="text-xs font-semibold mb-1.5"
-                  style={{ color: theme.purple[700] }}
-                >
-                  Recent Vitals
-                </div>
-                <div
-                  className="grid grid-cols-4 gap-2 text-xs p-2 rounded-lg"
-                  style={{ background: 'white', border: `1px solid ${theme.purple[200]}` }}
-                >
-                  <span>
-                    BP: <b style={{ color: theme.purple[700] }}>{chart.recentVitals.bp}</b>
-                  </span>
-                  <span>
-                    HR: <b style={{ color: theme.purple[700] }}>{chart.recentVitals.hr}</b>
-                  </span>
-                  <span>
-                    T: <b style={{ color: theme.purple[700] }}>{chart.recentVitals.temp}</b>
-                  </span>
-                  <span>
-                    Wt: <b style={{ color: theme.purple[700] }}>{chart.recentVitals.weight}</b>
-                  </span>
-                </div>
-              </div>
             </div>
-          </ResizableSection>
+          )}
 
-          {/* AI Recommendations Section */}
-          <ResizableSection
-            title="AI Recommendations"
-            icon={<Sparkles className="w-4 h-4" />}
-            badge={templates.length}
-            isOpen={openSections.has('ai')}
-            onToggle={() => toggleSection('ai')}
-            height={sectionHeights.ai}
-            onHeightChange={(h) => setSectionHeights((prev) => ({ ...prev, ai: h }))}
-            accentColor="#8b5cf6"
-          >
-            <div className="space-y-2">
-              {templates.map((template) => (
-                <div
-                  key={template.id}
-                  onClick={() => handleTemplateSelect(template)}
-                  className="p-2.5 rounded-lg cursor-pointer text-xs transition-all"
-                  style={{
-                    background: selectedTemplate === template.id ? theme.purple[100] : 'white',
-                    border:
-                      selectedTemplate === template.id
-                        ? `2px solid ${theme.purple[500]}`
-                        : `1px solid ${theme.purple[200]}`,
-                    boxShadow:
-                      selectedTemplate === template.id
-                        ? `0 0 0 2px ${theme.purple[500]}30`
-                        : 'none',
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold" style={{ color: theme.text.primary }}>
-                      {template.title}
-                    </span>
-                    <span className="font-medium" style={{ color: theme.purple[600] }}>
-                      {Math.round(template.confidence * 100)}%
-                    </span>
-                  </div>
-                  <p className="mt-1" style={{ color: theme.text.secondary }}>
-                    {template.reasoning}
-                  </p>
+          {/* Quick Chart Snapshot */}
+          <div className="space-y-3">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Chart Snapshot</div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: 'BP', value: chart.recentVitals.bp },
+                { label: 'HR', value: chart.recentVitals.hr },
+                { label: 'Temp', value: chart.recentVitals.temp },
+                { label: 'Wt', value: chart.recentVitals.weight },
+              ].map((v, i) => (
+                <div key={i} className="text-center p-2 rounded-lg" style={{ background: '#faf5ff' }}>
+                  <div className="text-xs text-gray-500">{v.label}</div>
+                  <div className="text-sm font-bold text-gray-900">{v.value || '—'}</div>
                 </div>
               ))}
             </div>
-          </ResizableSection>
-        </div>
-
-        {/* Horizontal Resize Handle */}
-        <div
-          onMouseDown={() => {
-            isDraggingH.current = true;
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-          }}
-          className="w-2 cursor-col-resize flex items-center justify-center transition-colors"
-          style={{ background: theme.purple[100] }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = theme.purple[200])}
-          onMouseLeave={(e) => (e.currentTarget.style.background = theme.purple[100])}
-        >
-          <GripVertical className="w-3 h-3" style={{ color: theme.purple[500] }} />
-        </div>
-
-        {/* Right Panel - Response Area */}
-        <div
-          style={{
-            width: `${100 - panelWidth}%`,
-            padding: '16px',
-            display: 'flex',
-            flexDirection: 'column',
-            background: theme.purple[50],
-          }}
-        >
-          <label
-            className="text-sm font-semibold mb-2"
-            style={{ color: theme.purple[700] }}
-          >
-            {item.category === 'incomplete'
-              ? 'Action / Notes'
-              : item.category === 'encounters'
-              ? 'Visit Notes'
-              : 'Response'}
-          </label>
-
-          <textarea
-            value={response}
-            onChange={(e) => setResponse(e.target.value)}
-            className="flex-1 w-full p-3 rounded-xl text-sm resize-none transition-all"
-            style={{
-              border: `2px solid ${theme.purple[200]}`,
-              background: 'white',
-              outline: 'none',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = theme.purple[500];
-              e.currentTarget.style.boxShadow = `0 0 0 3px ${theme.purple[500]}20`;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = theme.purple[200];
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-            placeholder="Select an AI recommendation or type your response..."
-          />
-
-          <div className="flex justify-end gap-3 mt-4">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              style={{ color: theme.text.secondary }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = theme.purple[100])}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-            >
-              Cancel
-            </button>
-
-            <button
-              onClick={() => onComplete(response)}
-              disabled={!response.trim()}
-              className="px-5 py-2 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-all"
-              style={{
-                background: response.trim() ? theme.gradient.primary : '#d1d5db',
-                opacity: response.trim() ? 1 : 0.5,
-                cursor: response.trim() ? 'pointer' : 'not-allowed',
-                boxShadow: response.trim() ? theme.shadow.md : 'none',
-              }}
-            >
-              <Check className="w-4 h-4" />
-              {item.category === 'incomplete'
-                ? 'Sign & Close'
-                : item.category === 'encounters'
-                ? 'Start Visit'
-                : 'Complete'}
-            </button>
+            {chart.medications.length > 0 && (
+              <div>
+                <div className="text-xs font-semibold text-gray-500 mb-1.5 flex items-center gap-1">
+                  <Pill className="w-3 h-3" /> Current Medications
+                </div>
+                <div className="space-y-1">
+                  {chart.medications.slice(0, 4).map((med, i) => (
+                    <div key={i} className="text-xs text-gray-700 py-0.5">
+                      <span className="font-medium">{med.name}</span> {med.dose} {med.frequency}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="text-xs text-gray-500 flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
+              Last visit: {chart.lastVisit.date} — {chart.lastVisit.reason} ({chart.lastVisit.provider})
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Resize Handle */}
-      <div
-        onMouseDown={(e) => {
-          isDraggingTotal.current = true;
-          startY.current = e.clientY;
-          startH.current = totalHeight;
-          document.body.style.cursor = 'row-resize';
-          document.body.style.userSelect = 'none';
-        }}
-        className="h-2 cursor-row-resize flex items-center justify-center transition-colors"
-        style={{ background: theme.purple[200] }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = theme.purple[300])}
-        onMouseLeave={(e) => (e.currentTarget.style.background = theme.purple[200])}
-      >
-        <GripHorizontal className="w-4 h-4" style={{ color: theme.purple[500] }} />
+        {/* ═══ ZONE 2: AI Intelligence (25%) ═══ */}
+        <div className="w-[25%] p-5 border-r" style={{ borderColor: '#ede9fe', background: '#faf5ff' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+              <Brain className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-bold text-gray-900">AI Intelligence</span>
+          </div>
+
+          {/* Suggested Responses */}
+          <div className="space-y-2 mb-5">
+            <div className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-2">
+              Suggested Responses
+            </div>
+            {templates.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => handleTemplateSelect(template)}
+                className="w-full text-left p-3 rounded-xl transition-all hover:scale-[1.01]"
+                style={{
+                  background: selectedTemplateId === template.id ? '#ede9fe' : 'white',
+                  border: selectedTemplateId === template.id ? '2px solid #8b5cf6' : '1px solid #e5e7eb',
+                  boxShadow: selectedTemplateId === template.id ? '0 0 0 3px rgba(139, 92, 246, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+                }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-semibold text-gray-900">{template.title}</span>
+                  <ConfidenceBadge confidence={template.confidence} />
+                </div>
+                <p className="text-xs text-gray-500 leading-relaxed">{template.reasoning}</p>
+                {selectedTemplateId === template.id && (
+                  <div className="mt-2 flex items-center gap-1 text-xs text-purple-600 font-medium">
+                    <Check className="w-3 h-3" /> Applied to response
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Suggested Orders */}
+          {suggestedOrders.length > 0 && (
+            <div className="mb-5">
+              <div className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-2">Suggested Orders</div>
+              <div className="space-y-1.5">
+                {suggestedOrders.map((order, i) => (
+                  <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-white border border-gray-100">
+                    <FlaskConical className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="text-xs font-medium text-gray-800">{order}</span>
+                    <button className="ml-auto text-xs text-purple-600 font-semibold hover:text-purple-800">+ Order</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Clinical Context */}
+          {aiInsights.length > 0 && (
+            <div>
+              <div className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-2">Clinical Context</div>
+              <div className="space-y-2">
+                {(showAllInsights ? aiInsights : aiInsights.slice(0, 3)).map((insight, i) => (
+                  <div key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                    <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <span>{insight}</span>
+                  </div>
+                ))}
+                {aiInsights.length > 3 && (
+                  <button onClick={() => setShowAllInsights(!showAllInsights)} className="flex items-center gap-1 text-xs text-purple-600 font-medium hover:text-purple-800">
+                    {showAllInsights ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    {showAllInsights ? 'Show less' : `+${aiInsights.length - 3} more`}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ═══ ZONE 3: Response Composer (40%) ═══ */}
+        <div className="w-[40%] p-5 flex flex-col" style={{ background: 'white' }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Edit3 className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-bold text-gray-900">
+                {item.category === 'messages' ? 'Reply to Patient' :
+                 item.category === 'phone' ? 'Call Notes' :
+                 item.category === 'refills' ? 'Refill Decision' :
+                 item.category === 'incomplete' ? 'Complete Chart' :
+                 'Response'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button onClick={handleReset} className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Reset to AI draft">
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <button onClick={handleCopy} className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Copy to clipboard">
+                {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* AI Draft Label */}
+          {!isEditing && (
+            <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg" style={{ background: '#f5f3ff' }}>
+              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              <span className="text-xs text-purple-700 font-medium">AI-generated draft — click to edit before sending</span>
+            </div>
+          )}
+
+          {/* Response Textarea */}
+          <div className="flex-1 relative">
+            <textarea
+              value={response}
+              onChange={(e) => { setResponse(e.target.value); setIsEditing(true); }}
+              onFocus={() => setIsEditing(true)}
+              className="w-full h-full min-h-[220px] p-4 rounded-2xl text-sm leading-relaxed resize-none transition-all"
+              style={{
+                border: isEditing ? '2px solid #8b5cf6' : '2px solid #e5e7eb',
+                background: isEditing ? 'white' : '#fafafa',
+                boxShadow: isEditing ? '0 0 0 3px rgba(139, 92, 246, 0.08)' : 'none',
+                outline: 'none',
+                color: '#1f2937',
+              }}
+              placeholder="Your response will appear here..."
+            />
+          </div>
+
+          {/* Amendment Notice */}
+          {isEditing && response !== primaryDraft && (
+            <div className="flex items-center gap-2 mt-2 px-3 py-1.5 rounded-lg" style={{ background: '#fffbeb', border: '1px solid #fde68a' }}>
+              <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-xs text-amber-700 font-medium">Modified from AI draft — your edits will be preserved</span>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl font-medium transition-colors">
+              Cancel
+            </button>
+            <div className="flex items-center gap-2">
+              {item.category === 'messages' && (
+                <button className="px-4 py-2.5 text-sm text-purple-600 border border-purple-200 hover:bg-purple-50 rounded-xl font-medium transition-colors flex items-center gap-2">
+                  <Stethoscope className="w-4 h-4" /> Schedule Visit
+                </button>
+              )}
+              <button
+                onClick={handleSend}
+                disabled={!response.trim()}
+                className="px-6 py-2.5 text-sm text-white rounded-xl font-semibold flex items-center gap-2 transition-all hover:shadow-lg hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
+                style={{
+                  background: response.trim() ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#d1d5db',
+                }}
+              >
+                {item.category === 'messages' ? <Send className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                {item.category === 'messages' ? 'Send Reply' :
+                 item.category === 'refills' ? 'Approve & Send' :
+                 item.category === 'incomplete' ? 'Sign & Close' :
+                 item.category === 'encounters' ? 'Start Visit' :
+                 'Complete'}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

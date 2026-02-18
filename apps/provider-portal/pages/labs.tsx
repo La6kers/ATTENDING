@@ -9,9 +9,10 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import {
   TestTube, Brain, Package, Search, Filter, AlertTriangle,
-  CheckCircle, ArrowLeft, Home, RefreshCw, X
+  CheckCircle, RefreshCw, X
 } from 'lucide-react';
 import { QuickActionsBar, PatientBanner, SimpleCriticalAlert, useToast } from '../components/shared';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import {
   LabCatalogBrowser,
   AIRecommendationsPanel,
@@ -25,7 +26,7 @@ import {
 } from '../store/labOrderingStore';
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 };
 
 const DEMO_PATIENT = {
@@ -106,63 +107,20 @@ export default function Labs() {
         <title>Lab Orders | ATTENDING AI</title>
       </Head>
 
-      <div className="min-h-screen" style={{ background: theme.gradient }}>
-        {/* Header */}
-        <header className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button onClick={() => router.back()} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-                <Link href="/" className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors">
-                  <Home className="w-5 h-5" />
-                </Link>
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                  <TestTube className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">Lab Orders</h1>
-                  <p className="text-purple-200 text-sm">
-                    {viewMode === 'order' ? `Ordering for ${patientContext?.name || 'Select Patient'}` : 'View results'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 text-sm text-purple-200 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showCosts}
-                    onChange={(e) => setShowCosts(e.target.checked)}
-                    className="rounded text-purple-600"
-                  />
-                  Show Costs
-                </label>
-
-                <div className="flex bg-white/10 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('order')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      viewMode === 'order' ? 'bg-white text-purple-700' : 'text-white hover:bg-white/10'
-                    }`}
-                  >
-                    Order Labs
-                  </button>
-                  <button
-                    onClick={() => setViewMode('results')}
-                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                      viewMode === 'results' ? 'bg-white text-purple-700' : 'text-white hover:bg-white/10'
-                    }`}
-                  >
-                    View Results
-                  </button>
-                </div>
-              </div>
+      <ProviderShell contextBadge="Lab Orders" currentPage="labs"
+        headerRight={
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={showCosts} onChange={(e) => setShowCosts(e.target.checked)} className="rounded text-purple-600" />
+              Show Costs
+            </label>
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button onClick={() => setViewMode('order')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'order' ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>Order Labs</button>
+              <button onClick={() => setViewMode('results')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'results' ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>View Results</button>
             </div>
           </div>
-        </header>
-
+        }
+      >
         <main className="max-w-7xl mx-auto px-6 py-6">
           {/* Critical Alert - Click to dismiss */}
           {patientContext?.redFlags && patientContext.redFlags.length > 0 && !alertDismissed && (
@@ -292,7 +250,7 @@ export default function Labs() {
             <LabResultsView />
           )}
         </main>
-      </div>
+      </ProviderShell>
     </>
   );
 }
