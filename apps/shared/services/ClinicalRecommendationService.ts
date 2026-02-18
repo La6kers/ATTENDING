@@ -7,6 +7,7 @@
 // ============================================================
 
 import type { 
+  OrderingContext,
   PatientContext, 
   AIRecommendation, 
   OrderPriority,
@@ -288,9 +289,12 @@ function enhanceForRedFlags(
 
 export class ClinicalRecommendationService {
   /**
-   * Generate comprehensive clinical recommendations
+   * Generate comprehensive clinical recommendations.
+   * Synchronous rule-based engine — no network calls.
+   * For AI-enhanced recommendations, use generateAIRecommendations() which
+   * calls this first for instant results, then optionally enhances via API.
    */
-  async generateRecommendations(patient: PatientContext): Promise<RecommendationResult> {
+  generateRecommendations(patient: OrderingContext): RecommendationResult {
     const complaint = patient.chiefComplaint.toLowerCase();
     const labs: LabRecommendation[] = [];
     const imaging: ImagingRecommendation[] = [];
@@ -441,27 +445,61 @@ export class ClinicalRecommendationService {
   }
 
   /**
-   * Generate only lab recommendations
+   * Generate only lab recommendations (synchronous).
    */
-  async generateLabRecommendations(patient: PatientContext): Promise<LabRecommendation[]> {
-    const result = await this.generateRecommendations(patient);
-    return result.labs;
+  generateLabRecommendations(patient: OrderingContext): LabRecommendation[] {
+    return this.generateRecommendations(patient).labs;
   }
 
   /**
-   * Generate only imaging recommendations
+   * Generate only imaging recommendations (synchronous).
    */
-  async generateImagingRecommendations(patient: PatientContext): Promise<ImagingRecommendation[]> {
-    const result = await this.generateRecommendations(patient);
-    return result.imaging;
+  generateImagingRecommendations(patient: OrderingContext): ImagingRecommendation[] {
+    return this.generateRecommendations(patient).imaging;
   }
 
   /**
-   * Generate only medication recommendations
+   * Generate only medication recommendations (synchronous).
    */
-  async generateMedicationRecommendations(patient: PatientContext): Promise<MedicationRecommendation[]> {
-    const result = await this.generateRecommendations(patient);
-    return result.medications;
+  generateMedicationRecommendations(patient: OrderingContext): MedicationRecommendation[] {
+    return this.generateRecommendations(patient).medications;
+  }
+
+  /**
+   * Async wrapper that returns rule-based results instantly,
+   * then optionally enhances via BioMistral API if available.
+   * Callers get immediate results; AI enhancement is best-effort.
+   */
+  async generateAIRecommendations(
+    patient: OrderingContext,
+    apiEndpoint?: string
+  ): Promise<RecommendationResult> {
+    // Start with synchronous rule-based results
+    const ruleBasedResult = this.generateRecommendations(patient);
+
+    // If no API endpoint, return rule-based results
+    if (!apiEndpoint) return ruleBasedResult;
+
+    try {
+      const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patient }),
+      });
+      if (!response.ok) return ruleBasedResult;
+      const aiResult = await response.json();
+      // Merge AI results with rule-based (AI can add new items or adjust confidence)
+      // For now, prefer AI results if available, fallback to rule-based
+      return {
+        labs: aiResult.labs?.length ? aiResult.labs : ruleBasedResult.labs,
+        imaging: aiResult.imaging?.length ? aiResult.imaging : ruleBasedResult.imaging,
+        medications: aiResult.medications?.length ? aiResult.medications : ruleBasedResult.medications,
+        summary: aiResult.summary || ruleBasedResult.summary,
+      };
+    } catch {
+      // AI unavailable — rule-based results are the fallback
+      return ruleBasedResult;
+    }
   }
 }
 

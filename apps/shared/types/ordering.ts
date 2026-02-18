@@ -2,66 +2,33 @@
 // Unified Clinical Ordering Types
 // apps/shared/types/ordering.ts
 //
-// Single source of truth for all ordering-related types
-// Eliminates duplication across store files
+// REFACTORED: Imports canonical types from clinical.types.ts
+// instead of redefining them. Only adds ordering-specific types
+// (catalog items, selected items, store factory config).
 // ============================================================
 
 // =============================================================================
-// Priority Types - Unified across all modules
+// Re-export canonical types (single source of truth: clinical.types.ts)
 // =============================================================================
 
-export type OrderPriority = 'STAT' | 'URGENT' | 'ASAP' | 'ROUTINE';
+export type {
+  OrderingContext,
+  PatientContext,
+  AllergyInfo,
+  OrderPriority,
+  RecommendationCategory,
+} from './clinical.types';
 
-export const PRIORITY_CONFIG: Record<OrderPriority, {
-  label: string;
-  color: string;
-  bgColor: string;
-  sortOrder: number;
-}> = {
-  STAT: { label: 'STAT', color: 'text-red-700', bgColor: 'bg-red-100', sortOrder: 0 },
-  URGENT: { label: 'Urgent', color: 'text-orange-700', bgColor: 'bg-orange-100', sortOrder: 1 },
-  ASAP: { label: 'ASAP', color: 'text-yellow-700', bgColor: 'bg-yellow-100', sortOrder: 2 },
-  ROUTINE: { label: 'Routine', color: 'text-gray-700', bgColor: 'bg-gray-100', sortOrder: 3 },
-};
-
-// =============================================================================
-// Patient Context - Shared across ALL ordering modules
-// =============================================================================
-
-export interface AllergyInfo {
-  allergen: string;
-  reaction?: string;
-  severity?: 'mild' | 'moderate' | 'severe';
-  type?: 'drug' | 'food' | 'environmental' | 'contrast' | 'other';
-  crossReactivity?: string[];
-}
-
-export interface PatientContext {
-  id: string;
-  mrn: string;
-  name: string;
-  age: number;
-  gender: 'male' | 'female' | 'other' | string;
-  weight?: number;
-  height?: number;
-  chiefComplaint: string;
-  redFlags: string[];
-  allergies: AllergyInfo[] | string[];
-  currentMedications: string[];
-  medicalHistory: string[];
-  renalFunction?: { creatinine: number; gfr: number };
-  hepaticFunction?: { alt: number; ast: number };
-  pregnant?: boolean;
-  breastfeeding?: boolean;
-  insurancePlan?: string;
-}
+export {
+  PRIORITY_CONFIG,
+  RECOMMENDATION_CATEGORY_CONFIGS,
+} from './clinical.types';
 
 // =============================================================================
-// AI Recommendation Types
+// AI Recommendation Base Type
 // =============================================================================
 
-export type RecommendationCategory = 
-  | 'critical' | 'recommended' | 'consider' | 'not-indicated' | 'avoid';
+import type { OrderPriority, RecommendationCategory } from './clinical.types';
 
 export interface BaseAIRecommendation {
   id: string;
@@ -86,7 +53,7 @@ export interface BaseCatalogItem {
   description: string;
   category: string;
   defaultPriority: OrderPriority;
-  cost: number | { generic: number; brand: number }; // Allow both formats
+  cost: number | { generic: number; brand: number };
 }
 
 export interface BaseSelectedItem<T extends BaseCatalogItem = BaseCatalogItem> {
@@ -100,8 +67,8 @@ export interface BaseSelectedItem<T extends BaseCatalogItem = BaseCatalogItem> {
 // Lab Types
 // =============================================================================
 
-export type LabCategory = 
-  | 'hematology' | 'chemistry' | 'endocrine' | 'coagulation' 
+export type LabCategory =
+  | 'hematology' | 'chemistry' | 'endocrine' | 'coagulation'
   | 'microbiology' | 'urinalysis' | 'immunology' | 'toxicology' | 'other';
 
 export interface LabTest extends BaseCatalogItem {
@@ -166,15 +133,15 @@ export interface AIImagingRecommendation extends BaseAIRecommendation {
 // =============================================================================
 
 export type DrugSchedule = 'OTC' | 'RX' | 'II' | 'III' | 'IV' | 'V';
-export type DosageForm = 
-  | 'tablet' | 'capsule' | 'liquid' | 'injection' 
+export type DosageForm =
+  | 'tablet' | 'capsule' | 'liquid' | 'injection'
   | 'topical' | 'inhaler' | 'patch' | 'suppository' | 'drops' | 'spray';
 
-export type DrugCategory = 
-  | 'analgesic' | 'antibiotic' | 'antihypertensive' | 'antidiabetic' 
-  | 'anticoagulant' | 'antidepressant' | 'anxiolytic' | 'anticonvulsant' 
-  | 'antihistamine' | 'antacid' | 'bronchodilator' | 'corticosteroid' 
-  | 'diuretic' | 'lipid-lowering' | 'migraine' | 'muscle-relaxant' 
+export type DrugCategory =
+  | 'analgesic' | 'antibiotic' | 'antihypertensive' | 'antidiabetic'
+  | 'anticoagulant' | 'antidepressant' | 'anxiolytic' | 'anticonvulsant'
+  | 'antihistamine' | 'antacid' | 'bronchodilator' | 'corticosteroid'
+  | 'diuretic' | 'lipid-lowering' | 'migraine' | 'muscle-relaxant'
   | 'nsaid' | 'opioid' | 'proton-pump-inhibitor' | 'thyroid' | 'vitamin' | 'other';
 
 export interface Medication extends BaseCatalogItem {
@@ -234,7 +201,7 @@ export interface DrugInteraction {
 // Referral Types
 // =============================================================================
 
-export type ReferralSpecialty = 
+export type ReferralSpecialty =
   | 'cardiology' | 'neurology' | 'orthopedics' | 'gastroenterology'
   | 'pulmonology' | 'endocrinology' | 'rheumatology' | 'oncology'
   | 'nephrology' | 'dermatology' | 'psychiatry' | 'physical-therapy'
@@ -322,6 +289,8 @@ export interface TreatmentPlan {
 // Store Factory Types
 // =============================================================================
 
+import type { OrderingContext as OC } from './clinical.types';
+
 export interface ClinicalStoreConfig<
   TItem extends BaseCatalogItem,
   TSelectedItem extends BaseSelectedItem<TItem>,
@@ -332,8 +301,8 @@ export interface ClinicalStoreConfig<
   name: string;
   catalog: Record<string, TItem>;
   apiEndpoint: string;
-  generateRecommendations: (context: PatientContext) => Promise<TRecommendation[]>;
+  generateRecommendations: (context: OC) => Promise<TRecommendation[]>;
   createSelectedItem: (item: TItem, options?: Partial<Omit<TSelectedItem, 'item'>>) => TSelectedItem;
-  transformForSubmit: (selectedItem: TSelectedItem, context: PatientContext | null) => Record<string, unknown>;
+  transformForSubmit: (selectedItem: TSelectedItem, context: OC | null) => Record<string, unknown>;
   getItemSearchFields: (item: TItem) => string[];
 }

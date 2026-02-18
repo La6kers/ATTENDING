@@ -185,6 +185,9 @@ export interface PatientContextState {
   // For API calls (formatted context)
   getPatientContext: () => PatientContextForAI;
   
+  // Bridge to ordering stores (OrderingContext format)
+  toOrderingContext: () => import('@attending/shared/catalogs').OrderingContext | null;
+  
   // Reset
   reset: () => void;
 }
@@ -572,6 +575,41 @@ export const usePatientContextStore = create<PatientContextState>()(
         },
         
         // =====================================================================
+        // Bridge: toOrderingContext()
+        // Converts rich store state → flat OrderingContext for ordering stores
+        // =====================================================================
+        
+        toOrderingContext: () => {
+          const state = get();
+          const d = state.demographics;
+          if (!d) return null;
+          
+          return {
+            id: d.id,
+            mrn: d.mrn,
+            name: `${d.firstName} ${d.lastName}`,
+            age: d.age,
+            gender: d.gender,
+            weight: state.vitals?.weight,
+            height: state.vitals?.height,
+            chiefComplaint: state.encounter?.chiefComplaint || '',
+            redFlags: state.clinical?.redFlags || [],
+            allergies: state.allergies.map(a => ({
+              allergen: a.allergen,
+              reaction: a.reaction,
+              severity: a.severity === 'life-threatening' ? 'severe' as const : a.severity as 'mild' | 'moderate' | 'severe',
+              type: a.type as 'drug' | 'food' | 'environmental' | 'other',
+            })),
+            currentMedications: state.getActiveMedications().map(m => m.name),
+            medicalHistory: state.conditions
+              .filter(c => c.status === 'active')
+              .map(c => c.name),
+            pregnant: d.pregnancyStatus === 'pregnant',
+            insurancePlan: state.insurance?.insuranceName,
+          };
+        },
+        
+        // =====================================================================
         // Reset
         // =====================================================================
         
@@ -629,5 +667,6 @@ export function usePatientContext() {
     isPregnant: state.isPregnant,
     needsPregnancyTest: state.needsPregnancyTest,
     getPatientContext: state.getPatientContext,
+    toOrderingContext: state.toOrderingContext,
   }));
 }

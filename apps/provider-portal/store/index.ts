@@ -49,7 +49,6 @@ export {
   type ReferralRecommendation,
   type ReferralUrgency,
   type SelectedReferral,
-  type PatientContext as ReferralPatientContext,
 } from './referralOrderingStore';
 
 // =============================================================================
@@ -88,10 +87,10 @@ export {
   useClinicalHub,
 } from './useClinicalHub';
 
-// Inbox
+// Inbox (canonical store lives in components/inbox)
 export { 
-  useInbox,
-} from './useInbox';
+  useInboxStore,
+} from '../components/inbox/inbox-store';
 
 // =============================================================================
 // Provider State
@@ -105,4 +104,10 @@ export {
 // Shared Types
 // =============================================================================
 
-export type { OrderPriority, PatientContext } from '@attending/shared/catalogs';
+export type { OrderPriority, OrderingContext, PatientContext } from '@attending/shared/catalogs';
+
+// Patient Context Store (rich store + toOrderingContext bridge)
+export { 
+  usePatientContextStore,
+  usePatientContext,
+} from './patientContextStore';

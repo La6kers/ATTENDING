@@ -1,16 +1,18 @@
 // ============================================================
-// Medication Ordering Store
+// Medication Ordering Store — REFACTORED
 // apps/provider-portal/store/medicationOrderingStore.ts
 //
-// Uses shared catalogs and recommendation service
-// Streamlined from ~1100 lines to ~350 lines
+// CHANGES:
+//   • Map → Record (JSON-serializable)
+//   • ClinicalRecommendationService is now synchronous
+//   • Removed type aliases (PrescriptionPriority, AIMedicationRecommendation)
+//   • Uses OrderingContext (with PatientContext backward compat)
 // ============================================================
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-// Import from shared catalogs
 import {
   MEDICATION_CATALOG,
   DRUG_INTERACTIONS,
@@ -23,26 +25,24 @@ import {
   type DosageForm,
   type DrugSchedule,
   type OrderPriority,
+  type OrderingContext,
   type PatientContext,
 } from '@attending/shared/catalogs';
 
-import { 
+import {
   clinicalRecommendationService,
-  type MedicationRecommendation 
+  type MedicationRecommendation,
 } from '@attending/shared/services/ClinicalRecommendationService';
 
 // =============================================================================
-// Re-export types for backward compatibility
+// Re-exports
 // =============================================================================
-export type { Medication, DrugInteraction, DrugCategory, DosageForm, DrugSchedule, OrderPriority, PatientContext };
-export type PrescriptionPriority = OrderPriority;
-export type AIMedicationRecommendation = MedicationRecommendation; // Alias for component imports
+export type { Medication, DrugInteraction, DrugCategory, DosageForm, DrugSchedule, OrderPriority, OrderingContext, PatientContext };
 export type { MedicationRecommendation };
-
 export { MEDICATION_CATALOG, DRUG_INTERACTIONS };
 
 // =============================================================================
-// Store-specific Types
+// Types
 // =============================================================================
 
 export interface SelectedMedication {
@@ -85,14 +85,14 @@ export interface AllergyAlert {
 }
 
 // =============================================================================
-// Store State Interface
+// Store Interface
 // =============================================================================
 
 interface MedicationOrderingState {
-  patientContext: PatientContext | null;
-  selectedMedications: Map<string, SelectedMedication>;
+  patientContext: OrderingContext | null;
+  selectedMedications: Record<string, SelectedMedication>;  // ← was Map
   aiRecommendations: MedicationRecommendation[];
-  isLoadingRecommendations: boolean;
+  loadingRecommendations: boolean;
   detectedInteractions: DrugInteraction[];
   allergyAlerts: AllergyAlert[];
   searchQuery: string;
@@ -102,22 +102,23 @@ interface MedicationOrderingState {
   submitting: boolean;
   error: string | null;
   lastSubmittedRxIds: string[];
-  
+
   // Actions
-  setPatientContext: (context: PatientContext) => void;
+  setPatientContext: (context: OrderingContext) => void;
   addMedication: (medId: string, options?: Partial<Omit<SelectedMedication, 'medication'>>) => void;
   removeMedication: (medId: string) => void;
   updateMedication: (medId: string, updates: Partial<SelectedMedication>) => void;
   setSearchQuery: (query: string) => void;
   setCategoryFilter: (category: DrugCategory | 'all') => void;
+  resetFilters: () => void;
   setPreferredPharmacy: (pharmacy: PharmacyInfo) => void;
-  generateAIRecommendations: () => Promise<void>;
+  generateAIRecommendations: () => void;
   addAIRecommendedMedication: (medId: string, priority: OrderPriority, rationale: string) => void;
   checkInteractions: () => void;
   checkAllergies: (medId: string) => void;
   submitPrescriptions: (encounterId: string) => Promise<string[]>;
   clearOrder: () => void;
-  
+
   // Computed
   getSelectedMedicationsArray: () => SelectedMedication[];
   getFilteredCatalog: () => Medication[];
@@ -127,20 +128,20 @@ interface MedicationOrderingState {
 }
 
 // =============================================================================
-// Store Implementation
+// Store
 // =============================================================================
 
 export const useMedicationOrderingStore = create<MedicationOrderingState>()(
   devtools(
     immer((set, get) => ({
       patientContext: null,
-      selectedMedications: new Map(),
+      selectedMedications: {} as Record<string, SelectedMedication>,
       aiRecommendations: [],
-      isLoadingRecommendations: false,
+      loadingRecommendations: false,
       detectedInteractions: [],
       allergyAlerts: [],
       searchQuery: '',
-      categoryFilter: 'all',
+      categoryFilter: 'all' as DrugCategory | 'all',
       preferredPharmacy: null,
       loading: false,
       submitting: false,
@@ -159,11 +160,11 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
           return;
         }
 
-        // Check allergies first
+        // Safety: check allergies before adding
         get().checkAllergies(medId);
 
         set(state => {
-          state.selectedMedications.set(medId, {
+          state.selectedMedications[medId] = {
             medication: med,
             strength: options.strength || med.defaultStrength,
             form: options.form || med.defaultForm,
@@ -175,17 +176,16 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
             priority: options.priority || 'ROUTINE',
             dispenseAsWritten: options.dispenseAsWritten || false,
             aiRecommended: options.aiRecommended || false,
-            rationale: options.rationale
-          });
+            rationale: options.rationale,
+          };
         });
 
-        // Check interactions after adding
         get().checkInteractions();
       },
 
       removeMedication: (medId) => {
         set(state => {
-          state.selectedMedications.delete(medId);
+          delete state.selectedMedications[medId];
           state.allergyAlerts = state.allergyAlerts.filter(a => a.medication !== medId);
         });
         get().checkInteractions();
@@ -193,49 +193,39 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
 
       updateMedication: (medId, updates) => {
         set(state => {
-          const existing = state.selectedMedications.get(medId);
-          if (existing) {
-            state.selectedMedications.set(medId, { ...existing, ...updates });
+          if (state.selectedMedications[medId]) {
+            state.selectedMedications[medId] = { ...state.selectedMedications[medId], ...updates };
           }
         });
       },
 
       setSearchQuery: (query) => set({ searchQuery: query }),
       setCategoryFilter: (category) => set({ categoryFilter: category }),
+      resetFilters: () => set(state => { state.searchQuery = ''; state.categoryFilter = 'all'; }),
       setPreferredPharmacy: (pharmacy) => set({ preferredPharmacy: pharmacy }),
 
-      // AI Recommendations - Uses shared ClinicalRecommendationService
-      generateAIRecommendations: async () => {
+      // Synchronous rule-based recommendations
+      generateAIRecommendations: () => {
         const { patientContext } = get();
         if (!patientContext) return;
-
-        set({ isLoadingRecommendations: true });
-
-        try {
-          const recommendations = await clinicalRecommendationService.generateMedicationRecommendations(patientContext);
-          set({ aiRecommendations: recommendations, isLoadingRecommendations: false });
-        } catch (error) {
-          console.error('Failed to generate medication recommendations:', error);
-          set({ isLoadingRecommendations: false, error: 'Failed to generate recommendations' });
-        }
+        set({ loadingRecommendations: true });
+        const recommendations = clinicalRecommendationService.generateMedicationRecommendations(patientContext);
+        set({ aiRecommendations: recommendations, loadingRecommendations: false });
       },
 
       addAIRecommendedMedication: (medId, priority, rationale) => {
         get().addMedication(medId, { priority, rationale, aiRecommended: true });
       },
 
-      // Uses shared checkDrugInteractions from catalogs
       checkInteractions: () => {
         const { selectedMedications, patientContext } = get();
-        const selectedIds = Array.from(selectedMedications.keys());
+        const selectedIds = Object.keys(selectedMedications);
         const allMeds = [...selectedIds, ...(patientContext?.currentMedications || [])];
-        
-        const detected = checkDrugInteractions(allMeds);
-        set({ detectedInteractions: detected });
+        set({ detectedInteractions: checkDrugInteractions(allMeds) });
       },
 
       checkAllergies: (medId) => {
-        const { patientContext, allergyAlerts } = get();
+        const { patientContext } = get();
         if (!patientContext) return;
 
         const med = getMedication(medId);
@@ -244,92 +234,74 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
         const newAlerts: AllergyAlert[] = [];
 
         for (const allergy of patientContext.allergies || []) {
-          // Normalize allergy to extract allergen name and build DrugAllergy object
           const allergenName = typeof allergy === 'string' ? allergy : allergy.allergen;
-          const allergyObj: DrugAllergy = typeof allergy === 'string' 
+          const allergyObj: DrugAllergy = typeof allergy === 'string'
             ? { allergen: allergy, reaction: 'Unknown', severity: 'moderate' }
-            : { 
-                allergen: allergy.allergen, 
-                reaction: allergy.reaction || 'Unknown', 
-                severity: allergy.severity || 'moderate' 
-              };
-          
+            : { allergen: allergy.allergen, reaction: allergy.reaction || 'Unknown', severity: allergy.severity || 'moderate' };
+
           // Direct match
-          if (
-            med.genericName.toLowerCase().includes(allergenName.toLowerCase()) ||
-            med.brandName.toLowerCase().includes(allergenName.toLowerCase())
-          ) {
-            newAlerts.push({ 
-              medication: medId, 
-              allergy: { ...allergyObj, crossReactivity: [] }, 
-              crossReactivity: false 
-            });
+          if (med.genericName.toLowerCase().includes(allergenName.toLowerCase()) ||
+              med.brandName.toLowerCase().includes(allergenName.toLowerCase())) {
+            newAlerts.push({ medication: medId, allergy: { ...allergyObj, crossReactivity: [] }, crossReactivity: false });
           }
-          
+
           // Penicillin cross-reactivity
-          if (allergenName.toLowerCase() === 'penicillin') {
-            if (med.genericName.toLowerCase().includes('amoxicillin') ||
-                med.genericName.toLowerCase().includes('ampicillin')) {
-              newAlerts.push({ 
-                medication: medId, 
-                allergy: { ...allergyObj, crossReactivity: ['amoxicillin', 'ampicillin'] }, 
-                crossReactivity: true 
-              });
-            }
+          if (allergenName.toLowerCase() === 'penicillin' &&
+              (med.genericName.toLowerCase().includes('amoxicillin') || med.genericName.toLowerCase().includes('ampicillin'))) {
+            newAlerts.push({
+              medication: medId,
+              allergy: { ...allergyObj, crossReactivity: ['amoxicillin', 'ampicillin'] },
+              crossReactivity: true,
+            });
           }
         }
 
         if (newAlerts.length > 0) {
           set(state => {
-            state.allergyAlerts = [
-              ...state.allergyAlerts.filter(a => a.medication !== medId), 
-              ...newAlerts
-            ];
+            state.allergyAlerts = [...state.allergyAlerts.filter(a => a.medication !== medId), ...newAlerts];
           });
         }
       },
 
       submitPrescriptions: async (encounterId) => {
         const { selectedMedications, preferredPharmacy } = get();
-        
-        if (selectedMedications.size === 0) throw new Error('No medications selected');
-        
+        const medsArray = Object.entries(selectedMedications);
+
+        if (medsArray.length === 0) throw new Error('No medications selected');
         set({ submitting: true, error: null });
-        
+
         try {
           const rxIds: string[] = [];
-          
-          for (const [id, selectedMed] of selectedMedications.entries()) {
+
+          for (const [_id, sel] of medsArray) {
             const response = await fetch('/api/prescriptions', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 encounterId,
-                medicationName: selectedMed.medication.genericName,
-                brandName: selectedMed.medication.brandName,
-                strength: selectedMed.strength,
-                form: selectedMed.form,
-                quantity: selectedMed.quantity,
-                daysSupply: selectedMed.daysSupply,
-                refills: selectedMed.refills,
-                directions: selectedMed.directions,
-                indication: selectedMed.indication,
-                dispenseAsWritten: selectedMed.dispenseAsWritten,
+                medicationName: sel.medication.genericName,
+                brandName: sel.medication.brandName,
+                strength: sel.strength,
+                form: sel.form,
+                quantity: sel.quantity,
+                daysSupply: sel.daysSupply,
+                refills: sel.refills,
+                directions: sel.directions,
+                indication: sel.indication,
+                dispenseAsWritten: sel.dispenseAsWritten,
                 pharmacyId: preferredPharmacy?.id,
-                isControlled: selectedMed.medication.isControlled,
-                schedule: selectedMed.medication.schedule
-              })
+                isControlled: sel.medication.isControlled,
+                schedule: sel.medication.schedule,
+              }),
             });
-            
             if (!response.ok) {
-              const error = await response.json();
-              throw new Error(error.error || 'Failed to submit prescription');
+              const err = await response.json();
+              throw new Error(err.error || 'Failed to submit prescription');
             }
-            
             const result = await response.json();
             rxIds.push(result.id);
           }
-          
+
           set(state => { state.submitting = false; state.lastSubmittedRxIds = rxIds; });
           get().clearOrder();
           return rxIds;
@@ -343,36 +315,28 @@ export const useMedicationOrderingStore = create<MedicationOrderingState>()(
       },
 
       clearOrder: () => set(state => {
-        state.selectedMedications = new Map();
+        state.selectedMedications = {};
         state.detectedInteractions = [];
         state.allergyAlerts = [];
         state.error = null;
+        state.searchQuery = '';
+        state.categoryFilter = 'all';
       }),
 
-      getSelectedMedicationsArray: () => Array.from(get().selectedMedications.values()),
-
+      // Computed
+      getSelectedMedicationsArray: () => Object.values(get().selectedMedications),
       getFilteredCatalog: () => {
         const { searchQuery, categoryFilter } = get();
         let results = searchQuery ? searchMedications(searchQuery) : Object.values(MEDICATION_CATALOG);
-        if (categoryFilter !== 'all') {
-          results = results.filter(med => med.category === categoryFilter);
-        }
+        if (categoryFilter !== 'all') results = results.filter(m => m.category === categoryFilter);
         return results;
       },
-
-      getTotalCost: () => {
-        const meds = get().getSelectedMedicationsArray();
-        return meds.reduce(
-          (sum, m) => ({
-            generic: sum.generic + m.medication.cost.generic,
-            brand: sum.brand + m.medication.cost.brand
-          }),
-          { generic: 0, brand: 0 }
-        );
-      },
-
-      getControlledCount: () => get().getSelectedMedicationsArray().filter(m => m.medication.isControlled).length,
-      hasBlackBoxWarnings: () => get().getSelectedMedicationsArray().some(m => m.medication.blackBoxWarning),
+      getTotalCost: () => Object.values(get().selectedMedications).reduce(
+        (sum, m) => ({ generic: sum.generic + m.medication.cost.generic, brand: sum.brand + m.medication.cost.brand }),
+        { generic: 0, brand: 0 }
+      ),
+      getControlledCount: () => Object.values(get().selectedMedications).filter(m => m.medication.isControlled).length,
+      hasBlackBoxWarnings: () => Object.values(get().selectedMedications).some(m => m.medication.blackBoxWarning),
     })),
     { name: 'medication-ordering-store' }
   )

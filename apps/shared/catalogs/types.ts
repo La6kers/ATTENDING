@@ -19,7 +19,8 @@ export {
   normalizeAllergies,
   getAllergenNames,
   
-  // Patient context
+  // Patient/Ordering context
+  type OrderingContext,
   type PatientContext,
   
   // Priority types

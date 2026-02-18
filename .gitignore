@@ -242,5 +242,11 @@ typings/
 .tern-port
 .vuepress/dist
 
+# Backup files
+*.bak
+*.bak2
+*.bak*
+*.old
+
 # Keep empty directories (optional)
 # !**/.gitkeep

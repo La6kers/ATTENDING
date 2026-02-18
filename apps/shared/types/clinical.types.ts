@@ -66,17 +66,20 @@ export function getAllergenNames(allergies: (string | AllergyInfo)[] | undefined
 }
 
 // =============================================================================
-// PATIENT CONTEXT - Canonical Definition
+// ORDERING CONTEXT - Canonical Definition (renamed from PatientContext)
 // =============================================================================
 
 /**
- * Patient context for clinical ordering workflows
- * Used across labs, imaging, medications, and referrals
- * 
+ * Compact patient context for clinical ordering workflows.
+ * Used by labs, imaging, medications, referrals, and AI recommendation engines.
+ *
+ * NOT the same as the rich PatientContextState in patientContextStore —
+ * use patientContextStore.toOrderingContext() to bridge between them.
+ *
  * IMPORTANT: `allergies` can be either string[] or AllergyInfo[]
- * Always use the helper functions above to safely access allergy data
+ * Always use the helper functions above to safely access allergy data.
  */
-export interface PatientContext {
+export interface OrderingContext {
   // Identity
   id: string;
   mrn: string;
@@ -113,6 +116,11 @@ export interface PatientContext {
   insurancePlan?: string;
   pcp?: string;
 }
+
+/**
+ * @deprecated Use OrderingContext instead. Kept for backward compatibility.
+ */
+export type PatientContext = OrderingContext;
 
 // =============================================================================
 // ORDER PRIORITY - Canonical Definition
