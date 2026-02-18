@@ -4,3 +4,4 @@
 // ============================================================
 
 export { UnifiedDashboard } from './UnifiedDashboard';
+export { default as DashboardGridSnap } from './DashboardGridSnap';
