@@ -151,6 +151,24 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // --------------------------------------------------------
+  // 0. PRODUCTION SAFETY: Block if auth bypass is enabled
+  // --------------------------------------------------------
+  if (
+    process.env.DEV_BYPASS_AUTH === 'true' &&
+    process.env.NODE_ENV === 'production'
+  ) {
+    console.error(
+      '[FATAL SECURITY] DEV_BYPASS_AUTH is enabled in production. ' +
+      'This is a critical security violation. All requests blocked.'
+    );
+    return apiError(
+      'SECURITY_VIOLATION',
+      'Server misconfiguration detected. Contact administrator.',
+      503
+    );
+  }
+
+  // --------------------------------------------------------
   // 1. SKIP PUBLIC ROUTES
   // --------------------------------------------------------
   if (matchesRoutes(pathname, PUBLIC_ROUTES)) {

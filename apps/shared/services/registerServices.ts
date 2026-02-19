@@ -14,26 +14,30 @@
 
 import { getServiceRegistry, ServiceDefinition, ServiceTier, ServiceCategory } from './registry';
 
-// Import existing service instances
-import { ambientScribeService } from './ai-scribe/AmbientScribeService';
-import { deteriorationAlertService } from './predictive-alerts/DeteriorationAlertService';
+// ==========================================================================
+// PRODUCTION-READY Services (registered by default)
+// ==========================================================================
 import { diagnosticSolverService } from './diagnostic-solver/DiagnosticSolverService';
-import { imageAnalysisService } from './clinical-imaging/ImageAnalysisService';
 import { smartInboxService } from './smart-inbox/SmartInboxService';
 import { careGapsService } from './care-gaps/CareGapsService';
-import { smartSchedulingService } from './smart-scheduling/SmartSchedulingService';
-import { peerConsultService } from './peer-consult/PeerConsultService';
-import { medicationBuddyService } from './patient-engagement/MedicationBuddyService';
-import { healthCoachingService } from './patient-engagement/HealthCoachingService';
-import { familyHealthHubService } from './patient-engagement/FamilyHealthHubService';
-import { postDischargeConciergeService } from './patient-engagement/PostDischargeConciergeService';
-import { mentalHealthService } from './mental-health/MentalHealthService';
-import { socialSupportService } from './social-support/SocialSupportService';
-import { endOfLifeService } from './end-of-life/EndOfLifeService';
-import { medicalInterpreterService } from './interpreter/MedicalInterpreterService';
-import { populationHealthService } from './population-health/PopulationHealthService';
-import { wearablesService } from './wearables/WearablesService';
 import { clinicalDecisionEngine } from './clinical-decision/ClinicalDecisionEngine';
+
+// ==========================================================================
+// PARTIALLY IMPLEMENTED Services (registered only when feature-flagged)
+// ==========================================================================
+import { ambientScribeService } from './ai-scribe/AmbientScribeService';
+import { deteriorationAlertService } from './predictive-alerts/DeteriorationAlertService';
+import { imageAnalysisService } from './clinical-imaging/ImageAnalysisService';
+
+// ==========================================================================
+// FUTURE Services — moved to _future/ directory
+// To re-enable: move service back from _future/ and add to registrations below
+// Previously registered:
+//   - smartSchedulingService, peerConsultService
+//   - medicationBuddyService, healthCoachingService, familyHealthHubService, postDischargeConciergeService
+//   - mentalHealthService, socialSupportService, endOfLifeService
+//   - medicalInterpreterService, populationHealthService, wearablesService
+// ==========================================================================
 
 // ============================================================================
 // Service Definitions
@@ -50,10 +54,57 @@ type ServiceRegistration = {
   service: any;
 };
 
-const SERVICE_REGISTRATIONS: ServiceRegistration[] = [
-  // ---------------------------------------------------------------------------
-  // AI Services (Clinical Intelligence)
-  // ---------------------------------------------------------------------------
+// ==========================================================================
+// PRODUCTION-READY SERVICES — always registered
+// ==========================================================================
+const PRODUCTION_SERVICES: ServiceRegistration[] = [
+  {
+    id: 'ai.diagnostic-solver',
+    name: 'Diagnostic Solver',
+    description: 'AI differential diagnosis generation',
+    version: '1.0.0',
+    category: 'clinical-ai',
+    tier: 'pro',
+    dependencies: [],
+    service: diagnosticSolverService,
+  },
+  {
+    id: 'ai.clinical-decision',
+    name: 'Clinical Decision Engine',
+    description: 'Evidence-based clinical decision support',
+    version: '1.0.0',
+    category: 'clinical-ai',
+    tier: 'pro',
+    dependencies: [],
+    service: clinicalDecisionEngine,
+  },
+  {
+    id: 'workflow.smart-inbox',
+    name: 'Smart Inbox',
+    description: 'AI-prioritized message inbox',
+    version: '1.0.0',
+    category: 'workflow',
+    tier: 'pro',
+    dependencies: [],
+    service: smartInboxService,
+  },
+  {
+    id: 'workflow.care-gaps',
+    name: 'Care Gap Detection',
+    description: 'Identify missing preventive care and screenings',
+    version: '1.0.0',
+    category: 'clinical-ai',
+    tier: 'pro',
+    dependencies: [],
+    service: careGapsService,
+  },
+];
+
+// ==========================================================================
+// PARTIAL SERVICES — registered when feature flag is enabled
+// These have real implementations but depend on external APIs not yet connected
+// ==========================================================================
+const PARTIAL_SERVICES: ServiceRegistration[] = [
   {
     id: 'ai.ambient-scribe',
     name: 'AI Ambient Scribe',
@@ -75,16 +126,6 @@ const SERVICE_REGISTRATIONS: ServiceRegistration[] = [
     service: deteriorationAlertService,
   },
   {
-    id: 'ai.diagnostic-solver',
-    name: 'Diagnostic Solver',
-    description: 'AI differential diagnosis generation',
-    version: '1.0.0',
-    category: 'clinical-ai',
-    tier: 'pro',
-    dependencies: [],
-    service: diagnosticSolverService,
-  },
-  {
     id: 'ai.image-analysis',
     name: 'Medical Image Analysis',
     description: 'AI-assisted radiology image interpretation',
@@ -94,172 +135,12 @@ const SERVICE_REGISTRATIONS: ServiceRegistration[] = [
     dependencies: [],
     service: imageAnalysisService,
   },
-  {
-    id: 'ai.clinical-decision',
-    name: 'Clinical Decision Engine',
-    description: 'Evidence-based clinical decision support',
-    version: '1.0.0',
-    category: 'clinical-ai',
-    tier: 'pro',
-    dependencies: [],
-    service: clinicalDecisionEngine,
-  },
+];
 
-  // ---------------------------------------------------------------------------
-  // Workflow Services
-  // ---------------------------------------------------------------------------
-  {
-    id: 'workflow.smart-inbox',
-    name: 'Smart Inbox',
-    description: 'AI-prioritized message inbox',
-    version: '1.0.0',
-    category: 'workflow',
-    tier: 'pro',
-    dependencies: [],
-    service: smartInboxService,
-  },
-  {
-    id: 'workflow.care-gaps',
-    name: 'Care Gap Detection',
-    description: 'Identify missing preventive care and screenings',
-    version: '1.0.0',
-    category: 'clinical-ai',
-    tier: 'pro',
-    dependencies: [],
-    service: careGapsService,
-  },
-  {
-    id: 'workflow.smart-scheduling',
-    name: 'Smart Scheduling',
-    description: 'AI-optimized appointment scheduling',
-    version: '1.0.0',
-    category: 'workflow',
-    tier: 'enterprise',
-    dependencies: [],
-    service: smartSchedulingService,
-  },
-  {
-    id: 'workflow.peer-consult',
-    name: 'Peer Consultation',
-    description: 'Request specialist consultations',
-    version: '1.0.0',
-    category: 'communication',
-    tier: 'enterprise',
-    dependencies: [],
-    service: peerConsultService,
-  },
-
-  // ---------------------------------------------------------------------------
-  // Patient Engagement Services
-  // ---------------------------------------------------------------------------
-  {
-    id: 'patient.medication-buddy',
-    name: 'Medication Buddy',
-    description: 'Medication reminder and adherence tracking',
-    version: '1.0.0',
-    category: 'patient-engagement',
-    tier: 'pro',
-    dependencies: [],
-    service: medicationBuddyService,
-  },
-  {
-    id: 'patient.health-coaching',
-    name: 'AI Health Coaching',
-    description: 'Personalized health coaching and education',
-    version: '1.0.0',
-    category: 'patient-engagement',
-    tier: 'pro',
-    dependencies: [],
-    service: healthCoachingService,
-  },
-  {
-    id: 'patient.family-hub',
-    name: 'Family Health Hub',
-    description: 'Family health management and sharing',
-    version: '1.0.0',
-    category: 'patient-engagement',
-    tier: 'pro',
-    dependencies: [],
-    service: familyHealthHubService,
-  },
-  {
-    id: 'patient.post-discharge',
-    name: 'Post-Discharge Concierge',
-    description: 'Post-discharge care coordination',
-    version: '1.0.0',
-    category: 'patient-engagement',
-    tier: 'enterprise',
-    dependencies: [],
-    service: postDischargeConciergeService,
-  },
-
-  // ---------------------------------------------------------------------------
-  // Specialized Care Services
-  // ---------------------------------------------------------------------------
-  {
-    id: 'care.mental-health',
-    name: 'Mental Health Support',
-    description: 'Mental health screening and resources',
-    version: '1.0.0',
-    category: 'clinical-ai',
-    tier: 'pro',
-    dependencies: [],
-    service: mentalHealthService,
-  },
-  {
-    id: 'care.social-support',
-    name: 'Social Support Services',
-    description: 'Social determinants of health resources',
-    version: '1.0.0',
-    category: 'patient-engagement',
-    tier: 'pro',
-    dependencies: [],
-    service: socialSupportService,
-  },
-  {
-    id: 'care.end-of-life',
-    name: 'End of Life Care',
-    description: 'Palliative and hospice care support',
-    version: '1.0.0',
-    category: 'clinical-ai',
-    tier: 'enterprise',
-    dependencies: [],
-    service: endOfLifeService,
-  },
-
-  // ---------------------------------------------------------------------------
-  // Platform Services
-  // ---------------------------------------------------------------------------
-  {
-    id: 'platform.interpreter',
-    name: 'Medical Interpreter',
-    description: 'Real-time medical translation',
-    version: '1.0.0',
-    category: 'communication',
-    tier: 'enterprise',
-    dependencies: [],
-    service: medicalInterpreterService,
-  },
-  {
-    id: 'platform.population-health',
-    name: 'Population Health',
-    description: 'Population-level health analytics',
-    version: '1.0.0',
-    category: 'analytics',
-    tier: 'enterprise',
-    dependencies: [],
-    service: populationHealthService,
-  },
-  {
-    id: 'platform.wearables',
-    name: 'Wearables Integration',
-    description: 'Wearable device data integration',
-    version: '1.0.0',
-    category: 'integration',
-    tier: 'enterprise',
-    dependencies: [],
-    service: wearablesService,
-  },
+// Combined registrations (production + feature-flagged partial services)
+const SERVICE_REGISTRATIONS: ServiceRegistration[] = [
+  ...PRODUCTION_SERVICES,
+  ...PARTIAL_SERVICES,
 ];
 
 // ============================================================================

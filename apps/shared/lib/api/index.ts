@@ -45,6 +45,13 @@ export {
 } from './response';
 
 export {
+  // Standardized API handler wrapper
+  createApiHandler,
+  errors as apiErrors,
+  ApiError as ApiHandlerError,
+} from './createApiHandler';
+
+export {
   // Secure handler factory
   createSecureHandler,
   createPHIHandler,
