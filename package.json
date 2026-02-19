@@ -6,6 +6,7 @@
   "workspaces": [
     "packages/*",
     "apps/shared",
+    "apps/landing",
     "apps/provider-portal",
     "apps/patient-portal"
   ],
@@ -19,11 +20,12 @@
     }
   },
   "scripts": {
+    "dev:landing": "npm run dev --workspace=apps/landing",
     "dev:provider": "npm run dev --workspace=apps/provider-portal",
     "dev:patient": "npm run dev --workspace=apps/patient-portal",
     "dev:ws": "cd services/notification-service && npm run dev",
     "dev": "turbo run dev --parallel",
-    "dev:all": "concurrently \"npm run dev:provider\" \"npm run dev:patient\" \"npm run dev:ws\"",
+    "dev:all": "concurrently \"npm run dev:landing\" \"npm run dev:provider\" \"npm run dev:patient\" \"npm run dev:ws\"",
     "setup": "node scripts/setup-dev.js",
     "dev:setup": "node scripts/dev-setup.js",
     "build": "turbo run build",
