@@ -5,7 +5,7 @@
 // Provider selects treatments based on selected diagnoses
 // =============================================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -31,6 +31,9 @@ import {
   X,
   Plus,
 } from 'lucide-react';
+import { PharmacyAvailabilityPanel } from '@/components/pharmacy';
+import type { PharmacyMedication } from '@/components/pharmacy';
+import type { PharmacyInfo } from '@attending/shared/services/PharmacyInventoryService';
 
 // =============================================================================
 // Theme
@@ -361,6 +364,7 @@ export default function TreatmentPage() {
   const [expandedTreatment, setExpandedTreatment] = useState<string | null>(null);
   const [selectedDiagnoses, setSelectedDiagnoses] = useState<SelectedDiagnosis[]>([]);
   const [patientContext, setPatientContext] = useState<PatientContext | null>(null);
+  const [selectedPharmacy, setSelectedPharmacy] = useState<PharmacyInfo | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -392,6 +396,26 @@ export default function TreatmentPage() {
 
   const selectedTreatments = treatments.filter(tx => tx.selected);
   const canProceed = selectedTreatments.length > 0;
+
+  // Derive medication list for pharmacy inventory check
+  const pharmacyMedications: PharmacyMedication[] = useMemo(() =>
+    treatments
+      .filter(tx => tx.category === 'medication' && tx.selected)
+      .map(tx => ({
+        id: tx.name.toLowerCase().replace(/\s+/g, '-'),
+        name: tx.name,
+        genericName: tx.name, // In production, resolve from MEDICATION_CATALOG
+        strength: tx.details.match(/\d+mg/)?.[0] || '',
+        isControlled: false,  // Set from catalog in production
+      })),
+    [treatments],
+  );
+
+  const handlePharmacyChange = (pharmacy: PharmacyInfo) => {
+    setSelectedPharmacy(pharmacy);
+    // In production: update medication store's preferredPharmacy
+    // useMedicationOrderingStore.getState().setPreferredPharmacy(pharmacy);
+  };
 
   const handleExecuteTreatmentPlan = () => {
     // Store treatments for billing page
@@ -499,6 +523,15 @@ export default function TreatmentPage() {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* Pharmacy Availability Panel */}
+              {pharmacyMedications.length > 0 && (
+                <PharmacyAvailabilityPanel
+                  selectedMedications={pharmacyMedications}
+                  preferredPharmacyId={selectedPharmacy?.id || 'PH-001'}
+                  onPharmacyChange={handlePharmacyChange}
+                />
               )}
 
               {/* Treatment Summary */}
