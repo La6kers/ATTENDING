@@ -324,7 +324,20 @@ function registerDefaultJobs(scheduler: JobScheduler): void {
     },
   });
 
-  // 8. Webhook subscription health — every 30 minutes
+  // 8. Alert rule evaluation — every 60 seconds
+  scheduler.register({
+    name: 'alert-evaluation',
+    intervalMs: 60_000,
+    runOnStart: false,
+    handler: async () => {
+      try {
+        const { alertEngine } = await import('./alerting');
+        await alertEngine.evaluate();
+      } catch { /* Module not available */ }
+    },
+  });
+
+  // 9. Webhook subscription health — every 30 minutes
   scheduler.register({
     name: 'webhook-health',
     intervalMs: 1_800_000,

@@ -60,6 +60,7 @@ import {
 } from '../audit';
 import { recordRequest } from '../metrics';
 import { getTraceContext, withTrace, setTraceHeaders, startSpan } from '../tracing';
+import { meter } from '../billing';
 
 // ============================================================
 // AUTH PRESETS
@@ -410,6 +411,11 @@ export function createHandler<TBody = unknown, TQuery = unknown>(
           userId: user?.id,
         });
         recordRequest(req.method || 'GET', req.url || '/', res.statusCode, durationMs);
+
+        // Billing metering
+        if (user?.organizationId) {
+          meter.record(user.organizationId, 'api.call', { path: req.url || '/', method: req.method || 'GET' }).catch(() => {});
+        }
 
       } finally {
         clearTimeout(timer);

@@ -522,6 +522,49 @@ export function generateOpenAPISpec() {
         },
       },
 
+      // Billing & Usage
+      '/api/admin/billing': {
+        get: {
+          tags: ['Admin'],
+          summary: 'Usage summary, trends, or platform stats',
+          operationId: 'getBilling',
+          parameters: [
+            { name: 'view', in: 'query', schema: { type: 'string', enum: ['summary', 'trends', 'platform'] } },
+            { name: 'period', in: 'query', schema: { type: 'string', example: '2026-02' } },
+            { name: 'organizationId', in: 'query', schema: { type: 'string' } },
+          ],
+          responses: { '200': { description: 'Usage data' } },
+        },
+      },
+
+      // Alerting
+      '/api/admin/alerts': {
+        get: {
+          tags: ['Admin'],
+          summary: 'Active alerts, history, and rule definitions',
+          operationId: 'getAlerts',
+          responses: { '200': { description: 'Alert data' } },
+        },
+        post: {
+          tags: ['Admin'],
+          summary: 'Evaluate rules or acknowledge alert',
+          operationId: 'alertAction',
+          parameters: [{ name: 'action', in: 'query', required: true, schema: { type: 'string', enum: ['evaluate', 'ack'] } }],
+          responses: { '200': { description: 'Action result' } },
+        },
+      },
+
+      // Platform Health
+      '/api/admin/platform': {
+        get: {
+          tags: ['Admin'],
+          summary: 'Platform health summary (operational or investor view)',
+          operationId: 'getPlatformHealth',
+          parameters: [{ name: 'view', in: 'query', schema: { type: 'string', enum: ['operational', 'investor'] } }],
+          responses: { '200': { description: 'Platform health data' } },
+        },
+      },
+
       // Tenant Onboarding
       '/api/admin/onboard-tenant': {
         post: {
