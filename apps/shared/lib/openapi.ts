@@ -271,6 +271,42 @@ export function generateOpenAPISpec() {
         },
       },
 
+      // Admin - Tenant Onboarding
+      '/api/admin/onboard-tenant': {
+        post: {
+          tags: ['Admin'],
+          summary: 'Onboard new tenant organization',
+          description: 'Provisions a new organization with admin user, API key, integration connection, and optional webhook subscription in one idempotent call.',
+          operationId: 'onboardTenant',
+          parameters: [
+            { name: 'Idempotency-Key', in: 'header', schema: { type: 'string', format: 'uuid' }, description: 'Unique key to prevent duplicate provisioning' },
+          ],
+          requestBody: {
+            required: true,
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'domain', 'adminEmail', 'adminName'],
+                properties: {
+                  name: { type: 'string', description: 'Organization name' },
+                  domain: { type: 'string', description: 'Primary email domain' },
+                  adminEmail: { type: 'string', format: 'email' },
+                  adminName: { type: 'string' },
+                  ehrSystem: { type: 'string', enum: ['epic', 'cerner', 'allscripts', 'athena', 'meditech', 'other'] },
+                  fhirBaseUrl: { type: 'string', format: 'uri' },
+                  createApiKey: { type: 'boolean', default: true },
+                  enableWebhooks: { type: 'boolean', default: false },
+                },
+              },
+            } },
+          },
+          responses: {
+            '201': { description: 'Tenant provisioned (includes one-time credentials)' },
+            '409': { description: 'Idempotency conflict — duplicate request in progress' },
+          },
+        },
+      },
+
       // Admin - API Keys
       '/api/admin/api-keys': {
         get: {
@@ -333,6 +369,63 @@ export function generateOpenAPISpec() {
         },
       },
 
+      // Bulk Data Export (FHIR Bulk Data Access IG)
+      '/api/fhir/export': {
+        post: {
+          tags: ['Integrations'],
+          summary: 'Start bulk data export',
+          description: 'Initiates an async FHIR Bulk Data export. Returns 202 with polling URL.',
+          operationId: 'startBulkExport',
+          requestBody: {
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  _type: { type: 'array', items: { type: 'string' } },
+                  _since: { type: 'string', format: 'date-time' },
+                  patientIds: { type: 'array', items: { type: 'string' } },
+                },
+              },
+            } },
+          },
+          responses: { '202': { description: 'Export job started' } },
+        },
+        get: {
+          tags: ['Integrations'],
+          summary: 'Poll export job status',
+          operationId: 'getExportStatus',
+          parameters: [{ name: 'jobId', in: 'query', schema: { type: 'string' } }],
+          responses: { '200': { description: 'Job complete with file URLs' }, '202': { description: 'Still processing' } },
+        },
+      },
+
+      // Tenant Onboarding
+      '/api/admin/onboard-tenant': {
+        post: {
+          tags: ['Admin'],
+          summary: 'Onboard new organization',
+          description: 'Automated provisioning: org, admin user, API key, integration connection.',
+          operationId: 'onboardTenant',
+          requestBody: {
+            required: true,
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'domain', 'adminEmail', 'adminName'],
+                properties: {
+                  name: { type: 'string' },
+                  domain: { type: 'string' },
+                  adminEmail: { type: 'string', format: 'email' },
+                  adminName: { type: 'string' },
+                  ehrSystem: { type: 'string', enum: ['epic', 'cerner', 'allscripts', 'athena', 'meditech'] },
+                },
+              },
+            } },
+          },
+          responses: { '201': { description: 'Tenant onboarded' } },
+        },
+      },
+
       // Admin - Integration Connections
       '/api/admin/integrations': {
         get: {
@@ -361,6 +454,64 @@ export function generateOpenAPISpec() {
             } },
           },
           responses: { '201': { description: 'Integration registered' } },
+        },
+      },
+
+      // FHIR Bulk Data Export
+      '/api/fhir/$export': {
+        post: {
+          tags: ['Integrations'],
+          summary: 'Start FHIR bulk data export',
+          description: 'Initiates an async export job. Returns 202 with a polling URL. Supports _type, _since, and patient filters.',
+          operationId: 'startFhirExport',
+          security: [{ apiKey: [] }],
+          requestBody: {
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  _type: { type: 'array', items: { type: 'string', enum: ['Patient', 'Encounter', 'Condition', 'Observation', 'MedicationRequest', 'AllergyIntolerance', 'ServiceRequest'] } },
+                  _since: { type: 'string', format: 'date-time', description: 'Only include resources modified since this date' },
+                  patientIds: { type: 'array', items: { type: 'string' } },
+                },
+              },
+            } },
+          },
+          responses: {
+            '202': { description: 'Export job started. Poll Content-Location header for status.', headers: { 'Content-Location': { schema: { type: 'string' } } } },
+            '401': { $ref: '#/components/responses/Unauthorized' },
+          },
+        },
+        get: {
+          tags: ['Integrations'],
+          summary: 'List export jobs',
+          operationId: 'listFhirExports',
+          security: [{ apiKey: [] }],
+          responses: { '200': { description: 'List of export jobs with status' } },
+        },
+      },
+      '/api/fhir/$export/{jobId}': {
+        get: {
+          tags: ['Integrations'],
+          summary: 'Poll export job status or download file',
+          operationId: 'getFhirExportStatus',
+          security: [{ apiKey: [] }],
+          parameters: [
+            { name: 'jobId', in: 'path', required: true, schema: { type: 'string' } },
+            { name: 'file', in: 'query', schema: { type: 'string' }, description: 'File ID to download NDJSON' },
+          ],
+          responses: {
+            '200': { description: 'Job complete with file manifest, or NDJSON file download' },
+            '202': { description: 'Job still processing', headers: { 'X-Progress': { schema: { type: 'string' } }, 'Retry-After': { schema: { type: 'string' } } } },
+          },
+        },
+        delete: {
+          tags: ['Integrations'],
+          summary: 'Cancel export job',
+          operationId: 'cancelFhirExport',
+          security: [{ apiKey: [] }],
+          parameters: [{ name: 'jobId', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '202': { description: 'Job cancelled' } },
         },
       },
 
@@ -583,6 +734,15 @@ export function generateOpenAPISpec() {
           in: 'header',
           name: 'X-API-Key',
           description: 'API key for system-to-system integration (prefix: atnd_)',
+        },
+      },
+      parameters: {
+        IdempotencyKey: {
+          name: 'Idempotency-Key',
+          in: 'header',
+          required: false,
+          schema: { type: 'string', format: 'uuid' },
+          description: 'Client-generated UUID to guarantee exactly-once processing. Responses for duplicate keys are replayed from cache (24h TTL). Returned headers: X-Idempotency-Replayed, X-Idempotency-Original-Date.',
         },
       },
     },

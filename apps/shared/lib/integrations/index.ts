@@ -46,3 +46,45 @@ export type {
   IntegrationConfig,
   ConnectionSummary,
 } from './registry';
+
+// Bulk data export
+export {
+  startExportJob,
+  getExportJob,
+  cancelExportJob,
+  listExportJobs,
+  getExportFileData,
+} from './bulkExport';
+
+export type {
+  ExportStatus,
+  ExportableResourceType,
+  BulkExportRequest,
+  ExportJob,
+  ExportFile,
+} from './bulkExport';
+
+// Data transformation pipeline
+export {
+  TransformPipeline,
+  validateRequired,
+  normalizeText,
+  normalizeDates,
+  normalizeGender,
+  normalizePhone,
+  stripPHI,
+  fieldMapper,
+  enrichWith,
+  filterItems,
+  batchTransform,
+  patientImportPipeline,
+  labResultImportPipeline,
+  deidentifiedExportPipeline,
+} from './transforms';
+
+export type {
+  TransformContext,
+  TransformError,
+  TransformResult,
+  TransformStage,
+} from './transforms';

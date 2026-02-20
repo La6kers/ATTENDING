@@ -35,6 +35,10 @@ const PUBLIC_ROUTES = [
   '/api/csrf-token', // CSRF token endpoint
   '/api/integrations/hl7v2',   // HL7v2 receiver (API key auth)
   '/api/integrations/webhook', // Webhook receiver (API key auth)
+  '/api/integrations/import',  // CSV/JSON import (API key auth)
+  '/api/fhir/export',          // Bulk data export (API key or admin)
+  '/api/fhir/export-files',    // Export file download (API key or admin)
+  '/api/fhir/$export',         // FHIR Bulk Export (API key auth)
   '/_next',
   '/favicon.ico',
   '/sounds',
