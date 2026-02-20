@@ -419,4 +419,6 @@ function calculateAge(dateOfBirth: Date | null): number {
   return age;
 }
 
-export default requireAuth(handler);
+// Per-route rate limiting: AI tier (20 req/min) prevents runaway inference costs
+import { withRateLimit } from '@attending/shared/lib/rateLimits';
+export default withRateLimit('ai', requireAuth(handler));

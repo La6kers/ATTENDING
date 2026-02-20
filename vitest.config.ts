@@ -46,6 +46,7 @@ export default defineConfig({
       '@attending/shared': path.resolve(__dirname, 'apps/shared'),
       '@attending/clinical-types': path.resolve(__dirname, 'packages/clinical-types'),
       '@attending/clinical-services': path.resolve(__dirname, 'packages/clinical-services'),
+      '@test': path.resolve(__dirname, 'tests'),
     },
   },
 });
