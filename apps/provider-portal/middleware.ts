@@ -33,6 +33,7 @@ const PUBLIC_ROUTES = [
   '/api/health',
   '/api/docs',       // OpenAPI spec (public)
   '/api/csrf-token', // CSRF token endpoint
+  '/api/metrics',    // Prometheus metrics (restrict via network in prod)
   '/api/integrations/hl7v2',   // HL7v2 receiver (API key auth)
   '/api/integrations/webhook', // Webhook receiver (API key auth)
   '/api/integrations/import',  // CSV/JSON import (API key auth)

@@ -58,6 +58,7 @@ import {
   type AuditAction,
   type AuditResourceType,
 } from '../audit';
+import { recordRequest } from '../metrics';
 
 // ============================================================
 // AUTH PRESETS
@@ -391,13 +392,14 @@ export function createHandler<TBody = unknown, TQuery = unknown>(
           await handler(req, ctx);
         }
 
-        // Log request completion
+        // Log request completion + record metrics
         const durationMs = Math.round(performance.now() - startTime);
         log.info(`${req.method} ${req.url} ${res.statusCode}`, {
           durationMs,
           statusCode: res.statusCode,
           userId: user?.id,
         });
+        recordRequest(req.method || 'GET', req.url || '/', res.statusCode, durationMs);
 
       } finally {
         clearTimeout(timer);

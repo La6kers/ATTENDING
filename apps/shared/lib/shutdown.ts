@@ -99,6 +99,13 @@ export function registerShutdownHandlers(options: ShutdownOptions = {}): void {
       }
 
       // 3. Close database (last, so in-flight queries complete)
+      // Stop background scheduler
+      try {
+        const { scheduler } = require('./scheduler');
+        scheduler.stop();
+        logger('[Shutdown] Background scheduler stopped');
+      } catch { /* Scheduler not loaded */ }
+
       if (prisma) {
         try {
           logger('[Shutdown] Closing database connection...');

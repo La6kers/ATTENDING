@@ -4,6 +4,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { applySoftDeleteMiddleware } from './softDeleteMiddleware';
+import { applyTenantMiddleware } from './multiTenant';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -21,6 +22,13 @@ function createPrismaClient(): PrismaClient {
   // are never hard-deleted. Queries auto-filter deleted records.
   applySoftDeleteMiddleware(client, {
     debug: process.env.NODE_ENV === 'development' && process.env.DEBUG_SOFT_DELETE === 'true',
+  });
+
+  // Multi-tenant row-level security: auto-injects organizationId
+  // on all queries for tenant-scoped models
+  applyTenantMiddleware(client, {
+    strict: process.env.NODE_ENV === 'production',
+    debug: process.env.DEBUG_TENANT === 'true',
   });
 
   return client;

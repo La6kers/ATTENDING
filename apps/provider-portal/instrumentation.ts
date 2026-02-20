@@ -66,5 +66,14 @@ export async function register() {
     }
   }
 
+  // 4. Start background job scheduler
+  try {
+    const { scheduler } = await import('@attending/shared/lib/scheduler');
+    scheduler.start();
+    console.log('[ATTENDING AI] Background scheduler started');
+  } catch (err) {
+    console.warn('[ATTENDING AI] Could not start scheduler:', err);
+  }
+
   console.log('[ATTENDING AI] Server initialization complete');
 }

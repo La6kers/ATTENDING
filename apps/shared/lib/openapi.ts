@@ -399,6 +399,76 @@ export function generateOpenAPISpec() {
         },
       },
 
+      // Metrics
+      '/api/metrics': {
+        get: {
+          tags: ['Health'],
+          summary: 'Prometheus metrics',
+          description: 'Metrics in Prometheus text format for monitoring/alerting.',
+          operationId: 'getMetrics',
+          responses: { '200': { description: 'Prometheus text', content: { 'text/plain': { schema: { type: 'string' } } } } },
+        },
+      },
+
+      // Admin Dashboard
+      '/api/admin/dashboard': {
+        get: {
+          tags: ['Admin'],
+          summary: 'Operational dashboard',
+          description: 'Uptime, request stats, latency percentiles, integration health, scheduler status, memory.',
+          operationId: 'getDashboard',
+          responses: { '200': { description: 'Dashboard JSON' } },
+        },
+      },
+
+      // Scheduler Controls
+      '/api/admin/scheduler': {
+        get: {
+          tags: ['Admin'],
+          summary: 'Background job status',
+          operationId: 'getSchedulerStatus',
+          responses: { '200': { description: 'Job status list' } },
+        },
+        post: {
+          tags: ['Admin'],
+          summary: 'Trigger background job',
+          operationId: 'triggerJob',
+          parameters: [{ name: 'job', in: 'query', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'Job triggered' } },
+        },
+      },
+
+      // Rate Limit Dashboard
+      '/api/admin/rate-limits': {
+        get: {
+          tags: ['Admin'],
+          summary: 'Rate limit tier config and live usage',
+          operationId: 'getRateLimits',
+          responses: { '200': { description: 'Rate limit tiers + per-key usage stats' } },
+        },
+      },
+
+      // Data Retention
+      '/api/admin/retention': {
+        get: {
+          tags: ['Admin'],
+          summary: 'View data retention policies',
+          operationId: 'getRetentionPolicies',
+          responses: { '200': { description: 'Retention policy list' } },
+        },
+        post: {
+          tags: ['Admin'],
+          summary: 'Run retention policies (dry-run by default)',
+          operationId: 'runRetention',
+          requestBody: {
+            content: { 'application/json': {
+              schema: { type: 'object', properties: { dryRun: { type: 'boolean', default: true } } },
+            } },
+          },
+          responses: { '200': { description: 'Retention report' } },
+        },
+      },
+
       // Tenant Onboarding
       '/api/admin/onboard-tenant': {
         post: {
