@@ -31,6 +31,7 @@ const PUBLIC_ROUTES = [
   '/auth/callback',
   '/api/auth',
   '/api/health',
+  '/api/docs',       // OpenAPI spec (public)
   '/api/csrf-token', // CSRF token endpoint
   '/_next',
   '/favicon.ico',

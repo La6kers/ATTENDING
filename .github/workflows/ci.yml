@@ -106,8 +106,11 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate --schema=prisma/schema.prisma
 
-      - name: Push schema to test database
-        run: npx prisma db push --schema=prisma/schema.prisma --skip-generate
+      - name: Verify migration status
+        run: npx prisma migrate status --schema=prisma/schema.prisma
+
+      - name: Apply migrations to test database
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma
 
       - name: Run unit & integration tests
         run: npm run test:run -- --reporter=verbose

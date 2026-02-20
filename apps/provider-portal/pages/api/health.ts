@@ -11,6 +11,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { checkDatabaseHealth } from '@attending/shared/lib/database';
 import { checkRedisHealth } from '@attending/shared/lib/redis';
+import { getAllCircuitBreakerStats } from '@attending/shared/lib/circuitBreaker';
 
 // ============================================================
 // TYPES
@@ -26,6 +27,7 @@ interface HealthStatus {
     database: ComponentHealth;
     redis: ComponentHealth;
     memory: ComponentHealth;
+    circuitBreakers?: Record<string, { state: string; failures: number }>;
   };
 }
 
@@ -153,13 +155,24 @@ export default async function handler(
     overallStatus = 'degraded';
   }
   
+  // Circuit breaker status (for authorized requests)
+  const cbStats = getAllCircuitBreakerStats();
+  const circuitBreakers: Record<string, { state: string; failures: number }> = {};
+  for (const cb of cbStats) {
+    circuitBreakers[cb.name] = { state: cb.state, failures: cb.failures };
+    // Any OPEN circuit breaker = degraded
+    if (cb.state === 'OPEN' && overallStatus === 'healthy') {
+      overallStatus = 'degraded';
+    }
+  }
+
   const response: HealthStatus = {
     status: overallStatus,
     timestamp: new Date().toISOString(),
     version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
     uptime: getUptime(),
-    checks: isAuthorized ? checks : {
+    checks: isAuthorized ? { ...checks, circuitBreakers } : {
       // Limited info for unauthorized requests
       database: { status: database.status },
       redis: { status: redis.status },

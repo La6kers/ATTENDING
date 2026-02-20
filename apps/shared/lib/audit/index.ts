@@ -847,6 +847,9 @@ function truncateUserAgent(ua?: string): string | undefined {
 // EXPORTS
 // ============================================================
 
+// Re-export middleware
+export { withAudit } from './middleware';
+
 export default {
   auditLog,
   auditPHIAccess,
