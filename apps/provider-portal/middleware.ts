@@ -285,13 +285,20 @@ export async function middleware(request: NextRequest) {
   // Generate per-request nonce for CSP (allows Next.js inline scripts)
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
 
-  // Pass nonce to _document.tsx via request headers
+  // Pass nonce and request ID to handlers via request headers
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-csp-nonce', nonce);
+
+  // Correlation ID: propagate incoming X-Request-ID or generate new UUID
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+  requestHeaders.set('x-request-id', requestId);
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
+
+  // Echo request ID back on the response for client-side correlation
+  response.headers.set('x-request-id', requestId);
 
   // --------------------------------------------------------
   // SECURITY: Do NOT put PII in HTTP headers
@@ -318,9 +325,7 @@ export async function middleware(request: NextRequest) {
     // Role for authorization (not PII)
     response.headers.set('x-user-role', userRole);
     
-    // Request ID for tracing
-    const requestId = `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-    response.headers.set('x-request-id', requestId);
+    // Request ID already set in section 5 (on both request and response headers)
   }
 
   // --------------------------------------------------------

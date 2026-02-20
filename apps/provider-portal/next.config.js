@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+
+  // Standalone output for Docker deployments (copies only needed node_modules)
+  output: 'standalone',
   
   // Transpile the shared workspace package
   transpilePackages: ['@attending/shared'],
@@ -84,6 +87,11 @@ const nextConfig = {
         ],
       },
     ];
+  },
+
+  // Enable instrumentation hook for startup validation
+  experimental: {
+    instrumentationHook: true,
   },
 }
 

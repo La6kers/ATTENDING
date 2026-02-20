@@ -1,0 +1,60 @@
+# ============================================================
+# ATTENDING AI - Docker Ignore
+# Prevents unnecessary files from entering the build context
+# ============================================================
+
+# Dependencies (rebuilt in container)
+node_modules
+**/node_modules
+
+# Build outputs
+.next
+**/dist
+**/.next
+**/out
+
+# Environment files (secrets — pass via env vars or Docker secrets)
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Development files
+.git
+.github
+.vscode
+*.md
+!README.md
+docs/
+tests/
+**/__tests__/
+**/*.test.*
+**/*.spec.*
+coverage/
+
+# Database files
+prisma/dev.db
+prisma/dev.db-journal
+prisma/migrations/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Scripts (not needed in image)
+scripts/
+infrastructure/
+
+# Misc
+*.log
+npm-debug.log*
