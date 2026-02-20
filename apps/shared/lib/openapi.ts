@@ -57,6 +57,9 @@ export function generateOpenAPISpec() {
       { name: 'Referrals', description: 'Specialist referrals' },
       { name: 'Alerts', description: 'Real-time clinical alerts' },
       { name: 'Admin', description: 'Administrative functions' },
+      { name: 'Integrations', description: 'External system integration (HL7v2, webhooks, FHIR)' },
+      { name: 'API Keys', description: 'System-to-system API key management' },
+      { name: 'Webhooks', description: 'Outbound webhook subscription management' },
     ],
 
     // ---- Paths ----
@@ -217,6 +220,147 @@ export function generateOpenAPISpec() {
             '201': { description: 'Lab order created', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiResponse' } } } },
             '400': { $ref: '#/components/responses/ValidationError' },
           },
+        },
+      },
+
+      // Integrations - HL7v2
+      '/api/integrations/hl7v2': {
+        post: {
+          tags: ['Integrations'],
+          summary: 'Receive HL7v2 message',
+          description: 'Inbound HL7v2 message receiver. Supports ADT (patient registration/update) and ORU (lab results). Authenticated via API key.',
+          operationId: 'receiveHL7v2',
+          security: [{ apiKey: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              'x-application/hl7-v2+er7': { schema: { type: 'string' } },
+              'text/plain': { schema: { type: 'string' } },
+              'application/json': {
+                schema: { type: 'object', properties: { message: { type: 'string' } } },
+              },
+            },
+          },
+          responses: {
+            '200': { description: 'HL7v2 ACK/NACK response', content: { 'x-application/hl7-v2+er7': { schema: { type: 'string' } } } },
+            '401': { $ref: '#/components/responses/Unauthorized' },
+          },
+        },
+      },
+
+      // Integrations - Webhook receiver
+      '/api/integrations/webhook': {
+        post: {
+          tags: ['Integrations'],
+          summary: 'Receive webhook event',
+          description: 'Generic inbound webhook receiver for external system events. Authenticated via API key.',
+          operationId: 'receiveWebhook',
+          security: [{ apiKey: [] }],
+          parameters: [
+            { name: 'X-Webhook-Event', in: 'header', required: true, schema: { type: 'string' } },
+            { name: 'X-Webhook-Signature', in: 'header', schema: { type: 'string' } },
+          ],
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { type: 'object' } } },
+          },
+          responses: {
+            '200': { description: 'Event processed' },
+            '401': { $ref: '#/components/responses/Unauthorized' },
+          },
+        },
+      },
+
+      // Admin - API Keys
+      '/api/admin/api-keys': {
+        get: {
+          tags: ['API Keys'],
+          summary: 'List API keys',
+          operationId: 'listApiKeys',
+          responses: { '200': { description: 'API key list (hashes never returned)' } },
+        },
+        post: {
+          tags: ['API Keys'],
+          summary: 'Create API key',
+          description: 'Creates a new API key. The plaintext key is returned ONCE at creation time.',
+          operationId: 'createApiKey',
+          requestBody: {
+            required: true,
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'scopes'],
+                properties: {
+                  name: { type: 'string' },
+                  scopes: { type: 'array', items: { type: 'string' } },
+                  expiresInDays: { type: 'integer' },
+                },
+              },
+            } },
+          },
+          responses: { '201': { description: 'API key created (includes plaintext key)' } },
+        },
+      },
+
+      // Admin - Webhooks
+      '/api/admin/webhooks': {
+        get: {
+          tags: ['Webhooks'],
+          summary: 'List webhook subscriptions',
+          operationId: 'listWebhooks',
+          responses: { '200': { description: 'Webhook subscription list' } },
+        },
+        post: {
+          tags: ['Webhooks'],
+          summary: 'Create webhook subscription',
+          description: 'Subscribe to clinical events via webhook. Returns signing secret once.',
+          operationId: 'createWebhook',
+          requestBody: {
+            required: true,
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'url', 'events'],
+                properties: {
+                  name: { type: 'string' },
+                  url: { type: 'string', format: 'uri' },
+                  events: { type: 'array', items: { type: 'string' } },
+                },
+              },
+            } },
+          },
+          responses: { '201': { description: 'Webhook created (includes signing secret)' } },
+        },
+      },
+
+      // Admin - Integration Connections
+      '/api/admin/integrations': {
+        get: {
+          tags: ['Integrations'],
+          summary: 'List integration connections with health status',
+          operationId: 'listIntegrations',
+          responses: { '200': { description: 'Integration list with health summary' } },
+        },
+        post: {
+          tags: ['Integrations'],
+          summary: 'Register integration connection',
+          operationId: 'registerIntegration',
+          requestBody: {
+            required: true,
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'type', 'direction', 'config'],
+                properties: {
+                  name: { type: 'string' },
+                  type: { type: 'string', enum: ['FHIR', 'HL7V2', 'WEBHOOK', 'SFTP', 'CUSTOM'] },
+                  direction: { type: 'string', enum: ['INBOUND', 'OUTBOUND', 'BIDIRECTIONAL'] },
+                  config: { type: 'object' },
+                },
+              },
+            } },
+          },
+          responses: { '201': { description: 'Integration registered' } },
         },
       },
 
@@ -434,10 +578,16 @@ export function generateOpenAPISpec() {
           bearerFormat: 'JWT',
           description: 'JWT bearer token (for API integrations)',
         },
+        apiKey: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-API-Key',
+          description: 'API key for system-to-system integration (prefix: atnd_)',
+        },
       },
     },
 
-    security: [{ sessionCookie: [] }, { bearerToken: [] }],
+    security: [{ sessionCookie: [] }, { bearerToken: [] }, { apiKey: [] }],
   };
 }
 

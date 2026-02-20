@@ -33,6 +33,8 @@ const PUBLIC_ROUTES = [
   '/api/health',
   '/api/docs',       // OpenAPI spec (public)
   '/api/csrf-token', // CSRF token endpoint
+  '/api/integrations/hl7v2',   // HL7v2 receiver (API key auth)
+  '/api/integrations/webhook', // Webhook receiver (API key auth)
   '/_next',
   '/favicon.ico',
   '/sounds',

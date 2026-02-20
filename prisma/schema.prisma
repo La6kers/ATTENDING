@@ -750,6 +750,104 @@ model AuditLog {
   @@index([action, createdAt])              // Security event reports
 }
 
+// ============== API KEYS (System-to-System Authentication) ==============
+
+model ApiKey {
+  id             String    @id @default(cuid())
+  name           String
+  description    String?
+  keyHash        String    @unique // SHA-256 hash of the key (never store plaintext)
+  keyPrefix      String    // First 12 chars for human identification
+  organizationId String
+  scopes         String    // JSON array of scope strings
+  rateLimit      Int?      // Custom requests/minute override
+  expiresAt      DateTime?
+  lastUsedAt     DateTime?
+  usageCount     Int       @default(0)
+  isActive       Boolean   @default(true)
+  createdBy      String    // User ID who created this key
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([keyHash])
+  @@index([organizationId])
+  @@index([isActive])
+}
+
+// ============== WEBHOOKS (Outbound Event Delivery) ==============
+
+model WebhookSubscription {
+  id             String    @id @default(cuid())
+  name           String
+  url            String    // Delivery URL (must be HTTPS in production)
+  secret         String    // HMAC-SHA256 signing secret
+  organizationId String
+  events         String    // JSON array of event types to subscribe to
+  isActive       Boolean   @default(true)
+  failureCount   Int       @default(0) // Consecutive failures
+  disabledAt     DateTime? // Auto-disabled after too many failures
+  disabledReason String?
+  lastDeliveryAt DateTime?
+  lastStatusCode Int?
+  createdBy      String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  deliveries     WebhookDelivery[]
+
+  @@index([organizationId])
+  @@index([isActive])
+}
+
+model WebhookDelivery {
+  id               String    @id @default(cuid())
+  subscriptionId   String
+  eventType        String
+  payload          String    // JSON event payload
+  statusCode       Int?
+  responseBody     String?   // Truncated response (max 1KB)
+  durationMs       Int?
+  attempt          Int       @default(1)
+  maxAttempts      Int       @default(5)
+  nextRetryAt      DateTime?
+  status           String    @default("PENDING") // PENDING, SUCCESS, FAILED, RETRYING
+  errorMessage     String?
+  createdAt        DateTime  @default(now())
+
+  subscription     WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([nextRetryAt])
+  @@index([createdAt])
+}
+
+// ============== INTEGRATION REGISTRY ==============
+
+model IntegrationConnection {
+  id             String    @id @default(cuid())
+  name           String
+  type           String    // FHIR, HL7V2, WEBHOOK, SFTP, CUSTOM
+  direction      String    // INBOUND, OUTBOUND, BIDIRECTIONAL
+  organizationId String
+  config         String    // Encrypted JSON config (endpoints, credentials ref)
+  status         String    @default("ACTIVE") // ACTIVE, PAUSED, ERROR, DISABLED
+  lastSyncAt     DateTime?
+  lastErrorAt    DateTime?
+  lastError      String?
+  healthStatus   String    @default("UNKNOWN") // HEALTHY, DEGRADED, DOWN, UNKNOWN
+  messageCount   Int       @default(0)
+  errorCount     Int       @default(0)
+  metadata       String?   // JSON metadata (version, capabilities, etc.)
+  createdBy      String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([organizationId])
+  @@index([type])
+  @@index([status])
+}
+
 // ============== FHIR INTEGRATION TABLES ==============
 
 model FhirLabResult {

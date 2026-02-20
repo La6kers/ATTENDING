@@ -54,4 +54,17 @@ export async function register() {
     timeoutMs: 15_000, // 15s for clinical data to finish writing
     logger: (msg) => console.log(msg),
   });
+
+  // 3. Wire webhook event dispatcher
+  if (prisma) {
+    try {
+      const { wireWebhookDispatcher } = await import('@attending/shared/lib/integrations/events');
+      wireWebhookDispatcher(prisma);
+      console.log('[ATTENDING AI] Webhook event dispatcher wired');
+    } catch (err) {
+      console.warn('[ATTENDING AI] Could not wire webhook dispatcher:', err);
+    }
+  }
+
+  console.log('[ATTENDING AI] Server initialization complete');
 }

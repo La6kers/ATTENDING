@@ -3,6 +3,22 @@
 // apps/shared/lib/api/index.ts
 // ============================================================
 
+// Unified handler factory (preferred entry point for all new routes)
+export {
+  createHandler,
+  publicHandler,
+  providerHandler,
+  adminHandler,
+  clinicalHandler,
+  apiKeyHandler,
+} from './handler';
+
+export type {
+  HandlerConfig,
+  HandlerContext,
+  AuthLevel,
+} from './handler';
+
 export {
   API_VERSION,
   API_VERSION_FULL,
