@@ -7,7 +7,7 @@
 // ============================================================
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Mic, MicOff, Camera, Loader2, X, Image as ImageIcon, Paperclip } from 'lucide-react';
+import { Send, Camera, Loader2, X, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { VoiceInput } from '../media/VoiceInput';
 import { CameraCapture } from '../media/CameraCapture';
 
@@ -41,7 +41,7 @@ export function ChatInput({
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, _setIsProcessing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);

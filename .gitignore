@@ -250,3 +250,6 @@ typings/
 
 # Keep empty directories (optional)
 # !**/.gitkeep
+
+prisma/dev.db
+prisma/dev.db-journal

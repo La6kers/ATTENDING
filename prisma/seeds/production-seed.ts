@@ -4,10 +4,17 @@
 //
 // Realistic clinical data for pilot deployment
 // Includes sample providers, patients, and clinical scenarios
+//
+// Run: npx tsx prisma/seeds/production-seed.ts
 // ============================================================
 
-import { PrismaClient, UserRole, AllergySeverity, AllergyType } from '@prisma/client';
-import { hash } from 'bcryptjs';
+import { PrismaClient } from '@prisma/client';
+
+// Use dynamic import for bcryptjs to avoid type declaration issues
+async function hashPassword(password: string): Promise<string> {
+  const bcrypt = await import('bcryptjs');
+  return bcrypt.hash(password, 12);
+}
 
 const prisma = new PrismaClient();
 
@@ -33,7 +40,7 @@ async function main() {
   // ============================================================
   console.log('Creating admin user...');
   
-  const adminPassword = await hash(process.env.ADMIN_PASSWORD || 'ChangeMe123!', 12);
+  const adminPassword = await hashPassword(process.env.ADMIN_PASSWORD || 'ChangeMe123!');
   
   const admin = await prisma.user.upsert({
     where: { email: 'admin@attending.ai' },
@@ -42,7 +49,7 @@ async function main() {
       email: 'admin@attending.ai',
       name: 'System Administrator',
       password: adminPassword,
-      role: UserRole.ADMIN,
+      role: 'ADMIN',
       isActive: true,
     },
   });
@@ -58,7 +65,7 @@ async function main() {
     {
       email: 'dr.smith@pilotclinic.org',
       name: 'Dr. Sarah Smith, MD',
-      role: UserRole.PROVIDER,
+      role: 'PROVIDER',
       specialty: 'Family Medicine',
       npi: '1122334455',
       department: 'Primary Care',
@@ -66,7 +73,7 @@ async function main() {
     {
       email: 'dr.jones@pilotclinic.org',
       name: 'Dr. Michael Jones, DO',
-      role: UserRole.PROVIDER,
+      role: 'PROVIDER',
       specialty: 'Internal Medicine',
       npi: '2233445566',
       department: 'Primary Care',
@@ -74,7 +81,7 @@ async function main() {
     {
       email: 'np.williams@pilotclinic.org',
       name: 'Jennifer Williams, NP',
-      role: UserRole.PROVIDER,
+      role: 'PROVIDER',
       specialty: 'Family Nurse Practitioner',
       npi: '3344556677',
       department: 'Primary Care',
@@ -82,18 +89,18 @@ async function main() {
     {
       email: 'rn.davis@pilotclinic.org',
       name: 'Robert Davis, RN',
-      role: UserRole.NURSE,
+      role: 'NURSE',
       department: 'Primary Care',
     },
     {
       email: 'staff.miller@pilotclinic.org',
       name: 'Amanda Miller',
-      role: UserRole.STAFF,
+      role: 'STAFF',
       department: 'Front Desk',
     },
   ];
 
-  const providerPassword = await hash('PilotClinic2026!', 12);
+  const providerPassword = await hashPassword('PilotClinic2026!');
 
   for (const provider of providers) {
     const created = await prisma.user.upsert({
@@ -126,13 +133,13 @@ async function main() {
       state: 'MT',
       zipCode: '59001',
       allergies: [
-        { allergen: 'Penicillin', reaction: 'Hives', severity: AllergySeverity.MODERATE, type: AllergyType.DRUG },
-        { allergen: 'Sulfa', reaction: 'Rash', severity: AllergySeverity.MILD, type: AllergyType.DRUG },
+        { allergen: 'Penicillin', reaction: 'Hives', severity: 'MODERATE' },
+        { allergen: 'Sulfa', reaction: 'Rash', severity: 'MILD' },
       ],
       conditions: [
-        { name: 'Type 2 Diabetes Mellitus', icdCode: 'E11.9' },
-        { name: 'Essential Hypertension', icdCode: 'I10' },
-        { name: 'Hyperlipidemia', icdCode: 'E78.5' },
+        { description: 'Type 2 Diabetes Mellitus', icdCode: 'E11.9' },
+        { description: 'Essential Hypertension', icdCode: 'I10' },
+        { description: 'Hyperlipidemia', icdCode: 'E78.5' },
       ],
       medications: [
         { name: 'Metformin', dose: '1000mg', frequency: 'twice daily' },
@@ -152,11 +159,11 @@ async function main() {
       state: 'MT',
       zipCode: '59001',
       allergies: [
-        { allergen: 'Codeine', reaction: 'Nausea', severity: AllergySeverity.MILD, type: AllergyType.DRUG },
+        { allergen: 'Codeine', reaction: 'Nausea', severity: 'MILD' },
       ],
       conditions: [
-        { name: 'Asthma, moderate persistent', icdCode: 'J45.40' },
-        { name: 'Seasonal allergies', icdCode: 'J30.2' },
+        { description: 'Asthma, moderate persistent', icdCode: 'J45.40' },
+        { description: 'Seasonal allergies', icdCode: 'J30.2' },
       ],
       medications: [
         { name: 'Fluticasone/Salmeterol', dose: '250/50mcg', frequency: 'twice daily' },
@@ -176,9 +183,9 @@ async function main() {
       zipCode: '59001',
       allergies: [],
       conditions: [
-        { name: 'Coronary artery disease', icdCode: 'I25.10' },
-        { name: 'History of STEMI', icdCode: 'I25.2' },
-        { name: 'Heart failure with reduced EF', icdCode: 'I50.22' },
+        { description: 'Coronary artery disease', icdCode: 'I25.10' },
+        { description: 'History of STEMI', icdCode: 'I25.2' },
+        { description: 'Heart failure with reduced EF', icdCode: 'I50.22' },
       ],
       medications: [
         { name: 'Aspirin', dose: '81mg', frequency: 'once daily' },
@@ -200,11 +207,11 @@ async function main() {
       state: 'MT',
       zipCode: '59001',
       allergies: [
-        { allergen: 'Peanuts', reaction: 'Anaphylaxis', severity: AllergySeverity.LIFE_THREATENING, type: AllergyType.FOOD },
+        { allergen: 'Peanuts', reaction: 'Anaphylaxis', severity: 'LIFE_THREATENING' },
       ],
       conditions: [
-        { name: 'Anxiety disorder', icdCode: 'F41.1' },
-        { name: 'Migraine without aura', icdCode: 'G43.909' },
+        { description: 'Anxiety disorder', icdCode: 'F41.1' },
+        { description: 'Migraine without aura', icdCode: 'G43.909' },
       ],
       medications: [
         { name: 'Sertraline', dose: '100mg', frequency: 'once daily' },
@@ -223,14 +230,14 @@ async function main() {
       state: 'MT',
       zipCode: '59001',
       allergies: [
-        { allergen: 'NSAIDs', reaction: 'GI bleeding', severity: AllergySeverity.SEVERE, type: AllergyType.DRUG },
-        { allergen: 'ACE inhibitors', reaction: 'Angioedema', severity: AllergySeverity.LIFE_THREATENING, type: AllergyType.DRUG },
+        { allergen: 'NSAIDs', reaction: 'GI bleeding', severity: 'SEVERE' },
+        { allergen: 'ACE inhibitors', reaction: 'Angioedema', severity: 'LIFE_THREATENING' },
       ],
       conditions: [
-        { name: 'Chronic kidney disease, stage 3', icdCode: 'N18.3' },
-        { name: 'Atrial fibrillation', icdCode: 'I48.91' },
-        { name: 'Osteoarthritis', icdCode: 'M19.90' },
-        { name: 'GERD', icdCode: 'K21.0' },
+        { description: 'Chronic kidney disease, stage 3', icdCode: 'N18.3' },
+        { description: 'Atrial fibrillation', icdCode: 'I48.91' },
+        { description: 'Osteoarthritis', icdCode: 'M19.90' },
+        { description: 'GERD', icdCode: 'K21.0' },
       ],
       medications: [
         { name: 'Apixaban', dose: '2.5mg', frequency: 'twice daily' },
@@ -260,9 +267,9 @@ async function main() {
       });
     }
 
-    // Add conditions
+    // Add conditions (maps to Condition model)
     for (const condition of conditions) {
-      await prisma.medicalCondition.create({
+      await prisma.condition.create({
         data: {
           ...condition,
           patientId: created.id,
@@ -271,15 +278,15 @@ async function main() {
       });
     }
 
-    // Add medications
+    // Add medications (maps to Medication model)
     for (const medication of medications) {
-      await prisma.patientMedication.create({
+      await prisma.medication.create({
         data: {
           patientId: created.id,
-          medicationName: medication.name,
+          name: medication.name,
           dose: medication.dose,
           frequency: medication.frequency,
-          isActive: true,
+          status: 'ACTIVE',
         },
       });
     }
@@ -288,69 +295,22 @@ async function main() {
   }
 
   // ============================================================
-  // 4. CREATE SYSTEM CONFIGURATION
-  // ============================================================
-  console.log('Creating system configuration...');
-
-  await prisma.systemConfig.upsert({
-    where: { key: 'clinic_info' },
-    update: {},
-    create: {
-      key: 'clinic_info',
-      value: JSON.stringify(PILOT_CLINIC),
-    },
-  });
-
-  await prisma.systemConfig.upsert({
-    where: { key: 'feature_flags' },
-    update: {},
-    create: {
-      key: 'feature_flags',
-      value: JSON.stringify({
-        ai_differential_diagnosis: true,
-        voice_input: true,
-        camera_capture: true,
-        offline_mode: true,
-        fhir_integration: true,
-        emergency_escalation: true,
-      }),
-    },
-  });
-
-  await prisma.systemConfig.upsert({
-    where: { key: 'ai_settings' },
-    update: {},
-    create: {
-      key: 'ai_settings',
-      value: JSON.stringify({
-        model: 'biomistral-7b',
-        confidence_threshold: 0.7,
-        max_differentials: 7,
-        enable_learning: true,
-      }),
-    },
-  });
-
-  console.log('  ✓ System configuration created');
-
-  // ============================================================
-  // 5. CREATE AUDIT LOG ENTRY FOR SEED
+  // 4. CREATE AUDIT LOG ENTRY FOR SEED
   // ============================================================
   console.log('Creating seed audit log...');
 
   await prisma.auditLog.create({
     data: {
       action: 'SYSTEM_SEED',
-      resource: 'database',
-      resourceId: 'production-seed',
+      entityType: 'database',
+      entityId: 'production-seed',
       userId: admin.id,
-      userEmail: admin.email,
-      userRole: admin.role,
-      details: JSON.stringify({
+      changes: JSON.stringify({
         providers: providers.length,
         patients: patients.length,
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
+        clinic: PILOT_CLINIC.name,
       }),
       ipAddress: '127.0.0.1',
       userAgent: 'prisma-seed',

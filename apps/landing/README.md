@@ -1,48 +1,17 @@
-# ATTENDING AI — Landing Hub
+# ⚠️ DEPRECATED — apps/landing
 
-Central entry point for the ATTENDING AI Clinical Intelligence Platform. Routes to all four portals based on environment detection.
+**This directory contains static HTML prototypes that are no longer the canonical source of truth.**
 
-## Portals
+The real applications are:
+- **Provider Portal**: `apps/provider-portal` (Next.js, port 3000)
+- **Patient Portal**: `apps/patient-portal` (Next.js, port 3001)
 
-| Portal | Description | Dev URL |
-|--------|-------------|---------|
-| **COMPASS** | AI-guided patient symptom assessment | `localhost:3001/compass` |
-| **ATTENDING** | Provider clinical decision support | `localhost:3000` |
-| **Patient Portal** | Patient health records & messaging | `localhost:3001` |
-| **IT Admin** | System monitoring & administration | `localhost:3000/admin` |
+## Cleanup
 
-## Quick Start
+This directory has been removed from the workspace config in `package.json` and will not be built or deployed. To fully remove:
 
 ```bash
-# Serve the landing page locally
-npm run dev
-# Opens at http://localhost:3002
+rm -rf apps/landing
 ```
 
-## Environment Detection
-
-The landing page auto-detects where it's running:
-
-- **Production** (`attendingai.health`): Routes to subdomains
-- **Development** (`localhost`): Routes to port-based URLs
-- **Demo** (`file://`): Routes to local HTML files in `./demos/`
-
-## Demo Files
-
-Place standalone HTML prototypes in `public/demos/` for offline demo mode:
-
-```
-public/demos/
-├── compass-chatbot.html      # COMPASS assessment demo
-├── provider-portal.html      # Provider portal demo
-├── patient-portal.html       # Patient portal demo
-└── admin-console.html        # IT admin console demo
-```
-
-## Running All Portals Together
-
-From the monorepo root:
-
-```bash
-npm run dev:all    # Starts landing (3002) + provider (3000) + patient (3001)
-```
+The HTML demos (admin-console, compass-chatbot, patient-portal, provider-portal) were early prototypes. If you need them for historical reference, archive them separately before deletion.

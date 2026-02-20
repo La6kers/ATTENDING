@@ -1,17 +1,26 @@
 // =============================================================================
-// ATTENDING AI - Enhanced WebSocket Hook for Provider Portal
+// ATTENDING AI - Provider Portal WebSocket Hook
 // apps/provider-portal/hooks/useWebSocket.ts
 //
-// Revolutionary Real-Time Features:
+// Provider-specific real-time features layered on shared WebSocket types:
 // - Emergency alert propagation with audio
 // - Live assessment queue updates
 // - Provider presence/collaboration
 // - Critical lab and imaging notifications
+//
+// Shared types & base connection hook: @attending/shared/hooks/useWebSocket
+// TODO: Refactor to compose useWebSocketConnection from shared for DRY
+//       socket lifecycle management (connect/disconnect/reconnect).
 // =============================================================================
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useProviderStore } from '@/store/useProviderStore';
+import type {
+  EmergencyAlert as SharedEmergencyAlert,
+  AssessmentUpdate as SharedAssessmentUpdate,
+  ConnectionStatus,
+} from '@attending/shared/hooks/useWebSocket';
 
 // ============================================================================
 // Types

@@ -1,8 +1,16 @@
 // =============================================================================
-// ATTENDING AI - Care Coordination Hub Component
+// ATTENDING AI - Care Coordination Hub (Interventions Tab Version)
 // apps/provider-portal/components/interventions/CareCoordinationHub.tsx
 //
-// Task management, handoffs, and team communication
+// Tab-embedded version for the Clinical Interventions Hub.
+// Renders on: /interventions (as 'coordination' tab)
+//
+// NOTE: A standalone full-page version exists at:
+//   components/coordination/CareCoordinationHub.tsx
+// Both share types with: @attending/shared/services/interventions/CareCoordinationHub
+//
+// TODO: Extract shared types (TaskPriority, TaskStatus, TaskCategory) to
+//       the shared service and import here to eliminate type duplication.
 // =============================================================================
 
 'use client';

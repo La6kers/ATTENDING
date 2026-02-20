@@ -1,5 +1,6 @@
 import React from 'react';
-import { Brain, AlertTriangle, TrendingUp, Lightbulb, Target, Activity } from 'lucide-react';
+import { Brain, AlertTriangle, TrendingUp, Lightbulb, Target, Activity, ShieldCheck } from 'lucide-react';
+import { TERM, CLINICAL_DISCLAIMER_SHORT } from '@attending/shared/lib/clinicalBranding';
 
 interface InsightItem {
   id: string;
@@ -14,14 +15,14 @@ const AIInsights = () => {
     {
       id: '1',
       title: 'Critical Alert',
-      content: "John Doe's presentation has 85% probability of acute coronary syndrome based on symptom constellation. Immediate 12-lead EKG and troponin levels recommended.",
+      content: "John Doe's symptom constellation is consistent with acute coronary syndrome based on published cardiac risk criteria. Consider immediate 12-lead EKG and troponin levels.",
       type: 'critical',
       icon: AlertTriangle
     },
     {
       id: '2',
-      title: 'Differential Diagnosis',
-      content: 'Sarah Wilson: Migraine (78%), Tension headache (15%), Secondary headache (7%). Consider neuroimaging if atypical features develop.',
+      title: 'Diagnostic Considerations',
+      content: 'Sarah Wilson: Evidence-based differential includes migraine (78%), tension headache (15%), secondary headache (7%). Consider neuroimaging if atypical features develop.',
       type: 'diagnosis',
       icon: Brain
     },
@@ -69,8 +70,8 @@ const AIInsights = () => {
     <div className="bg-white rounded-lg shadow-sm">
       <div className="p-6 border-b">
         <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-green-600" />
-          <h2 className="text-lg font-semibold text-gray-900">BioMistral Clinical Insights</h2>
+          <ShieldCheck className="w-5 h-5 text-green-600" />
+          <h2 className="text-lg font-semibold text-gray-900">{TERM.aiInsightsHeader}</h2>
         </div>
       </div>
 
@@ -98,9 +99,9 @@ const AIInsights = () => {
 
       <div className="p-4 border-t bg-gray-50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Activity className="w-4 h-4 text-green-500" />
-            <span>AI Model: BioMistral-7B</span>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
+            <span className="italic">{CLINICAL_DISCLAIMER_SHORT}</span>
           </div>
           <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
             View All Insights

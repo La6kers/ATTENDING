@@ -1,9 +1,16 @@
 // ============================================================
-// ATTENDING AI - Care Coordination Hub
+// ATTENDING AI - Care Coordination Hub (Standalone Page Version)
 // apps/provider-portal/components/coordination/CareCoordinationHub.tsx
 //
-// Phase 9C: Everyone on the care team, on the same page
-// Seamless collaboration across all providers
+// Full-page care team coordination view.
+// Renders on: /coordination, /care-coordination
+//
+// NOTE: A tab-embedded version exists at:
+//   components/interventions/CareCoordinationHub.tsx
+// Both share types with: @attending/shared/services/interventions/CareCoordinationHub
+//
+// TODO: Extract shared types (TaskPriority, TaskStatus, TeamMemberRole) to
+//       the shared service and import here to eliminate type duplication.
 // ============================================================
 
 'use client';

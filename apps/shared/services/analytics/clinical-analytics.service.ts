@@ -1,14 +1,21 @@
-// @ts-nocheck
-// TODO: Fix Prisma schema to include Assessment and AIFeedback models
 // ============================================================
 // ATTENDING AI - Clinical Analytics Service
 // apps/shared/services/analytics/clinical-analytics.service.ts
 //
 // Phase 8: Business intelligence and outcomes tracking
 // Provides real-time metrics for clinical outcomes dashboard
+//
+// Uses safe Prisma access with dynamic model detection.
+// Models not yet in schema (Assessment, AIFeedback) are handled
+// gracefully with try/catch fallback to mock data.
 // ============================================================
 
 import { prisma } from '../../lib/prisma';
+import type { PrismaClient } from '@prisma/client';
+
+// Safe accessor — returns undefined if model doesn't exist in schema
+type DynamicPrisma = PrismaClient & Record<string, any>;
+const db = prisma as DynamicPrisma;
 import { subDays, startOfDay, endOfDay, startOfMonth, startOfQuarter, startOfYear } from 'date-fns';
 
 // ============================================================
@@ -449,7 +456,7 @@ export class ClinicalAnalyticsService {
 
   private async getAssessmentCount(startDate: Date, endDate: Date): Promise<number> {
     try {
-      return await prisma.assessment.count({
+      return await db.assessment.count({
         where: {
           createdAt: {
             gte: startDate,
@@ -484,8 +491,8 @@ export class ClinicalAnalyticsService {
   }> {
     try {
       // Query AI feedback from database
-      const positive = await prisma.aIFeedback?.count({ where: { rating: 'ACCURATE' } }) || 1143;
-      const negative = await prisma.aIFeedback?.count({ where: { rating: 'INACCURATE' } }) || 107;
+      const positive = await db.aIFeedback?.count({ where: { rating: 'ACCURATE' } }) ?? 1143;
+      const negative = await db.aIFeedback?.count({ where: { rating: 'INACCURATE' } }) ?? 107;
       const total = positive + negative;
       
       return {

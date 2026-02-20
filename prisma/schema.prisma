@@ -1,9 +1,14 @@
 // ATTENDING AI - Complete Database Schema
 // Production: PostgreSQL with encryption at rest
-// Development: SQLite for local testing
+// Development: PostgreSQL via docker-compose
 // 
-// HIPAA Requirement: 164.312(a)(2)(iv) - Encryption and Decryption
-// Production database MUST have encryption at rest enabled
+// HIPAA Requirements:
+// - 164.312(a)(2)(iv) - Encryption and Decryption
+//   Production database MUST have encryption at rest enabled
+// - 164.530(j) - 6-year minimum record retention
+//   All PHI-containing models use soft-delete (deletedAt/deletedBy)
+//   Middleware in apps/shared/lib/softDeleteMiddleware.ts
+//   auto-filters deleted records and converts deletes to soft-deletes
 //
 // Run: npx prisma migrate dev --name init
 // Production: npx prisma migrate deploy
@@ -12,11 +17,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Use environment variable to switch between SQLite (dev) and PostgreSQL (prod)
-// Development: DATABASE_URL="file:./dev.db"
+// PostgreSQL for all environments.
+// Local dev: docker-compose provides postgres on port 5432
 // Production: DATABASE_URL="postgresql://user:pass@host:5432/attending?sslmode=require"
 datasource db {
-  provider = env("DATABASE_PROVIDER") // "sqlite" or "postgresql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -127,6 +132,9 @@ model Patient {
   insurancePolicyNum String?
   preferredLanguage  String    @default("en")
   isActive           Boolean   @default(true)
+  // HIPAA soft-delete: 164.530(j) - 6-year retention minimum
+  deletedAt          DateTime?
+  deletedBy          String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -154,6 +162,7 @@ model Patient {
   @@index([lastName, firstName])
   @@index([dateOfBirth])
   @@index([isActive])
+  @@index([deletedAt])
 }
 
 // ============== CLINICAL ENCOUNTERS ==============
@@ -170,11 +179,14 @@ model Encounter {
   endTime         DateTime?
   notes           String?
   diagnosis       String?   // JSON array of diagnosis codes
+  // HIPAA soft-delete
+  deletedAt       DateTime?
+  deletedBy       String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  patient          Patient            @relation(fields: [patientId], references: [id])
-  provider         User               @relation("ProviderEncounters", fields: [providerId], references: [id])
+  patient          Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  provider         User               @relation("ProviderEncounters", fields: [providerId], references: [id], onDelete: Restrict)
   labOrders        LabOrder[]
   imagingOrders    ImagingOrder[]
   medicationOrders MedicationOrder[]
@@ -187,6 +199,10 @@ model Encounter {
   @@index([providerId])
   @@index([status])
   @@index([startTime])
+  @@index([deletedAt])
+  @@index([providerId, status])          // Provider dashboard: active encounters
+  @@index([patientId, startTime])        // Patient timeline queries
+  @@index([providerId, status, startTime]) // Sorted provider queue
 }
 
 // ============== ALLERGIES ==============
@@ -201,6 +217,9 @@ model Allergy {
   status     String    @default("ACTIVE") // ACTIVE, INACTIVE, RESOLVED
   verifiedAt DateTime?
   notes      String?
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt  DateTime?
+  deletedBy  String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -208,6 +227,7 @@ model Allergy {
 
   @@index([patientId])
   @@index([allergen])
+  @@index([deletedAt])
 }
 
 // ============== CONDITIONS / DIAGNOSES ==============
@@ -222,6 +242,9 @@ model Condition {
   abatementDate DateTime?
   isPrimary     Boolean   @default(false)
   notes         String?
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt     DateTime?
+  deletedBy     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -230,6 +253,7 @@ model Condition {
   @@index([patientId])
   @@index([icdCode])
   @@index([status])
+  @@index([deletedAt])
 }
 
 // ============== MEDICATIONS ==============
@@ -250,6 +274,9 @@ model Medication {
   prescribedBy  String?
   pharmacy      String?
   notes         String?
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt     DateTime?
+  deletedBy     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -258,12 +285,13 @@ model Medication {
   @@index([patientId])
   @@index([name])
   @@index([status])
+  @@index([deletedAt])
 }
 
 // ============== VITAL SIGNS ==============
 
 model VitalSign {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   patientId             String
   encounterId           String?
   heartRate             Int?
@@ -271,18 +299,21 @@ model VitalSign {
   bloodPressureDiastolic Int?
   respiratoryRate       Int?
   temperature           Float?
-  temperatureUnit       String   @default("F")
+  temperatureUnit       String    @default("F")
   oxygenSaturation      Float?
   weight                Float?
-  weightUnit            String   @default("lbs")
+  weightUnit            String    @default("lbs")
   height                Float?
-  heightUnit            String   @default("in")
+  heightUnit            String    @default("in")
   painLevel             Int?
   bloodGlucose          Float?
   notes                 String?
-  recordedAt            DateTime @default(now())
+  recordedAt            DateTime  @default(now())
   recordedBy            String?
-  createdAt             DateTime @default(now())
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt             DateTime?
+  deletedBy             String?
+  createdAt             DateTime  @default(now())
 
   patient   Patient    @relation(fields: [patientId], references: [id])
   encounter Encounter? @relation(fields: [encounterId], references: [id])
@@ -290,6 +321,7 @@ model VitalSign {
   @@index([patientId])
   @@index([encounterId])
   @@index([recordedAt])
+  @@index([deletedAt])
 }
 
 // ============== LAB ORDERS ==============
@@ -311,11 +343,14 @@ model LabOrder {
   fasting             Boolean   @default(false)
   orderedAt           DateTime  @default(now())
   completedAt         DateTime?
+  // HIPAA soft-delete
+  deletedAt           DateTime?
+  deletedBy           String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  patient   Patient     @relation(fields: [patientId], references: [id])
-  provider  User        @relation(fields: [providerId], references: [id])
+  patient   Patient     @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  provider  User        @relation(fields: [providerId], references: [id], onDelete: Restrict)
   encounter Encounter?  @relation(fields: [encounterId], references: [id])
   results   LabResult[]
 
@@ -323,24 +358,30 @@ model LabOrder {
   @@index([providerId])
   @@index([status])
   @@index([orderedAt])
+  @@index([deletedAt])
+  @@index([providerId, status])    // Provider pending orders dashboard
+  @@index([patientId, orderedAt])  // Patient lab history timeline
 }
 
 model LabResult {
-  id           String    @id @default(cuid())
-  patientId    String
-  labOrderId   String?
-  testCode     String
-  testName     String
-  loincCode    String?
-  value        String
-  unit         String?
+  id             String    @id @default(cuid())
+  patientId      String
+  labOrderId     String?
+  testCode       String
+  testName       String
+  loincCode      String?
+  value          String
+  unit           String?
   referenceRange String?
-  interpretation String? // NORMAL, HIGH, LOW, CRITICAL_HIGH, CRITICAL_LOW
-  status       String    @default("FINAL") // PRELIMINARY, FINAL, CORRECTED
-  performedAt  DateTime?
-  reportedAt   DateTime  @default(now())
-  notes        String?
-  createdAt    DateTime  @default(now())
+  interpretation String?   // NORMAL, HIGH, LOW, CRITICAL_HIGH, CRITICAL_LOW
+  status         String    @default("FINAL") // PRELIMINARY, FINAL, CORRECTED
+  performedAt    DateTime?
+  reportedAt     DateTime  @default(now())
+  notes          String?
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt      DateTime?
+  deletedBy      String?
+  createdAt      DateTime  @default(now())
 
   patient  Patient   @relation(fields: [patientId], references: [id])
   labOrder LabOrder? @relation(fields: [labOrderId], references: [id])
@@ -349,6 +390,7 @@ model LabResult {
   @@index([labOrderId])
   @@index([testCode])
   @@index([interpretation])
+  @@index([deletedAt])
 }
 
 // ============== IMAGING ORDERS ==============
@@ -374,11 +416,14 @@ model ImagingOrder {
   scheduledDate       DateTime?
   orderedAt           DateTime  @default(now())
   completedAt         DateTime?
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt           DateTime?
+  deletedBy           String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  patient   Patient         @relation(fields: [patientId], references: [id])
-  provider  User            @relation(fields: [providerId], references: [id])
+  patient   Patient         @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  provider  User            @relation(fields: [providerId], references: [id], onDelete: Restrict)
   encounter Encounter?      @relation(fields: [encounterId], references: [id])
   results   ImagingResult[]
 
@@ -386,6 +431,7 @@ model ImagingOrder {
   @@index([providerId])
   @@index([status])
   @@index([orderedAt])
+  @@index([deletedAt])
 }
 
 model ImagingResult {
@@ -400,6 +446,9 @@ model ImagingResult {
   status         String    @default("FINAL") // PRELIMINARY, FINAL, ADDENDUM
   performedAt    DateTime?
   reportedAt     DateTime  @default(now())
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt      DateTime?
+  deletedBy      String?
   createdAt      DateTime  @default(now())
 
   patient      Patient       @relation(fields: [patientId], references: [id])
@@ -407,6 +456,7 @@ model ImagingResult {
 
   @@index([patientId])
   @@index([imagingOrderId])
+  @@index([deletedAt])
 }
 
 // ============== MEDICATION ORDERS ==============
@@ -443,11 +493,14 @@ model MedicationOrder {
   orderedAt            DateTime  @default(now())
   discontinuedAt       DateTime?
   discontinuedReason   String?
+  // HIPAA soft-delete
+  deletedAt            DateTime?
+  deletedBy            String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  patient   Patient    @relation(fields: [patientId], references: [id])
-  provider  User       @relation(fields: [providerId], references: [id])
+  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  provider  User       @relation(fields: [providerId], references: [id], onDelete: Restrict)
   encounter Encounter? @relation(fields: [encounterId], references: [id])
 
   @@index([patientId])
@@ -455,6 +508,7 @@ model MedicationOrder {
   @@index([status])
   @@index([isControlled])
   @@index([orderedAt])
+  @@index([deletedAt])
 }
 
 // ============== REFERRALS ==============
@@ -481,17 +535,21 @@ model Referral {
   orderedAt         DateTime  @default(now())
   completedAt       DateTime?
   consultNote       String?
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt         DateTime?
+  deletedBy         String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  patient   Patient    @relation(fields: [patientId], references: [id])
-  provider  User       @relation(fields: [providerId], references: [id])
+  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  provider  User       @relation(fields: [providerId], references: [id], onDelete: Restrict)
   encounter Encounter? @relation(fields: [encounterId], references: [id])
 
   @@index([patientId])
   @@index([providerId])
   @@index([status])
   @@index([specialty])
+  @@index([deletedAt])
 }
 
 // ============== PATIENT ASSESSMENTS (COMPASS) ==============
@@ -519,10 +577,13 @@ model PatientAssessment {
   startedAt          DateTime  @default(now())
   completedAt        DateTime?
   lastActivityAt     DateTime  @default(now())
+  // HIPAA soft-delete
+  deletedAt          DateTime?
+  deletedBy          String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  patient          Patient          @relation(fields: [patientId], references: [id])
+  patient          Patient          @relation(fields: [patientId], references: [id], onDelete: Restrict)
   assignedProvider User?            @relation("AssignedProvider", fields: [assignedProviderId], references: [id])
   emergencyEvents  EmergencyEvent[]
 
@@ -530,28 +591,32 @@ model PatientAssessment {
   @@index([assignedProviderId])
   @@index([status])
   @@index([sessionId])
+  @@index([deletedAt])
 }
 
 // ============== EMERGENCY EVENTS ==============
 
 model EmergencyEvent {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   patientId         String
   assessmentId      String?
-  eventType         String   // RED_FLAG, CRASH_DETECTION, MANUAL_TRIGGER
-  severity          String   // CRITICAL, HIGH, MODERATE
+  eventType         String    // RED_FLAG, CRASH_DETECTION, MANUAL_TRIGGER
+  severity          String    // CRITICAL, HIGH, MODERATE
   description       String
-  triggeredBy       String   // SYSTEM, PATIENT, PROVIDER
-  symptoms          String?  // JSON array
-  vitalSigns        String?  // JSON object
-  location          String?  // GPS coordinates or address
+  triggeredBy       String    // SYSTEM, PATIENT, PROVIDER
+  symptoms          String?   // JSON array
+  vitalSigns        String?   // JSON object
+  location          String?   // GPS coordinates or address
   acknowledgedAt    DateTime?
   acknowledgedBy    String?
   resolvedAt        DateTime?
   resolvedBy        String?
   resolution        String?
-  notificationsSent String?  // JSON array of notifications sent
-  createdAt         DateTime @default(now())
+  notificationsSent String?   // JSON array of notifications sent
+  // HIPAA soft-delete: 164.530(j)
+  deletedAt         DateTime?
+  deletedBy         String?
+  createdAt         DateTime  @default(now())
 
   patient    Patient            @relation(fields: [patientId], references: [id])
   assessment PatientAssessment? @relation(fields: [assessmentId], references: [id])
@@ -560,6 +625,7 @@ model EmergencyEvent {
   @@index([eventType])
   @@index([severity])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 // ============== TREATMENT PLANS ==============
@@ -582,15 +648,19 @@ model TreatmentPlan {
   additionalInstructions String?
   approvedAt             DateTime?
   approvedBy             String?
+  // HIPAA soft-delete
+  deletedAt              DateTime?
+  deletedBy              String?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  patient   Patient   @relation(fields: [patientId], references: [id])
-  encounter Encounter @relation(fields: [encounterId], references: [id])
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
 
   @@index([patientId])
   @@index([encounterId])
   @@index([status])
+  @@index([deletedAt])
 }
 
 // ============== CLINICAL NOTES ==============
@@ -611,16 +681,20 @@ model ClinicalNote {
   signedBy      String?
   amendedAt     DateTime?
   amendments    String?   // JSON array of amendments
+  // HIPAA soft-delete
+  deletedAt     DateTime?
+  deletedBy     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  patient   Patient   @relation(fields: [patientId], references: [id])
-  encounter Encounter @relation(fields: [encounterId], references: [id])
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
 
   @@index([patientId])
   @@index([encounterId])
   @@index([noteType])
   @@index([status])
+  @@index([deletedAt])
 }
 
 // ============== NOTIFICATIONS ==============
@@ -645,6 +719,7 @@ model Notification {
   @@index([type])
   @@index([read])
   @@index([createdAt])
+  @@index([userId, read, createdAt]) // Unread notification badge count
 }
 
 // ============== AUDIT LOG - HIPAA REQUIREMENT ==============
@@ -670,6 +745,9 @@ model AuditLog {
   @@index([entityId])
   @@index([createdAt])
   @@index([success])
+  @@index([userId, createdAt])              // User activity reports
+  @@index([entityType, entityId, createdAt]) // Resource access history
+  @@index([action, createdAt])              // Security event reports
 }
 
 // ============== FHIR INTEGRATION TABLES ==============

@@ -91,27 +91,27 @@ export default async function handler(
       const { view } = req.query;
       
       switch (view) {
-        case 'tasks':
+        case 'tasks': {
           const tasks = careCoordinationHub.getTasksForProvider(providerId);
           return res.status(200).json({ success: true, tasks });
-        
-        case 'overdue':
+        }
+        case 'overdue': {
           const overdueTasks = careCoordinationHub.getOverdueTasks(providerId);
           return res.status(200).json({ success: true, tasks: overdueTasks });
-        
-        case 'handoffs':
+        }
+        case 'handoffs': {
           const handoffs = careCoordinationHub.getPendingHandoffs(providerId);
           return res.status(200).json({ success: true, handoffs });
-        
-        case 'messages':
+        }
+        case 'messages': {
           const messages = careCoordinationHub.getMessagesForProvider(providerId);
           const unreadCount = careCoordinationHub.getUnreadCount(providerId);
           return res.status(200).json({ success: true, messages, unreadCount });
-        
-        case 'templates':
+        }
+        case 'templates': {
           const templates = careCoordinationHub.getTaskTemplates();
           return res.status(200).json({ success: true, templates });
-        
+        }
         default:
           return res.status(400).json({ success: false, error: 'Invalid view parameter' });
       }

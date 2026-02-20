@@ -14,7 +14,6 @@ import {
   markAssessmentSynced,
   markAssessmentFailed,
   type OfflineAssessment,
-  type PendingRequest,
 } from './indexedDB';
 
 // ============================================================

@@ -1,270 +1,137 @@
-// NextAuth Configuration
+// ============================================================
+// Authentication Utilities - Provider Portal
 // apps/provider-portal/lib/api/auth.ts
+//
+// This file provides the portal-specific auth utilities that 60+ API
+// routes depend on. It delegates to the canonical shared auth module.
+//
+// ARCHITECTURE:
+//
+//   Canonical config:  @attending/shared/auth/config.ts
+//     └─ createProviderAuthOptions(prisma) → NextAuthOptions
+//     └─ authOptions (default, no-prisma version)
+//
+//   Canonical middleware: @attending/shared/auth/middleware.ts  
+//     └─ withAuth(), withRole(), withProvider(), withAuditLog()
+//
+//   NextAuth route:    pages/api/auth/[...nextauth].ts
+//     └─ imports createProviderAuthOptions from shared
+//
+//   THIS FILE:         lib/api/auth.ts
+//     └─ requireAuth(), requireRole(), createAuditLog()
+//     └─ Used by 60+ API routes via `import { requireAuth } from '@/lib/api/auth'`
+//     └─ Delegates to shared authOptions for session validation
+//
+//   Role helpers:      lib/auth.ts
+//     └─ Re-exports this file + component-side role utilities
+//
+//   Client API:        @attending/shared/lib/auth/authApi.ts
+//     └─ Fetch-based auth operations (login, MFA, tokens)
+//
+//   Session store:     @attending/shared/lib/auth/secureSession.ts
+//     └─ Redis-backed HIPAA session lifecycle
+// ============================================================
 
-import type { NextAuthOptions, User as _User } from 'next-auth';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import AzureADProvider from 'next-auth/providers/azure-ad';
+import { createProviderAuthOptions } from '@attending/shared/auth';
 import { prisma } from '@attending/shared/lib/prisma';
 
-// Extend NextAuth types
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name?: string;
-      role: string;
-      specialty?: string;
-      npi?: string;
-    };
-  }
-  interface User {
-    id: string;
-    role: string;
-    specialty?: string;
-    npi?: string;
-  }
-}
+// Re-export types from shared for convenience
+export type { AttendingUser, AttendingSession, AttendingJWT } from '@attending/shared/auth';
 
-declare module 'next-auth/jwt' {
-  interface JWT {
-    id: string;
-    role: string;
-    specialty?: string;
-    npi?: string;
-  }
-}
+// ============================================================
+// AUTH OPTIONS
+// ============================================================
 
-export const authOptions: NextAuthOptions = {
-  session: {
-    strategy: 'jwt',
-    maxAge: 8 * 60 * 60, // 8-hour clinical shift
-  },
-  
-  providers: [
-    // Azure AD for enterprise healthcare organizations
-    ...(process.env.AZURE_AD_CLIENT_ID && process.env.AZURE_AD_CLIENT_SECRET ? [
-      AzureADProvider({
-        clientId: process.env.AZURE_AD_CLIENT_ID,
-        clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
-        tenantId: process.env.AZURE_AD_TENANT_ID,
-        authorization: {
-          params: {
-            scope: 'openid email profile User.Read',
-          },
-        },
-      }),
-    ] : []),
-    
-    // Credentials for development and fallback
-    CredentialsProvider({
-      id: 'credentials',
-      name: 'Email & Password',
-      credentials: {
-        email: { label: 'Email', type: 'email', placeholder: 'provider@clinic.com' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
+/**
+ * Provider portal auth options — uses the shared factory with Prisma
+ * for database-backed user lookups.
+ *
+ * This is the SAME config used by pages/api/auth/[...nextauth].ts,
+ * ensuring session validation is consistent across all API routes.
+ */
+export const authOptions = createProviderAuthOptions(prisma);
 
-        // Development bypass - allows any email with password 'password'
-        if (process.env.DEV_BYPASS_AUTH === 'true' && credentials.password === 'password') {
-          return {
-            id: 'dev-provider-001',
-            email: credentials.email,
-            name: 'Dr. Dev Provider',
-            role: 'PROVIDER',
-            specialty: 'Family Medicine',
-          };
-        }
+// ============================================================
+// SESSION HELPER
+// ============================================================
 
-        // In development without DEV_BYPASS_AUTH, still allow password='password' for testing
-        if (process.env.NODE_ENV === 'development' && credentials.password === 'password') {
-          // Try to find user in database first
-          try {
-            const user = await prisma.user.findUnique({
-              where: { email: credentials.email },
-              select: {
-                id: true,
-                email: true,
-                name: true,
-                role: true,
-                specialty: true,
-                npi: true,
-                isActive: true,
-              },
-            });
-
-            if (user && user.isActive) {
-              await prisma.user.update({
-                where: { id: user.id },
-                data: { lastLoginAt: new Date() },
-              });
-
-              return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-                specialty: user.specialty || undefined,
-                npi: user.npi || undefined,
-              };
-            }
-          } catch (error) {
-            console.error('Database lookup error:', error);
-          }
-
-          // Fallback to mock user for development
-          return {
-            id: 'dev-provider-001',
-            email: credentials.email,
-            name: 'Dr. Dev Provider',
-            role: 'PROVIDER',
-            specialty: 'Family Medicine',
-          };
-        }
-
-        // Production: require proper password validation
-        // TODO: Install bcryptjs and implement proper password hashing
-        // For now, reject in production if no DEV_BYPASS_AUTH
-        console.warn('[Auth] Production password validation not implemented');
-        return null;
-      },
-    }),
-  ],
-
-  callbacks: {
-    async jwt({ token, user, account: _account }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.specialty = user.specialty;
-        token.npi = user.npi;
-      }
-      return token;
-    },
-
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.specialty = token.specialty;
-        session.user.npi = token.npi;
-      }
-      return session;
-    },
-
-    async signIn({ user: _user, account, profile }) {
-      // For Azure AD, create/update user in our database
-      if (account?.provider === 'azure-ad' && profile?.email) {
-        try {
-          const existingUser = await prisma.user.findUnique({
-            where: { email: profile.email },
-          });
-
-          if (!existingUser) {
-            await prisma.user.create({
-              data: {
-                email: profile.email,
-                name: profile.name || profile.email,
-                role: 'PROVIDER',
-                isActive: true,
-              },
-            });
-          }
-        } catch (error) {
-          console.error('Error creating user from Azure AD:', error);
-        }
-      }
-      return true;
-    },
-  },
-
-  pages: {
-    signIn: '/auth/signin',
-    error: '/auth/error',
-  },
-
-  events: {
-    async signIn({ user }) {
-      try {
-        await prisma.auditLog.create({
-          data: {
-            userId: user.id,
-            action: 'LOGIN',
-            entityType: 'User',
-            entityId: user.id,
-            success: true,
-          },
-        });
-      } catch (error) {
-        console.error('Audit log error:', error);
-      }
-    },
-    async signOut({ token }) {
-      if (token?.id) {
-        try {
-          await prisma.auditLog.create({
-            data: {
-              userId: token.id as string,
-              action: 'LOGOUT',
-              entityType: 'User',
-              entityId: token.id as string,
-              success: true,
-            },
-          });
-        } catch (error) {
-          console.error('Audit log error:', error);
-        }
-      }
-    },
-  },
-};
-
-// Helper to get session in API routes
+/**
+ * Get the current session from an API route.
+ */
 export async function getSession(req: NextApiRequest, res: NextApiResponse) {
   return getServerSession(req, res, authOptions);
 }
 
-// Middleware to require authentication
+// ============================================================
+// MIDDLEWARE: requireAuth
+// ============================================================
+
+/**
+ * Wrap an API handler to require authentication.
+ * The session is passed as the third argument for backward compatibility
+ * with existing API routes.
+ *
+ * @example
+ * export default requireAuth(async (req, res, session) => {
+ *   console.log(session.user.role);
+ * });
+ */
 export function requireAuth(
   handler: (req: NextApiRequest, res: NextApiResponse, session: any) => Promise<void>
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     const session = await getSession(req, res);
-    
+
     if (!session) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    
+
     return handler(req, res, session);
   };
 }
 
-// Middleware to require specific role
+// ============================================================
+// MIDDLEWARE: requireRole
+// ============================================================
+
+/**
+ * Wrap an API handler to require one of the specified roles.
+ *
+ * @example
+ * export default requireRole(['PROVIDER', 'ADMIN'])(async (req, res, session) => {
+ *   // Only providers and admins reach here
+ * });
+ */
 export function requireRole(roles: string[]) {
   return (handler: (req: NextApiRequest, res: NextApiResponse, session: any) => Promise<void>) => {
     return async (req: NextApiRequest, res: NextApiResponse) => {
       const session = await getSession(req, res);
-      
+
       if (!session) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
-      
+
       if (!roles.includes(session.user.role)) {
         return res.status(403).json({ error: 'Forbidden - Insufficient permissions' });
       }
-      
+
       return handler(req, res, session);
     };
   };
 }
 
-// Audit logging helper
+// ============================================================
+// AUDIT LOGGING
+// ============================================================
+
+/**
+ * Create a HIPAA-compliant audit log entry.
+ *
+ * @example
+ * await createAuditLog(session.user.id, 'READ_PATIENT', 'Patient', patientId, null, req);
+ */
 export async function createAuditLog(
   userId: string | null,
   action: string,
@@ -287,6 +154,6 @@ export async function createAuditLog(
       },
     });
   } catch (error) {
-    console.error('Audit log error:', error);
+    console.error('[Audit] Failed to create audit log:', error);
   }
 }

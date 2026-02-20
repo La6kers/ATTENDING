@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 // Medication Buddy
 // =============================================================================
 async function handleMedicationBuddy(req: NextApiRequest, res: NextApiResponse) {
-  const patientId = (req as any).session?.user?.id || 'patient_1';
+  const _patientId = (req as any).session?.user?.id || 'patient_1';
 
   if (req.method === 'GET') {
     const medications = [
@@ -185,7 +185,7 @@ async function handleHealthCoaching(req: NextApiRequest, res: NextApiResponse) {
 // =============================================================================
 async function handleFamilyHub(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
-    const { memberId } = req.query;
+    const { memberId: _memberId } = req.query;
 
     return res.status(200).json({
       familyId: 'fam_001',
@@ -377,7 +377,7 @@ async function handleMentalHealth(req: NextApiRequest, res: NextApiResponse) {
     const { action, data } = req.body;
 
     switch (action) {
-      case 'submit-screening':
+      case 'submit-screening': {
         const totalScore = data.responses.reduce((sum: number, r: any) => sum + r.score, 0);
         return res.status(200).json({
           screeningType: data.screeningType,
@@ -386,6 +386,7 @@ async function handleMentalHealth(req: NextApiRequest, res: NextApiResponse) {
           recommendations: ['Continue self-care practices', 'Schedule follow-up if symptoms persist'],
           resources: totalScore >= 10 ? ['Consider speaking with a counselor'] : [],
         });
+      }
 
       case 'create-safety-plan':
         return res.status(201).json({

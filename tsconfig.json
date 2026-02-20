@@ -25,5 +25,5 @@
     }
   },
   "include": ["prisma/**/*", "scripts/**/*"],
-  "exclude": ["node_modules", "dist", "apps"]
+  "exclude": ["node_modules", "dist", "apps", "prisma/seeds"]
 }

@@ -3,19 +3,30 @@
 // This prevents multiple Prisma Client instances in development
 
 import { PrismaClient } from '@prisma/client';
+import { applySoftDeleteMiddleware } from './softDeleteMiddleware';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function createPrismaClient(): PrismaClient {
+  const client = new PrismaClient({
     log:
       process.env.NODE_ENV === 'development'
         ? ['query', 'error', 'warn']
         : ['error'],
   });
+
+  // HIPAA 164.530(j): Soft-delete middleware ensures clinical records
+  // are never hard-deleted. Queries auto-filter deleted records.
+  applySoftDeleteMiddleware(client, {
+    debug: process.env.NODE_ENV === 'development' && process.env.DEBUG_SOFT_DELETE === 'true',
+  });
+
+  return client;
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
@@ -35,6 +46,9 @@ export async function withPrisma<T>(
 
 // Re-export PrismaClient type
 export { PrismaClient };
+
+// Re-export soft-delete helpers for HIPAA-compliant record management
+export { softDelete, restoreSoftDeleted, hardDelete } from './softDeleteMiddleware';
 
 // Re-export enums with Db prefix to avoid conflicts with app-level types
 export { 

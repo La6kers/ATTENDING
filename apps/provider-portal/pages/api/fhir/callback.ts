@@ -6,7 +6,7 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { createFhirClient } from '@/shared/lib/fhir';
 import type { FhirClientConfig, EhrVendor } from '@/shared/lib/fhir/types';
 

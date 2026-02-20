@@ -8,7 +8,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { createFhirSyncService } from '@/shared/services/fhir-sync/FhirSyncService';
 import { createFhirPersistenceService } from '@/shared/services/fhir-sync/FhirPersistenceService';
 import type { EhrVendor } from '@/shared/lib/fhir/types';

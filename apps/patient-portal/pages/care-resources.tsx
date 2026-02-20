@@ -20,11 +20,7 @@ import {
   Star,
   FlaskConical,
   CheckCircle,
-  AlertCircle,
-  Clock,
   Building,
-  Users,
-  FileText,
   MessageSquare,
   ArrowLeft,
 } from 'lucide-react';

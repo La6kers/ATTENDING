@@ -8,24 +8,18 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Heart,
   Pill,
   Activity,
   Calendar,
   MessageSquare,
-  Bell,
   CheckCircle,
   AlertCircle,
-  TrendingUp,
-  TrendingDown,
-  ChevronRight,
   Plus,
   Clock,
-  Thermometer,
   Droplets,
-  Scale,
   Smile,
   Meh,
   Frown,
@@ -541,7 +535,7 @@ const MessageBubble: React.FC<{ message: Message }> = ({ message }) => {
 export const HealthCompanion: React.FC<{
   patientName: string;
   patientId: string;
-}> = ({ patientName, patientId }) => {
+}> = ({ patientName, patientId: _patientId }) => {
   const [activeTab, setActiveTab] = useState<'checkin' | 'medications' | 'goals' | 'messages'>('checkin');
   const [medications, setMedications] = useState<MedicationReminder[]>(mockMedications);
   const [careGaps] = useState<CareGap[]>(mockCareGaps);

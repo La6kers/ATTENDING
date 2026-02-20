@@ -4,7 +4,7 @@
 //
 // HIPAA-compliant session management that:
 // - Never exposes PII in headers or logs
-// - Uses encrypted session storage
+// - Uses pluggable storage (Redis in production, in-memory for dev)
 // - Enforces clinical shift-aligned timeouts (8 hours)
 // - Tracks session activity for audit
 //
@@ -16,7 +16,9 @@
 
 import { getToken, JWT } from 'next-auth/jwt';
 import type { NextApiRequest } from 'next';
+import crypto from 'crypto';
 import { encryptData, decryptData, hashData } from '../security';
+import { getSessionStore } from './sessionStoreAdapter';
 
 // ============================================================
 // TYPES
@@ -72,24 +74,8 @@ const SESSION_EXTENSION_THRESHOLD_MS = 60 * 60 * 1000;
 // Maximum session duration (cannot extend beyond 12 hours)
 const MAX_SESSION_DURATION_MS = 12 * 60 * 60 * 1000;
 
-// ============================================================
-// SESSION STORAGE (In-memory for development, use Redis in production)
-// ============================================================
-
-// In production, replace with Redis or database storage
-const sessionStore = new Map<string, SecureSession>();
-const sessionActivity = new Map<string, SessionActivity[]>();
-
-// Cleanup expired sessions periodically
-setInterval(() => {
-  const now = new Date();
-  for (const [sessionId, session] of sessionStore.entries()) {
-    if (session.expiresAt < now) {
-      sessionStore.delete(sessionId);
-      sessionActivity.delete(sessionId);
-    }
-  }
-}, 60000); // Every minute
+// TTL for session data in store (max session + 1 hour buffer for audit trail)
+const SESSION_TTL_SECONDS = Math.ceil((MAX_SESSION_DURATION_MS + 60 * 60 * 1000) / 1000);
 
 // ============================================================
 // SESSION CREATION
@@ -98,11 +84,11 @@ setInterval(() => {
 /**
  * Create a new secure session from JWT token
  */
-export function createSecureSession(
+export async function createSecureSession(
   token: JWT,
   userAgent?: string,
   ipAddress?: string
-): SecureSession {
+): Promise<SecureSession> {
   const now = new Date();
   const sessionId = generateSessionId();
   const fingerprint = generateFingerprint(token.sub || '', userAgent, ipAddress);
@@ -118,21 +104,20 @@ export function createSecureSession(
     fingerprint,
   };
   
-  // Store session
-  sessionStore.set(sessionId, session);
-  sessionActivity.set(sessionId, []);
+  const store = getSessionStore();
+  await store.setSession(sessionId, session, SESSION_TTL_SECONDS);
+  await store.setActivity(sessionId, [], SESSION_TTL_SECONDS);
   
   return session;
 }
 
 /**
- * Generate a secure session ID
+ * Generate a cryptographically secure session ID
+ * Uses crypto.randomBytes instead of Math.random() for HIPAA compliance
  */
 function generateSessionId(): string {
   const timestamp = Date.now().toString(36);
-  const random = Array.from({ length: 24 }, () =>
-    Math.random().toString(36).charAt(2)
-  ).join('');
+  const random = crypto.randomBytes(18).toString('hex');
   return `sess_${timestamp}_${random}`;
 }
 
@@ -167,13 +152,13 @@ export async function getSecureSession(
     return null;
   }
   
-  // Get session by user ID
+  const store = getSessionStore();
   const userId = token.sub || '';
   
-  for (const session of sessionStore.values()) {
-    if (session.userId === userId && session.isValid) {
-      return session;
-    }
+  // Look for existing valid session
+  const existing = await store.findSessionByUserId(userId);
+  if (existing) {
+    return existing;
   }
   
   // Create new session if none exists
@@ -186,8 +171,9 @@ export async function getSecureSession(
 /**
  * Get session by ID
  */
-export function getSessionById(sessionId: string): SecureSession | null {
-  return sessionStore.get(sessionId) || null;
+export async function getSessionById(sessionId: string): Promise<SecureSession | null> {
+  const store = getSessionStore();
+  return store.getSession(sessionId);
 }
 
 /**
@@ -205,12 +191,13 @@ export async function getSecureUserId(req: NextApiRequest): Promise<string | nul
 /**
  * Validate a session
  */
-export function validateSession(
+export async function validateSession(
   sessionId: string,
   userAgent?: string,
   ipAddress?: string
-): SessionValidation {
-  const session = sessionStore.get(sessionId);
+): Promise<SessionValidation> {
+  const store = getSessionStore();
+  const session = await store.getSession(sessionId);
   
   if (!session) {
     return { valid: false, reason: 'not_found' };
@@ -220,14 +207,14 @@ export function validateSession(
   
   // Check expiry
   if (session.expiresAt < now) {
-    invalidateSession(sessionId);
+    await invalidateSession(sessionId);
     return { valid: false, reason: 'expired' };
   }
   
   // Check inactivity
   const inactivityTime = now.getTime() - session.lastActivityAt.getTime();
   if (inactivityTime > INACTIVITY_TIMEOUT_MS) {
-    invalidateSession(sessionId);
+    await invalidateSession(sessionId);
     return { valid: false, reason: 'inactive' };
   }
   
@@ -235,15 +222,11 @@ export function validateSession(
   if (userAgent || ipAddress) {
     const expectedFingerprint = generateFingerprint(session.userId, userAgent, ipAddress);
     if (session.fingerprint !== expectedFingerprint) {
-      // Log suspicious activity but don't immediately invalidate
       console.warn('[Session] Fingerprint mismatch:', {
         sessionId,
         expected: session.fingerprint.slice(0, 10) + '...',
         received: expectedFingerprint.slice(0, 10) + '...',
       });
-      // In high-security mode, you might want to:
-      // invalidateSession(sessionId);
-      // return { valid: false, reason: 'invalid_fingerprint' };
     }
   }
   
@@ -257,13 +240,14 @@ export function validateSession(
 /**
  * Update session activity (called on each request)
  */
-export function updateSessionActivity(
+export async function updateSessionActivity(
   sessionId: string,
   action: string,
   resourceType?: string,
   resourceId?: string
-): void {
-  const session = sessionStore.get(sessionId);
+): Promise<void> {
+  const store = getSessionStore();
+  const session = await store.getSession(sessionId);
   
   if (!session) {
     return;
@@ -273,7 +257,7 @@ export function updateSessionActivity(
   session.lastActivityAt = now;
   
   // Record activity
-  const activities = sessionActivity.get(sessionId) || [];
+  const activities = await store.getActivity(sessionId);
   activities.push({
     timestamp: now,
     action,
@@ -286,20 +270,34 @@ export function updateSessionActivity(
     activities.splice(0, activities.length - 100);
   }
   
-  sessionActivity.set(sessionId, activities);
+  // Calculate remaining TTL based on session expiry
+  const remainingMs = session.expiresAt.getTime() - Date.now();
+  const ttl = Math.max(Math.ceil(remainingMs / 1000) + 3600, 3600); // At least 1h buffer
   
   // Extend session if near expiry
   const timeToExpiry = session.expiresAt.getTime() - now.getTime();
   if (timeToExpiry < SESSION_EXTENSION_THRESHOLD_MS) {
-    extendSession(sessionId);
+    await extendSession(sessionId);
+    // Re-read session after extension for correct TTL
+    const extended = await store.getSession(sessionId);
+    if (extended) {
+      const newTtl = Math.ceil((extended.expiresAt.getTime() - Date.now()) / 1000) + 3600;
+      await store.setSession(sessionId, extended, newTtl);
+      await store.setActivity(sessionId, activities, newTtl);
+      return;
+    }
   }
+  
+  await store.setSession(sessionId, session, ttl);
+  await store.setActivity(sessionId, activities, ttl);
 }
 
 /**
  * Extend session duration
  */
-export function extendSession(sessionId: string): boolean {
-  const session = sessionStore.get(sessionId);
+export async function extendSession(sessionId: string): Promise<boolean> {
+  const store = getSessionStore();
+  const session = await store.getSession(sessionId);
   
   if (!session || !session.isValid) {
     return false;
@@ -319,22 +317,33 @@ export function extendSession(sessionId: string): boolean {
   
   session.expiresAt = new Date(now.getTime() + extension);
   
+  const ttl = Math.ceil(extension / 1000) + 3600; // extension + 1h buffer
+  await store.setSession(sessionId, session, ttl);
+  
   return true;
 }
 
 /**
  * Invalidate a session
  */
-export function invalidateSession(sessionId: string): void {
-  const session = sessionStore.get(sessionId);
+export async function invalidateSession(sessionId: string): Promise<void> {
+  const store = getSessionStore();
+  const session = await store.getSession(sessionId);
   
   if (session) {
     session.isValid = false;
     
-    // Keep for audit trail (will be cleaned up later)
-    setTimeout(() => {
-      sessionStore.delete(sessionId);
-      sessionActivity.delete(sessionId);
+    // Keep for audit trail with short TTL (5 minutes)
+    await store.setSession(sessionId, session, 300);
+    
+    // Schedule full deletion after audit window
+    setTimeout(async () => {
+      try {
+        await store.deleteSession(sessionId);
+        await store.deleteActivity(sessionId);
+      } catch (error) {
+        console.error('[Session] Failed to cleanup invalidated session:', error);
+      }
     }, 300000); // 5 minutes
   }
 }
@@ -342,14 +351,14 @@ export function invalidateSession(sessionId: string): void {
 /**
  * Invalidate all sessions for a user
  */
-export function invalidateUserSessions(userId: string): number {
+export async function invalidateUserSessions(userId: string): Promise<number> {
+  const store = getSessionStore();
+  const sessionIds = await store.getSessionIdsByUserId(userId);
   let count = 0;
   
-  for (const [sessionId, session] of sessionStore.entries()) {
-    if (session.userId === userId) {
-      invalidateSession(sessionId);
-      count++;
-    }
+  for (const sessionId of sessionIds) {
+    await invalidateSession(sessionId);
+    count++;
   }
   
   return count;
@@ -383,8 +392,9 @@ export function getSessionInfo(session: SecureSession): {
 /**
  * Get session activity for audit
  */
-export function getSessionActivityLog(sessionId: string): SessionActivity[] {
-  return sessionActivity.get(sessionId) || [];
+export async function getSessionActivityLog(sessionId: string): Promise<SessionActivity[]> {
+  const store = getSessionStore();
+  return store.getActivity(sessionId);
 }
 
 // ============================================================

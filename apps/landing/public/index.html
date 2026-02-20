@@ -1,986 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATTENDING AI — Clinical Intelligence Platform</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* ============================================================
-           ATTENDING AI — Landing Hub
-           Design System: Clinical-grade with warmth
-           ============================================================ */
-        :root {
-            --brand-50: #eef2ff;
-            --brand-100: #e0e7ff;
-            --brand-200: #c7d2fe;
-            --brand-400: #818cf8;
-            --brand-500: #667eea;
-            --brand-600: #5a67d8;
-            --brand-700: #4c51bf;
-            --brand-800: #3730a3;
-            --brand-900: #312e81;
-            --accent-violet: #764ba2;
-            --accent-emerald: #10b981;
-            --accent-amber: #f59e0b;
-            --accent-rose: #f43f5e;
-            --accent-sky: #0ea5e9;
-            --gray-50: #f8fafc;
-            --gray-100: #f1f5f9;
-            --gray-200: #e2e8f0;
-            --gray-300: #cbd5e1;
-            --gray-400: #94a3b8;
-            --gray-500: #64748b;
-            --gray-600: #475569;
-            --gray-700: #334155;
-            --gray-800: #1e293b;
-            --gray-900: #0f172a;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 24px;
-            --radius-2xl: 32px;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-            --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
-            --shadow-xl: 0 20px 60px rgba(0,0,0,0.16);
-            --shadow-glow: 0 0 40px rgba(102,126,234,0.15);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--gray-50);
-            color: var(--gray-800);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* ---- Animated Background ---- */
-        .bg-mesh {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            background:
-                radial-gradient(ellipse 80% 60% at 10% 20%, rgba(102,126,234,0.08) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 80% at 90% 80%, rgba(118,75,162,0.06) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 50% at 50% 50%, rgba(16,185,129,0.03) 0%, transparent 60%);
-            animation: meshShift 20s ease-in-out infinite alternate;
-        }
-        @keyframes meshShift {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-
-        /* ---- Top Navigation ---- */
-        .top-nav {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            background: rgba(255,255,255,0.82);
-            border-bottom: 1px solid rgba(226,232,240,0.6);
-            padding: 0 clamp(16px, 4vw, 48px);
-        }
-        .nav-inner {
-            max-width: 1280px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 64px;
-        }
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: var(--gray-900);
-        }
-        .nav-logo {
-            width: 40px; height: 40px;
-            background: linear-gradient(135deg, var(--brand-500), var(--accent-violet));
-            border-radius: var(--radius-md);
-            display: grid;
-            place-items: center;
-            color: white;
-            font-weight: 800;
-            font-size: 18px;
-            letter-spacing: -0.5px;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.3);
-        }
-        .nav-title {
-            font-weight: 700;
-            font-size: 20px;
-            letter-spacing: -0.4px;
-        }
-        .nav-title span {
-            font-weight: 400;
-            color: var(--gray-400);
-            margin-left: 4px;
-            font-size: 14px;
-        }
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .nav-link {
-            padding: 8px 16px;
-            border-radius: var(--radius-sm);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--gray-600);
-            transition: all 0.2s;
-        }
-        .nav-link:hover {
-            background: var(--brand-50);
-            color: var(--brand-700);
-        }
-        .nav-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            background: rgba(16,185,129,0.08);
-            border: 1px solid rgba(16,185,129,0.2);
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--accent-emerald);
-        }
-        .nav-status::before {
-            content: '';
-            width: 7px; height: 7px;
-            background: var(--accent-emerald);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(0.85); }
-        }
-
-        /* ---- Hero Section ---- */
-        .hero {
-            position: relative;
-            z-index: 1;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 80px clamp(16px, 4vw, 48px) 40px;
-            text-align: center;
-        }
-        .hero-eyebrow {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 16px 6px 8px;
-            background: white;
-            border: 1px solid var(--gray-200);
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--gray-600);
-            margin-bottom: 24px;
-            box-shadow: var(--shadow-sm);
-        }
-        .hero-eyebrow .dot {
-            width: 24px; height: 24px;
-            background: linear-gradient(135deg, var(--brand-500), var(--accent-violet));
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-        }
-        .hero-eyebrow .dot svg { width: 14px; height: 14px; color: white; }
-        .hero h1 {
-            font-size: clamp(36px, 5vw, 56px);
-            font-weight: 800;
-            letter-spacing: -1.5px;
-            line-height: 1.1;
-            color: var(--gray-900);
-            margin-bottom: 20px;
-        }
-        .hero h1 .gradient-text {
-            background: linear-gradient(135deg, var(--brand-500), var(--accent-violet));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .hero-sub {
-            font-size: clamp(16px, 2vw, 20px);
-            color: var(--gray-500);
-            max-width: 640px;
-            margin: 0 auto 16px;
-            line-height: 1.6;
-            font-weight: 400;
-        }
-        .hero-stat-row {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-top: 32px;
-            flex-wrap: wrap;
-        }
-        .hero-stat {
-            text-align: center;
-        }
-        .hero-stat .num {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--brand-700);
-            letter-spacing: -0.5px;
-        }
-        .hero-stat .label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--gray-400);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-top: 2px;
-        }
-
-        /* ---- Portal Grid ---- */
-        .portal-section {
-            position: relative;
-            z-index: 1;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 20px clamp(16px, 4vw, 48px) 80px;
-        }
-        .portal-section-title {
-            text-align: center;
-            font-size: 13px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--gray-400);
-            margin-bottom: 32px;
-        }
-        .portal-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        /* ---- Portal Card ---- */
-        .portal-card {
-            background: white;
-            border-radius: var(--radius-xl);
-            border: 1px solid var(--gray-200);
-            padding: 32px 28px 28px;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-        }
-        .portal-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-            opacity: 0;
-            transition: opacity 0.35s;
-        }
-        .portal-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-            border-color: transparent;
-        }
-        .portal-card:hover::before { opacity: 1; }
-        .portal-card:active { transform: translateY(-2px); }
-
-        /* Card color variants */
-        .portal-card.compass::before { background: linear-gradient(90deg, var(--accent-emerald), #34d399); }
-        .portal-card.compass:hover { box-shadow: 0 12px 40px rgba(16,185,129,0.15); }
-        .portal-card.provider::before { background: linear-gradient(90deg, var(--brand-500), var(--accent-violet)); }
-        .portal-card.provider:hover { box-shadow: 0 12px 40px rgba(102,126,234,0.15); }
-        .portal-card.patient::before { background: linear-gradient(90deg, var(--accent-sky), #38bdf8); }
-        .portal-card.patient:hover { box-shadow: 0 12px 40px rgba(14,165,233,0.15); }
-        .portal-card.admin::before { background: linear-gradient(90deg, var(--gray-700), var(--gray-500)); }
-        .portal-card.admin:hover { box-shadow: 0 12px 40px rgba(51,65,85,0.15); }
-
-        .card-icon-wrap {
-            width: 52px; height: 52px;
-            border-radius: var(--radius-lg);
-            display: grid;
-            place-items: center;
-            margin-bottom: 20px;
-        }
-        .card-icon-wrap svg { width: 26px; height: 26px; }
-        .compass .card-icon-wrap { background: rgba(16,185,129,0.1); color: var(--accent-emerald); }
-        .provider .card-icon-wrap { background: rgba(102,126,234,0.1); color: var(--brand-600); }
-        .patient .card-icon-wrap { background: rgba(14,165,233,0.1); color: var(--accent-sky); }
-        .admin .card-icon-wrap { background: rgba(51,65,85,0.08); color: var(--gray-600); }
-
-        .card-label {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-        }
-        .compass .card-label { color: var(--accent-emerald); }
-        .provider .card-label { color: var(--brand-600); }
-        .patient .card-label { color: var(--accent-sky); }
-        .admin .card-label { color: var(--gray-500); }
-
-        .card-title {
-            font-size: 22px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-            color: var(--gray-900);
-            margin-bottom: 8px;
-        }
-        .card-desc {
-            font-size: 14px;
-            line-height: 1.6;
-            color: var(--gray-500);
-            margin-bottom: 20px;
-            flex: 1;
-        }
-        .card-features {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 24px;
-        }
-        .card-features li {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--gray-600);
-        }
-        .card-features li .check {
-            width: 18px; height: 18px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            flex-shrink: 0;
-        }
-        .card-features li .check svg { width: 11px; height: 11px; stroke-width: 3; }
-        .compass .card-features .check { background: rgba(16,185,129,0.1); color: var(--accent-emerald); }
-        .provider .card-features .check { background: rgba(102,126,234,0.1); color: var(--brand-600); }
-        .patient .card-features .check { background: rgba(14,165,233,0.1); color: var(--accent-sky); }
-        .admin .card-features .check { background: rgba(51,65,85,0.06); color: var(--gray-500); }
-
-        .card-action {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            padding: 12px 20px;
-            border-radius: var(--radius-md);
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            justify-content: center;
-        }
-        .card-action svg { width: 16px; height: 16px; transition: transform 0.2s; }
-        .portal-card:hover .card-action svg { transform: translateX(3px); }
-
-        .compass .card-action { background: rgba(16,185,129,0.1); color: var(--accent-emerald); }
-        .compass .card-action:hover { background: var(--accent-emerald); color: white; }
-        .provider .card-action { background: rgba(102,126,234,0.1); color: var(--brand-600); }
-        .provider .card-action:hover { background: var(--brand-600); color: white; }
-        .patient .card-action { background: rgba(14,165,233,0.1); color: var(--accent-sky); }
-        .patient .card-action:hover { background: var(--accent-sky); color: white; }
-        .admin .card-action { background: rgba(51,65,85,0.06); color: var(--gray-600); }
-        .admin .card-action:hover { background: var(--gray-700); color: white; }
-
-        /* ---- Architecture Section ---- */
-        .arch-section {
-            position: relative;
-            z-index: 1;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 0 clamp(16px, 4vw, 48px) 80px;
-        }
-        .arch-card {
-            background: white;
-            border: 1px solid var(--gray-200);
-            border-radius: var(--radius-xl);
-            padding: 40px;
-            box-shadow: var(--shadow-sm);
-        }
-        .arch-card h2 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 8px;
-            letter-spacing: -0.3px;
-        }
-        .arch-card .subtitle {
-            font-size: 15px;
-            color: var(--gray-500);
-            margin-bottom: 32px;
-        }
-        .arch-diagram {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 24px;
-            align-items: start;
-        }
-        .arch-col {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .arch-col-title {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--gray-400);
-            margin-bottom: 4px;
-        }
-        .arch-item {
-            padding: 14px 18px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--gray-200);
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .arch-item:hover {
-            border-color: var(--brand-200);
-            box-shadow: var(--shadow-sm);
-        }
-        .arch-item .name { font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
-        .arch-item .detail { font-size: 12px; color: var(--gray-400); }
-        .arch-connector {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding-top: 32px;
-        }
-        .arch-connector .line { width: 2px; height: 40px; background: var(--gray-200); }
-        .arch-connector .hub {
-            width: 48px; height: 48px;
-            background: linear-gradient(135deg, var(--brand-500), var(--accent-violet));
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 16px rgba(102,126,234,0.3);
-        }
-
-        /* ---- Footer ---- */
-        .footer {
-            position: relative;
-            z-index: 1;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 32px clamp(16px, 4vw, 48px);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid var(--gray-200);
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        .footer-left { font-size: 13px; color: var(--gray-400); }
-        .footer-right { display: flex; gap: 24px; }
-        .footer-right a {
-            font-size: 13px;
-            color: var(--gray-400);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .footer-right a:hover { color: var(--brand-600); }
-
-        /* ---- Demo Badge ---- */
-        .demo-banner {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 200;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 20px;
-            background: var(--gray-900);
-            color: white;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
-            box-shadow: var(--shadow-xl);
-        }
-        .demo-banner .demo-dot {
-            width: 8px; height: 8px;
-            background: var(--accent-emerald);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        /* ---- Loading Overlay ---- */
-        .nav-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(20px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-        .nav-overlay.active { opacity: 1; pointer-events: all; }
-        .nav-overlay .spinner {
-            width: 40px; height: 40px;
-            border: 3px solid var(--gray-200);
-            border-top-color: var(--brand-500);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .nav-overlay .nav-text { font-size: 15px; font-weight: 600; color: var(--gray-700); }
-
-        /* ---- Toast ---- */
-        .toast {
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-20px);
-            z-index: 500;
-            padding: 12px 24px;
-            background: var(--gray-900);
-            color: white;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
-            box-shadow: var(--shadow-lg);
-            opacity: 0;
-            transition: all 0.3s;
-            pointer-events: none;
-            white-space: nowrap;
-        }
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-        /* ---- Responsive ---- */
-        @media (max-width: 768px) {
-            .hero { padding-top: 48px; }
-            .hero-stat-row { gap: 24px; }
-            .arch-diagram { grid-template-columns: 1fr; }
-            .arch-connector { flex-direction: row; padding-top: 0; }
-            .arch-connector .line { width: 40px; height: 2px; }
-            .nav-links { display: none; }
-            .portal-grid { grid-template-columns: 1fr; }
-        }
-
-        /* ---- Entrance Animations ---- */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(16px);
-            animation: fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-        }
-        .fade-in:nth-child(1) { animation-delay: 0.05s; }
-        .fade-in:nth-child(2) { animation-delay: 0.1s; }
-        .fade-in:nth-child(3) { animation-delay: 0.15s; }
-        .fade-in:nth-child(4) { animation-delay: 0.2s; }
-        @keyframes fadeUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .hero .fade-in { animation-delay: 0s; }
-        .hero .fade-in:nth-child(2) { animation-delay: 0.08s; }
-        .hero .fade-in:nth-child(3) { animation-delay: 0.14s; }
-        .hero .fade-in:nth-child(4) { animation-delay: 0.2s; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATTENDING AI - Clinical Intelligence Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--brand-400:#818cf8;--brand-500:#667eea;--brand-600:#5a67d8;--brand-700:#4c51bf;--accent-violet:#764ba2;--accent-emerald:#10b981;--accent-amber:#f59e0b;--accent-sky:#0ea5e9;--navy-900:#0b0f1a;--navy-800:#0f172a;--navy-700:#1a2236;--navy-600:#1e293b;--navy-500:#263348;--navy-400:#334155;--navy-300:#475569;--navy-200:#64748b;--navy-100:#94a3b8;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:24px;--shadow-sm:0 1px 3px rgba(0,0,0,.2);--shadow-lg:0 12px 40px rgba(0,0,0,.4);--shadow-xl:0 20px 60px rgba(0,0,0,.5)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--navy-800);color:#e2e8f0;min-height:100vh;overflow-x:hidden}
+.bg-mesh{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 60% at 10% 20%,rgba(102,126,234,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 90% 80%,rgba(118,75,162,.05) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 50% 0%,rgba(16,185,129,.03) 0%,transparent 50%)}
+.top-nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px) saturate(180%);background:rgba(15,23,42,.75);border-bottom:1px solid rgba(255,255,255,.06);padding:0 clamp(16px,4vw,48px)}
+.nav-inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+.nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#f1f5f9}
+.nav-logo{width:40px;height:40px;background:linear-gradient(135deg,var(--brand-500),var(--accent-violet));border-radius:var(--radius-md);display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;box-shadow:0 2px 12px rgba(102,126,234,.4)}
+.nav-title{font-weight:700;font-size:20px;letter-spacing:-.4px}
+.nav-title span{font-weight:400;color:var(--navy-100);margin-left:4px;font-size:14px}
+.nav-links{display:flex;align-items:center;gap:8px}
+.nav-link{padding:8px 16px;border-radius:var(--radius-sm);text-decoration:none;font-size:14px;font-weight:500;color:var(--navy-100);transition:all .2s}
+.nav-link:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-status{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
+.hero{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:80px clamp(16px,4vw,48px) 40px;text-align:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 16px 6px 8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:100px;font-size:13px;font-weight:600;color:var(--navy-100);margin-bottom:24px}
+.hero-eyebrow .dot{width:24px;height:24px;background:linear-gradient(135deg,var(--brand-500),var(--accent-violet));border-radius:50%;display:grid;place-items:center}
+.hero-eyebrow .dot svg{width:14px;height:14px;color:#fff}
+.hero h1{font-size:clamp(36px,5vw,56px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;color:#fff;margin-bottom:20px}
+.hero h1 .gradient-text{background:linear-gradient(135deg,var(--brand-400),#a78bfa,var(--accent-violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(16px,2vw,20px);color:var(--navy-100);max-width:640px;margin:0 auto 16px;line-height:1.6}
+.hero-stat-row{display:flex;justify-content:center;gap:40px;margin-top:32px;flex-wrap:wrap}
+.hero-stat .num{font-size:28px;font-weight:800;color:var(--brand-400);letter-spacing:-.5px}
+.hero-stat .label{font-size:12px;font-weight:600;color:var(--navy-200);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+.portal-section{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:20px clamp(16px,4vw,48px) 80px}
+.portal-section-title{text-align:center;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--navy-200);margin-bottom:32px}
+.portal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.portal-card{background:var(--navy-700);border-radius:var(--radius-xl);border:1px solid rgba(255,255,255,.06);padding:32px 28px 28px;position:relative;overflow:hidden;cursor:pointer;transition:all .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.portal-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--radius-xl) var(--radius-xl) 0 0;opacity:0;transition:opacity .35s}
+.portal-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.1)}
+.portal-card:hover::before{opacity:1}
+.portal-card.compass::before{background:linear-gradient(90deg,var(--accent-emerald),#34d399)}
+.portal-card.compass:hover{box-shadow:0 12px 40px rgba(16,185,129,.12)}
+.portal-card.provider::before{background:linear-gradient(90deg,var(--brand-500),var(--accent-violet))}
+.portal-card.provider:hover{box-shadow:0 12px 40px rgba(102,126,234,.12)}
+.portal-card.patient::before{background:linear-gradient(90deg,var(--accent-sky),#38bdf8)}
+.portal-card.patient:hover{box-shadow:0 12px 40px rgba(14,165,233,.12)}
+.portal-card.admin::before{background:linear-gradient(90deg,var(--navy-300),var(--navy-200))}
+.portal-card.admin:hover{box-shadow:0 12px 40px rgba(71,85,105,.15)}
+.card-icon-wrap{width:52px;height:52px;border-radius:var(--radius-lg);display:grid;place-items:center;margin-bottom:20px}
+.card-icon-wrap svg{width:26px;height:26px}
+.compass .card-icon-wrap{background:rgba(16,185,129,.12);color:var(--accent-emerald)}
+.provider .card-icon-wrap{background:rgba(102,126,234,.12);color:var(--brand-400)}
+.patient .card-icon-wrap{background:rgba(14,165,233,.12);color:var(--accent-sky)}
+.admin .card-icon-wrap{background:rgba(148,163,184,.08);color:var(--navy-100)}
+.card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.compass .card-label{color:var(--accent-emerald)}.provider .card-label{color:var(--brand-400)}.patient .card-label{color:var(--accent-sky)}.admin .card-label{color:var(--navy-200)}
+.card-title{font-size:22px;font-weight:700;letter-spacing:-.3px;color:#fff;margin-bottom:8px}
+.card-desc{font-size:14px;line-height:1.6;color:var(--navy-100);margin-bottom:20px;flex:1}
+.card-features{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.card-features li{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--navy-100)}
+.card-features li .ck{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.card-features li .ck svg{width:11px;height:11px;stroke-width:3}
+.compass .card-features .ck{background:rgba(16,185,129,.12);color:var(--accent-emerald)}
+.provider .card-features .ck{background:rgba(102,126,234,.12);color:var(--brand-400)}
+.patient .card-features .ck{background:rgba(14,165,233,.12);color:var(--accent-sky)}
+.admin .card-features .ck{background:rgba(148,163,184,.06);color:var(--navy-200)}
+.card-action{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:12px 20px;border-radius:var(--radius-md);border:none;cursor:pointer;transition:all .2s;justify-content:center}
+.card-action svg{width:16px;height:16px;transition:transform .2s}
+.portal-card:hover .card-action svg{transform:translateX(3px)}
+.compass .card-action{background:rgba(16,185,129,.12);color:var(--accent-emerald)}.compass .card-action:hover{background:var(--accent-emerald);color:#fff}
+.provider .card-action{background:rgba(102,126,234,.12);color:var(--brand-400)}.provider .card-action:hover{background:var(--brand-500);color:#fff}
+.patient .card-action{background:rgba(14,165,233,.12);color:var(--accent-sky)}.patient .card-action:hover{background:var(--accent-sky);color:#fff}
+.admin .card-action{background:rgba(148,163,184,.06);color:var(--navy-100)}.admin .card-action:hover{background:var(--navy-400);color:#fff}
+.arch-section{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,48px) 80px}
+.arch-card{background:var(--navy-700);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-xl);padding:40px}
+.arch-card h2{font-size:24px;font-weight:700;color:#fff;margin-bottom:8px}
+.arch-card .subtitle{font-size:15px;color:var(--navy-100);margin-bottom:32px}
+.arch-diagram{display:grid;grid-template-columns:1fr auto 1fr;gap:24px;align-items:start}
+.arch-col{display:flex;flex-direction:column;gap:12px}
+.arch-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--navy-200);margin-bottom:4px}
+.arch-item{padding:14px 18px;border-radius:var(--radius-md);border:1px solid rgba(255,255,255,.06);font-size:13px;font-weight:500;transition:all .2s;cursor:pointer;background:rgba(255,255,255,.02)}
+.arch-item:hover{border-color:rgba(102,126,234,.3);box-shadow:0 0 20px rgba(102,126,234,.08)}
+.arch-item .name{font-weight:600;color:#e2e8f0;margin-bottom:2px}
+.arch-item .detail{font-size:12px;color:var(--navy-200)}
+.arch-connector{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding-top:32px}
+.arch-connector .line{width:2px;height:40px;background:rgba(255,255,255,.08)}
+.arch-connector .hub{width:48px;height:48px;background:linear-gradient(135deg,var(--brand-500),var(--accent-violet));border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;box-shadow:0 4px 20px rgba(102,126,234,.4)}
+.footer{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:32px clamp(16px,4vw,48px);display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.06);flex-wrap:wrap;gap:16px}
+.footer-left{font-size:13px;color:var(--navy-200)}
+.footer-right{display:flex;gap:24px}
+.footer-right a{font-size:13px;color:var(--navy-200);text-decoration:none;transition:color .2s}
+.footer-right a:hover{color:var(--brand-400)}
+.demo-banner{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;align-items:center;gap:10px;padding:12px 20px;background:rgba(255,255,255,.08);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:100px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);cursor:pointer;transition:all .2s}
+.demo-banner:hover{background:rgba(255,255,255,.12);transform:translateY(-2px)}
+.demo-banner .demo-dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s ease-in-out infinite}
+.nav-overlay{position:fixed;inset:0;z-index:1000;background:rgba(11,15,26,.95);backdrop-filter:blur(20px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;opacity:0;pointer-events:none;transition:opacity .3s}
+.nav-overlay.active{opacity:1;pointer-events:all}
+.nav-overlay .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--brand-500);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.nav-overlay .nav-text{font-size:15px;font-weight:600;color:#e2e8f0}
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);z-index:500;padding:12px 24px;background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:100px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sp{display:none;position:fixed;top:80px;right:24px;z-index:300;background:var(--navy-700);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:28px;width:360px;box-shadow:var(--shadow-xl)}
+.sp.open{display:block}
+.sp h3{font-size:16px;font-weight:700;color:#fff;margin-bottom:20px}
+.sp label{display:block;font-size:12px;font-weight:600;color:var(--navy-100);margin-bottom:6px}
+.sp .row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.sp input{width:100%;padding:10px 14px;border:1px solid rgba(255,255,255,.1);border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:var(--navy-600);color:#fff}
+.sp input:focus{border-color:var(--brand-500);box-shadow:0 0 0 3px rgba(102,126,234,.15)}
+.sp .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sp .btns{display:flex;gap:8px;margin-top:20px}
+.sp .btns button{padding:10px 16px;border:none;border-radius:10px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+.sp .bp{flex:1;background:linear-gradient(135deg,var(--brand-500),var(--accent-violet));color:#fff}
+.sp .bs{background:rgba(255,255,255,.06);color:var(--navy-100)}
+.sp .bs:hover{background:rgba(255,255,255,.1)}
+.sp .hint{margin-top:14px;font-size:11px;color:var(--navy-200);line-height:1.5}
+.sp .hint code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--navy-100)}
+.sp .close{position:absolute;top:16px;right:16px;cursor:pointer;font-size:20px;color:var(--navy-200);background:none;border:none}
+.sp .close:hover{color:#fff}
+@media(max-width:768px){.hero{padding-top:48px}.arch-diagram{grid-template-columns:1fr}.arch-connector{flex-direction:row;padding-top:0}.arch-connector .line{width:40px;height:2px}.nav-links{display:none}.portal-grid{grid-template-columns:1fr}.sp{right:12px;left:12px;width:auto}}
+.fade-in{opacity:0;transform:translateY(16px);animation:fadeUp .6s cubic-bezier(.4,0,.2,1) forwards}
+.fade-in:nth-child(1){animation-delay:.05s}.fade-in:nth-child(2){animation-delay:.1s}.fade-in:nth-child(3){animation-delay:.15s}.fade-in:nth-child(4){animation-delay:.2s}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+</style>
 </head>
 <body>
-
 <div class="bg-mesh"></div>
+<nav class="top-nav"><div class="nav-inner">
+<a href="#" class="nav-brand" onclick="event.preventDefault();"><div class="nav-logo">A</div><div class="nav-title">ATTENDING <span>AI</span></div></a>
+<div class="nav-links">
+<a href="#portals" class="nav-link">Portals</a>
+<a href="#architecture" class="nav-link">Architecture</a>
+<a href="https://attendingai.health" class="nav-link" target="_blank">attendingai.health</a>
+<div class="nav-status" id="navStatus" onclick="toggleSettings()">Scanning ports...</div>
+</div>
+</div></nav>
 
-<!-- ==================== TOP NAVIGATION ==================== -->
-<nav class="top-nav">
-    <div class="nav-inner">
-        <a href="#" class="nav-brand" onclick="event.preventDefault();">
-            <div class="nav-logo">A</div>
-            <div class="nav-title">ATTENDING <span>AI</span></div>
-        </a>
-        <div class="nav-links">
-            <a href="#portals" class="nav-link">Portals</a>
-            <a href="#architecture" class="nav-link">Architecture</a>
-            <a href="https://attendingai.health" class="nav-link" target="_blank">attendingai.health</a>
-            <div class="nav-status">All Systems Operational</div>
-        </div>
-    </div>
-</nav>
-
-<!-- ==================== HERO SECTION ==================== -->
 <section class="hero" id="hero">
-    <div class="fade-in">
-        <div class="hero-eyebrow">
-            <div class="dot">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-            </div>
-            Clinical Intelligence Platform &mdash; v1.0
-        </div>
-    </div>
-    <h1 class="fade-in">
-        Where AI Meets<br>
-        <span class="gradient-text">Clinical Excellence</span>
-    </h1>
-    <p class="hero-sub fade-in">
-        ATTENDING AI reverses the clinical workload ratio &mdash; transforming 80% information gathering
-        into 80% clinical decision-making. Select a portal below to begin.
-    </p>
-    <div class="hero-stat-row fade-in">
-        <div class="hero-stat">
-            <div class="num">4</div>
-            <div class="label">Integrated Portals</div>
-        </div>
-        <div class="hero-stat">
-            <div class="num">14+</div>
-            <div class="label">Red Flag Conditions</div>
-        </div>
-        <div class="hero-stat">
-            <div class="num">100+</div>
-            <div class="label">Lab Tests Available</div>
-        </div>
-        <div class="hero-stat">
-            <div class="num">92%</div>
-            <div class="label">Production Ready</div>
-        </div>
-    </div>
+<div class="fade-in"><div class="hero-eyebrow"><div class="dot"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>Clinical Intelligence Platform - v1.0</div></div>
+<h1 class="fade-in">Where AI Meets<br><span class="gradient-text">Clinical Excellence</span></h1>
+<p class="hero-sub fade-in">ATTENDING AI reverses the clinical workload ratio - transforming 80% information gathering into 80% clinical decision-making. Select a portal below to begin.</p>
+<div class="hero-stat-row fade-in">
+<div class="hero-stat"><div class="num">4</div><div class="label">Integrated Portals</div></div>
+<div class="hero-stat"><div class="num">14+</div><div class="label">Red Flag Conditions</div></div>
+<div class="hero-stat"><div class="num">100+</div><div class="label">Lab Tests Available</div></div>
+<div class="hero-stat"><div class="num">92%</div><div class="label">Production Ready</div></div>
+</div>
 </section>
 
-<!-- ==================== PORTAL GRID ==================== -->
 <section class="portal-section" id="portals">
-    <div class="portal-section-title">Select Your Portal</div>
-    <div class="portal-grid">
-
-        <!-- COMPASS -->
-        <div class="portal-card compass fade-in" onclick="navigateTo('compass')">
-            <div class="card-icon-wrap">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/>
-                    <path d="M2 12h20"/>
-                </svg>
-            </div>
-            <div class="card-label">Patient Assessment</div>
-            <div class="card-title">COMPASS</div>
-            <div class="card-desc">
-                AI-guided symptom assessment chatbot. Patients describe their concerns naturally
-                through voice or text while AI captures a comprehensive clinical history.
-            </div>
-            <ul class="card-features">
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Voice &amp; text input with OLDCARTS methodology</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Red flag detection for 14+ emergency conditions</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Camera capture for visible symptoms</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>GPS emergency facility finder with 911 integration</li>
-            </ul>
-            <div class="card-action">
-                Launch COMPASS
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </div>
-        </div>
-
-        <!-- ATTENDING Provider Portal -->
-        <div class="portal-card provider fade-in" onclick="navigateTo('provider')">
-            <div class="card-icon-wrap">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                </svg>
-            </div>
-            <div class="card-label">Clinical Decision Support</div>
-            <div class="card-title">ATTENDING</div>
-            <div class="card-desc">
-                Provider-facing clinical intelligence portal. AI-powered pre-visit summaries,
-                differential diagnosis, and integrated ordering for labs, imaging, medications, and referrals.
-            </div>
-            <ul class="card-features">
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>AI differential diagnosis with ranked probabilities</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Smart ordering &mdash; labs, imaging, meds, referrals</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Auto-generated SOAP notes with MDM calculation</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Real-time patient queue with urgency sorting</li>
-            </ul>
-            <div class="card-action">
-                Open Provider Portal
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </div>
-        </div>
-
-        <!-- Patient Portal -->
-        <div class="portal-card patient fade-in" onclick="navigateTo('patient')">
-            <div class="card-icon-wrap">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                    <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                </svg>
-            </div>
-            <div class="card-label">Patient Experience</div>
-            <div class="card-title">Patient Portal</div>
-            <div class="card-desc">
-                Complete patient-facing experience including appointment management, health records,
-                messaging, and pre-visit COMPASS assessment integration.
-            </div>
-            <ul class="card-features">
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Pre-visit assessment via COMPASS integration</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Secure messaging with AI-drafted responses</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Lab results and health records access</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Appointment scheduling and reminders</li>
-            </ul>
-            <div class="card-action">
-                Open Patient Portal
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </div>
-        </div>
-
-        <!-- IT Admin -->
-        <div class="portal-card admin fade-in" onclick="navigateTo('admin')">
-            <div class="card-icon-wrap">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                </svg>
-            </div>
-            <div class="card-label">System Administration</div>
-            <div class="card-title">IT Admin Console</div>
-            <div class="card-desc">
-                Tiered IT support console with real-time system monitoring, HIPAA audit logs,
-                user management, EHR integration status, and security dashboards.
-            </div>
-            <ul class="card-features">
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>3-tier access: Basic &rarr; Advanced &rarr; Engineering</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Real-time system health &amp; WebSocket monitoring</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>HIPAA compliance audit trail</li>
-                <li><span class="check"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>EHR integration status &amp; API monitoring</li>
-            </ul>
-            <div class="card-action">
-                Open Admin Console
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-            </div>
-        </div>
-
-    </div>
+<div class="portal-section-title">Select Your Portal</div>
+<div class="portal-grid">
+<div class="portal-card compass fade-in" onclick="navigateTo('compass')">
+<div class="card-icon-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20 14.5 14.5 0 000-20"/><path d="M2 12h20"/></svg></div>
+<div class="card-label">Patient Assessment</div><div class="card-title">COMPASS</div>
+<div class="card-desc">AI-guided symptom assessment chatbot. Patients describe their concerns naturally through voice or text while AI captures a comprehensive clinical history.</div>
+<ul class="card-features"><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Voice and text input with OLDCARTS methodology</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Red flag detection for 14+ emergency conditions</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Camera capture for visible symptoms</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>GPS emergency facility finder with 911 integration</li></ul>
+<div class="card-action" id="act-compass">Launch COMPASS <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+</div>
+<div class="portal-card provider fade-in" onclick="navigateTo('provider')">
+<div class="card-icon-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+<div class="card-label">Clinical Decision Support</div><div class="card-title">ATTENDING</div>
+<div class="card-desc">Provider-facing clinical intelligence portal. AI-powered pre-visit summaries, differential diagnosis, and integrated ordering for labs, imaging, medications, and referrals.</div>
+<ul class="card-features"><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>AI differential diagnosis with ranked probabilities</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Smart ordering - labs, imaging, meds, referrals</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Auto-generated SOAP notes with MDM calculation</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Real-time patient queue with urgency sorting</li></ul>
+<div class="card-action" id="act-provider">Open Provider Portal <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+</div>
+<div class="portal-card patient fade-in" onclick="navigateTo('patient')">
+<div class="card-icon-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
+<div class="card-label">Patient Experience</div><div class="card-title">Patient Portal</div>
+<div class="card-desc">Complete patient-facing experience including appointment management, health records, messaging, and pre-visit COMPASS assessment integration.</div>
+<ul class="card-features"><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Pre-visit assessment via COMPASS integration</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Secure messaging with AI-drafted responses</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Lab results and health records access</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Appointment scheduling and reminders</li></ul>
+<div class="card-action" id="act-patient">Open Patient Portal <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+</div>
+<div class="portal-card admin fade-in" onclick="navigateTo('admin')">
+<div class="card-icon-wrap"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>
+<div class="card-label">System Administration</div><div class="card-title">IT Admin Console</div>
+<div class="card-desc">Tiered IT support console with real-time system monitoring, HIPAA audit logs, user management, EHR integration status, and security dashboards.</div>
+<ul class="card-features"><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>3-tier access: Basic, Advanced, Engineering</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>Real-time system health and WebSocket monitoring</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>HIPAA compliance audit trail</li><li><span class="ck"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>EHR integration status and API monitoring</li></ul>
+<div class="card-action" id="act-admin">Open Admin Console <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg></div>
+</div>
+</div>
 </section>
 
-<!-- ==================== ARCHITECTURE OVERVIEW ==================== -->
 <section class="arch-section" id="architecture">
-    <div class="arch-card">
-        <h2>Platform Architecture</h2>
-        <p class="subtitle">How the Clinical Intelligence Layer connects everything</p>
-        <div class="arch-diagram">
-            <div class="arch-col">
-                <div class="arch-col-title">Frontend Portals</div>
-                <div class="arch-item" onclick="navigateTo('compass')" style="cursor:pointer">
-                    <div class="name">&#x1F9ED; COMPASS</div>
-                    <div class="detail">Patient Assessment &mdash; Port 3001</div>
-                </div>
-                <div class="arch-item" onclick="navigateTo('provider')" style="cursor:pointer">
-                    <div class="name">&#x1FA7A; ATTENDING</div>
-                    <div class="detail">Provider Portal &mdash; Port 3000</div>
-                </div>
-                <div class="arch-item" onclick="navigateTo('patient')" style="cursor:pointer">
-                    <div class="name">&#x1F464; Patient Portal</div>
-                    <div class="detail">Health Records &mdash; Port 3001</div>
-                </div>
-                <div class="arch-item" onclick="navigateTo('admin')" style="cursor:pointer">
-                    <div class="name">&#x2699;&#xFE0F; IT Admin</div>
-                    <div class="detail">System Console &mdash; Port 3000/admin</div>
-                </div>
-            </div>
-            <div class="arch-connector">
-                <div class="line"></div>
-                <div class="hub">API</div>
-                <div class="line"></div>
-            </div>
-            <div class="arch-col">
-                <div class="arch-col-title">Backend Services</div>
-                <div class="arch-item">
-                    <div class="name">Prisma ORM + PostgreSQL</div>
-                    <div class="detail">30+ clinical models, HIPAA audit</div>
-                </div>
-                <div class="arch-item">
-                    <div class="name">WebSocket (Socket.io)</div>
-                    <div class="detail">Real-time patient &harr; provider sync</div>
-                </div>
-                <div class="arch-item">
-                    <div class="name">FHIR R4 Connectors</div>
-                    <div class="detail">Epic, Oracle Health, Meditech</div>
-                </div>
-                <div class="arch-item">
-                    <div class="name">Azure AD B2C</div>
-                    <div class="detail">Enterprise SSO, RBAC (5 roles)</div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="arch-card">
+<h2>Platform Architecture</h2><p class="subtitle">How the Clinical Intelligence Layer connects everything</p>
+<div class="arch-diagram">
+<div class="arch-col">
+<div class="arch-col-title">Frontend Portals</div>
+<div class="arch-item" onclick="navigateTo('compass')"><div class="name">COMPASS</div><div class="detail" id="ar-compass">Patient Assessment</div></div>
+<div class="arch-item" onclick="navigateTo('provider')"><div class="name">ATTENDING</div><div class="detail" id="ar-provider">Provider Portal</div></div>
+<div class="arch-item" onclick="navigateTo('patient')"><div class="name">Patient Portal</div><div class="detail" id="ar-patient">Health Records</div></div>
+<div class="arch-item" onclick="navigateTo('admin')"><div class="name">IT Admin</div><div class="detail" id="ar-admin">System Console</div></div>
+</div>
+<div class="arch-connector"><div class="line"></div><div class="hub">API</div><div class="line"></div></div>
+<div class="arch-col">
+<div class="arch-col-title">Backend Services</div>
+<div class="arch-item"><div class="name">Prisma ORM + PostgreSQL</div><div class="detail">30+ clinical models, HIPAA audit</div></div>
+<div class="arch-item"><div class="name">WebSocket (Socket.io)</div><div class="detail">Real-time patient-provider sync</div></div>
+<div class="arch-item"><div class="name">FHIR R4 Connectors</div><div class="detail">Epic, Oracle Health, Meditech</div></div>
+<div class="arch-item"><div class="name">Azure AD B2C</div><div class="detail">Enterprise SSO, RBAC (5 roles)</div></div>
+</div>
+</div>
+</div>
 </section>
 
-<!-- ==================== FOOTER ==================== -->
-<footer class="footer">
-    <div class="footer-left">&copy; 2026 ATTENDING AI LLC &mdash; Clinical Intelligence Platform</div>
-    <div class="footer-right">
-        <a href="https://attendingai.health" target="_blank">attendingai.health</a>
-        <a href="mailto:Attendingai@gmail.com">Contact</a>
-        <a href="#">HIPAA Compliant</a>
-    </div>
-</footer>
+<footer class="footer"><div class="footer-left">2026 ATTENDING AI LLC - Clinical Intelligence Platform</div><div class="footer-right"><a href="https://attendingai.health" target="_blank">attendingai.health</a><a href="mailto:Attendingai@gmail.com">Contact</a></div></footer>
 
-<!-- ==================== DEMO BADGE ==================== -->
-<div class="demo-banner">
-    <div class="demo-dot"></div>
-    Demo Environment
+<div class="sp" id="sp">
+<button class="close" onclick="toggleSettings()">&times;</button>
+<h3>Port Configuration</h3>
+<label>Provider Portal (ATTENDING)</label>
+<div class="row"><input type="number" id="inProv" min="1000" max="65535"><div class="dot" id="dProv" style="background:#94a3b8"></div></div>
+<label>Patient Portal / COMPASS</label>
+<div class="row"><input type="number" id="inPat" min="1000" max="65535"><div class="dot" id="dPat" style="background:#94a3b8"></div></div>
+<div class="btns"><button class="bp" onclick="applySettings()">Apply and Scan</button><button class="bs" onclick="scanPorts()">Rescan</button></div>
+<div class="hint">Check your terminal for actual ports. Next.js prints:<br><code>ready - started server on 0.0.0.0:XXXX</code><br><br>Ports are saved between sessions.</div>
 </div>
 
-<!-- ==================== LOADING OVERLAY ==================== -->
-<div class="nav-overlay" id="navOverlay">
-    <div class="spinner"></div>
-    <div class="nav-text" id="navText">Loading COMPASS...</div>
-</div>
+<div class="demo-banner" onclick="toggleSettings()"><div class="demo-dot" id="bDot" style="background:#f59e0b"></div><span id="bTxt">Scanning...</span><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="opacity:.5"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg></div>
 
-<!-- ==================== TOAST ==================== -->
+<div class="nav-overlay" id="navOverlay"><div class="spinner"></div><div class="nav-text" id="navText">Loading...</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-    // ============================================================
-    //  ROUTING CONFIGURATION
-    //  Auto-detects environment and routes accordingly:
-    //
-    //  Production (attendingai.health):
-    //    compass  -> https://compass.attendingai.health
-    //    provider -> https://app.attendingai.health
-    //    patient  -> https://patient.attendingai.health
-    //    admin    -> https://app.attendingai.health/admin
-    //
-    //  Development (localhost):
-    //    compass  -> http://localhost:3001/compass?demo=true
-    //    provider -> http://localhost:3000
-    //    patient  -> http://localhost:3001
-    //    admin    -> http://localhost:3000/admin
-    //
-    //  Demo (file:// or standalone):
-    //    compass  -> ./demos/compass-chatbot.html
-    //    provider -> ./demos/provider-portal.html
-    //    patient  -> ./demos/patient-portal.html
-    //    admin    -> ./demos/admin-console.html
-    // ============================================================
-
-    const ENV = detectEnvironment();
-
-    function detectEnvironment() {
-        const host = window.location.hostname;
-
-        // Production
-        if (host.includes('attendingai.health') || host.includes('attendingai.com')) {
-            return {
-                mode: 'production',
-                routes: {
-                    compass:  'https://compass.attendingai.health',
-                    provider: 'https://app.attendingai.health',
-                    patient:  'https://patient.attendingai.health',
-                    admin:    'https://app.attendingai.health/admin'
-                }
-            };
-        }
-
-        // Local dev servers
-        if (host === 'localhost' || host === '127.0.0.1') {
-            return {
-                mode: 'development',
-                routes: {
-                    compass:  'http://localhost:3001/compass?demo=true',
-                    provider: 'http://localhost:3000',
-                    patient:  'http://localhost:3001',
-                    admin:    'http://localhost:3000/admin'
-                }
-            };
-        }
-
-        // Standalone HTML demo (file:// or unknown host)
-        return {
-            mode: 'demo',
-            routes: {
-                compass:  './demos/compass-chatbot.html',
-                provider: './demos/provider-portal.html',
-                patient:  './demos/patient-portal.html',
-                admin:    './demos/admin-console.html'
-            }
-        };
-    }
-
-    const portalLabels = {
-        compass:  'COMPASS Assessment',
-        provider: 'Provider Portal',
-        patient:  'Patient Portal',
-        admin:    'IT Admin Console'
-    };
-
-    function navigateTo(portal) {
-        const url = ENV.routes[portal];
-        const label = portalLabels[portal];
-        if (!url) { showToast('Portal not configured'); return; }
-
-        if (ENV.mode === 'demo') {
-            showLoadingOverlay(label);
-            setTimeout(function() { window.location.href = url; }, 600);
-            // Fallback if file not found
-            setTimeout(function() {
-                hideLoadingOverlay();
-                showToast(label + ' demo \u2014 place HTML files in ./demos/ folder');
-            }, 2500);
-            return;
-        }
-
-        showLoadingOverlay(label);
-        setTimeout(function() { window.location.href = url; }, 400);
-    }
-
-    function showLoadingOverlay(label) {
-        document.getElementById('navText').textContent = 'Loading ' + label + '...';
-        document.getElementById('navOverlay').classList.add('active');
-    }
-    function hideLoadingOverlay() {
-        document.getElementById('navOverlay').classList.remove('active');
-    }
-    function showToast(msg) {
-        var toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.classList.add('show');
-        setTimeout(function() { toast.classList.remove('show'); }, 3000);
-    }
-
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            var target = document.querySelector(link.getAttribute('href'));
-            if (target) {
-                e.preventDefault();
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
-
-    console.log('[ATTENDING AI] Environment: ' + ENV.mode, ENV.routes);
+var PORTS=[3000,3001,3002,3003,3004,3005,3006,3007,3008,3009,3010];
+var cfg;try{var s=localStorage.getItem('attending-ports');cfg=s?JSON.parse(s):null}catch(e){}
+if(!cfg)cfg={provider:3002,patient:3001};
+function save(){try{localStorage.setItem('attending-ports',JSON.stringify(cfg))}catch(e){}}
+function $(id){return document.getElementById(id)}
+function mode(){var h=location.hostname;if(h.includes('attendingai.health'))return'prod';if(location.protocol==='file:')return'demo';return'dev'}
+function url(p){var m=mode();if(m==='prod')return{compass:'https://compass.attendingai.health',provider:'https://app.attendingai.health',patient:'https://patient.attendingai.health',admin:'https://app.attendingai.health/admin'}[p];if(m==='demo')return{compass:'./demos/compass-chatbot.html',provider:'./demos/provider-portal.html',patient:'./demos/patient-portal.html',admin:'./demos/admin-console.html'}[p];return{compass:'http://localhost:'+cfg.patient+'/compass',provider:'http://localhost:'+cfg.provider,patient:'http://localhost:'+cfg.patient,admin:'http://localhost:'+cfg.provider+'/admin'}[p]}
+function probe(port){return new Promise(function(ok){var c=new AbortController();var t=setTimeout(function(){c.abort();ok(false)},1200);fetch('http://localhost:'+port+'/',{mode:'no-cors',signal:c.signal}).then(function(){clearTimeout(t);ok(true)}).catch(function(){clearTimeout(t);ok(false)})})}
+async function scanPorts(){if(mode()!=='dev'){$('bTxt').textContent=mode()==='prod'?'Production':'Demo Mode';$('bDot').style.background='#10b981';setNav('Ready','live');return}
+$('bTxt').textContent='Scanning...';$('bDot').style.background='#f59e0b';setNav('Scanning ports...','scan');
+var r={};await Promise.all(PORTS.map(function(p){return probe(p).then(function(a){r[p]=a})}));
+var live=PORTS.filter(function(p){return r[p]});console.log('[ATTENDING] Live:',live);
+var pOk=r[cfg.provider]||false,tOk=r[cfg.patient]||false;
+if(!pOk){for(var i=0;i<live.length;i++){if(live[i]!==cfg.patient){cfg.provider=live[i];pOk=true;save();toast('Found Provider on :'+cfg.provider);break}}}
+if(!tOk){for(var i=0;i<live.length;i++){if(live[i]!==cfg.provider){cfg.patient=live[i];tOk=true;save();toast('Found Patient on :'+cfg.patient);break}}}
+setDot('act-compass',tOk);setDot('act-provider',pOk);setDot('act-patient',tOk);setDot('act-admin',pOk);
+$('ar-compass').textContent=(tOk?'[LIVE] ':'[OFF] ')+'Port '+cfg.patient+'/compass';
+$('ar-provider').textContent=(pOk?'[LIVE] ':'[OFF] ')+'Port '+cfg.provider;
+$('ar-patient').textContent=(tOk?'[LIVE] ':'[OFF] ')+'Port '+cfg.patient;
+$('ar-admin').textContent=(pOk?'[LIVE] ':'[OFF] ')+'Port '+cfg.provider+'/admin';
+$('dProv').style.background=pOk?'#10b981':'#ef4444';$('dPat').style.background=tOk?'#10b981':'#ef4444';
+$('inProv').value=cfg.provider;$('inPat').value=cfg.patient;
+if(pOk&&tOk){$('bTxt').textContent=':'+cfg.provider+' + :'+cfg.patient+' live';$('bDot').style.background='#10b981';setNav('All Systems Live','live')}
+else if(pOk||tOk){$('bTxt').textContent=(pOk?'Provider :'+cfg.provider:'Patient :'+cfg.patient)+' only';$('bDot').style.background='#f59e0b';setNav('Partial - click gear','warn')}
+else{$('bTxt').textContent='No services - click to configure';$('bDot').style.background='#ef4444';setNav('Offline - configure ports','off')}}
+function setDot(id,ok){var a=$(id);if(!a)return;var o=a.querySelector('.ld');if(o)o.remove();var d=document.createElement('span');d.className='ld';d.style.cssText='width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;'+(ok?'background:#10b981;box-shadow:0 0 8px rgba(16,185,129,.5)':'background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.3)');a.insertBefore(d,a.firstChild)}
+function setNav(t,s){var b=$('navStatus');b.textContent=t;var c={scan:['rgba(245,158,11,.1)','rgba(245,158,11,.25)','#f59e0b'],live:['rgba(16,185,129,.1)','rgba(16,185,129,.25)','#10b981'],warn:['rgba(245,158,11,.1)','rgba(245,158,11,.25)','#f59e0b'],off:['rgba(239,68,68,.1)','rgba(239,68,68,.25)','#ef4444']}[s]||['rgba(239,68,68,.1)','rgba(239,68,68,.25)','#ef4444'];b.style.background=c[0];b.style.borderColor=c[1];b.style.color=c[2]}
+function navigateTo(p){var u=url(p);if(!u)return;var labels={compass:'COMPASS',provider:'Provider Portal',patient:'Patient Portal',admin:'IT Admin'};$('navText').textContent='Loading '+labels[p]+'...';$('navOverlay').classList.add('active');setTimeout(function(){window.location.href=u},350);if(mode()==='demo')setTimeout(function(){$('navOverlay').classList.remove('active');toast('Place HTML demos in ./demos/')},2500)}
+function toggleSettings(){$('sp').classList.toggle('open');if($('sp').classList.contains('open')){$('inProv').value=cfg.provider;$('inPat').value=cfg.patient}}
+function applySettings(){var pv=parseInt($('inProv').value,10),pt=parseInt($('inPat').value,10);if(!pv||!pt||pv<1000||pt<1000){toast('Enter valid port numbers');return}cfg.provider=pv;cfg.patient=pt;save();$('sp').classList.remove('open');toast('Set :'+pv+' + :'+pt+' - scanning...');scanPorts()}
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3500)}
+document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener('click',function(e){var tgt=document.querySelector(a.getAttribute('href'));if(tgt){e.preventDefault();tgt.scrollIntoView({behavior:'smooth'})}})});
+scanPorts();
 </script>
-
 </body>
 </html>

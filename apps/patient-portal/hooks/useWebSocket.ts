@@ -1,16 +1,24 @@
 // ============================================================
-// ATTENDING AI - Enhanced WebSocket Client Hook
+// ATTENDING AI - Patient Portal WebSocket Hook
 // apps/patient-portal/hooks/useWebSocket.ts
 //
-// Real-time communication for:
-// - Emergency alerts
-// - Assessment progress
-// - Provider connection
-// - Queue updates
+// Patient-specific real-time features:
+// - Emergency alert triggering
+// - Assessment progress reporting
+// - Provider connection/queue management
+//
+// Shared types & base connection hook: @attending/shared/hooks/useWebSocket
+// TODO: Refactor to compose useWebSocketConnection from shared for DRY
+//       socket lifecycle management (connect/disconnect/reconnect).
 // ============================================================
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import type {
+  EmergencyAlert as SharedEmergencyAlert,
+  AssessmentUpdate as SharedAssessmentUpdate,
+  ConnectionStatus,
+} from '@attending/shared/hooks/useWebSocket';
 
 // =============================================================================
 // Types

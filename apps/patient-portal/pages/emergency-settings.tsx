@@ -18,16 +18,11 @@ import {
   Lock,
   Bell,
   Heart,
-  ChevronRight,
-  CheckCircle,
   Info,
-  Settings,
-  Smartphone,
   Car,
   Activity,
   Eye,
   Plus,
-  Trash2,
   Edit2,
 } from 'lucide-react';
 
@@ -72,14 +67,14 @@ export default function EmergencySettingsPage() {
     gForceThreshold: 4.0,
   });
 
-  const [contacts, setContacts] = useState<EmergencyContact[]>([
+  const [contacts, _setContacts] = useState<EmergencyContact[]>([
     { id: '1', name: 'Rachel Anderson', relationship: 'Fiancée', phone: '(555) 123-4567', isPrimary: true },
     { id: '2', name: 'Michael Anderson', relationship: 'Brother', phone: '(555) 234-5678', isPrimary: false },
   ]);
 
-  const [showPINModal, setShowPINModal] = useState(false);
-  const [showContactModal, setShowContactModal] = useState(false);
-  const [editingContact, setEditingContact] = useState<EmergencyContact | null>(null);
+  const [_showPINModal, setShowPINModal] = useState(false);
+  const [_showContactModal, setShowContactModal] = useState(false);
+  const [_editingContact, setEditingContact] = useState<EmergencyContact | null>(null);
   const [testMode, setTestMode] = useState(false);
 
   // Save settings when changed

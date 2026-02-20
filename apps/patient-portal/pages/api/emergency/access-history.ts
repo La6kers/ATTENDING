@@ -100,7 +100,7 @@ export default async function handler(
   }
 
   try {
-    const { patientId, limit = '10', offset = '0' } = req.query;
+    const { patientId: _patientId, limit = '10', offset = '0' } = req.query;
 
     // In production, verify authentication and authorization
     

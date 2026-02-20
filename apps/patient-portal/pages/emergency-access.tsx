@@ -5,7 +5,7 @@
 // The page shown when crash is detected or when emergency access is triggered
 // =============================================================================
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import {
@@ -15,14 +15,11 @@ import {
   Shield,
   Phone,
   User,
-  X,
   AlertCircle,
-  Activity,
   Droplets,
   Syringe,
   FileText,
   Camera,
-  MapPin,
 } from 'lucide-react';
 
 // =============================================================================

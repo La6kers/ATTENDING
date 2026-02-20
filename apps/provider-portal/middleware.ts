@@ -175,6 +175,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Normalize versioned API paths for RBAC checks
+  // /api/v1/patients → /api/patients (rewrite happens at Next.js level,
+  // but middleware sees the original path)
+  const normalizedPath = pathname.replace(/^\/api\/v1\//, '/api/');
+
   // --------------------------------------------------------
   // 2. GET AND VALIDATE JWT TOKEN
   // --------------------------------------------------------
@@ -230,8 +235,8 @@ export async function middleware(request: NextRequest) {
   // --------------------------------------------------------
   const userRole = token.role as string || 'STAFF';
 
-  // Check provider-only routes
-  if (matchesRoutes(pathname, PROVIDER_ONLY_ROUTES)) {
+  // Check provider-only routes (use normalizedPath for versioned API routes)
+  if (matchesRoutes(normalizedPath, PROVIDER_ONLY_ROUTES)) {
     if (userRole !== 'PROVIDER' && userRole !== 'ADMIN') {
       console.warn('[SECURITY] Provider-only route access denied:', {
         userId: token.sub,
@@ -252,8 +257,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Check role-based routes
-  const allowedRoles = getAllowedRoles(pathname);
+  // Check role-based routes (use normalizedPath for versioned API routes)
+  const allowedRoles = getAllowedRoles(normalizedPath);
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     console.warn('[SECURITY] Role-based access denied:', {
       userId: token.sub,
@@ -275,9 +280,18 @@ export async function middleware(request: NextRequest) {
   }
 
   // --------------------------------------------------------
-  // 5. CREATE SECURE RESPONSE
+  // 5. GENERATE CSP NONCE & CREATE RESPONSE
   // --------------------------------------------------------
-  const response = NextResponse.next();
+  // Generate per-request nonce for CSP (allows Next.js inline scripts)
+  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+
+  // Pass nonce to _document.tsx via request headers
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-csp-nonce', nonce);
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 
   // --------------------------------------------------------
   // SECURITY: Do NOT put PII in HTTP headers
@@ -309,12 +323,43 @@ export async function middleware(request: NextRequest) {
     response.headers.set('x-request-id', requestId);
   }
 
-  // Set security headers for all responses
+  // --------------------------------------------------------
+  // 6. SECURITY HEADERS (including CSP)
+  // --------------------------------------------------------
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('X-XSS-Protection', '0'); // Disabled; CSP replaces it (XSS-Protection can cause issues)
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
+  // Content-Security-Policy
+  // - 'nonce-...' allows Next.js inline scripts
+  // - 'strict-dynamic' trusts scripts loaded by nonced scripts
+  // - connect-src includes WebSocket and API endpoints
+  const isProduction = process.env.NODE_ENV === 'production';
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || (isProduction ? 'wss:' : 'ws://localhost:3003');
+
+  const cspDirectives = [
+    `default-src 'self'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isProduction ? '' : " 'unsafe-eval'"}`,
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`, // Tailwind/CSS-in-JS + Google Fonts CSS
+    `img-src 'self' data: blob: https:`,
+    `font-src 'self' data: https://fonts.gstatic.com`,
+    `connect-src 'self' ${wsUrl} https://api.anthropic.com https://api.openai.com`,
+    `media-src 'self' blob:`, // For audio alerts
+    `frame-src 'none'`,
+    `frame-ancestors 'none'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+    `object-src 'none'`,
+  ];
+
+  // Use Content-Security-Policy in production, Report-Only in dev
+  // so dev tooling (React DevTools, HMR) isn't blocked
+  const cspHeader = isProduction
+    ? 'Content-Security-Policy'
+    : 'Content-Security-Policy-Report-Only';
+  response.headers.set(cspHeader, cspDirectives.join('; '));
+
   // Prevent caching of authenticated content
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   response.headers.set('Pragma', 'no-cache');

@@ -10,4 +10,12 @@ export {
   type RedisHealthCheck,
 } from './client';
 
+export {
+  clinicalCache,
+  type CacheConfig,
+  type CacheStats,
+  type CachedDifferential,
+  type CachedDrugInteraction,
+} from './cacheService';
+
 export { default } from './client';

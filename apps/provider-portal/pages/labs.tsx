@@ -80,7 +80,7 @@ export default function Labs() {
   const selectedCodes = new Set(selectedLabs.keys());
 
   const handleToggleLab = (code: string) => {
-    selectedLabs.has(code) ? removeLab(code) : addLab(code);
+    if (selectedLabs.has(code)) { removeLab(code); } else { addLab(code); }
   };
 
   const handleSubmit = async () => {

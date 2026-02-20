@@ -9,7 +9,7 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 
 // Types
 interface SubmitAssessmentRequest {

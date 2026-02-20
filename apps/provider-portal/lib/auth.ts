@@ -1,94 +1,52 @@
 // ============================================================
-// Authentication Configuration
+// Authentication - Re-export & Role Helpers
 // apps/provider-portal/lib/auth.ts
 //
-// NextAuth.js configuration for provider portal authentication
-// TODO: Wire up Azure AD B2C provider in Phase 7
+// This file re-exports the canonical auth config from lib/api/auth.ts
+// and provides lightweight role-checking utilities for components.
+//
+// See lib/api/auth.ts header for the full auth architecture map.
 // ============================================================
 
-import type { NextAuthOptions } from 'next-auth';
+// Re-export canonical auth utilities (used by API routes)
+export { authOptions, getSession, requireAuth, requireRole, createAuditLog } from './api/auth';
 
-/**
- * NextAuth configuration options
- * Currently set up as a stub for development
- */
-export const authOptions: NextAuthOptions = {
-  // TODO: Add Azure AD B2C provider
-  providers: [],
-  
-  pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error',
-    verifyRequest: '/auth/verify-request',
-  },
-  
-  callbacks: {
-    async session({ session, token }) {
-      // Add custom session data
-      if (token.sub) {
-        (session as any).userId = token.sub;
-      }
-      return session;
-    },
-    async jwt({ token, user }) {
-      // Add user data to JWT
-      if (user) {
-        token.role = (user as any).role || 'provider';
-      }
-      return token;
-    },
-  },
-  
-  session: {
-    strategy: 'jwt',
-    maxAge: 8 * 60 * 60, // 8 hours - aligned with clinical shifts
-  },
-  
-  // Enable debug mode in development
-  debug: process.env.NODE_ENV === 'development',
-};
+// Re-export shared types
+export type { AttendingUser, AttendingSession, AttendingJWT } from '@attending/shared/auth';
 
-/**
- * Type for session user with role
- */
+// ============================================================
+// Role Checking Utilities (for components & pages)
+// ============================================================
+
+/** User roles matching the shared auth module */
+type UserRole = 'ADMIN' | 'PROVIDER' | 'NURSE' | 'STAFF' | 'PATIENT';
+
 export interface SessionUser {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'provider' | 'nurse' | 'staff';
+  role: UserRole;
 }
 
-/**
- * Type for JWT payload
- */
-export interface JWTPayload {
-  sub: string;
-  role: string;
-  iat: number;
-  exp: number;
-}
-
-/**
- * Helper to check if user has required role
- */
-export function hasRole(user: SessionUser | null | undefined, roles: SessionUser['role'][]): boolean {
+/** Check if user has one of the required roles */
+export function hasRole(user: SessionUser | null | undefined, roles: UserRole[]): boolean {
   if (!user) return false;
   return roles.includes(user.role);
 }
 
-/**
- * Helper to check if user is provider or higher
- */
+/** Check if user has provider-level access (PROVIDER or ADMIN) */
 export function isProvider(user: SessionUser | null | undefined): boolean {
-  return hasRole(user, ['provider', 'admin']);
+  return hasRole(user, ['PROVIDER', 'ADMIN']);
 }
 
-/**
- * Helper to check if user is admin
- */
+/** Check if user has admin access */
 export function isAdmin(user: SessionUser | null | undefined): boolean {
-  return hasRole(user, ['admin']);
+  return hasRole(user, ['ADMIN']);
 }
 
-export default authOptions;
+/** Check if user has clinical access (PROVIDER, NURSE, or ADMIN) */
+export function isClinicalStaff(user: SessionUser | null | undefined): boolean {
+  return hasRole(user, ['PROVIDER', 'NURSE', 'ADMIN']);
+}
+
+export default { hasRole, isProvider, isAdmin, isClinicalStaff };

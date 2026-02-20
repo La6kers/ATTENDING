@@ -85,7 +85,7 @@ export default function Imaging() {
   const selectedCodes = new Set(selectedStudies.keys());
 
   const handleToggleStudy = (code: string) => {
-    selectedStudies.has(code) ? removeStudy(code) : addStudy(code);
+    if (selectedStudies.has(code)) { removeStudy(code); } else { addStudy(code); }
   };
 
   const handleSubmit = async () => {

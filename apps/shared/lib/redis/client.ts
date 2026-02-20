@@ -13,10 +13,25 @@
 // ============================================================
 
 import { setRedisClient, type RedisClient as SecurityRedisClient } from '../security';
+import { initializeSessionStore } from '../auth/sessionStoreAdapter';
 
 // ============================================================
 // TYPES
 // ============================================================
+
+/**
+ * Full Redis client interface for both cache and rate-limiting.
+ * Extends SecurityRedisClient (incr/expire/ttl) with cache operations
+ * (get/set/del/keys) needed by ClinicalCacheService.
+ */
+export interface AttendingRedisClient extends SecurityRedisClient {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, ttlSeconds?: number): Promise<void>;
+  del(key: string): Promise<void>;
+  keys(pattern: string): Promise<string[]>;
+  exists(key: string): Promise<boolean>;
+  ping(): Promise<string>;
+}
 
 export interface RedisConfig {
   url: string;
@@ -42,7 +57,7 @@ export interface RedisHealthCheck {
  * In-memory mock Redis client for development
  * WARNING: Not suitable for production - no persistence, single instance only
  */
-class MockRedisClient implements SecurityRedisClient {
+class MockRedisClient implements AttendingRedisClient {
   private store = new Map<string, { value: string; expireAt?: number }>();
   private isConnected = false;
 
@@ -142,8 +157,8 @@ class MockRedisClient implements SecurityRedisClient {
 /**
  * Redis client wrapper that supports both real Redis and mock
  */
-class RedisClientWrapper implements SecurityRedisClient {
-  private client: SecurityRedisClient;
+class RedisClientWrapper implements AttendingRedisClient {
+  private client: AttendingRedisClient;
   private config: RedisConfig;
   private isInitialized = false;
 
@@ -178,6 +193,8 @@ class RedisClientWrapper implements SecurityRedisClient {
       
       // Register with security module for rate limiting
       setRedisClient(this);
+      // Register with session store for distributed sessions
+      initializeSessionStore(this);
       return;
     }
 
@@ -204,8 +221,28 @@ class RedisClientWrapper implements SecurityRedisClient {
 
       const redis = new Redis(this.config.url, redisOptions);
 
-      // Wrap ioredis client to match our interface
+      // Wrap ioredis client to match full AttendingRedisClient interface
       this.client = {
+        get: async (key: string) => {
+          const val = await redis.get(key);
+          return val ?? null;
+        },
+        set: async (key: string, value: string, ttlSeconds?: number) => {
+          if (ttlSeconds) {
+            await redis.set(key, value, 'EX', ttlSeconds);
+          } else {
+            await redis.set(key, value);
+          }
+        },
+        del: async (key: string) => {
+          await redis.del(key);
+        },
+        keys: async (pattern: string) => redis.keys(pattern),
+        exists: async (key: string) => {
+          const count = await redis.exists(key);
+          return count > 0;
+        },
+        ping: async () => redis.ping(),
         incr: async (key: string) => redis.incr(key),
         expire: async (key: string, seconds: number) => {
           await redis.expire(key, seconds);
@@ -230,6 +267,8 @@ class RedisClientWrapper implements SecurityRedisClient {
       
       // Register with security module for rate limiting
       setRedisClient(this);
+      // Register with session store for distributed sessions
+      initializeSessionStore(this);
       
     } catch (error) {
       console.error('[REDIS] Failed to connect:', error);
@@ -241,12 +280,46 @@ class RedisClientWrapper implements SecurityRedisClient {
       this.client = mockClient;
       this.isInitialized = true;
       
-      // Still register for rate limiting
+      // Still register for rate limiting (memory fallback)
       setRedisClient(this);
+      // Session store falls back to memory automatically
     }
   }
 
-  // Delegate to underlying client
+  // ----------------------------------------------------------
+  // Delegate all operations to underlying client
+  // ----------------------------------------------------------
+
+  async get(key: string): Promise<string | null> {
+    if (!this.isInitialized) await this.initialize();
+    return this.client.get(key);
+  }
+
+  async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+    if (!this.isInitialized) await this.initialize();
+    return this.client.set(key, value, ttlSeconds);
+  }
+
+  async del(key: string): Promise<void> {
+    if (!this.isInitialized) await this.initialize();
+    return this.client.del(key);
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    if (!this.isInitialized) await this.initialize();
+    return this.client.keys(pattern);
+  }
+
+  async exists(key: string): Promise<boolean> {
+    if (!this.isInitialized) await this.initialize();
+    return this.client.exists(key);
+  }
+
+  async ping(): Promise<string> {
+    if (!this.isInitialized) await this.initialize();
+    return this.client.ping();
+  }
+
   async incr(key: string): Promise<number> {
     if (!this.isInitialized) await this.initialize();
     return this.client.incr(key);

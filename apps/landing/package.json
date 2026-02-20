@@ -4,8 +4,8 @@
   "private": true,
   "description": "ATTENDING AI Landing Hub - Central portal routing entry point",
   "scripts": {
-    "dev": "npx serve public -l 3002 --cors",
-    "preview": "npx serve public -l 3002 --cors",
-    "start": "npx serve public -l 3002 --cors"
+    "dev": "npx serve public -l 8080 --cors",
+    "preview": "npx serve public -l 8080 --cors",
+    "start": "npx serve public -l 8080 --cors"
   }
 }

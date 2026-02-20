@@ -556,9 +556,35 @@ export function safeErrorMessage(error: Error | unknown): string {
 // ============================================================
 
 /**
- * Set comprehensive security headers on response
+ * Generate a cryptographic nonce for CSP headers.
+ * Call once per request and pass the nonce to both
+ * setSecurityHeaders() and your page's <script nonce={nonce}>.
  */
-export function setSecurityHeaders(res: NextApiResponse): void {
+export function generateCspNonce(): string {
+  return crypto.randomBytes(16).toString('base64');
+}
+
+/**
+ * Set comprehensive security headers on response.
+ *
+ * @param res - Next.js API response
+ * @param options - Optional configuration
+ * @param options.nonce - CSP nonce (from generateCspNonce). When provided,
+ *   scripts and styles must include nonce="{nonce}" attributes.
+ *   When omitted, falls back to 'unsafe-inline' for development compatibility.
+ * @param options.connectSources - Additional connect-src origins
+ *   (e.g., WebSocket URLs, external API endpoints)
+ */
+export function setSecurityHeaders(
+  res: NextApiResponse,
+  options?: {
+    nonce?: string;
+    connectSources?: string[];
+  }
+): void {
+  const nonce = options?.nonce;
+  const isProduction = process.env.NODE_ENV === 'production';
+
   // Prevent clickjacking
   res.setHeader('X-Frame-Options', 'DENY');
   
@@ -571,11 +597,41 @@ export function setSecurityHeaders(res: NextApiResponse): void {
   // Control referrer information
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // Content Security Policy (basic - customize per page)
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;"
-  );
+  // Content Security Policy
+  // Production: nonce-based (no unsafe-inline/unsafe-eval)
+  // Development: falls back to unsafe-inline for hot-reload compatibility
+  const scriptSrc = nonce
+    ? `'self' 'nonce-${nonce}'`
+    : isProduction
+      ? "'self'"
+      : "'self' 'unsafe-inline' 'unsafe-eval'";
+
+  const styleSrc = nonce
+    ? `'self' 'nonce-${nonce}'`
+    : "'self' 'unsafe-inline'";
+
+  const connectSources = [
+    "'self'",
+    'https:',
+    // WebSocket connections
+    process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3003',
+    ...(options?.connectSources || []),
+  ].join(' ');
+
+  const csp = [
+    `default-src 'self'`,
+    `script-src ${scriptSrc}`,
+    `style-src ${styleSrc}`,
+    `img-src 'self' data: https:`,
+    `font-src 'self' data:`,
+    `connect-src ${connectSources}`,
+    `frame-ancestors 'none'`,
+    `base-uri 'self'`,
+    `form-action 'self'`,
+    `object-src 'none'`,
+  ].join('; ');
+
+  res.setHeader('Content-Security-Policy', csp);
   
   // Permissions Policy (disable dangerous features)
   res.setHeader(
@@ -584,7 +640,7 @@ export function setSecurityHeaders(res: NextApiResponse): void {
   );
   
   // Strict Transport Security (HTTPS only)
-  if (process.env.NODE_ENV === 'production') {
+  if (isProduction) {
     res.setHeader(
       'Strict-Transport-Security',
       'max-age=31536000; includeSubDomains; preload'
@@ -829,6 +885,7 @@ export const security = {
   detectXss,
   maskPHI,
   safeErrorMessage,
+  generateCspNonce,
   setSecurityHeaders,
   setApiSecurityHeaders,
   getClientIp,

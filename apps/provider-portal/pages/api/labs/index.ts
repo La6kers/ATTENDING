@@ -45,8 +45,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse, _session: any)
     case 'POST':
       return createLabOrder(req, res, _session);
     default:
+      // TODO: All routes should migrate to @attending/shared/lib/api helpers
+      // import { sendMethodNotAllowed } from '@attending/shared/lib/api';
       res.setHeader('Allow', ['GET', 'POST']);
-      return res.status(405).json({ error: `Method ${req.method} not allowed` });
+      return res.status(405).json({
+        success: false,
+        error: { code: 'METHOD_NOT_ALLOWED', message: `Method ${req.method} not allowed. Use: GET, POST` },
+        meta: { timestamp: new Date().toISOString(), apiVersion: '1.0.0' },
+      });
   }
 }
 
@@ -142,8 +148,12 @@ async function getLabOrders(req: NextApiRequest, res: NextApiResponse) {
     
     return res.status(200).json(response);
   } catch (error) {
-    console.error('Error fetching lab orders:', error);
-    return res.status(500).json({ error: 'Failed to fetch lab orders' });
+    console.error('[Labs API] Error fetching lab orders:', error);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch lab orders' },
+      meta: { timestamp: new Date().toISOString(), apiVersion: '1.0.0' },
+    });
   }
 }
 
@@ -179,7 +189,11 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
     });
     
     if (!encounter) {
-      return res.status(404).json({ error: 'Encounter not found' });
+      return res.status(404).json({
+        success: false,
+        error: { code: 'ENCOUNTER_NOT_FOUND', message: 'Encounter not found' },
+        meta: { timestamp: new Date().toISOString(), apiVersion: '1.0.0' },
+      });
     }
     
     // Get latest assessment for clinical context
@@ -307,8 +321,12 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
       },
     });
   } catch (error) {
-    console.error('Error creating lab order:', error);
-    return res.status(500).json({ error: 'Failed to create lab order' });
+    console.error('[Labs API] Error creating lab order:', error);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to create lab order' },
+      meta: { timestamp: new Date().toISOString(), apiVersion: '1.0.0' },
+    });
   }
 }
 

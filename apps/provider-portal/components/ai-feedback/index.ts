@@ -10,3 +10,12 @@ export type {
   FeedbackRating,
   AIFeedbackCollectorProps 
 } from './AIFeedbackCollector';
+
+// Inline widget for embedding directly on AI recommendations
+export { InlineFeedbackWidget } from './InlineFeedbackWidget';
+export type {
+  FeedbackType,
+  FeedbackRating as InlineFeedbackRating,
+  InlineFeedbackData,
+  InlineFeedbackWidgetProps,
+} from './InlineFeedbackWidget';

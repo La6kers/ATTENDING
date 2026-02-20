@@ -23,11 +23,8 @@ import {
   Calendar,
   Bell,
   User,
-  UserPlus,
   MessageSquare,
   Heart,
-  FlaskConical,
-  Building,
 } from 'lucide-react';
 
 // Types
