@@ -88,3 +88,15 @@ export type {
   TransformResult,
   TransformStage,
 } from './transforms';
+
+// Dead letter queue
+export { dlq } from './deadLetterQueue';
+
+export type {
+  DLQEntry,
+  DLQMessageType,
+  DLQStatus,
+  DLQStats,
+  DLQEnqueueInput,
+  DLQListOptions,
+} from './deadLetterQueue';

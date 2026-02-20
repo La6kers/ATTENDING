@@ -609,6 +609,304 @@ describe('Bulk Export', () => {
   });
 });
 
+// ============================================================
+// ENCRYPTION TESTS
+// ============================================================
+
+describe('PHI Encryption', () => {
+  it('encrypts and decrypts a value', async () => {
+    const { encryptPHI, decryptPHI } = await import('../../apps/shared/lib/encryption');
+
+    const plain = '123-45-6789';
+    const encrypted = encryptPHI(plain, 'ssn');
+
+    expect(encrypted).toMatch(/^enc:v1:/);
+    expect(encrypted).not.toBe(plain);
+
+    const decrypted = decryptPHI(encrypted, 'ssn');
+    expect(decrypted).toBe(plain);
+  });
+
+  it('does not double-encrypt', async () => {
+    const { encryptPHI, isEncrypted } = await import('../../apps/shared/lib/encryption');
+
+    const encrypted = encryptPHI('test@email.com', 'email');
+    const doubleEncrypted = encryptPHI(encrypted, 'email');
+
+    expect(doubleEncrypted).toBe(encrypted);
+    expect(isEncrypted(encrypted)).toBe(true);
+  });
+
+  it('produces different ciphertext for same input (random IV)', async () => {
+    const { encryptPHI } = await import('../../apps/shared/lib/encryption');
+
+    const e1 = encryptPHI('same-value', 'phone');
+    const e2 = encryptPHI('same-value', 'phone');
+
+    expect(e1).not.toBe(e2); // Random IV = different each time
+  });
+
+  it('deterministic encryption produces same output', async () => {
+    const { encryptPHIDeterministic } = await import('../../apps/shared/lib/encryption');
+
+    const e1 = encryptPHIDeterministic('123-45-6789', 'ssn');
+    const e2 = encryptPHIDeterministic('123-45-6789', 'ssn');
+
+    expect(e1).toBe(e2); // Deterministic = same output
+  });
+
+  it('encrypts/decrypts full objects', async () => {
+    const { encryptObject, decryptObject } = await import('../../apps/shared/lib/encryption');
+
+    const patient = {
+      id: 'P-001',
+      firstName: 'John',
+      ssn: '123-45-6789',
+      email: 'john@test.com',
+      phone: '303-555-1234',
+    };
+
+    const encrypted = encryptObject(patient);
+    expect(encrypted.id).toBe('P-001'); // Non-PHI unchanged
+    expect(encrypted.firstName).toBe('John'); // Not in PHI_FIELDS
+    expect(encrypted.ssn).toMatch(/^enc:v1:/); // Encrypted
+    expect(encrypted.email).toMatch(/^enc:v1:/); // Encrypted
+
+    const decrypted = decryptObject(encrypted);
+    expect(decrypted.ssn).toBe('123-45-6789');
+    expect(decrypted.email).toBe('john@test.com');
+  });
+
+  it('generates valid encryption keys', async () => {
+    const { generateEncryptionKey } = await import('../../apps/shared/lib/encryption');
+    const key = generateEncryptionKey();
+
+    expect(key).toHaveLength(64); // 32 bytes = 64 hex chars
+    expect(/^[a-f0-9]+$/.test(key)).toBe(true);
+  });
+});
+
+// ============================================================
+// CLINICAL VALIDATOR TESTS
+// ============================================================
+
+describe('Clinical Validators', () => {
+  it('validates MRN format', async () => {
+    const { validateMRN } = await import('../../apps/shared/lib/validators/clinical');
+
+    expect(validateMRN('MRN-123456').valid).toBe(true);
+    expect(validateMRN('MRN-123456').normalized).toBe('MRN-123456');
+    expect(validateMRN('AB').valid).toBe(false); // Too short
+    expect(validateMRN('MRN@123').valid).toBe(false); // Invalid char
+  });
+
+  it('validates ICD-10 codes', async () => {
+    const { validateICD10 } = await import('../../apps/shared/lib/validators/clinical');
+
+    expect(validateICD10('E11.65').valid).toBe(true);
+    expect(validateICD10('J18.9').valid).toBe(true);
+    expect(validateICD10('Z23').valid).toBe(true);
+    expect(validateICD10('S72.001A').valid).toBe(true);
+    expect(validateICD10('123').valid).toBe(false); // Must start with letter
+    expect(validateICD10('U99').valid).toBe(false); // U is reserved
+  });
+
+  it('validates NPI with Luhn check', async () => {
+    const { validateNPI } = await import('../../apps/shared/lib/validators/clinical');
+
+    expect(validateNPI('1234567893').valid).toBe(true); // Valid Luhn
+    expect(validateNPI('1234567890').valid).toBe(false); // Bad check digit
+    expect(validateNPI('12345').valid).toBe(false); // Too short
+    expect(validateNPI('3234567893').valid).toBe(false); // Must start with 1 or 2
+  });
+
+  it('validates LOINC codes', async () => {
+    const { validateLOINC } = await import('../../apps/shared/lib/validators/clinical');
+
+    expect(validateLOINC('2160-0').valid).toBe(true); // Creatinine
+    expect(validateLOINC('718-7').valid).toBe(true); // Hemoglobin
+    expect(validateLOINC('14749-6').valid).toBe(true); // Glucose
+    expect(validateLOINC('ABC').valid).toBe(false);
+  });
+
+  it('validates CPT codes', async () => {
+    const { validateCPT } = await import('../../apps/shared/lib/validators/clinical');
+
+    expect(validateCPT('99213').valid).toBe(true); // E&M
+    expect(validateCPT('0001F').valid).toBe(true); // Category II
+    expect(validateCPT('123').valid).toBe(false); // Too short
+  });
+
+  it('validates DEA numbers', async () => {
+    const { validateDEA } = await import('../../apps/shared/lib/validators/clinical');
+
+    // Valid DEA: AB1234563 (check digit = (1+3+5)*1 + (2+4+6)*2 = 9+24 = 33, last digit = 3)
+    expect(validateDEA('AB1234563').valid).toBe(true);
+    expect(validateDEA('AB1234560').valid).toBe(false); // Bad check
+    expect(validateDEA('XB1234563').valid).toBe(false); // Bad first letter
+  });
+
+  it('validates date of birth', async () => {
+    const { validateDOB } = await import('../../apps/shared/lib/validators/clinical');
+
+    expect(validateDOB('1980-01-15').valid).toBe(true);
+    expect(validateDOB('19800115').valid).toBe(true); // HL7 format
+    expect(validateDOB('01/15/1980').valid).toBe(true); // US format
+    expect(validateDOB('2099-01-01').valid).toBe(false); // Future
+  });
+
+  it('validates phone numbers', async () => {
+    const { validatePhone } = await import('../../apps/shared/lib/validators/clinical');
+
+    const r = validatePhone('(303) 555-1234');
+    expect(r.valid).toBe(true);
+    expect(r.normalized).toBe('+13035551234');
+  });
+});
+
+// ============================================================
+// FEATURE FLAGS TESTS
+// ============================================================
+
+describe('Feature Flags', () => {
+  it('returns default values for known features', async () => {
+    const { isEnabled, getConfig, FEATURES } = await import('../../apps/shared/lib/featureFlags');
+
+    expect(await isEnabled('ai.triage')).toBe(true);
+    expect(await isEnabled('ai.scribe')).toBe(false); // Enterprise only
+    expect(await getConfig('limits.maxUsers')).toBe(50);
+    expect(FEATURES['ai.triage']).toBeDefined();
+  });
+
+  it('returns false for unknown features', async () => {
+    const { isEnabled } = await import('../../apps/shared/lib/featureFlags');
+    expect(await isEnabled('nonexistent.feature')).toBe(false);
+  });
+});
+
+// ============================================================
+// DLQ TESTS
+// ============================================================
+
+describe('Dead Letter Queue', () => {
+  it('enqueues and lists entries', async () => {
+    const { dlq } = await import('../../apps/shared/lib/integrations/deadLetterQueue');
+
+    const entry = await dlq.enqueue({
+      type: 'webhook',
+      payload: { event: 'test' },
+      destination: 'https://example.com/hook',
+      error: 'Connection refused',
+      attempts: 5,
+      organizationId: 'test-org',
+    });
+
+    expect(entry.id).toBeDefined();
+    expect(entry.status).toBe('pending');
+    expect(entry.type).toBe('webhook');
+
+    const { entries } = await dlq.list({ organizationId: 'test-org' });
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.find(e => e.id === entry.id)).toBeDefined();
+  });
+
+  it('discards entries', async () => {
+    const { dlq } = await import('../../apps/shared/lib/integrations/deadLetterQueue');
+
+    const entry = await dlq.enqueue({
+      type: 'hl7v2',
+      payload: 'MSH|...',
+      destination: 'localhost:2575',
+      error: 'Parse error',
+      attempts: 3,
+    });
+
+    await dlq.discard(entry.id, 'Bad message');
+
+    const { entries } = await dlq.list({ status: 'discarded' });
+    expect(entries.find(e => e.id === entry.id)?.status).toBe('discarded');
+  });
+
+  it('reports stats', async () => {
+    const { dlq } = await import('../../apps/shared/lib/integrations/deadLetterQueue');
+    const stats = await dlq.getStats();
+
+    expect(stats.total).toBeGreaterThanOrEqual(0);
+    expect(typeof stats.pending).toBe('number');
+    expect(typeof stats.byType).toBe('object');
+  });
+});
+
+// ============================================================
+// TRACING TESTS
+// ============================================================
+
+describe('Distributed Tracing', () => {
+  it('creates trace context from request', async () => {
+    const { getTraceContext } = await import('../../apps/shared/lib/tracing');
+
+    const trace = getTraceContext({ headers: {}, method: 'GET', url: '/api/test' });
+
+    expect(trace.requestId).toBeDefined();
+    expect(trace.traceId).toHaveLength(32); // 16 bytes hex
+    expect(trace.spanId).toHaveLength(16); // 8 bytes hex
+    expect(trace.method).toBe('GET');
+    expect(trace.path).toBe('/api/test');
+  });
+
+  it('preserves incoming request ID', async () => {
+    const { getTraceContext } = await import('../../apps/shared/lib/tracing');
+
+    const trace = getTraceContext({
+      headers: { 'x-request-id': 'my-custom-id' },
+      method: 'POST',
+      url: '/api/patients',
+    });
+
+    expect(trace.requestId).toBe('my-custom-id');
+  });
+
+  it('parses W3C traceparent header', async () => {
+    const { getTraceContext } = await import('../../apps/shared/lib/tracing');
+
+    const trace = getTraceContext({
+      headers: { traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01' },
+    });
+
+    expect(trace.traceId).toBe('0af7651916cd43dd8448eb211c80319c');
+    expect(trace.parentSpanId).toBe('b7ad6b7169203331');
+  });
+
+  it('creates and ends spans', async () => {
+    const { getTraceContext, withTrace, startSpan, getCurrentTrace } = await import('../../apps/shared/lib/tracing');
+
+    const trace = getTraceContext({ headers: {} });
+
+    await withTrace(trace, async () => {
+      const span = startSpan('test.operation', { key: 'value' });
+      span.setAttribute('db.system', 'postgresql');
+      span.end();
+
+      const current = getCurrentTrace();
+      expect(current?.spans).toHaveLength(1);
+      expect(current?.spans[0].name).toBe('test.operation');
+      expect(current?.spans[0].durationMs).toBeGreaterThanOrEqual(0);
+      expect(current?.spans[0].status).toBe('ok');
+    });
+  });
+
+  it('generates outbound propagation headers', async () => {
+    const { getTraceContext, getOutboundHeaders } = await import('../../apps/shared/lib/tracing');
+
+    const trace = getTraceContext({ headers: {} });
+    const headers = getOutboundHeaders(trace);
+
+    expect(headers['X-Request-ID']).toBe(trace.requestId);
+    expect(headers['X-Correlation-ID']).toBe(trace.requestId);
+    expect(headers['traceparent']).toMatch(/^00-[a-f0-9]{32}-[a-f0-9]{16}-01$/);
+  });
+});
+
 describe('SSO Providers', () => {
   it('has presets for common enterprise IdPs', async () => {
     const { SSO_PRESETS } = await import('../../apps/shared/lib/auth/ssoProviders');

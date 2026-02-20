@@ -59,6 +59,7 @@ import {
   type AuditResourceType,
 } from '../audit';
 import { recordRequest } from '../metrics';
+import { getTraceContext, withTrace, setTraceHeaders, startSpan } from '../tracing';
 
 // ============================================================
 // AUTH PRESETS
@@ -195,8 +196,11 @@ export function createHandler<TBody = unknown, TQuery = unknown>(
     const ip = getClientIp(req);
     const userAgent = getClientUserAgent(req);
 
-    // Ensure request ID is on the response
-    res.setHeader('X-Request-ID', requestId);
+    // Create trace context and set response headers
+    const trace = getTraceContext(req);
+    trace.userId = undefined; // Set after auth
+    res.setHeader('X-Request-ID', trace.requestId);
+    res.setHeader('X-Trace-ID', trace.traceId);
     setApiSecurityHeaders(res);
 
     try {
@@ -280,6 +284,12 @@ export function createHandler<TBody = unknown, TQuery = unknown>(
               return sendError(res, ErrorCodes.ROLE_FORBIDDEN, 'Insufficient permissions', { requiredRoles: allowedRoles }, 403);
             }
           }
+        }
+
+        // Set trace context with authenticated user
+        if (user) {
+          trace.userId = user.id;
+          trace.organizationId = user.organizationId;
         }
 
         // ---- 6. CSRF ----

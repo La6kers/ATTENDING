@@ -469,6 +469,59 @@ export function generateOpenAPISpec() {
         },
       },
 
+      // Feature Flags
+      '/api/admin/features': {
+        get: {
+          tags: ['Admin'],
+          summary: 'List feature flags and values',
+          operationId: 'getFeatureFlags',
+          parameters: [{ name: 'organizationId', in: 'query', schema: { type: 'string' } }],
+          responses: { '200': { description: 'Feature flag list with current values' } },
+        },
+        post: {
+          tags: ['Admin'],
+          summary: 'Set feature flag override',
+          operationId: 'setFeatureFlag',
+          requestBody: {
+            required: true,
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                required: ['featureKey', 'value'],
+                properties: {
+                  featureKey: { type: 'string' },
+                  value: { oneOf: [{ type: 'boolean' }, { type: 'number' }, { type: 'string' }] },
+                  organizationId: { type: 'string' },
+                },
+              },
+            } },
+          },
+          responses: { '200': { description: 'Feature flag updated' } },
+        },
+      },
+
+      // Dead Letter Queue
+      '/api/admin/dlq': {
+        get: {
+          tags: ['Admin'],
+          summary: 'List dead letter queue entries + stats',
+          operationId: 'getDLQ',
+          parameters: [
+            { name: 'type', in: 'query', schema: { type: 'string', enum: ['webhook', 'hl7v2', 'fhir', 'import'] } },
+            { name: 'status', in: 'query', schema: { type: 'string', enum: ['pending', 'replayed', 'discarded'] } },
+            { name: 'limit', in: 'query', schema: { type: 'integer', default: 50 } },
+          ],
+          responses: { '200': { description: 'DLQ entries with stats' } },
+        },
+        post: {
+          tags: ['Admin'],
+          summary: 'Replay or discard DLQ entry',
+          operationId: 'dlqAction',
+          parameters: [{ name: 'action', in: 'query', required: true, schema: { type: 'string', enum: ['replay', 'discard', 'replayAll'] } }],
+          responses: { '200': { description: 'Action result' } },
+        },
+      },
+
       // Tenant Onboarding
       '/api/admin/onboard-tenant': {
         post: {
