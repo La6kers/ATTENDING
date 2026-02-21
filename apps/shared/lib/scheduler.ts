@@ -337,7 +337,20 @@ function registerDefaultJobs(scheduler: JobScheduler): void {
     },
   });
 
-  // 9. Webhook subscription health — every 30 minutes
+  // 9. PHI cache maintenance — every 15 minutes
+  scheduler.register({
+    name: 'phi-cache-maintenance',
+    intervalMs: 900_000,
+    runOnStart: false,
+    handler: async () => {
+      try {
+        const { phiCacheMaintenanceJob } = await import('./phiCache');
+        await phiCacheMaintenanceJob();
+      } catch { /* Module not available */ }
+    },
+  });
+
+  // 10. Webhook subscription health — every 30 minutes
   scheduler.register({
     name: 'webhook-health',
     intervalMs: 1_800_000,

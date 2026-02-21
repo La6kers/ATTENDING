@@ -25,16 +25,115 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============== ENUMS ==============
+
+enum UserRole {
+  ADMIN
+  PROVIDER
+  NURSE
+  STAFF
+  PATIENT
+  SYSTEM
+}
+
+enum OrderStatus {
+  PENDING
+  COLLECTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  ACTIVE
+  ON_HOLD
+  SCHEDULED
+  SENT
+  DISCONTINUED
+}
+
+enum OrderPriority {
+  STAT
+  ASAP
+  URGENT
+  ROUTINE
+  TIMED
+  ELECTIVE
+}
+
+enum EncounterStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  EMERGENCY
+}
+
+enum EncounterType {
+  OFFICE
+  TELEHEALTH
+  EMERGENCY
+  INPATIENT
+}
+
+// ============== ORGANIZATIONS (Multi-Tenant) ==============
+
+model Organization {
+  id              String    @id @default(cuid())
+  name            String
+  slug            String    @unique // URL-safe identifier
+  type            String    @default("CLINIC") // CLINIC, HOSPITAL, HEALTH_SYSTEM, PRACTICE
+  npi             String?   // Organization NPI
+  taxId           String?   // EIN (encrypted)
+  address         String?
+  city            String?
+  state           String?
+  zipCode         String?
+  phone           String?
+  faxNumber       String?
+  website         String?
+  ehrVendor       String?   // EPIC, CERNER, ALLSCRIPTS, etc.
+  fhirEndpoint    String?   // Base FHIR URL for this org's EHR
+  tier            String    @default("standard") // free, standard, enterprise
+  isActive        Boolean   @default(true)
+  settings        String?   // JSON: org-specific configuration
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  users           User[]
+  patients        Patient[]
+  encounters      Encounter[]
+  labOrders       LabOrder[]
+  imagingOrders   ImagingOrder[]
+  medicationOrders MedicationOrder[]
+  referrals       Referral[]
+  assessments     PatientAssessment[]
+  apiKeys         ApiKey[]
+  webhooks        WebhookSubscription[]
+  integrations    IntegrationConnection[]
+  auditLogs       AuditLog[]
+  clinicalNotes   ClinicalNote[]
+  treatmentPlans  TreatmentPlan[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([tier])
+}
+
 // ============== AUTHENTICATION & USERS ==============
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  emailVerified DateTime?
-  name          String?
-  image         String?
-  password      String?   // Hashed with bcrypt, never stored plain
-  role          String    @default("PROVIDER") // ADMIN, PROVIDER, NURSE, STAFF, PATIENT
+  id              String    @id @default(cuid())
+  organizationId  String?
+  email           String    @unique
+  emailVerified   DateTime?
+  name            String?
+  image           String?
+  password        String?   // Hashed with bcrypt, never stored plain
+  role            String    @default("PROVIDER") // ADMIN, PROVIDER, NURSE, STAFF, PATIENT
   specialty     String?
   npi           String?   @unique // National Provider Identifier
   deaNumber     String?   // DEA number for controlled substances
@@ -49,6 +148,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  organization        Organization? @relation(fields: [organizationId], references: [id])
   accounts            Account[]
   sessions            Session[]
   encounters          Encounter[]        @relation("ProviderEncounters")
@@ -64,6 +164,7 @@ model User {
   @@index([npi])
   @@index([role])
   @@index([isActive])
+  @@index([organizationId])
 }
 
 model Account {
@@ -113,6 +214,7 @@ model VerificationToken {
 
 model Patient {
   id                 String    @id @default(cuid())
+  organizationId     String?
   mrn                String    @unique // Medical Record Number
   firstName          String
   lastName           String
@@ -150,6 +252,7 @@ model Patient {
   medicationOrders  MedicationOrder[]
   referrals         Referral[]
   assessments       PatientAssessment[]
+  organization      Organization? @relation(fields: [organizationId], references: [id])
   emergencyEvents   EmergencyEvent[]
   treatmentPlans    TreatmentPlan[]
   fhirLabResults    FhirLabResult[]
@@ -163,12 +266,14 @@ model Patient {
   @@index([dateOfBirth])
   @@index([isActive])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== CLINICAL ENCOUNTERS ==============
 
 model Encounter {
   id              String    @id @default(cuid())
+  organizationId  String?
   patientId       String
   providerId      String
   facilityId      String?
@@ -185,6 +290,7 @@ model Encounter {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  organization       Organization? @relation(fields: [organizationId], references: [id])
   patient          Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
   provider         User               @relation("ProviderEncounters", fields: [providerId], references: [id], onDelete: Restrict)
   labOrders        LabOrder[]
@@ -200,6 +306,7 @@ model Encounter {
   @@index([status])
   @@index([startTime])
   @@index([deletedAt])
+  @@index([organizationId])
   @@index([providerId, status])          // Provider dashboard: active encounters
   @@index([patientId, startTime])        // Patient timeline queries
   @@index([providerId, status, startTime]) // Sorted provider queue
@@ -328,6 +435,7 @@ model VitalSign {
 
 model LabOrder {
   id                  String    @id @default(cuid())
+  organizationId      String?
   patientId           String
   providerId          String
   encounterId         String?
@@ -349,6 +457,7 @@ model LabOrder {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id])
   patient   Patient     @relation(fields: [patientId], references: [id], onDelete: Restrict)
   provider  User        @relation(fields: [providerId], references: [id], onDelete: Restrict)
   encounter Encounter?  @relation(fields: [encounterId], references: [id])
@@ -359,6 +468,7 @@ model LabOrder {
   @@index([status])
   @@index([orderedAt])
   @@index([deletedAt])
+  @@index([organizationId])
   @@index([providerId, status])    // Provider pending orders dashboard
   @@index([patientId, orderedAt])  // Patient lab history timeline
 }
@@ -397,6 +507,7 @@ model LabResult {
 
 model ImagingOrder {
   id                  String    @id @default(cuid())
+  organizationId      String?
   patientId           String
   providerId          String
   encounterId         String?
@@ -422,6 +533,7 @@ model ImagingOrder {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id])
   patient   Patient         @relation(fields: [patientId], references: [id], onDelete: Restrict)
   provider  User            @relation(fields: [providerId], references: [id], onDelete: Restrict)
   encounter Encounter?      @relation(fields: [encounterId], references: [id])
@@ -432,6 +544,7 @@ model ImagingOrder {
   @@index([status])
   @@index([orderedAt])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 model ImagingResult {
@@ -463,6 +576,7 @@ model ImagingResult {
 
 model MedicationOrder {
   id                   String    @id @default(cuid())
+  organizationId       String?
   patientId            String
   providerId           String
   encounterId          String?
@@ -499,6 +613,7 @@ model MedicationOrder {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id])
   patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Restrict)
   provider  User       @relation(fields: [providerId], references: [id], onDelete: Restrict)
   encounter Encounter? @relation(fields: [encounterId], references: [id])
@@ -509,12 +624,14 @@ model MedicationOrder {
   @@index([isControlled])
   @@index([orderedAt])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== REFERRALS ==============
 
 model Referral {
   id                String    @id @default(cuid())
+  organizationId    String?
   patientId         String
   providerId        String
   encounterId       String?
@@ -541,6 +658,7 @@ model Referral {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id])
   patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Restrict)
   provider  User       @relation(fields: [providerId], references: [id], onDelete: Restrict)
   encounter Encounter? @relation(fields: [encounterId], references: [id])
@@ -550,12 +668,14 @@ model Referral {
   @@index([status])
   @@index([specialty])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== PATIENT ASSESSMENTS (COMPASS) ==============
 
 model PatientAssessment {
   id                 String    @id @default(cuid())
+  organizationId     String?
   patientId          String
   assignedProviderId String?
   sessionId          String    @unique
@@ -583,6 +703,7 @@ model PatientAssessment {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
+  organization    Organization?    @relation(fields: [organizationId], references: [id])
   patient          Patient          @relation(fields: [patientId], references: [id], onDelete: Restrict)
   assignedProvider User?            @relation("AssignedProvider", fields: [assignedProviderId], references: [id])
   emergencyEvents  EmergencyEvent[]
@@ -592,6 +713,7 @@ model PatientAssessment {
   @@index([status])
   @@index([sessionId])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== EMERGENCY EVENTS ==============
@@ -632,6 +754,7 @@ model EmergencyEvent {
 
 model TreatmentPlan {
   id                     String    @id @default(cuid())
+  organizationId         String?
   patientId              String
   encounterId            String
   status                 String    @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CANCELLED
@@ -654,6 +777,7 @@ model TreatmentPlan {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id])
   patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
   encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
 
@@ -661,12 +785,14 @@ model TreatmentPlan {
   @@index([encounterId])
   @@index([status])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== CLINICAL NOTES ==============
 
 model ClinicalNote {
   id            String    @id @default(cuid())
+  organizationId String?
   patientId     String
   encounterId   String
   noteType      String    // PROGRESS, SOAP, H_AND_P, PROCEDURE, DISCHARGE
@@ -687,6 +813,7 @@ model ClinicalNote {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  organization Organization? @relation(fields: [organizationId], references: [id])
   patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
   encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
 
@@ -695,6 +822,7 @@ model ClinicalNote {
   @@index([noteType])
   @@index([status])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== NOTIFICATIONS ==============
@@ -725,10 +853,11 @@ model Notification {
 // ============== AUDIT LOG - HIPAA REQUIREMENT ==============
 
 model AuditLog {
-  id           String   @id @default(cuid())
-  action       String   // Action performed (from AuditActions enum)
-  userId       String?  // Who performed the action
-  entityType   String   // Type of resource accessed
+  id             String   @id @default(cuid())
+  organizationId String?
+  action         String   // Action performed (from AuditActions enum)
+  userId         String?  // Who performed the action
+  entityType     String   // Type of resource accessed
   entityId     String?  // ID of resource accessed
   changes      String?  // JSON: what was changed, includes patientId if PHI
   ipAddress    String?  // Client IP address
@@ -737,6 +866,7 @@ model AuditLog {
   errorMessage String?  // Error message if failed
   createdAt    DateTime @default(now())
 
+  organization Organization? @relation(fields: [organizationId], references: [id])
   user User? @relation(fields: [userId], references: [id])
 
   @@index([action])
@@ -745,6 +875,7 @@ model AuditLog {
   @@index([entityId])
   @@index([createdAt])
   @@index([success])
+  @@index([organizationId])
   @@index([userId, createdAt])              // User activity reports
   @@index([entityType, entityId, createdAt]) // Resource access history
   @@index([action, createdAt])              // Security event reports
@@ -768,6 +899,8 @@ model ApiKey {
   createdBy      String    // User ID who created this key
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@index([keyHash])
   @@index([organizationId])
@@ -793,6 +926,7 @@ model WebhookSubscription {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
+  organization   Organization @relation(fields: [organizationId], references: [id])
   deliveries     WebhookDelivery[]
 
   @@index([organizationId])
@@ -842,6 +976,8 @@ model IntegrationConnection {
   createdBy      String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
 
   @@index([organizationId])
   @@index([type])

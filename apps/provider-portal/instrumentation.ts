@@ -66,7 +66,16 @@ export async function register() {
     }
   }
 
-  // 4. Start background job scheduler
+  // 4. Initialize PHI cache service
+  try {
+    const { phiCache } = await import('@attending/shared/lib/phiCache');
+    await phiCache.initialize(redis || undefined);
+    console.log('[ATTENDING AI] PHI cache initialized (TTL:', process.env.PHI_CACHE_TTL_SECONDS || '14400', 'seconds)');
+  } catch (err) {
+    console.warn('[ATTENDING AI] Could not initialize PHI cache:', err);
+  }
+
+  // 5. Start background job scheduler
   try {
     const { scheduler } = await import('@attending/shared/lib/scheduler');
     scheduler.start();

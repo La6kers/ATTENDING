@@ -58,42 +58,41 @@ export { PrismaClient };
 // Re-export soft-delete helpers for HIPAA-compliant record management
 export { softDelete, restoreSoftDeleted, hardDelete } from './softDeleteMiddleware';
 
-// Re-export enums with Db prefix to avoid conflicts with app-level types
-export { 
+// Re-export Prisma enums (must match schema.prisma enum declarations)
+export {
   UserRole as DbUserRole,
-  UrgencyLevel as DbUrgencyLevel,
-  AssessmentStatus as DbAssessmentStatus,
-  OrderPriority as DbOrderPriority,
   OrderStatus as DbOrderStatus,
+  OrderPriority as DbOrderPriority,
   EncounterStatus as DbEncounterStatus,
-  VisitType as DbVisitType,
-  AllergySeverity as DbAllergySeverity,
-  AllergyType as DbAllergyType,
-  NotificationType as DbNotificationType,
-  NotificationPriority as DbNotificationPriority,
-  ConditionStatus as DbConditionStatus,
-  InteractionSeverity as DbInteractionSeverity,
-  ReferralStatus as DbReferralStatus,
-  EmergencySeverity as DbEmergencySeverity,
+  AssessmentStatus as DbAssessmentStatus,
+  EncounterType as DbEncounterType,
 } from '@prisma/client';
 
-// Type exports for database models with Db prefix to avoid conflicts
+// Type exports for database models (must match schema.prisma model names)
 export type {
+  Organization as DbOrganization,
   User as DbUser,
   Patient as DbPatient,
-  PatientAssessment as DbPatientAssessment,
   Encounter as DbEncounter,
   Allergy as DbAllergy,
-  MedicalCondition as DbMedicalCondition,
-  PatientMedication as DbPatientMedication,
-  VitalSigns as DbVitalSigns,
+  Condition as DbCondition,
+  Medication as DbMedication,
+  VitalSign as DbVitalSign,
   LabOrder as DbLabOrder,
   LabResult as DbLabResult,
   ImagingOrder as DbImagingOrder,
+  ImagingResult as DbImagingResult,
   MedicationOrder as DbMedicationOrder,
   Referral as DbReferral,
+  PatientAssessment as DbPatientAssessment,
+  EmergencyEvent as DbEmergencyEvent,
+  TreatmentPlan as DbTreatmentPlan,
+  ClinicalNote as DbClinicalNote,
   Notification as DbNotification,
   AuditLog as DbAuditLog,
-  EmergencyEvent as DbEmergencyEvent,
+  ApiKey as DbApiKey,
+  WebhookSubscription as DbWebhookSubscription,
+  IntegrationConnection as DbIntegrationConnection,
   ClinicalProtocol as DbClinicalProtocol,
+  RedFlagRule as DbRedFlagRule,
 } from '@prisma/client';

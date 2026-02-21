@@ -22,20 +22,26 @@ import { logger } from './logging';
 // CONFIGURATION
 // ============================================================
 
-/** Models that are scoped to an organization */
+/** Models that are scoped to an organization.
+ *  Keep in sync with organizationId fields in schema.prisma.
+ */
 const TENANT_SCOPED_MODELS = new Set([
+  // Core clinical models (all have organizationId in schema)
   'Patient',
   'Encounter',
   'LabOrder',
   'LabResult',
+  'ImagingOrder',
   'MedicationOrder',
+  'Referral',
+  'PatientAssessment',
+  'TreatmentPlan',
+  'ClinicalNote',
+  // Supporting clinical models (scoped via patient relation)
   'VitalSign',
   'Allergy',
   'Condition',
-  'Referral',
-  'ImagingOrder',
-  'Alert',
-  'ClinicalNote',
+  // Infrastructure models (have organizationId directly)
   'ApiKey',
   'WebhookSubscription',
   'WebhookDelivery',

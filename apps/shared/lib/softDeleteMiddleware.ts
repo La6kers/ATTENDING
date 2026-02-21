@@ -163,12 +163,25 @@ export async function restoreSoftDeleted(
 /**
  * Hard-delete — ONLY for data past HIPAA retention period (6+ years).
  * Bypasses the soft-delete middleware via raw SQL.
+ *
+ * SECURITY: model parameter is validated against SOFT_DELETE_MODELS
+ * whitelist to prevent SQL injection via table name interpolation.
  */
 export async function hardDelete(
   prisma: PrismaClient,
   model: string,
   id: string
 ): Promise<void> {
+  // CRITICAL: Validate model against whitelist to prevent SQL injection.
+  // The table name cannot be parameterized in SQL ($1), so we must
+  // ensure it's a known-safe value before interpolation.
+  if (!SOFT_DELETE_MODELS.has(model)) {
+    throw new Error(
+      `hardDelete: model "${model}" is not a valid soft-delete model. ` +
+      `Allowed: ${[...SOFT_DELETE_MODELS].join(', ')}`
+    );
+  }
+
   console.warn(`[SoftDelete] HARD DELETE: ${model}#${id} — ensure HIPAA retention period has elapsed`);
   const tableName = `"${model}"`;
   await prisma.$executeRawUnsafe(`DELETE FROM ${tableName} WHERE id = $1`, id);
