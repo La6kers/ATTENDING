@@ -1,6 +1,6 @@
 # ATTENDING AI — Current State
 
-**Last Updated:** February 21, 2026
+**Last Updated:** February 22, 2026
 **Branch:** mockup-2
 **Tag:** v0.9-pre-restructure
 
@@ -21,7 +21,7 @@ This is the first file any developer or AI session should read.
 | Frontend (Patient) | Next.js 14 / React 18 / TypeScript | Running, mock data |
 | BFF API Routes | Next.js API routes + Prisma | Partially wired |
 | Production Backend | .NET 8 / Clean Architecture | Built, not connected |
-| Database | PostgreSQL via Prisma (migrating to MS SQL) | Schema complete |
+| Database | MS SQL Server via Prisma (sqlserver provider) | Schema complete, Docker dev |
 | Auth | Azure AD B2C + NextAuth | Scaffolded, not enforced |
 | Real-time | Socket.io / SignalR | Scaffolded, not connected |
 | CI/CD | GitHub Actions (8 workflows) | Builds only, no deploy |

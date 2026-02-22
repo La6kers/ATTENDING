@@ -26,8 +26,8 @@ const baseSchema = z.object({
     .string()
     .min(1, 'DATABASE_URL is required')
     .refine(
-      (v) => v.startsWith('postgresql://') || v.startsWith('postgres://'),
-      'DATABASE_URL must be a PostgreSQL connection string'
+      (v) => v.startsWith('sqlserver://') || v.startsWith('postgresql://') || v.startsWith('postgres://'),
+      'DATABASE_URL must be a SQL Server or PostgreSQL connection string'
     ),
 
   // Auth

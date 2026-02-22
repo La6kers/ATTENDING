@@ -1,93 +1,47 @@
 // ATTENDING AI - Complete Database Schema
-// Production: PostgreSQL with encryption at rest
-// Development: PostgreSQL via docker-compose
+// Production: MS SQL Server (Azure SQL) with encryption at rest
+// Development: MS SQL Server 2022 via docker-compose
 // 
 // HIPAA Requirements:
 // - 164.312(a)(2)(iv) - Encryption and Decryption
-//   Production database MUST have encryption at rest enabled
+//   Production database MUST have Transparent Data Encryption (TDE) enabled
 // - 164.530(j) - 6-year minimum record retention
 //   All PHI-containing models use soft-delete (deletedAt/deletedBy)
 //   Middleware in apps/shared/lib/softDeleteMiddleware.ts
 //   auto-filters deleted records and converts deletes to soft-deletes
 //
-// Run: npx prisma migrate dev --name init
+// SQL Server Note: All relations use onDelete/onUpdate: NoAction to avoid
+// "multiple cascade paths" errors. Cascading deletes are handled by
+// application-level soft-delete middleware instead.
+//
+// Run: npx prisma db push (development)
 // Production: npx prisma migrate deploy
 
 generator client {
   provider = "prisma-client-js"
 }
 
-// PostgreSQL for all environments.
-// Local dev: docker-compose provides postgres on port 5432
-// Production: DATABASE_URL="postgresql://user:pass@host:5432/attending?sslmode=require"
+// MS SQL Server for all environments.
+// Local dev: docker-compose provides SQL Server 2022 on port 1433
+// Production: Azure SQL with TDE enabled
 datasource db {
-  provider = "postgresql"
+  provider = "sqlserver"
   url      = env("DATABASE_URL")
 }
 
-// ============== ENUMS ==============
-
-enum UserRole {
-  ADMIN
-  PROVIDER
-  NURSE
-  STAFF
-  PATIENT
-  SYSTEM
-}
-
-enum OrderStatus {
-  PENDING
-  COLLECTED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  ACTIVE
-  ON_HOLD
-  SCHEDULED
-  SENT
-  DISCONTINUED
-}
-
-enum OrderPriority {
-  STAT
-  ASAP
-  URGENT
-  ROUTINE
-  TIMED
-  ELECTIVE
-}
-
-enum EncounterStatus {
-  SCHEDULED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
-enum AssessmentStatus {
-  IN_PROGRESS
-  COMPLETED
-  ABANDONED
-  EMERGENCY
-}
-
-enum EncounterType {
-  OFFICE
-  TELEHEALTH
-  EMERGENCY
-  INPATIENT
-}
+// NOTE: Prisma does not support native enums on SQL Server.
+// All enum-like fields use String with application-level validation.
+// Canonical values are defined in @attending/shared types.
 
 // ============== ORGANIZATIONS (Multi-Tenant) ==============
 
 model Organization {
   id              String    @id @default(cuid())
   name            String
-  slug            String    @unique // URL-safe identifier
-  type            String    @default("CLINIC") // CLINIC, HOSPITAL, HEALTH_SYSTEM, PRACTICE
-  npi             String?   // Organization NPI
-  taxId           String?   // EIN (encrypted)
+  slug            String    @unique
+  type            String    @default("CLINIC")
+  npi             String?
+  taxId           String?
   address         String?
   city            String?
   state           String?
@@ -95,11 +49,11 @@ model Organization {
   phone           String?
   faxNumber       String?
   website         String?
-  ehrVendor       String?   // EPIC, CERNER, ALLSCRIPTS, etc.
-  fhirEndpoint    String?   // Base FHIR URL for this org's EHR
-  tier            String    @default("standard") // free, standard, enterprise
+  ehrVendor       String?
+  fhirEndpoint    String?
+  tier            String    @default("standard")
   isActive        Boolean   @default(true)
-  settings        String?   // JSON: org-specific configuration
+  settings        String?   @db.NVarChar(Max)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -132,23 +86,23 @@ model User {
   emailVerified   DateTime?
   name            String?
   image           String?
-  password        String?   // Hashed with bcrypt, never stored plain
-  role            String    @default("PROVIDER") // ADMIN, PROVIDER, NURSE, STAFF, PATIENT
-  specialty     String?
-  npi           String?   @unique // National Provider Identifier
-  deaNumber     String?   // DEA number for controlled substances
-  department    String?
-  phone         String?
-  isActive      Boolean   @default(true)
-  mfaEnabled    Boolean   @default(false)
-  mfaSecret     String?   // Encrypted TOTP secret
-  lastLoginAt   DateTime?
-  failedLoginAttempts Int @default(0)
-  lockedUntil   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  password        String?
+  role            String    @default("PROVIDER")
+  specialty       String?
+  npi             String?   @unique
+  deaNumber       String?
+  department      String?
+  phone           String?
+  isActive        Boolean   @default(true)
+  mfaEnabled      Boolean   @default(false)
+  mfaSecret       String?
+  lastLoginAt     DateTime?
+  failedLoginAttempts Int   @default(0)
+  lockedUntil     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  organization        Organization? @relation(fields: [organizationId], references: [id])
+  organization        Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   accounts            Account[]
   sessions            Session[]
   encounters          Encounter[]        @relation("ProviderEncounters")
@@ -173,15 +127,15 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String?
-  access_token      String?
+  refresh_token     String? @db.NVarChar(Max)
+  access_token      String? @db.NVarChar(Max)
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String?
+  id_token          String? @db.NVarChar(Max)
   session_state     String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -196,7 +150,7 @@ model Session {
   userAgent    String?
   createdAt    DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([userId])
   @@index([expires])
@@ -215,7 +169,7 @@ model VerificationToken {
 model Patient {
   id                 String    @id @default(cuid())
   organizationId     String?
-  mrn                String    @unique // Medical Record Number
+  mrn                String    @unique
   firstName          String
   lastName           String
   middleName         String?
@@ -234,7 +188,6 @@ model Patient {
   insurancePolicyNum String?
   preferredLanguage  String    @default("en")
   isActive           Boolean   @default(true)
-  // HIPAA soft-delete: 164.530(j) - 6-year retention minimum
   deletedAt          DateTime?
   deletedBy          String?
   createdAt          DateTime  @default(now())
@@ -252,7 +205,7 @@ model Patient {
   medicationOrders  MedicationOrder[]
   referrals         Referral[]
   assessments       PatientAssessment[]
-  organization      Organization? @relation(fields: [organizationId], references: [id])
+  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   emergencyEvents   EmergencyEvent[]
   treatmentPlans    TreatmentPlan[]
   fhirLabResults    FhirLabResult[]
@@ -277,22 +230,21 @@ model Encounter {
   patientId       String
   providerId      String
   facilityId      String?
-  encounterType   String    // OFFICE, TELEHEALTH, EMERGENCY, INPATIENT
-  status          String    @default("IN_PROGRESS") // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
+  encounterType   String
+  status          String    @default("IN_PROGRESS")
   chiefComplaint  String?
   startTime       DateTime  @default(now())
   endTime         DateTime?
-  notes           String?
-  diagnosis       String?   // JSON array of diagnosis codes
-  // HIPAA soft-delete
+  notes           String?   @db.NVarChar(Max)
+  diagnosis       String?   @db.NVarChar(Max)
   deletedAt       DateTime?
   deletedBy       String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  organization       Organization? @relation(fields: [organizationId], references: [id])
-  patient          Patient            @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  provider         User               @relation("ProviderEncounters", fields: [providerId], references: [id], onDelete: Restrict)
+  organization       Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient          Patient            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider         User               @relation("ProviderEncounters", fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   labOrders        LabOrder[]
   imagingOrders    ImagingOrder[]
   medicationOrders MedicationOrder[]
@@ -307,9 +259,9 @@ model Encounter {
   @@index([startTime])
   @@index([deletedAt])
   @@index([organizationId])
-  @@index([providerId, status])          // Provider dashboard: active encounters
-  @@index([patientId, startTime])        // Patient timeline queries
-  @@index([providerId, status, startTime]) // Sorted provider queue
+  @@index([providerId, status])
+  @@index([patientId, startTime])
+  @@index([providerId, status, startTime])
 }
 
 // ============== ALLERGIES ==============
@@ -319,18 +271,17 @@ model Allergy {
   patientId  String
   allergen   String
   reaction   String?
-  severity   String?   // MILD, MODERATE, SEVERE, LIFE_THREATENING
+  severity   String?
   onsetDate  DateTime?
-  status     String    @default("ACTIVE") // ACTIVE, INACTIVE, RESOLVED
+  status     String    @default("ACTIVE")
   verifiedAt DateTime?
-  notes      String?
-  // HIPAA soft-delete: 164.530(j)
+  notes      String?   @db.NVarChar(Max)
   deletedAt  DateTime?
   deletedBy  String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([allergen])
@@ -344,18 +295,17 @@ model Condition {
   patientId     String
   icdCode       String
   description   String
-  status        String    @default("ACTIVE") // ACTIVE, RESOLVED, INACTIVE
+  status        String    @default("ACTIVE")
   onsetDate     DateTime?
   abatementDate DateTime?
   isPrimary     Boolean   @default(false)
-  notes         String?
-  // HIPAA soft-delete: 164.530(j)
+  notes         String?   @db.NVarChar(Max)
   deletedAt     DateTime?
   deletedBy     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([icdCode])
@@ -375,19 +325,18 @@ model Medication {
   dose          String?
   frequency     String?
   route         String?
-  status        String    @default("ACTIVE") // ACTIVE, COMPLETED, DISCONTINUED, ON_HOLD
+  status        String    @default("ACTIVE")
   startDate     DateTime?
   endDate       DateTime?
   prescribedBy  String?
   pharmacy      String?
-  notes         String?
-  // HIPAA soft-delete: 164.530(j)
+  notes         String?   @db.NVarChar(Max)
   deletedAt     DateTime?
   deletedBy     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([name])
@@ -414,16 +363,15 @@ model VitalSign {
   heightUnit            String    @default("in")
   painLevel             Int?
   bloodGlucose          Float?
-  notes                 String?
+  notes                 String?   @db.NVarChar(Max)
   recordedAt            DateTime  @default(now())
   recordedBy            String?
-  // HIPAA soft-delete: 164.530(j)
   deletedAt             DateTime?
   deletedBy             String?
   createdAt             DateTime  @default(now())
 
-  patient   Patient    @relation(fields: [patientId], references: [id])
-  encounter Encounter? @relation(fields: [encounterId], references: [id])
+  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([encounterId])
@@ -440,27 +388,26 @@ model LabOrder {
   providerId          String
   encounterId         String?
   orderNumber         String    @unique
-  status              String    @default("PENDING") // PENDING, COLLECTED, IN_PROGRESS, COMPLETED, CANCELLED
-  priority            String    @default("ROUTINE") // STAT, ASAP, ROUTINE, TIMED
-  tests               String    // JSON array of ordered tests
-  diagnosis           String?   // JSON array of diagnosis codes
+  status              String    @default("PENDING")
+  priority            String    @default("ROUTINE")
+  tests               String    @db.NVarChar(Max)
+  diagnosis           String?   @db.NVarChar(Max)
   indication          String?
-  specialInstructions String?
+  specialInstructions String?   @db.NVarChar(Max)
   specimenType        String?
   collectionDate      DateTime?
   fasting             Boolean   @default(false)
   orderedAt           DateTime  @default(now())
   completedAt         DateTime?
-  // HIPAA soft-delete
   deletedAt           DateTime?
   deletedBy           String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  patient   Patient     @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  provider  User        @relation(fields: [providerId], references: [id], onDelete: Restrict)
-  encounter Encounter?  @relation(fields: [encounterId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient   Patient     @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider  User        @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter Encounter?  @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   results   LabResult[]
 
   @@index([patientId])
@@ -469,8 +416,8 @@ model LabOrder {
   @@index([orderedAt])
   @@index([deletedAt])
   @@index([organizationId])
-  @@index([providerId, status])    // Provider pending orders dashboard
-  @@index([patientId, orderedAt])  // Patient lab history timeline
+  @@index([providerId, status])
+  @@index([patientId, orderedAt])
 }
 
 model LabResult {
@@ -483,18 +430,17 @@ model LabResult {
   value          String
   unit           String?
   referenceRange String?
-  interpretation String?   // NORMAL, HIGH, LOW, CRITICAL_HIGH, CRITICAL_LOW
-  status         String    @default("FINAL") // PRELIMINARY, FINAL, CORRECTED
+  interpretation String?
+  status         String    @default("FINAL")
   performedAt    DateTime?
   reportedAt     DateTime  @default(now())
-  notes          String?
-  // HIPAA soft-delete: 164.530(j)
+  notes          String?   @db.NVarChar(Max)
   deletedAt      DateTime?
   deletedBy      String?
   createdAt      DateTime  @default(now())
 
-  patient  Patient   @relation(fields: [patientId], references: [id])
-  labOrder LabOrder? @relation(fields: [labOrderId], references: [id])
+  patient  Patient   @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  labOrder LabOrder? @relation(fields: [labOrderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([labOrderId])
@@ -512,31 +458,30 @@ model ImagingOrder {
   providerId          String
   encounterId         String?
   orderNumber         String    @unique
-  status              String    @default("PENDING") // PENDING, SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
-  priority            String    @default("ROUTINE") // STAT, URGENT, ROUTINE
-  studyType           String    // X-RAY, CT, MRI, ULTRASOUND, etc.
+  status              String    @default("PENDING")
+  priority            String    @default("ROUTINE")
+  studyType           String
   studyName           String
   bodyPart            String
-  laterality          String?   // LEFT, RIGHT, BILATERAL
-  indication          String
-  clinicalHistory     String?
+  laterality          String?
+  indication          String    @db.NVarChar(Max)
+  clinicalHistory     String?   @db.NVarChar(Max)
   contrast            Boolean   @default(false)
   contrastType        String?
-  specialInstructions String?
-  diagnosis           String?   // JSON array
+  specialInstructions String?   @db.NVarChar(Max)
+  diagnosis           String?   @db.NVarChar(Max)
   scheduledDate       DateTime?
   orderedAt           DateTime  @default(now())
   completedAt         DateTime?
-  // HIPAA soft-delete: 164.530(j)
   deletedAt           DateTime?
   deletedBy           String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  patient   Patient         @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  provider  User            @relation(fields: [providerId], references: [id], onDelete: Restrict)
-  encounter Encounter?      @relation(fields: [encounterId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient   Patient         @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider  User            @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter Encounter?      @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   results   ImagingResult[]
 
   @@index([patientId])
@@ -553,19 +498,18 @@ model ImagingResult {
   imagingOrderId String?
   studyType      String
   studyName      String
-  findings       String
-  impression     String?
+  findings       String    @db.NVarChar(Max)
+  impression     String?   @db.NVarChar(Max)
   radiologistId  String?
-  status         String    @default("FINAL") // PRELIMINARY, FINAL, ADDENDUM
+  status         String    @default("FINAL")
   performedAt    DateTime?
   reportedAt     DateTime  @default(now())
-  // HIPAA soft-delete: 164.530(j)
   deletedAt      DateTime?
   deletedBy      String?
   createdAt      DateTime  @default(now())
 
-  patient      Patient       @relation(fields: [patientId], references: [id])
-  imagingOrder ImagingOrder? @relation(fields: [imagingOrderId], references: [id])
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  imagingOrder ImagingOrder? @relation(fields: [imagingOrderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([imagingOrderId])
@@ -581,7 +525,7 @@ model MedicationOrder {
   providerId           String
   encounterId          String?
   orderNumber          String    @unique
-  status               String    @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED, ON_HOLD
+  status               String    @default("ACTIVE")
   medicationName       String
   genericName          String?
   rxnormCode           String?
@@ -593,30 +537,29 @@ model MedicationOrder {
   duration             String?
   quantity             Int?
   refills              Int       @default(0)
-  indication           String
-  instructions         String?
+  indication           String    @db.NVarChar(Max)
+  instructions         String?   @db.NVarChar(Max)
   isControlled         Boolean   @default(false)
-  deaSchedule          String?   // II, III, IV, V
+  deaSchedule          String?
   dispenseAsWritten    Boolean   @default(false)
   substitutionAllowed  Boolean   @default(true)
   priorAuthRequired    Boolean   @default(false)
-  priorAuthStatus      String?   // PENDING, APPROVED, DENIED
-  diagnosis            String?   // JSON array
+  priorAuthStatus      String?
+  diagnosis            String?   @db.NVarChar(Max)
   pharmacy             String?
   pharmacyNpi          String?
   orderedAt            DateTime  @default(now())
   discontinuedAt       DateTime?
   discontinuedReason   String?
-  // HIPAA soft-delete
   deletedAt            DateTime?
   deletedBy            String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  provider  User       @relation(fields: [providerId], references: [id], onDelete: Restrict)
-  encounter Encounter? @relation(fields: [encounterId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider  User       @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([providerId])
@@ -636,32 +579,31 @@ model Referral {
   providerId        String
   encounterId       String?
   orderNumber       String    @unique
-  status            String    @default("PENDING") // PENDING, SENT, SCHEDULED, COMPLETED, CANCELLED
-  urgency           String    @default("ROUTINE") // STAT, URGENT, ROUTINE, ELECTIVE
+  status            String    @default("PENDING")
+  urgency           String    @default("ROUTINE")
   specialty         String
   subspecialty      String?
-  reason            String
-  clinicalSummary   String?
-  specificQuestions String?
+  reason            String    @db.NVarChar(Max)
+  clinicalSummary   String?   @db.NVarChar(Max)
+  specificQuestions  String?   @db.NVarChar(Max)
   preferredProvider String?
   preferredFacility String?
-  diagnosis         String?   // JSON array
+  diagnosis         String?   @db.NVarChar(Max)
   insurancePreAuth  Boolean   @default(false)
   preAuthStatus     String?
   scheduledDate     DateTime?
   orderedAt         DateTime  @default(now())
   completedAt       DateTime?
-  consultNote       String?
-  // HIPAA soft-delete: 164.530(j)
+  consultNote       String?   @db.NVarChar(Max)
   deletedAt         DateTime?
   deletedBy         String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  provider  User       @relation(fields: [providerId], references: [id], onDelete: Restrict)
-  encounter Encounter? @relation(fields: [encounterId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider  User       @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([providerId])
@@ -679,33 +621,32 @@ model PatientAssessment {
   patientId          String
   assignedProviderId String?
   sessionId          String    @unique
-  status             String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, ABANDONED, EMERGENCY
+  status             String    @default("IN_PROGRESS")
   phase              String    @default("GREETING")
-  chiefComplaint     String?
-  symptoms           String?   // JSON array
-  hpiNarrative       String?
-  reviewOfSystems    String?   // JSON object
-  medicalHistory     String?   // JSON array
-  medications        String?   // JSON array
-  allergies          String?   // JSON array
-  vitalSigns         String?   // JSON object
-  triageLevel        String?   // ESI 1-5 or custom
-  redFlagsDetected   String?   // JSON array of detected red flags
-  aiSummary          String?
-  aiDifferential     String?   // JSON array of differential diagnoses
-  conversation       String?   // JSON array of chat messages
+  chiefComplaint     String?   @db.NVarChar(Max)
+  symptoms           String?   @db.NVarChar(Max)
+  hpiNarrative       String?   @db.NVarChar(Max)
+  reviewOfSystems    String?   @db.NVarChar(Max)
+  medicalHistory     String?   @db.NVarChar(Max)
+  medications        String?   @db.NVarChar(Max)
+  allergies          String?   @db.NVarChar(Max)
+  vitalSigns         String?   @db.NVarChar(Max)
+  triageLevel        String?
+  redFlagsDetected   String?   @db.NVarChar(Max)
+  aiSummary          String?   @db.NVarChar(Max)
+  aiDifferential     String?   @db.NVarChar(Max)
+  conversation       String?   @db.NVarChar(Max)
   startedAt          DateTime  @default(now())
   completedAt        DateTime?
   lastActivityAt     DateTime  @default(now())
-  // HIPAA soft-delete
   deletedAt          DateTime?
   deletedBy          String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  organization    Organization?    @relation(fields: [organizationId], references: [id])
-  patient          Patient          @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  assignedProvider User?            @relation("AssignedProvider", fields: [assignedProviderId], references: [id])
+  organization     Organization?    @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient          Patient          @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assignedProvider User?            @relation("AssignedProvider", fields: [assignedProviderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   emergencyEvents  EmergencyEvent[]
 
   @@index([patientId])
@@ -722,26 +663,25 @@ model EmergencyEvent {
   id                String    @id @default(cuid())
   patientId         String
   assessmentId      String?
-  eventType         String    // RED_FLAG, CRASH_DETECTION, MANUAL_TRIGGER
-  severity          String    // CRITICAL, HIGH, MODERATE
-  description       String
-  triggeredBy       String    // SYSTEM, PATIENT, PROVIDER
-  symptoms          String?   // JSON array
-  vitalSigns        String?   // JSON object
-  location          String?   // GPS coordinates or address
+  eventType         String
+  severity          String
+  description       String    @db.NVarChar(Max)
+  triggeredBy       String
+  symptoms          String?   @db.NVarChar(Max)
+  vitalSigns        String?   @db.NVarChar(Max)
+  location          String?
   acknowledgedAt    DateTime?
   acknowledgedBy    String?
   resolvedAt        DateTime?
   resolvedBy        String?
-  resolution        String?
-  notificationsSent String?   // JSON array of notifications sent
-  // HIPAA soft-delete: 164.530(j)
+  resolution        String?   @db.NVarChar(Max)
+  notificationsSent String?   @db.NVarChar(Max)
   deletedAt         DateTime?
   deletedBy         String?
   createdAt         DateTime  @default(now())
 
-  patient    Patient            @relation(fields: [patientId], references: [id])
-  assessment PatientAssessment? @relation(fields: [assessmentId], references: [id])
+  patient    Patient            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assessment PatientAssessment? @relation(fields: [assessmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([eventType])
@@ -757,29 +697,28 @@ model TreatmentPlan {
   organizationId         String?
   patientId              String
   encounterId            String
-  status                 String    @default("DRAFT") // DRAFT, ACTIVE, COMPLETED, CANCELLED
-  diagnosis              String    // JSON array of diagnoses
-  chiefComplaint         String?
-  clinicalSummary        String?
-  labOrders              String?   // JSON array
-  imagingOrders          String?   // JSON array
-  medicationOrders       String?   // JSON array
-  referralOrders         String?   // JSON array
-  followUpSchedule       String?   // JSON array
-  patientEducation       String?   // JSON array
-  returnPrecautions      String?   // JSON array
-  additionalInstructions String?
+  status                 String    @default("DRAFT")
+  diagnosis              String    @db.NVarChar(Max)
+  chiefComplaint         String?   @db.NVarChar(Max)
+  clinicalSummary        String?   @db.NVarChar(Max)
+  labOrders              String?   @db.NVarChar(Max)
+  imagingOrders          String?   @db.NVarChar(Max)
+  medicationOrders       String?   @db.NVarChar(Max)
+  referralOrders         String?   @db.NVarChar(Max)
+  followUpSchedule       String?   @db.NVarChar(Max)
+  patientEducation       String?   @db.NVarChar(Max)
+  returnPrecautions      String?   @db.NVarChar(Max)
+  additionalInstructions String?   @db.NVarChar(Max)
   approvedAt             DateTime?
   approvedBy             String?
-  // HIPAA soft-delete
   deletedAt              DateTime?
   deletedBy              String?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([encounterId])
@@ -791,31 +730,30 @@ model TreatmentPlan {
 // ============== CLINICAL NOTES ==============
 
 model ClinicalNote {
-  id            String    @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String?
-  patientId     String
-  encounterId   String
-  noteType      String    // PROGRESS, SOAP, H_AND_P, PROCEDURE, DISCHARGE
-  status        String    @default("DRAFT") // DRAFT, SIGNED, AMENDED, ADDENDUM
-  content       String    // Rich text or structured JSON
-  subjective    String?
-  objective     String?
-  assessment    String?
-  plan          String?
-  authorId      String
-  signedAt      DateTime?
-  signedBy      String?
-  amendedAt     DateTime?
-  amendments    String?   // JSON array of amendments
-  // HIPAA soft-delete
-  deletedAt     DateTime?
-  deletedBy     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  patientId      String
+  encounterId    String
+  noteType       String
+  status         String    @default("DRAFT")
+  content        String    @db.NVarChar(Max)
+  subjective     String?   @db.NVarChar(Max)
+  objective      String?   @db.NVarChar(Max)
+  assessment     String?   @db.NVarChar(Max)
+  plan           String?   @db.NVarChar(Max)
+  authorId       String
+  signedAt       DateTime?
+  signedBy       String?
+  amendedAt      DateTime?
+  amendments     String?   @db.NVarChar(Max)
+  deletedAt      DateTime?
+  deletedBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: Restrict)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([encounterId])
@@ -830,24 +768,24 @@ model ClinicalNote {
 model Notification {
   id          String    @id @default(cuid())
   userId      String
-  type        String    // EMERGENCY, RED_FLAG, LAB_RESULT, ORDER_UPDATE, SYSTEM
-  priority    String    @default("NORMAL") // CRITICAL, HIGH, NORMAL, LOW
+  type        String
+  priority    String    @default("NORMAL")
   title       String
-  message     String
-  data        String?   // JSON additional data
+  message     String    @db.NVarChar(Max)
+  data        String?   @db.NVarChar(Max)
   read        Boolean   @default(false)
   readAt      DateTime?
   actionUrl   String?
   expiresAt   DateTime?
   createdAt   DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([userId])
   @@index([type])
   @@index([read])
   @@index([createdAt])
-  @@index([userId, read, createdAt]) // Unread notification badge count
+  @@index([userId, read, createdAt])
 }
 
 // ============== AUDIT LOG - HIPAA REQUIREMENT ==============
@@ -855,19 +793,19 @@ model Notification {
 model AuditLog {
   id             String   @id @default(cuid())
   organizationId String?
-  action         String   // Action performed (from AuditActions enum)
-  userId         String?  // Who performed the action
-  entityType     String   // Type of resource accessed
-  entityId     String?  // ID of resource accessed
-  changes      String?  // JSON: what was changed, includes patientId if PHI
-  ipAddress    String?  // Client IP address
-  userAgent    String?  // Client user agent
-  success      Boolean  @default(true)
-  errorMessage String?  // Error message if failed
-  createdAt    DateTime @default(now())
+  action         String
+  userId         String?
+  entityType     String
+  entityId       String?
+  changes        String?  @db.NVarChar(Max)
+  ipAddress      String?
+  userAgent      String?
+  success        Boolean  @default(true)
+  errorMessage   String?  @db.NVarChar(Max)
+  createdAt      DateTime @default(now())
 
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  user User? @relation(fields: [userId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user User? @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([action])
   @@index([userId])
@@ -876,9 +814,9 @@ model AuditLog {
   @@index([createdAt])
   @@index([success])
   @@index([organizationId])
-  @@index([userId, createdAt])              // User activity reports
-  @@index([entityType, entityId, createdAt]) // Resource access history
-  @@index([action, createdAt])              // Security event reports
+  @@index([userId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([action, createdAt])
 }
 
 // ============== API KEYS (System-to-System Authentication) ==============
@@ -886,21 +824,21 @@ model AuditLog {
 model ApiKey {
   id             String    @id @default(cuid())
   name           String
-  description    String?
-  keyHash        String    @unique // SHA-256 hash of the key (never store plaintext)
-  keyPrefix      String    // First 12 chars for human identification
+  description    String?   @db.NVarChar(Max)
+  keyHash        String    @unique
+  keyPrefix      String
   organizationId String
-  scopes         String    // JSON array of scope strings
-  rateLimit      Int?      // Custom requests/minute override
+  scopes         String    @db.NVarChar(Max)
+  rateLimit      Int?
   expiresAt      DateTime?
   lastUsedAt     DateTime?
   usageCount     Int       @default(0)
   isActive       Boolean   @default(true)
-  createdBy      String    // User ID who created this key
+  createdBy      String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([keyHash])
   @@index([organizationId])
@@ -912,13 +850,13 @@ model ApiKey {
 model WebhookSubscription {
   id             String    @id @default(cuid())
   name           String
-  url            String    // Delivery URL (must be HTTPS in production)
-  secret         String    // HMAC-SHA256 signing secret
+  url            String
+  secret         String
   organizationId String
-  events         String    // JSON array of event types to subscribe to
+  events         String    @db.NVarChar(Max)
   isActive       Boolean   @default(true)
-  failureCount   Int       @default(0) // Consecutive failures
-  disabledAt     DateTime? // Auto-disabled after too many failures
+  failureCount   Int       @default(0)
+  disabledAt     DateTime?
   disabledReason String?
   lastDeliveryAt DateTime?
   lastStatusCode Int?
@@ -926,7 +864,7 @@ model WebhookSubscription {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   deliveries     WebhookDelivery[]
 
   @@index([organizationId])
@@ -937,18 +875,18 @@ model WebhookDelivery {
   id               String    @id @default(cuid())
   subscriptionId   String
   eventType        String
-  payload          String    // JSON event payload
+  payload          String    @db.NVarChar(Max)
   statusCode       Int?
-  responseBody     String?   // Truncated response (max 1KB)
+  responseBody     String?   @db.NVarChar(Max)
   durationMs       Int?
   attempt          Int       @default(1)
   maxAttempts      Int       @default(5)
   nextRetryAt      DateTime?
-  status           String    @default("PENDING") // PENDING, SUCCESS, FAILED, RETRYING
-  errorMessage     String?
+  status           String    @default("PENDING")
+  errorMessage     String?   @db.NVarChar(Max)
   createdAt        DateTime  @default(now())
 
-  subscription     WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscription     WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([subscriptionId])
   @@index([status])
@@ -961,23 +899,23 @@ model WebhookDelivery {
 model IntegrationConnection {
   id             String    @id @default(cuid())
   name           String
-  type           String    // FHIR, HL7V2, WEBHOOK, SFTP, CUSTOM
-  direction      String    // INBOUND, OUTBOUND, BIDIRECTIONAL
+  type           String
+  direction      String
   organizationId String
-  config         String    // Encrypted JSON config (endpoints, credentials ref)
-  status         String    @default("ACTIVE") // ACTIVE, PAUSED, ERROR, DISABLED
+  config         String    @db.NVarChar(Max)
+  status         String    @default("ACTIVE")
   lastSyncAt     DateTime?
   lastErrorAt    DateTime?
-  lastError      String?
-  healthStatus   String    @default("UNKNOWN") // HEALTHY, DEGRADED, DOWN, UNKNOWN
+  lastError      String?   @db.NVarChar(Max)
+  healthStatus   String    @default("UNKNOWN")
   messageCount   Int       @default(0)
   errorCount     Int       @default(0)
-  metadata       String?   // JSON metadata (version, capabilities, etc.)
+  metadata       String?   @db.NVarChar(Max)
   createdBy      String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([organizationId])
   @@index([type])
@@ -989,10 +927,10 @@ model IntegrationConnection {
 model FhirLabResult {
   id              String   @id @default(cuid())
   patientId       String
-  fhirId          String   @unique // FHIR resource ID
-  fhirServerId    String   // Which FHIR server this came from
+  fhirId          String   @unique
+  fhirServerId    String
   resourceType    String   @default("Observation")
-  rawResource     String   // Full FHIR JSON
+  rawResource     String   @db.NVarChar(Max)
   testCode        String?
   testName        String?
   value           String?
@@ -1002,7 +940,7 @@ model FhirLabResult {
   lastSyncedAt    DateTime @default(now())
   createdAt       DateTime @default(now())
 
-  patient Patient @relation(fields: [patientId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([fhirId])
@@ -1015,7 +953,7 @@ model FhirCondition {
   fhirId          String   @unique
   fhirServerId    String
   resourceType    String   @default("Condition")
-  rawResource     String
+  rawResource     String   @db.NVarChar(Max)
   icdCode         String?
   description     String?
   status          String?
@@ -1023,7 +961,7 @@ model FhirCondition {
   lastSyncedAt    DateTime @default(now())
   createdAt       DateTime @default(now())
 
-  patient Patient @relation(fields: [patientId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([fhirId])
@@ -1035,14 +973,14 @@ model FhirMedication {
   fhirId          String   @unique
   fhirServerId    String
   resourceType    String   @default("MedicationRequest")
-  rawResource     String
+  rawResource     String   @db.NVarChar(Max)
   medicationName  String?
   dose            String?
   status          String?
   lastSyncedAt    DateTime @default(now())
   createdAt       DateTime @default(now())
 
-  patient Patient @relation(fields: [patientId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([fhirId])
@@ -1054,15 +992,15 @@ model FhirVitalSign {
   fhirId          String   @unique
   fhirServerId    String
   resourceType    String   @default("Observation")
-  rawResource     String
-  vitalType       String?  // heart-rate, blood-pressure, etc.
+  rawResource     String   @db.NVarChar(Max)
+  vitalType       String?
   value           String?
   unit            String?
   effectiveDate   DateTime?
   lastSyncedAt    DateTime @default(now())
   createdAt       DateTime @default(now())
 
-  patient Patient @relation(fields: [patientId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([fhirId])
@@ -1073,18 +1011,18 @@ model FhirVitalSign {
 
 model DeadLetterEntry {
   id             String    @id @default(cuid())
-  type           String    // webhook, hl7v2, fhir, import, event, custom
-  status         String    @default("pending") // pending, replaying, replayed, discarded
-  payload        String    // JSON: original message payload
-  destination    String    // Target URL or endpoint
-  error          String    // Last error message
+  type           String
+  status         String    @default("pending")
+  payload        String    @db.NVarChar(Max)
+  destination    String
+  error          String    @db.NVarChar(Max)
   attempts       Int       @default(0)
-  originalId     String?   // Original message/delivery ID
+  originalId     String?
   organizationId String?
-  lastStatusCode Int?      // HTTP status code from last attempt
-  metadata       String?   // JSON: additional context
+  lastStatusCode Int?
+  metadata       String?   @db.NVarChar(Max)
   replayedAt     DateTime?
-  replayResult   String?
+  replayResult   String?   @db.NVarChar(Max)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -1092,7 +1030,7 @@ model DeadLetterEntry {
   @@index([status])
   @@index([organizationId])
   @@index([createdAt])
-  @@index([status, type])  // Dashboard: filter pending by type
+  @@index([status, type])
 }
 
 // ============== CLINICAL PROTOCOLS ==============
@@ -1100,13 +1038,13 @@ model DeadLetterEntry {
 model ClinicalProtocol {
   id            String   @id @default(cuid())
   name          String   @unique
-  description   String
+  description   String   @db.NVarChar(Max)
   version       String
-  category      String   // EMERGENCY, CHRONIC_DISEASE, PREVENTIVE, etc.
-  triggerRules  String   // JSON: conditions that trigger this protocol
-  actions       String   // JSON: recommended actions
-  evidenceLevel String?  // A, B, C, D
-  guidelineRef  String?  // Reference to clinical guideline
+  category      String
+  triggerRules  String   @db.NVarChar(Max)
+  actions       String   @db.NVarChar(Max)
+  evidenceLevel String?
+  guidelineRef  String?
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -1120,14 +1058,14 @@ model ClinicalProtocol {
 model RedFlagRule {
   id              String   @id @default(cuid())
   name            String   @unique
-  description     String
-  category        String   // CARDIOVASCULAR, NEUROLOGICAL, RESPIRATORY, etc.
-  severity        String   // CRITICAL, HIGH, MODERATE
-  triggerCriteria String   // JSON: symptom patterns and thresholds
-  vitalThresholds String?  // JSON: vital sign thresholds
-  icdCodes        String?  // JSON: associated ICD-10 codes
-  recommendedAction String
-  timeframe       String   // IMMEDIATE, URGENT
+  description     String   @db.NVarChar(Max)
+  category        String
+  severity        String
+  triggerCriteria String   @db.NVarChar(Max)
+  vitalThresholds String?  @db.NVarChar(Max)
+  icdCodes        String?  @db.NVarChar(Max)
+  recommendedAction String @db.NVarChar(Max)
+  timeframe       String
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

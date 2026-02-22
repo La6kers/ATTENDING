@@ -15,7 +15,7 @@ import { PrismaClient } from '@prisma/client';
 // ============================================================
 
 export interface DatabaseConfig {
-  provider: 'sqlite' | 'postgresql';
+  provider: 'sqlite' | 'postgresql' | 'sqlserver';
   url: string;
   ssl: boolean;
   poolMin: number;
@@ -28,19 +28,27 @@ export interface DatabaseConfig {
 // ============================================================
 
 function getDatabaseConfig(): DatabaseConfig {
-  const provider = (process.env.DATABASE_PROVIDER || 'sqlite') as 'sqlite' | 'postgresql';
+  // Auto-detect provider from DATABASE_URL
   const url = process.env.DATABASE_URL || 'file:./dev.db';
+  let provider: 'sqlite' | 'postgresql' | 'sqlserver';
+  if (url.startsWith('sqlserver://')) {
+    provider = 'sqlserver';
+  } else if (url.startsWith('postgresql://') || url.startsWith('postgres://')) {
+    provider = 'postgresql';
+  } else {
+    provider = 'sqlite';
+  }
   
-  // Production should always use PostgreSQL with SSL
+  // Production should always use SQL Server (Azure SQL) or PostgreSQL
   if (process.env.NODE_ENV === 'production' && provider === 'sqlite') {
     console.warn('[DATABASE] WARNING: Using SQLite in production is not HIPAA-compliant!');
-    console.warn('[DATABASE] Please configure PostgreSQL with encryption at rest.');
+    console.warn('[DATABASE] Please configure SQL Server or PostgreSQL with encryption at rest.');
   }
   
   return {
     provider,
     url,
-    ssl: provider === 'postgresql' && process.env.NODE_ENV === 'production',
+    ssl: (provider === 'postgresql' || provider === 'sqlserver') && process.env.NODE_ENV === 'production',
     poolMin: parseInt(process.env.DATABASE_POOL_MIN || '5', 10),
     poolMax: parseInt(process.env.DATABASE_POOL_MAX || '20', 10),
     connectionTimeout: parseInt(process.env.DATABASE_CONNECTION_TIMEOUT || '30000', 10),

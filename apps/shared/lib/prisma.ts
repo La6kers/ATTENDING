@@ -58,15 +58,21 @@ export { PrismaClient };
 // Re-export soft-delete helpers for HIPAA-compliant record management
 export { softDelete, restoreSoftDeleted, hardDelete } from './softDeleteMiddleware';
 
-// Re-export Prisma enums (must match schema.prisma enum declarations)
-export {
-  UserRole as DbUserRole,
-  OrderStatus as DbOrderStatus,
-  OrderPriority as DbOrderPriority,
-  EncounterStatus as DbEncounterStatus,
-  AssessmentStatus as DbAssessmentStatus,
-  EncounterType as DbEncounterType,
-} from '@prisma/client';
+// Prisma does not generate native enums for SQL Server.
+// Use these string literal types for type-safe enum-like values.
+export const DbUserRole = { ADMIN: 'ADMIN', PROVIDER: 'PROVIDER', NURSE: 'NURSE', STAFF: 'STAFF', PATIENT: 'PATIENT', SYSTEM: 'SYSTEM' } as const;
+export const DbOrderStatus = { PENDING: 'PENDING', COLLECTED: 'COLLECTED', IN_PROGRESS: 'IN_PROGRESS', COMPLETED: 'COMPLETED', CANCELLED: 'CANCELLED', ACTIVE: 'ACTIVE', ON_HOLD: 'ON_HOLD', SCHEDULED: 'SCHEDULED', SENT: 'SENT', DISCONTINUED: 'DISCONTINUED' } as const;
+export const DbOrderPriority = { STAT: 'STAT', ASAP: 'ASAP', URGENT: 'URGENT', ROUTINE: 'ROUTINE', TIMED: 'TIMED', ELECTIVE: 'ELECTIVE' } as const;
+export const DbEncounterStatus = { SCHEDULED: 'SCHEDULED', IN_PROGRESS: 'IN_PROGRESS', COMPLETED: 'COMPLETED', CANCELLED: 'CANCELLED' } as const;
+export const DbAssessmentStatus = { IN_PROGRESS: 'IN_PROGRESS', COMPLETED: 'COMPLETED', ABANDONED: 'ABANDONED', EMERGENCY: 'EMERGENCY' } as const;
+export const DbEncounterType = { OFFICE: 'OFFICE', TELEHEALTH: 'TELEHEALTH', EMERGENCY: 'EMERGENCY', INPATIENT: 'INPATIENT' } as const;
+
+export type DbUserRoleType = typeof DbUserRole[keyof typeof DbUserRole];
+export type DbOrderStatusType = typeof DbOrderStatus[keyof typeof DbOrderStatus];
+export type DbOrderPriorityType = typeof DbOrderPriority[keyof typeof DbOrderPriority];
+export type DbEncounterStatusType = typeof DbEncounterStatus[keyof typeof DbEncounterStatus];
+export type DbAssessmentStatusType = typeof DbAssessmentStatus[keyof typeof DbAssessmentStatus];
+export type DbEncounterTypeType = typeof DbEncounterType[keyof typeof DbEncounterType];
 
 // Type exports for database models (must match schema.prisma model names)
 export type {

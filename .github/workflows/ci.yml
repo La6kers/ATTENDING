@@ -23,8 +23,8 @@ concurrency:
 
 env:
   NODE_VERSION: '20'
-  # Test environment
-  DATABASE_URL: 'postgresql://attending:test_password@localhost:5432/attending_test'
+  # Test environment — SQL Server
+  DATABASE_URL: 'sqlserver://localhost:1433;database=attending_test;user=sa;password=Attending_CI_2026!;trustServerCertificate=true;encrypt=true'
   REDIS_URL: 'redis://localhost:6379'
   NEXTAUTH_SECRET: 'ci-test-secret-must-be-at-least-32-characters'
   NEXTAUTH_URL: 'http://localhost:3000'
@@ -67,19 +67,20 @@ jobs:
     needs: lint
 
     services:
-      postgres:
-        image: postgres:15-alpine
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
         env:
-          POSTGRES_USER: attending
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: attending_test
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: Attending_CI_2026!
+          MSSQL_PID: Developer
         ports:
-          - 5432:5432
+          - 1433:1433
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Attending_CI_2026! -Q 'SELECT 1' -C -b"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 30s
 
       redis:
         image: redis:7-alpine
@@ -105,11 +106,18 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate --schema=prisma/schema.prisma
 
-      - name: Verify migration status
-        run: npx prisma migrate status --schema=prisma/schema.prisma
+      - name: Create test database
+        run: |
+          # Wait for SQL Server to be fully ready
+          sleep 5
+          # Install sqlcmd if not available via service container
+          docker exec $(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest") \
+            /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Attending_CI_2026!" -C \
+            -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'attending_test') CREATE DATABASE attending_test;"
+        continue-on-error: true
 
-      - name: Apply migrations to test database
-        run: npx prisma migrate deploy --schema=prisma/schema.prisma
+      - name: Push schema to test database
+        run: npx prisma db push --schema=prisma/schema.prisma --skip-generate
 
       - name: Run unit & integration tests
         run: npm run test:run -- --reporter=verbose
@@ -157,7 +165,7 @@ jobs:
         run: npm run build:patient
         env:
           NEXT_TELEMETRY_DISABLED: 1
-        continue-on-error: true  # Patient portal may have unresolved deps
+        continue-on-error: true
 
       - name: Check build output size
         run: |
@@ -192,7 +200,6 @@ jobs:
       - name: Check for secrets in code
         run: |
           echo "Scanning for potential secrets..."
-          # Check for common secret patterns
           FOUND=0
           grep -rn "AKIA[0-9A-Z]\{16\}" --include="*.ts" --include="*.js" --include="*.json" . && FOUND=1 || true
           grep -rn "-----BEGIN.*PRIVATE KEY-----" --include="*.ts" --include="*.js" --include="*.pem" . && FOUND=1 || true
@@ -206,17 +213,12 @@ jobs:
       - name: Verify security configurations
         run: |
           echo "Checking security configurations..."
-          
-          # Check that DEV_BYPASS_AUTH is not hardcoded to true
           if grep -rn "DEV_BYPASS_AUTH.*=.*true" --include="*.ts" --include="*.js" --include="*.yml" .; then
             echo "::warning::DEV_BYPASS_AUTH=true found in source files"
           fi
-          
-          # Check for unsafe-eval in production CSP
           if grep -rn "unsafe-eval" apps/provider-portal/middleware.ts | grep -v "dev\|development\|isProduction"; then
             echo "::warning::unsafe-eval may be present in production CSP"
           fi
-          
           echo "✓ Security checks passed"
 
   # ========================================================

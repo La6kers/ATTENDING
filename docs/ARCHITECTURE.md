@@ -117,8 +117,8 @@ ATTENDING/
 | State Machines | XState | 5.x |
 | Backend Framework | ASP.NET Core | 8.0 |
 | Backend ORM | Entity Framework Core | 8.x |
-| Frontend ORM | Prisma | 5.x |
-| Database | Microsoft SQL Server | 2022 |
+| Frontend ORM (Prisma) | Prisma | 5.x (sqlserver provider) |
+| Database | Microsoft SQL Server | 2022 (Docker dev / Azure SQL prod) |
 | Auth Provider | Azure AD B2C | — |
 | Auth Library | NextAuth.js | 4.x |
 | Real-time (.NET) | SignalR | — |

@@ -9,8 +9,6 @@
 # Add to .gitignore if you do not want it committed.
 # ============================================================
 
-version: '3.8'
-
 services:
   provider-portal:
     environment:
