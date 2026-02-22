@@ -177,19 +177,65 @@ export default function ProviderDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState({
-    pendingAssessments: 8,
-    patientsToday: 24,
-    unreadMessages: 5,
-    completedVisits: 16,
+    pendingAssessments: 0,
+    patientsToday: 0,
+    unreadMessages: 0,
+    completedVisits: 0,
   });
 
-  // Mock patient queue data
-  const [patientQueue] = useState<QueueItem[]>([
-    { id: 'p1', patientName: 'Margaret White', age: 72, chiefComplaint: 'Shortness of breath', urgencyLevel: 'high', waitTime: '12 min', redFlags: 4 },
-    { id: 'p2', patientName: 'Dorothy Clark', age: 81, chiefComplaint: 'Fall at home', urgencyLevel: 'emergency', waitTime: '5 min', redFlags: 2 },
-    { id: 'p3', patientName: 'Kevin Martinez', age: 28, chiefComplaint: 'Establish care', urgencyLevel: 'standard', waitTime: '18 min', redFlags: 0 },
-    { id: 'p4', patientName: 'Robert Martinez', age: 66, chiefComplaint: 'Chest discomfort', urgencyLevel: 'high', waitTime: '8 min', redFlags: 1 },
-  ]);
+  const [patientQueue, setPatientQueue] = useState<QueueItem[]>([]);
+
+  // Fetch real data from assessments API
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/assessments?pageSize=100');
+        if (!res.ok) return;
+        const data = await res.json();
+        const assessments = data.assessments || [];
+
+        // Calculate stats from real data
+        const pending = assessments.filter((a: any) => !a.assignedProvider).length;
+        const completed = assessments.filter((a: any) => a.status === 'REVIEWED').length;
+        setStats({
+          pendingAssessments: pending,
+          patientsToday: assessments.length,
+          unreadMessages: 0,
+          completedVisits: completed,
+        });
+
+        // Build patient queue from unassigned assessments (top 6)
+        const triageMap: Record<string, QueueItem['urgencyLevel']> = {
+          EMERGENCY: 'emergency', URGENT: 'high', MODERATE: 'moderate', ROUTINE: 'standard',
+        };
+        const queue: QueueItem[] = assessments
+          .filter((a: any) => !a.assignedProvider)
+          .slice(0, 6)
+          .map((a: any) => {
+            const p = a.patient || {};
+            const redFlags: string[] = Array.isArray(a.redFlags) ? a.redFlags : [];
+            const completedAt = a.completedAt ? new Date(a.completedAt) : new Date();
+            const waitMs = Date.now() - completedAt.getTime();
+            const waitMin = Math.max(1, Math.floor(waitMs / 60000));
+            const dob = p.dateOfBirth ? new Date(p.dateOfBirth) : null;
+            const age = dob ? Math.floor((Date.now() - dob.getTime()) / 31557600000) : 0;
+            return {
+              id: a.id,
+              patientName: [p.firstName, p.lastName].filter(Boolean).join(' ') || 'Unknown',
+              age,
+              chiefComplaint: a.chiefComplaint || '',
+              urgencyLevel: triageMap[a.triageLevel] || 'standard',
+              waitTime: waitMin < 60 ? `${waitMin} min` : `${Math.floor(waitMin / 60)}h ${waitMin % 60}m`,
+              redFlags: redFlags.length,
+            };
+          });
+        setPatientQueue(queue);
+      } catch (err) {
+        console.error('[Dashboard] Failed to load data:', err);
+      }
+    }
+    loadDashboard();
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {

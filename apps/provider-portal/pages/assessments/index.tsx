@@ -57,123 +57,65 @@ interface Assessment {
 }
 
 // =============================================================================
-// Mock Data
+// API → UI Mapping
 // =============================================================================
 
-const getMockAssessments = (): Assessment[] => [
-  {
-    id: 'a1',
-    patientName: 'Sarah Johnson',
-    patientAge: 32,
-    patientGender: 'Female',
-    mrn: '78932145',
-    chiefComplaint: 'Severe headache for 3 days',
-    submittedAt: new Date(Date.now() - 15 * 60000).toISOString(),
-    urgencyLevel: 'high',
-    redFlags: ['Worst headache of life', 'Confusion', 'Elevated BP'],
-    status: 'pending',
-    aiConfidence: 0.85,
-    primaryDiagnosis: 'Migraine with Aura',
-  },
-  {
-    id: 'a2',
-    patientName: 'Margaret White',
-    patientAge: 72,
-    patientGender: 'Female',
-    mrn: 'MRN-020',
-    chiefComplaint: 'Shortness of breath',
-    submittedAt: new Date(Date.now() - 30 * 60000).toISOString(),
-    urgencyLevel: 'high',
-    redFlags: ['Acute dyspnea', 'Orthopnea', 'Lower extremity edema'],
-    status: 'pending',
-    aiConfidence: 0.78,
-    primaryDiagnosis: 'Acute CHF Exacerbation',
-  },
-  {
-    id: 'a3',
-    patientName: 'Dorothy Clark',
-    patientAge: 81,
-    patientGender: 'Female',
-    mrn: 'MRN-021',
-    chiefComplaint: 'Fall at home',
-    submittedAt: new Date(Date.now() - 45 * 60000).toISOString(),
-    urgencyLevel: 'emergency',
-    redFlags: ['Head injury', 'On anticoagulation', 'Loss of consciousness'],
-    status: 'pending',
-    aiConfidence: 0.92,
-    primaryDiagnosis: 'Traumatic Brain Injury',
-  },
-  {
-    id: 'a4',
-    patientName: 'Robert Martinez',
-    patientAge: 66,
-    patientGender: 'Male',
-    mrn: 'MRN-022',
-    chiefComplaint: 'Chest discomfort',
-    submittedAt: new Date(Date.now() - 60 * 60000).toISOString(),
-    urgencyLevel: 'high',
-    redFlags: ['Chest pain', 'Diaphoresis'],
-    status: 'pending',
-    aiConfidence: 0.72,
-    primaryDiagnosis: 'Acute Coronary Syndrome',
-  },
-  {
-    id: 'a5',
-    patientName: 'Kevin Martinez',
-    patientAge: 28,
-    patientGender: 'Male',
-    mrn: 'MRN-023',
-    chiefComplaint: 'Establish care',
-    submittedAt: new Date(Date.now() - 2 * 60 * 60000).toISOString(),
-    urgencyLevel: 'standard',
-    redFlags: [],
-    status: 'pending',
-    aiConfidence: 0.95,
-    primaryDiagnosis: 'Wellness Visit',
-  },
-  {
-    id: 'a6',
-    patientName: 'Linda Thompson',
-    patientAge: 45,
-    patientGender: 'Female',
-    mrn: 'MRN-024',
-    chiefComplaint: 'Abdominal pain',
-    submittedAt: new Date(Date.now() - 3 * 60 * 60000).toISOString(),
-    urgencyLevel: 'moderate',
-    redFlags: ['RLQ tenderness'],
-    status: 'in_review',
-    aiConfidence: 0.81,
-    primaryDiagnosis: 'Appendicitis',
-  },
-  {
-    id: 'a7',
-    patientName: 'James Wilson',
-    patientAge: 55,
-    patientGender: 'Male',
-    mrn: 'MRN-025',
-    chiefComplaint: 'Chronic back pain',
-    submittedAt: new Date(Date.now() - 4 * 60 * 60000).toISOString(),
-    urgencyLevel: 'standard',
-    redFlags: [],
-    status: 'pending',
-    aiConfidence: 0.88,
-    primaryDiagnosis: 'Lumbar Radiculopathy',
-  },
-  {
-    id: 'a8',
-    patientName: 'Patricia Brown',
-    patientAge: 38,
-    patientGender: 'Female',
-    mrn: 'MRN-026',
-    chiefComplaint: 'Anxiety and insomnia',
-    submittedAt: new Date(Date.now() - 5 * 60 * 60000).toISOString(),
-    urgencyLevel: 'standard',
-    redFlags: [],
-    status: 'pending',
-    aiConfidence: 0.76,
-    primaryDiagnosis: 'Generalized Anxiety Disorder',
-  },
-];
+const TRIAGE_TO_URGENCY: Record<string, Assessment['urgencyLevel']> = {
+  EMERGENCY: 'emergency',
+  URGENT: 'high',
+  MODERATE: 'moderate',
+  ROUTINE: 'standard',
+};
+
+const STATUS_MAP: Record<string, Assessment['status']> = {
+  COMPLETED: 'pending',    // Completed by patient, pending provider review
+  IN_REVIEW: 'in_review',
+  REVIEWED: 'completed',
+};
+
+function calculateAge(dob: string): number {
+  const birth = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+/** Map API response row → UI Assessment */
+function mapApiToAssessment(row: any): Assessment {
+  const patient = row.patient || {};
+  const redFlags: string[] = Array.isArray(row.redFlags) ? row.redFlags : [];
+  const aiDiff: any[] = Array.isArray(row.aiDifferential) ? row.aiDifferential : [];
+  const topDx = aiDiff[0];
+
+  return {
+    id: row.id,
+    patientName: [patient.firstName, patient.lastName].filter(Boolean).join(' ') || 'Unknown',
+    patientAge: patient.dateOfBirth ? calculateAge(patient.dateOfBirth) : 0,
+    patientGender: patient.gender || 'Unknown',
+    mrn: patient.mrn || '',
+    chiefComplaint: row.chiefComplaint || '',
+    submittedAt: row.completedAt || row.createdAt || new Date().toISOString(),
+    urgencyLevel: TRIAGE_TO_URGENCY[row.triageLevel] || 'standard',
+    redFlags,
+    status: STATUS_MAP[row.status] || 'pending',
+    aiConfidence: topDx?.probability ?? 0,
+    primaryDiagnosis: topDx?.name,
+  };
+}
+
+async function fetchAssessmentsFromApi(): Promise<Assessment[]> {
+  try {
+    const res = await fetch('/api/assessments?pageSize=100');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return (data.assessments || []).map(mapApiToAssessment);
+  } catch (err) {
+    console.error('[Assessments] API fetch failed:', err);
+    return [];
+  }
+}
 
 // =============================================================================
 // Helper Functions
@@ -369,11 +311,15 @@ export default function AssessmentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list');
 
+  const loadAssessments = async () => {
+    setLoading(true);
+    const data = await fetchAssessmentsFromApi();
+    setAssessments(data);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    setTimeout(() => {
-      setAssessments(getMockAssessments());
-      setLoading(false);
-    }, 300);
+    loadAssessments();
   }, []);
 
   const filteredAssessments = assessments
@@ -456,13 +402,7 @@ export default function AssessmentsPage() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    setLoading(true);
-                    setTimeout(() => {
-                      setAssessments(getMockAssessments());
-                      setLoading(false);
-                    }, 300);
-                  }}
+                  onClick={() => loadAssessments()}
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg flex items-center gap-2 transition-colors"
                 >
                   <RefreshCw className="w-4 h-4" />
