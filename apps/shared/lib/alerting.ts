@@ -65,11 +65,39 @@ class AlertEngine {
   private rules = new Map<string, AlertRule>();
   private activeAlerts = new Map<string, AlertEvent>();
   private lastFired = new Map<string, number>();
-  private history: AlertEvent[] = [];
+  private history: AlertEvent[] = []; // In-memory fallback
+  private redis: any = null;
   private config: NotificationConfig = {};
+  private readonly REDIS_KEY_ACTIVE = 'alerts:active';
+  private readonly REDIS_KEY_HISTORY = 'alerts:history';
+  private readonly MAX_HISTORY = 1000;
 
   constructor() {
     this.loadConfig();
+  }
+
+  /**
+   * Initialize with Redis for persistent alert state.
+   * Without Redis, falls back to in-memory (lost on restart).
+   */
+  async initialize(redisClient?: any): Promise<void> {
+    if (redisClient) {
+      this.redis = redisClient;
+      // Restore active alerts from Redis
+      try {
+        const activeKeys = await this.redis.keys(`${this.REDIS_KEY_ACTIVE}:*`);
+        for (const key of activeKeys) {
+          const raw = await this.redis.get(key);
+          if (raw) {
+            const event: AlertEvent = JSON.parse(raw);
+            this.activeAlerts.set(event.ruleId, event);
+          }
+        }
+        logger.info(`[Alerting] Restored ${this.activeAlerts.size} active alerts from Redis`);
+      } catch (err) {
+        logger.warn('[Alerting] Could not restore alerts from Redis', err);
+      }
+    }
   }
 
   private loadConfig(): void {
@@ -140,7 +168,18 @@ class AlertEngine {
     this.activeAlerts.set(rule.id, event);
     this.lastFired.set(rule.id, Date.now());
     this.history.push(event);
-    if (this.history.length > 1000) this.history.splice(0, this.history.length - 1000);
+    if (this.history.length > this.MAX_HISTORY) this.history.splice(0, this.history.length - this.MAX_HISTORY);
+
+    // Persist to Redis if available
+    if (this.redis) {
+      try {
+        await this.redis.set(`${this.REDIS_KEY_ACTIVE}:${rule.id}`, JSON.stringify(event), 86400); // 24h TTL
+        // Store in sorted set for history (score = timestamp)
+        const score = Date.now();
+        await this.redis.zadd?.(this.REDIS_KEY_HISTORY, score, JSON.stringify(event))
+          || await this.redis.set(`${this.REDIS_KEY_HISTORY}:${event.id}`, JSON.stringify(event), 604800); // 7d fallback
+      } catch { /* Redis persistence optional */ }
+    }
 
     logger.warn(`[Alerting] FIRING: ${event.message}`);
 
@@ -163,6 +202,13 @@ class AlertEngine {
     event.status = 'resolved';
     event.resolvedAt = new Date().toISOString();
     this.activeAlerts.delete(ruleId);
+
+    // Remove from Redis active set
+    if (this.redis) {
+      try {
+        await this.redis.del(`${this.REDIS_KEY_ACTIVE}:${ruleId}`);
+      } catch { /* Redis persistence optional */ }
+    }
 
     logger.info(`[Alerting] RESOLVED: ${event.ruleName}`);
   }

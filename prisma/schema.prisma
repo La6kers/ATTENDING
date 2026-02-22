@@ -1069,6 +1069,32 @@ model FhirVitalSign {
   @@index([vitalType])
 }
 
+// ============== DEAD LETTER QUEUE ==============
+
+model DeadLetterEntry {
+  id             String    @id @default(cuid())
+  type           String    // webhook, hl7v2, fhir, import, event, custom
+  status         String    @default("pending") // pending, replaying, replayed, discarded
+  payload        String    // JSON: original message payload
+  destination    String    // Target URL or endpoint
+  error          String    // Last error message
+  attempts       Int       @default(0)
+  originalId     String?   // Original message/delivery ID
+  organizationId String?
+  lastStatusCode Int?      // HTTP status code from last attempt
+  metadata       String?   // JSON: additional context
+  replayedAt     DateTime?
+  replayResult   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([organizationId])
+  @@index([createdAt])
+  @@index([status, type])  // Dashboard: filter pending by type
+}
+
 // ============== CLINICAL PROTOCOLS ==============
 
 model ClinicalProtocol {

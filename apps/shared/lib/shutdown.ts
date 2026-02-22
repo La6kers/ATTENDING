@@ -87,7 +87,20 @@ export function registerShutdownHandlers(options: ShutdownOptions = {}): void {
         }
       }
 
-      // 2. Close Redis
+      // 2. Stop scheduler + release distributed locks
+      try {
+        const { scheduler } = await import('./scheduler');
+        scheduler.stop();
+        logger('[Shutdown] Scheduler stopped');
+      } catch { /* not initialized */ }
+
+      try {
+        const { distributedLock } = await import('./distributedLock');
+        await distributedLock.releaseAll();
+        logger('[Shutdown] Distributed locks released');
+      } catch { /* not initialized */ }
+
+      // 3. Close Redis
       if (redis) {
         try {
           logger('[Shutdown] Closing Redis connection...');
@@ -98,14 +111,7 @@ export function registerShutdownHandlers(options: ShutdownOptions = {}): void {
         }
       }
 
-      // 3. Close database (last, so in-flight queries complete)
-      // Stop background scheduler
-      try {
-        const { scheduler } = require('./scheduler');
-        scheduler.stop();
-        logger('[Shutdown] Background scheduler stopped');
-      } catch { /* Scheduler not loaded */ }
-
+      // 4. Close database (last, so in-flight queries complete)
       if (prisma) {
         try {
           logger('[Shutdown] Closing database connection...');

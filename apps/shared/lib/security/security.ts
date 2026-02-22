@@ -72,12 +72,24 @@ const DANGEROUS_PATTERNS = [
   /expression\s*\(/gi,
 ];
 
+// SQL injection patterns use COMBINED keywords to avoid false positives.
+// Clinical content often contains bare SQL keywords like "SELECT the appropriate
+// dosage" or "Patient wants to UPDATE their medication list". Only flag patterns
+// that combine SQL keywords with structural SQL syntax.
 const SQL_INJECTION_PATTERNS = [
-  /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE|TRUNCATE)\b)/gi,
-  /('|")\s*(OR|AND)\s*('|"|\d)/gi,
-  /;\s*(DROP|DELETE|UPDATE|INSERT)/gi,
-  /--\s*$/gm,
-  /\/\*[\s\S]*?\*\//g,
+  /\bSELECT\b[\s\S]{0,50}\bFROM\b/gi,           // SELECT ... FROM
+  /\bINSERT\b[\s\S]{0,20}\bINTO\b/gi,             // INSERT INTO
+  /\bUPDATE\b[\s\S]{0,50}\bSET\b/gi,              // UPDATE ... SET
+  /\bDELETE\b[\s\S]{0,20}\bFROM\b/gi,             // DELETE FROM
+  /\bDROP\b\s+(TABLE|DATABASE|INDEX|VIEW)\b/gi,    // DROP TABLE/DATABASE/etc
+  /\bUNION\b[\s\S]{0,20}\bSELECT\b/gi,            // UNION SELECT
+  /\bALTER\b\s+TABLE\b/gi,                         // ALTER TABLE
+  /\bCREATE\b\s+(TABLE|DATABASE|INDEX|VIEW)\b/gi,  // CREATE TABLE/etc
+  /\bTRUNCATE\b\s+TABLE\b/gi,                      // TRUNCATE TABLE
+  /('|")\s*(OR|AND)\s*('|"|\d)\s*=\s*('|"|\d)/gi, // ' OR '1'='1 (tautology)
+  /;\s*(DROP|DELETE|UPDATE|INSERT)\b/gi,            // Statement chaining
+  /--\s*$/gm,                                       // SQL line comments at end
+  /\/\*[\s\S]*?\*\//g,                              // SQL block comments
 ];
 
 /**
@@ -654,15 +666,37 @@ export function setSecurityHeaders(
 }
 
 /**
- * Set security headers for API responses
+ * Set security headers for API responses.
+ * Skips CSP if the Edge middleware already set it (to avoid overwriting
+ * the nonce-based policy with a weaker one).
  */
 export function setApiSecurityHeaders(res: NextApiResponse): void {
-  setSecurityHeaders(res);
-  
-  // Additional API-specific headers
+  // Only set CSP if the middleware hasn't already set it.
+  // The Edge middleware sets a nonce-based CSP which is stronger than
+  // the generic fallback here. Overwriting it would be a downgrade.
+  const existingCsp = res.getHeader('Content-Security-Policy')
+    || res.getHeader('Content-Security-Policy-Report-Only');
+
+  if (!existingCsp) {
+    setSecurityHeaders(res);
+  } else {
+    // Set non-CSP security headers only
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '0');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    }
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self), payment=()');
+  }
+
+  // API-specific headers
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  
-  // Prevent caching of API responses
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('Surrogate-Control', 'no-store');
 }

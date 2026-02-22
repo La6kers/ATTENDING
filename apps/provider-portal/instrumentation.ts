@@ -66,7 +66,16 @@ export async function register() {
     }
   }
 
-  // 4. Initialize PHI cache service
+  // 4. Initialize distributed lock service (multi-pod job coordination)
+  try {
+    const { distributedLock } = await import('@attending/shared/lib/distributedLock');
+    await distributedLock.initialize(redis || undefined);
+    console.log('[ATTENDING AI] Distributed lock initialized (instance:', distributedLock.getInstanceId(), ')');
+  } catch (err) {
+    console.warn('[ATTENDING AI] Could not initialize distributed lock:', err);
+  }
+
+  // 5. Initialize PHI cache service
   try {
     const { phiCache } = await import('@attending/shared/lib/phiCache');
     await phiCache.initialize(redis || undefined);
@@ -75,7 +84,16 @@ export async function register() {
     console.warn('[ATTENDING AI] Could not initialize PHI cache:', err);
   }
 
-  // 5. Start background job scheduler
+  // 6. Initialize alert engine with Redis persistence
+  try {
+    const { alertEngine } = await import('@attending/shared/lib/alerting');
+    await alertEngine.initialize(redis || undefined);
+    console.log('[ATTENDING AI] Alert engine initialized with Redis persistence');
+  } catch (err) {
+    console.warn('[ATTENDING AI] Could not initialize alert engine:', err);
+  }
+
+  // 7. Start background job scheduler
   try {
     const { scheduler } = await import('@attending/shared/lib/scheduler');
     scheduler.start();

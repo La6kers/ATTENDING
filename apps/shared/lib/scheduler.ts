@@ -118,6 +118,20 @@ class JobScheduler {
     const job = this.jobs.get(name);
     if (!job || job.status.isRunning) return;
 
+    // Distributed lock: prevent duplicate execution across pods.
+    // If another instance holds the lock, skip this run silently.
+    try {
+      const { distributedLock } = await import('./distributedLock');
+      const lockTTL = Math.max(Math.ceil((job.definition.timeoutMs || 30_000) / 1000) + 5, 30);
+      const acquired = await distributedLock.acquire(`scheduler:${name}`, lockTTL);
+      if (!acquired) {
+        logger.debug(`[Scheduler] Skipping ${name} — another instance holds the lock`);
+        return;
+      }
+    } catch {
+      // Lock service unavailable — proceed (single-instance fallback)
+    }
+
     job.status.isRunning = true;
     const start = performance.now();
 
@@ -145,6 +159,12 @@ class JobScheduler {
       job.status.isRunning = false;
       job.status.lastRun = new Date().toISOString();
       job.status.nextRun = new Date(Date.now() + job.definition.intervalMs).toISOString();
+
+      // Release distributed lock
+      try {
+        const { distributedLock } = await import('./distributedLock');
+        await distributedLock.release(`scheduler:${name}`);
+      } catch { /* Lock service unavailable */ }
     }
   }
 
