@@ -2,7 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  
+
+  // Standalone output for Docker deployments
+  output: 'standalone',
+
   // Transpile the shared workspace package
   transpilePackages: ['@attending/shared'],
   

@@ -1,102 +1,72 @@
 # ============================================================
-# ATTENDING AI - Provider Portal Production Dockerfile
+# ATTENDING AI - Provider Portal Dockerfile
 # apps/provider-portal/Dockerfile
 #
-# Multi-stage build for minimal, secure production image:
-#   Stage 1 (deps):     Install dependencies
-#   Stage 2 (builder):  Build Next.js
-#   Stage 3 (runner):   Minimal runtime image
-#
-# Security features:
-#   - Non-root user (nextjs:nodejs)
-#   - Read-only filesystem compatible
-#   - No dev dependencies in final image
-#   - Minimal Alpine base
-#   - Health check built in
-#
-# Build:
-#   docker build -f apps/provider-portal/Dockerfile -t attending-provider .
-#
-# Run:
-#   docker run -p 3000:3000 --env-file .env.production attending-provider
+# Multi-stage build for Next.js in monorepo context.
+# Build context: repository root (.)
 # ============================================================
 
-# ---- Stage 1: Install dependencies ----
+# --- Stage 1: Dependencies ---
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy workspace root files
-COPY package.json package-lock.json ./
-COPY apps/shared/package.json ./apps/shared/
-COPY apps/provider-portal/package.json ./apps/provider-portal/
-COPY packages/clinical-types/package.json ./packages/clinical-types/ 2>/dev/null || true
-COPY packages/clinical-services/package.json ./packages/clinical-services/ 2>/dev/null || true
-COPY packages/ui-primitives/package.json ./packages/ui-primitives/ 2>/dev/null || true
+COPY package.json package-lock.json turbo.json ./
+COPY apps/shared/package.json apps/shared/
+COPY apps/provider-portal/package.json apps/provider-portal/
 
-# Install dependencies
-RUN npm ci --ignore-scripts
+# Install all dependencies (workspace-aware)
+RUN npm ci --workspace=apps/provider-portal --workspace=apps/shared --include-workspace-root
 
-# ---- Stage 2: Build ----
+# --- Stage 2: Builder ---
 FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY --from=deps /app/apps/shared/node_modules ./apps/shared/node_modules 2>/dev/null || true
+COPY --from=deps /app/apps/provider-portal/node_modules ./apps/provider-portal/node_modules 2>/dev/null || true
+
+# Copy source
+COPY package.json turbo.json tsconfig.json ./
+COPY prisma ./prisma
+COPY apps/shared ./apps/shared
+COPY apps/provider-portal ./apps/provider-portal
 
 # Generate Prisma client
-RUN npx prisma generate --schema=prisma/schema.prisma
+RUN npx prisma generate
 
-# Build the Next.js app
+# Build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-RUN npm run build:provider
+RUN npm run build --workspace=apps/provider-portal
 
-# ---- Stage 3: Production runner ----
+# --- Stage 3: Runner ---
 FROM node:20-alpine AS runner
 WORKDIR /app
-
-# Security: non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
-
-# Install runtime-only dependencies
-RUN apk add --no-cache \
-    wget \
-    ca-certificates \
-    tini
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
-# Copy only what's needed for runtime
-COPY --from=builder /app/apps/provider-portal/next.config.js ./apps/provider-portal/
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built output
 COPY --from=builder /app/apps/provider-portal/public ./apps/provider-portal/public
 COPY --from=builder /app/apps/provider-portal/.next/standalone ./
 COPY --from=builder /app/apps/provider-portal/.next/static ./apps/provider-portal/.next/static
 
-# Copy Prisma client (needed at runtime)
+# Copy Prisma for runtime queries
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/prisma/schema.prisma ./prisma/
+COPY --from=builder /app/prisma ./prisma
 
-# Set ownership
-RUN chown -R nextjs:nodejs /app
-
-# Switch to non-root user
 USER nextjs
 
-# Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget --spider -q http://localhost:3000/api/health || exit 1
 
-# Use tini as init process (proper signal handling for graceful shutdown)
-ENTRYPOINT ["tini", "--"]
-
-# Start the Next.js server
 CMD ["node", "apps/provider-portal/server.js"]

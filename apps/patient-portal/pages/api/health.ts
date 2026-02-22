@@ -1,4 +1,4 @@
-// apps/provider-portal/pages/api/health.ts
+// apps/patient-portal/pages/api/health.ts
 // Health check endpoint for Azure App Service probes and Docker HEALTHCHECK
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
@@ -7,13 +7,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const start = Date.now();
 
   try {
-    // Quick DB connectivity check
     await prisma.$queryRaw`SELECT 1 AS ok`;
     const dbMs = Date.now() - start;
 
     res.status(200).json({
       status: 'healthy',
-      service: 'provider-portal',
+      service: 'patient-portal',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       checks: {
@@ -23,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     res.status(503).json({
       status: 'unhealthy',
-      service: 'provider-portal',
+      service: 'patient-portal',
       timestamp: new Date().toISOString(),
       checks: {
         database: { status: 'error', message: (error as Error).message },
