@@ -1,157 +1,136 @@
 // =============================================================================
-// ATTENDING AI - Assessments API
+// ATTENDING AI - Assessments API (Provider Portal)
 // apps/provider-portal/pages/api/assessments/index.ts
 //
-// Returns assessment data from the database via Prisma
-// Supports filtering by status, urgency, and date range
+// Returns patient assessments from database.
+// Supports filtering by status, triage level, and provider assignment.
 //
-// UPDATED: Now fetches from real database instead of mock data
+// Phase 3: Reads actual PatientAssessment schema fields.
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/api/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 
-// Type definitions
-interface AssessmentResponse {
+// =============================================================================
+// Types
+// =============================================================================
+
+interface AssessmentListItem {
   id: string;
   sessionId: string;
   patientId: string;
   patientName: string;
-  patientAge: number | null;
-  patientDOB: string;
   patientMRN: string;
+  patientDOB: string | null;
   patientGender: string | null;
-  chiefComplaint: string;
-  hpiOnset: string | null;
-  hpiLocation: string | null;
-  hpiDuration: string | null;
-  hpiCharacter: string | null;
-  hpiSeverity: number | null;
-  hpiTiming: string | null;
-  hpiAggravating: string[];
-  hpiRelieving: string[];
-  hpiAssociated: string[];
+  chiefComplaint: string | null;
+  hpiNarrative: string | null;
+  symptoms: string[];
   medications: string[];
   allergies: string[];
   medicalHistory: string[];
-  urgencyLevel: string;
-  urgencyScore: number;
-  redFlags: string[];
+  triageLevel: string | null;
+  redFlags: Array<{ flag: string; severity: string; category?: string }>;
   status: string;
+  phase: string;
   assignedProviderId: string | null;
   assignedProviderName: string | null;
-  submittedAt: string;
+  completedAt: string | null;
   createdAt: string;
-  updatedAt: string;
 }
 
-interface ApiResponse {
-  assessments: AssessmentResponse[];
-  total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
-}
+// =============================================================================
+// Helpers
+// =============================================================================
 
-// Helper to safely parse JSON strings
-function safeParseJson<T>(value: string | null, defaultValue: T): T {
-  if (!value) return defaultValue;
+function safeJsonParse<T>(value: string | null, fallback: T): T {
+  if (!value) return fallback;
   try {
     return JSON.parse(value);
   } catch {
-    return defaultValue;
+    return fallback;
   }
 }
 
-// Calculate age from date of birth
 function calculateAge(dob: Date): number {
   const today = new Date();
   let age = today.getFullYear() - dob.getFullYear();
-  const monthDiff = today.getMonth() - dob.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-    age--;
-  }
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
   return age;
 }
 
+// =============================================================================
+// Handler
+// =============================================================================
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse | { error: string }>
+  res: NextApiResponse
 ) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { 
-      status, 
-      urgency, 
-      urgent,
+    const {
+      status,
+      triageLevel,
+      unassigned,
       providerId,
       page = '1',
       pageSize = '50',
-      sortBy = 'submittedAt',
-      sortOrder = 'desc',
     } = req.query;
 
-    // Build where clause
+    // Build filter
     const where: any = {};
 
-    // Filter by status
     if (status && typeof status === 'string') {
       where.status = status.toUpperCase();
-    } else if (urgent === 'true') {
-      // Get pending/in-progress assessments only for urgent flag
-      where.status = { in: ['PENDING', 'IN_PROGRESS'] };
     }
 
-    // Filter by urgency level
-    if (urgency && typeof urgency === 'string') {
-      where.urgencyLevel = urgency.toUpperCase();
-    } else if (urgent === 'true') {
-      // High and emergency urgency only
-      where.urgencyLevel = { in: ['HIGH', 'EMERGENCY'] };
+    if (triageLevel && typeof triageLevel === 'string') {
+      where.triageLevel = triageLevel.toUpperCase();
     }
 
-    // Filter by assigned provider
+    if (unassigned === 'true') {
+      where.assignedProviderId = null;
+      // Only show completed (submitted) assessments waiting for review
+      if (!status) {
+        where.status = 'COMPLETED';
+      }
+    }
+
     if (providerId && typeof providerId === 'string') {
       where.assignedProviderId = providerId;
     }
 
     // Pagination
-    const pageNum = parseInt(page as string, 10) || 1;
+    const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
     const pageSizeNum = Math.min(parseInt(pageSize as string, 10) || 50, 100);
     const skip = (pageNum - 1) * pageSizeNum;
 
-    // Sort order
-    const orderBy: any = {};
-    const sortField = (sortBy as string) || 'submittedAt';
-    const order = (sortOrder as string) === 'asc' ? 'asc' : 'desc';
-    
-    // Priority sorting: urgent first, then by time
-    if (urgent === 'true' || !sortBy) {
-      orderBy.urgencyLevel = 'desc'; // EMERGENCY > HIGH > MODERATE > STANDARD
-    }
-    orderBy[sortField] = order;
-
-    // Fetch assessments with patient data
+    // Query
     const [assessments, total] = await Promise.all([
       prisma.patientAssessment.findMany({
         where,
         include: {
-          patient: true,
-          assignedProvider: {
+          patient: {
             select: {
               id: true,
-              name: true,
+              firstName: true,
+              lastName: true,
+              mrn: true,
+              dateOfBirth: true,
+              gender: true,
             },
+          },
+          assignedProvider: {
+            select: { id: true, name: true },
           },
         },
         orderBy: [
-          // Sort by urgency first (emergency on top)
-          { urgencyLevel: 'desc' },
-          // Then by submitted time
-          { submittedAt: order as 'asc' | 'desc' },
+          { completedAt: 'desc' },
         ],
         skip,
         take: pageSizeNum,
@@ -159,48 +138,37 @@ export default async function handler(
       prisma.patientAssessment.count({ where }),
     ]);
 
-    // Transform to response format
-    const formattedAssessments: AssessmentResponse[] = assessments.map((assessment) => ({
-      id: assessment.id,
-      sessionId: assessment.sessionId,
-      patientId: assessment.patientId,
-      patientName: assessment.patient 
-        ? `${assessment.patient.firstName} ${assessment.patient.lastName}`
+    // Transform
+    const items: AssessmentListItem[] = assessments.map((a) => ({
+      id: a.id,
+      sessionId: a.sessionId,
+      patientId: a.patientId,
+      patientName: a.patient
+        ? `${a.patient.firstName} ${a.patient.lastName}`
         : 'Unknown Patient',
-      patientAge: assessment.patient?.dateOfBirth 
-        ? calculateAge(assessment.patient.dateOfBirth) 
+      patientMRN: a.patient?.mrn || '',
+      patientDOB: a.patient?.dateOfBirth
+        ? a.patient.dateOfBirth.toISOString().split('T')[0]
         : null,
-      patientDOB: assessment.patient?.dateOfBirth 
-        ? assessment.patient.dateOfBirth.toISOString().split('T')[0] 
-        : '',
-      patientMRN: assessment.patient?.mrn || '',
-      patientGender: assessment.patient?.gender || null,
-      chiefComplaint: assessment.chiefComplaint,
-      hpiOnset: assessment.hpiOnset,
-      hpiLocation: assessment.hpiLocation,
-      hpiDuration: assessment.hpiDuration,
-      hpiCharacter: assessment.hpiCharacter,
-      hpiSeverity: assessment.hpiSeverity,
-      hpiTiming: assessment.hpiTiming,
-      hpiAggravating: safeParseJson<string[]>(assessment.hpiAggravating, []),
-      hpiRelieving: safeParseJson<string[]>(assessment.hpiRelieving, []),
-      hpiAssociated: safeParseJson<string[]>(assessment.hpiAssociated, []),
-      medications: safeParseJson<string[]>(assessment.medications, []),
-      allergies: safeParseJson<string[]>(assessment.allergies, []),
-      medicalHistory: safeParseJson<string[]>(assessment.medicalHistory, []),
-      urgencyLevel: assessment.urgencyLevel,
-      urgencyScore: assessment.urgencyScore,
-      redFlags: safeParseJson<string[]>(assessment.redFlags, []),
-      status: assessment.status,
-      assignedProviderId: assessment.assignedProviderId,
-      assignedProviderName: assessment.assignedProvider?.name || null,
-      submittedAt: assessment.submittedAt?.toISOString() || assessment.createdAt.toISOString(),
-      createdAt: assessment.createdAt.toISOString(),
-      updatedAt: assessment.updatedAt.toISOString(),
+      patientGender: a.patient?.gender || null,
+      chiefComplaint: a.chiefComplaint,
+      hpiNarrative: a.hpiNarrative,
+      symptoms: safeJsonParse<string[]>(a.symptoms, []),
+      medications: safeJsonParse<string[]>(a.medications, []),
+      allergies: safeJsonParse<string[]>(a.allergies, []),
+      medicalHistory: safeJsonParse<string[]>(a.medicalHistory, []),
+      triageLevel: a.triageLevel,
+      redFlags: safeJsonParse<any[]>(a.redFlagsDetected, []),
+      status: a.status,
+      phase: a.phase,
+      assignedProviderId: a.assignedProviderId,
+      assignedProviderName: a.assignedProvider?.name || null,
+      completedAt: a.completedAt?.toISOString() || null,
+      createdAt: a.createdAt.toISOString(),
     }));
 
     return res.status(200).json({
-      assessments: formattedAssessments,
+      assessments: items,
       total,
       page: pageNum,
       pageSize: pageSizeNum,
@@ -208,8 +176,6 @@ export default async function handler(
     });
   } catch (error) {
     console.error('[ASSESSMENTS API ERROR]', error);
-    return res.status(500).json({ 
-      error: 'Failed to fetch assessments',
-    });
+    return res.status(500).json({ error: 'Failed to fetch assessments' });
   }
 }

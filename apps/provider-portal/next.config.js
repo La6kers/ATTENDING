@@ -13,6 +13,17 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     // Handle workspace package resolution
     config.resolve.symlinks = true;
+
+    // Node.js built-ins aren't available in browser bundles.
+    // events.ts imports 'crypto' for webhook HMAC signing (server-only)
+    // but webpack still tries to resolve it for the client build.
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        crypto: false,
+      };
+    }
+
     return config;
   },
 

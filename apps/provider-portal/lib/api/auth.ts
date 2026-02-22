@@ -147,7 +147,7 @@ export async function createAuditLog(
         action,
         entityType,
         entityId,
-        changes,
+        changes: changes ? (typeof changes === 'string' ? changes : JSON.stringify(changes)) : null,
         ipAddress: req?.headers['x-forwarded-for']?.toString() || req?.socket?.remoteAddress,
         userAgent: req?.headers['user-agent'],
         success: true,

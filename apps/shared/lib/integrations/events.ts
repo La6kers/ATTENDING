@@ -31,7 +31,11 @@
 //   });
 // ============================================================
 
-import { createHmac, randomUUID } from 'crypto';
+// Webpack cannot resolve Node.js built-in 'crypto' during client bundling.
+// Using eval('require') hides it from webpack's static module analysis.
+// This code only runs server-side (webhook HMAC signing + event IDs).
+// eslint-disable-next-line no-eval
+const getCrypto = (): typeof import('crypto') => eval('require')('crypto');
 
 // ============================================================
 // EVENT TYPES
@@ -131,7 +135,7 @@ class EventBus {
     context?: { organizationId?: string; userId?: string }
   ): Promise<void> {
     const event: ClinicalEvent = {
-      id: randomUUID(),
+      id: getCrypto().randomUUID(),
       type,
       timestamp: new Date().toISOString(),
       organizationId: context?.organizationId,
@@ -204,7 +208,7 @@ export interface WebhookDeliveryResult {
  * The signature is sent in the X-Webhook-Signature header.
  */
 export function signWebhookPayload(payload: string, secret: string): string {
-  return createHmac('sha256', secret).update(payload).digest('hex');
+  return getCrypto().createHmac('sha256', secret).update(payload).digest('hex');
 }
 
 /**

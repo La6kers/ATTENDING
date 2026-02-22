@@ -1,176 +1,206 @@
-// Lab Order API - Get, Update, Cancel individual lab order
+// =============================================================================
+// Lab Order Detail API: /api/labs/[id]
 // apps/provider-portal/pages/api/labs/[id].ts
+//
+// GET — single lab order with results
+// PATCH — update status, add results
+// DELETE — cancel order (soft)
+//
+// Phase 3: Uses actual LabOrder/LabResult schema fields only.
+// =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/api/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+function safeJsonParse<T>(value: string | null, fallback: T): T {
+  if (!value) return fallback;
+  try { return JSON.parse(value); } catch { return fallback; }
+}
+
+// =============================================================================
+// Handler
+// =============================================================================
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
   const { id } = req.query;
-  
   if (typeof id !== 'string') {
     return res.status(400).json({ error: 'Invalid lab order ID' });
   }
 
   switch (req.method) {
-    case 'GET':
-      return getLabOrder(req, res, session, id);
-    case 'PUT':
-    case 'PATCH':
-      return updateLabOrder(req, res, session, id);
-    case 'DELETE':
-      return cancelLabOrder(req, res, session, id);
+    case 'GET': return getLabOrder(id, res);
+    case 'PATCH': return updateLabOrder(id, req, res, session);
+    case 'DELETE': return cancelLabOrder(id, res, session, req);
     default:
-      res.setHeader('Allow', ['GET', 'PUT', 'PATCH', 'DELETE']);
+      res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
       return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
 }
 
-async function getLabOrder(req: NextApiRequest, res: NextApiResponse, session: any, id: string) {
+// =============================================================================
+// GET
+// =============================================================================
+
+async function getLabOrder(id: string, res: NextApiResponse) {
   try {
     const labOrder = await prisma.labOrder.findUnique({
       where: { id },
       include: {
-        encounter: {
-          include: {
-            patient: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                mrn: true,
-                dateOfBirth: true,
-                allergies: { where: { isActive: true } },
-              },
-            },
+        patient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            mrn: true,
+            dateOfBirth: true,
           },
         },
-        orderedBy: { select: { id: true, name: true, specialty: true } },
-        results: { orderBy: { resultedAt: 'desc' } },
+        provider: {
+          select: { id: true, name: true, specialty: true },
+        },
+        results: {
+          orderBy: { reportedAt: 'desc' },
+        },
       },
     });
-    
+
     if (!labOrder) {
       return res.status(404).json({ error: 'Lab order not found' });
     }
-    
-    return res.status(200).json(labOrder);
+
+    return res.status(200).json({
+      ...labOrder,
+      tests: safeJsonParse(labOrder.tests, []),
+      diagnosis: safeJsonParse(labOrder.diagnosis, null),
+    });
   } catch (error) {
-    console.error('Error fetching lab order:', error);
+    console.error('[Labs API] Error fetching lab order:', error);
     return res.status(500).json({ error: 'Failed to fetch lab order' });
   }
 }
 
-async function updateLabOrder(req: NextApiRequest, res: NextApiResponse, session: any, id: string) {
+// =============================================================================
+// PATCH — update status or add results
+// =============================================================================
+
+async function updateLabOrder(
+  id: string,
+  req: NextApiRequest,
+  res: NextApiResponse,
+  session: any
+) {
   try {
-    const {
-      status,
-      priority,
-      indication,
-      specialInstructions,
-      collectionDate,
-      notes,
-      // For adding results
-      results,
-    } = req.body;
-    
-    const existingOrder = await prisma.labOrder.findUnique({ where: { id } });
-    
-    if (!existingOrder) {
+    const existing = await prisma.labOrder.findUnique({ where: { id } });
+    if (!existing) {
       return res.status(404).json({ error: 'Lab order not found' });
     }
-    
-    // Update order
+
+    const { status, priority, specialInstructions, results } = req.body;
+
+    // Update the order itself
     const updateData: any = {};
-    if (status) updateData.status = status;
-    if (priority) updateData.priority = priority;
-    if (indication) updateData.indication = indication;
+    if (status) updateData.status = status.toUpperCase();
+    if (priority) updateData.priority = priority.toUpperCase();
     if (specialInstructions) updateData.specialInstructions = specialInstructions;
-    if (collectionDate) updateData.collectionDate = new Date(collectionDate);
-    if (notes) updateData.notes = notes;
-    
-    // Handle status changes
-    if (status === 'COLLECTED' && !existingOrder.collectedAt) {
-      updateData.collectedAt = new Date();
-    }
-    if (status === 'RESULTED' && !existingOrder.resultedAt) {
-      updateData.resultedAt = new Date();
-    }
-    
+    if (status === 'COMPLETED') updateData.completedAt = new Date();
+
     const labOrder = await prisma.labOrder.update({
       where: { id },
       data: updateData,
       include: {
-        encounter: {
-          include: {
-            patient: { select: { firstName: true, lastName: true, mrn: true } },
-          },
-        },
+        patient: { select: { firstName: true, lastName: true, mrn: true } },
         results: true,
       },
     });
-    
+
     // Add results if provided
     if (results && Array.isArray(results)) {
-      const createdResults = await Promise.all(
-        results.map((result: any) =>
-          prisma.labResult.create({
-            data: {
-              labOrderId: id,
-              analyte: result.analyte,
-              value: result.value,
-              unit: result.unit,
-              referenceRange: result.referenceRange,
-              isAbnormal: result.isAbnormal || false,
-              isCritical: result.isCritical || false,
-              interpretation: result.interpretation,
-              verifiedBy: session.user.id,
-            },
-          })
-        )
+      for (const r of results) {
+        await prisma.labResult.create({
+          data: {
+            patientId: existing.patientId,
+            labOrderId: id,
+            testCode: r.testCode || r.code || '',
+            testName: r.testName || r.name || '',
+            loincCode: r.loincCode || null,
+            value: String(r.value),
+            unit: r.unit || null,
+            referenceRange: r.referenceRange || null,
+            interpretation: r.interpretation || null,
+            status: r.status || 'FINAL',
+            performedAt: r.performedAt ? new Date(r.performedAt) : null,
+          },
+        });
+      }
+
+      // Create notification for critical results
+      const criticalResults = results.filter(
+        (r: any) => r.interpretation === 'CRITICAL' || r.isCritical
       );
-      
-      // If any critical values, create notification
-      const criticalResults = createdResults.filter(r => r.isCritical);
       if (criticalResults.length > 0) {
         await prisma.notification.create({
           data: {
-            userId: labOrder.orderedById,
+            userId: existing.providerId,
             type: 'CRITICAL_VALUE',
             title: 'Critical Lab Value',
-            message: `Critical value for ${labOrder.testName}: ${criticalResults.map(r => `${r.analyte}: ${r.value}`).join(', ')}`,
-            priority: 'CRITICAL',
-            relatedType: 'LabOrder',
-            relatedId: id,
+            message: `Critical result on order ${existing.orderNumber} for ${labOrder.patient.lastName}, ${labOrder.patient.firstName}`,
+            priority: 'HIGH',
+            data: JSON.stringify({ labOrderId: id, orderNumber: existing.orderNumber }),
           },
         });
       }
     }
-    
-    await createAuditLog(session.user.id, 'UPDATE', 'LabOrder', id, req.body, req);
-    
-    return res.status(200).json(labOrder);
+
+    await createAuditLog(session.user.id, 'UPDATE_LAB_ORDER', 'LabOrder', id, JSON.stringify(req.body), req);
+
+    return res.status(200).json({
+      success: true,
+      labOrder: {
+        ...labOrder,
+        tests: safeJsonParse(labOrder.tests, []),
+      },
+    });
   } catch (error) {
-    console.error('Error updating lab order:', error);
+    console.error('[Labs API] Error updating lab order:', error);
     return res.status(500).json({ error: 'Failed to update lab order' });
   }
 }
 
-async function cancelLabOrder(req: NextApiRequest, res: NextApiResponse, session: any, id: string) {
+// =============================================================================
+// DELETE — cancel (soft)
+// =============================================================================
+
+async function cancelLabOrder(
+  id: string,
+  res: NextApiResponse,
+  session: any,
+  req: NextApiRequest
+) {
   try {
-    const labOrder = await prisma.labOrder.update({
+    const existing = await prisma.labOrder.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Lab order not found' });
+    }
+
+    await prisma.labOrder.update({
       where: { id },
       data: {
         status: 'CANCELLED',
-        notes: `Cancelled by ${session.user.name} at ${new Date().toISOString()}`,
+        deletedAt: new Date(),
+        deletedBy: session.user.id,
       },
     });
-    
-    await createAuditLog(session.user.id, 'CANCEL', 'LabOrder', id, null, req);
-    
-    return res.status(200).json({ success: true, labOrder });
+
+    await createAuditLog(session.user.id, 'CANCEL_LAB_ORDER', 'LabOrder', id, null, req);
+
+    return res.status(200).json({ success: true, message: 'Lab order cancelled' });
   } catch (error) {
-    console.error('Error cancelling lab order:', error);
+    console.error('[Labs API] Error cancelling lab order:', error);
     return res.status(500).json({ error: 'Failed to cancel lab order' });
   }
 }

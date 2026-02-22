@@ -1,86 +1,80 @@
-// ============================================================
-// API Route: /api/assessments/[id]
+// =============================================================================
+// Assessment Detail API: /api/assessments/[id]
 // apps/provider-portal/pages/api/assessments/[id].ts
 //
-// Handles GET (single), PATCH (update), DELETE operations
-// ============================================================
+// GET — single assessment with patient context
+// PATCH — assign provider, update status, add notes
+//
+// Phase 3: Uses actual PatientAssessment schema fields only.
+// =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
-import { AssessmentStatus } from '@prisma/client';
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+// =============================================================================
+// Helpers
+// =============================================================================
+
+function safeJsonParse<T>(value: string | null, fallback: T): T {
+  if (!value) return fallback;
+  try { return JSON.parse(value); } catch { return fallback; }
+}
+
+function calculateAge(dob: Date): number {
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+// =============================================================================
+// Handler
+// =============================================================================
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
-
   if (!id || typeof id !== 'string') {
     return res.status(400).json({ error: 'Assessment ID is required' });
   }
 
   try {
     switch (req.method) {
-      case 'GET':
-        return handleGet(id, res);
-      case 'PATCH':
-        return handlePatch(id, req, res);
-      case 'DELETE':
-        return handleDelete(id, res);
+      case 'GET': return handleGet(id, res);
+      case 'PATCH': return handlePatch(id, req, res);
       default:
-        res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
+        res.setHeader('Allow', ['GET', 'PATCH']);
         return res.status(405).json({ error: `Method ${req.method} not allowed` });
     }
   } catch (error) {
-    console.error('API Error:', error);
-    return res.status(500).json({ 
+    console.error('[Assessment Detail API Error]', error);
+    return res.status(500).json({
       error: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
     });
   }
 }
 
-// GET /api/assessments/[id] - Get single assessment with full details
+// =============================================================================
+// GET — full assessment detail
+// =============================================================================
+
 async function handleGet(id: string, res: NextApiResponse) {
   const assessment = await prisma.patientAssessment.findUnique({
     where: { id },
     include: {
       patient: {
         include: {
-          allergies: true,
-          medications: true,
-          conditions: true,
-          vitals: {
-            orderBy: { recordedAt: 'desc' },
-            take: 5,
-          },
-        },
-      },
-      encounter: {
-        include: {
-          labOrders: {
-            include: { results: true },
-            orderBy: { orderedAt: 'desc' },
-            take: 10,
-          },
-          imagingOrders: {
-            orderBy: { orderedAt: 'desc' },
-            take: 5,
-          },
-          medicationOrders: {
-            orderBy: { orderedAt: 'desc' },
-            take: 10,
-          },
+          allergies: { where: { deletedAt: null } },
+          medications: { where: { deletedAt: null } },
+          conditions: { where: { deletedAt: null } },
+          vitalSigns: { orderBy: { recordedAt: 'desc' }, take: 5 },
         },
       },
       assignedProvider: {
-        select: {
-          id: true,
-          name: true,
-          specialty: true,
-          email: true,
-        },
+        select: { id: true, name: true, specialty: true, email: true },
       },
+      emergencyEvents: true,
     },
   });
 
@@ -88,202 +82,135 @@ async function handleGet(id: string, res: NextApiResponse) {
     return res.status(404).json({ error: 'Assessment not found' });
   }
 
-  // Transform to frontend format
-  const transformed = {
+  const p = assessment.patient;
+
+  return res.status(200).json({
     id: assessment.id,
     sessionId: assessment.sessionId,
-    patientId: assessment.patientId,
-    patientName: `${assessment.patient.firstName} ${assessment.patient.lastName}`,
-    patientAge: calculateAge(assessment.patient.dateOfBirth),
-    patientGender: assessment.patient.gender,
-    patientDOB: assessment.patient.dateOfBirth.toISOString().split('T')[0],
-    patientContact: {
-      phone: assessment.patient.phone,
-      email: assessment.patient.email,
-      address: assessment.patient.address,
-      city: assessment.patient.city,
-      state: assessment.patient.state,
-      zipCode: assessment.patient.zipCode,
-    },
-    emergencyContact: {
-      name: assessment.patient.emergencyContact,
-      phone: assessment.patient.emergencyPhone,
-    },
-    chiefComplaint: assessment.chiefComplaint,
-    urgencyLevel: assessment.urgencyLevel.toLowerCase(),
-    urgencyScore: assessment.urgencyScore,
-    status: assessment.status.toLowerCase().replace('_', '-'),
-    redFlags: assessment.redFlags,
-    riskFactors: assessment.riskFactors,
-    differentialDiagnosis: transformDifferentialDx(assessment.differentialDx),
-    hpiData: {
-      onset: assessment.hpiOnset,
-      location: assessment.hpiLocation,
-      duration: assessment.hpiDuration,
-      character: assessment.hpiCharacter,
-      severity: assessment.hpiSeverity,
-      timing: assessment.hpiTiming,
-      aggravatingFactors: assessment.hpiAggravating,
-      relievingFactors: assessment.hpiRelieving,
-      associatedSymptoms: assessment.hpiAssociated,
-    },
-    reviewOfSystems: assessment.reviewOfSystems,
-    medicalHistory: {
-      conditions: assessment.patient.conditions.map(c => ({
-        name: c.name,
-        icdCode: c.icdCode,
-        status: c.status,
-      })),
-      medications: assessment.patient.medications.map(m => ({
-        name: m.medicationName,
-        dose: m.dose,
-        frequency: m.frequency,
-        prescriber: m.prescriber,
-      })),
-      allergies: assessment.patient.allergies.map(a => ({
-        allergen: a.allergen,
-        reaction: a.reaction,
-        severity: a.severity,
-      })),
-      surgeries: assessment.surgicalHistory,
-    },
-    socialHistory: assessment.socialHistory,
-    familyHistory: assessment.familyHistory,
-    recentVitals: assessment.patient.vitals[0] ? {
-      systolic: assessment.patient.vitals[0].systolic,
-      diastolic: assessment.patient.vitals[0].diastolic,
-      heartRate: assessment.patient.vitals[0].heartRate,
-      temperature: assessment.patient.vitals[0].temperature,
-      respiratoryRate: assessment.patient.vitals[0].respiratoryRate,
-      oxygenSaturation: assessment.patient.vitals[0].oxygenSaturation,
-      weight: assessment.patient.vitals[0].weight,
-      painLevel: assessment.patient.vitals[0].painLevel,
-      recordedAt: assessment.patient.vitals[0].recordedAt,
-    } : null,
-    aiRecommendations: assessment.aiRecommendations,
-    clinicalPearls: assessment.clinicalPearls,
-    providerNotes: assessment.providerNotes,
-    confirmedDiagnoses: assessment.confirmedDiagnoses,
-    icdCodes: assessment.icdCodes,
-    treatmentPlan: assessment.treatmentPlan,
-    followUpInstructions: assessment.followUpInstructions,
-    ordersPlaced: assessment.ordersPlaced,
-    assignedProvider: assessment.assignedProvider,
-    encounter: assessment.encounter ? {
-      id: assessment.encounter.id,
-      status: assessment.encounter.status,
-      visitType: assessment.encounter.visitType,
-      labOrders: assessment.encounter.labOrders,
-      imagingOrders: assessment.encounter.imagingOrders,
-      medicationOrders: assessment.encounter.medicationOrders,
-    } : null,
-    timestamps: {
-      created: assessment.createdAt.toISOString(),
-      submitted: assessment.submittedAt?.toISOString(),
-      reviewed: assessment.reviewedAt?.toISOString(),
-      completed: assessment.completedAt?.toISOString(),
-      updated: assessment.updatedAt.toISOString(),
-    },
-    compassVersion: assessment.compassVersion,
-    aiModelUsed: assessment.aiModelUsed,
-  };
+    status: assessment.status,
+    phase: assessment.phase,
 
-  return res.status(200).json(transformed);
+    // Patient demographics
+    patient: {
+      id: p.id,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      mrn: p.mrn,
+      dateOfBirth: p.dateOfBirth.toISOString().split('T')[0],
+      age: calculateAge(p.dateOfBirth),
+      gender: p.gender,
+      phone: p.phone,
+      email: p.email,
+    },
+
+    // Assessment content (all stored as JSON strings in NVarChar(Max))
+    chiefComplaint: assessment.chiefComplaint,
+    hpiNarrative: assessment.hpiNarrative,
+    symptoms: safeJsonParse(assessment.symptoms, []),
+    reviewOfSystems: safeJsonParse(assessment.reviewOfSystems, {}),
+    medications: safeJsonParse(assessment.medications, []),
+    allergies: safeJsonParse(assessment.allergies, []),
+    medicalHistory: safeJsonParse(assessment.medicalHistory, []),
+    vitalSigns: safeJsonParse(assessment.vitalSigns, null),
+
+    // Risk / triage
+    triageLevel: assessment.triageLevel,
+    redFlags: safeJsonParse(assessment.redFlagsDetected, []),
+
+    // AI analysis
+    aiSummary: assessment.aiSummary,
+    aiDifferential: safeJsonParse(assessment.aiDifferential, []),
+
+    // Conversation transcript
+    conversation: safeJsonParse(assessment.conversation, []),
+
+    // Provider assignment
+    assignedProvider: assessment.assignedProvider,
+
+    // Emergency events
+    emergencyEvents: assessment.emergencyEvents.map((e) => ({
+      id: e.id,
+      eventType: e.eventType,
+      severity: e.severity,
+      description: e.description,
+      createdAt: e.createdAt.toISOString(),
+      acknowledgedAt: e.acknowledgedAt?.toISOString() || null,
+      resolvedAt: e.resolvedAt?.toISOString() || null,
+    })),
+
+    // Patient's existing clinical data (from their medical record)
+    patientRecord: {
+      allergies: p.allergies.map((a) => ({
+        id: a.id, allergen: a.allergen, reaction: a.reaction, severity: a.severity,
+      })),
+      medications: p.medications.map((m) => ({
+        id: m.id, name: m.name, dose: m.dose, frequency: m.frequency, status: m.status,
+      })),
+      conditions: p.conditions.map((c) => ({
+        id: c.id, icdCode: c.icdCode, description: c.description, status: c.status,
+      })),
+      recentVitals: p.vitalSigns.length > 0 ? {
+        heartRate: p.vitalSigns[0].heartRate,
+        bloodPressureSystolic: p.vitalSigns[0].bloodPressureSystolic,
+        bloodPressureDiastolic: p.vitalSigns[0].bloodPressureDiastolic,
+        temperature: p.vitalSigns[0].temperature,
+        respiratoryRate: p.vitalSigns[0].respiratoryRate,
+        oxygenSaturation: p.vitalSigns[0].oxygenSaturation,
+        recordedAt: p.vitalSigns[0].recordedAt.toISOString(),
+      } : null,
+    },
+
+    // Timestamps
+    startedAt: assessment.startedAt.toISOString(),
+    completedAt: assessment.completedAt?.toISOString() || null,
+    lastActivityAt: assessment.lastActivityAt.toISOString(),
+    createdAt: assessment.createdAt.toISOString(),
+    updatedAt: assessment.updatedAt.toISOString(),
+  });
 }
 
-// PATCH /api/assessments/[id] - Update assessment
+// =============================================================================
+// PATCH — update assessment (assign provider, change status)
+// =============================================================================
+
 async function handlePatch(id: string, req: NextApiRequest, res: NextApiResponse) {
-  const data = req.body;
-
-  // Verify assessment exists
-  const existing = await prisma.patientAssessment.findUnique({
-    where: { id },
-  });
-
+  const existing = await prisma.patientAssessment.findUnique({ where: { id } });
   if (!existing) {
     return res.status(404).json({ error: 'Assessment not found' });
   }
 
-  // Build update data
+  const { status, assignedProviderId } = req.body;
   const updateData: any = {};
 
-  // Status update
-  if (data.status) {
-    const statusMap: Record<string, AssessmentStatus> = {
-      'pending': AssessmentStatus.PENDING,
-      'urgent': AssessmentStatus.URGENT,
-      'in-review': AssessmentStatus.IN_REVIEW,
-      'in_review': AssessmentStatus.IN_REVIEW,
-      'completed': AssessmentStatus.COMPLETED,
-      'follow-up': AssessmentStatus.FOLLOW_UP,
-      'follow_up': AssessmentStatus.FOLLOW_UP,
-      'cancelled': AssessmentStatus.CANCELLED,
-    };
-    updateData.status = statusMap[data.status] || data.status;
+  if (status) {
+    updateData.status = status.toUpperCase();
+  }
 
-    // Set timestamps based on status
-    if (data.status === 'in-review' || data.status === 'in_review') {
-      updateData.reviewedAt = new Date();
-    } else if (data.status === 'completed') {
-      updateData.completedAt = new Date();
+  if (assignedProviderId) {
+    // Verify provider exists
+    const provider = await prisma.user.findUnique({ where: { id: assignedProviderId } });
+    if (!provider) {
+      return res.status(404).json({ error: 'Provider not found' });
     }
+    updateData.assignedProviderId = assignedProviderId;
   }
 
-  // Provider notes
-  if (data.providerNotes !== undefined) {
-    updateData.providerNotes = data.providerNotes;
-  }
-
-  // Confirmed diagnoses
-  if (data.confirmedDiagnoses) {
-    updateData.confirmedDiagnoses = data.confirmedDiagnoses;
-  }
-
-  // ICD codes
-  if (data.icdCodes) {
-    updateData.icdCodes = data.icdCodes;
-  }
-
-  // Treatment plan
-  if (data.treatmentPlan !== undefined) {
-    updateData.treatmentPlan = data.treatmentPlan;
-  }
-
-  // Follow-up instructions
-  if (data.followUpInstructions !== undefined) {
-    updateData.followUpInstructions = data.followUpInstructions;
-  }
-
-  // Orders placed
-  if (data.ordersPlaced) {
-    updateData.ordersPlaced = data.ordersPlaced;
-  }
-
-  // Assigned provider
-  if (data.assignedProviderId) {
-    updateData.assignedProviderId = data.assignedProviderId;
-  }
-
-  // Perform update
   const updated = await prisma.patientAssessment.update({
     where: { id },
     data: updateData,
     include: {
-      patient: true,
-      assignedProvider: true,
+      assignedProvider: { select: { id: true, name: true } },
     },
   });
 
-  // Create audit log
+  // Audit
   await prisma.auditLog.create({
     data: {
       action: 'ASSESSMENT_UPDATED',
       entityType: 'PatientAssessment',
       entityId: id,
-      changes: {
-        before: existing,
-        after: updateData,
-      },
+      changes: JSON.stringify({ before: { status: existing.status, assignedProviderId: existing.assignedProviderId }, after: updateData }),
+      success: true,
     },
   });
 
@@ -291,65 +218,9 @@ async function handlePatch(id: string, req: NextApiRequest, res: NextApiResponse
     success: true,
     assessment: {
       id: updated.id,
-      status: updated.status.toLowerCase(),
+      status: updated.status,
+      assignedProvider: updated.assignedProvider,
       updatedAt: updated.updatedAt.toISOString(),
     },
   });
-}
-
-// DELETE /api/assessments/[id] - Cancel/delete assessment
-async function handleDelete(id: string, res: NextApiResponse) {
-  const existing = await prisma.patientAssessment.findUnique({
-    where: { id },
-  });
-
-  if (!existing) {
-    return res.status(404).json({ error: 'Assessment not found' });
-  }
-
-  // Soft delete by setting status to CANCELLED
-  await prisma.patientAssessment.update({
-    where: { id },
-    data: {
-      status: AssessmentStatus.CANCELLED,
-    },
-  });
-
-  // Create audit log
-  await prisma.auditLog.create({
-    data: {
-      action: 'ASSESSMENT_CANCELLED',
-      entityType: 'PatientAssessment',
-      entityId: id,
-    },
-  });
-
-  return res.status(200).json({
-    success: true,
-    message: 'Assessment cancelled',
-  });
-}
-
-// Helper functions
-function calculateAge(dateOfBirth: Date): number {
-  const today = new Date();
-  let age = today.getFullYear() - dateOfBirth.getFullYear();
-  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
-    age--;
-  }
-  return age;
-}
-
-function transformDifferentialDx(dx: any): Array<{name: string; probability: number; supportingEvidence: string[]; icdCode?: string}> {
-  if (!dx) return [];
-  const dxArray = dx.primary || dx;
-  if (!Array.isArray(dxArray)) return [];
-  
-  return dxArray.map((d: any) => ({
-    name: d.name,
-    probability: d.probability,
-    supportingEvidence: d.evidence || d.supportingEvidence || [],
-    icdCode: d.icdCode,
-  }));
 }

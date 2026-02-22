@@ -2,57 +2,30 @@
 // Lab Orders API - List & Create
 // apps/provider-portal/pages/api/labs/index.ts
 //
-// UPDATED: Integrated clinical-services for AI-powered recommendations
-// and validation of lab orders against patient context.
+// GET  — list lab orders with filtering
+// POST — create lab order(s) for an encounter
+//
+// Phase 3: Uses actual LabOrder schema fields. Removed phantom
+// @attending/clinical-services import (package doesn't exist).
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/api/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
-import { 
-  CreateLabOrderSchema, 
-  validate, 
-} from '@attending/shared/schemas';
-import {
-  labRecommender,
-  redFlagEvaluator,
-} from '@attending/clinical-services';
 
 // =============================================================================
-// Types
+// Handler
 // =============================================================================
 
-interface LabOrderResponse {
-  labOrders: any[];
-  total: number;
-  limit: number;
-  offset: number;
-  recommendations?: {
-    critical: any[];
-    recommended: any[];
-    consider: any[];
-  };
-}
-
-// =============================================================================
-// Main Handler
-// =============================================================================
-
-async function handler(req: NextApiRequest, res: NextApiResponse, _session: any) {
+async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
   switch (req.method) {
     case 'GET':
       return getLabOrders(req, res);
     case 'POST':
-      return createLabOrder(req, res, _session);
+      return createLabOrder(req, res, session);
     default:
-      // TODO: All routes should migrate to @attending/shared/lib/api helpers
-      // import { sendMethodNotAllowed } from '@attending/shared/lib/api';
       res.setHeader('Allow', ['GET', 'POST']);
-      return res.status(405).json({
-        success: false,
-        error: { code: 'METHOD_NOT_ALLOWED', message: `Method ${req.method} not allowed. Use: GET, POST` },
-        meta: { timestamp: new Date().toISOString(), apiVersion: '1.0.0' },
-      });
+      return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
 }
 
@@ -62,98 +35,61 @@ async function handler(req: NextApiRequest, res: NextApiResponse, _session: any)
 
 async function getLabOrders(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { 
-      encounterId, 
-      patientId, 
-      status, 
-      priority, 
-      limit = '50', 
+    const {
+      patientId,
+      encounterId,
+      status,
+      priority,
+      limit = '50',
       offset = '0',
-      includeRecommendations = 'false',
     } = req.query;
-    
+
     const where: any = {};
-    
+    if (patientId) where.patientId = String(patientId);
     if (encounterId) where.encounterId = String(encounterId);
-    if (status) where.status = String(status);
-    if (priority) where.priority = String(priority);
-    
-    if (patientId) {
-      where.encounter = { patientId: String(patientId) };
-    }
-    
+    if (status) where.status = String(status).toUpperCase();
+    if (priority) where.priority = String(priority).toUpperCase();
+
     const [labOrders, total] = await Promise.all([
       prisma.labOrder.findMany({
         where,
         include: {
-          encounter: {
-            include: {
-              patient: { select: { id: true, firstName: true, lastName: true, mrn: true } },
-            },
+          patient: {
+            select: { id: true, firstName: true, lastName: true, mrn: true },
           },
-          orderedBy: { select: { id: true, name: true } },
+          provider: {
+            select: { id: true, name: true },
+          },
+          encounter: {
+            select: { id: true, encounterType: true, status: true },
+          },
           results: true,
         },
         orderBy: [
-          { priority: 'desc' },
           { orderedAt: 'desc' },
         ],
-        take: parseInt(String(limit)),
+        take: Math.min(parseInt(String(limit)), 100),
         skip: parseInt(String(offset)),
       }),
       prisma.labOrder.count({ where }),
     ]);
-    
-    const response: LabOrderResponse = {
-      labOrders,
+
+    // Parse JSON test arrays for response
+    const formatted = labOrders.map((order) => ({
+      ...order,
+      tests: safeJsonParse(order.tests, []),
+      diagnosis: safeJsonParse(order.diagnosis, null),
+    }));
+
+    return res.status(200).json({
+      labOrders: formatted,
       total,
       limit: parseInt(String(limit)),
       offset: parseInt(String(offset)),
-    };
-    
-    // Include AI recommendations if requested with encounter context
-    if (includeRecommendations === 'true' && encounterId) {
-      const encounter = await prisma.encounter.findUnique({
-        where: { id: String(encounterId) },
-        include: {
-          patient: true,
-          patientAssessment: true,
-        },
-      });
-      
-      if (encounter?.patientAssessment) {
-        const assessment = encounter.patientAssessment;
-        const symptoms = (assessment as any).symptoms || [];
-        
-        // Get AI-powered lab recommendations
-        const recommendations = labRecommender.getRecommendations({
-          chiefComplaint: (assessment as any).chiefComplaint || '',
-          symptoms,
-          age: calculateAge(encounter.patient.dateOfBirth) || 0,
-          gender: encounter.patient.gender || 'unknown',
-        });
-        
-        // Group by priority/category
-        const criticalRecs = recommendations.filter(r => r.priority === 'STAT');
-        const recommendedRecs = recommendations.filter(r => r.category === 'critical' || r.category === 'recommended');
-        const considerRecs = recommendations.filter(r => r.category !== 'critical' && r.category !== 'recommended');
-        
-        response.recommendations = {
-          critical: criticalRecs,
-          recommended: recommendedRecs,
-          consider: considerRecs,
-        };
-      }
-    }
-    
-    return res.status(200).json(response);
+    });
   } catch (error) {
     console.error('[Labs API] Error fetching lab orders:', error);
-    return res.status(500).json({
-      success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch lab orders' },
-      meta: { timestamp: new Date().toISOString(), apiVersion: '1.0.0' },
-    });
+    return res.status(500).json({ error: 'Failed to fetch lab orders' });
   }
 }
 
@@ -162,188 +98,121 @@ async function getLabOrders(req: NextApiRequest, res: NextApiResponse) {
 // =============================================================================
 
 async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session: any) {
-  // Validate request body with Zod
-  const validation = validate(CreateLabOrderSchema, req.body);
-  
-  if (!validation.success) {
-    return res.status(400).json(validation.error.toJSON());
-  }
-
-  const { 
-    encounterId, 
-    tests, 
-    indication, 
-    priority, 
-    specialInstructions, 
-    collectionDate 
-  } = validation.data;
-
   try {
-    // Verify encounter exists and get patient context
-    const encounter = await prisma.encounter.findUnique({
-      where: { id: encounterId },
-      include: { 
-        patient: true,
-        patientAssessment: true,
+    const {
+      patientId,
+      encounterId,
+      tests,
+      indication,
+      diagnosis,
+      priority = 'ROUTINE',
+      specialInstructions,
+      specimenType,
+      collectionDate,
+      fasting = false,
+    } = req.body;
+
+    // Validate required fields
+    if (!patientId) {
+      return res.status(400).json({ error: 'Patient ID is required' });
+    }
+    if (!tests || !Array.isArray(tests) || tests.length === 0) {
+      return res.status(400).json({ error: 'At least one test is required' });
+    }
+
+    // Verify patient exists
+    const patient = await prisma.patient.findUnique({ where: { id: patientId } });
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    // Verify encounter if provided
+    if (encounterId) {
+      const encounter = await prisma.encounter.findUnique({ where: { id: encounterId } });
+      if (!encounter) {
+        return res.status(404).json({ error: 'Encounter not found' });
+      }
+    }
+
+    // Generate unique order number
+    const orderNumber = `LAB-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+    // Create the lab order — tests stored as JSON in single row
+    const labOrder = await prisma.labOrder.create({
+      data: {
+        orderNumber,
+        patientId,
+        providerId: session.user.id,
+        encounterId: encounterId || null,
+        status: 'PENDING',
+        priority: priority.toUpperCase(),
+        tests: JSON.stringify(tests),
+        diagnosis: diagnosis ? JSON.stringify(diagnosis) : null,
+        indication: indication || null,
+        specialInstructions: specialInstructions || null,
+        specimenType: specimenType || null,
+        collectionDate: collectionDate ? new Date(collectionDate) : null,
+        fasting: fasting || false,
+      },
+      include: {
+        patient: {
+          select: { id: true, firstName: true, lastName: true, mrn: true },
+        },
+        provider: {
+          select: { id: true, name: true },
+        },
       },
     });
-    
-    if (!encounter) {
-      return res.status(404).json({
-        success: false,
-        error: { code: 'ENCOUNTER_NOT_FOUND', message: 'Encounter not found' },
-        meta: { timestamp: new Date().toISOString(), apiVersion: '1.0.0' },
-      });
-    }
-    
-    // Get latest assessment for clinical context
-    const assessment = encounter.patientAssessment;
-    const symptoms = (assessment as any)?.symptoms || [];
-    const chiefComplaint = (assessment as any)?.chiefComplaint || indication;
-    
-    // CLINICAL SAFETY CHECK: Evaluate for red flags
-    const redFlagResult = redFlagEvaluator.evaluate({
-      symptoms,
-      chiefComplaint,
-    });
-    
-    const hasEmergencyRedFlags = redFlagResult.isEmergency;
-    
-    // If emergency red flags detected, auto-upgrade to STAT if not already
-    let effectivePriority = priority;
-    let priorityUpgradeReason: string | undefined;
-    
-    if (hasEmergencyRedFlags && priority !== 'STAT') {
-      effectivePriority = 'STAT';
-      priorityUpgradeReason = `Auto-upgraded to STAT due to emergency indicators: ${redFlagResult.redFlags.map(rf => rf.message).join(', ')}`;
-    }
-    
-    // Get AI recommendations for additional labs to suggest
-    const recommendations = labRecommender.getRecommendations({
-      chiefComplaint,
-      symptoms,
-      age: calculateAge(encounter.patient.dateOfBirth) || 0,
-      gender: encounter.patient.gender || 'unknown',
-    });
-    
-    // Separate critical from other recommendations
-    const criticalRecs = recommendations.filter(r => r.priority === 'STAT');
-    const recommendedRecs = recommendations.filter(r => r.priority !== 'STAT');
-    
-    // Check if any critical recommended labs are missing from the order
-    const orderedTestCodes = tests.map(t => t.code);
-    const missingCriticalLabs = criticalRecs.filter(
-      rec => !orderedTestCodes.includes(rec.testCode)
-    );
-    
-    // Create lab orders for each test
-    const labOrders = await Promise.all(
-      tests.map((test) =>
-        prisma.labOrder.create({
-          data: {
-            encounterId,
-            orderedById: session.user.id,
-            testCode: test.code,
-            testName: test.name,
-            category: test.category,
-            priority: test.priority || effectivePriority,
-            indication,
-            specialInstructions: [
-              specialInstructions,
-              priorityUpgradeReason,
-            ].filter(Boolean).join(' | '),
-            specimenType: test.specimenType,
-            collectionDate: collectionDate ? new Date(collectionDate) : undefined,
-          },
-          include: {
-            encounter: {
-              include: {
-                patient: { select: { firstName: true, lastName: true, mrn: true } },
-              },
-            },
-            orderedBy: { select: { name: true } },
-          },
-        })
-      )
-    );
-    
-    // Create notification for lab department if STAT
-    if (effectivePriority === 'STAT') {
+
+    // Create notification for STAT orders
+    if (priority.toUpperCase() === 'STAT') {
       await prisma.notification.create({
         data: {
-          userId: session.user.id, // In production, this would be the lab supervisor
+          userId: session.user.id,
           type: 'ALERT',
-          title: 'STAT Lab Order',
-          message: `STAT lab order for ${encounter.patient.lastName}, ${encounter.patient.firstName}${
-            priorityUpgradeReason ? ` - ${priorityUpgradeReason}` : ''
-          }`,
           priority: 'HIGH',
-          relatedType: 'LabOrder',
-          relatedId: labOrders[0].id,
+          title: 'STAT Lab Order Created',
+          message: `STAT lab order ${orderNumber} for ${patient.lastName}, ${patient.firstName} (MRN: ${patient.mrn})`,
+          data: JSON.stringify({ labOrderId: labOrder.id, orderNumber }),
         },
       });
     }
-    
-    // Log the order with clinical safety metadata
+
+    // Audit log
     await createAuditLog(
       session.user.id,
-      'CREATE',
+      'CREATE_LAB_ORDER',
       'LabOrder',
-      labOrders.map(l => l.id).join(','),
-      { 
-        tests: tests.map((t) => t.name), 
-        priority: effectivePriority,
-        originalPriority: priority,
-        priorityUpgraded: !!priorityUpgradeReason,
-        priorityUpgradeReason,
-        redFlagsDetected: redFlagResult.redFlags.map(rf => rf.message),
-        patientContext: {
-          patientId: encounter.patient.id,
-          symptoms,
-          chiefComplaint,
-        },
+      labOrder.id,
+      {
+        orderNumber,
+        patientId,
+        tests: tests.map((t: any) => t.name || t.code),
+        priority: priority.toUpperCase(),
       },
       req
     );
-    
-    // Return response with clinical decision support info
+
     return res.status(201).json({
-      labOrders,
-      clinicalDecisionSupport: {
-        priorityUpgraded: !!priorityUpgradeReason,
-        priorityUpgradeReason,
-        redFlagsDetected: redFlagResult.redFlags,
-        missingCriticalLabs,
-        recommendations: {
-          critical: criticalRecs,
-          recommended: recommendedRecs,
-        },
+      success: true,
+      labOrder: {
+        ...labOrder,
+        tests: safeJsonParse(labOrder.tests, []),
       },
     });
   } catch (error) {
     console.error('[Labs API] Error creating lab order:', error);
-    return res.status(500).json({
-      success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to create lab order' },
-      meta: { timestamp: new Date().toISOString(), apiVersion: '1.0.0' },
-    });
+    return res.status(500).json({ error: 'Failed to create lab order' });
   }
 }
 
 // =============================================================================
-// Helper Functions
+// Helpers
 // =============================================================================
 
-function calculateAge(dateOfBirth: Date | string | null): number | undefined {
-  if (!dateOfBirth) return undefined;
-  const dob = new Date(dateOfBirth);
-  const today = new Date();
-  let age = today.getFullYear() - dob.getFullYear();
-  const monthDiff = today.getMonth() - dob.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-    age--;
-  }
-  return age;
+function safeJsonParse<T>(value: string | null, fallback: T): T {
+  if (!value) return fallback;
+  try { return JSON.parse(value); } catch { return fallback; }
 }
 
 export default requireAuth(handler);
