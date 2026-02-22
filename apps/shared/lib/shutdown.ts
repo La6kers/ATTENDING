@@ -88,17 +88,10 @@ export function registerShutdownHandlers(options: ShutdownOptions = {}): void {
       }
 
       // 2. Stop scheduler + release distributed locks
-      try {
-        const { scheduler } = await import('./scheduler');
-        scheduler.stop();
-        logger('[Shutdown] Scheduler stopped');
-      } catch { /* not initialized */ }
-
-      try {
-        const { distributedLock } = await import('./distributedLock');
-        await distributedLock.releaseAll();
-        logger('[Shutdown] Distributed locks released');
-      } catch { /* not initialized */ }
+      // NOTE: Disabled until Redis/ioredis is provisioned (Phase 6).
+      // Dynamic imports of scheduler and distributedLock cause Next.js
+      // bundler to resolve ioredis at build time, breaking the build.
+      // Uncomment when ioredis is installed and Redis is available.
 
       // 3. Close Redis
       if (redis) {
