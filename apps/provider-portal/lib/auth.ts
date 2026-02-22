@@ -11,8 +11,8 @@
 // Re-export canonical auth utilities (used by API routes)
 export { authOptions, getSession, requireAuth, requireRole, createAuditLog } from './api/auth';
 
-// Re-export shared types
-export type { AttendingUser, AttendingSession, AttendingJWT } from '@attending/shared/auth';
+// Re-export types from our local auth module
+export type { AttendingUser, AttendingSession, AttendingJWT } from './api/auth';
 
 // ============================================================
 // Role Checking Utilities (for components & pages)
