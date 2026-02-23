@@ -1,5 +1,6 @@
 using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Events;
+using ATTENDING.Domain.Services;
 
 namespace ATTENDING.Domain.Entities;
 
@@ -75,7 +76,10 @@ public class PatientAssessment : BaseEntity, IAggregateRoot
     
     private PatientAssessment() { }
     
-    public static PatientAssessment Create(Guid patientId, string chiefComplaint)
+    public static PatientAssessment Create(
+        Guid patientId,
+        string chiefComplaint,
+        RedFlagEvaluation? redFlagEvaluation = null)
     {
         var assessment = new PatientAssessment
         {
@@ -89,6 +93,16 @@ public class PatientAssessment : BaseEntity, IAggregateRoot
         
         assessment._domainEvents.Add(new AssessmentStartedEvent(assessment.Id, patientId));
         
+        // Apply red flags if detected from chief complaint
+        if (redFlagEvaluation?.HasRedFlags == true)
+        {
+            assessment.SetRedFlags(redFlagEvaluation.RedFlags);
+            if (redFlagEvaluation.IsEmergency)
+            {
+                assessment.TriggerEmergency(redFlagEvaluation.Reason);
+            }
+        }
+        
         return assessment;
     }
     
@@ -97,6 +111,11 @@ public class PatientAssessment : BaseEntity, IAggregateRoot
         CurrentPhase = newPhase;
         SetModified();
     }
+    
+    /// <summary>
+    /// Alias for AdvancePhase — used by controller
+    /// </summary>
+    public void AdvanceToPhase(AssessmentPhase newPhase) => AdvancePhase(newPhase);
     
     public void SetHpiData(
         string? onset = null,
@@ -162,8 +181,12 @@ public class PatientAssessment : BaseEntity, IAggregateRoot
         SetModified();
     }
     
-    public void Complete()
+    public void Complete(TriageLevel? triageLevel = null, string? summary = null)
     {
+        if (triageLevel.HasValue)
+        {
+            TriageLevel = triageLevel.Value;
+        }
         CurrentPhase = AssessmentPhase.Completed;
         CompletedAt = DateTime.UtcNow;
         SetModified();
@@ -172,10 +195,31 @@ public class PatientAssessment : BaseEntity, IAggregateRoot
             Id, PatientId, TriageLevel ?? Enums.TriageLevel.NonUrgent, HasRedFlags));
     }
     
-    public void MarkAsReviewed(Guid providerId)
+    public void MarkAsReviewed(Guid providerId, string? notes = null)
     {
         ReviewedByProviderId = providerId;
         ReviewedAt = DateTime.UtcNow;
+        SetModified();
+    }
+    
+    /// <summary>
+    /// Add a patient response and re-evaluate for red flags
+    /// </summary>
+    public void AddResponse(string question, string response, RedFlagEvaluation? redFlagEvaluation = null)
+    {
+        var assessmentResponse = AssessmentResponse.Create(
+            Id, CurrentPhase, question, response);
+        Responses.Add(assessmentResponse);
+        
+        if (redFlagEvaluation?.HasRedFlags == true)
+        {
+            SetRedFlags(redFlagEvaluation.RedFlags);
+            if (redFlagEvaluation.IsEmergency && !IsEmergency)
+            {
+                TriggerEmergency(redFlagEvaluation.Reason);
+            }
+        }
+        
         SetModified();
     }
     

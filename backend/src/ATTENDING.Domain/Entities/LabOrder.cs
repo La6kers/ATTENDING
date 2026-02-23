@@ -1,5 +1,6 @@
 using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Events;
+using ATTENDING.Domain.Services;
 using ATTENDING.Domain.ValueObjects;
 
 namespace ATTENDING.Domain.Entities;
@@ -277,20 +278,3 @@ public class LabResult : BaseEntity
     }
 }
 
-/// <summary>
-/// Red flag evaluation result (value object)
-/// </summary>
-public record RedFlagEvaluation(
-    IReadOnlyList<DetectedRedFlag> Flags,
-    bool HasRedFlags,
-    bool IsCritical,
-    string Reason);
-
-/// <summary>
-/// A single detected red flag
-/// </summary>
-public record DetectedRedFlag(
-    string Category,
-    string MatchedKeyword,
-    RedFlagSeverity Severity,
-    string ClinicalReason);

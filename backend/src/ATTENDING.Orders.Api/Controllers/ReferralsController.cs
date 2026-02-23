@@ -148,8 +148,7 @@ public class ReferralsController : ControllerBase
             clinicalQuestion: request.ClinicalQuestion,
             diagnosisCode: request.DiagnosisCode,
             reasonForReferral: request.ReasonForReferral,
-            referredToProviderId: request.ReferredToProviderId != null 
-                ? Guid.Parse(request.ReferredToProviderId) : null,
+            referredToProviderId: request.ReferredToProviderId,
             referredToProviderName: request.ReferredToProviderName,
             referredToFacility: request.ReferredToFacility);
 
@@ -214,7 +213,7 @@ public class ReferralsController : ControllerBase
             });
         }
 
-        referral.AddInsuranceAuthorization(request.AuthNumber, request.ExpirationDate);
+        referral.SetInsuranceAuthorization(request.AuthNumber, request.ExpirationDate);
         _repository.Update(referral);
         await _unitOfWork.SaveChangesAsync();
 
@@ -274,7 +273,7 @@ public class ReferralsController : ControllerBase
             });
         }
 
-        referral.Cancel(userId, request.Reason);
+        referral.Cancel();
         _repository.Update(referral);
         await _unitOfWork.SaveChangesAsync();
 

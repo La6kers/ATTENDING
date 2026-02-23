@@ -119,21 +119,22 @@ public class MedicationsController : ControllerBase
         // Get current medications
         var currentMeds = await _repository.GetActiveByPatientIdAsync(patientId);
         var currentMedNames = currentMeds.Select(m => m.MedicationName).ToList();
-
-        // Check interactions
-        var allMeds = currentMedNames.Concat(new[] { request.NewMedicationName }).ToList();
         var allergies = patient.Allergies.Select(a => a.Allergen).ToList();
 
-        var result = _drugInteractionService.CheckInteractions(allMeds, allergies);
+        // Check drug-drug interactions for the new medication against current meds
+        var drugResult = _drugInteractionService.CheckInteractions(request.NewMedicationName, currentMedNames);
+        
+        // Check drug-allergy interactions
+        var allergyResult = _drugInteractionService.CheckAllergyConflicts(request.NewMedicationName, allergies);
 
-        var interactions = result.DrugDrugInteractions
+        var interactions = drugResult.Interactions
             .Select(i => new DrugInteractionResponse(
                 i.Drug1, i.Drug2, i.Severity.ToString(), 
-                i.Description, "Drug-Drug"))
-            .Concat(result.DrugAllergyInteractions
+                i.Description, i.InteractionType))
+            .Concat(allergyResult.Interactions
                 .Select(i => new DrugInteractionResponse(
-                    i.Drug, i.Allergen, i.Severity.ToString(),
-                    i.Description, "Drug-Allergy")))
+                    i.Drug1, i.Drug2, i.Severity.ToString(),
+                    i.Description, i.InteractionType)))
             .ToList();
 
         return Ok(interactions);
@@ -163,24 +164,30 @@ public class MedicationsController : ControllerBase
         // Get current medications and check interactions
         var currentMeds = await _repository.GetActiveByPatientIdAsync(request.PatientId);
         var currentMedNames = currentMeds.Select(m => m.MedicationName).ToList();
-        var allMeds = currentMedNames.Concat(new[] { request.MedicationName }).ToList();
         var allergies = patient.Allergies.Select(a => a.Allergen).ToList();
 
-        var interactionResult = _drugInteractionService.CheckInteractions(allMeds, allergies);
+        var drugResult = _drugInteractionService.CheckInteractions(request.MedicationName, currentMedNames);
+        var allergyResult = _drugInteractionService.CheckAllergyConflicts(request.MedicationName, allergies);
 
         // Block if contraindicated interaction found
-        if (interactionResult.HasContraindication)
+        if (drugResult.HasContraindications || allergyResult.HasContraindications)
         {
+            var contraindicated = drugResult.Interactions
+                .Where(i => i.Severity == InteractionSeverity.Contraindicated)
+                .Concat(allergyResult.Interactions
+                    .Where(i => i.Severity == InteractionSeverity.Contraindicated))
+                .Select(i => i.Description);
+
             return BadRequest(new ProblemDetails
             {
                 Title = "Contraindicated medication",
                 Detail = $"Cannot prescribe {request.MedicationName} due to contraindicated interaction: " +
-                         string.Join(", ", interactionResult.DrugDrugInteractions
-                             .Where(i => i.Severity == Domain.ValueObjects.InteractionSeverity.Contraindicated)
-                             .Select(i => i.Description)),
+                         string.Join(", ", contraindicated),
                 Status = StatusCodes.Status400BadRequest
             });
         }
+
+        var hasInteractions = drugResult.HasInteractions || allergyResult.HasInteractions;
 
         var order = Domain.Entities.MedicationOrder.Create(
             patientId: request.PatientId,
@@ -202,7 +209,8 @@ public class MedicationsController : ControllerBase
             isControlledSubstance: request.IsControlledSubstance,
             deaSchedule: request.DeaSchedule,
             pharmacyId: request.PharmacyId,
-            pharmacyName: request.PharmacyName);
+            pharmacyName: request.PharmacyName,
+            hasInteractions: hasInteractions);
 
         await _repository.AddAsync(order);
         await _unitOfWork.SaveChangesAsync();
@@ -220,14 +228,14 @@ public class MedicationsController : ControllerBase
             order.OrderNumber, request.PatientId, request.MedicationName, request.IsControlledSubstance);
 
         // Include interactions in response if any
-        var interactions = interactionResult.DrugDrugInteractions
+        var interactions = drugResult.Interactions
             .Select(i => new DrugInteractionResponse(
                 i.Drug1, i.Drug2, i.Severity.ToString(),
-                i.Description, "Drug-Drug"))
-            .Concat(interactionResult.DrugAllergyInteractions
+                i.Description, i.InteractionType))
+            .Concat(allergyResult.Interactions
                 .Select(i => new DrugInteractionResponse(
-                    i.Drug, i.Allergen, i.Severity.ToString(),
-                    i.Description, "Drug-Allergy")))
+                    i.Drug1, i.Drug2, i.Severity.ToString(),
+                    i.Description, i.InteractionType)))
             .ToList();
 
         return CreatedAtAction(nameof(GetById), new { id = order.Id }, MapToResponse(order, interactions));
@@ -253,7 +261,7 @@ public class MedicationsController : ControllerBase
             });
         }
 
-        order.Discontinue(userId, request.Reason);
+        order.Discontinue(request.Reason, userId);
         _repository.Update(order);
         await _unitOfWork.SaveChangesAsync();
 

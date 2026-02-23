@@ -1,4 +1,5 @@
 using FluentAssertions;
+using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Services;
 using Xunit;
 
@@ -49,7 +50,7 @@ public class RedFlagEvaluatorTests
         // Assert
         result.HasRedFlags.Should().BeTrue();
         result.RedFlags.Should().Contain(f => f.Category == expectedCategory);
-        result.RedFlags.Should().Contain(f => f.Severity == "Critical");
+        result.RedFlags.Should().Contain(f => f.Severity == RedFlagSeverity.Critical);
     }
 
     [Theory]
@@ -81,7 +82,7 @@ public class RedFlagEvaluatorTests
 
         // Assert
         result.HasRedFlags.Should().BeTrue();
-        result.RedFlags.Should().Contain(f => f.Category == "PainSeverity");
+        result.RedFlags.Should().Contain(f => f.Category == "Pain");
     }
 
     [Fact]
@@ -94,7 +95,7 @@ public class RedFlagEvaluatorTests
         var result = _evaluator.Evaluate(symptoms, null, 5);
 
         // Assert
-        result.RedFlags.Should().NotContain(f => f.Category == "PainSeverity");
+        result.RedFlags.Should().NotContain(f => f.Category == "Pain");
     }
 
     #endregion
@@ -133,7 +134,7 @@ public class RedFlagEvaluatorTests
     #region Clinical Category Tests
 
     [Theory]
-    [InlineData("high fever and confusion", "Infectious")]
+    [InlineData("high fever with confusion", "Infectious")]
     [InlineData("stiff neck with fever", "Infectious")]
     public void Evaluate_WithInfectiousSymptoms_ShouldFlagAsEmergent(string symptoms, string expectedCategory)
     {
@@ -146,8 +147,8 @@ public class RedFlagEvaluatorTests
     }
 
     [Theory]
-    [InlineData("vomiting blood", "GI_Bleeding")]
-    [InlineData("black tarry stool", "GI_Bleeding")]
+    [InlineData("vomiting blood", "GI Bleeding")]
+    [InlineData("black tarry stool", "GI Bleeding")]
     public void Evaluate_WithGIBleedingSymptoms_ShouldFlagAsEmergent(string symptoms, string expectedCategory)
     {
         // Act

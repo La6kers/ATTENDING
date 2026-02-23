@@ -158,7 +158,6 @@ public class BioMistralClinicalAiService : IClinicalAiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error assessing triage level");
-            // Default to urgent if AI fails - better safe than sorry
             return new TriageAssessmentResult
             {
                 Success = false,
@@ -217,159 +216,103 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private static string BuildDifferentialDiagnosisPrompt(ClinicalContext context)
     {
-        return $"""
-            Generate a differential diagnosis list for this patient:
-            
-            Chief Complaint: {context.ChiefComplaint}
-            History of Present Illness: {context.HpiSummary}
-            Age: {context.PatientAge}
-            Sex: {context.PatientSex}
-            Medical History: {string.Join(", ", context.MedicalHistory)}
-            Current Medications: {string.Join(", ", context.CurrentMedications)}
-            Allergies: {string.Join(", ", context.Allergies)}
-            Vital Signs: {context.VitalSignsSummary}
-            
-            Respond with JSON:
-            {{
-                "diagnoses": [
-                    {{
-                        "icd10Code": "code",
-                        "name": "diagnosis name",
-                        "probability": "high/medium/low",
-                        "reasoning": "clinical reasoning",
-                        "redFlags": ["any concerning features"],
-                        "recommendedWorkup": ["tests to consider"]
-                    }}
-                ],
-                "urgentConsiderations": ["any emergent conditions to rule out"]
-            }}
-            """;
+        var medHistory = string.Join(", ", context.MedicalHistory);
+        var meds = string.Join(", ", context.CurrentMedications);
+        var allergies = string.Join(", ", context.Allergies);
+        
+        return $"Generate a differential diagnosis list for this patient:\n\n" +
+               $"Chief Complaint: {context.ChiefComplaint}\n" +
+               $"History of Present Illness: {context.HpiSummary}\n" +
+               $"Age: {context.PatientAge}\nSex: {context.PatientSex}\n" +
+               $"Medical History: {medHistory}\n" +
+               $"Current Medications: {meds}\n" +
+               $"Allergies: {allergies}\n" +
+               $"Vital Signs: {context.VitalSignsSummary}\n\n" +
+               "Respond with JSON:\n" +
+               "{ \"diagnoses\": [{ \"icd10Code\": \"code\", \"name\": \"diagnosis name\", " +
+               "\"probability\": \"high/medium/low\", \"reasoning\": \"clinical reasoning\", " +
+               "\"redFlags\": [\"any concerning features\"], \"recommendedWorkup\": [\"tests to consider\"] }], " +
+               "\"urgentConsiderations\": [\"any emergent conditions to rule out\"] }";
     }
 
     private static string BuildLabRecommendationPrompt(ClinicalContext context)
     {
-        return $"""
-            Recommend laboratory tests for this clinical scenario:
-            
-            Chief Complaint: {context.ChiefComplaint}
-            Working Diagnosis: {context.WorkingDiagnosis}
-            Age: {context.PatientAge}, Sex: {context.PatientSex}
-            Medical History: {string.Join(", ", context.MedicalHistory)}
-            
-            Respond with JSON:
-            {{
-                "recommendations": [
-                    {{
-                        "testCode": "code",
-                        "testName": "name",
-                        "cptCode": "cpt",
-                        "loincCode": "loinc",
-                        "priority": "Stat/Urgent/Routine",
-                        "clinicalRationale": "why this test",
-                        "category": "Chemistry/Hematology/etc"
-                    }}
-                ],
-                "panels": ["any recommended panels like BMP, CBC"]
-            }}
-            """;
+        var medHistory = string.Join(", ", context.MedicalHistory);
+        
+        return $"Recommend laboratory tests for this clinical scenario:\n\n" +
+               $"Chief Complaint: {context.ChiefComplaint}\n" +
+               $"Working Diagnosis: {context.WorkingDiagnosis}\n" +
+               $"Age: {context.PatientAge}, Sex: {context.PatientSex}\n" +
+               $"Medical History: {medHistory}\n\n" +
+               "Respond with JSON:\n" +
+               "{ \"recommendations\": [{ \"testCode\": \"code\", \"testName\": \"name\", " +
+               "\"cptCode\": \"cpt\", \"loincCode\": \"loinc\", \"priority\": \"Stat/Urgent/Routine\", " +
+               "\"clinicalRationale\": \"why this test\", \"category\": \"Chemistry/Hematology/etc\" }], " +
+               "\"panels\": [\"any recommended panels like BMP, CBC\"] }";
     }
 
     private static string BuildImagingRecommendationPrompt(ClinicalContext context)
     {
-        return $"""
-            Recommend imaging studies for this clinical scenario:
-            
-            Chief Complaint: {context.ChiefComplaint}
-            Working Diagnosis: {context.WorkingDiagnosis}
-            Location of Symptoms: {context.SymptomLocation}
-            Age: {context.PatientAge}, Sex: {context.PatientSex}
-            
-            Consider radiation exposure and choose the most appropriate modality.
-            
-            Respond with JSON:
-            {{
-                "recommendations": [
-                    {{
-                        "studyName": "name",
-                        "modality": "X-Ray/CT/MRI/Ultrasound/etc",
-                        "bodyPart": "part",
-                        "cptCode": "cpt",
-                        "priority": "Stat/Urgent/Routine",
-                        "withContrast": true/false,
-                        "clinicalRationale": "why this study",
-                        "radiationDose": "low/medium/high/none"
-                    }}
-                ]
-            }}
-            """;
+        return $"Recommend imaging studies for this clinical scenario:\n\n" +
+               $"Chief Complaint: {context.ChiefComplaint}\n" +
+               $"Working Diagnosis: {context.WorkingDiagnosis}\n" +
+               $"Location of Symptoms: {context.SymptomLocation}\n" +
+               $"Age: {context.PatientAge}, Sex: {context.PatientSex}\n\n" +
+               "Consider radiation exposure and choose the most appropriate modality.\n\n" +
+               "Respond with JSON:\n" +
+               "{ \"recommendations\": [{ \"studyName\": \"name\", \"modality\": \"X-Ray/CT/MRI/Ultrasound/etc\", " +
+               "\"bodyPart\": \"part\", \"cptCode\": \"cpt\", \"priority\": \"Stat/Urgent/Routine\", " +
+               "\"withContrast\": false, \"clinicalRationale\": \"why this study\", " +
+               "\"radiationDose\": \"low/medium/high/none\" }] }";
     }
 
     private static string BuildTreatmentRecommendationPrompt(ClinicalContext context, string diagnosisCode)
     {
-        return $"""
-            Recommend treatment for:
-            
-            Diagnosis: {diagnosisCode}
-            Chief Complaint: {context.ChiefComplaint}
-            Age: {context.PatientAge}, Sex: {context.PatientSex}
-            Allergies: {string.Join(", ", context.Allergies)}
-            Current Medications: {string.Join(", ", context.CurrentMedications)}
-            Renal Function: {context.RenalFunction}
-            Hepatic Function: {context.HepaticFunction}
-            
-            Respond with JSON:
-            {{
-                "recommendations": [
-                    {{
-                        "medicationName": "name",
-                        "genericName": "generic",
-                        "dosage": "dose",
-                        "frequency": "frequency",
-                        "duration": "duration",
-                        "route": "PO/IV/etc",
-                        "clinicalRationale": "why this medication",
-                        "monitoring": ["what to monitor"],
-                        "contraindications": ["any for this patient"]
-                    }}
-                ],
-                "nonPharmacologic": ["lifestyle modifications, etc"],
-                "referrals": ["any specialty referrals needed"]
-            }}
-            """;
+        var allergies = string.Join(", ", context.Allergies);
+        var meds = string.Join(", ", context.CurrentMedications);
+        
+        return $"Recommend treatment for:\n\n" +
+               $"Diagnosis: {diagnosisCode}\n" +
+               $"Chief Complaint: {context.ChiefComplaint}\n" +
+               $"Age: {context.PatientAge}, Sex: {context.PatientSex}\n" +
+               $"Allergies: {allergies}\n" +
+               $"Current Medications: {meds}\n" +
+               $"Renal Function: {context.RenalFunction}\n" +
+               $"Hepatic Function: {context.HepaticFunction}\n\n" +
+               "Respond with JSON:\n" +
+               "{ \"recommendations\": [{ \"medicationName\": \"name\", \"genericName\": \"generic\", " +
+               "\"dosage\": \"dose\", \"frequency\": \"frequency\", \"duration\": \"duration\", " +
+               "\"route\": \"PO/IV/etc\", \"clinicalRationale\": \"why this medication\", " +
+               "\"monitoring\": [\"what to monitor\"], \"contraindications\": [\"any for this patient\"] }], " +
+               "\"nonPharmacologic\": [\"lifestyle modifications, etc\"], " +
+               "\"referrals\": [\"any specialty referrals needed\"] }";
     }
 
     private static string BuildTriageAssessmentPrompt(string chiefComplaint, string symptoms, int? painLevel)
     {
-        return $"""
-            Assess the Emergency Severity Index (ESI) triage level:
-            
-            Chief Complaint: {chiefComplaint}
-            Symptoms: {symptoms}
-            Pain Level: {painLevel?.ToString() ?? "Not reported"}/10
-            
-            ESI Levels:
-            - Level1_Resuscitation: Immediate life-saving intervention
-            - Level2_Emergent: High risk, confused, severe pain
-            - Level3_Urgent: Multiple resources needed
-            - Level4_LessUrgent: One resource needed
-            - Level5_NonUrgent: No resources needed
-            
-            Respond with JSON:
-            {{
-                "triageLevel": "Level#_Name",
-                "reasoning": "clinical reasoning",
-                "redFlags": ["any concerning features"],
-                "timeToProvider": "immediate/15min/30min/60min/120min",
-                "resourcesNeeded": ["anticipated resources"]
-            }}
-            """;
+        var painStr = painLevel?.ToString() ?? "Not reported";
+        
+        return $"Assess the Emergency Severity Index (ESI) triage level:\n\n" +
+               $"Chief Complaint: {chiefComplaint}\n" +
+               $"Symptoms: {symptoms}\n" +
+               $"Pain Level: {painStr}/10\n\n" +
+               "ESI Levels:\n" +
+               "- Level1_Resuscitation: Immediate life-saving intervention\n" +
+               "- Level2_Emergent: High risk, confused, severe pain\n" +
+               "- Level3_Urgent: Multiple resources needed\n" +
+               "- Level4_LessUrgent: One resource needed\n" +
+               "- Level5_NonUrgent: No resources needed\n\n" +
+               "Respond with JSON:\n" +
+               "{ \"triageLevel\": \"Level#_Name\", \"reasoning\": \"clinical reasoning\", " +
+               "\"redFlags\": [\"any concerning features\"], " +
+               "\"timeToProvider\": \"immediate/15min/30min/60min/120min\", " +
+               "\"resourcesNeeded\": [\"anticipated resources\"] }";
     }
 
     private DifferentialDiagnosisResult ParseDifferentialDiagnosisResponse(string response)
     {
         try
         {
-            // Extract JSON from response (may have markdown formatting)
             var json = ExtractJson(response);
             var parsed = JsonSerializer.Deserialize<DifferentialDiagnosisResponse>(json);
             
@@ -427,13 +370,11 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private ImagingRecommendationResult ParseImagingRecommendationResponse(string response)
     {
-        // Similar implementation
         return new ImagingRecommendationResult { Success = true, Recommendations = new List<ImagingRecommendation>() };
     }
 
     private TreatmentRecommendationResult ParseTreatmentRecommendationResponse(string response)
     {
-        // Similar implementation
         return new TreatmentRecommendationResult { Success = true, Recommendations = new List<TreatmentRecommendation>() };
     }
 
@@ -468,7 +409,6 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private static string ExtractJson(string response)
     {
-        // Handle markdown code blocks
         if (response.Contains("```json"))
         {
             var start = response.IndexOf("```json") + 7;
@@ -486,7 +426,6 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private static List<DiagnosisRecommendation> GetFallbackDifferentials(ClinicalContext context)
     {
-        // Basic fallback differentials based on common presentations
         return new List<DiagnosisRecommendation>
         {
             new()
@@ -500,7 +439,6 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private static List<LabRecommendation> GetFallbackLabRecommendations(ClinicalContext context)
     {
-        // Basic labs for most clinical scenarios
         return new List<LabRecommendation>
         {
             new() { TestCode = "CBC", TestName = "Complete Blood Count", CptCode = "85025", Priority = "Routine", Category = "Hematology" },

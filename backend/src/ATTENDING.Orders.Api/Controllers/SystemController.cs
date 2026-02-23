@@ -33,8 +33,8 @@ public class SystemController : ControllerBase
         return Ok(new VersionInfo(
             Version: version,
             ApiVersion: "v1",
-            Environment: Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
-            BuildDate: File.GetLastWriteTimeUtc(assembly.Location).ToString("O")
+            Environment: System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
+            BuildDate: System.IO.File.GetLastWriteTimeUtc(assembly.Location).ToString("O")
         ));
     }
 

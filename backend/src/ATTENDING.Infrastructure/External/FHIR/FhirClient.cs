@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ATTENDING.Infrastructure.External.FHIR;
 
@@ -493,6 +495,3 @@ public static class FhirJsonOptions
 
 #endregion
 
-// Required using statements for this file
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;

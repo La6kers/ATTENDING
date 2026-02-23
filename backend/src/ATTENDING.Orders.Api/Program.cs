@@ -45,29 +45,46 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
-// Add authentication (Azure AD B2C)
-builder.Services.AddAuthentication()
-    .AddJwtBearer(options =>
-    {
-        options.Authority = builder.Configuration["AzureAdB2C:Authority"];
-        options.Audience = builder.Configuration["AzureAdB2C:ClientId"];
-        
-        // For SignalR, allow token from query string
-        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+// ============================================================
+// Authentication
+// Development: bypass JWT validation entirely
+// Production: Azure AD B2C JWT bearer
+// ============================================================
+var devBypass = builder.Configuration.GetValue<bool>("Authentication:DevBypass");
+
+if (devBypass && builder.Environment.IsDevelopment())
+{
+    Log.Warning("⚠️  Authentication bypass enabled — all requests treated as authenticated (dev only)");
+    
+    builder.Services.AddAuthentication("DevBypass")
+        .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, DevAuthHandler>(
+            "DevBypass", options => { });
+}
+else
+{
+    builder.Services.AddAuthentication()
+        .AddJwtBearer(options =>
         {
-            OnMessageReceived = context =>
+            options.Authority = builder.Configuration["AzureAdB2C:Authority"];
+            options.Audience = builder.Configuration["AzureAdB2C:ClientId"];
+
+            // For SignalR, allow token from query string
+            options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
             {
-                var accessToken = context.Request.Query["access_token"];
-                var path = context.HttpContext.Request.Path;
-                
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                OnMessageReceived = context =>
                 {
-                    context.Token = accessToken;
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
                 }
-                return Task.CompletedTask;
-            }
-        };
-    });
+            };
+        });
+}
 
 builder.Services.AddAuthorization();
 
@@ -77,7 +94,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-            ?? new[] { "http://localhost:3000", "http://localhost:3001" };
+            ?? new[] { "http://localhost:3000", "http://localhost:3001", "http://localhost:3002" };
         
         policy.WithOrigins(origins)
             .AllowAnyMethod()
@@ -117,7 +134,7 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
+        Description = "JWT Authorization header using the Bearer scheme.",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -140,7 +157,6 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 
-    // Include XML comments
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
@@ -217,7 +233,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
-    Predicate = _ => false // Just returns healthy if app is running
+    Predicate = _ => false
 });
 
 // Startup logging
@@ -237,4 +253,36 @@ catch (Exception ex)
 finally
 {
     Log.CloseAndFlush();
+}
+
+// ============================================================
+// Dev authentication handler — auto-authenticates all requests
+// ============================================================
+public class DevAuthHandler : Microsoft.AspNetCore.Authentication.AuthenticationHandler<
+    Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>
+{
+    public DevAuthHandler(
+        Microsoft.Extensions.Options.IOptionsMonitor<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions> options,
+        ILoggerFactory logger,
+        System.Text.Encodings.Web.UrlEncoder encoder)
+        : base(options, logger, encoder) { }
+
+    protected override Task<Microsoft.AspNetCore.Authentication.AuthenticateResult> HandleAuthenticateAsync()
+    {
+        // Create a dev identity with provider claims
+        var claims = new[]
+        {
+            new System.Security.Claims.Claim("sub", "00000000-0000-0000-0000-000000000001"),
+            new System.Security.Claims.Claim("oid", "00000000-0000-0000-0000-000000000001"),
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, "scott.isbell@attending.ai"),
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Dr. Scott Isbell"),
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Provider"),
+        };
+
+        var identity = new System.Security.Claims.ClaimsIdentity(claims, "DevBypass");
+        var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+        var ticket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(principal, "DevBypass");
+
+        return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(ticket));
+    }
 }

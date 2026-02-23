@@ -182,8 +182,8 @@ public class MedicationOrder : BaseEntity, IAggregateRoot
     public string MedicationName { get; private set; } = string.Empty;
     public string GenericName { get; private set; } = string.Empty;
     public string Strength { get; private set; } = string.Empty;
-    public string Form { get; private set; } = string.Empty; // Tablet, Capsule, Injection, etc.
-    public string Route { get; private set; } = string.Empty; // PO, IV, IM, etc.
+    public string Form { get; private set; } = string.Empty;
+    public string Route { get; private set; } = string.Empty;
     public string Frequency { get; private set; } = string.Empty;
     public string Dosage { get; private set; } = string.Empty;
     public int Quantity { get; private set; }
@@ -416,6 +416,13 @@ public class Referral : BaseEntity, IAggregateRoot
         SetModified();
     }
     
+    public void SetInsuranceAuthorization(string authNumber, DateTime? expirationDate)
+    {
+        InsuranceAuthNumber = authNumber;
+        AuthExpirationDate = expirationDate;
+        SetModified();
+    }
+
     public void Cancel()
     {
         Status = ReferralStatus.Cancelled;

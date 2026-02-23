@@ -174,7 +174,7 @@ public class ImagingOrdersController : ControllerBase
             });
         }
 
-        order.Schedule(request.ScheduledAt, request.Location);
+        order.Schedule(request.ScheduledAt);
         _repository.Update(order);
         await _unitOfWork.SaveChangesAsync();
 
@@ -201,7 +201,7 @@ public class ImagingOrdersController : ControllerBase
             });
         }
 
-        order.Cancel(userId, request.Reason);
+        order.Cancel();
         _repository.Update(order);
         await _unitOfWork.SaveChangesAsync();
 

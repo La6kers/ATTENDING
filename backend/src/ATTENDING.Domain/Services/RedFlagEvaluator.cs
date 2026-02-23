@@ -187,6 +187,24 @@ public class RedFlagEvaluator : IRedFlagEvaluator
 }
 
 /// <summary>
+/// Result of red flag evaluation
+/// </summary>
+public record RedFlagEvaluation(
+    IReadOnlyList<DetectedRedFlag> RedFlags,
+    bool HasRedFlags,
+    bool IsEmergency,
+    string Reason);
+
+/// <summary>
+/// A detected red flag from patient symptoms
+/// </summary>
+public record DetectedRedFlag(
+    string Category,
+    string MatchedKeyword,
+    RedFlagSeverity Severity,
+    string ClinicalReason);
+
+/// <summary>
 /// Internal record for red flag patterns
 /// </summary>
 internal record RedFlagPattern(
