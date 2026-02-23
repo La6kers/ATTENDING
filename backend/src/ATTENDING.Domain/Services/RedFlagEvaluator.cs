@@ -8,7 +8,7 @@ namespace ATTENDING.Domain.Services;
 /// </summary>
 public interface IRedFlagEvaluator
 {
-    RedFlagEvaluation Evaluate(string chiefComplaint, string symptomDescription, int? painSeverity);
+    RedFlagEvaluation Evaluate(string chiefComplaint, string? symptomDescription, int? painSeverity);
 }
 
 /// <summary>
@@ -124,7 +124,7 @@ public class RedFlagEvaluator : IRedFlagEvaluator
     /// <summary>
     /// Evaluate patient symptoms for red flags
     /// </summary>
-    public RedFlagEvaluation Evaluate(string chiefComplaint, string symptomDescription, int? painSeverity)
+    public RedFlagEvaluation Evaluate(string chiefComplaint, string? symptomDescription, int? painSeverity)
     {
         var combinedText = $"{chiefComplaint} {symptomDescription}".ToLowerInvariant();
         var detectedFlags = new List<DetectedRedFlag>();

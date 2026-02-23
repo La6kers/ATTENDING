@@ -322,7 +322,7 @@ public class BioMistralClinicalAiService : IClinicalAiService
                 Diagnoses = parsed?.Diagnoses?.Select(d => new DiagnosisRecommendation
                 {
                     Icd10Code = d.Icd10Code,
-                    Name = d.Name,
+                    Name = d.Name ?? string.Empty,
                     Probability = d.Probability,
                     Reasoning = d.Reasoning,
                     RedFlags = d.RedFlags ?? new List<string>(),
@@ -350,11 +350,11 @@ public class BioMistralClinicalAiService : IClinicalAiService
                 Success = true,
                 Recommendations = parsed?.Recommendations?.Select(r => new LabRecommendation
                 {
-                    TestCode = r.TestCode,
-                    TestName = r.TestName,
+                    TestCode = r.TestCode ?? string.Empty,
+                    TestName = r.TestName ?? string.Empty,
                     CptCode = r.CptCode,
                     LoincCode = r.LoincCode,
-                    Priority = r.Priority,
+                    Priority = r.Priority ?? "Routine",
                     ClinicalRationale = r.ClinicalRationale,
                     Category = r.Category
                 }).ToList() ?? new List<LabRecommendation>(),

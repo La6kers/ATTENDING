@@ -74,7 +74,7 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
     #region IUnitOfWork Implementation
 
-    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public new async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         // Process domain events before saving
         var domainEntities = ChangeTracker.Entries<IAggregateRoot>()

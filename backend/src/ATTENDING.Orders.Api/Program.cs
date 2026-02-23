@@ -26,13 +26,23 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddInfrastructureHealthChecks(builder.Configuration);
 
-// Add SignalR
-builder.Services.AddSignalR(options =>
+// Add SignalR with Redis backplane for multi-instance scaling
+var signalRBuilder = builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = builder.Environment.IsDevelopment();
     options.KeepAliveInterval = TimeSpan.FromSeconds(15);
     options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
 });
+
+var signalRRedis = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrWhiteSpace(signalRRedis))
+{
+    signalRBuilder.AddStackExchangeRedis(signalRRedis, options =>
+    {
+        options.Configuration.ChannelPrefix = new StackExchange.Redis.RedisChannel("attending:signalr:", StackExchange.Redis.RedisChannel.PatternMode.Auto);
+    });
+    Log.Information("SignalR Redis backplane enabled");
+}
 
 // Register SignalR notification service
 builder.Services.AddScoped<IClinicalNotificationService, ClinicalNotificationService>();

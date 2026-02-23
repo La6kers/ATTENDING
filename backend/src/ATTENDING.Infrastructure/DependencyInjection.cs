@@ -27,6 +27,8 @@ public static class DependencyInjection
             var connectionString = configuration.GetConnectionString("AttendingDb");
             options.UseSqlServer(connectionString, sqlOptions =>
             {
+                sqlOptions.MigrationsAssembly(typeof(AttendingDbContext).Assembly.GetName().Name);
+                sqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "migrations");
                 sqlOptions.EnableRetryOnFailure(
                     maxRetryCount: 3,
                     maxRetryDelay: TimeSpan.FromSeconds(30),
