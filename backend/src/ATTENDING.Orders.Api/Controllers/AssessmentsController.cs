@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ATTENDING.Application.Commands.Assessments;
@@ -22,8 +22,7 @@ public class AssessmentsController : ControllerBase
     private readonly ILogger<AssessmentsController> _logger;
 
     public AssessmentsController(
-        IMediator mediator,
-        IClinicalNotificationService notifications,
+        IMediator mediator, IClinicalNotificationService notifications,
         ILogger<AssessmentsController> logger)
     {
         _mediator = mediator;
@@ -51,8 +50,7 @@ public class AssessmentsController : ControllerBase
 
     [HttpGet("pending-review")]
     public async Task<ActionResult<PagedResult<AssessmentSummaryResponse>>> GetPendingReview(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var assessments = await _mediator.Send(new GetPendingReviewAssessmentsQuery());
         return Ok(assessments.Select(MapToSummary).ToPagedResult(page, pageSize));
@@ -60,8 +58,7 @@ public class AssessmentsController : ControllerBase
 
     [HttpGet("red-flags")]
     public async Task<ActionResult<PagedResult<AssessmentSummaryResponse>>> GetWithRedFlags(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var assessments = await _mediator.Send(new GetRedFlagAssessmentsQuery());
         return Ok(assessments.Select(MapToSummary).ToPagedResult(page, pageSize));
@@ -69,16 +66,20 @@ public class AssessmentsController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(AssessmentResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AssessmentResponse>> StartAssessment([FromBody] StartAssessmentRequest request)
     {
         var result = await _mediator.Send(new StartAssessmentCommand(request.PatientId, request.ChiefComplaint));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed to start assessment", Detail = result.Error, Status = 400 });
+
+        if (result.IsFailure)
+            return BadRequest(new ProblemDetails { Title = result.Error.Code, Detail = result.Error.Message, Status = 400 });
+
+        var val = result.Value;
 
         try
         {
-            var assessment = await _mediator.Send(new GetAssessmentByIdQuery(result.AssessmentId!.Value));
+            var assessment = await _mediator.Send(new GetAssessmentByIdQuery(val.AssessmentId));
             if (assessment != null)
             {
                 await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
@@ -88,13 +89,13 @@ public class AssessmentsController : ControllerBase
                     ChiefComplaint: assessment.ChiefComplaint, TriageLevel: assessment.TriageLevel?.ToString(),
                     HasRedFlags: assessment.HasRedFlags, StartedAt: assessment.StartedAt));
 
-                if (result.IsEmergency)
+                if (val.IsEmergency)
                 {
                     await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
                         AssessmentId: assessment.Id, AssessmentNumber: assessment.AssessmentNumber,
                         PatientId: assessment.PatientId, PatientName: assessment.Patient?.FullName ?? "Unknown",
                         PatientMrn: assessment.Patient?.MRN ?? "", ChiefComplaint: assessment.ChiefComplaint,
-                        EmergencyReason: result.EmergencyReason ?? "Red flags detected",
+                        EmergencyReason: val.EmergencyReason ?? "Red flags detected",
                         RedFlagCategories: new List<string>(), DetectedAt: DateTime.UtcNow));
                 }
                 return CreatedAtAction(nameof(GetById), new { id = assessment.Id }, MapToResponse(assessment));
@@ -102,20 +103,22 @@ public class AssessmentsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to send notifications for {Num}", result.AssessmentNumber);
+            _logger.LogWarning(ex, "Failed to send notifications for {Num}", val.AssessmentNumber);
         }
-        return CreatedAtAction(nameof(GetById), new { id = result.AssessmentId },
-            new { id = result.AssessmentId, assessmentNumber = result.AssessmentNumber });
+        return CreatedAtAction(nameof(GetById), new { id = val.AssessmentId },
+            new { id = val.AssessmentId, assessmentNumber = val.AssessmentNumber });
     }
 
     [HttpPost("{id:guid}/responses")]
     public async Task<ActionResult<AssessmentResponse>> SubmitResponse(Guid id, [FromBody] SubmitAssessmentResponseRequest request)
     {
         var result = await _mediator.Send(new SubmitAssessmentResponseCommand(id, request.Question, request.Response));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed to submit response", Detail = result.Error, Status = 400 });
 
-        if (result.HasNewRedFlags && result.IsEmergency)
+        if (result.IsFailure)
+            return BadRequest(new ProblemDetails { Title = result.Error.Code, Detail = result.Error.Message, Status = 400 });
+
+        var val = result.Value;
+        if (val.HasNewRedFlags && val.IsEmergency)
         {
             try
             {
@@ -123,7 +126,7 @@ public class AssessmentsController : ControllerBase
                 if (a != null)
                     await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
                         a.Id, a.AssessmentNumber, a.PatientId, a.Patient?.FullName ?? "Unknown",
-                        a.Patient?.MRN ?? "", a.ChiefComplaint, result.EmergencyReason ?? "Red flags detected",
+                        a.Patient?.MRN ?? "", a.ChiefComplaint, val.EmergencyReason ?? "Red flags detected",
                         new List<string>(), DateTime.UtcNow));
             }
             catch (Exception ex) { _logger.LogWarning(ex, "Notification failed for {Id}", id); }
@@ -140,8 +143,9 @@ public class AssessmentsController : ControllerBase
             return BadRequest(new ProblemDetails { Title = "Invalid phase", Status = 400 });
 
         var result = await _mediator.Send(new AdvanceAssessmentPhaseCommand(id, newPhase, request.Data));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed to advance phase", Detail = result.Error, Status = 400 });
+
+        if (result.IsFailure)
+            return BadRequest(new ProblemDetails { Title = result.Error.Code, Detail = result.Error.Message, Status = 400 });
 
         var assessment = await _mediator.Send(new GetAssessmentByIdQuery(id));
         return assessment != null ? Ok(MapToResponse(assessment)) : NotFound();
@@ -154,8 +158,9 @@ public class AssessmentsController : ControllerBase
             return BadRequest(new ProblemDetails { Title = "Invalid triage level", Status = 400 });
 
         var result = await _mediator.Send(new CompleteAssessmentCommand(id, triageLevel, request.Summary));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed", Detail = result.Error, Status = 400 });
+
+        if (result.IsFailure)
+            return BadRequest(new ProblemDetails { Title = result.Error.Code, Detail = result.Error.Message, Status = 400 });
 
         var assessment = await _mediator.Send(new GetAssessmentByIdQuery(id));
         return assessment != null ? Ok(MapToResponse(assessment)) : NotFound();
@@ -166,9 +171,7 @@ public class AssessmentsController : ControllerBase
     {
         var providerId = GetCurrentUserId();
         var result = await _mediator.Send(new ReviewAssessmentCommand(id, providerId, request.Notes));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed", Detail = result.Error, Status = 400 });
-        return NoContent();
+        return result.ToNoContent();
     }
 
     private Guid GetCurrentUserId()

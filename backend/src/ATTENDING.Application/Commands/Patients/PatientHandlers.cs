@@ -1,11 +1,12 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
+using ATTENDING.Domain.Common;
 using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Application.Commands.Patients;
 
-public class CreatePatientHandler : IRequestHandler<CreatePatientCommand, CreatePatientResult>
+public class CreatePatientHandler : IRequestHandler<CreatePatientCommand, Result<PatientCreated>>
 {
     private readonly IPatientRepository _repo;
     private readonly IUnitOfWork _uow;
@@ -18,22 +19,22 @@ public class CreatePatientHandler : IRequestHandler<CreatePatientCommand, Create
         _logger = logger;
     }
 
-    public async Task<CreatePatientResult> Handle(CreatePatientCommand cmd, CancellationToken ct)
+    public async Task<Result<PatientCreated>> Handle(CreatePatientCommand cmd, CancellationToken ct)
     {
         var existing = await _repo.GetByMrnAsync(cmd.MRN, ct);
         if (existing != null)
-            return new CreatePatientResult(false, Error: $"Patient with MRN {cmd.MRN} already exists");
+            return Result.Failure<PatientCreated>(DomainErrors.Patient.DuplicateMrn(cmd.MRN));
 
         var patient = Patient.Create(cmd.MRN, cmd.FirstName, cmd.LastName, cmd.DateOfBirth, cmd.Sex);
         await _repo.AddAsync(patient, ct);
         await _uow.SaveChangesAsync(ct);
 
         _logger.LogInformation("Patient created: {MRN} {Name}", patient.MRN, patient.FullName);
-        return new CreatePatientResult(true, patient.Id, patient.MRN);
+        return new PatientCreated(patient.Id, patient.MRN);
     }
 }
 
-public class AddAllergyHandler : IRequestHandler<AddAllergyCommand, AddAllergyResult>
+public class AddAllergyHandler : IRequestHandler<AddAllergyCommand, Result<AllergyAdded>>
 {
     private readonly IPatientRepository _repo;
     private readonly IUnitOfWork _uow;
@@ -44,21 +45,21 @@ public class AddAllergyHandler : IRequestHandler<AddAllergyCommand, AddAllergyRe
         _uow = uow;
     }
 
-    public async Task<AddAllergyResult> Handle(AddAllergyCommand cmd, CancellationToken ct)
+    public async Task<Result<AllergyAdded>> Handle(AddAllergyCommand cmd, CancellationToken ct)
     {
         var patient = await _repo.GetWithAllergiesAsync(cmd.PatientId, ct);
         if (patient == null)
-            return new AddAllergyResult(false, Error: "Patient not found");
+            return Result.Failure<AllergyAdded>(DomainErrors.Patient.NotFound(cmd.PatientId));
 
         var allergy = Allergy.Create(cmd.PatientId, cmd.Allergen, cmd.Severity, cmd.Reaction);
         patient.Allergies.Add(allergy);
         await _uow.SaveChangesAsync(ct);
 
-        return new AddAllergyResult(true, allergy.Id);
+        return new AllergyAdded(allergy.Id);
     }
 }
 
-public class AddConditionHandler : IRequestHandler<AddConditionCommand, AddConditionResult>
+public class AddConditionHandler : IRequestHandler<AddConditionCommand, Result<ConditionAdded>>
 {
     private readonly IPatientRepository _repo;
     private readonly IUnitOfWork _uow;
@@ -69,16 +70,16 @@ public class AddConditionHandler : IRequestHandler<AddConditionCommand, AddCondi
         _uow = uow;
     }
 
-    public async Task<AddConditionResult> Handle(AddConditionCommand cmd, CancellationToken ct)
+    public async Task<Result<ConditionAdded>> Handle(AddConditionCommand cmd, CancellationToken ct)
     {
         var patient = await _repo.GetWithConditionsAsync(cmd.PatientId, ct);
         if (patient == null)
-            return new AddConditionResult(false, Error: "Patient not found");
+            return Result.Failure<ConditionAdded>(DomainErrors.Patient.NotFound(cmd.PatientId));
 
         var condition = MedicalCondition.Create(cmd.PatientId, cmd.Code, cmd.Name, cmd.OnsetDate);
         patient.Conditions.Add(condition);
         await _uow.SaveChangesAsync(ct);
 
-        return new AddConditionResult(true, condition.Id);
+        return new ConditionAdded(condition.Id);
     }
 }

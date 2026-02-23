@@ -6,6 +6,7 @@ using ATTENDING.Application;
 using ATTENDING.Infrastructure;
 using ATTENDING.Orders.Api.Hubs;
 using ATTENDING.Orders.Api.Middleware;
+using ATTENDING.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,10 @@ if (!string.IsNullOrWhiteSpace(signalRRedis))
 
 // Register SignalR notification service
 builder.Services.AddScoped<IClinicalNotificationService, ClinicalNotificationService>();
+
+// Current user context for audit trails
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ATTENDING.Domain.Interfaces.ICurrentUserService, ATTENDING.Orders.Api.Services.CurrentUserService>();
 
 // Add controllers
 builder.Services.AddControllers()
@@ -179,6 +184,9 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Initialize database (migrate + seed)
+await DatabaseInitializer.InitializeAsync(app.Services, app.Environment);
 
 // Configure middleware pipeline
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")

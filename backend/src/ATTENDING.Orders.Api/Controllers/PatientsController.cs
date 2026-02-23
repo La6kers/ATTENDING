@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ATTENDING.Application.Commands.Patients;
@@ -6,6 +6,7 @@ using ATTENDING.Application.Queries.Patients;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
+using ATTENDING.Orders.Api.Extensions;
 
 namespace ATTENDING.Orders.Api.Controllers;
 
@@ -59,9 +60,10 @@ public class PatientsController : ControllerBase
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(PatientDetailResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(PatientCreated), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<PatientDetailResponse>> Create([FromBody] CreatePatientRequest request)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Create([FromBody] CreatePatientRequest request)
     {
         var result = await _mediator.Send(new CreatePatientCommand(
             request.MRN, request.FirstName, request.LastName,
@@ -69,38 +71,30 @@ public class PatientsController : ControllerBase
             request.AddressLine1, request.City, request.State, request.ZipCode,
             request.PrimaryLanguage));
 
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed to create patient", Detail = result.Error, Status = 400 });
-
-        var patient = await _mediator.Send(new GetPatientByIdQuery(result.PatientId!.Value));
-        return CreatedAtAction(nameof(GetById), new { id = result.PatientId }, MapToDetail(patient!));
+        return result.ToCreatedAtAction(nameof(GetById), new { id = result.IsSuccess ? result.Value.PatientId : Guid.Empty });
     }
 
     [HttpPost("{id:guid}/allergies")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddAllergy(Guid id, [FromBody] AddAllergyRequest request)
     {
         if (!Enum.TryParse<AllergySeverity>(request.Severity, true, out var severity))
             return BadRequest(new ProblemDetails { Title = "Invalid allergy severity", Status = 400 });
 
         var result = await _mediator.Send(new AddAllergyCommand(id, request.Allergen, severity, request.Reaction));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed", Detail = result.Error, Status = 400 });
-
-        return Created($"/api/v1/patients/{id}/allergies", new { id = result.AllergyId });
+        return result.ToCreated($"/api/v1/patients/{id}/allergies");
     }
 
     [HttpPost("{id:guid}/conditions")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddCondition(Guid id, [FromBody] AddConditionRequest request)
     {
         var result = await _mediator.Send(new AddConditionCommand(id, request.Code, request.Name, request.OnsetDate));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed", Detail = result.Error, Status = 400 });
-
-        return Created($"/api/v1/patients/{id}/conditions", new { id = result.ConditionId });
+        return result.ToCreated($"/api/v1/patients/{id}/conditions");
     }
 
     #region Mappers

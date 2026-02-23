@@ -1,5 +1,5 @@
-﻿using MediatR;
-using ATTENDING.Application.DTOs;
+using MediatR;
+using ATTENDING.Domain.Common;
 using ATTENDING.Domain.Enums;
 
 namespace ATTENDING.Application.Commands.Assessments;
@@ -7,56 +7,40 @@ namespace ATTENDING.Application.Commands.Assessments;
 public record StartAssessmentCommand(
     Guid PatientId,
     string ChiefComplaint
-) : IRequest<StartAssessmentResult>;
+) : IRequest<Result<AssessmentStarted>>;
 
-public record StartAssessmentResult(
-    bool Success,
-    Guid? AssessmentId,
-    string? AssessmentNumber,
+public record AssessmentStarted(
+    Guid AssessmentId,
+    string AssessmentNumber,
     bool IsEmergency,
     string? EmergencyReason,
-    bool HasRedFlags,
-    string? Error);
+    bool HasRedFlags);
 
 public record SubmitAssessmentResponseCommand(
     Guid AssessmentId,
     string Question,
     string Response
-) : IRequest<SubmitAssessmentResponseResult>;
+) : IRequest<Result<AssessmentResponseSubmitted>>;
 
-public record SubmitAssessmentResponseResult(
-    bool Success,
+public record AssessmentResponseSubmitted(
     bool HasNewRedFlags,
     bool IsEmergency,
-    string? EmergencyReason,
-    string? Error);
+    string? EmergencyReason);
 
 public record AdvanceAssessmentPhaseCommand(
     Guid AssessmentId,
     AssessmentPhase NewPhase,
     Dictionary<string, string>? Data = null
-) : IRequest<AdvanceAssessmentPhaseResult>;
-
-public record AdvanceAssessmentPhaseResult(
-    bool Success,
-    string? Error);
+) : IRequest<Result<Unit>>;
 
 public record CompleteAssessmentCommand(
     Guid AssessmentId,
     TriageLevel TriageLevel,
     string? Summary = null
-) : IRequest<CompleteAssessmentResult>;
-
-public record CompleteAssessmentResult(
-    bool Success,
-    string? Error);
+) : IRequest<Result<Unit>>;
 
 public record ReviewAssessmentCommand(
     Guid AssessmentId,
     Guid ProviderId,
     string? Notes = null
-) : IRequest<ReviewAssessmentResult>;
-
-public record ReviewAssessmentResult(
-    bool Success,
-    string? Error);
+) : IRequest<Result<Unit>>;

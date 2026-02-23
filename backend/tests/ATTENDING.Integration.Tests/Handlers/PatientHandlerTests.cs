@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using ATTENDING.Application.Commands.Patients;
 using ATTENDING.Application.Queries.Patients;
@@ -26,9 +26,9 @@ public class PatientHandlerTests
             "MRN-12345", "John", "Doe", new DateTime(1985, 3, 15), "Male",
             "555-1234", "john@test.com", null, null, null, null, "English"), default);
 
-        result.Success.Should().BeTrue();
-        result.PatientId.Should().NotBeEmpty();
-        result.MRN.Should().Be("MRN-12345");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.PatientId.Should().NotBeEmpty();
+        result.Value.MRN.Should().Be("MRN-12345");
     }
 
     [Fact]
@@ -42,8 +42,8 @@ public class PatientHandlerTests
             "MRN-12345", "John", "Doe", new DateTime(1985, 3, 15), "Male",
             null, null, null, null, null, null, "English"), default);
 
-        result.Success.Should().BeFalse();
-        result.Error.Should().Contain("already exists");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Message.Should().Contain("already exists");
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class PatientHandlerTests
         var result = await handler.Handle(new AddAllergyCommand(
             patient.Id, "Penicillin", AllergySeverity.Severe, "Anaphylaxis"), default);
 
-        result.Success.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         patient.Allergies.Should().HaveCount(1);
     }
 
@@ -69,7 +69,7 @@ public class PatientHandlerTests
         var result = await handler.Handle(new AddAllergyCommand(
             Guid.NewGuid(), "Penicillin", AllergySeverity.Mild, null), default);
 
-        result.Success.Should().BeFalse();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class PatientHandlerTests
         var result = await handler.Handle(new AddConditionCommand(
             patient.Id, "E11.9", "Type 2 Diabetes", new DateTime(2020, 6, 1)), default);
 
-        result.Success.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         patient.Conditions.Should().HaveCount(1);
     }
 

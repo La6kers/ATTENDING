@@ -43,9 +43,9 @@ public class LabOrder : BaseEntity, IAggregateRoot
     public DateTime? CollectedAt { get; private set; }
     public DateTime? ResultedAt { get; private set; }
     
-    // Audit
-    public Guid CreatedBy { get; private set; }
-    public Guid? ModifiedBy { get; private set; }
+    // Audit — who ordered/modified (supplements base audit fields)
+    public Guid OrderedBy { get; private set; }
+    public Guid? LastModifiedBy { get; private set; }
     
     // Navigation properties
     public virtual Patient? Patient { get; private set; }
@@ -107,7 +107,7 @@ public class LabOrder : BaseEntity, IAggregateRoot
             RequiresFasting = requiresFasting,
             Status = LabOrderStatus.Pending,
             OrderedAt = DateTime.UtcNow,
-            CreatedBy = orderingProviderId
+            OrderedBy = orderingProviderId
         };
         
         // Apply red flag upgrade if detected
@@ -185,7 +185,7 @@ public class LabOrder : BaseEntity, IAggregateRoot
             throw new InvalidOperationException("Cannot cancel orders that have been collected or resulted");
             
         Status = LabOrderStatus.Cancelled;
-        ModifiedBy = cancelledBy;
+        LastModifiedBy = cancelledBy;
         SetModified();
         
         _domainEvents.Add(new LabOrderCancelledEvent(Id, cancelledBy, reason));
@@ -201,7 +201,7 @@ public class LabOrder : BaseEntity, IAggregateRoot
             
         var previousPriority = Priority;
         Priority = newPriority;
-        ModifiedBy = modifiedBy;
+        LastModifiedBy = modifiedBy;
         SetModified();
         
         _domainEvents.Add(new LabOrderPriorityChangedEvent(Id, previousPriority, newPriority));

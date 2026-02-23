@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -48,10 +48,10 @@ public class LabOrderHandlerTests : IClassFixture<DatabaseFixture>
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        result.Success.Should().BeTrue();
-        result.LabOrderId.Should().NotBeNull();
-        result.OrderNumber.Should().StartWith("LAB-");
-        result.WasUpgradedToStat.Should().BeFalse();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.LabOrderId.Should().NotBeEmpty();
+        result.Value.OrderNumber.Should().StartWith("LAB-");
+        result.Value.WasUpgradedToStat.Should().BeFalse();
     }
 
     [Fact]
@@ -77,8 +77,8 @@ public class LabOrderHandlerTests : IClassFixture<DatabaseFixture>
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        result.Success.Should().BeFalse();
-        result.Error.Should().Contain("Patient not found");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Message.Should().Contain("Patient");
     }
 
     [Fact]
@@ -109,8 +109,8 @@ public class LabOrderHandlerTests : IClassFixture<DatabaseFixture>
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        result.Success.Should().BeTrue();
-        result.WasUpgradedToStat.Should().BeTrue();
-        result.RedFlagReason.Should().NotBeNullOrWhiteSpace();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.WasUpgradedToStat.Should().BeTrue();
+        result.Value.RedFlagReason.Should().NotBeNullOrWhiteSpace();
     }
 }

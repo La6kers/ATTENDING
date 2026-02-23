@@ -70,6 +70,60 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
         // Configure schemas
         modelBuilder.HasDefaultSchema("clinical");
+
+        // --------------------------------------------------------
+        // Global query filters: soft delete
+        // Healthcare data must never be hard-deleted (HIPAA).
+        // These filters automatically exclude soft-deleted records
+        // from all queries unless explicitly overridden with
+        // .IgnoreQueryFilters()
+        // --------------------------------------------------------
+        modelBuilder.Entity<Patient>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Encounter>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Allergy>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<MedicalCondition>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<LabOrder>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<ImagingOrder>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<MedicationOrder>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Referral>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<PatientAssessment>().HasQueryFilter(e => !e.IsDeleted);
+
+        // Child entities: matching filters to prevent EF warning 10622
+        // (required end of relationship with filtered parent)
+        modelBuilder.Entity<AssessmentSymptom>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<AssessmentResponse>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<LabResult>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<ImagingResult>().HasQueryFilter(e => !e.IsDeleted);
+
+        // --------------------------------------------------------
+        // Concurrency tokens: RowVersion on all aggregate roots
+        // Prevents lost updates in multi-provider environments
+        // --------------------------------------------------------
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+            .Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType)
+                     && t.ClrType != typeof(AuditLog)))
+        {
+            modelBuilder.Entity(entityType.ClrType)
+                .Property(nameof(BaseEntity.RowVersion))
+                .IsRowVersion();
+
+            modelBuilder.Entity(entityType.ClrType)
+                .Property(nameof(BaseEntity.IsDeleted))
+                .HasDefaultValue(false);
+
+            modelBuilder.Entity(entityType.ClrType)
+                .Property(nameof(BaseEntity.CreatedBy))
+                .HasMaxLength(100);
+
+            modelBuilder.Entity(entityType.ClrType)
+                .Property(nameof(BaseEntity.ModifiedBy))
+                .HasMaxLength(100);
+
+            modelBuilder.Entity(entityType.ClrType)
+                .Property(nameof(BaseEntity.DeletedBy))
+                .HasMaxLength(100);
+        }
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

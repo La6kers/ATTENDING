@@ -37,8 +37,8 @@ public class ImagingOrder : BaseEntity, IAggregateRoot
     public DateTime? ScheduledAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
     
-    // Audit
-    public Guid CreatedBy { get; private set; }
+    // Audit — who ordered (supplements base audit fields)
+    public Guid OrderedBy { get; private set; }
     
     // Navigation
     public virtual Patient? Patient { get; private set; }
@@ -87,7 +87,7 @@ public class ImagingOrder : BaseEntity, IAggregateRoot
             EstimatedRadiationDose = estimatedRadiationDose,
             Status = ImagingOrderStatus.Pending,
             OrderedAt = DateTime.UtcNow,
-            CreatedBy = orderingProviderId
+            OrderedBy = orderingProviderId
         };
         
         order._domainEvents.Add(new ImagingOrderCreatedEvent(
@@ -208,8 +208,8 @@ public class MedicationOrder : BaseEntity, IAggregateRoot
     public DateTime? DiscontinuedAt { get; private set; }
     public string? DiscontinuedReason { get; private set; }
     
-    // Audit
-    public Guid CreatedBy { get; private set; }
+    // Audit — who ordered (supplements base audit fields)
+    public Guid OrderedBy { get; private set; }
     
     // Navigation
     public virtual Patient? Patient { get; private set; }
@@ -272,7 +272,7 @@ public class MedicationOrder : BaseEntity, IAggregateRoot
             PharmacyName = pharmacyName,
             Status = MedicationOrderStatus.Pending,
             OrderedAt = DateTime.UtcNow,
-            CreatedBy = orderingProviderId
+            OrderedBy = orderingProviderId
         };
         
         order._domainEvents.Add(new MedicationOrderCreatedEvent(
@@ -343,8 +343,8 @@ public class Referral : BaseEntity, IAggregateRoot
     public DateTime? CompletedAt { get; private set; }
     public string? ConsultNotes { get; private set; }
     
-    // Audit
-    public Guid CreatedBy { get; private set; }
+    // Audit — who referred (supplements base audit fields)
+    public Guid ReferredBy { get; private set; }
     
     // Navigation
     public virtual Patient? Patient { get; private set; }
@@ -386,7 +386,7 @@ public class Referral : BaseEntity, IAggregateRoot
             ReferredToFacility = referredToFacility,
             Status = ReferralStatus.Pending,
             ReferredAt = DateTime.UtcNow,
-            CreatedBy = referringProviderId
+            ReferredBy = referringProviderId
         };
         
         referral._domainEvents.Add(new ReferralCreatedEvent(

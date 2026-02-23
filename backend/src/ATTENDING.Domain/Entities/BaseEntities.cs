@@ -5,21 +5,63 @@ using ATTENDING.Domain.ValueObjects;
 namespace ATTENDING.Domain.Entities;
 
 /// <summary>
-/// Base entity with common properties
+/// Base entity with audit fields, concurrency control, and soft delete.
+/// All clinical entities inherit these enterprise capabilities.
 /// </summary>
 public abstract class BaseEntity
 {
     public DateTime CreatedAt { get; protected set; }
     public DateTime? ModifiedAt { get; protected set; }
+    public string? CreatedBy { get; protected set; }
+    public string? ModifiedBy { get; protected set; }
+    
+    /// <summary>
+    /// Optimistic concurrency token — prevents lost updates
+    /// in multi-provider clinical environments
+    /// </summary>
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+    
+    /// <summary>
+    /// Soft delete — healthcare data must never be hard-deleted (HIPAA)
+    /// </summary>
+    public bool IsDeleted { get; protected set; }
+    public DateTime? DeletedAt { get; protected set; }
+    public string? DeletedBy { get; protected set; }
     
     protected BaseEntity()
     {
         CreatedAt = DateTime.UtcNow;
     }
     
-    public void SetModified()
+    public void SetModified(string? userId = null)
     {
         ModifiedAt = DateTime.UtcNow;
+        ModifiedBy = userId;
+    }
+    
+    public void SetCreatedBy(string userId)
+    {
+        CreatedBy = userId;
+    }
+    
+    /// <summary>
+    /// Soft delete — marks entity as deleted without removing from database
+    /// </summary>
+    public virtual void SoftDelete(string? userId = null)
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
+        DeletedBy = userId;
+    }
+    
+    /// <summary>
+    /// Restore a soft-deleted entity
+    /// </summary>
+    public virtual void Restore()
+    {
+        IsDeleted = false;
+        DeletedAt = null;
+        DeletedBy = null;
     }
 }
 

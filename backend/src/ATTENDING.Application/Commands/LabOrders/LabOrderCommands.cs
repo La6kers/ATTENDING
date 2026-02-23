@@ -1,12 +1,9 @@
 using MediatR;
-using ATTENDING.Application.DTOs;
+using ATTENDING.Domain.Common;
 using ATTENDING.Domain.Enums;
 
 namespace ATTENDING.Application.Commands.LabOrders;
 
-/// <summary>
-/// Command to create a new lab order
-/// </summary>
 public record CreateLabOrderCommand(
     Guid PatientId,
     Guid EncounterId,
@@ -24,58 +21,33 @@ public record CreateLabOrderCommand(
     string? DiagnosisDescription,
     bool RequiresFasting,
     int? PainSeverity = null
-) : IRequest<CreateLabOrderResult>;
+) : IRequest<Result<LabOrderCreated>>;
 
-public record CreateLabOrderResult(
-    bool Success,
-    Guid? LabOrderId,
-    string? OrderNumber,
+public record LabOrderCreated(
+    Guid LabOrderId,
+    string OrderNumber,
     bool WasUpgradedToStat,
-    string? RedFlagReason,
-    string? Error);
+    string? RedFlagReason);
 
-/// <summary>
-/// Command to update lab order priority
-/// </summary>
 public record UpdateLabOrderPriorityCommand(
     Guid LabOrderId,
     OrderPriority NewPriority,
     Guid ModifiedBy
-) : IRequest<UpdateLabOrderPriorityResult>;
+) : IRequest<Result<PriorityUpdated>>;
 
-public record UpdateLabOrderPriorityResult(
-    bool Success,
-    OrderPriority? PreviousPriority,
-    string? Error);
+public record PriorityUpdated(OrderPriority PreviousPriority);
 
-/// <summary>
-/// Command to cancel a lab order
-/// </summary>
 public record CancelLabOrderCommand(
     Guid LabOrderId,
     Guid CancelledBy,
     string Reason
-) : IRequest<CancelLabOrderResult>;
+) : IRequest<Result<Unit>>;
 
-public record CancelLabOrderResult(
-    bool Success,
-    string? Error);
-
-/// <summary>
-/// Command to mark lab order as collected
-/// </summary>
 public record MarkLabOrderCollectedCommand(
     Guid LabOrderId,
     DateTime CollectedAt
-) : IRequest<MarkLabOrderCollectedResult>;
+) : IRequest<Result<Unit>>;
 
-public record MarkLabOrderCollectedResult(
-    bool Success,
-    string? Error);
-
-/// <summary>
-/// Command to add result to lab order
-/// </summary>
 public record AddLabResultCommand(
     Guid LabOrderId,
     string Value,
@@ -88,10 +60,6 @@ public record AddLabResultCommand(
     string? PerformingLab,
     string? ResultedBy,
     string? Comments
-) : IRequest<AddLabResultResult>;
+) : IRequest<Result<LabResultAdded>>;
 
-public record AddLabResultResult(
-    bool Success,
-    Guid? ResultId,
-    bool IsCritical,
-    string? Error);
+public record LabResultAdded(Guid ResultId, bool IsCritical);

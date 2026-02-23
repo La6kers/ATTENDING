@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using ATTENDING.Application.Commands.Encounters;
 using ATTENDING.Domain.Entities;
@@ -25,8 +25,8 @@ public class EncounterHandlerTests
         var result = await handler.Handle(new CreateEncounterCommand(
             patient.Id, Guid.NewGuid(), "Office Visit", DateTime.UtcNow.AddHours(2), null), default);
 
-        result.Success.Should().BeTrue();
-        result.EncounterNumber.Should().StartWith("ENC-");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.EncounterNumber.Should().StartWith("ENC-");
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class EncounterHandlerTests
         var result = await handler.Handle(new CreateEncounterCommand(
             Guid.NewGuid(), Guid.NewGuid(), "Office Visit", null, null), default);
 
-        result.Success.Should().BeFalse();
+        result.IsFailure.Should().BeTrue();
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class EncounterHandlerTests
         var handler = new CheckInEncounterHandler(_encounterRepo.Object, _uow.Object);
         var result = await handler.Handle(new CheckInEncounterCommand(encounter.Id), default);
 
-        result.Success.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         encounter.CheckedInAt.Should().NotBeNull();
     }
 
@@ -64,7 +64,7 @@ public class EncounterHandlerTests
         var handler = new StartEncounterHandler(_encounterRepo.Object, _uow.Object);
         var result = await handler.Handle(new StartEncounterCommand(encounter.Id, "Chest pain"), default);
 
-        result.Success.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         encounter.ChiefComplaint.Should().Be("Chest pain");
     }
 
@@ -79,7 +79,7 @@ public class EncounterHandlerTests
         var handler = new CompleteEncounterHandler(_encounterRepo.Object, _uow.Object);
         var result = await handler.Handle(new CompleteEncounterCommand(encounter.Id), default);
 
-        result.Success.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         encounter.CompletedAt.Should().NotBeNull();
     }
 
@@ -91,6 +91,49 @@ public class EncounterHandlerTests
 
         var result = await handler.Handle(new CheckInEncounterCommand(Guid.NewGuid()), default);
 
-        result.Success.Should().BeFalse();
+        result.IsFailure.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CheckIn_AlreadyCheckedIn_ShouldFail()
+    {
+        var encounter = Encounter.Create(Guid.NewGuid(), Guid.NewGuid(), "Office Visit");
+        encounter.CheckIn();
+        _encounterRepo.Setup(r => r.GetByIdAsync(encounter.Id, default)).ReturnsAsync(encounter);
+
+        var handler = new CheckInEncounterHandler(_encounterRepo.Object, _uow.Object);
+        var result = await handler.Handle(new CheckInEncounterCommand(encounter.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Encounter.InvalidTransition");
+    }
+
+    [Fact]
+    public async Task Complete_AlreadyCompleted_ShouldFail()
+    {
+        var encounter = Encounter.Create(Guid.NewGuid(), Guid.NewGuid(), "Office Visit");
+        encounter.CheckIn();
+        encounter.Start("Test");
+        encounter.Complete();
+        _encounterRepo.Setup(r => r.GetByIdAsync(encounter.Id, default)).ReturnsAsync(encounter);
+
+        var handler = new CompleteEncounterHandler(_encounterRepo.Object, _uow.Object);
+        var result = await handler.Handle(new CompleteEncounterCommand(encounter.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Encounter.AlreadyCompleted");
+    }
+
+    [Fact]
+    public async Task Complete_FromScheduled_ShouldFail()
+    {
+        var encounter = Encounter.Create(Guid.NewGuid(), Guid.NewGuid(), "Office Visit");
+        _encounterRepo.Setup(r => r.GetByIdAsync(encounter.Id, default)).ReturnsAsync(encounter);
+
+        var handler = new CompleteEncounterHandler(_encounterRepo.Object, _uow.Object);
+        var result = await handler.Handle(new CompleteEncounterCommand(encounter.Id), default);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Encounter.InvalidTransition");
     }
 }

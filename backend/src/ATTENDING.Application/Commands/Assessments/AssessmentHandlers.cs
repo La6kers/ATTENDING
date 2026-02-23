@@ -1,12 +1,13 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
+using ATTENDING.Domain.Common;
 using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Interfaces;
 using ATTENDING.Domain.Services;
 
 namespace ATTENDING.Application.Commands.Assessments;
 
-public class StartAssessmentHandler : IRequestHandler<StartAssessmentCommand, StartAssessmentResult>
+public class StartAssessmentHandler : IRequestHandler<StartAssessmentCommand, Result<AssessmentStarted>>
 {
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly IPatientRepository _patientRepository;
@@ -31,50 +32,40 @@ public class StartAssessmentHandler : IRequestHandler<StartAssessmentCommand, St
         _logger = logger;
     }
 
-    public async Task<StartAssessmentResult> Handle(
+    public async Task<Result<AssessmentStarted>> Handle(
         StartAssessmentCommand request, CancellationToken cancellationToken)
     {
-        try
-        {
-            var patient = await _patientRepository.GetByIdAsync(request.PatientId, cancellationToken);
-            if (patient == null)
-                return new StartAssessmentResult(false, null, null, false, null, false,
-                    $"Patient not found: {request.PatientId}");
+        var patient = await _patientRepository.GetByIdAsync(request.PatientId, cancellationToken);
+        if (patient == null)
+            return Result.Failure<AssessmentStarted>(DomainErrors.Patient.NotFound(request.PatientId));
 
-            var redFlagEvaluation = _redFlagEvaluator.Evaluate(request.ChiefComplaint, null, null);
+        var redFlagEvaluation = _redFlagEvaluator.Evaluate(request.ChiefComplaint, null, null);
 
-            var assessment = PatientAssessment.Create(
-                patientId: request.PatientId,
-                chiefComplaint: request.ChiefComplaint,
-                redFlagEvaluation: redFlagEvaluation);
+        var assessment = PatientAssessment.Create(
+            patientId: request.PatientId,
+            chiefComplaint: request.ChiefComplaint,
+            redFlagEvaluation: redFlagEvaluation);
 
-            await _assessmentRepository.AddAsync(assessment, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _assessmentRepository.AddAsync(assessment, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            await _auditService.LogPhiAccessAsync(
-                userId: request.PatientId, patientId: request.PatientId,
-                action: "START_ASSESSMENT", resourceType: "PatientAssessment",
-                resourceId: assessment.Id,
-                details: $"Started assessment: {request.ChiefComplaint}",
-                cancellationToken: cancellationToken);
+        await _auditService.LogPhiAccessAsync(
+            userId: request.PatientId, patientId: request.PatientId,
+            action: "START_ASSESSMENT", resourceType: "PatientAssessment",
+            resourceId: assessment.Id,
+            details: $"Started assessment: {request.ChiefComplaint}",
+            cancellationToken: cancellationToken);
 
-            _logger.LogInformation(
-                "Assessment started: {AssessmentNumber} for Patient {PatientId}",
-                assessment.AssessmentNumber, request.PatientId);
+        _logger.LogInformation("Assessment started: {AssessmentNumber} for Patient {PatientId}",
+            assessment.AssessmentNumber, request.PatientId);
 
-            return new StartAssessmentResult(true, assessment.Id, assessment.AssessmentNumber,
-                assessment.IsEmergency, assessment.EmergencyReason, assessment.HasRedFlags, null);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to start assessment for Patient {PatientId}", request.PatientId);
-            return new StartAssessmentResult(false, null, null, false, null, false, ex.Message);
-        }
+        return new AssessmentStarted(assessment.Id, assessment.AssessmentNumber,
+            assessment.IsEmergency, assessment.EmergencyReason, assessment.HasRedFlags);
     }
 }
 
 public class SubmitAssessmentResponseHandler
-    : IRequestHandler<SubmitAssessmentResponseCommand, SubmitAssessmentResponseResult>
+    : IRequestHandler<SubmitAssessmentResponseCommand, Result<AssessmentResponseSubmitted>>
 {
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -91,13 +82,16 @@ public class SubmitAssessmentResponseHandler
         _logger = logger;
     }
 
-    public async Task<SubmitAssessmentResponseResult> Handle(
+    public async Task<Result<AssessmentResponseSubmitted>> Handle(
         SubmitAssessmentResponseCommand request, CancellationToken cancellationToken)
     {
         var assessment = await _assessmentRepository.GetWithSymptomsAsync(request.AssessmentId, cancellationToken);
         if (assessment == null)
-            return new SubmitAssessmentResponseResult(false, false, false, null,
-                $"Assessment not found: {request.AssessmentId}");
+            return Result.Failure<AssessmentResponseSubmitted>(
+                DomainErrors.Assessment.NotFound(request.AssessmentId));
+
+        if (assessment.CurrentPhase == Domain.Enums.AssessmentPhase.Completed)
+            return Result.Failure<AssessmentResponseSubmitted>(DomainErrors.Assessment.AlreadyCompleted);
 
         var combinedText = $"{assessment.ChiefComplaint} {request.Response}";
         var redFlagEvaluation = _redFlagEvaluator.Evaluate(combinedText, null, assessment.PainSeverity);
@@ -111,13 +105,13 @@ public class SubmitAssessmentResponseHandler
                 assessment.AssessmentNumber,
                 string.Join(", ", redFlagEvaluation.RedFlags.Select(f => f.Category)));
 
-        return new SubmitAssessmentResponseResult(true, redFlagEvaluation.HasRedFlags,
-            assessment.IsEmergency, assessment.EmergencyReason, null);
+        return new AssessmentResponseSubmitted(redFlagEvaluation.HasRedFlags,
+            assessment.IsEmergency, assessment.EmergencyReason);
     }
 }
 
 public class AdvanceAssessmentPhaseHandler
-    : IRequestHandler<AdvanceAssessmentPhaseCommand, AdvanceAssessmentPhaseResult>
+    : IRequestHandler<AdvanceAssessmentPhaseCommand, Result<Unit>>
 {
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -125,22 +119,25 @@ public class AdvanceAssessmentPhaseHandler
     public AdvanceAssessmentPhaseHandler(IAssessmentRepository assessmentRepository, IUnitOfWork unitOfWork)
     { _assessmentRepository = assessmentRepository; _unitOfWork = unitOfWork; }
 
-    public async Task<AdvanceAssessmentPhaseResult> Handle(
+    public async Task<Result<Unit>> Handle(
         AdvanceAssessmentPhaseCommand request, CancellationToken cancellationToken)
     {
         var assessment = await _assessmentRepository.GetWithSymptomsAsync(request.AssessmentId, cancellationToken);
         if (assessment == null)
-            return new AdvanceAssessmentPhaseResult(false, $"Assessment not found: {request.AssessmentId}");
+            return Result.Failure<Unit>(DomainErrors.Assessment.NotFound(request.AssessmentId));
+
+        if (assessment.CurrentPhase == Domain.Enums.AssessmentPhase.Completed)
+            return Result.Failure<Unit>(DomainErrors.Assessment.AlreadyCompleted);
 
         assessment.AdvanceToPhase(request.NewPhase);
         _assessmentRepository.Update(assessment);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        return new AdvanceAssessmentPhaseResult(true, null);
+        return Result.Success(Unit.Value);
     }
 }
 
 public class CompleteAssessmentHandler
-    : IRequestHandler<CompleteAssessmentCommand, CompleteAssessmentResult>
+    : IRequestHandler<CompleteAssessmentCommand, Result<Unit>>
 {
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -150,12 +147,15 @@ public class CompleteAssessmentHandler
         IUnitOfWork unitOfWork, ILogger<CompleteAssessmentHandler> logger)
     { _assessmentRepository = assessmentRepository; _unitOfWork = unitOfWork; _logger = logger; }
 
-    public async Task<CompleteAssessmentResult> Handle(
+    public async Task<Result<Unit>> Handle(
         CompleteAssessmentCommand request, CancellationToken cancellationToken)
     {
         var assessment = await _assessmentRepository.GetWithSymptomsAsync(request.AssessmentId, cancellationToken);
         if (assessment == null)
-            return new CompleteAssessmentResult(false, $"Assessment not found: {request.AssessmentId}");
+            return Result.Failure<Unit>(DomainErrors.Assessment.NotFound(request.AssessmentId));
+
+        if (assessment.CurrentPhase == Domain.Enums.AssessmentPhase.Completed)
+            return Result.Failure<Unit>(DomainErrors.Assessment.AlreadyCompleted);
 
         assessment.Complete(request.TriageLevel, request.Summary);
         _assessmentRepository.Update(assessment);
@@ -163,12 +163,12 @@ public class CompleteAssessmentHandler
 
         _logger.LogInformation("Assessment completed: {Num}, Triage: {T}",
             assessment.AssessmentNumber, request.TriageLevel);
-        return new CompleteAssessmentResult(true, null);
+        return Result.Success(Unit.Value);
     }
 }
 
 public class ReviewAssessmentHandler
-    : IRequestHandler<ReviewAssessmentCommand, ReviewAssessmentResult>
+    : IRequestHandler<ReviewAssessmentCommand, Result<Unit>>
 {
     private readonly IAssessmentRepository _assessmentRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -178,12 +178,12 @@ public class ReviewAssessmentHandler
         IUnitOfWork unitOfWork, IAuditService auditService)
     { _assessmentRepository = assessmentRepository; _unitOfWork = unitOfWork; _auditService = auditService; }
 
-    public async Task<ReviewAssessmentResult> Handle(
+    public async Task<Result<Unit>> Handle(
         ReviewAssessmentCommand request, CancellationToken cancellationToken)
     {
         var assessment = await _assessmentRepository.GetByIdAsync(request.AssessmentId, cancellationToken);
         if (assessment == null)
-            return new ReviewAssessmentResult(false, $"Assessment not found: {request.AssessmentId}");
+            return Result.Failure<Unit>(DomainErrors.Assessment.NotFound(request.AssessmentId));
 
         assessment.MarkAsReviewed(request.ProviderId, request.Notes);
         _assessmentRepository.Update(assessment);
@@ -194,6 +194,6 @@ public class ReviewAssessmentHandler
             action: "REVIEW_ASSESSMENT", resourceType: "PatientAssessment",
             resourceId: assessment.Id, details: "Provider reviewed patient assessment",
             cancellationToken: cancellationToken);
-        return new ReviewAssessmentResult(true, null);
+        return Result.Success(Unit.Value);
     }
 }

@@ -191,3 +191,14 @@ public interface IAiFeedbackRepository
     Task<(int totalCount, int helpfulCount, double avgAccuracy)> GetStatsAsync(
         string? recommendationType = null, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// Provides current user context for audit trails.
+/// Implemented in the API layer using HttpContext.
+/// </summary>
+public interface ICurrentUserService
+{
+    string? UserId { get; }
+    string? Email { get; }
+    bool IsAuthenticated { get; }
+}

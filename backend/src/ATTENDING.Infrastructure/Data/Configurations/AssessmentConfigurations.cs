@@ -244,9 +244,15 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(x => x.NewValues)
             .HasColumnType("nvarchar(max)");
 
-        // Ignore base entity properties that don't apply
+        // Ignore base entity properties that don't apply to audit logs
         builder.Ignore(x => x.CreatedAt);
         builder.Ignore(x => x.ModifiedAt);
+        builder.Ignore(x => x.CreatedBy);
+        builder.Ignore(x => x.ModifiedBy);
+        builder.Ignore(x => x.RowVersion);
+        builder.Ignore(x => x.IsDeleted);
+        builder.Ignore(x => x.DeletedAt);
+        builder.Ignore(x => x.DeletedBy);
 
         // Indexes for HIPAA compliance queries
         builder.HasIndex(x => x.Timestamp)

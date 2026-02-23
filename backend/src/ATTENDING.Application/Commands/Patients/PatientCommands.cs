@@ -1,6 +1,11 @@
-﻿using MediatR;
+using MediatR;
+using ATTENDING.Domain.Common;
 
 namespace ATTENDING.Application.Commands.Patients;
+
+// ================================================================
+// Commands return Result<T> — no more ad-hoc bool+error records
+// ================================================================
 
 public record CreatePatientCommand(
     string MRN,
@@ -14,26 +19,22 @@ public record CreatePatientCommand(
     string? City,
     string? State,
     string? ZipCode,
-    string PrimaryLanguage) : IRequest<CreatePatientResult>;
+    string PrimaryLanguage) : IRequest<Result<PatientCreated>>;
 
-public record CreatePatientResult(
-    bool Success,
-    Guid? PatientId = null,
-    string? MRN = null,
-    string? Error = null);
+public record PatientCreated(Guid PatientId, string MRN);
 
 public record AddAllergyCommand(
     Guid PatientId,
     string Allergen,
     Domain.Enums.AllergySeverity Severity,
-    string? Reaction) : IRequest<AddAllergyResult>;
+    string? Reaction) : IRequest<Result<AllergyAdded>>;
 
-public record AddAllergyResult(bool Success, Guid? AllergyId = null, string? Error = null);
+public record AllergyAdded(Guid AllergyId);
 
 public record AddConditionCommand(
     Guid PatientId,
     string Code,
     string Name,
-    DateTime? OnsetDate) : IRequest<AddConditionResult>;
+    DateTime? OnsetDate) : IRequest<Result<ConditionAdded>>;
 
-public record AddConditionResult(bool Success, Guid? ConditionId = null, string? Error = null);
+public record ConditionAdded(Guid ConditionId);

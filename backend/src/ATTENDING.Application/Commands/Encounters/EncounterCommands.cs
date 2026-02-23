@@ -1,4 +1,5 @@
-﻿using MediatR;
+using MediatR;
+using ATTENDING.Domain.Common;
 
 namespace ATTENDING.Application.Commands.Encounters;
 
@@ -7,16 +8,10 @@ public record CreateEncounterCommand(
     Guid ProviderId,
     string Type,
     DateTime? ScheduledAt,
-    string? ChiefComplaint) : IRequest<CreateEncounterResult>;
+    string? ChiefComplaint) : IRequest<Result<EncounterCreated>>;
 
-public record CreateEncounterResult(
-    bool Success,
-    Guid? EncounterId = null,
-    string? EncounterNumber = null,
-    string? Error = null);
+public record EncounterCreated(Guid EncounterId, string EncounterNumber);
 
-public record CheckInEncounterCommand(Guid EncounterId) : IRequest<EncounterActionResult>;
-public record StartEncounterCommand(Guid EncounterId, string? ChiefComplaint) : IRequest<EncounterActionResult>;
-public record CompleteEncounterCommand(Guid EncounterId) : IRequest<EncounterActionResult>;
-
-public record EncounterActionResult(bool Success, string? Error = null);
+public record CheckInEncounterCommand(Guid EncounterId) : IRequest<Result<Unit>>;
+public record StartEncounterCommand(Guid EncounterId, string? ChiefComplaint) : IRequest<Result<Unit>>;
+public record CompleteEncounterCommand(Guid EncounterId) : IRequest<Result<Unit>>;

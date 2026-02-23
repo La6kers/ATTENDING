@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ATTENDING.Application.Commands.Encounters;
@@ -39,9 +39,7 @@ public class EncountersController : ControllerBase
     [HttpGet("patient/{patientId:guid}")]
     [ProducesResponseType(typeof(PagedResult<EncounterResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<EncounterResponse>>> GetByPatient(
-        Guid patientId,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        Guid patientId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var encounters = await _mediator.Send(new GetEncountersByPatientQuery(patientId));
         return Ok(encounters.Select(MapToResponse).ToPagedResult(page, pageSize));
@@ -54,67 +52,57 @@ public class EncountersController : ControllerBase
         var id = providerId ?? GetCurrentUserId();
         var encounters = await _mediator.Send(new GetTodaysScheduleQuery(id));
         var responses = encounters.Select(MapToResponse).ToList();
-        return Ok(new ScheduleResponse(
-            responses.AsReadOnly(),
-            responses.Count,
-            DateTime.UtcNow.ToString("yyyy-MM-dd")));
+        return Ok(new ScheduleResponse(responses.AsReadOnly(), responses.Count, DateTime.UtcNow.ToString("yyyy-MM-dd")));
     }
 
     [HttpGet("status/{status}")]
     [ProducesResponseType(typeof(PagedResult<EncounterResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<EncounterResponse>>> GetByStatus(
-        EncounterStatus status,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        EncounterStatus status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var encounters = await _mediator.Send(new GetEncountersByStatusQuery(status));
         return Ok(encounters.Select(MapToResponse).ToPagedResult(page, pageSize));
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(EncounterResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(EncounterCreated), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<EncounterResponse>> Create([FromBody] CreateEncounterRequest request)
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Create([FromBody] CreateEncounterRequest request)
     {
         var providerId = GetCurrentUserId();
         var result = await _mediator.Send(new CreateEncounterCommand(
             request.PatientId, providerId, request.Type, request.ScheduledAt, request.ChiefComplaint));
 
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed", Detail = result.Error, Status = 400 });
-
-        var encounter = await _mediator.Send(new GetEncounterByIdQuery(result.EncounterId!.Value));
-        return CreatedAtAction(nameof(GetById), new { id = result.EncounterId }, MapToResponse(encounter!));
+        return result.ToCreatedAtAction(nameof(GetById),
+            new { id = result.IsSuccess ? result.Value.EncounterId : Guid.Empty });
     }
 
     [HttpPost("{id:guid}/check-in")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckIn(Guid id)
     {
         var result = await _mediator.Send(new CheckInEncounterCommand(id));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed", Detail = result.Error, Status = 400 });
-        return NoContent();
+        return result.ToNoContent();
     }
 
     [HttpPost("{id:guid}/start")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Start(Guid id, [FromBody] StartEncounterRequest? request = null)
     {
         var result = await _mediator.Send(new StartEncounterCommand(id, request?.ChiefComplaint));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed", Detail = result.Error, Status = 400 });
-        return NoContent();
+        return result.ToNoContent();
     }
 
     [HttpPost("{id:guid}/complete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Complete(Guid id)
     {
         var result = await _mediator.Send(new CompleteEncounterCommand(id));
-        if (!result.Success)
-            return BadRequest(new ProblemDetails { Title = "Failed", Detail = result.Error, Status = 400 });
-        return NoContent();
+        return result.ToNoContent();
     }
 
     #region Helpers

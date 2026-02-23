@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -37,10 +37,10 @@ public class AssessmentHandlerTests : IClassFixture<DatabaseFixture>
             new StartAssessmentCommand(patient.Id, "Sore throat and fever"),
             CancellationToken.None);
 
-        result.Success.Should().BeTrue();
-        result.AssessmentId.Should().NotBeNull();
-        result.AssessmentNumber.Should().StartWith("ASM-");
-        result.IsEmergency.Should().BeFalse();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.AssessmentId.Should().NotBeEmpty();
+        result.Value.AssessmentNumber.Should().StartWith("ASM-");
+        result.Value.IsEmergency.Should().BeFalse();
     }
 
     [Fact]
@@ -60,9 +60,9 @@ public class AssessmentHandlerTests : IClassFixture<DatabaseFixture>
             new StartAssessmentCommand(patient.Id, "I want to kill myself"),
             CancellationToken.None);
 
-        result.Success.Should().BeTrue();
-        result.IsEmergency.Should().BeTrue();
-        result.HasRedFlags.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.IsEmergency.Should().BeTrue();
+        result.Value.HasRedFlags.Should().BeTrue();
     }
 
     [Fact]
@@ -80,8 +80,8 @@ public class AssessmentHandlerTests : IClassFixture<DatabaseFixture>
             new StartAssessmentCommand(Guid.NewGuid(), "Headache"),
             CancellationToken.None);
 
-        result.Success.Should().BeFalse();
-        result.Error.Should().Contain("Patient not found");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Message.Should().Contain("Patient");
     }
 
     [Fact]
@@ -107,9 +107,9 @@ public class AssessmentHandlerTests : IClassFixture<DatabaseFixture>
             Mock.Of<ILogger<CompleteAssessmentHandler>>());
 
         var completeResult = await completeHandler.Handle(
-            new CompleteAssessmentCommand(startResult.AssessmentId!.Value, TriageLevel.NonUrgent),
+            new CompleteAssessmentCommand(startResult.Value.AssessmentId, TriageLevel.NonUrgent),
             CancellationToken.None);
 
-        completeResult.Success.Should().BeTrue();
+        completeResult.IsSuccess.Should().BeTrue();
     }
 }

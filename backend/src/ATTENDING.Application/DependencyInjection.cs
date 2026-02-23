@@ -23,7 +23,8 @@ public static class DependencyInjection
         // FluentValidation
         services.AddValidatorsFromAssembly(assembly);
 
-        // Pipeline behaviors (order matters!)
+        // Pipeline behaviors (order matters — outermost first!)
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ConcurrencyExceptionBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));

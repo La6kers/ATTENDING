@@ -21,10 +21,17 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         // --------------------------------------------------------
+        // Audit Interceptor (auto-populates CreatedBy/ModifiedBy/DeletedBy)
+        // --------------------------------------------------------
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
+        // --------------------------------------------------------
         // Database
         // --------------------------------------------------------
-        services.AddDbContext<AttendingDbContext>(options =>
+        services.AddDbContext<AttendingDbContext>((sp, options) =>
         {
+            options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
+
             var connectionString = configuration.GetConnectionString("AttendingDb");
             options.UseSqlServer(connectionString, sqlOptions =>
             {
@@ -43,7 +50,7 @@ public static class DependencyInjection
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
             }
-        });
+        });  // end AddDbContext
 
         // Unit of Work
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AttendingDbContext>());
