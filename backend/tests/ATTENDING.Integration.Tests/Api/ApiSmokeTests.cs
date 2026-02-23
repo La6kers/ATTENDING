@@ -31,6 +31,8 @@ public class ApiSmokeTests : IClassFixture<AttendingWebApplicationFactory>
     [InlineData("/api/v1/laborders/critical")]
     [InlineData("/api/v1/assessments/pending-review")]
     [InlineData("/api/v1/assessments/red-flags")]
+    [InlineData("/api/v1/patients/search")]
+    [InlineData("/api/v1/encounters/schedule/today")]
     public async Task ListEndpoints_ShouldNotReturn500(string endpoint)
     {
         var response = await _client.GetAsync(endpoint);
@@ -46,3 +48,4 @@ public class ApiSmokeTests : IClassFixture<AttendingWebApplicationFactory>
         ((int)response.StatusCode).Should().BeLessThan(500);
     }
 }
+
