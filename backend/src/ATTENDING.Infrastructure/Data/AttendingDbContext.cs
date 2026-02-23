@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Interfaces;
@@ -53,6 +53,9 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     
     // Audit
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    
+    // AI
+    public DbSet<AiFeedback> AiFeedback => Set<AiFeedback>();
 
     #endregion
 
@@ -222,3 +225,4 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
     #endregion
 }
+

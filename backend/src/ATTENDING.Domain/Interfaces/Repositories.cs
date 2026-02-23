@@ -177,3 +177,17 @@ public class AuditEntry
     public Dictionary<string, object>? OldValues { get; set; }
     public Dictionary<string, object>? NewValues { get; set; }
 }
+
+/// <summary>
+/// AI Feedback repository interface
+/// </summary>
+public interface IAiFeedbackRepository
+{
+    Task<AiFeedback?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task AddAsync(AiFeedback feedback, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AiFeedback>> GetByProviderAsync(Guid providerId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AiFeedback>> GetByRequestIdAsync(string requestId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AiFeedback>> GetByTypeAsync(string recommendationType, int skip = 0, int take = 50, CancellationToken cancellationToken = default);
+    Task<(int totalCount, int helpfulCount, double avgAccuracy)> GetStatsAsync(
+        string? recommendationType = null, CancellationToken cancellationToken = default);
+}

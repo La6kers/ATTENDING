@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ATTENDING.Domain.Interfaces;
@@ -64,7 +64,7 @@ public static class DependencyInjection
         else
         {
             // Development fallback: in-memory distributed cache
-            // WARNING: Not suitable for production — single instance, no persistence
+            // WARNING: Not suitable for production â€” single instance, no persistence
             services.AddDistributedMemoryCache();
         }
 
@@ -81,6 +81,7 @@ public static class DependencyInjection
         services.AddScoped<IMedicationOrderRepository, MedicationOrderRepository>();
         services.AddScoped<IReferralRepository, ReferralRepository>();
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
+        services.AddScoped<IAiFeedbackRepository, AiFeedbackRepository>();
 
         // --------------------------------------------------------
         // Domain Services
@@ -92,6 +93,18 @@ public static class DependencyInjection
         // Infrastructure Services
         // --------------------------------------------------------
         services.AddScoped<IAuditService, AuditService>();
+
+        // --------------------------------------------------------
+        // AI Services
+        // --------------------------------------------------------
+        services.Configure<External.AI.ClinicalAiOptions>(opts =>
+            configuration.GetSection("ClinicalAi").Bind(opts));
+        services.AddHttpClient<External.AI.IClinicalAiService, External.AI.BioMistralClinicalAiService>(client =>
+        {
+            var aiOptions = configuration.GetSection("ClinicalAi").Get<External.AI.ClinicalAiOptions>();
+            client.BaseAddress = new Uri(aiOptions?.BaseUrl ?? "http://localhost:11434/api");
+            client.Timeout = TimeSpan.FromSeconds(aiOptions?.TimeoutSeconds ?? 30);
+        });
 
         return services;
     }
@@ -123,3 +136,5 @@ public static class DependencyInjection
         return services;
     }
 }
+
+
