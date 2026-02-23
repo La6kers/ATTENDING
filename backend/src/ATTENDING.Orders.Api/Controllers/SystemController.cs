@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Orders.Api.Controllers;
 
@@ -13,11 +14,16 @@ public class SystemController : ControllerBase
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<SystemController> _logger;
+    private readonly IClinicalCacheService _cacheService;
 
-    public SystemController(IConfiguration configuration, ILogger<SystemController> logger)
+    public SystemController(
+        IConfiguration configuration,
+        ILogger<SystemController> logger,
+        IClinicalCacheService cacheService)
     {
         _configuration = configuration;
         _logger = logger;
+        _cacheService = cacheService;
     }
 
     /// <summary>
@@ -46,6 +52,73 @@ public class SystemController : ControllerBase
     public ActionResult<PingResponse> Ping()
     {
         return Ok(new PingResponse("pong", DateTime.UtcNow));
+    }
+
+    /// <summary>
+    /// Get cache statistics (hit rate, savings estimates)
+    /// </summary>
+    [HttpGet("cache/stats")]
+    [ProducesResponseType(typeof(CacheStatsResponse), StatusCodes.Status200OK)]
+    public ActionResult<CacheStatsResponse> GetCacheStats()
+    {
+        var stats = _cacheService.GetStatistics();
+        var hasRedis = !string.IsNullOrWhiteSpace(_configuration.GetConnectionString("Redis"));
+
+        return Ok(new CacheStatsResponse(
+            Hits: stats.Hits,
+            Misses: stats.Misses,
+            HitRatePercent: Math.Round(stats.HitRate, 2),
+            TotalQueries: stats.TotalQueries,
+            EstimatedSavingsUsd: stats.EstimatedSavingsUsd,
+            Backend: hasRedis ? "redis" : "memory"
+        ));
+    }
+
+    /// <summary>
+    /// Reset cache statistics counters
+    /// </summary>
+    [HttpPost("cache/stats/reset")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public IActionResult ResetCacheStats()
+    {
+        _cacheService.ResetStatistics();
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Invalidate cache entries by category
+    /// </summary>
+    [HttpPost("cache/invalidate/{category}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> InvalidateCache(string category)
+    {
+        var validCategories = new[] { "diff", "drug", "labs", "all" };
+        if (!validCategories.Contains(category, StringComparer.OrdinalIgnoreCase))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid cache category",
+                Detail = $"Valid categories: {string.Join(", ", validCategories)}",
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+
+        if (category.Equals("all", StringComparison.OrdinalIgnoreCase))
+        {
+            await _cacheService.RemoveByPrefixAsync("diff");
+            await _cacheService.RemoveByPrefixAsync("drug");
+            await _cacheService.RemoveByPrefixAsync("labs");
+        }
+        else
+        {
+            await _cacheService.RemoveByPrefixAsync(category.ToLowerInvariant());
+        }
+
+        _logger.LogInformation("Cache invalidated for category: {Category}", category);
+        return NoContent();
     }
 
     /// <summary>
@@ -92,6 +165,17 @@ public record VersionInfo(
 /// Ping response
 /// </summary>
 public record PingResponse(string Status, DateTime Timestamp);
+
+/// <summary>
+/// Cache statistics response
+/// </summary>
+public record CacheStatsResponse(
+    long Hits,
+    long Misses,
+    double HitRatePercent,
+    long TotalQueries,
+    decimal EstimatedSavingsUsd,
+    string Backend);
 
 /// <summary>
 /// Clinical constants for reference data

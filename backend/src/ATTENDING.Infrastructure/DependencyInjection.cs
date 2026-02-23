@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ATTENDING.Domain.Interfaces;
 using ATTENDING.Domain.Services;
+using ATTENDING.Infrastructure.Caching;
 using ATTENDING.Infrastructure.Data;
 using ATTENDING.Infrastructure.Repositories;
 using ATTENDING.Infrastructure.Services;
@@ -18,7 +19,9 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // --------------------------------------------------------
         // Database
+        // --------------------------------------------------------
         services.AddDbContext<AttendingDbContext>(options =>
         {
             var connectionString = configuration.GetConnectionString("AttendingDb");
@@ -42,7 +45,32 @@ public static class DependencyInjection
         // Unit of Work
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AttendingDbContext>());
 
+        // --------------------------------------------------------
+        // Distributed Cache (Redis or in-memory fallback)
+        // --------------------------------------------------------
+        var redisConnectionString = configuration.GetConnectionString("Redis");
+
+        if (!string.IsNullOrWhiteSpace(redisConnectionString))
+        {
+            // Production/staging: use Redis
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnectionString;
+                options.InstanceName = "attending:";
+            });
+        }
+        else
+        {
+            // Development fallback: in-memory distributed cache
+            // WARNING: Not suitable for production — single instance, no persistence
+            services.AddDistributedMemoryCache();
+        }
+
+        services.AddSingleton<IClinicalCacheService, RedisClinicalCacheService>();
+
+        // --------------------------------------------------------
         // Repositories
+        // --------------------------------------------------------
         services.AddScoped<IPatientRepository, PatientRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IEncounterRepository, EncounterRepository>();
@@ -52,11 +80,15 @@ public static class DependencyInjection
         services.AddScoped<IReferralRepository, ReferralRepository>();
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
 
+        // --------------------------------------------------------
         // Domain Services
+        // --------------------------------------------------------
         services.AddScoped<IRedFlagEvaluator, RedFlagEvaluator>();
         services.AddScoped<IDrugInteractionService, DrugInteractionService>();
 
+        // --------------------------------------------------------
         // Infrastructure Services
+        // --------------------------------------------------------
         services.AddScoped<IAuditService, AuditService>();
 
         return services;
@@ -69,12 +101,22 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        services.AddHealthChecks()
+        var healthChecks = services.AddHealthChecks()
             .AddDbContextCheck<AttendingDbContext>("database")
             .AddSqlServer(
                 configuration.GetConnectionString("AttendingDb")!,
                 name: "sqlserver",
                 tags: new[] { "db", "sql", "sqlserver" });
+
+        // Add Redis health check if configured
+        var redisConnectionString = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrWhiteSpace(redisConnectionString))
+        {
+            healthChecks.AddRedis(
+                redisConnectionString,
+                name: "redis",
+                tags: new[] { "cache", "redis" });
+        }
 
         return services;
     }
