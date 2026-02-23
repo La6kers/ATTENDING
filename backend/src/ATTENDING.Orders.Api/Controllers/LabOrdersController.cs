@@ -7,6 +7,7 @@ using ATTENDING.Application.Queries.LabOrders;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
+using ATTENDING.Orders.Api.Hubs;
 
 namespace ATTENDING.Orders.Api.Controllers;
 
@@ -20,11 +21,16 @@ namespace ATTENDING.Orders.Api.Controllers;
 public class LabOrdersController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IClinicalNotificationService _notifications;
     private readonly ILogger<LabOrdersController> _logger;
 
-    public LabOrdersController(IMediator mediator, ILogger<LabOrdersController> logger)
+    public LabOrdersController(
+        IMediator mediator,
+        IClinicalNotificationService notifications,
+        ILogger<LabOrdersController> logger)
     {
         _mediator = mediator;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -316,9 +322,37 @@ public class LabOrdersController : ControllerBase
             });
         }
 
-        return Created($"/api/v1/laborders/{id}", new AddResultResponse(
-            result.ResultId!.Value,
-            result.IsCritical));
+        var response = new AddResultResponse(result.ResultId!.Value, result.IsCritical);
+
+        // Fire real-time notification for critical results
+        if (result.IsCritical)
+        {
+            try
+            {
+                var order = await _mediator.Send(new GetLabOrderByIdQuery(id));
+                if (order != null)
+                {
+                    await _notifications.NotifyCriticalResultAsync(new CriticalResultNotification(
+                        PatientId: order.PatientId,
+                        PatientName: order.Patient?.FullName ?? "Unknown",
+                        PatientMrn: order.Patient?.MRN ?? "",
+                        LabOrderId: id,
+                        OrderNumber: order.OrderNumber,
+                        TestName: order.TestName,
+                        Value: request.Value,
+                        Unit: request.Unit,
+                        ReferenceRange: request.ReferenceRangeText,
+                        ResultedAt: DateTime.UtcNow,
+                        OrderingProviderName: order.OrderingProvider?.FullName));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send critical result notification for order {OrderId}", id);
+            }
+        }
+
+        return Created($"/api/v1/laborders/{id}", response);
     }
 
     #region Private Helpers

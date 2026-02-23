@@ -5,6 +5,7 @@ using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Interfaces;
 using ATTENDING.Domain.Services;
+using ATTENDING.Orders.Api.Hubs;
 
 namespace ATTENDING.Orders.Api.Controllers;
 
@@ -22,6 +23,7 @@ public class AssessmentsController : ControllerBase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IRedFlagEvaluator _redFlagEvaluator;
     private readonly IAuditService _auditService;
+    private readonly IClinicalNotificationService _notifications;
     private readonly ILogger<AssessmentsController> _logger;
 
     public AssessmentsController(
@@ -30,6 +32,7 @@ public class AssessmentsController : ControllerBase
         IUnitOfWork unitOfWork,
         IRedFlagEvaluator redFlagEvaluator,
         IAuditService auditService,
+        IClinicalNotificationService notifications,
         ILogger<AssessmentsController> logger)
     {
         _repository = repository;
@@ -37,6 +40,7 @@ public class AssessmentsController : ControllerBase
         _unitOfWork = unitOfWork;
         _redFlagEvaluator = redFlagEvaluator;
         _auditService = auditService;
+        _notifications = notifications;
         _logger = logger;
     }
 
@@ -138,12 +142,42 @@ public class AssessmentsController : ControllerBase
             "Assessment started: {AssessmentNumber} for Patient {PatientId}, RedFlags: {HasRedFlags}, Emergency: {IsEmergency}",
             assessment.AssessmentNumber, request.PatientId, assessment.HasRedFlags, assessment.IsEmergency);
 
-        // Return immediately if emergency detected
-        if (assessment.IsEmergency)
+        // Fire real-time notifications
+        try
         {
-            _logger.LogWarning(
-                "EMERGENCY DETECTED in assessment {AssessmentNumber}: {Reason}",
-                assessment.AssessmentNumber, assessment.EmergencyReason);
+            await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
+                AssessmentId: assessment.Id,
+                AssessmentNumber: assessment.AssessmentNumber,
+                PatientId: patient.Id,
+                PatientName: patient.FullName,
+                PatientMrn: patient.MRN,
+                PatientAge: patient.Age,
+                ChiefComplaint: assessment.ChiefComplaint,
+                TriageLevel: assessment.TriageLevel?.ToString(),
+                HasRedFlags: assessment.HasRedFlags,
+                StartedAt: assessment.StartedAt));
+
+            if (assessment.IsEmergency)
+            {
+                _logger.LogWarning(
+                    "EMERGENCY DETECTED in assessment {AssessmentNumber}: {Reason}",
+                    assessment.AssessmentNumber, assessment.EmergencyReason);
+
+                await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
+                    AssessmentId: assessment.Id,
+                    AssessmentNumber: assessment.AssessmentNumber,
+                    PatientId: patient.Id,
+                    PatientName: patient.FullName,
+                    PatientMrn: patient.MRN,
+                    ChiefComplaint: assessment.ChiefComplaint,
+                    EmergencyReason: assessment.EmergencyReason ?? "Red flags detected",
+                    RedFlagCategories: redFlagEvaluation.RedFlags.Select(f => f.Category).ToList(),
+                    DetectedAt: DateTime.UtcNow));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send assessment notifications for {AssessmentNumber}", assessment.AssessmentNumber);
         }
 
         return CreatedAtAction(nameof(GetById), new { id = assessment.Id }, MapToResponse(assessment));
@@ -178,7 +212,7 @@ public class AssessmentsController : ControllerBase
         _repository.Update(assessment);
         await _unitOfWork.SaveChangesAsync();
 
-        // Log if new red flags detected
+        // Fire real-time notifications for red flags / emergency
         if (redFlagEvaluation.HasRedFlags)
         {
             _logger.LogWarning(
@@ -186,12 +220,42 @@ public class AssessmentsController : ControllerBase
                 assessment.AssessmentNumber,
                 string.Join(", ", redFlagEvaluation.RedFlags.Select(f => f.Category)));
 
-            // Check if it became emergency
-            if (redFlagEvaluation.IsEmergency)
+            try
             {
-                _logger.LogCritical(
-                    "EMERGENCY ESCALATION in assessment {AssessmentNumber}: {Reason}",
-                    assessment.AssessmentNumber, assessment.EmergencyReason);
+                foreach (var flag in redFlagEvaluation.RedFlags)
+                {
+                    await _notifications.NotifyRedFlagDetectedAsync(new RedFlagNotification(
+                        AssessmentId: assessment.Id,
+                        PatientId: assessment.PatientId,
+                        PatientName: assessment.Patient?.FullName ?? "Unknown",
+                        Category: flag.Category,
+                        MatchedKeyword: flag.MatchedKeyword,
+                        Severity: flag.Severity.ToString(),
+                        ClinicalReason: flag.ClinicalReason,
+                        DetectedAt: DateTime.UtcNow));
+                }
+
+                if (redFlagEvaluation.IsEmergency)
+                {
+                    _logger.LogCritical(
+                        "EMERGENCY ESCALATION in assessment {AssessmentNumber}: {Reason}",
+                        assessment.AssessmentNumber, assessment.EmergencyReason);
+
+                    await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
+                        AssessmentId: assessment.Id,
+                        AssessmentNumber: assessment.AssessmentNumber,
+                        PatientId: assessment.PatientId,
+                        PatientName: assessment.Patient?.FullName ?? "Unknown",
+                        PatientMrn: assessment.Patient?.MRN ?? "",
+                        ChiefComplaint: assessment.ChiefComplaint,
+                        EmergencyReason: assessment.EmergencyReason ?? "Red flags detected",
+                        RedFlagCategories: redFlagEvaluation.RedFlags.Select(f => f.Category).ToList(),
+                        DetectedAt: DateTime.UtcNow));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send red flag notifications for assessment {Id}", assessment.Id);
             }
         }
 
