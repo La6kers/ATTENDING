@@ -1,4 +1,4 @@
-using HealthChecks.UI.Client;
+﻿using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -64,7 +64,7 @@ var devBypass = builder.Configuration.GetValue<bool>("Authentication:DevBypass")
 
 if (devBypass && builder.Environment.IsDevelopment())
 {
-    Log.Warning("⚠️  Authentication bypass enabled — all requests treated as authenticated (dev only)");
+    Log.Warning("âš ï¸  Authentication bypass enabled â€” all requests treated as authenticated (dev only)");
     
     builder.Services.AddAuthentication("DevBypass")
         .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, DevAuthHandler>(
@@ -112,6 +112,9 @@ builder.Services.AddCors(options =>
             .AllowCredentials(); // Required for SignalR
     });
 });
+
+// Rate limiting
+builder.Services.AddAttendingRateLimiting();
 
 // Add response caching
 builder.Services.AddResponseCaching();
@@ -178,7 +181,7 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Configure middleware pipeline
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
@@ -190,6 +193,15 @@ if (app.Environment.IsDevelopment())
         c.DisplayRequestDuration();
     });
 }
+
+// Security headers (first in pipeline)
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
+// Correlation ID
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+// API version header
+app.UseMiddleware<ApiVersionHeaderMiddleware>();
 
 // Global exception handling
 app.UseMiddleware<ExceptionMiddleware>();
@@ -216,6 +228,9 @@ app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Rate limiting
+app.UseRateLimiter();
 
 // Audit middleware (after auth)
 app.UseMiddleware<AuditMiddleware>();
@@ -266,7 +281,7 @@ finally
 }
 
 // ============================================================
-// Dev authentication handler — auto-authenticates all requests
+// Dev authentication handler â€” auto-authenticates all requests
 // ============================================================
 public class DevAuthHandler : Microsoft.AspNetCore.Authentication.AuthenticationHandler<
     Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>
@@ -299,3 +314,7 @@ public class DevAuthHandler : Microsoft.AspNetCore.Authentication.Authentication
 
 // Expose Program for WebApplicationFactory in integration tests
 public partial class Program { }
+
+
+
+

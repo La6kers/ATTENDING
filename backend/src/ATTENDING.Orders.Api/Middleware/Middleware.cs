@@ -1,8 +1,10 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Orders.Api.Middleware;
@@ -263,5 +265,156 @@ public class AuditMiddleware
         }
 
         return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+}
+
+
+/// <summary>
+/// Adds a correlation ID to every request for distributed tracing
+/// </summary>
+public class CorrelationIdMiddleware
+{
+    private const string CorrelationIdHeader = "X-Correlation-Id";
+    private readonly RequestDelegate _next;
+
+    public CorrelationIdMiddleware(RequestDelegate next)
+    {
+        _next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        if (!context.Request.Headers.TryGetValue(CorrelationIdHeader, out var correlationId) 
+            || string.IsNullOrWhiteSpace(correlationId))
+        {
+            correlationId = Guid.NewGuid().ToString("N");
+        }
+
+        context.Items["CorrelationId"] = correlationId.ToString();
+        context.Response.Headers[CorrelationIdHeader] = correlationId.ToString();
+
+        using (Serilog.Context.LogContext.PushProperty("CorrelationId", correlationId.ToString()))
+        {
+            await _next(context);
+        }
+    }
+}
+
+/// <summary>
+/// ASP.NET Core rate limiting configuration
+/// </summary>
+public static class RateLimitingConfiguration
+{
+    public static IServiceCollection AddAttendingRateLimiting(this IServiceCollection services)
+    {
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            // Global policy: 100 requests per minute per IP
+            options.AddFixedWindowLimiter("standard", limiterOptions =>
+            {
+                limiterOptions.PermitLimit = 100;
+                limiterOptions.Window = TimeSpan.FromMinutes(1);
+                limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+                limiterOptions.QueueLimit = 5;
+            });
+
+            // AI endpoints: 20 requests per minute
+            options.AddFixedWindowLimiter("ai", limiterOptions =>
+            {
+                limiterOptions.PermitLimit = 20;
+                limiterOptions.Window = TimeSpan.FromMinutes(1);
+                limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+                limiterOptions.QueueLimit = 2;
+            });
+
+            // Auth endpoints: 10 per minute (brute force protection)
+            options.AddFixedWindowLimiter("auth", limiterOptions =>
+            {
+                limiterOptions.PermitLimit = 10;
+                limiterOptions.Window = TimeSpan.FromMinutes(1);
+                limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+                limiterOptions.QueueLimit = 0;
+            });
+
+            // Global fallback by IP
+            options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            {
+                var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                return System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(clientIp,
+                    _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 200,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 10
+                    });
+            });
+
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                context.HttpContext.Response.ContentType = "application/problem+json";
+                var problem = new Microsoft.AspNetCore.Mvc.ProblemDetails
+                {
+                    Title = "Too Many Requests",
+                    Status = StatusCodes.Status429TooManyRequests,
+                    Detail = "Rate limit exceeded. Please try again later.",
+                    Instance = context.HttpContext.Request.Path
+                };
+
+                if (context.Lease.TryGetMetadata(System.Threading.RateLimiting.MetadataName.RetryAfter, out var retryAfter))
+                {
+                    context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+                    problem.Extensions["retryAfter"] = (int)retryAfter.TotalSeconds;
+                }
+
+                await context.HttpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
+            };
+        });
+
+        return services;
+    }
+}
+
+
+/// <summary>
+/// Adds API version header to all responses
+/// </summary>
+public class ApiVersionHeaderMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public ApiVersionHeaderMiddleware(RequestDelegate next) => _next = next;
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        context.Response.Headers["X-Api-Version"] = "1.0";
+        context.Response.Headers["X-Powered-By"] = "ATTENDING-AI";
+        await _next(context);
+    }
+}
+
+
+/// <summary>
+/// Adds security headers to all responses (OWASP recommended)
+/// </summary>
+public class SecurityHeadersMiddleware
+{
+    private readonly RequestDelegate _next;
+
+    public SecurityHeadersMiddleware(RequestDelegate next) => _next = next;
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["X-Frame-Options"] = "DENY";
+        context.Response.Headers["X-XSS-Protection"] = "0"; // Modern approach: rely on CSP instead
+        context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+        context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'";
+        context.Response.Headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+        
+        await _next(context);
     }
 }
