@@ -595,6 +595,16 @@ export const assessmentsApi = {
     apiClient.post(`/assessments/${id}/review`, { notes }),
 };
 
+// Cache Stats Types
+export interface CacheStatsResponse {
+  hits: number;
+  misses: number;
+  hitRatePercent: number;
+  totalQueries: number;
+  estimatedSavingsUsd: number;
+  backend: 'redis' | 'memory';
+}
+
 export const systemApi = {
   getVersion: () => 
     apiClient.get<{ version: string; apiVersion: string; environment: string; buildDate: string }>(
@@ -612,6 +622,15 @@ export const systemApi = {
   
   getImagingModalities: () => 
     apiClient.get<string[]>('/system/imaging-modalities'),
+
+  getCacheStats: () =>
+    apiClient.get<CacheStatsResponse>('/system/cache/stats'),
+
+  resetCacheStats: () =>
+    apiClient.post<void>('/system/cache/stats/reset'),
+
+  invalidateCache: (category: 'diff' | 'drug' | 'labs' | 'all') =>
+    apiClient.post<void>(`/system/cache/invalidate/${category}`),
 };
 
 export default {

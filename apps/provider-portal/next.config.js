@@ -28,14 +28,30 @@ const nextConfig = {
   },
 
   // ============================================================
-  // API Versioning
-  // /api/v1/* rewrites to /api/* for backward-compatible versioning.
-  // When v2 routes are needed, create pages/api/v2/ directory.
-  // Unversioned /api/* continues to work during migration.
+  // API Rewrites & .NET Backend Proxy
   // ============================================================
   async rewrites() {
+    const dotnetBackendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+    const dotnetBaseUrl = dotnetBackendUrl.replace(/\/api\/v1$/, '');
+
     return {
       beforeFiles: [
+        // ============================================================
+        // .NET Backend Proxy (development)
+        // Proxies clinical orders API calls through Next.js to avoid
+        // CORS issues during local development. In production, the
+        // frontend talks directly to the .NET API behind a reverse
+        // proxy (Azure Front Door / API Management).
+        // ============================================================
+        {
+          source: '/dotnet-api/:path*',
+          destination: `${dotnetBaseUrl}/api/v1/:path*`,
+        },
+        // SignalR hub proxy
+        {
+          source: '/hubs/:path*',
+          destination: `${dotnetBaseUrl}/hubs/:path*`,
+        },
         // /api/v1/patients → /api/patients (and all sub-paths)
         {
           source: '/api/v1/:path*',
@@ -54,12 +70,10 @@ const nextConfig = {
     const isProduction = process.env.NODE_ENV === 'production';
 
     // Base headers applied to all routes
-    // NOTE: CSP is set by middleware.ts (per-request nonce). These are
-    // additional headers that don't require dynamic values.
     const securityHeaders = [
       { key: 'X-Frame-Options', value: 'DENY' },
       { key: 'X-Content-Type-Options', value: 'nosniff' },
-      { key: 'X-XSS-Protection', value: '0' }, // Disabled; CSP replaces it
+      { key: 'X-XSS-Protection', value: '0' },
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=(self), payment=()' },
     ];
@@ -73,12 +87,10 @@ const nextConfig = {
 
     return [
       {
-        // Apply to all routes
         source: '/:path*',
         headers: securityHeaders,
       },
       {
-        // API routes: no-cache for PHI protection + version header
         source: '/api/:path*',
         headers: [
           ...securityHeaders,
@@ -88,7 +100,6 @@ const nextConfig = {
         ],
       },
       {
-        // Versioned API routes get the same headers
         source: '/api/v1/:path*',
         headers: [
           ...securityHeaders,

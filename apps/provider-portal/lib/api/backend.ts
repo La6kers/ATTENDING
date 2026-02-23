@@ -27,7 +27,11 @@ export type {
   AssessmentSummary,
   HpiResponse,
   RedFlagResponse,
+  CacheStatsResponse,
 } from './backendClient';
+
+// Auth Token Bridge
+export { useAuthTokenBridge, setApiToken } from './useAuthTokenBridge';
 
 // Notification Client
 export { 
@@ -86,6 +90,10 @@ export {
   useSystemVersion,
   useLabCategories,
   useImagingModalities,
+  // Cache
+  useCacheStats,
+  useResetCacheStats,
+  useInvalidateCache,
   // Utilities
   usePolling,
   useCriticalAlertPolling,

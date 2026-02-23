@@ -285,6 +285,20 @@ export function useImagingModalities() {
   return useQuery(() => api.system.getImagingModalities(), []);
 }
 
+export function useCacheStats() {
+  return useQuery(() => api.system.getCacheStats(), []);
+}
+
+export function useResetCacheStats() {
+  return useMutation(() => api.system.resetCacheStats());
+}
+
+export function useInvalidateCache() {
+  return useMutation((category: 'diff' | 'drug' | 'labs' | 'all') =>
+    api.system.invalidateCache(category)
+  );
+}
+
 // =============================================================================
 // POLLING HOOK (for real-time updates without WebSocket)
 // =============================================================================
@@ -387,6 +401,10 @@ export default {
   useSystemVersion,
   useLabCategories,
   useImagingModalities,
+  // Cache
+  useCacheStats,
+  useResetCacheStats,
+  useInvalidateCache,
   // Utilities
   usePolling,
   useCriticalAlertPolling,
