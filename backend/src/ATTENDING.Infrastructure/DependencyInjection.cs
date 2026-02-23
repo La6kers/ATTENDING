@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ATTENDING.Application.Interfaces;
 using ATTENDING.Domain.Interfaces;
 using ATTENDING.Domain.Services;
 using ATTENDING.Infrastructure.Caching;
@@ -93,6 +94,8 @@ public static class DependencyInjection
         // Infrastructure Services
         // --------------------------------------------------------
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
 
         // --------------------------------------------------------
         // AI Services
@@ -136,5 +139,6 @@ public static class DependencyInjection
         return services;
     }
 }
+
 
 

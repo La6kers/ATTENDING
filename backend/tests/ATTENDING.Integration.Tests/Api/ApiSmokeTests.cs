@@ -34,6 +34,14 @@ public class ApiSmokeTests : IClassFixture<AttendingWebApplicationFactory>
     [InlineData("/api/v1/patients/search")]
     [InlineData("/api/v1/encounters/schedule/today")]
     [InlineData("/api/v1/ai/feedback/stats")]
+    [InlineData("/api/v1/admin/dashboard")]
+    [InlineData("/api/v1/admin/features")]
+    [InlineData("/api/v1/admin/alerts")]
+    [InlineData("/api/v1/admin/rate-limits")]
+    [InlineData("/api/v1/analytics/outcomes")]
+    [InlineData("/api/v1/analytics/quality/dashboard")]
+    [InlineData("/api/v1/analytics/quality/care-gaps")]
+    [InlineData("/api/v1/analytics/quality/measures")]
     [InlineData("/api/v1/ai/feedback/history")]
     public async Task ListEndpoints_ShouldNotReturn500(string endpoint)
     {
@@ -50,5 +58,6 @@ public class ApiSmokeTests : IClassFixture<AttendingWebApplicationFactory>
         ((int)response.StatusCode).Should().BeLessThan(500);
     }
 }
+
 
 

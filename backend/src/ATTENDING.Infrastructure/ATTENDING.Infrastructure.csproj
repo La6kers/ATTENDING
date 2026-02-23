@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ATTENDING.Domain\ATTENDING.Domain.csproj" />
+    <ProjectReference Include="..\ATTENDING.Application\ATTENDING.Application.csproj" />
   </ItemGroup>
 
 </Project>
