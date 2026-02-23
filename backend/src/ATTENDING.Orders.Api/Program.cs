@@ -296,3 +296,6 @@ public class DevAuthHandler : Microsoft.AspNetCore.Authentication.Authentication
         return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(ticket));
     }
 }
+
+// Expose Program for WebApplicationFactory in integration tests
+public partial class Program { }

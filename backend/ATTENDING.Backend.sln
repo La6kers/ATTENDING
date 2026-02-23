@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -18,6 +18,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{SRC-GUID-0000-0000-000000000000}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{TEST-GUID-0000-0000-000000000000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATTENDING.Integration.Tests", "tests\ATTENDING.Integration.Tests\ATTENDING.Integration.Tests.csproj", "{D7EAF750-5873-45F9-9F25-0D8486DCCA96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +51,10 @@ Global
 		{A7B8C9D0-E1F2-3456-0123-567890123456}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7B8C9D0-E1F2-3456-0123-567890123456}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7B8C9D0-E1F2-3456-0123-567890123456}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7EAF750-5873-45F9-9F25-0D8486DCCA96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7EAF750-5873-45F9-9F25-0D8486DCCA96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7EAF750-5873-45F9-9F25-0D8486DCCA96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7EAF750-5873-45F9-9F25-0D8486DCCA96}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,5 +66,6 @@ Global
 		{E5F6A7B8-C9D0-1234-EF01-345678901234} = {SRC-GUID-0000-0000-000000000000}
 		{F6A7B8C9-D0E1-2345-F012-456789012345} = {SRC-GUID-0000-0000-000000000000}
 		{A7B8C9D0-E1F2-3456-0123-567890123456} = {TEST-GUID-0000-0000-000000000000}
+		{D7EAF750-5873-45F9-9F25-0D8486DCCA96} = {TEST-GUID-0000-0000-000000000000}
 	EndGlobalSection
 EndGlobal
