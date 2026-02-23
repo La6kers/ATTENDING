@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Interfaces;
+using ATTENDING.Domain.Events;
 
 namespace ATTENDING.Infrastructure.Data;
 
@@ -11,10 +12,19 @@ namespace ATTENDING.Infrastructure.Data;
 public class AttendingDbContext : DbContext, IUnitOfWork
 {
     private IDbContextTransaction? _currentTransaction;
+    private readonly IDomainEventDispatcher? _domainEventDispatcher;
 
     public AttendingDbContext(DbContextOptions<AttendingDbContext> options) 
         : base(options)
     {
+    }
+
+    public AttendingDbContext(
+        DbContextOptions<AttendingDbContext> options,
+        IDomainEventDispatcher? domainEventDispatcher)
+        : base(options)
+    {
+        _domainEventDispatcher = domainEventDispatcher;
     }
 
     #region DbSets
@@ -82,9 +92,27 @@ public class AttendingDbContext : DbContext, IUnitOfWork
             .Select(e => e.Entity)
             .ToList();
 
-        // Domain events could be dispatched here to an event bus
-        // For now, we just clear them after save
+        // Collect all domain events before save
+        var allDomainEvents = new List<DomainEvent>();
+        foreach (var entity in domainEntities)
+        {
+            switch (entity)
+            {
+                case LabOrder lo: allDomainEvents.AddRange(lo.DomainEvents); break;
+                case ImagingOrder io: allDomainEvents.AddRange(io.DomainEvents); break;
+                case MedicationOrder mo: allDomainEvents.AddRange(mo.DomainEvents); break;
+                case Referral r: allDomainEvents.AddRange(r.DomainEvents); break;
+                case PatientAssessment pa: allDomainEvents.AddRange(pa.DomainEvents); break;
+            }
+        }
+
         var result = await base.SaveChangesAsync(cancellationToken);
+
+        // Dispatch domain events after successful save
+        if (_domainEventDispatcher != null && allDomainEvents.Count > 0)
+        {
+            await _domainEventDispatcher.DispatchEventsAsync(allDomainEvents, cancellationToken);
+        }
 
         // Clear domain events after successful save
         foreach (var entity in domainEntities)

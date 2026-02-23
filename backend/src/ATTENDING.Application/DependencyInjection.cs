@@ -3,6 +3,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using ATTENDING.Application.Behaviors;
+using ATTENDING.Application.Events;
+using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Application;
 
@@ -26,6 +28,9 @@ public static class DependencyInjection
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+
+        // Domain event dispatcher
+        services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
 
         return services;
     }

@@ -117,6 +117,14 @@ public interface IReferralRepository : IRepository<Referral>
 }
 
 /// <summary>
+/// Dispatches domain events collected from aggregate roots
+/// </summary>
+public interface IDomainEventDispatcher
+{
+    Task DispatchEventsAsync(IEnumerable<Events.DomainEvent> domainEvents, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
 /// Assessment repository interface
 /// </summary>
 public interface IAssessmentRepository : IRepository<PatientAssessment>
