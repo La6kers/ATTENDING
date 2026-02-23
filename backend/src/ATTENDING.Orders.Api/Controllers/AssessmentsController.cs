@@ -6,6 +6,7 @@ using ATTENDING.Application.Queries.Assessments;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
+using ATTENDING.Orders.Api.Extensions;
 using ATTENDING.Orders.Api.Hubs;
 
 namespace ATTENDING.Orders.Api.Controllers;
@@ -49,17 +50,21 @@ public class AssessmentsController : ControllerBase
     }
 
     [HttpGet("pending-review")]
-    public async Task<ActionResult<IEnumerable<AssessmentSummaryResponse>>> GetPendingReview()
+    public async Task<ActionResult<PagedResult<AssessmentSummaryResponse>>> GetPendingReview(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var assessments = await _mediator.Send(new GetPendingReviewAssessmentsQuery());
-        return Ok(assessments.Select(MapToSummary));
+        return Ok(assessments.Select(MapToSummary).ToPagedResult(page, pageSize));
     }
 
     [HttpGet("red-flags")]
-    public async Task<ActionResult<IEnumerable<AssessmentSummaryResponse>>> GetWithRedFlags()
+    public async Task<ActionResult<PagedResult<AssessmentSummaryResponse>>> GetWithRedFlags(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var assessments = await _mediator.Send(new GetRedFlagAssessmentsQuery());
-        return Ok(assessments.Select(MapToSummary));
+        return Ok(assessments.Select(MapToSummary).ToPagedResult(page, pageSize));
     }
 
     [HttpPost]

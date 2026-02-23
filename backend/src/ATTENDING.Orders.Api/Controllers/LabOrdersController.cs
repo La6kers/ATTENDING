@@ -7,6 +7,7 @@ using ATTENDING.Application.Queries.LabOrders;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
+using ATTENDING.Orders.Api.Extensions;
 using ATTENDING.Orders.Api.Hubs;
 
 namespace ATTENDING.Orders.Api.Controllers;
@@ -128,11 +129,13 @@ public class LabOrdersController : ControllerBase
     /// </summary>
     /// <returns>List of pending lab orders</returns>
     [HttpGet("pending")]
-    [ProducesResponseType(typeof(IEnumerable<LabOrderResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<LabOrderResponse>>> GetPending()
+    [ProducesResponseType(typeof(PagedResult<LabOrderResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<LabOrderResponse>>> GetPending(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var result = await _mediator.Send(new GetPendingLabOrdersQuery());
-        return Ok(result.Select(MapToResponse));
+        return Ok(result.Select(MapToResponse).ToPagedResult(page, pageSize));
     }
 
     /// <summary>
@@ -140,11 +143,13 @@ public class LabOrdersController : ControllerBase
     /// </summary>
     /// <returns>List of lab orders with critical results</returns>
     [HttpGet("critical")]
-    [ProducesResponseType(typeof(IEnumerable<LabOrderResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<LabOrderResponse>>> GetCritical()
+    [ProducesResponseType(typeof(PagedResult<LabOrderResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<LabOrderResponse>>> GetCritical(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var result = await _mediator.Send(new GetCriticalLabResultsQuery());
-        return Ok(result.Select(MapToResponse));
+        return Ok(result.Select(MapToResponse).ToPagedResult(page, pageSize));
     }
 
     /// <summary>

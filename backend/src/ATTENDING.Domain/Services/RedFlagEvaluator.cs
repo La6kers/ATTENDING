@@ -59,7 +59,8 @@ public class RedFlagEvaluator : IRedFlagEvaluator
         // Anaphylaxis - Allergic emergency
         new("Allergy",
             new[] { "throat swelling", "can't swallow", "tongue swelling", "hives all over",
-                    "anaphylaxis", "allergic reaction", "throat closing", "can't breathe allergic" },
+                    "anaphylaxis", "allergic reaction", "throat closing", "can't breathe allergic",
+                    "swelling shut", "throat is swelling" },
             RedFlagSeverity.Critical,
             "Possible anaphylactic reaction - immediate epinephrine may be needed"),
             
@@ -95,7 +96,8 @@ public class RedFlagEvaluator : IRedFlagEvaluator
         // Obstetric
         new("Obstetric",
             new[] { "pregnant and bleeding", "pregnancy bleeding", "severe cramping pregnant",
-                    "water broke early", "decreased fetal movement", "ectopic symptoms" },
+                    "water broke early", "decreased fetal movement", "ectopic symptoms",
+                    "vaginal bleeding" },
             RedFlagSeverity.Emergent,
             "Obstetric emergency - immediate OB evaluation required"),
             
