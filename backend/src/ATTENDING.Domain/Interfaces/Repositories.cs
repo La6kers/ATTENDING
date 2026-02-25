@@ -193,7 +193,7 @@ public interface IAiFeedbackRepository
 }
 
 /// <summary>
-/// Provides current user context for audit trails.
+/// Provides current user context for audit trails and tenant isolation.
 /// Implemented in the API layer using HttpContext.
 /// </summary>
 public interface ICurrentUserService
@@ -201,4 +201,11 @@ public interface ICurrentUserService
     string? UserId { get; }
     string? Email { get; }
     bool IsAuthenticated { get; }
+    
+    /// <summary>
+    /// The tenant (organization) ID resolved from the authenticated user's JWT.
+    /// Used by AuditSaveChangesInterceptor to auto-set OrganizationId on new entities
+    /// and by AttendingDbContext global query filters for tenant isolation.
+    /// </summary>
+    Guid? TenantId { get; }
 }

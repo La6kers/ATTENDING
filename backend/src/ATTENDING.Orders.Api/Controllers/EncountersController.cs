@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Application.Commands.Encounters;
 using ATTENDING.Application.Queries.Encounters;
 using ATTENDING.Contracts.Requests;
@@ -14,6 +15,7 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Route("api/v1/[controller]")]
 [Authorize]
 [Produces("application/json")]
+[EnableRateLimiting("tenant-api")]
 public class EncountersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -65,6 +67,7 @@ public class EncountersController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(EncounterCreated), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -79,6 +82,7 @@ public class EncountersController : ControllerBase
     }
 
     [HttpPost("{id:guid}/check-in")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckIn(Guid id)
@@ -88,6 +92,7 @@ public class EncountersController : ControllerBase
     }
 
     [HttpPost("{id:guid}/start")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Start(Guid id, [FromBody] StartEncounterRequest? request = null)
@@ -97,6 +102,7 @@ public class EncountersController : ControllerBase
     }
 
     [HttpPost("{id:guid}/complete")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Complete(Guid id)

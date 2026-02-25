@@ -2,122 +2,234 @@
 // Pre-Visit Summary Page
 // apps/provider-portal/pages/previsit/[id].tsx
 //
-// Dynamic page showing pre-visit intelligence for a patient
-// Accessed when clicking on a patient in the queue/list
-// UPDATED: Fixed broken links and placeholder implementations
+// Loads real assessment data from /api/assessments/[id]
+// and renders it in the PreVisitSummary component.
 // ============================================================
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import type { PreVisitData } from '@/components/previsit';
+import type { PreVisitData, PatientVitals } from '@/components/previsit';
 import { PreVisitSummary } from '@/components/previsit';
 
 // ============================================================
-// Mock Data - Replace with API call
+// Vitals Status Helpers
 // ============================================================
 
-const getMockPreVisitData = (patientId: string): PreVisitData => ({
-  patient: {
-    id: patientId,
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    age: 32,
-    gender: 'Female',
-    mrn: '78932145',
-    dob: '03/15/1992',
-    lastVisit: '3 months ago',
-    phone: '(555) 123-4567',
-  },
-  appointment: {
-    time: '3:00 PM',
-    type: 'Follow-up Visit',
-  },
-  chiefComplaint: {
-    summary: 'Severe headache for 3 days',
-    patientQuote: 'Severe headache for 3 days - worst headache of my life',
-    patientEmphasis: 'Patient emphasizes this is different from usual migraines',
-    details: `The patient reports the gradual onset of a severe, right-sided unilateral headache beginning 3 days ago. The pain is described as throbbing and pulsating in character, with severity reaching 9/10 at its worst and currently rated at 7/10. The headache is associated with visual aura presenting as zigzag lines, along with photophobia, phonophobia, nausea, vomiting, and episodes of confusion.
+function bpStatus(systolic: number): PatientVitals['bloodPressure']['status'] {
+  if (systolic >= 180) return 'critical';
+  if (systolic >= 140) return 'high';
+  if (systolic >= 120) return 'elevated';
+  return 'normal';
+}
 
-The patient finds some relief with rest in a dark room, though ibuprofen has provided only minimal pain reduction. She emphasizes that this headache pattern is distinctly different from her usual migraines, describing it as "the worst headache of my life."`,
-  },
-  vitals: {
-    bloodPressure: { systolic: 138, diastolic: 88, status: 'elevated' },
-    heartRate: { value: 96, status: 'tachycardia' },
-    temperature: { value: 98.6, unit: 'F', status: 'normal' },
-    respRate: { value: 18, status: 'normal' },
-    oxygenSat: { value: 99, status: 'normal' },
-  },
-  medications: [
-    {
-      id: 'med-1',
-      name: 'Oral Contraceptive',
-      dosage: 'Daily',
-      frequency: 'specific formulation to confirm',
-      status: 'active',
-    },
-    {
-      id: 'med-2',
-      name: 'Ibuprofen',
-      dosage: '400mg',
-      frequency: 'every 6 hours PRN × 3 days',
-      status: 'self-medicating',
-    },
-  ],
-  allergies: [
-    {
-      id: 'allergy-1',
-      allergen: 'Penicillin',
-      reaction: 'Rash, hives, difficulty breathing',
-      severity: 'severe',
-    },
-    {
-      id: 'allergy-2',
-      allergen: 'Sulfa Drugs',
-      reaction: 'Skin rash, nausea',
-      severity: 'moderate',
-    },
-    {
-      id: 'allergy-3',
-      allergen: 'Codeine',
-      reaction: 'Nausea, vomiting, drowsiness',
-      severity: 'mild',
-    },
-  ],
-  riskAssessment: {
-    level: 'high',
-    summary: 'Urgent Evaluation Required',
-    factors: [
-      { id: 'rf-1', description: '"Worst headache of life" reported' },
-      { id: 'rf-2', description: 'Confusion mentioned by patient' },
-      { id: 'rf-3', description: 'Elevated blood pressure (138/88)' },
-      { id: 'rf-4', description: 'Tachycardia (96 BPM)' },
-      { id: 'rf-5', description: 'Different from usual migraine pattern' },
-    ],
-  },
-  actionItems: [
-    { id: 'action-1', description: 'Order STAT CT head without contrast', priority: 'urgent' },
-    { id: 'action-2', description: 'Complete neurological examination', priority: 'urgent' },
-    { id: 'action-3', description: 'Assess for meningeal signs', priority: 'urgent' },
-    { id: 'action-4', description: 'Obtain pregnancy test', priority: 'high' },
-    { id: 'action-5', description: 'Consider CBC and basic metabolic panel', priority: 'normal' },
-    { id: 'action-6', description: 'Blood pressure monitoring', priority: 'high' },
-  ],
-  criticalAlert: {
-    message: 'Patient reports "worst headache of life" - High priority for SAH evaluation',
-    type: 'sah',
-  },
-});
+function hrStatus(hr: number): PatientVitals['heartRate']['status'] {
+  if (hr >= 150) return 'critical';
+  if (hr > 100) return 'tachycardia';
+  if (hr < 40) return 'critical';
+  if (hr < 60) return 'bradycardia';
+  return 'normal';
+}
+
+function tempStatus(temp: number): PatientVitals['temperature']['status'] {
+  if (temp >= 103) return 'fever';
+  if (temp >= 99.5) return 'elevated';
+  if (temp < 96) return 'low';
+  return 'normal';
+}
+
+function respStatus(rr: number): PatientVitals['respRate']['status'] {
+  if (rr > 20) return 'elevated';
+  if (rr < 12) return 'low';
+  return 'normal';
+}
+
+function o2Status(sat: number): PatientVitals['oxygenSat']['status'] {
+  if (sat < 90) return 'critical';
+  if (sat < 95) return 'low';
+  return 'normal';
+}
 
 // ============================================================
-// Patient List for Navigation (Mock)
+// API → PreVisitData Mapper
 // ============================================================
 
-const patientQueue = [
-  'patient-001',
-  'patient-002', // Sarah Johnson
-  'patient-003',
-  'patient-004',
-];
+function mapApiToPreVisitData(api: any): PreVisitData {
+  const p = api.patient || {};
+  const record = api.patientRecord || {};
+  const vitalsRaw = record.recentVitals;
+
+  // Vitals — use real values when available, or placeholder normals
+  const vitals: PatientVitals = vitalsRaw
+    ? {
+        bloodPressure: {
+          systolic: vitalsRaw.bloodPressureSystolic ?? 120,
+          diastolic: vitalsRaw.bloodPressureDiastolic ?? 80,
+          status: bpStatus(vitalsRaw.bloodPressureSystolic ?? 120),
+        },
+        heartRate: {
+          value: vitalsRaw.heartRate ?? 75,
+          status: hrStatus(vitalsRaw.heartRate ?? 75),
+        },
+        temperature: {
+          value: vitalsRaw.temperature ?? 98.6,
+          unit: 'F',
+          status: tempStatus(vitalsRaw.temperature ?? 98.6),
+        },
+        respRate: {
+          value: vitalsRaw.respiratoryRate ?? 16,
+          status: respStatus(vitalsRaw.respiratoryRate ?? 16),
+        },
+        oxygenSat: {
+          value: vitalsRaw.oxygenSaturation ?? 98,
+          status: o2Status(vitalsRaw.oxygenSaturation ?? 98),
+        },
+      }
+    : {
+        // No vitals yet — show pending placeholders as normal
+        bloodPressure: { systolic: 0, diastolic: 0, status: 'normal' },
+        heartRate: { value: 0, status: 'normal' },
+        temperature: { value: 0, unit: 'F', status: 'normal' },
+        respRate: { value: 0, status: 'normal' },
+        oxygenSat: { value: 0, status: 'normal' },
+      };
+
+  // Medications — prefer structured patient record, fall back to assessment strings
+  const medications: PreVisitData['medications'] =
+    record.medications?.length > 0
+      ? record.medications.map((m: any) => ({
+          id: m.id,
+          name: m.name,
+          dosage: m.dose || 'See chart',
+          frequency: m.frequency || '',
+          status: (m.status?.toLowerCase() || 'active') as any,
+        }))
+      : (api.medications as string[] || []).map((name: string, i: number) => ({
+          id: `asm-med-${i}`,
+          name,
+          dosage: '',
+          frequency: '',
+          status: 'active' as const,
+        }));
+
+  // Allergies — prefer structured patient record, fall back to assessment strings
+  const allergies: PreVisitData['allergies'] =
+    record.allergies?.length > 0
+      ? record.allergies.map((a: any) => ({
+          id: a.id,
+          allergen: a.allergen,
+          reaction: a.reaction || 'Unknown reaction',
+          severity: (a.severity?.toLowerCase() || 'moderate') as any,
+        }))
+      : (api.allergies as string[] || []).map((name: string, i: number) => ({
+          id: `asm-allergy-${i}`,
+          allergen: name,
+          reaction: 'See chart',
+          severity: 'moderate' as const,
+        }));
+
+  // Red flags → risk factors
+  const redFlags: string[] = Array.isArray(api.redFlags) ? api.redFlags : [];
+  const triageLevel: string = api.triageLevel || 'ROUTINE';
+
+  const riskLevel: PreVisitData['riskAssessment']['level'] =
+    triageLevel === 'EMERGENCY' ? 'critical'
+      : triageLevel === 'URGENT' ? 'high'
+      : triageLevel === 'MODERATE' ? 'moderate'
+      : 'low';
+
+  const riskSummary =
+    riskLevel === 'critical' ? 'Emergency Evaluation Required'
+      : riskLevel === 'high' ? 'Urgent Evaluation Required'
+      : riskLevel === 'moderate' ? 'Requires Prompt Attention'
+      : 'Routine Evaluation';
+
+  // Action items derived from red flags
+  const actionItems: PreVisitData['actionItems'] = redFlags.length > 0
+    ? redFlags.map((flag: string, i: number) => ({
+        id: `rf-action-${i}`,
+        description: `Evaluate: ${flag}`,
+        priority: riskLevel === 'critical' || riskLevel === 'high' ? 'urgent' : 'high',
+      }))
+    : [
+        { id: 'action-default', description: 'Review patient history', priority: 'normal' },
+        { id: 'action-vitals', description: 'Obtain vital signs', priority: 'normal' },
+      ];
+
+  // Chief complaint details
+  const cc = api.chiefComplaint || 'Not specified';
+  const hpi = api.hpiNarrative || cc;
+  const symptoms: string[] = Array.isArray(api.symptoms) ? api.symptoms : [];
+
+  const symptomsText = symptoms.length > 0
+    ? `\n\nAssociated symptoms: ${symptoms.join(', ')}.`
+    : '';
+
+  // Format DOB
+  const dob = p.dateOfBirth
+    ? new Date(p.dateOfBirth).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
+    : 'Unknown';
+
+  // Critical alert for emergency or urgent with red flags
+  const criticalAlert: PreVisitData['criticalAlert'] | undefined =
+    (riskLevel === 'critical' || (riskLevel === 'high' && redFlags.length > 0))
+      ? {
+          message: redFlags.length > 0
+            ? `${redFlags[0]} — ${riskSummary}`
+            : riskSummary,
+          type: 'other',
+        }
+      : undefined;
+
+  return {
+    patient: {
+      id: p.id || api.id,
+      firstName: p.firstName || 'Unknown',
+      lastName: p.lastName || 'Patient',
+      age: p.age || 0,
+      gender: p.gender || 'Unknown',
+      mrn: p.mrn || '',
+      dob,
+      phone: p.phone || undefined,
+    },
+    appointment: {
+      time: api.completedAt
+        ? new Date(api.completedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+        : 'Pending',
+      type: 'COMPASS Pre-Visit Assessment',
+    },
+    chiefComplaint: {
+      summary: cc,
+      patientQuote: cc,
+      patientEmphasis: redFlags.length > 0
+        ? `Red flags detected: ${redFlags.slice(0, 3).join(', ')}`
+        : undefined,
+      details: hpi + symptomsText,
+    },
+    vitals,
+    medications,
+    allergies,
+    riskAssessment: {
+      level: riskLevel,
+      summary: riskSummary,
+      factors: redFlags.map((flag, i) => ({ id: `rf-${i}`, description: flag })),
+    },
+    actionItems,
+    criticalAlert,
+  };
+}
+
+// ============================================================
+// Fetch Assessment from API
+// ============================================================
+
+async function fetchAssessment(id: string): Promise<any> {
+  const res = await fetch(`/api/assessments/${id}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `Failed to load assessment (HTTP ${res.status})`);
+  }
+  return res.json();
+}
 
 // ============================================================
 // Page Component
@@ -128,92 +240,127 @@ export default function PreVisitPage() {
   const { id } = router.query;
   const [preVisitData, setPreVisitData] = useState<PreVisitData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [rawAssessment, setRawAssessment] = useState<any>(null);
 
-  // Fetch pre-visit data
+  // Fetch real assessment data
   useEffect(() => {
     if (!id || typeof id !== 'string') return;
 
-    // Simulate API call
     setLoading(true);
-    setTimeout(() => {
-      const data = getMockPreVisitData(id);
-      setPreVisitData(data);
-      setLoading(false);
-    }, 300);
+    setError(null);
+
+    fetchAssessment(id)
+      .then((data) => {
+        setRawAssessment(data);
+        setPreVisitData(mapApiToPreVisitData(data));
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('[PreVisit] Failed to load assessment:', err);
+        setError(err.message || 'Failed to load assessment');
+        setLoading(false);
+      });
   }, [id]);
 
-  // Navigation handlers
-  const handleNavigatePatient = (direction: 'prev' | 'next') => {
-    const currentIndex = patientQueue.indexOf(id as string);
-    if (currentIndex === -1) return;
+  // Navigation — load adjacent assessments from the queue
+  const handleNavigatePatient = async (direction: 'prev' | 'next') => {
+    try {
+      const res = await fetch('/api/assessments?pageSize=50');
+      if (!res.ok) return;
+      const data = await res.json();
+      const ids: string[] = (data.assessments || []).map((a: any) => a.id);
+      const currentIndex = ids.indexOf(id as string);
+      if (currentIndex === -1) return;
 
-    const newIndex = direction === 'prev' 
-      ? Math.max(0, currentIndex - 1)
-      : Math.min(patientQueue.length - 1, currentIndex + 1);
+      const newIndex = direction === 'prev'
+        ? Math.max(0, currentIndex - 1)
+        : Math.min(ids.length - 1, currentIndex + 1);
 
-    if (newIndex !== currentIndex) {
-      router.push(`/previsit/${patientQueue[newIndex]}`);
+      if (newIndex !== currentIndex) {
+        router.push(`/previsit/${ids[newIndex]}`);
+      }
+    } catch {
+      // navigation failure is non-critical
     }
   };
 
   // Action handlers
   const handleStartEncounter = () => {
-    // Navigate to diagnosis selection page (visit workflow)
     router.push(`/visit/${id}`);
   };
 
-  const handleOrderLabs = () => {
-    router.push(`/labs?patientId=${id}`);
-  };
-
-  const handleOrderImaging = () => {
-    router.push(`/imaging?patientId=${id}`);
-  };
-
-  const handlePrescribe = () => {
-    router.push(`/medications?patientId=${id}`);
-  };
-
-  const handleRefer = () => {
-    router.push(`/referrals?patientId=${id}`);
-  };
-
-  const handleScheduleFollowup = () => {
-    // Navigate to schedule page with follow-up parameters
-    const patientName = preVisitData?.patient 
-      ? `${preVisitData.patient.firstName} ${preVisitData.patient.lastName}`
-      : '';
-    router.push(`/schedule?action=new&patientId=${id}&patientName=${encodeURIComponent(patientName)}&type=followup`);
-  };
-
   const handleEmergencyProtocol = () => {
-    // Store emergency context and navigate to visit with emergency flag
     if (preVisitData) {
-      sessionStorage.setItem('emergencyPatient', JSON.stringify({
-        id,
-        name: `${preVisitData.patient.firstName} ${preVisitData.patient.lastName}`,
-        mrn: preVisitData.patient.mrn,
-        chiefComplaint: preVisitData.chiefComplaint.summary,
-        redFlags: preVisitData.riskAssessment.factors.map(f => f.description),
-        vitals: preVisitData.vitals,
-      }));
+      try {
+        sessionStorage.setItem('emergencyPatient', JSON.stringify({
+          id,
+          name: `${preVisitData.patient.firstName} ${preVisitData.patient.lastName}`,
+          mrn: preVisitData.patient.mrn,
+          chiefComplaint: preVisitData.chiefComplaint.summary,
+          redFlags: preVisitData.riskAssessment.factors.map((f) => f.description),
+        }));
+      } catch {
+        // sessionStorage may not be available
+      }
     }
-    // Navigate to visit workflow with emergency mode
     router.push(`/visit/${id}?emergency=true`);
   };
 
   const handleReviewChart = () => {
-    // FIXED: Navigate to correct patient chart path
-    router.push(`/patients/${id}`);
+    const patientId = rawAssessment?.patient?.id;
+    if (patientId) {
+      router.push(`/patients/${patientId}`);
+    } else {
+      router.push(`/patients`);
+    }
   };
 
   // Loading state
-  if (loading || !preVisitData) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading pre-visit summary...</p>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+      >
+        <div className="text-center text-white">
+          <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-lg font-medium">Loading pre-visit summary…</p>
+          <p className="text-purple-200 text-sm mt-1">Pulling assessment data from database</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !preVisitData) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+      >
+        <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">⚠️</span>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Assessment Not Found</h2>
+          <p className="text-gray-600 mb-6">
+            {error || 'This assessment could not be loaded. It may have been removed or you may not have permission to view it.'}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={() => router.push('/assessments')}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+            >
+              All Assessments
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -223,11 +370,14 @@ export default function PreVisitPage() {
     <PreVisitSummary
       data={preVisitData}
       onStartEncounter={handleStartEncounter}
-      onOrderLabs={handleOrderLabs}
-      onOrderImaging={handleOrderImaging}
-      onPrescribe={handlePrescribe}
-      onRefer={handleRefer}
-      onScheduleFollowup={handleScheduleFollowup}
+      onOrderLabs={() => router.push(`/labs?patientId=${rawAssessment?.patient?.id || id}`)}
+      onOrderImaging={() => router.push(`/imaging?patientId=${rawAssessment?.patient?.id || id}`)}
+      onPrescribe={() => router.push(`/medications?patientId=${rawAssessment?.patient?.id || id}`)}
+      onRefer={() => router.push(`/referrals?patientId=${rawAssessment?.patient?.id || id}`)}
+      onScheduleFollowup={() => {
+        const name = `${preVisitData.patient.firstName} ${preVisitData.patient.lastName}`;
+        router.push(`/schedule?action=new&patientId=${rawAssessment?.patient?.id || id}&patientName=${encodeURIComponent(name)}&type=followup`);
+      }}
       onEmergencyProtocol={handleEmergencyProtocol}
       onReviewChart={handleReviewChart}
       onNavigatePatient={handleNavigatePatient}

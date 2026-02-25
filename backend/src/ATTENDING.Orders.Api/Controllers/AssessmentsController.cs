@@ -1,13 +1,14 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Application.Commands.Assessments;
 using ATTENDING.Application.Queries.Assessments;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
 using ATTENDING.Orders.Api.Extensions;
-using ATTENDING.Orders.Api.Hubs;
+using ATTENDING.Application.Interfaces;
 
 namespace ATTENDING.Orders.Api.Controllers;
 
@@ -15,6 +16,7 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Route("api/v1/[controller]")]
 [Authorize]
 [Produces("application/json")]
+[EnableRateLimiting("tenant-api")]
 public class AssessmentsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -65,6 +67,7 @@ public class AssessmentsController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(AssessmentResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -110,6 +113,7 @@ public class AssessmentsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/responses")]
+    [EnableRateLimiting("clinical-ops")]
     public async Task<ActionResult<AssessmentResponse>> SubmitResponse(Guid id, [FromBody] SubmitAssessmentResponseRequest request)
     {
         var result = await _mediator.Send(new SubmitAssessmentResponseCommand(id, request.Question, request.Response));
@@ -137,6 +141,7 @@ public class AssessmentsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/advance")]
+    [EnableRateLimiting("clinical-ops")]
     public async Task<ActionResult<AssessmentResponse>> AdvancePhase(Guid id, [FromBody] AdvanceAssessmentRequest request)
     {
         if (!Enum.TryParse<AssessmentPhase>(request.NewPhase, out var newPhase))
@@ -152,6 +157,7 @@ public class AssessmentsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/complete")]
+    [EnableRateLimiting("clinical-ops")]
     public async Task<ActionResult<AssessmentResponse>> CompleteAssessment(Guid id, [FromBody] CompleteAssessmentRequest request)
     {
         if (!Enum.TryParse<TriageLevel>(request.TriageLevel, out var triageLevel))
@@ -167,6 +173,7 @@ public class AssessmentsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/review")]
+    [EnableRateLimiting("clinical-ops")]
     public async Task<IActionResult> ReviewAssessment(Guid id, [FromBody] ReviewAssessmentRequest request)
     {
         var providerId = GetCurrentUserId();

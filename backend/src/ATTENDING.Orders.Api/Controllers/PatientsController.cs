@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Application.Commands.Patients;
 using ATTENDING.Application.Queries.Patients;
 using ATTENDING.Contracts.Requests;
@@ -14,6 +15,7 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Route("api/v1/[controller]")]
 [Authorize]
 [Produces("application/json")]
+[EnableRateLimiting("tenant-api")]
 public class PatientsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -60,6 +62,7 @@ public class PatientsController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(PatientCreated), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -75,6 +78,7 @@ public class PatientsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/allergies")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -88,6 +92,7 @@ public class PatientsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/conditions")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

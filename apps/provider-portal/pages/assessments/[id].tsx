@@ -24,7 +24,8 @@ import {
   ChevronDown,
   ChevronUp,
   Plus,
-  X
+  X,
+  TestTube
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -589,6 +590,21 @@ export default function AssessmentDetailPage() {
                   </div>
                 )}
                 
+                <Link
+                  href={{
+                    pathname: '/labs',
+                    query: {
+                      patientId: assessment.patientId,
+                      assessmentId: assessment.id,
+                      chiefComplaint: assessment.chiefComplaint,
+                    },
+                  }}
+                  className="w-full border border-purple-300 bg-purple-50 text-purple-700 py-2.5 px-4 rounded-lg hover:bg-purple-100 transition-colors mb-3 flex items-center justify-center font-medium"
+                >
+                  <TestTube className="h-4 w-4 mr-2" />
+                  Order Labs
+                </Link>
+
                 <button className="w-full border border-gray-300 text-gray-700 py-2.5 px-4 rounded-lg hover:bg-gray-50 transition-colors mb-3 flex items-center justify-center">
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Message Patient

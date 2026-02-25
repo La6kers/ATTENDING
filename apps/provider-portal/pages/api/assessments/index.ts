@@ -10,6 +10,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 // =============================================================================
 // Types
@@ -71,6 +72,12 @@ export default async function handler(
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Attempt .NET backend first (CQRS pipeline with tenant isolation)
+  const proxied = await proxyToBackend(req, res, '/api/v1/assessments');
+  if (proxied) return;
+
+  // Fallback: direct Prisma access
 
   try {
     const {

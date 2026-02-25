@@ -63,6 +63,14 @@ public class DrugInteractionService : IDrugInteractionService
         new("ibuprofen", "methotrexate", InteractionSeverity.Major,
             "NSAIDs increase methotrexate toxicity. Avoid combination."),
             
+        // Additional anticoagulant interactions (gap identified in clinical review)
+        new("warfarin", "fluconazole", InteractionSeverity.Major,
+            "Fluconazole inhibits CYP2C9, significantly increasing warfarin levels and bleeding risk. Monitor INR daily."),
+        new("warfarin", "metronidazole", InteractionSeverity.Major,
+            "Metronidazole inhibits warfarin metabolism. Significantly increased INR and bleeding risk."),
+        new("warfarin", "amiodarone", InteractionSeverity.Major,
+            "Amiodarone inhibits warfarin metabolism. Reduce warfarin dose by 30-50% and monitor INR."),
+            
         // Diabetes interactions
         new("metformin", "contrast dye", InteractionSeverity.Major,
             "Hold metformin before/after contrast. Risk of lactic acidosis."),

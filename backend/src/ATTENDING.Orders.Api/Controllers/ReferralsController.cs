@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
@@ -14,9 +15,11 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Route("api/v1/[controller]")]
 [Authorize]
 [Produces("application/json")]
+[EnableRateLimiting("tenant-api")]
 public class ReferralsController : ControllerBase
 {
     private readonly IReferralRepository _repository;
+    private readonly IPatientRepository _patientRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAuditService _auditService;
     private readonly ILogger<ReferralsController> _logger;
@@ -32,11 +35,13 @@ public class ReferralsController : ControllerBase
 
     public ReferralsController(
         IReferralRepository repository,
+        IPatientRepository patientRepository,
         IUnitOfWork unitOfWork,
         IAuditService auditService,
         ILogger<ReferralsController> logger)
     {
         _repository = repository;
+        _patientRepository = patientRepository;
         _unitOfWork = unitOfWork;
         _auditService = auditService;
         _logger = logger;
@@ -88,6 +93,17 @@ public class ReferralsController : ControllerBase
     }
 
     /// <summary>
+    /// Get pending referrals
+    /// </summary>
+    [HttpGet("pending")]
+    [ProducesResponseType(typeof(IEnumerable<ReferralResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<ReferralResponse>>> GetPending()
+    {
+        var referrals = await _repository.GetByStatusAsync(ReferralStatus.Pending);
+        return Ok(referrals.Select(MapToResponse));
+    }
+
+    /// <summary>
     /// Get referrals by status
     /// </summary>
     [HttpGet("status/{status}")]
@@ -123,11 +139,24 @@ public class ReferralsController : ControllerBase
     /// Create a new referral
     /// </summary>
     [HttpPost]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(ReferralResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ReferralResponse>> Create([FromBody] CreateReferralRequest request)
     {
         var userId = GetCurrentUserId();
+
+        // Validate patient exists
+        var patient = await _patientRepository.GetByIdAsync(request.PatientId);
+        if (patient == null)
+        {
+            return NotFound(new ProblemDetails
+            {
+                Title = "Patient not found",
+                Detail = $"No patient found with ID {request.PatientId}",
+                Status = StatusCodes.Status404NotFound
+            });
+        }
 
         if (!Specialties.Contains(request.Specialty, StringComparer.OrdinalIgnoreCase))
         {
@@ -139,12 +168,22 @@ public class ReferralsController : ControllerBase
             });
         }
 
+        if (!Enum.TryParse<UrgencyLevel>(request.Urgency, ignoreCase: true, out var urgency))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid urgency level",
+                Detail = $"'{request.Urgency}' is not a valid urgency level. Valid values: {string.Join(", ", Enum.GetNames<UrgencyLevel>())}",
+                Status = StatusCodes.Status400BadRequest
+            });
+        }
+
         var referral = Domain.Entities.Referral.Create(
             patientId: request.PatientId,
             encounterId: request.EncounterId,
             referringProviderId: userId,
             specialty: request.Specialty,
-            urgency: Enum.Parse<UrgencyLevel>(request.Urgency),
+            urgency: urgency,
             clinicalQuestion: request.ClinicalQuestion,
             diagnosisCode: request.DiagnosisCode,
             reasonForReferral: request.ReasonForReferral,
@@ -174,6 +213,7 @@ public class ReferralsController : ControllerBase
     /// Schedule a referral appointment
     /// </summary>
     [HttpPost("{id:guid}/schedule")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Schedule(Guid id, [FromBody] ScheduleReferralRequest request)
@@ -199,6 +239,7 @@ public class ReferralsController : ControllerBase
     /// Add insurance authorization
     /// </summary>
     [HttpPost("{id:guid}/authorization")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AddAuthorization(Guid id, [FromBody] AddAuthorizationRequest request)
@@ -224,6 +265,7 @@ public class ReferralsController : ControllerBase
     /// Complete a referral with consult notes
     /// </summary>
     [HttpPost("{id:guid}/complete")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Complete(Guid id, [FromBody] CompleteReferralRequest request)
@@ -257,6 +299,7 @@ public class ReferralsController : ControllerBase
     /// Cancel a referral
     /// </summary>
     [HttpPost("{id:guid}/cancel")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Cancel(Guid id, [FromBody] CancelOrderRequest request)

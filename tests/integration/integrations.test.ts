@@ -13,7 +13,7 @@
 // Run: npx jest tests/integration/integrations.test.ts
 // ============================================================
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // ============================================================
 // HL7v2 PARSER TESTS

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Application.Commands.LabOrders;
 using ATTENDING.Application.DTOs;
 using ATTENDING.Application.Queries.LabOrders;
@@ -8,7 +9,7 @@ using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
 using ATTENDING.Orders.Api.Extensions;
-using ATTENDING.Orders.Api.Hubs;
+using ATTENDING.Application.Interfaces;
 
 namespace ATTENDING.Orders.Api.Controllers;
 
@@ -16,6 +17,7 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Route("api/v1/[controller]")]
 [Authorize]
 [Produces("application/json")]
+[EnableRateLimiting("tenant-api")]
 public class LabOrdersController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -94,6 +96,7 @@ public class LabOrdersController : ControllerBase
     }
 
     [HttpPost]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(CreateLabOrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -132,6 +135,7 @@ public class LabOrdersController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/priority")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(UpdatePriorityResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -149,6 +153,7 @@ public class LabOrdersController : ControllerBase
     }
 
     [HttpPost("{id:guid}/cancel")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -160,6 +165,7 @@ public class LabOrdersController : ControllerBase
     }
 
     [HttpPost("{id:guid}/collect")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -170,6 +176,7 @@ public class LabOrdersController : ControllerBase
     }
 
     [HttpPost("{id:guid}/result")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(AddResultResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

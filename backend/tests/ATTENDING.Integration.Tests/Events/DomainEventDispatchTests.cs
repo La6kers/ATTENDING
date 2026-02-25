@@ -4,41 +4,50 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ATTENDING.Application.Events;
 using ATTENDING.Application.Events.Handlers;
+using ATTENDING.Application.Interfaces;
 using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Events;
 using ATTENDING.Domain.Services;
+using ATTENDING.Integration.Tests.Fixtures;
 using Xunit;
 
 namespace ATTENDING.Integration.Tests.Events;
 
 public class DomainEventDispatchTests
 {
-    [Fact]
-    public async Task DispatchEvents_EmergencyProtocol_ShouldPublish()
+    /// <summary>
+    /// Build a minimal service provider with MediatR, logging, and a stub notification service.
+    /// </summary>
+    private static ServiceProvider BuildTestProvider()
     {
         var services = new ServiceCollection();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<EmergencyProtocolHandler>());
         services.AddLogging(b => b.AddDebug());
-        var sp = services.BuildServiceProvider();
+        services.AddSingleton<IClinicalNotificationService, StubClinicalNotificationService>();
+        return services.BuildServiceProvider();
+    }
 
+    [Fact]
+    public async Task DispatchEvents_EmergencyProtocol_ShouldPublish()
+    {
+        var sp = BuildTestProvider();
         var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
 
         var evt = new EmergencyProtocolTriggeredEvent(Guid.NewGuid(), Guid.NewGuid(), "Chest pain", "Call 911");
 
-        // Should not throw — handler processes the event
         await dispatcher.Invoking(d => d.DispatchEventsAsync(new[] { evt }))
             .Should().NotThrowAsync();
+
+        // Verify the notification was sent via the stub
+        var stub = sp.GetRequiredService<IClinicalNotificationService>() as StubClinicalNotificationService;
+        stub!.EmergencyAssessments.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task DispatchEvents_RedFlag_ShouldPublish()
     {
-        var services = new ServiceCollection();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RedFlagDetectedHandler>());
-        services.AddLogging(b => b.AddDebug());
-        var sp = services.BuildServiceProvider();
-
+        var sp = BuildTestProvider();
         var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
 
         var evt = new RedFlagDetectedEvent(
@@ -47,32 +56,45 @@ public class DomainEventDispatchTests
 
         await dispatcher.Invoking(d => d.DispatchEventsAsync(new[] { evt }))
             .Should().NotThrowAsync();
+
+        var stub = sp.GetRequiredService<IClinicalNotificationService>() as StubClinicalNotificationService;
+        stub!.RedFlags.Should().HaveCount(1);
     }
 
     [Fact]
     public async Task DispatchEvents_CriticalLabResult_ShouldPublish()
     {
-        var services = new ServiceCollection();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CriticalLabResultHandler>());
-        services.AddLogging(b => b.AddDebug());
-        var sp = services.BuildServiceProvider();
-
+        var sp = BuildTestProvider();
         var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
 
         var evt = new LabOrderResultedEvent(Guid.NewGuid(), true);
 
         await dispatcher.Invoking(d => d.DispatchEventsAsync(new[] { evt }))
             .Should().NotThrowAsync();
+
+        var stub = sp.GetRequiredService<IClinicalNotificationService>() as StubClinicalNotificationService;
+        stub!.CriticalResults.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task DispatchEvents_NonCriticalLabResult_ShouldNotNotify()
+    {
+        var sp = BuildTestProvider();
+        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
+
+        var evt = new LabOrderResultedEvent(Guid.NewGuid(), isCritical: false);
+
+        await dispatcher.Invoking(d => d.DispatchEventsAsync(new[] { evt }))
+            .Should().NotThrowAsync();
+
+        var stub = sp.GetRequiredService<IClinicalNotificationService>() as StubClinicalNotificationService;
+        stub!.CriticalResults.Should().BeEmpty("non-critical results should not trigger notifications");
     }
 
     [Fact]
     public async Task DispatchEvents_MultipleEvents_ShouldPublishAll()
     {
-        var services = new ServiceCollection();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<EmergencyProtocolHandler>());
-        services.AddLogging(b => b.AddDebug());
-        var sp = services.BuildServiceProvider();
-
+        var sp = BuildTestProvider();
         var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
 
         var events = new DomainEvent[]
@@ -84,6 +106,10 @@ public class DomainEventDispatchTests
 
         await dispatcher.Invoking(d => d.DispatchEventsAsync(events))
             .Should().NotThrowAsync();
+
+        var stub = sp.GetRequiredService<IClinicalNotificationService>() as StubClinicalNotificationService;
+        stub!.RedFlags.Should().HaveCount(1);
+        stub!.EmergencyAssessments.Should().HaveCount(1);
     }
 
     [Fact]

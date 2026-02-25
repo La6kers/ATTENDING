@@ -55,12 +55,29 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./coverage
 
+      - name: Run integration tests (InMemory DB — no Docker required)
+        run: |
+          dotnet test tests/ATTENDING.Integration.Tests/ATTENDING.Integration.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --filter "Category!=Docker" \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./coverage-integration
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
           directory: ./backend/coverage
           flags: backend
           name: backend-coverage
+
+      - name: Upload integration coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./backend/coverage-integration
+          flags: backend-integration
+          name: backend-integration-coverage
 
       - name: Publish build artifacts
         run: |
@@ -181,11 +198,31 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
           package: ./publish
 
-      - name: Run smoke tests
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Health check
         run: |
-          sleep 30
           curl -f https://staging-api.attendingai.com/health || exit 1
           curl -f https://staging-api.attendingai.com/api/v1/system/ping || exit 1
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install k6
+
+      - name: Run k6 smoke test against staging
+        run: |
+          k6 run \
+            -e BASE_URL=https://staging-api.attendingai.com \
+            -e BASE_TOKEN=${{ secrets.STAGING_API_TOKEN }} \
+            backend/tests/load/smoke.js
 
   # ==========================================================================
   # DEPLOY TO PRODUCTION

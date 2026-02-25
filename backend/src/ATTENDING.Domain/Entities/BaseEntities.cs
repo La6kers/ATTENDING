@@ -5,11 +5,18 @@ using ATTENDING.Domain.ValueObjects;
 namespace ATTENDING.Domain.Entities;
 
 /// <summary>
-/// Base entity with audit fields, concurrency control, and soft delete.
-/// All clinical entities inherit these enterprise capabilities.
+/// Base entity with audit fields, concurrency control, multi-tenant isolation,
+/// and soft delete. All clinical entities inherit these enterprise capabilities.
 /// </summary>
 public abstract class BaseEntity
 {
+    /// <summary>
+    /// Multi-tenant isolation — every clinical entity belongs to exactly one organization.
+    /// Global query filters in AttendingDbContext ensure cross-tenant data never leaks.
+    /// Set automatically by AuditSaveChangesInterceptor from the authenticated user's tenant.
+    /// </summary>
+    public Guid OrganizationId { get; protected set; }
+    
     public DateTime CreatedAt { get; protected set; }
     public DateTime? ModifiedAt { get; protected set; }
     public string? CreatedBy { get; protected set; }
@@ -42,6 +49,16 @@ public abstract class BaseEntity
     public void SetCreatedBy(string userId)
     {
         CreatedBy = userId;
+    }
+    
+    /// <summary>
+    /// Set the tenant for this entity. Called automatically by the
+    /// AuditSaveChangesInterceptor on entity creation.
+    /// </summary>
+    public void SetOrganization(Guid organizationId)
+    {
+        if (OrganizationId == Guid.Empty)
+            OrganizationId = organizationId;
     }
     
     /// <summary>

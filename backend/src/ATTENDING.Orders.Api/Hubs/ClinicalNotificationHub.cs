@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using ATTENDING.Application.Interfaces;
 
 namespace ATTENDING.Orders.Api.Hubs;
 
@@ -28,13 +29,11 @@ public class ClinicalNotificationHub : Hub
         var userId = Context.UserIdentifier ?? Context.ConnectionId;
         var connectionId = Context.ConnectionId;
         
-        // Add to provider connections
         _providerConnections.AddOrUpdate(
             userId,
             _ => new HashSet<string> { connectionId },
             (_, connections) => { connections.Add(connectionId); return connections; });
         
-        // Add to providers group
         await Groups.AddToGroupAsync(connectionId, "Providers");
         
         _logger.LogInformation("Provider {UserId} connected with connection {ConnectionId}", userId, connectionId);
@@ -47,7 +46,6 @@ public class ClinicalNotificationHub : Hub
         var userId = Context.UserIdentifier ?? Context.ConnectionId;
         var connectionId = Context.ConnectionId;
         
-        // Remove from provider connections
         if (_providerConnections.TryGetValue(userId, out var connections))
         {
             connections.Remove(connectionId);
@@ -57,7 +55,6 @@ public class ClinicalNotificationHub : Hub
             }
         }
         
-        // Remove from all patient watch lists
         foreach (var kvp in _patientWatchers)
         {
             kvp.Value.Remove(connectionId);
@@ -122,34 +119,23 @@ public class ClinicalNotificationHub : Hub
 }
 
 /// <summary>
-/// Service for sending notifications through SignalR
+/// SignalR implementation of IClinicalNotificationService.
+/// Pushes domain events as real-time notifications to connected providers.
 /// </summary>
-public interface IClinicalNotificationService
-{
-    Task NotifyCriticalResultAsync(CriticalResultNotification notification);
-    Task NotifyEmergencyAssessmentAsync(EmergencyAssessmentNotification notification);
-    Task NotifyOrderStatusChangeAsync(OrderStatusNotification notification);
-    Task NotifyNewAssessmentAsync(NewAssessmentNotification notification);
-    Task NotifyRedFlagDetectedAsync(RedFlagNotification notification);
-}
-
-public class ClinicalNotificationService : IClinicalNotificationService
+public class SignalRClinicalNotificationService : IClinicalNotificationService
 {
     private readonly IHubContext<ClinicalNotificationHub> _hubContext;
-    private readonly ILogger<ClinicalNotificationService> _logger;
+    private readonly ILogger<SignalRClinicalNotificationService> _logger;
 
-    public ClinicalNotificationService(
+    public SignalRClinicalNotificationService(
         IHubContext<ClinicalNotificationHub> hubContext,
-        ILogger<ClinicalNotificationService> logger)
+        ILogger<SignalRClinicalNotificationService> logger)
     {
         _hubContext = hubContext;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Notify providers about a critical lab result
-    /// </summary>
-    public async Task NotifyCriticalResultAsync(CriticalResultNotification notification)
+    public async Task NotifyCriticalResultAsync(CriticalResultNotification notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "CRITICAL RESULT: {TestName} = {Value} for Patient {PatientId}",
@@ -157,145 +143,91 @@ public class ClinicalNotificationService : IClinicalNotificationService
 
         // Notify all providers watching this patient
         await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
-            .SendAsync("CriticalResult", notification);
+            .SendAsync("CriticalResult", notification, cancellationToken);
         
-        // Also notify all providers (critical results are important)
+        // Also notify all providers (critical results are broadcast)
         await _hubContext.Clients.Group("Providers")
-            .SendAsync("CriticalResult", notification);
+            .SendAsync("CriticalResult", notification, cancellationToken);
         
         // Play alert sound on client
         await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
-            .SendAsync("PlayAlert", new { Type = "critical", Repeat = 3 });
+            .SendAsync("PlayAlert", new { Type = "critical", Repeat = 3 }, cancellationToken);
     }
 
-    /// <summary>
-    /// Notify providers about an emergency assessment (red flags detected)
-    /// </summary>
-    public async Task NotifyEmergencyAssessmentAsync(EmergencyAssessmentNotification notification)
+    public async Task NotifyEmergencyAssessmentAsync(EmergencyAssessmentNotification notification, CancellationToken cancellationToken)
     {
         _logger.LogCritical(
             "EMERGENCY ASSESSMENT: {PatientName} - {ChiefComplaint}, Reason: {EmergencyReason}",
             notification.PatientName, notification.ChiefComplaint, notification.EmergencyReason);
 
-        // Notify emergency alerts group
         await _hubContext.Clients.Group("EmergencyAlerts")
-            .SendAsync("EmergencyAssessment", notification);
+            .SendAsync("EmergencyAssessment", notification, cancellationToken);
         
-        // Notify all providers
         await _hubContext.Clients.Group("Providers")
-            .SendAsync("EmergencyAssessment", notification);
+            .SendAsync("EmergencyAssessment", notification, cancellationToken);
         
-        // Play emergency alert
+        // Emergency alert with repeated audio
         await _hubContext.Clients.Group("Providers")
-            .SendAsync("PlayAlert", new { Type = "emergency", Repeat = 5 });
+            .SendAsync("PlayAlert", new { Type = "emergency", Repeat = 5 }, cancellationToken);
     }
 
-    /// <summary>
-    /// Notify about order status changes
-    /// </summary>
-    public async Task NotifyOrderStatusChangeAsync(OrderStatusNotification notification)
+    public async Task NotifyOrderStatusChangeAsync(OrderStatusNotification notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Order status change: {OrderType} {OrderId} -> {NewStatus}",
             notification.OrderType, notification.OrderId, notification.NewStatus);
 
         await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
-            .SendAsync("OrderStatusChange", notification);
+            .SendAsync("OrderStatusChange", notification, cancellationToken);
     }
 
-    /// <summary>
-    /// Notify about new assessment in queue
-    /// </summary>
-    public async Task NotifyNewAssessmentAsync(NewAssessmentNotification notification)
+    public async Task NotifyNewAssessmentAsync(NewAssessmentNotification notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "New assessment: {AssessmentId} for Patient {PatientId} - {ChiefComplaint}",
             notification.AssessmentId, notification.PatientId, notification.ChiefComplaint);
 
         await _hubContext.Clients.Group("Providers")
-            .SendAsync("NewAssessment", notification);
+            .SendAsync("NewAssessment", notification, cancellationToken);
         
-        // If has red flags, send urgent notification
         if (notification.HasRedFlags)
         {
             await _hubContext.Clients.Group("Providers")
-                .SendAsync("PlayAlert", new { Type = "urgent", Repeat = 2 });
+                .SendAsync("PlayAlert", new { Type = "urgent", Repeat = 2 }, cancellationToken);
         }
     }
 
-    /// <summary>
-    /// Notify about red flag detection during assessment
-    /// </summary>
-    public async Task NotifyRedFlagDetectedAsync(RedFlagNotification notification)
+    public async Task NotifyRedFlagDetectedAsync(RedFlagNotification notification, CancellationToken cancellationToken)
     {
         _logger.LogWarning(
             "Red flag detected: {Category} for Assessment {AssessmentId}",
             notification.Category, notification.AssessmentId);
 
         await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
-            .SendAsync("RedFlagDetected", notification);
+            .SendAsync("RedFlagDetected", notification, cancellationToken);
         
         await _hubContext.Clients.Group("Providers")
-            .SendAsync("RedFlagDetected", notification);
+            .SendAsync("RedFlagDetected", notification, cancellationToken);
+    }
+
+    public async Task NotifyDrugInteractionAsync(DrugInteractionNotification notification, CancellationToken cancellationToken)
+    {
+        _logger.LogWarning(
+            "Drug interaction: {Drug1} <-> {Drug2} ({Severity}) for Patient {PatientId}",
+            notification.Drug1, notification.Drug2, notification.Severity, notification.PatientId);
+
+        await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
+            .SendAsync("DrugInteraction", notification, cancellationToken);
+        
+        // Severe interactions broadcast to all providers
+        if (notification.Severity.Equals("Severe", StringComparison.OrdinalIgnoreCase) ||
+            notification.Severity.Equals("Critical", StringComparison.OrdinalIgnoreCase))
+        {
+            await _hubContext.Clients.Group("Providers")
+                .SendAsync("DrugInteraction", notification, cancellationToken);
+            
+            await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
+                .SendAsync("PlayAlert", new { Type = "warning", Repeat = 2 }, cancellationToken);
+        }
     }
 }
-
-#region Notification Models
-
-public record CriticalResultNotification(
-    Guid PatientId,
-    string PatientName,
-    string PatientMrn,
-    Guid LabOrderId,
-    string OrderNumber,
-    string TestName,
-    string Value,
-    string? Unit,
-    string? ReferenceRange,
-    DateTime ResultedAt,
-    string? OrderingProviderName);
-
-public record EmergencyAssessmentNotification(
-    Guid AssessmentId,
-    string AssessmentNumber,
-    Guid PatientId,
-    string PatientName,
-    string PatientMrn,
-    string ChiefComplaint,
-    string EmergencyReason,
-    List<string> RedFlagCategories,
-    DateTime DetectedAt);
-
-public record OrderStatusNotification(
-    Guid OrderId,
-    string OrderNumber,
-    string OrderType, // Lab, Imaging, Medication, Referral
-    Guid PatientId,
-    string PatientName,
-    string OldStatus,
-    string NewStatus,
-    DateTime ChangedAt);
-
-public record NewAssessmentNotification(
-    Guid AssessmentId,
-    string AssessmentNumber,
-    Guid PatientId,
-    string PatientName,
-    string PatientMrn,
-    int PatientAge,
-    string ChiefComplaint,
-    string? TriageLevel,
-    bool HasRedFlags,
-    DateTime StartedAt);
-
-public record RedFlagNotification(
-    Guid AssessmentId,
-    Guid PatientId,
-    string PatientName,
-    string Category,
-    string MatchedKeyword,
-    string Severity,
-    string ClinicalReason,
-    DateTime DetectedAt);
-
-#endregion

@@ -42,6 +42,43 @@ const DEMO_PATIENT = {
   redFlags: ['Worst headache of life', 'Visual changes'],
 };
 
+/**
+ * Fetch real patient context from the API when patientId is provided via URL.
+ * Falls back to DEMO_PATIENT for standalone browsing / demo mode.
+ */
+async function fetchPatientContext(patientId: string): Promise<typeof DEMO_PATIENT | null> {
+  try {
+    const res = await fetch(`/api/patients/${patientId}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const patient = data.patient || data;
+
+    // Map API response to the shape the lab ordering store expects
+    const dob = patient.dateOfBirth ? new Date(patient.dateOfBirth) : null;
+    const age = dob ? Math.floor((Date.now() - dob.getTime()) / 31557600000) : 0;
+
+    return {
+      id: patient.id,
+      name: [patient.firstName, patient.lastName].filter(Boolean).join(' ') || 'Unknown',
+      age,
+      gender: patient.gender || 'Unknown',
+      mrn: patient.mrn || '',
+      chiefComplaint: patient.chiefComplaint || data.chiefComplaint || '',
+      allergies: (patient.allergies || []).map((a: any) =>
+        typeof a === 'string'
+          ? { allergen: a, reaction: 'Unknown', severity: 'moderate' as const }
+          : { allergen: a.allergen || a.name || a, reaction: a.reaction || 'Unknown', severity: (a.severity || 'moderate') as 'moderate' }
+      ),
+      currentMedications: patient.medications || patient.currentMedications || [],
+      medicalHistory: patient.medicalHistory || patient.conditions || [],
+      redFlags: patient.redFlags || data.redFlags || [],
+    };
+  } catch (err) {
+    console.error('[Labs] Failed to fetch patient:', err);
+    return null;
+  }
+}
+
 type ViewMode = 'order' | 'results';
 type OrderTab = 'ai' | 'panels' | 'catalog';
 
@@ -51,6 +88,7 @@ export default function Labs() {
   const [activeTab, setActiveTab] = useState<OrderTab>('ai');
   const [showCosts, setShowCosts] = useState(true);
   const [alertDismissed, setAlertDismissed] = useState(false);
+  const [patientLoading, setPatientLoading] = useState(false);
   const toast = useToast();
 
   const {
@@ -62,9 +100,41 @@ export default function Labs() {
     getSelectedLabsArray, getFilteredCatalog, getTotalCost, getStatCount, getFastingRequired,
   } = useLabOrderingStore();
 
+  // Load real patient from URL params, or fall back to DEMO_PATIENT
+  const { patientId, encounterId, assessmentId, chiefComplaint } = router.query;
+
   useEffect(() => {
-    if (!patientContext) setPatientContext(DEMO_PATIENT);
-  }, [patientContext, setPatientContext]);
+    let cancelled = false;
+
+    async function loadPatient() {
+      // If a real patientId is in the URL, fetch from API
+      if (patientId && typeof patientId === 'string') {
+        setPatientLoading(true);
+        const ctx = await fetchPatientContext(patientId);
+        if (!cancelled) {
+          if (ctx) {
+            // Overlay chiefComplaint from URL if provided (e.g., from assessment)
+            if (chiefComplaint && typeof chiefComplaint === 'string') {
+              ctx.chiefComplaint = chiefComplaint;
+            }
+            setPatientContext(ctx);
+          } else {
+            // Patient not found — fall back to demo
+            toast.error('Patient not found', 'Using demo patient data');
+            setPatientContext(DEMO_PATIENT);
+          }
+          setPatientLoading(false);
+        }
+      } else if (!patientContext) {
+        // No patientId in URL — use demo patient
+        setPatientContext(DEMO_PATIENT);
+      }
+    }
+
+    loadPatient();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientId, chiefComplaint]);
 
   const selectedLabsArray = getSelectedLabsArray();
   const filteredCatalog = getFilteredCatalog();
@@ -86,8 +156,13 @@ export default function Labs() {
   const handleSubmit = async () => {
     try {
       toast.loading('Submitting lab orders...');
-      const orderIds = await submitOrder('encounter-demo-001');
+      const eid = (encounterId && typeof encounterId === 'string') ? encounterId : 'encounter-demo-001';
+      const orderIds = await submitOrder(eid);
       toast.success('Lab orders submitted!', `Order IDs: ${Array.isArray(orderIds) ? orderIds.join(', ') : orderIds}`);
+      // If we came from an assessment, navigate back to it
+      if (assessmentId && typeof assessmentId === 'string') {
+        router.push(`/assessments/${assessmentId}`);
+      }
     } catch (err) {
       toast.error('Failed to submit', 'Please try again.');
     }

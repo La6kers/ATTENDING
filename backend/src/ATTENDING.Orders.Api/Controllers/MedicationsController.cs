@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
@@ -15,6 +16,7 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Route("api/v1/[controller]")]
 [Authorize]
 [Produces("application/json")]
+[EnableRateLimiting("tenant-api")]
 public class MedicationsController : ControllerBase
 {
     private readonly IMedicationOrderRepository _repository;
@@ -144,6 +146,7 @@ public class MedicationsController : ControllerBase
     /// Create a new medication order
     /// </summary>
     [HttpPost]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(MedicationOrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<MedicationOrderResponse>> Create([FromBody] CreateMedicationOrderRequest request)
@@ -245,6 +248,7 @@ public class MedicationsController : ControllerBase
     /// Discontinue a medication
     /// </summary>
     [HttpPost("{id:guid}/discontinue")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Discontinue(Guid id, [FromBody] DiscontinueMedicationRequest request)

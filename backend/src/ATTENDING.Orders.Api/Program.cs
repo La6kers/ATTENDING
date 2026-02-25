@@ -5,18 +5,34 @@ using Serilog;
 using ATTENDING.Application;
 using ATTENDING.Infrastructure;
 using ATTENDING.Orders.Api.Hubs;
+using ATTENDING.Orders.Api.Extensions;
 using ATTENDING.Orders.Api.Middleware;
 using ATTENDING.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Serilog
+// ============================================================
+// Azure Key Vault — Production secrets management
+// Supplements appsettings.Production.json placeholders with
+// real secrets from Key Vault. Only active when KV URI is set.
+// ============================================================
+var keyVaultUri = builder.Configuration["AzureKeyVault:Uri"];
+if (!string.IsNullOrWhiteSpace(keyVaultUri))
+{
+    builder.Configuration.AddAzureKeyVault(
+        new Uri(keyVaultUri),
+        new Azure.Identity.DefaultAzureCredential());
+    Log.Information("Azure Key Vault configuration source active: {Uri}", keyVaultUri);
+}
+
+// Configure Serilog with PHI-safe logging
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .Enrich.WithMachineName()
     .Enrich.WithEnvironmentName()
     .Enrich.WithProperty("Application", "ATTENDING.Orders.Api")
+    .Destructure.With<PhiMaskingDestructuringPolicy>()   // masks PHI in structured log properties
     .WriteTo.Console()
     .CreateLogger();
 
@@ -45,12 +61,21 @@ if (!string.IsNullOrWhiteSpace(signalRRedis))
     Log.Information("SignalR Redis backplane enabled");
 }
 
-// Register SignalR notification service
-builder.Services.AddScoped<IClinicalNotificationService, ClinicalNotificationService>();
+// Register SignalR notification service (implements Application.Interfaces.IClinicalNotificationService)
+builder.Services.AddScoped<ATTENDING.Application.Interfaces.IClinicalNotificationService,
+    ATTENDING.Orders.Api.Hubs.SignalRClinicalNotificationService>();
 
 // Current user context for audit trails
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ATTENDING.Domain.Interfaces.ICurrentUserService, ATTENDING.Orders.Api.Services.CurrentUserService>();
+
+// Request body size limit (5MB max — prevents abuse, sufficient for clinical payloads)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5 MB
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
+    options.AddServerHeader = false; // Don't expose server version
+});
 
 // Add controllers
 builder.Services.AddControllers()
@@ -120,6 +145,12 @@ builder.Services.AddCors(options =>
 
 // Rate limiting
 builder.Services.AddAttendingRateLimiting();
+
+// Performance SLA monitoring
+builder.Services.AddPerformanceMonitoring(builder.Configuration);
+
+// OpenTelemetry distributed tracing
+builder.Services.AddAttendingOpenTelemetry(builder.Configuration, builder.Environment);
 
 // Add response caching
 builder.Services.AddResponseCaching();
@@ -208,25 +239,44 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 // Correlation ID
 app.UseMiddleware<CorrelationIdMiddleware>();
 
+// Performance SLA monitoring (after correlation ID so breaches include the ID)
+app.UseMiddleware<PerformanceMonitoringMiddleware>();
+
 // API version header
 app.UseMiddleware<ApiVersionHeaderMiddleware>();
 
 // Global exception handling
 app.UseMiddleware<ExceptionMiddleware>();
 
-// Request logging
+// Request logging (PHI-safe: path only, no query string, no PHI fields)
 app.UseSerilogRequestLogging(options =>
 {
+    // Exclude query string from logged path to prevent PHI leakage
+    options.GetLevel = (httpContext, elapsed, ex) =>
+        ex != null ? Serilog.Events.LogEventLevel.Error :
+        httpContext.Response.StatusCode >= 500 ? Serilog.Events.LogEventLevel.Error :
+        httpContext.Response.StatusCode >= 400 ? Serilog.Events.LogEventLevel.Warning :
+        Serilog.Events.LogEventLevel.Information;
+
     options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
+        // Explicitly use only Path (no QueryString) — PHI may appear in query params
+        diagnosticContext.Set("RequestPath", httpContext.Request.Path.Value);
         diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-        diagnosticContext.Set("UserAgent", httpContext.Request.Headers["User-Agent"].ToString());
-        diagnosticContext.Set("ClientIP", httpContext.Connection.RemoteIpAddress?.ToString());
-        
+        diagnosticContext.Set("UserAgent",   httpContext.Request.Headers["User-Agent"].ToString());
+        diagnosticContext.Set("ClientIP",    httpContext.Connection.RemoteIpAddress?.ToString());
+        diagnosticContext.Set("ResponseSize", httpContext.Response.ContentLength);
+
         if (httpContext.User.Identity?.IsAuthenticated == true)
         {
-            diagnosticContext.Set("UserId", httpContext.User.FindFirst("sub")?.Value);
+            // Log tenant/user IDs (not PHI — these are provider identifiers, not patient data)
+            var tenantId = httpContext.User.FindFirst("oid")?.Value ?? httpContext.User.FindFirst("sub")?.Value;
+            diagnosticContext.Set("TenantId", tenantId);
         }
+
+        // Propagate correlation ID for distributed trace linking
+        if (httpContext.Items.TryGetValue("CorrelationId", out var correlationId))
+            diagnosticContext.Set("CorrelationId", correlationId?.ToString());
     };
 });
 
@@ -239,6 +289,9 @@ app.UseAuthorization();
 
 // Rate limiting
 app.UseRateLimiter();
+
+// Idempotency protection for clinical order creation (after auth, before audit)
+app.UseMiddleware<IdempotencyMiddleware>();
 
 // Audit middleware (after auth)
 app.UseMiddleware<AuditMiddleware>();
@@ -307,6 +360,7 @@ public class DevAuthHandler : Microsoft.AspNetCore.Authentication.Authentication
         {
             new System.Security.Claims.Claim("sub", "00000000-0000-0000-0000-000000000001"),
             new System.Security.Claims.Claim("oid", "00000000-0000-0000-0000-000000000001"),
+            new System.Security.Claims.Claim("tenant_id", "00000000-0000-0000-0000-000000000001"),
             new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, "scott.isbell@attending.ai"),
             new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Dr. Scott Isbell"),
             new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Provider"),

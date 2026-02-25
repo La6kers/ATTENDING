@@ -13,6 +13,14 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 {
     private IDbContextTransaction? _currentTransaction;
     private readonly IDomainEventDispatcher? _domainEventDispatcher;
+    private readonly ICurrentUserService? _currentUserService;
+    
+    /// <summary>
+    /// Current tenant ID for global query filters.
+    /// Resolved from the authenticated user's JWT via ICurrentUserService.
+    /// When null (e.g. background jobs, migrations), tenant filters are bypassed.
+    /// </summary>
+    private Guid? _tenantId => _currentUserService?.TenantId;
 
     public AttendingDbContext(DbContextOptions<AttendingDbContext> options) 
         : base(options)
@@ -21,10 +29,12 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
     public AttendingDbContext(
         DbContextOptions<AttendingDbContext> options,
-        IDomainEventDispatcher? domainEventDispatcher)
+        IDomainEventDispatcher? domainEventDispatcher,
+        ICurrentUserService? currentUserService = null)
         : base(options)
     {
         _domainEventDispatcher = domainEventDispatcher;
+        _currentUserService = currentUserService;
     }
 
     #region DbSets
@@ -72,41 +82,64 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         modelBuilder.HasDefaultSchema("clinical");
 
         // --------------------------------------------------------
-        // Global query filters: soft delete
-        // Healthcare data must never be hard-deleted (HIPAA).
-        // These filters automatically exclude soft-deleted records
-        // from all queries unless explicitly overridden with
-        // .IgnoreQueryFilters()
+        // Global query filters: soft delete + multi-tenant isolation
+        //
+        // HIPAA: Healthcare data must never be hard-deleted.
+        // TENANT: Every query is scoped to the current user's organization.
+        //
+        // _tenantId == null bypasses tenant filter (background jobs, migrations, admin).
+        // To bypass soft-delete, use .IgnoreQueryFilters() explicitly.
         // --------------------------------------------------------
-        modelBuilder.Entity<Patient>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Encounter>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Allergy>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<MedicalCondition>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<LabOrder>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<ImagingOrder>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<MedicationOrder>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Referral>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<PatientAssessment>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Patient>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<Encounter>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<Allergy>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<MedicalCondition>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<LabOrder>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<ImagingOrder>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<MedicationOrder>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<Referral>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<PatientAssessment>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
 
         // Child entities: matching filters to prevent EF warning 10622
         // (required end of relationship with filtered parent)
-        modelBuilder.Entity<AssessmentSymptom>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<AssessmentResponse>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<LabResult>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<ImagingResult>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<AssessmentSymptom>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<AssessmentResponse>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<LabResult>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<ImagingResult>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
 
         // --------------------------------------------------------
         // Concurrency tokens: RowVersion on all aggregate roots
         // Prevents lost updates in multi-provider environments
+        //
+        // NOTE: IsRowVersion() is skipped for InMemory provider because
+        // InMemory auto-generates byte[] values that cause spurious
+        // DbUpdateConcurrencyException. Real concurrency is tested
+        // via Testcontainers (Docker) with actual SQL Server.
         // --------------------------------------------------------
+        var isInMemory = Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory";
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes()
             .Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType)
                      && t.ClrType != typeof(AuditLog)))
         {
-            modelBuilder.Entity(entityType.ClrType)
-                .Property(nameof(BaseEntity.RowVersion))
-                .IsRowVersion();
+            if (!isInMemory)
+            {
+                modelBuilder.Entity(entityType.ClrType)
+                    .Property(nameof(BaseEntity.RowVersion))
+                    .IsRowVersion();
+            }
+            else
+            {
+                // InMemory: completely disable RowVersion concurrency semantics.
+                // IsRowVersion() sets both IsConcurrencyToken + ValueGeneratedOnAddOrUpdate.
+                // We must undo BOTH: stop treating it as a concurrency token AND stop
+                // auto-generating values (which causes byte[] mismatch on save).
+                modelBuilder.Entity(entityType.ClrType)
+                    .Property(nameof(BaseEntity.RowVersion))
+                    .IsConcurrencyToken(false)
+                    .ValueGeneratedNever();
+            }
 
             modelBuilder.Entity(entityType.ClrType)
                 .Property(nameof(BaseEntity.IsDeleted))
@@ -123,6 +156,11 @@ public class AttendingDbContext : DbContext, IUnitOfWork
             modelBuilder.Entity(entityType.ClrType)
                 .Property(nameof(BaseEntity.DeletedBy))
                 .HasMaxLength(100);
+
+            // OrganizationId index — accelerates tenant-scoped queries
+            modelBuilder.Entity(entityType.ClrType)
+                .HasIndex(nameof(BaseEntity.OrganizationId))
+                .HasDatabaseName($"IX_{entityType.ClrType.Name}_OrganizationId");
         }
     }
 
@@ -266,13 +304,33 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
     private void UpdateAuditFields()
     {
+        var userId = _currentUserService?.UserId ?? "system";
+        var tenantId = _currentUserService?.TenantId;
         var entries = ChangeTracker.Entries<BaseEntity>();
 
         foreach (var entry in entries)
         {
-            if (entry.State == EntityState.Modified)
+            switch (entry.State)
             {
-                entry.Entity.SetModified();
+                case EntityState.Added:
+                    entry.Entity.SetCreatedBy(userId);
+                    // Auto-set tenant on new entities — ensures every record
+                    // is bound to the authenticated user's organization.
+                    if (entry.Entity.OrganizationId == Guid.Empty && tenantId.HasValue)
+                    {
+                        entry.Entity.SetOrganization(tenantId.Value);
+                    }
+                    break;
+
+                case EntityState.Modified:
+                    entry.Entity.SetModified(userId);
+                    break;
+
+                case EntityState.Deleted:
+                    // Intercept hard deletes → soft deletes (HIPAA)
+                    entry.State = EntityState.Modified;
+                    entry.Entity.SoftDelete(userId);
+                    break;
             }
         }
     }

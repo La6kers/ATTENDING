@@ -10,7 +10,7 @@
 //   - Organization model presence
 // ============================================================
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // ============================================================
 // HARD DELETE SQL INJECTION GUARD

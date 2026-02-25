@@ -11,31 +11,26 @@
 // Also tests middleware RBAC and multi-tenant isolation.
 // ============================================================
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// vi.mock is hoisted by vitest — runs before any imports
+vi.mock('next-auth/jwt', () => ({
+  getToken: vi.fn(),
+}));
+
+// Static imports — mock is already in place when these resolve
+import { createHandler, publicHandler, providerHandler, adminHandler } from '../../apps/shared/lib/api/handler';
+import * as nextAuthJwt from 'next-auth/jwt';
+
+const mockGetToken = vi.mocked(nextAuthJwt.getToken);
 
 // ============================================================
 // HANDLER PIPELINE UNIT TESTS
 // ============================================================
 
 describe('Unified Handler Factory', () => {
-  // Mock next-auth/jwt so we can control authentication
-  const mockGetToken = jest.fn();
-  jest.unstable_mockModule('next-auth/jwt', () => ({
-    getToken: mockGetToken,
-  }));
-
-  let createHandler: any;
-  let publicHandler: any;
-  let providerHandler: any;
-  let adminHandler: any;
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-    const mod = await import('../../apps/shared/lib/api/handler');
-    createHandler = mod.createHandler;
-    publicHandler = mod.publicHandler;
-    providerHandler = mod.providerHandler;
-    adminHandler = mod.adminHandler;
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
   // Helper: Create mock req/res for testing
@@ -220,7 +215,9 @@ describe('Unified Handler Factory', () => {
     const handler = createHandler({
       methods: ['GET'],
       auth: 'provider',
-      handler: async (_req: any, ctx: any) => ctx.success({ role: ctx.user?.role }),
+      handler: async (_req: any, ctx: any) => {
+        ctx.success({ role: ctx.user?.role });
+      },
     });
 
     const { req, res } = createMockReqRes();
@@ -551,7 +548,7 @@ describe('Multi-Tenant Isolation', () => {
   });
 
   it('middleware blocks unscoped queries in strict mode', async () => {
-    const { applyTenantMiddleware, TENANT_SCOPED_MODELS } = await import('../../apps/shared/lib/multiTenant');
+    const { TENANT_SCOPED_MODELS } = await import('../../apps/shared/lib/multiTenant');
 
     // Verify all clinical models are scoped
     const expectedModels = [

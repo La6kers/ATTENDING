@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.Json;
-using System.Threading.RateLimiting;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Orders.Api.Middleware;
@@ -38,6 +36,32 @@ public class ExceptionMiddleware
         {
             await HandleValidationExceptionAsync(context, ex);
         }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+        {
+            await HandleConcurrencyExceptionAsync(context, ex);
+        }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // Client disconnected — log at debug level, no error response needed
+            _logger.LogDebug("Request cancelled by client: {Path}", context.Request.Path);
+            context.Response.StatusCode = 499; // nginx-style client closed request
+        }
+        catch (KeyNotFoundException ex)
+        {
+            await HandleNotFoundExceptionAsync(context, ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            await HandleUnauthorizedExceptionAsync(context, ex);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("Cannot") || ex.Message.Contains("Can only"))
+        {
+            await HandleBusinessRuleViolationAsync(context, ex);
+        }
+        catch (ATTENDING.Infrastructure.External.CircuitBreakerOpenException ex)
+        {
+            await HandleServiceUnavailableAsync(context, ex);
+        }
         catch (Exception ex)
         {
             await HandleExceptionAsync(context, ex);
@@ -65,6 +89,119 @@ public class ExceptionMiddleware
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         context.Response.ContentType = "application/problem+json";
 
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    }
+
+    private async Task HandleConcurrencyExceptionAsync(
+        HttpContext context, Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+    {
+        var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        _logger.LogWarning(ex,
+            "Concurrency conflict on {Path}. TraceId: {TraceId}. " +
+            "Another provider likely modified this record simultaneously.",
+            context.Request.Path, traceId);
+
+        var problemDetails = new ProblemDetails
+        {
+            Title = "Concurrency Conflict",
+            Status = StatusCodes.Status409Conflict,
+            Detail = "This record was modified by another user since you last loaded it. " +
+                     "Please refresh and retry your changes.",
+            Instance = context.Request.Path,
+            Extensions = { ["traceId"] = traceId }
+        };
+
+        context.Response.StatusCode = StatusCodes.Status409Conflict;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    }
+
+    private async Task HandleNotFoundExceptionAsync(HttpContext context, KeyNotFoundException ex)
+    {
+        var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        _logger.LogWarning("Resource not found: {Path}. TraceId: {TraceId}",
+            context.Request.Path, traceId);
+
+        var problemDetails = new ProblemDetails
+        {
+            Title = "Resource Not Found",
+            Status = StatusCodes.Status404NotFound,
+            Detail = ex.Message,
+            Instance = context.Request.Path,
+            Extensions = { ["traceId"] = traceId }
+        };
+
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    }
+
+    private async Task HandleUnauthorizedExceptionAsync(HttpContext context, UnauthorizedAccessException ex)
+    {
+        var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        _logger.LogWarning("Unauthorized access attempt: {Path}. TraceId: {TraceId}",
+            context.Request.Path, traceId);
+
+        var problemDetails = new ProblemDetails
+        {
+            Title = "Access Denied",
+            Status = StatusCodes.Status403Forbidden,
+            Detail = "You do not have permission to perform this action.",
+            Instance = context.Request.Path,
+            Extensions = { ["traceId"] = traceId }
+        };
+
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    }
+
+    private async Task HandleBusinessRuleViolationAsync(HttpContext context, InvalidOperationException ex)
+    {
+        var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        _logger.LogWarning("Business rule violation on {Path}: {Message}. TraceId: {TraceId}",
+            context.Request.Path, ex.Message, traceId);
+
+        var problemDetails = new ProblemDetails
+        {
+            Title = "Business Rule Violation",
+            Status = StatusCodes.Status422UnprocessableEntity,
+            Detail = ex.Message,
+            Instance = context.Request.Path,
+            Extensions = { ["traceId"] = traceId }
+        };
+
+        context.Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        context.Response.ContentType = "application/problem+json";
+        await context.Response.WriteAsJsonAsync(problemDetails);
+    }
+
+    private async Task HandleServiceUnavailableAsync(
+        HttpContext context, ATTENDING.Infrastructure.External.CircuitBreakerOpenException ex)
+    {
+        var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+
+        _logger.LogWarning(ex,
+            "External service unavailable (circuit breaker open) for {Path}. TraceId: {TraceId}",
+            context.Request.Path, traceId);
+
+        var problemDetails = new ProblemDetails
+        {
+            Title = "Service Temporarily Unavailable",
+            Status = StatusCodes.Status503ServiceUnavailable,
+            Detail = "An external service is temporarily unavailable. " +
+                     "The system will retry automatically. Please try again in a few moments.",
+            Instance = context.Request.Path,
+            Extensions = { ["traceId"] = traceId }
+        };
+
+        context.Response.Headers["Retry-After"] = "30";
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        context.Response.ContentType = "application/problem+json";
         await context.Response.WriteAsJsonAsync(problemDetails);
     }
 
@@ -301,88 +438,24 @@ public class CorrelationIdMiddleware
 }
 
 /// <summary>
-/// ASP.NET Core rate limiting configuration
-/// </summary>
-public static class RateLimitingConfiguration
-{
-    public static IServiceCollection AddAttendingRateLimiting(this IServiceCollection services)
-    {
-        services.AddRateLimiter(options =>
-        {
-            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-
-            // Global policy: 100 requests per minute per IP
-            options.AddFixedWindowLimiter("standard", limiterOptions =>
-            {
-                limiterOptions.PermitLimit = 100;
-                limiterOptions.Window = TimeSpan.FromMinutes(1);
-                limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-                limiterOptions.QueueLimit = 5;
-            });
-
-            // AI endpoints: 20 requests per minute
-            options.AddFixedWindowLimiter("ai", limiterOptions =>
-            {
-                limiterOptions.PermitLimit = 20;
-                limiterOptions.Window = TimeSpan.FromMinutes(1);
-                limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-                limiterOptions.QueueLimit = 2;
-            });
-
-            // Auth endpoints: 10 per minute (brute force protection)
-            options.AddFixedWindowLimiter("auth", limiterOptions =>
-            {
-                limiterOptions.PermitLimit = 10;
-                limiterOptions.Window = TimeSpan.FromMinutes(1);
-                limiterOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-                limiterOptions.QueueLimit = 0;
-            });
-
-            // Global fallback by IP
-            options.GlobalLimiter = System.Threading.RateLimiting.PartitionedRateLimiter.Create<HttpContext, string>(context =>
-            {
-                var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                return System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(clientIp,
-                    _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 200,
-                        Window = TimeSpan.FromMinutes(1),
-                        QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 10
-                    });
-            });
-
-            options.OnRejected = async (context, cancellationToken) =>
-            {
-                context.HttpContext.Response.ContentType = "application/problem+json";
-                var problem = new Microsoft.AspNetCore.Mvc.ProblemDetails
-                {
-                    Title = "Too Many Requests",
-                    Status = StatusCodes.Status429TooManyRequests,
-                    Detail = "Rate limit exceeded. Please try again later.",
-                    Instance = context.HttpContext.Request.Path
-                };
-
-                if (context.Lease.TryGetMetadata(System.Threading.RateLimiting.MetadataName.RetryAfter, out var retryAfter))
-                {
-                    context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
-                    problem.Extensions["retryAfter"] = (int)retryAfter.TotalSeconds;
-                }
-
-                await context.HttpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
-            };
-        });
-
-        return services;
-    }
-}
-
-
-/// <summary>
-/// Adds API version header to all responses
+/// Adds API version and deprecation/sunset headers to all responses.
+///
+/// Per RFC 8594: the Sunset header indicates a deprecation date for an endpoint.
+/// When a route is routed to a deprecated version (e.g. /api/v0/ patterns),
+/// the Deprecation and Sunset headers are added automatically.
+///
+/// Consumers monitoring these headers can plan migrations before sunset dates.
 /// </summary>
 public class ApiVersionHeaderMiddleware
 {
+    // Map of route prefix → (deprecated since, sunset date)
+    // Add entries here when you deprecate an API version.
+    private static readonly Dictionary<string, (string Deprecated, string Sunset)> DeprecatedVersions =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            // Example: { "/api/v0/", ("Tue, 01 Jul 2025 00:00:00 GMT", "Sat, 01 Jan 2026 00:00:00 GMT") }
+        };
+
     private readonly RequestDelegate _next;
 
     public ApiVersionHeaderMiddleware(RequestDelegate next) => _next = next;
@@ -391,6 +464,20 @@ public class ApiVersionHeaderMiddleware
     {
         context.Response.Headers["X-Api-Version"] = "1.0";
         context.Response.Headers["X-Powered-By"] = "ATTENDING-AI";
+
+        // Add RFC 8594 Sunset/Deprecation headers for deprecated routes
+        var path = context.Request.Path.Value ?? "";
+        foreach (var (prefix, dates) in DeprecatedVersions)
+        {
+            if (path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.Headers["Deprecation"] = dates.Deprecated;
+                context.Response.Headers["Sunset"] = dates.Sunset;
+                context.Response.Headers["Link"] = "</api/v1/>; rel=\"successor-version\"";
+                break;
+            }
+        }
+
         await _next(context);
     }
 }

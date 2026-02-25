@@ -375,6 +375,7 @@ export const useLabOrderingStore = create<LabOrderingState>()(
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              patientId: get().patientContext?.id,
               encounterId: encounterId || get().encounterId,
               tests,
               indication: clinicalIndication,

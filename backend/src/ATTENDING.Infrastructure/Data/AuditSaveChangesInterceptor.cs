@@ -6,8 +6,8 @@ using ATTENDING.Domain.Interfaces;
 namespace ATTENDING.Infrastructure.Data;
 
 /// <summary>
-/// EF Core interceptor that auto-populates audit fields on SaveChanges.
-/// Handles CreatedBy, ModifiedBy, DeletedBy, and soft-delete interception.
+/// EF Core interceptor that auto-populates audit fields and tenant isolation on SaveChanges.
+/// Handles CreatedBy, ModifiedBy, DeletedBy, OrganizationId, and soft-delete interception.
 /// </summary>
 public class AuditSaveChangesInterceptor : SaveChangesInterceptor
 {
@@ -38,6 +38,7 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
         if (context == null) return;
 
         var userId = _currentUser.UserId ?? "system";
+        var tenantId = _currentUser.TenantId;
 
         foreach (var entry in context.ChangeTracker.Entries<BaseEntity>())
         {
@@ -45,6 +46,14 @@ public class AuditSaveChangesInterceptor : SaveChangesInterceptor
             {
                 case EntityState.Added:
                     entry.Entity.SetCreatedBy(userId);
+                    
+                    // Auto-set tenant on new entities — ensures every record
+                    // is bound to the authenticated user's organization.
+                    // Only set if not already assigned (allows explicit assignment in seeds/tests).
+                    if (entry.Entity.OrganizationId == Guid.Empty && tenantId.HasValue)
+                    {
+                        entry.Entity.SetOrganization(tenantId.Value);
+                    }
                     break;
 
                 case EntityState.Modified:

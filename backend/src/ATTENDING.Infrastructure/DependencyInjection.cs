@@ -7,6 +7,7 @@ using ATTENDING.Domain.Services;
 using ATTENDING.Infrastructure.Caching;
 using ATTENDING.Infrastructure.Data;
 using ATTENDING.Infrastructure.Repositories;
+using ATTENDING.Infrastructure.External;
 using ATTENDING.Infrastructure.Services;
 
 namespace ATTENDING.Infrastructure;
@@ -79,6 +80,25 @@ public static class DependencyInjection
         services.AddSingleton<IClinicalCacheService, RedisClinicalCacheService>();
 
         // --------------------------------------------------------
+        // Distributed Lock Service
+        // --------------------------------------------------------
+        if (!string.IsNullOrWhiteSpace(redisConnectionString))
+        {
+            // Production: Redis-backed distributed locks (cross-node safe)
+            services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
+                StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
+            services.AddSingleton<ATTENDING.Domain.Interfaces.IDistributedLockService,
+                Services.RedisDistributedLockService>();
+
+        }
+        else
+        {
+            // Development fallback: in-memory locks (single-process only)
+            services.AddSingleton<ATTENDING.Domain.Interfaces.IDistributedLockService,
+                Services.InMemoryDistributedLockService>();
+        }
+
+        // --------------------------------------------------------
         // Repositories
         // --------------------------------------------------------
         services.AddScoped<IPatientRepository, PatientRepository>();
@@ -95,7 +115,33 @@ public static class DependencyInjection
         // Domain Services
         // --------------------------------------------------------
         services.AddScoped<IRedFlagEvaluator, RedFlagEvaluator>();
-        services.AddScoped<IDrugInteractionService, DrugInteractionService>();
+
+        // Drug Interaction Service — composite pattern:
+        //   External API (NIH RxNorm, etc.) as primary → local rules as fallback
+        var drugApiConfig = configuration.GetSection("DrugInteractionApi");
+        var drugApiBaseUrl = drugApiConfig.GetValue<string>("BaseUrl");
+
+        if (!string.IsNullOrWhiteSpace(drugApiBaseUrl))
+        {
+            // External API is configured — register HTTP client with resilience
+            services.Configure<External.DrugInteraction.ExternalDrugInteractionOptions>(
+                opts => drugApiConfig.Bind(opts));
+            services.AddHttpClient<IExternalDrugInteractionApi,
+                External.DrugInteraction.NihDrugInteractionClient>(client =>
+            {
+                client.BaseAddress = new Uri(drugApiBaseUrl);
+            })
+            .AddClinicalResilienceHandler("DrugInteractionAPI");
+        }
+        else
+        {
+            // No external API configured — null stub (local rules only)
+            services.AddSingleton<IExternalDrugInteractionApi,
+                External.DrugInteraction.NullExternalDrugInteractionClient>();
+        }
+
+        services.AddScoped<IDrugInteractionService,
+            External.DrugInteraction.CompositeDrugInteractionService>();
 
         // --------------------------------------------------------
         // Infrastructure Services
@@ -105,7 +151,12 @@ public static class DependencyInjection
         services.AddScoped<IAnalyticsService, AnalyticsService>();
 
         // --------------------------------------------------------
-        // AI Services
+        // Background Scheduler (distributed-lock-guarded recurring jobs)
+        // --------------------------------------------------------
+        services.AddHostedService<Services.ClinicalSchedulerService>();
+
+        // --------------------------------------------------------
+        // AI Services — with resilience (retry + circuit breaker)
         // --------------------------------------------------------
         services.Configure<External.AI.ClinicalAiOptions>(opts =>
             configuration.GetSection("ClinicalAi").Bind(opts));
@@ -113,8 +164,25 @@ public static class DependencyInjection
         {
             var aiOptions = configuration.GetSection("ClinicalAi").Get<External.AI.ClinicalAiOptions>();
             client.BaseAddress = new Uri(aiOptions?.BaseUrl ?? "http://localhost:11434/api");
-            client.Timeout = TimeSpan.FromSeconds(aiOptions?.TimeoutSeconds ?? 30);
-        });
+        })
+        .AddClinicalResilienceHandler("ClinicalAI");
+
+        // --------------------------------------------------------
+        // FHIR EHR Client — with resilience
+        // --------------------------------------------------------
+        services.Configure<External.FHIR.FhirClientOptions>(opts =>
+            configuration.GetSection("Fhir").Bind(opts));
+        services.AddHttpClient<External.FHIR.IFhirClient, External.FHIR.EpicFhirClient>(client =>
+        {
+            var fhirOptions = configuration.GetSection("Fhir").Get<External.FHIR.FhirClientOptions>();
+            if (!string.IsNullOrWhiteSpace(fhirOptions?.BaseUrl))
+            {
+                client.BaseAddress = new Uri(fhirOptions.BaseUrl);
+            }
+            client.DefaultRequestHeaders.Accept.Add(
+                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/fhir+json"));
+        })
+        .AddClinicalResilienceHandler("EpicFHIR");
 
         return services;
     }

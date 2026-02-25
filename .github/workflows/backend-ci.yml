@@ -38,8 +38,8 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release /warnaserror
 
-      - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+      - name: Unit + Integration Tests (InMemory DB)
+        run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category!=Docker" --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
 
       - name: Publish test results
         uses: dorny/test-reporter@v1

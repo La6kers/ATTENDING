@@ -105,4 +105,5 @@ public class StubCurrentUserService : ICurrentUserService
     public string? UserId { get; }
     public string? Email => $"{UserId}@test.com";
     public bool IsAuthenticated => true;
+    public Guid? TenantId => Guid.TryParse(UserId, out var id) ? id : null;
 }

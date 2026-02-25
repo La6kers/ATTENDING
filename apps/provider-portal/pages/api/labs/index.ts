@@ -12,12 +12,20 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 // =============================================================================
 // Handler
 // =============================================================================
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
+  // Attempt to proxy to .NET backend first (architectural target).
+  // If the .NET API is running, it handles the request through CQRS/MediatR.
+  // If unavailable, fall through to direct Prisma access below.
+  const proxied = await proxyToBackend(req, res, '/api/v1/laborders');
+  if (proxied) return;
+
+  // Fallback: direct Prisma access (works without .NET backend running)
   switch (req.method) {
     case 'GET':
       return getLabOrders(req, res);

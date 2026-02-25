@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
@@ -15,6 +16,7 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Route("api/v1/[controller]")]
 [Authorize]
 [Produces("application/json")]
+[EnableRateLimiting("tenant-api")]
 public class ImagingOrdersController : ControllerBase
 {
     private readonly IImagingOrderRepository _repository;
@@ -116,6 +118,7 @@ public class ImagingOrdersController : ControllerBase
     /// Create a new imaging order
     /// </summary>
     [HttpPost]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(ImagingOrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ImagingOrderResponse>> Create([FromBody] CreateImagingOrderRequest request)
@@ -160,6 +163,7 @@ public class ImagingOrdersController : ControllerBase
     /// Schedule an imaging order
     /// </summary>
     [HttpPost("{id:guid}/schedule")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Schedule(Guid id, [FromBody] ScheduleImagingRequest request)
@@ -185,6 +189,7 @@ public class ImagingOrdersController : ControllerBase
     /// Cancel an imaging order
     /// </summary>
     [HttpPost("{id:guid}/cancel")]
+    [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Cancel(Guid id, [FromBody] CancelOrderRequest request)

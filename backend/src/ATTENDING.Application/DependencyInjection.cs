@@ -24,9 +24,12 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
 
         // Pipeline behaviors (order matters — outermost first!)
+        // TracingBehavior is outermost: span covers validation + handler + DB
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TracingMediatorBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ConcurrencyExceptionBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(InputSanitizationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 

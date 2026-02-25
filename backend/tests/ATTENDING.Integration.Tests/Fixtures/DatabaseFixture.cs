@@ -12,6 +12,12 @@ namespace ATTENDING.Integration.Tests.Fixtures;
 
 public class DatabaseFixture : IDisposable
 {
+    /// <summary>
+    /// Default test tenant ID — matches TestAuthHandler and DevAuthHandler identity.
+    /// All test seed data is assigned to this organization.
+    /// </summary>
+    public static readonly Guid DefaultTenantId = new("00000000-0000-0000-0000-000000000001");
+    
     public AttendingDbContext DbContext { get; }
     public IServiceProvider Services { get; }
 
@@ -50,26 +56,32 @@ public class DatabaseFixture : IDisposable
     }
 
     public async Task<Patient> SeedPatientAsync(string mrn = "TEST-001",
-        string firstName = "John", string lastName = "Doe")
+        string firstName = "John", string lastName = "Doe",
+        Guid? tenantId = null)
     {
         var patient = Patient.Create(mrn, firstName, lastName, new DateTime(1985, 6, 15), "Male");
+        patient.SetOrganization(tenantId ?? DefaultTenantId);
         DbContext.Set<Patient>().Add(patient);
         await DbContext.SaveChangesAsync();
         return patient;
     }
 
     public async Task<User> SeedProviderAsync(string email = "dr.test@attending.ai",
-        string firstName = "Test", string lastName = "Provider")
+        string firstName = "Test", string lastName = "Provider",
+        Guid? tenantId = null)
     {
         var user = User.Create(email, firstName, lastName, UserRole.Provider, "1234567890", "Family Medicine");
+        user.SetOrganization(tenantId ?? DefaultTenantId);
         DbContext.Set<User>().Add(user);
         await DbContext.SaveChangesAsync();
         return user;
     }
 
-    public async Task<Encounter> SeedEncounterAsync(Guid patientId, Guid providerId)
+    public async Task<Encounter> SeedEncounterAsync(Guid patientId, Guid providerId,
+        Guid? tenantId = null)
     {
         var encounter = Encounter.Create(patientId, providerId, "Office Visit");
+        encounter.SetOrganization(tenantId ?? DefaultTenantId);
         DbContext.Set<Encounter>().Add(encounter);
         await DbContext.SaveChangesAsync();
         return encounter;
@@ -81,34 +93,4 @@ public class DatabaseFixture : IDisposable
         if (Services is IDisposable disposable)
             disposable.Dispose();
     }
-}
-
-public class StubAuditService : IAuditService
-{
-    public List<AuditEntry> LoggedEntries { get; } = new();
-    public List<(Guid UserId, Guid PatientId, string Action)> PhiAccessLog { get; } = new();
-
-    public Task LogAsync(AuditEntry entry, CancellationToken cancellationToken = default)
-    {
-        LoggedEntries.Add(entry);
-        return Task.CompletedTask;
-    }
-
-    public Task LogPhiAccessAsync(Guid userId, Guid patientId, string action,
-        string resourceType, Guid? resourceId = null, string? details = null,
-        CancellationToken cancellationToken = default)
-    {
-        PhiAccessLog.Add((userId, patientId, action));
-        return Task.CompletedTask;
-    }
-
-    public Task<IReadOnlyList<AuditLog>> GetByPatientIdAsync(Guid patientId,
-        DateTime? startDate = null, DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<AuditLog>>(new List<AuditLog>());
-
-    public Task<IReadOnlyList<AuditLog>> GetByUserIdAsync(Guid userId,
-        DateTime? startDate = null, DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<AuditLog>>(new List<AuditLog>());
 }
