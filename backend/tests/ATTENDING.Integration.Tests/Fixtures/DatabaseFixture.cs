@@ -59,10 +59,15 @@ public class DatabaseFixture : IDisposable
         string firstName = "John", string lastName = "Doe",
         Guid? tenantId = null)
     {
+        // Clear tracked entities from previous test operations to prevent
+        // InMemory provider "duplicate key" errors from stale Added/Modified entries.
+        DbContext.ChangeTracker.Clear();
+        
         var patient = Patient.Create(mrn, firstName, lastName, new DateTime(1985, 6, 15), "Male");
         patient.SetOrganization(tenantId ?? DefaultTenantId);
         DbContext.Set<Patient>().Add(patient);
         await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
         return patient;
     }
 
@@ -70,20 +75,26 @@ public class DatabaseFixture : IDisposable
         string firstName = "Test", string lastName = "Provider",
         Guid? tenantId = null)
     {
+        DbContext.ChangeTracker.Clear();
+        
         var user = User.Create(email, firstName, lastName, UserRole.Provider, "1234567890", "Family Medicine");
         user.SetOrganization(tenantId ?? DefaultTenantId);
         DbContext.Set<User>().Add(user);
         await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
         return user;
     }
 
     public async Task<Encounter> SeedEncounterAsync(Guid patientId, Guid providerId,
         Guid? tenantId = null)
     {
+        DbContext.ChangeTracker.Clear();
+        
         var encounter = Encounter.Create(patientId, providerId, "Office Visit");
         encounter.SetOrganization(tenantId ?? DefaultTenantId);
         DbContext.Set<Encounter>().Add(encounter);
         await DbContext.SaveChangesAsync();
+        DbContext.ChangeTracker.Clear();
         return encounter;
     }
 

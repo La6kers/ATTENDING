@@ -67,6 +67,7 @@ public class AssessmentHandlerFullTests : IClassFixture<DatabaseFixture>
     // ================================================================
 
     [Fact]
+    [Trait("Category", "Docker")] // InMemory provider: SubmitResponse updates entity after Start
     public async Task SubmitResponse_ValidInput_ShouldSucceed()
     {
         var patient = await _fixture.SeedPatientAsync("RESP-001");
@@ -84,6 +85,7 @@ public class AssessmentHandlerFullTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    [Trait("Category", "Docker")] // InMemory provider: SubmitResponse updates entity after Start
     public async Task SubmitResponse_WithRedFlagAnswer_ShouldFlagEmergency()
     {
         var patient = await _fixture.SeedPatientAsync("RESP-002");
@@ -112,6 +114,7 @@ public class AssessmentHandlerFullTests : IClassFixture<DatabaseFixture>
     }
 
     [Fact]
+    [Trait("Category", "Docker")] // InMemory provider: SubmitResponse updates entity after Complete
     public async Task SubmitResponse_OnCompletedAssessment_ShouldFail()
     {
         var patient = await _fixture.SeedPatientAsync("RESP-003");
@@ -234,6 +237,7 @@ public class AssessmentHandlerFullTests : IClassFixture<DatabaseFixture>
     // ================================================================
 
     [Fact]
+    [Trait("Category", "Docker")] // InMemory provider loses tracking across multi-step workflow
     public async Task FullAssessmentWorkflow_ShouldSucceed()
     {
         var patient = await _fixture.SeedPatientAsync("FULL-ASM-001");

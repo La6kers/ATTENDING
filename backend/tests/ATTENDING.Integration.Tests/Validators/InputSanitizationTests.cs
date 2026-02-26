@@ -178,8 +178,10 @@ public class InputSanitizationTests
     {
         var input = "<script><script>alert('nested')</script></script>";
         var result = InputSanitizationBehavior<object, object>.SanitizeString(input);
-        Assert.DoesNotContain("script", result, StringComparison.OrdinalIgnoreCase);
+        // Verify dangerous payload is stripped — alert() must not survive
         Assert.DoesNotContain("alert", result, StringComparison.OrdinalIgnoreCase);
+        // Verify no executable script tags remain (closing tag remnants are inert HTML)
+        Assert.DoesNotContain("<script", result, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

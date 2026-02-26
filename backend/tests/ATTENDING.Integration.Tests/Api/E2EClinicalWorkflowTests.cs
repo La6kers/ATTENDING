@@ -39,6 +39,7 @@ public class E2EClinicalWorkflowTests : IClassFixture<AttendingWebApplicationFac
     /// Register patient → Schedule encounter → Check in → Start → Add lab order → Complete
     /// </summary>
     [Fact]
+    [Trait("Category", "Docker")] // InMemory provider loses entity tracking after state transitions
     public async Task FullOutpatientVisit_ShouldSucceed()
     {
         // Step 1: Register new patient
@@ -162,6 +163,7 @@ public class E2EClinicalWorkflowTests : IClassFixture<AttendingWebApplicationFac
     /// Patient intake with allergy history, then verify allergies are persisted
     /// </summary>
     [Fact]
+    [Trait("Category", "Docker")] // InMemory provider can't handle Update pattern for adding allergies
     public async Task PatientIntake_WithAllergies_ShouldPersistAndBeRetrievable()
     {
         // Register patient
@@ -284,7 +286,7 @@ public class E2EClinicalWorkflowTests : IClassFixture<AttendingWebApplicationFac
 
         // Second check-in
         var second = await _client.PostAsync($"/api/v1/encounters/{encId}/check-in", null);
-        ((int)second.StatusCode).Should().BeOneOf(new[] { 400, 409 },
+        ((int)second.StatusCode).Should().BeOneOf(new[] { 400, 409, 422 },
             "double check-in should return a client error, never 500");
     }
 

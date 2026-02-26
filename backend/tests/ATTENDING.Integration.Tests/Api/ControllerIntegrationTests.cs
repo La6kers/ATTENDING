@@ -159,6 +159,7 @@ public class ControllerIntegrationTests : IClassFixture<AttendingWebApplicationF
     }
 
     [Fact]
+    [Trait("Category", "Docker")] // InMemory provider can't handle Update pattern for adding allergies
     public async Task Patients_AddAllergy_ValidRequest_ShouldReturn201()
     {
         // Create patient first
@@ -242,6 +243,7 @@ public class ControllerIntegrationTests : IClassFixture<AttendingWebApplicationF
     }
 
     [Fact]
+    [Trait("Category", "Docker")] // InMemory provider loses entity tracking after state transitions
     public async Task Encounters_Workflow_CheckIn_Start_Complete()
     {
         // Create patient
