@@ -92,7 +92,7 @@ builder.Services.AddControllers()
 // ============================================================
 var devBypass = builder.Configuration.GetValue<bool>("Authentication:DevBypass");
 
-if (devBypass && builder.Environment.IsDevelopment())
+if (devBypass && !builder.Environment.IsProduction() && builder.Environment.IsDevelopment())
 {
     Log.Warning("âš ï¸  Authentication bypass enabled â€” all requests treated as authenticated (dev only)");
     
@@ -361,8 +361,8 @@ public class DevAuthHandler : Microsoft.AspNetCore.Authentication.Authentication
             new System.Security.Claims.Claim("sub", "00000000-0000-0000-0000-000000000001"),
             new System.Security.Claims.Claim("oid", "00000000-0000-0000-0000-000000000001"),
             new System.Security.Claims.Claim("tenant_id", "00000000-0000-0000-0000-000000000001"),
-            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, "scott.isbell@attending.ai"),
-            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Dr. Scott Isbell"),
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, "dev.provider@attending.local"),
+            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Dev Provider"),
             new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Provider"),
         };
 

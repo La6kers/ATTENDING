@@ -179,7 +179,7 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
     #region IUnitOfWork Implementation
 
-    public new async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         // Process domain events before saving
         var domainEntities = ChangeTracker.Entries<IAggregateRoot>()
@@ -239,8 +239,8 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     {
         try
         {
-            await SaveChangesAsync(cancellationToken);
-            
+            // Callers are responsible for SaveChangesAsync before committing.
+            // CommitTransaction only finalizes the DB transaction.
             if (_currentTransaction != null)
             {
                 await _currentTransaction.CommitAsync(cancellationToken);

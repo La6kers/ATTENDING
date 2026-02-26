@@ -8,6 +8,7 @@ using ATTENDING.Application.Interfaces;
 using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Events;
+using ATTENDING.Domain.Interfaces;
 using ATTENDING.Domain.Services;
 using ATTENDING.Integration.Tests.Fixtures;
 using Xunit;
@@ -17,7 +18,8 @@ namespace ATTENDING.Integration.Tests.Events;
 public class DomainEventDispatchTests
 {
     /// <summary>
-    /// Build a minimal service provider with MediatR, logging, and a stub notification service.
+    /// Build a minimal service provider with MediatR, logging, stub notification service,
+    /// and null-returning stub repositories (handlers gracefully handle null patient/order lookups).
     /// </summary>
     private static ServiceProvider BuildTestProvider()
     {
@@ -25,7 +27,44 @@ public class DomainEventDispatchTests
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<EmergencyProtocolHandler>());
         services.AddLogging(b => b.AddDebug());
         services.AddSingleton<IClinicalNotificationService, StubClinicalNotificationService>();
+        // Stub repositories — handlers use null-coalescing fallbacks ("Unknown Patient", "") when
+        // patient/order is not found, so returning null here is safe for unit-level event tests.
+        services.AddSingleton<IPatientRepository, NullPatientRepository>();
+        services.AddSingleton<ILabOrderRepository, NullLabOrderRepository>();
         return services.BuildServiceProvider();
+    }
+
+    // ── Minimal stub repositories ──────────────────────────────────────────────
+
+    private sealed class NullPatientRepository : IPatientRepository
+    {
+        public Task<Patient?> GetByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
+        public Task<Patient?> GetByMrnAsync(string mrn, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
+        public Task<IReadOnlyList<Patient>> GetAllAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Patient>>(Array.Empty<Patient>());
+        public Task<IReadOnlyList<Patient>> SearchAsync(string? term, int skip = 0, int take = 20, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Patient>>(Array.Empty<Patient>());
+        public Task<Patient?> GetWithAllergiesAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
+        public Task<Patient?> GetWithConditionsAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
+        public Task<Patient?> GetWithFullHistoryAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
+        public Task AddAsync(Patient entity, CancellationToken ct = default) => Task.CompletedTask;
+        public void Update(Patient entity) { }
+        public void Remove(Patient entity) { }
+    }
+
+    private sealed class NullLabOrderRepository : ILabOrderRepository
+    {
+        public Task<LabOrder?> GetByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<LabOrder?>(null);
+        public Task<LabOrder?> GetByOrderNumberAsync(string num, CancellationToken ct = default) => Task.FromResult<LabOrder?>(null);
+        public Task<LabOrder?> GetWithResultAsync(Guid id, CancellationToken ct = default) => Task.FromResult<LabOrder?>(null);
+        public Task<IReadOnlyList<LabOrder>> GetAllAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<LabOrder>>(Array.Empty<LabOrder>());
+        public Task<IReadOnlyList<LabOrder>> GetByPatientIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<LabOrder>>(Array.Empty<LabOrder>());
+        public Task<IReadOnlyList<LabOrder>> GetByEncounterIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<LabOrder>>(Array.Empty<LabOrder>());
+        public Task<IReadOnlyList<LabOrder>> GetByStatusAsync(LabOrderStatus status, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<LabOrder>>(Array.Empty<LabOrder>());
+        public Task<IReadOnlyList<LabOrder>> GetPendingOrdersAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<LabOrder>>(Array.Empty<LabOrder>());
+        public Task<IReadOnlyList<LabOrder>> GetCriticalResultsAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<LabOrder>>(Array.Empty<LabOrder>());
+        public Task<IReadOnlyList<LabOrder>> GetByDateRangeAsync(DateTime start, DateTime end, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<LabOrder>>(Array.Empty<LabOrder>());
+        public Task AddAsync(LabOrder entity, CancellationToken ct = default) => Task.CompletedTask;
+        public void Update(LabOrder entity) { }
+        public void Remove(LabOrder entity) { }
     }
 
     [Fact]

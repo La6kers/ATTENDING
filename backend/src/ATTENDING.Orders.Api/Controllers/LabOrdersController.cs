@@ -9,7 +9,6 @@ using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Enums;
 using ATTENDING.Orders.Api.Extensions;
-using ATTENDING.Application.Interfaces;
 
 namespace ATTENDING.Orders.Api.Controllers;
 
@@ -21,15 +20,13 @@ namespace ATTENDING.Orders.Api.Controllers;
 public class LabOrdersController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IClinicalNotificationService _notifications;
     private readonly ILogger<LabOrdersController> _logger;
 
     public LabOrdersController(
-        IMediator mediator, IClinicalNotificationService notifications,
+        IMediator mediator,
         ILogger<LabOrdersController> logger)
     {
         _mediator = mediator;
-        _notifications = notifications;
         _logger = logger;
     }
 
@@ -201,33 +198,8 @@ public class LabOrdersController : ControllerBase
         var val = result.Value;
         var response = new AddResultResponse(val.ResultId, val.IsCritical);
 
-        // Fire real-time notification for critical results
-        if (val.IsCritical)
-        {
-            try
-            {
-                var order = await _mediator.Send(new GetLabOrderByIdQuery(id));
-                if (order != null)
-                {
-                    await _notifications.NotifyCriticalResultAsync(new CriticalResultNotification(
-                        PatientId: order.PatientId,
-                        PatientName: order.Patient?.FullName ?? "Unknown",
-                        PatientMrn: order.Patient?.MRN ?? "",
-                        LabOrderId: id,
-                        OrderNumber: order.OrderNumber,
-                        TestName: order.TestName,
-                        Value: request.Value,
-                        Unit: request.Unit,
-                        ReferenceRange: request.ReferenceRangeText,
-                        ResultedAt: DateTime.UtcNow,
-                        OrderingProviderName: order.OrderingProvider?.FullName));
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to send critical result notification for order {OrderId}", id);
-            }
-        }
+        // Critical result notification is handled exclusively by CriticalLabResultHandler
+        // via the domain event pipeline. Do NOT fire it here — that causes duplicate alerts.
 
         return Created($"/api/v1/laborders/{id}", response);
     }

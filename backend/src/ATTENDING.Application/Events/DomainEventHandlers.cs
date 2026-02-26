@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ATTENDING.Application.Events;
 using ATTENDING.Application.Interfaces;
 using ATTENDING.Domain.Events;
+using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Application.Events.Handlers;
 
@@ -12,13 +13,16 @@ namespace ATTENDING.Application.Events.Handlers;
 public class EmergencyProtocolHandler : INotificationHandler<DomainEventNotification<EmergencyProtocolTriggeredEvent>>
 {
     private readonly IClinicalNotificationService _notifications;
+    private readonly IPatientRepository _patientRepository;
     private readonly ILogger<EmergencyProtocolHandler> _logger;
 
     public EmergencyProtocolHandler(
         IClinicalNotificationService notifications,
+        IPatientRepository patientRepository,
         ILogger<EmergencyProtocolHandler> logger)
     {
         _notifications = notifications;
+        _patientRepository = patientRepository;
         _logger = logger;
     }
 
@@ -31,12 +35,13 @@ public class EmergencyProtocolHandler : INotificationHandler<DomainEventNotifica
 
         try
         {
+            var patient = await _patientRepository.GetByIdAsync(evt.PatientId, cancellationToken);
             await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
                 AssessmentId: evt.AssessmentId,
                 AssessmentNumber: $"ASM-{evt.AssessmentId.ToString()[..8].ToUpperInvariant()}",
                 PatientId: evt.PatientId,
-                PatientName: "Patient", // Resolved by notification service from DB if needed
-                PatientMrn: "",
+                PatientName: patient?.FullName ?? "Unknown Patient",
+                PatientMrn: patient?.MRN ?? "",
                 ChiefComplaint: evt.Reason,
                 EmergencyReason: evt.RecommendedAction,
                 RedFlagCategories: new List<string> { "Emergency" },
@@ -57,13 +62,16 @@ public class EmergencyProtocolHandler : INotificationHandler<DomainEventNotifica
 public class RedFlagDetectedHandler : INotificationHandler<DomainEventNotification<RedFlagDetectedEvent>>
 {
     private readonly IClinicalNotificationService _notifications;
+    private readonly IPatientRepository _patientRepository;
     private readonly ILogger<RedFlagDetectedHandler> _logger;
 
     public RedFlagDetectedHandler(
         IClinicalNotificationService notifications,
+        IPatientRepository patientRepository,
         ILogger<RedFlagDetectedHandler> logger)
     {
         _notifications = notifications;
+        _patientRepository = patientRepository;
         _logger = logger;
     }
 
@@ -76,10 +84,11 @@ public class RedFlagDetectedHandler : INotificationHandler<DomainEventNotificati
 
         try
         {
+            var patient = await _patientRepository.GetByIdAsync(evt.PatientId, cancellationToken);
             await _notifications.NotifyRedFlagDetectedAsync(new RedFlagNotification(
                 AssessmentId: evt.AssessmentId,
                 PatientId: evt.PatientId,
-                PatientName: "Patient",
+                PatientName: patient?.FullName ?? "Unknown Patient",
                 Category: evt.Category,
                 MatchedKeyword: evt.Category,
                 Severity: evt.Severity.ToString(),
@@ -100,13 +109,16 @@ public class RedFlagDetectedHandler : INotificationHandler<DomainEventNotificati
 public class CriticalLabResultHandler : INotificationHandler<DomainEventNotification<LabOrderResultedEvent>>
 {
     private readonly IClinicalNotificationService _notifications;
+    private readonly ILabOrderRepository _labOrderRepository;
     private readonly ILogger<CriticalLabResultHandler> _logger;
 
     public CriticalLabResultHandler(
         IClinicalNotificationService notifications,
+        ILabOrderRepository labOrderRepository,
         ILogger<CriticalLabResultHandler> logger)
     {
         _notifications = notifications;
+        _labOrderRepository = labOrderRepository;
         _logger = logger;
     }
 
@@ -123,18 +135,19 @@ public class CriticalLabResultHandler : INotificationHandler<DomainEventNotifica
 
         try
         {
+            var order = await _labOrderRepository.GetWithResultAsync(evt.LabOrderId, cancellationToken);
             await _notifications.NotifyCriticalResultAsync(new CriticalResultNotification(
-                PatientId: Guid.Empty, // Resolved by notification service enrichment
-                PatientName: "Patient",
-                PatientMrn: "",
+                PatientId: order?.PatientId ?? Guid.Empty,
+                PatientName: order?.Patient?.FullName ?? "Unknown Patient",
+                PatientMrn: order?.Patient?.MRN ?? "",
                 LabOrderId: evt.LabOrderId,
-                OrderNumber: $"LAB-{evt.LabOrderId.ToString()[..8].ToUpperInvariant()}",
-                TestName: "Lab Test",
-                Value: "Critical",
-                Unit: null,
-                ReferenceRange: null,
+                OrderNumber: order?.OrderNumber ?? $"LAB-{evt.LabOrderId.ToString()[..8].ToUpperInvariant()}",
+                TestName: order?.TestName ?? "Lab Test",
+                Value: order?.Result?.Value ?? "Critical",
+                Unit: order?.Result?.Unit,
+                ReferenceRange: order?.Result?.ReferenceRangeText,
                 ResultedAt: evt.OccurredAt,
-                OrderingProviderName: null
+                OrderingProviderName: order?.OrderingProvider?.FullName
             ), cancellationToken);
         }
         catch (Exception ex)
@@ -150,13 +163,16 @@ public class CriticalLabResultHandler : INotificationHandler<DomainEventNotifica
 public class DrugInteractionHandler : INotificationHandler<DomainEventNotification<DrugInteractionDetectedEvent>>
 {
     private readonly IClinicalNotificationService _notifications;
+    private readonly IPatientRepository _patientRepository;
     private readonly ILogger<DrugInteractionHandler> _logger;
 
     public DrugInteractionHandler(
         IClinicalNotificationService notifications,
+        IPatientRepository patientRepository,
         ILogger<DrugInteractionHandler> logger)
     {
         _notifications = notifications;
+        _patientRepository = patientRepository;
         _logger = logger;
     }
 
@@ -169,10 +185,11 @@ public class DrugInteractionHandler : INotificationHandler<DomainEventNotificati
 
         try
         {
+            var patient = await _patientRepository.GetByIdAsync(evt.PatientId, cancellationToken);
             await _notifications.NotifyDrugInteractionAsync(new DrugInteractionNotification(
                 MedicationOrderId: evt.MedicationOrderId,
                 PatientId: evt.PatientId,
-                PatientName: "Patient",
+                PatientName: patient?.FullName ?? "Unknown Patient",
                 Drug1: evt.Drug1,
                 Drug2: evt.Drug2,
                 Severity: evt.Severity,
@@ -193,13 +210,16 @@ public class DrugInteractionHandler : INotificationHandler<DomainEventNotificati
 public class AssessmentCompletedHandler : INotificationHandler<DomainEventNotification<AssessmentCompletedEvent>>
 {
     private readonly IClinicalNotificationService _notifications;
+    private readonly IPatientRepository _patientRepository;
     private readonly ILogger<AssessmentCompletedHandler> _logger;
 
     public AssessmentCompletedHandler(
         IClinicalNotificationService notifications,
+        IPatientRepository patientRepository,
         ILogger<AssessmentCompletedHandler> logger)
     {
         _notifications = notifications;
+        _patientRepository = patientRepository;
         _logger = logger;
     }
 
@@ -212,13 +232,14 @@ public class AssessmentCompletedHandler : INotificationHandler<DomainEventNotifi
 
         try
         {
+            var patient = await _patientRepository.GetByIdAsync(evt.PatientId, cancellationToken);
             await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
                 AssessmentId: evt.AssessmentId,
                 AssessmentNumber: $"ASM-{evt.AssessmentId.ToString()[..8].ToUpperInvariant()}",
                 PatientId: evt.PatientId,
-                PatientName: "Patient",
-                PatientMrn: "",
-                PatientAge: 0,
+                PatientName: patient?.FullName ?? "Unknown Patient",
+                PatientMrn: patient?.MRN ?? "",
+                PatientAge: patient?.Age ?? 0,
                 ChiefComplaint: "",
                 TriageLevel: evt.TriageLevel.ToString(),
                 HasRedFlags: evt.HasRedFlags,
