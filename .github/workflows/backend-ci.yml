@@ -78,5 +78,5 @@ jobs:
             -p 8080:8080 \
             attending-api:${{ github.sha }}
           sleep 5
-          curl -f http://localhost:8080/health/live || exit 1
+          curl -f http://localhost:8080/health/ready || exit 1
           docker stop test-api

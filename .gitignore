@@ -123,6 +123,13 @@ playwright-report/
 playwright/.cache/
 .jest/
 
+# .NET test result artifacts — never commit these
+**/test-results*.txt
+test-results*.txt
+**/*.trx
+**/coverage-report/
+**/TestResults/
+
 # -----------------------------------------------------------------------------
 # Build Artifacts
 # -----------------------------------------------------------------------------

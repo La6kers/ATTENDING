@@ -1,9 +1,0 @@
-# DISABLED: Superseded by deploy.yml which handles staging + production via environment detection.
-name: "[DISABLED] Deploy Staging — use deploy.yml"
-on:
-  workflow_dispatch:
-jobs:
-  disabled:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Use deploy.yml instead (handles both staging and production)."
