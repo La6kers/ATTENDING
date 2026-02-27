@@ -1,13 +1,11 @@
-# DISABLED: Superseded by backend-ci.yml (CI) and deploy.yml (CD).
-# backend-ci.yml handles: build, test, security scan, Docker image build + health check.
-# deploy.yml handles: staging and production deployments for all services.
-name: "[DISABLED] Old Backend CI/CD — use backend-ci.yml + deploy.yml"
-
+# DISABLED — superseded by backend-ci.yml (CI) and deploy.yml (CD).
+# This file is kept only so git history is preserved.
+# Do not re-enable. Delete this file when cleaning up the repo.
+name: "[DISABLED] backend.yml — use backend-ci.yml and deploy.yml"
 on:
-  workflow_dispatch: # Manual only — effectively disabled
-
+  workflow_dispatch:
 jobs:
   disabled:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "This workflow is disabled. Use backend-ci.yml (CI) and deploy.yml (CD) instead."
+      - run: echo "This workflow is disabled. See backend-ci.yml and deploy.yml."

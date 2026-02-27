@@ -24,6 +24,8 @@ import {
   LAB_CATALOG,
   LAB_PANELS,
 } from '../store/labOrderingStore';
+import { useLabResults, useFhirConnected } from '@attending/shared/lib/fhir/hooks';
+import { useFhirContext } from '@attending/shared/lib/fhir/FhirProvider';
 
 const theme = {
   gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -331,90 +333,128 @@ export default function Labs() {
 }
 
 function LabResultsView() {
+  const [search, setSearch] = React.useState('');
+  const [filterInterpretation, setFilterInterpretation] = React.useState('all');
+  const isConnected = useFhirConnected();
+  const { patientId: fhirPatientId } = useFhirContext();
+  const { data: labResults, isLoading } = useLabResults(fhirPatientId || undefined);
+
+  const filteredResults = React.useMemo(() => {
+    if (!labResults) return [];
+    return labResults.filter((r) => {
+      const matchSearch = !search || r.testName.toLowerCase().includes(search.toLowerCase());
+      const matchFilter = filterInterpretation === 'all' || r.interpretation === filterInterpretation;
+      return matchSearch && matchFilter;
+    });
+  }, [labResults, search, filterInterpretation]);
+
+  const counts = React.useMemo(() => {
+    const all = labResults || [];
+    return {
+      critical: all.filter((r) => r.interpretation === 'critical').length,
+      abnormal: all.filter((r) => r.interpretation === 'abnormal' || r.interpretation === 'high' || r.interpretation === 'low').length,
+      normal: all.filter((r) => r.interpretation === 'normal').length,
+      total: all.length,
+    };
+  }, [labResults]);
+
+  const interpColors: Record<string, string> = {
+    critical: 'bg-red-100 text-red-700',
+    abnormal: 'bg-orange-100 text-orange-700',
+    high: 'bg-orange-100 text-orange-700',
+    low: 'bg-blue-100 text-blue-700',
+    normal: 'bg-green-100 text-green-700',
+  };
+
   return (
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Pending', value: 12, color: 'amber' },
-          { label: 'Critical', value: 3, color: 'red' },
-          { label: 'Abnormal', value: 8, color: 'orange' },
-          { label: 'Today', value: 24, color: 'green' },
+          { label: 'Total Results', value: isConnected ? counts.total : 24, color: 'text-white' },
+          { label: 'Critical', value: isConnected ? counts.critical : 3, color: 'text-red-400' },
+          { label: 'Abnormal', value: isConnected ? counts.abnormal : 8, color: 'text-orange-400' },
+          { label: 'Normal', value: isConnected ? counts.normal : 13, color: 'text-green-400' },
         ].map((stat) => (
           <div key={stat.label} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
             <p className="text-purple-200 text-sm">{stat.label}</p>
-            <p className={`text-2xl font-bold text-${stat.color}-400`}>{stat.value}</p>
+            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
           </div>
         ))}
       </div>
+
+      {/* EHR badge */}
+      {isConnected && (
+        <div className="flex items-center gap-2 text-sm text-green-300">
+          <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+          Showing lab results from EHR
+        </div>
+      )}
 
       {/* Results Table */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="p-4 border-b flex items-center gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search labs..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
-            />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search labs..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500" />
           </div>
-          <select className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200">
-            <option>All Results</option>
-            <option>Critical Only</option>
-            <option>Abnormal Only</option>
+          <select value={filterInterpretation} onChange={(e) => setFilterInterpretation(e.target.value)}
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200">
+            <option value="all">All Results</option>
+            <option value="critical">Critical Only</option>
+            <option value="abnormal">Abnormal Only</option>
+            <option value="normal">Normal Only</option>
           </select>
         </div>
 
-        <table className="w-full">
-          <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase">
-            <tr>
-              <th className="px-4 py-3">Patient</th>
-              <th className="px-4 py-3">Test</th>
-              <th className="px-4 py-3">Result</th>
-              <th className="px-4 py-3">Reference</th>
-              <th className="px-4 py-3">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            <tr className="bg-red-50">
-              <td className="px-4 py-3">
-                <p className="font-medium">John Doe</p>
-                <p className="text-sm text-gray-500">MRN: 123456</p>
-              </td>
-              <td className="px-4 py-3">Troponin I</td>
-              <td className="px-4 py-3 font-semibold text-red-600">2.5 ng/mL ↑↑</td>
-              <td className="px-4 py-3 text-gray-500">&lt; 0.04 ng/mL</td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Critical</span>
-              </td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3">
-                <p className="font-medium">Sarah Johnson</p>
-                <p className="text-sm text-gray-500">MRN: 789012</p>
-              </td>
-              <td className="px-4 py-3">TSH</td>
-              <td className="px-4 py-3 font-semibold text-orange-600">8.2 mIU/L ↑</td>
-              <td className="px-4 py-3 text-gray-500">0.4-4.0 mIU/L</td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">Abnormal</span>
-              </td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3">
-                <p className="font-medium">Mike Wilson</p>
-                <p className="text-sm text-gray-500">MRN: 345678</p>
-              </td>
-              <td className="px-4 py-3">CBC with Diff</td>
-              <td className="px-4 py-3 text-green-600">Normal</td>
-              <td className="px-4 py-3 text-gray-500">See Report</td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Normal</span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {isLoading ? (
+          <div className="p-8 text-center text-gray-500">Loading lab results from EHR…</div>
+        ) : filteredResults.length > 0 ? (
+          <table className="w-full">
+            <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase">
+              <tr>
+                <th className="px-4 py-3">Test</th>
+                <th className="px-4 py-3">Result</th>
+                <th className="px-4 py-3">Reference</th>
+                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filteredResults.map((r) => (
+                <tr key={r.id} className={r.interpretation === 'critical' ? 'bg-red-50' : ''}>
+                  <td className="px-4 py-3 font-medium text-gray-900">{r.testName}</td>
+                  <td className={`px-4 py-3 font-semibold ${r.interpretation === 'critical' ? 'text-red-600' : r.interpretation === 'abnormal' || r.interpretation === 'high' || r.interpretation === 'low' ? 'text-orange-600' : 'text-gray-700'}`}>
+                    {r.value}{r.unit ? ` ${r.unit}` : ''}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500 text-sm">{r.referenceRange || '—'}</td>
+                  <td className="px-4 py-3 text-gray-500 text-sm">{r.resultedAt ? new Date(r.resultedAt).toLocaleDateString() : '—'}</td>
+                  <td className="px-4 py-3">
+                    {r.interpretation && (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${interpColors[r.interpretation] || 'bg-gray-100 text-gray-600'}`}>
+                        {r.interpretation.charAt(0).toUpperCase() + r.interpretation.slice(1)}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="p-8 text-center text-gray-500">
+            {isConnected
+              ? search || filterInterpretation !== 'all'
+                ? 'No results match your filter.'
+                : 'No lab results found in EHR for this patient.'
+              : (
+                <div>
+                  <p className="font-medium mb-1">Connect to Epic to see real lab results</p>
+                  <p className="text-sm">Use the "Connect Epic" button in the header to link your EHR.</p>
+                </div>
+              )}
+          </div>
+        )}
       </div>
     </div>
   );

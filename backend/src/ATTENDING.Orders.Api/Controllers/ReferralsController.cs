@@ -347,7 +347,7 @@ public class ReferralsController : ControllerBase
             PatientId: referral.PatientId,
             Patient: referral.Patient != null ? new PatientSummaryResponse(
                 referral.Patient.Id, referral.Patient.MRN, referral.Patient.FullName,
-                referral.Patient.Age, referral.Patient.Sex) : null,
+                referral.Patient.Age, referral.Patient.Sex.ToString()) : null,
             Specialty: referral.Specialty,
             Urgency: referral.Urgency.ToString(),
             ClinicalQuestion: referral.ClinicalQuestion,

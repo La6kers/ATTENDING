@@ -192,7 +192,7 @@ public class AssessmentsController : ControllerBase
         return new AssessmentResponse(
             Id: a.Id, AssessmentNumber: a.AssessmentNumber, PatientId: a.PatientId,
             Patient: a.Patient != null ? new PatientSummaryResponse(
-                a.Patient.Id, a.Patient.MRN, a.Patient.FullName, a.Patient.Age, a.Patient.Sex) : null,
+                a.Patient.Id, a.Patient.MRN, a.Patient.FullName, a.Patient.Age, a.Patient.Sex.ToString()) : null,
             ChiefComplaint: a.ChiefComplaint, CurrentPhase: a.CurrentPhase.ToString(),
             TriageLevel: a.TriageLevel?.ToString(), PainSeverity: a.PainSeverity,
             Hpi: a.HpiOnset != null ? new HpiResponse(
@@ -211,7 +211,7 @@ public class AssessmentsController : ControllerBase
         return new AssessmentSummaryResponse(
             Id: a.Id, AssessmentNumber: a.AssessmentNumber,
             Patient: a.Patient != null ? new PatientSummaryResponse(
-                a.Patient.Id, a.Patient.MRN, a.Patient.FullName, a.Patient.Age, a.Patient.Sex) : null,
+                a.Patient.Id, a.Patient.MRN, a.Patient.FullName, a.Patient.Age, a.Patient.Sex.ToString()) : null,
             ChiefComplaint: a.ChiefComplaint, CurrentPhase: a.CurrentPhase.ToString(),
             TriageLevel: a.TriageLevel?.ToString(), HasRedFlags: a.HasRedFlags,
             IsEmergency: a.IsEmergency, StartedAt: a.StartedAt, CompletedAt: a.CompletedAt);

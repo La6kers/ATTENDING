@@ -80,7 +80,7 @@ public class GetLabOrderByIdHandler : IRequestHandler<GetLabOrderByIdQuery, LabO
                 order.Patient.MRN,
                 order.Patient.FullName,
                 order.Patient.Age,
-                order.Patient.Sex) : null,
+                order.Patient.Sex.ToString()) : null,
             EncounterId: order.EncounterId,
             OrderingProviderId: order.OrderingProviderId,
             OrderingProvider: order.OrderingProvider != null ? new ProviderDto(
@@ -147,7 +147,7 @@ public class GetLabOrderByNumberHandler : IRequestHandler<GetLabOrderByNumberQue
                 order.Patient.MRN,
                 order.Patient.FullName,
                 order.Patient.Age,
-                order.Patient.Sex) : null,
+                order.Patient.Sex.ToString()) : null,
             EncounterId: order.EncounterId,
             OrderingProviderId: order.OrderingProviderId,
             OrderingProvider: order.OrderingProvider != null ? new ProviderDto(
@@ -271,7 +271,7 @@ public class GetPendingLabOrdersHandler : IRequestHandler<GetPendingLabOrdersQue
                 o.Patient.MRN,
                 o.Patient.FullName,
                 o.Patient.Age,
-                o.Patient.Sex) : null,
+                o.Patient.Sex.ToString()) : null,
             EncounterId: o.EncounterId,
             OrderingProviderId: o.OrderingProviderId,
             OrderingProvider: null,
@@ -324,7 +324,7 @@ public class GetCriticalLabResultsHandler : IRequestHandler<GetCriticalLabResult
                 o.Patient.MRN,
                 o.Patient.FullName,
                 o.Patient.Age,
-                o.Patient.Sex) : null,
+                o.Patient.Sex.ToString()) : null,
             EncounterId: o.EncounterId,
             OrderingProviderId: o.OrderingProviderId,
             OrderingProvider: o.OrderingProvider != null ? new ProviderDto(

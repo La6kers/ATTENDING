@@ -6,6 +6,7 @@ using ATTENDING.Domain.Interfaces;
 using ATTENDING.Domain.Services;
 using ATTENDING.Infrastructure.Caching;
 using ATTENDING.Infrastructure.Data;
+using ATTENDING.Infrastructure.Messaging;
 using ATTENDING.Infrastructure.Repositories;
 using ATTENDING.Infrastructure.External;
 using ATTENDING.Infrastructure.Services;
@@ -151,6 +152,14 @@ public static class DependencyInjection
         services.AddScoped<IAnalyticsService, AnalyticsService>();
 
         // --------------------------------------------------------
+        // Event Bus (conditionally overrides InProcessEventBus from Application layer)
+        // InProcess: no-op here (InProcessEventBus already registered)
+        // InMemory:  MassTransit in-memory transport (single-host, with pipeline)
+        // AzureServiceBus: MassTransit + Azure Service Bus (multi-pod production)
+        // --------------------------------------------------------
+        services.AddEventBus(configuration);
+
+        // --------------------------------------------------------
         // Background Scheduler (distributed-lock-guarded recurring jobs)
         // --------------------------------------------------------
         services.AddHostedService<Services.ClinicalSchedulerService>();
@@ -168,21 +177,39 @@ public static class DependencyInjection
         .AddClinicalResilienceHandler("ClinicalAI");
 
         // --------------------------------------------------------
-        // FHIR EHR Client — with resilience
+        // FHIR EHR Clients — with resilience
+        // Two named registrations: Epic (default) and Oracle Health (Cerner).
+        //
+        // The default IFhirClient resolves to EpicFhirClient.
+        // To use Cerner, inject IFhirClientFactory and call GetClient("cerner").
         // --------------------------------------------------------
         services.Configure<External.FHIR.FhirClientOptions>(opts =>
             configuration.GetSection("Fhir").Bind(opts));
+
+        services.Configure<External.FHIR.FhirClientOptions>("Cerner", opts =>
+            configuration.GetSection("FhirCerner").Bind(opts));
+
+        // Epic — default IFhirClient
         services.AddHttpClient<External.FHIR.IFhirClient, External.FHIR.EpicFhirClient>(client =>
         {
             var fhirOptions = configuration.GetSection("Fhir").Get<External.FHIR.FhirClientOptions>();
             if (!string.IsNullOrWhiteSpace(fhirOptions?.BaseUrl))
-            {
                 client.BaseAddress = new Uri(fhirOptions.BaseUrl);
-            }
             client.DefaultRequestHeaders.Accept.Add(
                 new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/fhir+json"));
         })
         .AddClinicalResilienceHandler("EpicFHIR");
+
+        // Oracle Health (Cerner) — named registration
+        services.AddHttpClient<External.FHIR.OracleHealthFhirClient>(client =>
+        {
+            var cernerOptions = configuration.GetSection("FhirCerner").Get<External.FHIR.FhirClientOptions>();
+            if (!string.IsNullOrWhiteSpace(cernerOptions?.BaseUrl))
+                client.BaseAddress = new Uri(cernerOptions.BaseUrl);
+            client.DefaultRequestHeaders.Accept.Add(
+                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/fhir+json"));
+        })
+        .AddClinicalResilienceHandler("CernerFHIR");
 
         return services;
     }

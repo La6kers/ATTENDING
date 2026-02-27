@@ -16,6 +16,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from 'react';
+import { EhrConnectButton } from '../fhir/EhrConnectButton';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
@@ -254,7 +255,8 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
 
             {/* Right — search, notifications, settings, user */}
             <div className="flex items-center gap-1.5">
-              {headerRight}
+            {headerRight}
+              <EhrConnectButton />
 
               {showSearch ? (
                 <form onSubmit={handleSearch} className="relative">

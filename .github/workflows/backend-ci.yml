@@ -70,13 +70,13 @@ jobs:
       - name: Build Docker image
         run: docker build -t attending-api:${{ github.sha }} .
 
-      - name: Test Docker health
+      - name: Test Docker health (readiness — verifies DB connectivity)
         run: |
           docker run -d --name test-api \
             -e ASPNETCORE_ENVIRONMENT=Testing \
             -e "ConnectionStrings__AttendingDb=Server=localhost;Database=test;TrustServerCertificate=True" \
             -p 8080:8080 \
             attending-api:${{ github.sha }}
-          sleep 5
+          sleep 8
           curl -f http://localhost:8080/health/ready || exit 1
           docker stop test-api

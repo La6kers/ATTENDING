@@ -18,9 +18,31 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     /// <summary>
     /// Current tenant ID for global query filters.
     /// Resolved from the authenticated user's JWT via ICurrentUserService.
-    /// When null (e.g. background jobs, migrations), tenant filters are bypassed.
     /// </summary>
     private Guid? _tenantId => _currentUserService?.TenantId;
+
+    /// <summary>
+    /// When true, the context is operating in admin/background mode and tenant
+    /// filters are intentionally bypassed. Must be explicitly set via EnableAdminContext().
+    /// Never flows from the HTTP request path.
+    /// </summary>
+    private bool _adminContextEnabled = false;
+
+    /// <summary>
+    /// Explicitly enables cross-tenant access for background jobs, migrations, and admin operations.
+    /// Callers MUST document why they need cross-tenant access in the call site comment.
+    ///
+    /// Usage:
+    ///   context.EnableAdminContext(); // "audit rotation — must access all tenants"
+    ///
+    /// Do NOT call this from request-scoped code. For HTTP requests,
+    /// ICurrentUserService must always return a valid TenantId.
+    /// </summary>
+    public AttendingDbContext EnableAdminContext()
+    {
+        _adminContextEnabled = true;
+        return this;
+    }
 
     public AttendingDbContext(DbContextOptions<AttendingDbContext> options) 
         : base(options)
@@ -87,26 +109,31 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         // HIPAA: Healthcare data must never be hard-deleted.
         // TENANT: Every query is scoped to the current user's organization.
         //
-        // _tenantId == null bypasses tenant filter (background jobs, migrations, admin).
-        // To bypass soft-delete, use .IgnoreQueryFilters() explicitly.
+        // Tenant filter is bypassed ONLY when _adminContextEnabled is true.
+        // That flag is set explicitly via EnableAdminContext() — never implicitly.
+        // Accidental null TenantId on an HTTP request now returns NO data rather
+        // than all tenants' data, which is the safe failure mode for PHI.
+        //
+        // Background jobs / migrations: call context.EnableAdminContext() first.
+        // To bypass soft-delete as well: use .IgnoreQueryFilters() explicitly.
         // --------------------------------------------------------
-        modelBuilder.Entity<Patient>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<Encounter>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<Allergy>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<MedicalCondition>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<LabOrder>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<ImagingOrder>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<MedicationOrder>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<Referral>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<PatientAssessment>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<Patient>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<Encounter>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<Allergy>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<MedicalCondition>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<LabOrder>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<ImagingOrder>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<MedicationOrder>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<Referral>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<PatientAssessment>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
 
         // Child entities: matching filters to prevent EF warning 10622
         // (required end of relationship with filtered parent)
-        modelBuilder.Entity<AssessmentSymptom>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<AssessmentResponse>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<LabResult>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
-        modelBuilder.Entity<ImagingResult>().HasQueryFilter(e => !e.IsDeleted && (_tenantId == null || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<AssessmentSymptom>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<AssessmentResponse>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<LabResult>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<ImagingResult>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
 
         // --------------------------------------------------------
         // Concurrency tokens: RowVersion on all aggregate roots
@@ -181,25 +208,15 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Process domain events before saving
-        var domainEntities = ChangeTracker.Entries<IAggregateRoot>()
-            .Where(e => e.Entity is LabOrder or ImagingOrder or MedicationOrder or Referral or PatientAssessment)
+        // Collect domain events from all aggregate roots that implement IHasDomainEvents.
+        // New aggregate roots are picked up automatically — no type-switch maintenance needed.
+        var domainEntities = ChangeTracker.Entries<IHasDomainEvents>()
             .Select(e => e.Entity)
             .ToList();
 
-        // Collect all domain events before save
-        var allDomainEvents = new List<DomainEvent>();
-        foreach (var entity in domainEntities)
-        {
-            switch (entity)
-            {
-                case LabOrder lo: allDomainEvents.AddRange(lo.DomainEvents); break;
-                case ImagingOrder io: allDomainEvents.AddRange(io.DomainEvents); break;
-                case MedicationOrder mo: allDomainEvents.AddRange(mo.DomainEvents); break;
-                case Referral r: allDomainEvents.AddRange(r.DomainEvents); break;
-                case PatientAssessment pa: allDomainEvents.AddRange(pa.DomainEvents); break;
-            }
-        }
+        var allDomainEvents = domainEntities
+            .SelectMany(e => e.DomainEvents)
+            .ToList();
 
         var result = await base.SaveChangesAsync(cancellationToken);
 
@@ -212,14 +229,7 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         // Clear domain events after successful save
         foreach (var entity in domainEntities)
         {
-            switch (entity)
-            {
-                case LabOrder lo: lo.ClearDomainEvents(); break;
-                case ImagingOrder io: io.ClearDomainEvents(); break;
-                case MedicationOrder mo: mo.ClearDomainEvents(); break;
-                case Referral r: r.ClearDomainEvents(); break;
-                case PatientAssessment pa: pa.ClearDomainEvents(); break;
-            }
+            entity.ClearDomainEvents();
         }
 
         return result;

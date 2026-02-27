@@ -8,7 +8,7 @@ namespace ATTENDING.Domain.Entities;
 /// <summary>
 /// Lab Order aggregate root - represents a clinical laboratory order
 /// </summary>
-public class LabOrder : BaseEntity, IAggregateRoot
+public class LabOrder : BaseEntity, IAggregateRoot, IHasDomainEvents
 {
     // Identity
     public Guid Id { get; private set; }

@@ -29,8 +29,8 @@ public class ConcurrencyTests : IClassFixture<SqlServerFixture>
     {
         // Arrange — create a patient
         await using var setupCtx = _fixture.CreateContext();
-        var patient = Patient.Create($"MRN-{Guid.NewGuid():N}"[..12], "Concurrent", "Test",
-            new DateTime(1990, 1, 1), "Female");
+        var patient = Patient.Create(SqlServerFixture.DefaultTenantId, $"MRN-{Guid.NewGuid():N}"[..12], "Concurrent", "Test",
+            new DateTime(1990, 1, 1), BiologicalSex.Female);
         setupCtx.Set<Patient>().Add(patient);
         await setupCtx.SaveChangesAsync();
         var patientId = patient.Id;
@@ -61,8 +61,8 @@ public class ConcurrencyTests : IClassFixture<SqlServerFixture>
     {
         // Arrange
         await using var setupCtx = _fixture.CreateContext();
-        var patient = Patient.Create($"MRN-{Guid.NewGuid():N}"[..12], "Sequential", "Test",
-            new DateTime(1985, 5, 5), "Male");
+        var patient = Patient.Create(SqlServerFixture.DefaultTenantId, $"MRN-{Guid.NewGuid():N}"[..12], "Sequential", "Test",
+            new DateTime(1985, 5, 5), BiologicalSex.Male);
         setupCtx.Set<Patient>().Add(patient);
         await setupCtx.SaveChangesAsync();
         var patientId = patient.Id;
@@ -134,7 +134,7 @@ public class SoftDeleteQueryFilterTests : IClassFixture<SqlServerFixture>
         // Arrange
         await using var ctx = _fixture.CreateContext();
         var mrn = $"MRN-{Guid.NewGuid():N}"[..12];
-        var patient = Patient.Create(mrn, "Deleted", "Patient", new DateTime(1980, 3, 3), "Male");
+        var patient = Patient.Create(SqlServerFixture.DefaultTenantId, mrn, "Deleted", "Patient", new DateTime(1980, 3, 3), BiologicalSex.Male);
         ctx.Set<Patient>().Add(patient);
         await ctx.SaveChangesAsync();
         var patientId = patient.Id;
@@ -163,7 +163,7 @@ public class SoftDeleteQueryFilterTests : IClassFixture<SqlServerFixture>
         // Arrange
         await using var ctx = _fixture.CreateContext();
         var mrn = $"MRN-{Guid.NewGuid():N}"[..12];
-        var patient = Patient.Create(mrn, "AllergyTest", "Patient", new DateTime(1975, 7, 7), "Female");
+        var patient = Patient.Create(SqlServerFixture.DefaultTenantId, mrn, "AllergyTest", "Patient", new DateTime(1975, 7, 7), BiologicalSex.Female);
         ctx.Set<Patient>().Add(patient);
         await ctx.SaveChangesAsync();
 
@@ -193,7 +193,7 @@ public class SoftDeleteQueryFilterTests : IClassFixture<SqlServerFixture>
         // Arrange
         await using var ctx = _fixture.CreateContext();
         var mrn = $"MRN-{Guid.NewGuid():N}"[..12];
-        var patient = Patient.Create(mrn, "Restore", "Test", new DateTime(1995, 12, 25), "Male");
+        var patient = Patient.Create(SqlServerFixture.DefaultTenantId, mrn, "Restore", "Test", new DateTime(1995, 12, 25), BiologicalSex.Male);
         ctx.Set<Patient>().Add(patient);
         await ctx.SaveChangesAsync();
         var patientId = patient.Id;
@@ -239,8 +239,8 @@ public class AuditInterceptorTests : IClassFixture<SqlServerFixture>
     {
         // Arrange & Act
         await using var ctx = _fixture.CreateContextAsUser("provider-123");
-        var patient = Patient.Create($"MRN-{Guid.NewGuid():N}"[..12], "Audit", "Test",
-            new DateTime(1988, 4, 4), "Female");
+        var patient = Patient.Create(SqlServerFixture.DefaultTenantId, $"MRN-{Guid.NewGuid():N}"[..12], "Audit", "Test",
+            new DateTime(1988, 4, 4), BiologicalSex.Female);
         ctx.Set<Patient>().Add(patient);
         await ctx.SaveChangesAsync();
 
@@ -256,8 +256,8 @@ public class AuditInterceptorTests : IClassFixture<SqlServerFixture>
     {
         // Arrange — create as user A
         await using var createCtx = _fixture.CreateContextAsUser("userA");
-        var patient = Patient.Create($"MRN-{Guid.NewGuid():N}"[..12], "ModTest", "Patient",
-            new DateTime(1992, 8, 8), "Male");
+        var patient = Patient.Create(SqlServerFixture.DefaultTenantId, $"MRN-{Guid.NewGuid():N}"[..12], "ModTest", "Patient",
+            new DateTime(1992, 8, 8), BiologicalSex.Male);
         createCtx.Set<Patient>().Add(patient);
         await createCtx.SaveChangesAsync();
         var patientId = patient.Id;
@@ -280,8 +280,8 @@ public class AuditInterceptorTests : IClassFixture<SqlServerFixture>
     {
         // Arrange
         await using var createCtx = _fixture.CreateContextAsUser("creator");
-        var patient = Patient.Create($"MRN-{Guid.NewGuid():N}"[..12], "HardDel", "Test",
-            new DateTime(1970, 1, 1), "Female");
+        var patient = Patient.Create(SqlServerFixture.DefaultTenantId, $"MRN-{Guid.NewGuid():N}"[..12], "HardDel", "Test",
+            new DateTime(1970, 1, 1), BiologicalSex.Female);
         createCtx.Set<Patient>().Add(patient);
         await createCtx.SaveChangesAsync();
         var patientId = patient.Id;

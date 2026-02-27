@@ -56,7 +56,7 @@ public class ClinicalAiController : ControllerBase
             ChiefComplaint = request.ChiefComplaint ?? "Not specified",
             HpiSummary = request.HpiSummary ?? "",
             PatientAge = patient.Age,
-            PatientSex = patient.Sex,
+            PatientSex = patient.Sex.ToString(),
             MedicalHistory = patient.Conditions?.Select(c => c.Name).ToList() ?? new(),
             Allergies = patient.Allergies?.Select(a => a.Allergen).ToList() ?? new(),
         };

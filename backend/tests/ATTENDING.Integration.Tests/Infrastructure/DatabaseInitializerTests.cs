@@ -33,9 +33,10 @@ public class DatabaseInitializerTests
 
         using var scope = sp.CreateScope();
         var ctx = scope.ServiceProvider.GetRequiredService<AttendingDbContext>();
+        ctx.EnableAdminContext();
         var users = await ctx.Users.ToListAsync();
         users.Should().HaveCount(3);
-        users.Should().Contain(u => u.Email == "scott.isbell@attending.ai");
+        users.Should().Contain(u => u.Email == "dev.provider@attending.local");
         users.Should().Contain(u => u.Email == "jane.martinez@attending.ai");
         users.Should().Contain(u => u.Email == "admin@attending.ai");
     }
@@ -48,6 +49,7 @@ public class DatabaseInitializerTests
 
         using var scope = sp.CreateScope();
         var ctx = scope.ServiceProvider.GetRequiredService<AttendingDbContext>();
+        ctx.EnableAdminContext(); // bypass tenant filter — seeder stores data under defaultTenantId
         var patients = await ctx.Patients.ToListAsync();
         patients.Should().HaveCount(5);
         patients.First().Should().NotBeNull();
@@ -61,6 +63,7 @@ public class DatabaseInitializerTests
 
         using var scope = sp.CreateScope();
         var ctx = scope.ServiceProvider.GetRequiredService<AttendingDbContext>();
+        ctx.EnableAdminContext();
         var encounters = await ctx.Encounters.ToListAsync();
         encounters.Should().HaveCount(5);
     }
@@ -73,6 +76,7 @@ public class DatabaseInitializerTests
 
         using var scope = sp.CreateScope();
         var ctx = scope.ServiceProvider.GetRequiredService<AttendingDbContext>();
+        ctx.EnableAdminContext();
         var allergies = await ctx.Allergies.ToListAsync();
         var conditions = await ctx.MedicalConditions.ToListAsync();
         allergies.Should().HaveCount(4);
@@ -88,6 +92,7 @@ public class DatabaseInitializerTests
 
         using var scope = sp.CreateScope();
         var ctx = scope.ServiceProvider.GetRequiredService<AttendingDbContext>();
+        ctx.EnableAdminContext();
         var users = await ctx.Users.ToListAsync();
         users.Should().HaveCount(3, "seeding twice should not duplicate data");
     }
@@ -100,6 +105,7 @@ public class DatabaseInitializerTests
 
         using var scope = sp.CreateScope();
         var ctx = scope.ServiceProvider.GetRequiredService<AttendingDbContext>();
+        ctx.EnableAdminContext();
         var users = await ctx.Users.ToListAsync();
         users.Should().BeEmpty("production environment should not seed dev data");
     }

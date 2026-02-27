@@ -19,6 +19,10 @@ public static class DatabaseInitializer
         var context = scope.ServiceProvider.GetRequiredService<AttendingDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<AttendingDbContext>>();
 
+        // Migrations and seeding are admin operations — they must access all tenants
+        // (or no tenant yet, at bootstrap). Enable admin context explicitly.
+        context.EnableAdminContext();
+
         try
         {
             // Apply pending migrations (real SQL Server only)
@@ -44,7 +48,16 @@ public static class DatabaseInitializer
         catch (Exception ex)
         {
             logger.LogError(ex, "An error occurred while initializing the database");
-            throw;
+
+            // Do NOT rethrow — the backend should start and serve requests even if the
+            // database is temporarily unavailable (Docker not running, Azure SQL cold start, etc.).
+            // Individual API requests will fail with 500 until DB is available.
+            // The /health/ready endpoint will reflect the unhealthy state.
+            // Run `docker compose up sqlserver -d` to start the database.
+            logger.LogWarning(
+                "Backend starting WITHOUT database connectivity. " +
+                "API requests requiring DB will fail until SQL Server is reachable. " +
+                "Start SQL Server: docker compose up sqlserver redis -d");
         }
     }
 
@@ -67,9 +80,9 @@ public static class DatabaseInitializer
         // Provider (matches DevAuthHandler identity)
         // ============================================================
         var provider = User.Create(
-            email: "scott.isbell@attending.ai",
-            firstName: "Scott",
-            lastName: "Isbell",
+            email: "dev.provider@attending.local",
+            firstName: "Dev",
+            lastName: "Provider",
             role: UserRole.Provider,
             npi: "1234567890",
             specialty: "Family Medicine");
@@ -95,24 +108,20 @@ public static class DatabaseInitializer
         // ============================================================
         // Patients
         // ============================================================
-        var patient1 = Patient.Create("MRN-2026-0001", "Maria", "Garcia", new DateTime(1985, 3, 15), "Female");
-        patient1.SetOrganization(defaultTenantId);
+        // OrganizationId is now the first parameter (required at construction)
+        var patient1 = Patient.Create(defaultTenantId, "MRN-2026-0001", "Maria", "Garcia", new DateTime(1985, 3, 15), BiologicalSex.Female);
         context.Patients.Add(patient1);
 
-        var patient2 = Patient.Create("MRN-2026-0002", "James", "Thompson", new DateTime(1958, 11, 22), "Male");
-        patient2.SetOrganization(defaultTenantId);
+        var patient2 = Patient.Create(defaultTenantId, "MRN-2026-0002", "James", "Thompson", new DateTime(1958, 11, 22), BiologicalSex.Male);
         context.Patients.Add(patient2);
 
-        var patient3 = Patient.Create("MRN-2026-0003", "Aisha", "Patel", new DateTime(1992, 7, 4), "Female");
-        patient3.SetOrganization(defaultTenantId);
+        var patient3 = Patient.Create(defaultTenantId, "MRN-2026-0003", "Aisha", "Patel", new DateTime(1992, 7, 4), BiologicalSex.Female);
         context.Patients.Add(patient3);
 
-        var patient4 = Patient.Create("MRN-2026-0004", "Robert", "Chen", new DateTime(1970, 1, 30), "Male");
-        patient4.SetOrganization(defaultTenantId);
+        var patient4 = Patient.Create(defaultTenantId, "MRN-2026-0004", "Robert", "Chen", new DateTime(1970, 1, 30), BiologicalSex.Male);
         context.Patients.Add(patient4);
 
-        var patient5 = Patient.Create("MRN-2026-0005", "Emily", "Nguyen", new DateTime(2001, 9, 12), "Female");
-        patient5.SetOrganization(defaultTenantId);
+        var patient5 = Patient.Create(defaultTenantId, "MRN-2026-0005", "Emily", "Nguyen", new DateTime(2001, 9, 12), BiologicalSex.Female);
         context.Patients.Add(patient5);
 
         await context.SaveChangesAsync();

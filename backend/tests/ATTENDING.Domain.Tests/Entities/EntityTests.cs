@@ -13,8 +13,9 @@ namespace ATTENDING.Domain.Tests.Entities;
 public class BaseEntityTests
 {
     // Use a concrete subclass to test BaseEntity behavior
+    private static readonly Guid _testTenantId = new("00000000-0000-0000-0000-000000000001");
     private static Patient CreateTestPatient() =>
-        Patient.Create("MRN-001", "John", "Doe", new DateTime(1990, 1, 15), "Male");
+        Patient.Create(_testTenantId, "MRN-001", "John", "Doe", new DateTime(1990, 1, 15), BiologicalSex.Male);
 
     [Fact]
     public void Create_ShouldSetCreatedAt()
@@ -117,15 +118,16 @@ public class PatientEntityTests
     [Fact]
     public void Create_WithValidData_ShouldSetAllFields()
     {
-        var patient = Patient.Create("MRN-2026-001", "Jane", "Smith",
-            new DateTime(1985, 6, 15), "Female");
+        var tenantId = new Guid("00000000-0000-0000-0000-000000000001");
+        var patient = Patient.Create(tenantId, "MRN-2026-001", "Jane", "Smith",
+            new DateTime(1985, 6, 15), BiologicalSex.Female);
 
         patient.Id.Should().NotBeEmpty();
         patient.MRN.Should().Be("MRN-2026-001");
         patient.FirstName.Should().Be("Jane");
         patient.LastName.Should().Be("Smith");
         patient.DateOfBirth.Should().Be(new DateTime(1985, 6, 15));
-        patient.Sex.Should().Be("Female");
+        patient.Sex.Should().Be(BiologicalSex.Female);
         patient.IsActive.Should().BeTrue();
         patient.PrimaryLanguage.Should().Be("English");
     }
@@ -133,8 +135,9 @@ public class PatientEntityTests
     [Fact]
     public void FullName_ShouldConcatenateNames()
     {
-        var patient = Patient.Create("MRN-001", "John", "Doe",
-            new DateTime(1990, 1, 1), "Male");
+        var tenantId = new Guid("00000000-0000-0000-0000-000000000001");
+        var patient = Patient.Create(tenantId, "MRN-001", "John", "Doe",
+            new DateTime(1990, 1, 1), BiologicalSex.Male);
 
         patient.FullName.Should().Be("John Doe");
     }
@@ -142,8 +145,9 @@ public class PatientEntityTests
     [Fact]
     public void Age_ShouldCalculateCorrectly()
     {
+        var tenantId = new Guid("00000000-0000-0000-0000-000000000001");
         var birthDate = DateTime.Today.AddYears(-35);
-        var patient = Patient.Create("MRN-001", "Test", "Patient", birthDate, "Male");
+        var patient = Patient.Create(tenantId, "MRN-001", "Test", "Patient", birthDate, BiologicalSex.Male);
 
         patient.Age.Should().Be(35);
     }
@@ -152,8 +156,9 @@ public class PatientEntityTests
     public void Age_BirthdayNotYetThisYear_ShouldBeOneYearLess()
     {
         // Birthday is tomorrow — hasn't turned the age yet
+        var tenantId = new Guid("00000000-0000-0000-0000-000000000001");
         var birthDate = DateTime.Today.AddYears(-30).AddDays(1);
-        var patient = Patient.Create("MRN-001", "Test", "Patient", birthDate, "Male");
+        var patient = Patient.Create(tenantId, "MRN-001", "Test", "Patient", birthDate, BiologicalSex.Male);
 
         patient.Age.Should().Be(29);
     }
@@ -161,8 +166,9 @@ public class PatientEntityTests
     [Fact]
     public void Create_ShouldGenerateUniqueIds()
     {
-        var p1 = Patient.Create("MRN-001", "A", "B", DateTime.Today, "Male");
-        var p2 = Patient.Create("MRN-002", "C", "D", DateTime.Today, "Female");
+        var tenantId = new Guid("00000000-0000-0000-0000-000000000001");
+        var p1 = Patient.Create(tenantId, "MRN-001", "A", "B", DateTime.Today, BiologicalSex.Male);
+        var p2 = Patient.Create(tenantId, "MRN-002", "C", "D", DateTime.Today, BiologicalSex.Female);
 
         p1.Id.Should().NotBe(p2.Id);
     }
@@ -170,8 +176,9 @@ public class PatientEntityTests
     [Fact]
     public void Collections_ShouldInitializeEmpty()
     {
-        var patient = Patient.Create("MRN-001", "Test", "Patient",
-            DateTime.Today.AddYears(-30), "Male");
+        var tenantId = new Guid("00000000-0000-0000-0000-000000000001");
+        var patient = Patient.Create(tenantId, "MRN-001", "Test", "Patient",
+            DateTime.Today.AddYears(-30), BiologicalSex.Male);
 
         patient.Encounters.Should().BeEmpty();
         patient.LabOrders.Should().BeEmpty();

@@ -67,10 +67,12 @@ public class SqlServerFixture : IAsyncLifetime
         return CreateContext(new StubCurrentUserService(userId));
     }
 
+    public static readonly Guid DefaultTenantId = new("00000000-0000-0000-0000-000000000001");
+
     public async Task<Patient> SeedPatientAsync(AttendingDbContext context,
         string mrn = "TEST-001", string firstName = "John", string lastName = "Doe")
     {
-        var patient = Patient.Create(mrn, firstName, lastName, new DateTime(1985, 6, 15), "Male");
+        var patient = Patient.Create(DefaultTenantId, mrn, firstName, lastName, new DateTime(1985, 6, 15), BiologicalSex.Male);
         context.Set<Patient>().Add(patient);
         await context.SaveChangesAsync();
         return patient;

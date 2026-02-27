@@ -1,15 +1,45 @@
 // =============================================================================
-// ATTENDING AI - FHIR OAuth Callback Handler
+// ATTENDING AI — FHIR OAuth Callback Handler
 // apps/provider-portal/pages/api/fhir/auth/callback.ts
 //
-// Handles OAuth2 callback from Epic/Cerner, exchanges code for tokens
+// Receives the authorization code redirect from Epic/Cerner, exchanges
+// it for tokens, and stores them in a secure httpOnly cookie.
+//
+// No database required — state lives in a short-lived cookie; tokens
+// live in an 8-hour httpOnly cookie.  For production, swap the token
+// storage for an encrypted DB column (see DEPLOYMENT.md).
+//
+// Register this URL in Epic App Orchard:
+//   http://localhost:3000/api/fhir/auth/callback   (sandbox)
+//   https://your-domain.com/api/fhir/auth/callback (production)
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { createFhirClient } from '../../../../lib/fhir/fhirClientFactory';
-import { verifyOAuthState, clearOAuthState } from '../../../../lib/fhir/oauthState';
-import { storeFhirTokens } from '../../../../lib/fhir/tokenStorage';
-import { prisma } from '../../../../lib/prisma';
+
+function parseCookies(cookieHeader: string): Record<string, string> {
+  return Object.fromEntries(
+    cookieHeader.split(';').map((c) => {
+      const [k, ...v] = c.trim().split('=');
+      return [k.trim(), decodeURIComponent(v.join('='))];
+    })
+  );
+}
+
+function serializeCookie(name: string, value: string, options: {
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: 'lax' | 'strict' | 'none';
+  maxAge?: number;
+  path?: string;
+}): string {
+  let str = `${name}=${encodeURIComponent(value)}`;
+  if (options.httpOnly) str += '; HttpOnly';
+  if (options.secure) str += '; Secure';
+  if (options.sameSite) str += `; SameSite=${options.sameSite}`;
+  if (options.maxAge !== undefined) str += `; Max-Age=${options.maxAge}`;
+  if (options.path) str += `; Path=${options.path}`;
+  return str;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -18,106 +48,124 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { code, state, error, error_description } = req.query;
 
-  // Handle OAuth errors from the EHR
+  // OAuth error from EHR
   if (error) {
-    console.error('[FHIR Callback] OAuth error:', error, error_description);
+    console.error('[FHIR Callback] OAuth error from EHR:', error, error_description);
     return res.redirect(
-      `/settings/ehr-connection?error=${encodeURIComponent(error as string)}&message=${encodeURIComponent(error_description as string || 'Authorization failed')}`
+      `/?fhir_error=${encodeURIComponent(String(error_description || error))}`
     );
   }
 
-  // Validate required parameters
   if (!code || !state) {
-    console.error('[FHIR Callback] Missing code or state');
-    return res.redirect('/settings/ehr-connection?error=missing_params&message=Missing authorization code or state');
+    return res.status(400).json({ error: 'Missing code or state parameter' });
   }
+
+  // Retrieve state cookie
+  const cookies = parseCookies(req.headers.cookie || '');
+  const rawState = cookies['attending_fhir_state'];
+
+  if (!rawState) {
+    console.error('[FHIR Callback] State cookie missing — session expired or CSRF attempt');
+    return res.redirect('/?fhir_error=Session+expired.+Please+try+connecting+again.');
+  }
+
+  let statePayload: {
+    state: string;
+    vendor: string;
+    returnTo: string;
+    baseUrl: string;
+    clientId: string;
+    smartConfig: { authorization_endpoint: string; token_endpoint: string };
+  };
 
   try {
-    // Verify state to prevent CSRF
-    const storedState = await verifyOAuthState(state as string);
-    if (!storedState) {
-      console.error('[FHIR Callback] Invalid or expired state');
-      return res.redirect('/settings/ehr-connection?error=invalid_state&message=Session expired, please try again');
-    }
+    statePayload = JSON.parse(rawState);
+  } catch {
+    return res.redirect('/?fhir_error=Invalid+state.+Please+try+connecting+again.');
+  }
 
-    const { vendor, providerId } = storedState;
+  // Verify state matches to prevent CSRF
+  if (statePayload.state !== String(state)) {
+    console.error('[FHIR Callback] State mismatch — possible CSRF attack');
+    return res.redirect('/?fhir_error=Security+check+failed.+Please+try+again.');
+  }
 
-    // Create FHIR client for the vendor
-    const client = createFhirClient(vendor as 'epic' | 'cerner' | 'generic');
+  const { vendor, returnTo, baseUrl, clientId, smartConfig } = statePayload;
+  const clientSecret =
+    vendor === 'epic' ? process.env.EPIC_CLIENT_SECRET :
+    vendor === 'cerner' ? process.env.CERNER_CLIENT_SECRET :
+    undefined;
 
-    // Fetch SMART configuration
-    const smartConfig = await client.getSmartConfiguration();
-    client['config'].smart = smartConfig;
+  const redirectUri = `${process.env.NEXTAUTH_URL}/api/fhir/auth/callback`;
 
-    // Exchange authorization code for tokens
-    console.log('[FHIR Callback] Exchanging code for tokens...');
-    const tokenResponse = await client.exchangeCodeForToken(code as string);
+  // Exchange authorization code for tokens
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code: String(code),
+    redirect_uri: redirectUri,
+    client_id: clientId,
+  });
+  if (clientSecret) body.set('client_secret', clientSecret);
 
-    console.log('[FHIR Callback] Token exchange successful:', {
-      hasAccessToken: !!tokenResponse.access_token,
-      hasRefreshToken: !!tokenResponse.refresh_token,
-      expiresIn: tokenResponse.expires_in,
-      patientId: tokenResponse.patient,
-      encounterId: tokenResponse.encounter,
+  let tokenResponse: {
+    access_token: string;
+    refresh_token?: string;
+    expires_in: number;
+    scope: string;
+    patient?: string;
+    encounter?: string;
+    id_token?: string;
+  };
+
+  try {
+    const tokenRes = await fetch(smartConfig.token_endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
     });
 
-    // Store tokens securely
-    await storeFhirTokens({
-      providerId: providerId || 'system',
-      vendor,
-      accessToken: tokenResponse.access_token,
-      refreshToken: tokenResponse.refresh_token,
-      expiresAt: new Date(Date.now() + tokenResponse.expires_in * 1000),
-      patientId: tokenResponse.patient,
-      encounterId: tokenResponse.encounter,
-      scope: tokenResponse.scope,
-    });
-
-    // Clear the OAuth state
-    await clearOAuthState(state as string);
-
-    // Log the successful connection
-    await prisma.auditLog.create({
-      data: {
-        action: 'FHIR_CONNECTION_ESTABLISHED',
-        entityType: 'EHR_CONNECTION',
-        entityId: vendor,
-        userId: providerId || 'system',
-        details: JSON.stringify({
-          vendor,
-          patientId: tokenResponse.patient,
-          encounterId: tokenResponse.encounter,
-          scopes: tokenResponse.scope?.split(' '),
-        }),
-        ipAddress: req.headers['x-forwarded-for'] as string || req.socket.remoteAddress,
-      },
-    });
-
-    // If we have a patient context, trigger initial sync
-    if (tokenResponse.patient) {
-      // Queue background sync (don't await)
-      fetch(`${process.env.NEXTAUTH_URL}/api/fhir/sync/patient?patientId=${tokenResponse.patient}&vendor=${vendor}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      }).catch(err => console.error('[FHIR Callback] Background sync trigger failed:', err));
+    if (!tokenRes.ok) {
+      const errText = await tokenRes.text();
+      throw new Error(`${tokenRes.status}: ${errText}`);
     }
 
-    // Redirect to success page
-    const successUrl = tokenResponse.patient
-      ? `/patients/${tokenResponse.patient}?ehr_connected=true&vendor=${vendor}`
-      : `/settings/ehr-connection?connected=true&vendor=${vendor}`;
-
-    res.redirect(successUrl);
-  } catch (error: any) {
-    console.error('[FHIR Callback] Token exchange failed:', error);
-    
-    // Clear state on error
-    if (state) {
-      await clearOAuthState(state as string).catch(() => {});
-    }
-
-    res.redirect(
-      `/settings/ehr-connection?error=token_exchange_failed&message=${encodeURIComponent(error.message)}`
+    tokenResponse = await tokenRes.json();
+  } catch (err) {
+    console.error('[FHIR Callback] Token exchange failed:', err);
+    return res.redirect(
+      `/?fhir_error=${encodeURIComponent(`Token exchange failed: ${String(err)}`)}`
     );
   }
+
+  // Store token in httpOnly cookie (8 hours — typical clinical shift)
+  const tokenPayload = JSON.stringify({
+    accessToken: tokenResponse.access_token,
+    refreshToken: tokenResponse.refresh_token || null,
+    expiresAt: Date.now() + tokenResponse.expires_in * 1000,
+    patientId: tokenResponse.patient || null,
+    encounterId: tokenResponse.encounter || null,
+    scope: tokenResponse.scope,
+    vendor,
+    baseUrl,
+    clientId,
+  });
+
+  res.setHeader('Set-Cookie', [
+    // Clear the state cookie
+    serializeCookie('attending_fhir_state', '', { maxAge: 0, path: '/' }),
+    // Store the token cookie (8 hours)
+    serializeCookie('attending_fhir_token', tokenPayload, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 28800,
+      path: '/',
+    }),
+  ]);
+
+  const vendorName = vendor === 'epic' ? 'Epic' : vendor === 'cerner' ? 'Oracle Health' : vendor;
+  console.info(`[FHIR] Connected to ${vendorName}. PatientId: ${tokenResponse.patient || 'none'}`);
+
+  // Redirect back to where the provider was
+  return res.redirect(`${returnTo}?fhir_connected=true&vendor=${vendor}`);
 }

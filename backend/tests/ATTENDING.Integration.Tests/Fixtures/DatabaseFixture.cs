@@ -53,6 +53,10 @@ public class DatabaseFixture : IDisposable
 
         Services = services.BuildServiceProvider();
         DbContext = Services.GetRequiredService<AttendingDbContext>();
+
+        // Fixture has no authenticated user, so no TenantId from ICurrentUserService.
+        // Enable admin context so seed helpers can insert and query across all tenants.
+        DbContext.EnableAdminContext();
     }
 
     public async Task<Patient> SeedPatientAsync(string mrn = "TEST-001",
@@ -63,8 +67,7 @@ public class DatabaseFixture : IDisposable
         // InMemory provider "duplicate key" errors from stale Added/Modified entries.
         DbContext.ChangeTracker.Clear();
         
-        var patient = Patient.Create(mrn, firstName, lastName, new DateTime(1985, 6, 15), "Male");
-        patient.SetOrganization(tenantId ?? DefaultTenantId);
+        var patient = Patient.Create(tenantId ?? DefaultTenantId, mrn, firstName, lastName, new DateTime(1985, 6, 15), BiologicalSex.Male);
         DbContext.Set<Patient>().Add(patient);
         await DbContext.SaveChangesAsync();
         DbContext.ChangeTracker.Clear();

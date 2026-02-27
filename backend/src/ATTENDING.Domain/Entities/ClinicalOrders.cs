@@ -6,7 +6,7 @@ namespace ATTENDING.Domain.Entities;
 /// <summary>
 /// Imaging Order entity
 /// </summary>
-public class ImagingOrder : BaseEntity, IAggregateRoot
+public class ImagingOrder : BaseEntity, IAggregateRoot, IHasDomainEvents
 {
     public Guid Id { get; private set; }
     public string OrderNumber { get; private set; } = string.Empty;
@@ -167,7 +167,7 @@ public class ImagingResult : BaseEntity
 /// <summary>
 /// Medication Order entity
 /// </summary>
-public class MedicationOrder : BaseEntity, IAggregateRoot
+public class MedicationOrder : BaseEntity, IAggregateRoot, IHasDomainEvents
 {
     public Guid Id { get; private set; }
     public string OrderNumber { get; private set; } = string.Empty;
@@ -308,7 +308,7 @@ public class MedicationOrder : BaseEntity, IAggregateRoot
 /// <summary>
 /// Referral entity
 /// </summary>
-public class Referral : BaseEntity, IAggregateRoot
+public class Referral : BaseEntity, IAggregateRoot, IHasDomainEvents
 {
     public Guid Id { get; private set; }
     public string ReferralNumber { get; private set; } = string.Empty;

@@ -124,7 +124,7 @@ public class EncountersController : ControllerBase
         return new EncounterResponse(
             e.Id, e.EncounterNumber, e.PatientId,
             e.Patient != null ? new PatientSummaryResponse(
-                e.Patient.Id, e.Patient.MRN, e.Patient.FullName, e.Patient.Age, e.Patient.Sex) : null,
+                e.Patient.Id, e.Patient.MRN, e.Patient.FullName, e.Patient.Age, e.Patient.Sex.ToString()) : null,
             e.ProviderId,
             e.Provider != null ? new ProviderSummaryResponse(
                 e.Provider.Id, e.Provider.FullName, e.Provider.NPI, e.Provider.Specialty) : null,

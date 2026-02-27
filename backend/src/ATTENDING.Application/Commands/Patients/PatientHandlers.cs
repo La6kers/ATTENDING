@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using ATTENDING.Domain.Common;
 using ATTENDING.Domain.Entities;
+using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Application.Commands.Patients;
@@ -12,11 +13,14 @@ public class CreatePatientHandler : IRequestHandler<CreatePatientCommand, Result
     private readonly IUnitOfWork _uow;
     private readonly ILogger<CreatePatientHandler> _logger;
 
-    public CreatePatientHandler(IPatientRepository repo, IUnitOfWork uow, ILogger<CreatePatientHandler> logger)
+    private readonly ICurrentUserService _currentUser;
+
+    public CreatePatientHandler(IPatientRepository repo, IUnitOfWork uow, ILogger<CreatePatientHandler> logger, ICurrentUserService currentUser)
     {
         _repo = repo;
         _uow = uow;
         _logger = logger;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<PatientCreated>> Handle(CreatePatientCommand cmd, CancellationToken ct)
@@ -25,7 +29,15 @@ public class CreatePatientHandler : IRequestHandler<CreatePatientCommand, Result
         if (existing != null)
             return Result.Failure<PatientCreated>(DomainErrors.Patient.DuplicateMrn(cmd.MRN));
 
-        var patient = Patient.Create(cmd.MRN, cmd.FirstName, cmd.LastName, cmd.DateOfBirth, cmd.Sex);
+        // Resolve tenant from authenticated user; fall back to empty guid (interceptor
+        // will set it from the audit context if the claim is missing in dev/test).
+        var orgId = _currentUser.TenantId ?? Guid.Empty;
+
+        // Parse sex string to strongly-typed enum (accepts "Male", "male", "M", etc.).
+        if (!Enum.TryParse<BiologicalSex>(cmd.Sex, ignoreCase: true, out var sex))
+            sex = BiologicalSex.Unknown;
+
+        var patient = Patient.Create(orgId, cmd.MRN, cmd.FirstName, cmd.LastName, cmd.DateOfBirth, sex);
         await _repo.AddAsync(patient, ct);
         await _uow.SaveChangesAsync(ct);
 

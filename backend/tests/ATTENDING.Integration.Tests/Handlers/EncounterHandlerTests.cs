@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using ATTENDING.Application.Commands.Encounters;
 using ATTENDING.Domain.Entities;
+using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Interfaces;
 using Moq;
 using Xunit;
@@ -18,7 +19,7 @@ public class EncounterHandlerTests
     [Fact]
     public async Task CreateEncounter_ValidInput_ShouldSucceed()
     {
-        var patient = Patient.Create("MRN-001", "Test", "Patient", DateTime.Today.AddYears(-30), "Male");
+        var patient = Patient.Create(new Guid("00000000-0000-0000-0000-000000000001"), "MRN-001", "Test", "Patient", DateTime.Today.AddYears(-30), BiologicalSex.Male);
         _patientRepo.Setup(r => r.GetByIdAsync(patient.Id, default)).ReturnsAsync(patient);
 
         var handler = new CreateEncounterHandler(_encounterRepo.Object, _patientRepo.Object, _uow.Object, _logger.Object);

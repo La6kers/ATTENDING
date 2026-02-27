@@ -9,19 +9,32 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useChatStore } from '../../store/useChatStore';
-import { ChatContainer } from '../../components/chat/ChatContainer';
+import { ChatContainer } from '../../components/assessment/ChatContainer';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { CheckCircle, WifiOff, Clock, AlertCircle } from 'lucide-react';
 
 export default function CompassChatPage() {
   const router = useRouter();
-  const { 
+  const {
     sessionId,
-    isInitialized, 
-    initializeSession, 
+    isInitialized,
+    initializeSession,
     resetSession,
     currentPhase,
+    messages,
+    isAIProcessing,
+    sendMessage,
+    handleQuickReply,
+    getProgress,
+    assessmentData,
   } = useChatStore();
+
+  // Local input value — ChatContainer is a controlled component
+  const [inputValue, setInputValue] = useState('');
+
+  // Quick replies live in the last assistant message's metadata
+  const lastAssistantMessage = [...messages].reverse().find((m) => m.role === 'assistant');
+  const quickReplies = lastAssistantMessage?.metadata?.quickReplies ?? [];
 
   // WebSocket connection
   const { 
@@ -209,7 +222,22 @@ export default function CompassChatPage() {
         {/* Chat Container */}
         <main className="flex-1 overflow-hidden">
           {isInitialized ? (
-            <ChatContainer />
+            <ChatContainer
+              messages={messages}
+              quickReplies={quickReplies}
+              isTyping={isAIProcessing}
+              inputValue={inputValue}
+              onInputChange={setInputValue}
+              onSend={async (content) => {
+                setInputValue('');
+                await sendMessage(content);
+              }}
+              onQuickReply={handleQuickReply}
+              progress={getProgress()}
+              currentPhase={currentPhase}
+              patientName={assessmentData?.patientName || undefined}
+              disabled={isAIProcessing || currentPhase === 'complete' || currentPhase === 'completed'}
+            />
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">

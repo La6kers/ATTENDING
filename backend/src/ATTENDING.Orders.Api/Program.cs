@@ -43,6 +43,13 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddInfrastructureHealthChecks(builder.Configuration);
 
+// Background service exceptions should NOT stop the host — clinical system must stay up
+// The scheduler will log the error and the job will be retried on the next interval
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
+
 // Add SignalR with Redis backplane for multi-instance scaling
 var signalRBuilder = builder.Services.AddSignalR(options =>
 {

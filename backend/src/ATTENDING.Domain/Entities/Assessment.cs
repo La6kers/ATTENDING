@@ -7,7 +7,7 @@ namespace ATTENDING.Domain.Entities;
 /// <summary>
 /// Patient Assessment (COMPASS flow) entity
 /// </summary>
-public class PatientAssessment : BaseEntity, IAggregateRoot
+public class PatientAssessment : BaseEntity, IAggregateRoot, IHasDomainEvents
 {
     public Guid Id { get; private set; }
     public string AssessmentNumber { get; private set; } = string.Empty;

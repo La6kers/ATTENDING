@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ATTENDING.Domain.Interfaces;
+using ATTENDING.Infrastructure.Data;
 
 namespace ATTENDING.Infrastructure.Services;
 
@@ -117,6 +118,9 @@ public class ClinicalSchedulerService : BackgroundService
                         jobName, distributedLock.LockId);
 
                     using var scope = _services.CreateScope();
+                    // Background jobs have no authenticated user, so no TenantId.
+                    // Enable admin context explicitly so repositories can query across tenants.
+                    scope.ServiceProvider.GetRequiredService<AttendingDbContext>().EnableAdminContext();
                     await jobAction(scope, stoppingToken);
 
                     var elapsed = DateTime.UtcNow - cycleStart;

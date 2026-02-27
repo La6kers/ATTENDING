@@ -33,8 +33,13 @@ public static class DependencyInjection
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 
-        // Domain event dispatcher
+        // Domain event dispatcher (used by AttendingDbContext post-save)
         services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
+
+        // Event bus (used by application code for imperative event publishing)
+        // Backed by the in-process dispatcher; swap to MassTransitEventBus for multi-pod.
+        services.AddScoped<ATTENDING.Application.Interfaces.IEventBus,
+            ATTENDING.Application.Events.InProcessEventBus>();
 
         return services;
     }

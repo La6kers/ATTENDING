@@ -1,47 +1,61 @@
-﻿// =============================================================================
-// API Deprecation Middleware
+// =============================================================================
+// ATTENDING AI - Provider Portal Middleware
 // apps/provider-portal/middleware.ts
 //
-// Adds Deprecation and Sunset headers to Next.js API routes that have been
-// migrated to the .NET backend. Frontend consumers should migrate to the
-// NEXT_PUBLIC_API_URL endpoints.
+// Protects all provider-facing pages with NextAuth session enforcement.
+//
+// BEHAVIOR BY ENVIRONMENT:
+//   development  — skips auth check unless NEXTAUTH_ENFORCE=true is set.
+//                  This keeps the local dev loop intact when Azure AD B2C
+//                  credentials aren't configured yet.
+//   production   — always requires a valid NextAuth session token.
+//                  Unauthenticated requests are redirected to /auth/signin.
+//
+// PUBLIC PATHS (never protected):
+//   /auth/*          — sign-in, sign-out, error, callback routes
+//   /api/auth/*      — NextAuth API routes
+//   /api/health      — health check for uptime monitoring
+//   /_next/*         — Next.js static assets
+//   /favicon.ico     — browser favicon
+//   /sounds/*        — clinical alert audio files
+//   /icons/*         — PWA icon assets
 // =============================================================================
 
+import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Routes that have .NET equivalents â€” add Deprecation header
-const DEPRECATED_ROUTES: Record<string, string> = {
-  '/api/labs': 'GET /api/v1/laborders â€” see docs/NEXTJS_API_MIGRATION.md',
-  '/api/imaging': 'GET /api/v1/imagingorders â€” see docs/NEXTJS_API_MIGRATION.md',
-  '/api/prescriptions': 'GET /api/v1/medications â€” see docs/NEXTJS_API_MIGRATION.md',
-  '/api/referrals': 'GET /api/v1/referrals â€” see docs/NEXTJS_API_MIGRATION.md',
-  '/api/assessments': 'GET /api/v1/assessments â€” see docs/NEXTJS_API_MIGRATION.md',
-  '/api/clinical/drug-check': 'POST /api/v1/medications/patient/{id}/check-interactions',
-  '/api/clinical/red-flags': 'GET /api/v1/assessments/red-flags',
-};
+const isDevelopment = process.env.NODE_ENV === 'development';
+const enforceInDev = process.env.NEXTAUTH_ENFORCE === 'true';
 
-export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-
-  // Check if this route is deprecated
-  for (const [route, replacement] of Object.entries(DEPRECATED_ROUTES)) {
-    if (path.startsWith(route)) {
-      const response = NextResponse.next();
-      response.headers.set('Deprecation', 'true');
-      response.headers.set('Sunset', '2026-06-01');
-      response.headers.set('X-Deprecated-Use', replacement);
-      response.headers.set(
-        'Link',
-        `<${process.env.NEXT_PUBLIC_API_URL || 'https://api.attendingai.com'}${replacement.split(' ')[1] || ''}>; rel="successor-version"`
-      );
-      return response;
-    }
+export default withAuth(
+  // Middleware function runs AFTER the authorized callback returns true.
+  // Add request-level logic here (e.g. role checks, tenant injection).
+  function middleware(req: NextRequest) {
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => {
+        // In development without explicit enforcement, allow all requests.
+        // This lets developers use the portal without configuring Azure AD B2C.
+        if (isDevelopment && !enforceInDev) {
+          return true;
+        }
+        // Production: require a valid session token.
+        return !!token;
+      },
+    },
+    pages: {
+      signIn: '/auth/signin',
+    },
   }
+);
 
-  return NextResponse.next();
-}
-
+// Route matcher: exclude all public/static paths listed above.
+// The negative lookahead covers every public path in a single pattern.
 export const config = {
-  matcher: '/api/:path*',
+  matcher: [
+    '/((?!auth|api/auth|api/health|_next/static|_next/image|favicon\\.ico|sounds|icons).*)',
+  ],
 };

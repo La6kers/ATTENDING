@@ -183,37 +183,197 @@ public class EpicFhirClient : IFhirClient
 }
 
 /// <summary>
-/// Oracle Health (Cerner) FHIR R4 client implementation
+/// Oracle Health (Cerner) FHIR R4 client implementation.
+///
+/// Key Cerner differences from Epic:
+///   1. Patient MRN identifier: no stable system URL across tenants.
+///      Extract by type.coding.code == "MR" (HL7 v2 identifier type table).
+///   2. Vital signs use the same LOINC codes as Epic — no change required.
+///   3. Sandbox tenant: ec2458f2-1e24-41c8-b71b-0e701af7583d
+///      Base URL: https://fhir-ehr.cerner.com/r4/{tenantId}
+///   4. ServiceRequest for lab orders requires a category element that
+///      Cerner validates more strictly than Epic.
+///
+/// The HttpClient is pre-configured (base URL, Authorization header) by
+/// DependencyInjection.cs — this class only constructs FHIR queries.
 /// </summary>
 public class OracleHealthFhirClient : IFhirClient
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<OracleHealthFhirClient> _logger;
+    private readonly FhirClientOptions _options;
 
-    public OracleHealthFhirClient(HttpClient httpClient, ILogger<OracleHealthFhirClient> logger)
+    public OracleHealthFhirClient(
+        HttpClient httpClient,
+        ILogger<OracleHealthFhirClient> logger,
+        IOptions<FhirClientOptions> options)
     {
         _httpClient = httpClient;
         _logger = logger;
+        _options = options.Value;
     }
 
-    // Similar implementation to Epic, with Oracle Health specific adjustments
-    public Task<FhirPatient?> GetPatientAsync(string patientId, CancellationToken cancellationToken = default)
-        => throw new NotImplementedException("Oracle Health integration pending");
+    public async Task<FhirPatient?> GetPatientAsync(string patientId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"Patient/{patientId}", cancellationToken);
 
-    public Task<IReadOnlyList<FhirObservation>> GetObservationsAsync(string patientId, CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<FhirObservation>>(Array.Empty<FhirObservation>());
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "[Cerner] Failed to get patient {PatientId}: {StatusCode}",
+                    patientId, response.StatusCode);
+                return null;
+            }
 
-    public Task<IReadOnlyList<FhirMedicationRequest>> GetMedicationsAsync(string patientId, CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<FhirMedicationRequest>>(Array.Empty<FhirMedicationRequest>());
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            return JsonSerializer.Deserialize<FhirPatient>(content, FhirJsonOptions.Default);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Cerner] Error fetching patient {PatientId}", patientId);
+            return null;
+        }
+    }
 
-    public Task<IReadOnlyList<FhirCondition>> GetConditionsAsync(string patientId, CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<FhirCondition>>(Array.Empty<FhirCondition>());
+    public async Task<IReadOnlyList<FhirObservation>> GetObservationsAsync(string patientId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Cerner accepts the same category and sort parameters as Epic for FHIR R4
+            var response = await _httpClient.GetAsync(
+                $"Observation?patient={patientId}&category=laboratory&_sort=-date&_count=100",
+                cancellationToken);
 
-    public Task<IReadOnlyList<FhirAllergyIntolerance>> GetAllergiesAsync(string patientId, CancellationToken cancellationToken = default)
-        => Task.FromResult<IReadOnlyList<FhirAllergyIntolerance>>(Array.Empty<FhirAllergyIntolerance>());
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("[Cerner] Failed to get observations for patient {PatientId}", patientId);
+                return Array.Empty<FhirObservation>();
+            }
 
-    public Task<bool> SendLabOrderAsync(FhirServiceRequest labOrder, CancellationToken cancellationToken = default)
-        => Task.FromResult(false);
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var bundle = JsonSerializer.Deserialize<FhirBundle<FhirObservation>>(content, FhirJsonOptions.Default);
+            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirObservation>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Cerner] Error fetching observations for patient {PatientId}", patientId);
+            return Array.Empty<FhirObservation>();
+        }
+    }
+
+    public async Task<IReadOnlyList<FhirMedicationRequest>> GetMedicationsAsync(string patientId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"MedicationRequest?patient={patientId}&status=active",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+                return Array.Empty<FhirMedicationRequest>();
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var bundle = JsonSerializer.Deserialize<FhirBundle<FhirMedicationRequest>>(content, FhirJsonOptions.Default);
+            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirMedicationRequest>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Cerner] Error fetching medications for patient {PatientId}", patientId);
+            return Array.Empty<FhirMedicationRequest>();
+        }
+    }
+
+    public async Task<IReadOnlyList<FhirCondition>> GetConditionsAsync(string patientId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"Condition?patient={patientId}&clinical-status=active",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+                return Array.Empty<FhirCondition>();
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var bundle = JsonSerializer.Deserialize<FhirBundle<FhirCondition>>(content, FhirJsonOptions.Default);
+            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirCondition>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Cerner] Error fetching conditions for patient {PatientId}", patientId);
+            return Array.Empty<FhirCondition>();
+        }
+    }
+
+    public async Task<IReadOnlyList<FhirAllergyIntolerance>> GetAllergiesAsync(string patientId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"AllergyIntolerance?patient={patientId}&clinical-status=active",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+                return Array.Empty<FhirAllergyIntolerance>();
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var bundle = JsonSerializer.Deserialize<FhirBundle<FhirAllergyIntolerance>>(content, FhirJsonOptions.Default);
+            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirAllergyIntolerance>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Cerner] Error fetching allergies for patient {PatientId}", patientId);
+            return Array.Empty<FhirAllergyIntolerance>();
+        }
+    }
+
+    public async Task<bool> SendLabOrderAsync(FhirServiceRequest labOrder, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Cerner requires a category element on ServiceRequest
+            // Add "laboratory" category if the caller didn't supply one
+            if (labOrder.Category == null || labOrder.Category.Count == 0)
+            {
+                labOrder.Category = new List<FhirCodeableConcept>
+                {
+                    new()
+                    {
+                        Coding = new List<FhirCoding>
+                        {
+                            new()
+                            {
+                                System = "http://snomed.info/sct",
+                                Code = "108252007",
+                                Display = "Laboratory procedure"
+                            }
+                        }
+                    }
+                };
+            }
+
+            var json = JsonSerializer.Serialize(labOrder, FhirJsonOptions.Default);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/fhir+json");
+
+            var response = await _httpClient.PostAsync("ServiceRequest", content, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("[Cerner] Failed to send lab order: {StatusCode}", response.StatusCode);
+                return false;
+            }
+
+            _logger.LogInformation("[Cerner] Lab order sent successfully to Oracle Health");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[Cerner] Error sending lab order to Oracle Health");
+            return false;
+        }
+    }
 }
 
 #region FHIR R4 Models
@@ -457,6 +617,9 @@ public class FhirServiceRequest
     [JsonPropertyName("requester")]
     public FhirReference? Requester { get; set; }
     
+    [JsonPropertyName("category")]
+    public List<FhirCodeableConcept>? Category { get; set; }
+
     [JsonPropertyName("reasonCode")]
     public List<FhirCodeableConcept>? ReasonCode { get; set; }
 }

@@ -108,7 +108,7 @@ public class PatientsController : ControllerBase
     {
         return new PatientDetailResponse(
             p.Id, p.MRN, p.FirstName, p.LastName, p.FullName,
-            p.DateOfBirth, p.Age, p.Sex, p.Phone, p.Email,
+            p.DateOfBirth, p.Age, p.Sex.ToString(), p.Phone, p.Email,
             p.AddressLine1, p.AddressLine2, p.City, p.State, p.ZipCode,
             p.PrimaryLanguage, p.IsActive,
             p.Allergies?.Select(a => new AllergyResponse(
@@ -124,7 +124,7 @@ public class PatientsController : ControllerBase
 
     private static PatientSearchResponse MapToSearch(Domain.Entities.Patient p)
     {
-        return new PatientSearchResponse(p.Id, p.MRN, p.FullName, p.Age, p.Sex, p.Phone, p.Email, p.IsActive);
+        return new PatientSearchResponse(p.Id, p.MRN, p.FullName, p.Age, p.Sex.ToString(), p.Phone, p.Email, p.IsActive);
     }
 
     #endregion

@@ -10,7 +10,10 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:api": "playwright test --grep 'API contract'"
   },
   "dependencies": {
     "@attending/clinical-services": "*",
@@ -39,6 +42,7 @@
     "formidable": "^3.5.4",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@playwright/test": "^1.44.0"
   }
 }

@@ -26,6 +26,9 @@
     <!-- OpenTelemetry instrumentation for infrastructure components -->
     <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.0.0-beta.12" />
     <PackageReference Include="OpenTelemetry.Instrumentation.StackExchangeRedis" Version="1.10.0-beta.1" />
+    <!-- MassTransit — distributed event bus (used when EventBus:Transport = AzureServiceBus or InMemory) -->
+    <PackageReference Include="MassTransit" Version="8.2.3" />
+    <PackageReference Include="MassTransit.Azure.ServiceBus.Core" Version="8.2.3" />
   </ItemGroup>
 
   <ItemGroup>

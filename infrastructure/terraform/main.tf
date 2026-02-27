@@ -451,6 +451,112 @@ resource "azurerm_storage_management_policy" "audit_archival" {
 }
 
 # ============================================================
+# Deployment Slots — Blue-Green for all three App Services
+# Each service gets a "staging" slot that receives new deploys.
+# CI deploys here, runs smoke tests, then swaps to production.
+# ============================================================
+
+# Provider Portal — staging slot
+resource "azurerm_linux_web_app_slot" "provider_portal_staging" {
+  name           = "staging"
+  app_service_id = azurerm_linux_web_app.provider_portal.id
+
+  site_config {
+    always_on           = false
+    http2_enabled       = true
+    minimum_tls_version = "1.2"
+    health_check_path   = "/api/health"
+
+    application_stack {
+      node_version = "20-lts"
+    }
+  }
+
+  app_settings = azurerm_linux_web_app.provider_portal.app_settings
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = local.common_tags
+}
+
+resource "azurerm_key_vault_access_policy" "provider_portal_slot" {
+  key_vault_id = azurerm_key_vault.main.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_linux_web_app_slot.provider_portal_staging.identity[0].principal_id
+
+  secret_permissions = ["Get", "List"]
+}
+
+# Patient Portal — staging slot
+resource "azurerm_linux_web_app_slot" "patient_portal_staging" {
+  name           = "staging"
+  app_service_id = azurerm_linux_web_app.patient_portal.id
+
+  site_config {
+    always_on           = false
+    http2_enabled       = true
+    minimum_tls_version = "1.2"
+    health_check_path   = "/api/health"
+
+    application_stack {
+      node_version = "20-lts"
+    }
+  }
+
+  app_settings = azurerm_linux_web_app.patient_portal.app_settings
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = local.common_tags
+}
+
+resource "azurerm_key_vault_access_policy" "patient_portal_slot" {
+  key_vault_id = azurerm_key_vault.main.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_linux_web_app_slot.patient_portal_staging.identity[0].principal_id
+
+  secret_permissions = ["Get", "List"]
+}
+
+# Orders API — staging slot
+resource "azurerm_linux_web_app_slot" "orders_api_staging" {
+  name           = "staging"
+  app_service_id = azurerm_linux_web_app.orders_api.id
+
+  site_config {
+    always_on           = false
+    http2_enabled       = true
+    minimum_tls_version = "1.2"
+    health_check_path   = "/health/ready"
+    websocket_enabled   = true
+
+    application_stack {
+      dotnet_version = "8.0"
+    }
+  }
+
+  app_settings = azurerm_linux_web_app.orders_api.app_settings
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = local.common_tags
+}
+
+resource "azurerm_key_vault_access_policy" "orders_api_slot" {
+  key_vault_id = azurerm_key_vault.main.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_linux_web_app_slot.orders_api_staging.identity[0].principal_id
+
+  secret_permissions = ["Get", "List"]
+}
+
+# ============================================================
 # Outputs
 # ============================================================
 
@@ -482,4 +588,17 @@ output "key_vault_uri" {
 
 output "audit_storage_account" {
   value = azurerm_storage_account.audit_logs.name
+}
+
+# Staging slot URLs — used by CI to health-check before swapping
+output "provider_portal_staging_url" {
+  value = "https://${azurerm_linux_web_app_slot.provider_portal_staging.default_hostname}"
+}
+
+output "patient_portal_staging_url" {
+  value = "https://${azurerm_linux_web_app_slot.patient_portal_staging.default_hostname}"
+}
+
+output "orders_api_staging_url" {
+  value = "https://${azurerm_linux_web_app_slot.orders_api_staging.default_hostname}"
 }

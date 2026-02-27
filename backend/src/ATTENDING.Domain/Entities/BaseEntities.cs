@@ -88,6 +88,18 @@ public abstract class BaseEntity
 public interface IAggregateRoot { }
 
 /// <summary>
+/// Implemented by aggregate roots that raise domain events.
+/// AttendingDbContext.SaveChangesAsync uses this interface to collect and
+/// dispatch events generically, so new aggregate roots never require
+/// a matching case in a type-switch.
+/// </summary>
+public interface IHasDomainEvents
+{
+    IReadOnlyCollection<Events.DomainEvent> DomainEvents { get; }
+    void ClearDomainEvents();
+}
+
+/// <summary>
 /// Patient entity - core clinical entity
 /// </summary>
 public class Patient : BaseEntity, IAggregateRoot
@@ -97,7 +109,7 @@ public class Patient : BaseEntity, IAggregateRoot
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
     public DateTime DateOfBirth { get; private set; }
-    public string Sex { get; private set; } = string.Empty;
+    public BiologicalSex Sex { get; private set; }
     public string? Phone { get; private set; }
     public string? Email { get; private set; }
     public string? AddressLine1 { get; private set; }
@@ -120,15 +132,17 @@ public class Patient : BaseEntity, IAggregateRoot
     private Patient() { }
     
     public static Patient Create(
+        Guid organizationId,
         string mrn,
         string firstName,
         string lastName,
         DateTime dateOfBirth,
-        string sex)
+        BiologicalSex sex)
     {
         return new Patient
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction — not Guid.Empty
             MRN = mrn,
             FirstName = firstName,
             LastName = lastName,

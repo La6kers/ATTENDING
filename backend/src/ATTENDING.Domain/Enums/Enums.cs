@@ -125,6 +125,21 @@ public enum RedFlagSeverity
 }
 
 /// <summary>
+/// Biological sex — strongly typed to enforce HL7/FHIR compatibility.
+/// Stored as string in the database via EF HasConversion&lt;string&gt;().
+/// The API layer (CreatePatientRequest) still accepts strings and parses
+/// them to this enum in the command handler.
+/// </summary>
+public enum BiologicalSex
+{
+    Unknown = 0,
+    Male = 1,
+    Female = 2,
+    Other = 3,
+    PreferNotToSay = 4
+}
+
+/// <summary>
 /// ESI Triage levels
 /// </summary>
 public enum TriageLevel

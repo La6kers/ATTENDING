@@ -1,14 +1,15 @@
-# DISABLED: FHIR integration is not yet connected to a live sandbox.
-# This workflow references packages/fhir which does not have active test scripts.
-# Re-enable when Epic/Oracle sandbox credentials are configured and
-# FHIR client integration testing is ready to run in CI.
+# DISABLED — FHIR sandbox credentials not yet configured.
+# Re-enable when:
+#   1. EPIC_CLIENT_ID is set in GitHub Environment secrets
+#   2. Epic App Orchard sandbox registration is approved
+#   3. At least one FHIR resource mapper test is written
+#      in apps/shared/lib/fhir/__tests__/
+# See docs/STAGING_SETUP.md Step 5 for Epic B2C setup.
 name: "[DISABLED] EHR Integration Tests — re-enable when FHIR sandbox is ready"
-
 on:
-  workflow_dispatch: # Manual only — effectively disabled
-
+  workflow_dispatch:
 jobs:
   disabled:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "FHIR integration tests are not yet active. See docs/CURRENT_STATE.md for status."
+      - run: echo "FHIR integration tests are not yet active. See docs/STAGING_SETUP.md."

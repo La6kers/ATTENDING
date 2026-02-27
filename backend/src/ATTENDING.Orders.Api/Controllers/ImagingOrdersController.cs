@@ -237,7 +237,7 @@ public class ImagingOrdersController : ControllerBase
             PatientId: order.PatientId,
             Patient: order.Patient != null ? new PatientSummaryResponse(
                 order.Patient.Id, order.Patient.MRN, order.Patient.FullName,
-                order.Patient.Age, order.Patient.Sex) : null,
+                order.Patient.Age, order.Patient.Sex.ToString()) : null,
             StudyCode: order.StudyCode,
             StudyName: order.StudyName,
             Modality: order.Modality,

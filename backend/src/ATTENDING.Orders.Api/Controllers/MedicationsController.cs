@@ -298,7 +298,7 @@ public class MedicationsController : ControllerBase
             PatientId: order.PatientId,
             Patient: order.Patient != null ? new PatientSummaryResponse(
                 order.Patient.Id, order.Patient.MRN, order.Patient.FullName,
-                order.Patient.Age, order.Patient.Sex) : null,
+                order.Patient.Age, order.Patient.Sex.ToString()) : null,
             MedicationCode: order.MedicationCode,
             MedicationName: order.MedicationName,
             GenericName: order.GenericName,
