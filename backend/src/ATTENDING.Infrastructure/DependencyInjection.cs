@@ -152,6 +152,33 @@ public static class DependencyInjection
         services.AddScoped<IAnalyticsService, AnalyticsService>();
 
         // --------------------------------------------------------
+        // Clinical Intelligence Pipeline (Tiered Architecture)
+        // Tier 0: Pure domain logic — guidelines, red flags, drug interactions
+        // Tier 2: Cloud AI — optional enhancement when available
+        // --------------------------------------------------------
+
+        // Clinical guidelines — all implementations registered for injection
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.WellsPECriteria>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.HeartScore>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.QSofaScore>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.OttawaAnkleRules>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.Curb65Score>();
+
+        // Guideline evaluator — runs applicable guidelines against patient data
+        services.AddSingleton<Application.Services.GuidelineEvaluator>();
+
+        // Context assembler — pulls from repos to build EnrichedClinicalContext
+        services.AddScoped<IClinicalContextAssembler, ClinicalContextAssembler>();
+
+        // Tiered intelligence orchestrator — coordinates Tier 0 + Tier 2
+        services.AddScoped<ITieredClinicalIntelligence, TieredClinicalIntelligenceService>();
+
+        // --------------------------------------------------------
         // Event Bus (conditionally overrides InProcessEventBus from Application layer)
         // InProcess: no-op here (InProcessEventBus already registered)
         // InMemory:  MassTransit in-memory transport (single-host, with pipeline)
