@@ -26,6 +26,10 @@ public class Result
     public static Result<T> Success<T>(T value) => new(value, true, Error.None);
     public static Result<T> Failure<T>(Error error) => new(default, false, error);
 
+    /// <summary>Convenience overload: create a failure from a message string</summary>
+    public static Result Failure(string message) => new(false, Error.Custom("Error.General", message));
+    public static Result<T> Failure<T>(string message) => new(default, false, Error.Custom("Error.General", message));
+
     /// <summary>
     /// Combine multiple results — returns first failure or success
     /// </summary>
@@ -54,6 +58,9 @@ public class Result<T> : Result
     {
         _value = value;
     }
+
+    /// <summary>Convenience overload: create a typed failure from a message string</summary>
+    public new static Result<T> Failure(string message) => new(default, false, Error.Custom("Error.General", message));
 
     public static implicit operator Result<T>(T value) => Success(value);
 

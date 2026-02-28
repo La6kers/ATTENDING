@@ -5,13 +5,16 @@ using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
 using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Interfaces;
-using ATTENDING.Infrastructure.External.AI;
+using ATTENDING.Application.Interfaces;
+using ATTENDING.Application.Services;
+using LegacyAi = ATTENDING.Infrastructure.External.AI;
 using ATTENDING.Orders.Api.Extensions;
 
 namespace ATTENDING.Orders.Api.Controllers;
 
 /// <summary>
-/// Clinical AI endpoints: differential diagnosis, triage, recommendations, feedback
+/// Clinical AI endpoints: differential diagnosis, triage, recommendations, feedback.
+/// Includes Tiered Clinical Intelligence pipeline (Tier 0 + Tier 2).
 /// </summary>
 [ApiController]
 [Route("api/v1/ai")]
@@ -19,24 +22,150 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Produces("application/json")]
 public class ClinicalAiController : ControllerBase
 {
-    private readonly IClinicalAiService _aiService;
+    private readonly LegacyAi.IClinicalAiService _aiService;
+    private readonly ITieredClinicalIntelligence _intelligence;
+    private readonly DiagnosticReasoningService _diagnosticReasoning;
     private readonly IPatientRepository _patientRepo;
     private readonly IAiFeedbackRepository _feedbackRepo;
     private readonly IUnitOfWork _uow;
     private readonly ILogger<ClinicalAiController> _logger;
 
     public ClinicalAiController(
-        IClinicalAiService aiService,
+        LegacyAi.IClinicalAiService aiService,
+        ITieredClinicalIntelligence intelligence,
+        DiagnosticReasoningService diagnosticReasoning,
         IPatientRepository patientRepo,
         IAiFeedbackRepository feedbackRepo,
         IUnitOfWork uow,
         ILogger<ClinicalAiController> logger)
     {
         _aiService = aiService;
+        _intelligence = intelligence;
+        _diagnosticReasoning = diagnosticReasoning;
         _patientRepo = patientRepo;
         _feedbackRepo = feedbackRepo;
         _uow = uow;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Tiered Clinical Intelligence — runs guidelines, red flags, drug interactions (Tier 0)
+    /// plus cloud AI differentials (Tier 2) when available.
+    /// Tier 0 always succeeds, even offline. Returns in &lt;200ms typically.
+    /// </summary>
+    [HttpPost("intelligence")]
+    [ProducesResponseType(typeof(ClinicalIntelligenceResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ClinicalIntelligenceResponse>> GetClinicalIntelligence(
+        [FromBody] ClinicalIntelligenceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var patient = await _patientRepo.GetByIdAsync(request.PatientId, cancellationToken);
+        if (patient == null)
+            return NotFound(new ProblemDetails { Title = "Patient not found", Status = 404 });
+
+        var result = await _intelligence.EvaluateAsync(
+            request.PatientId, request.EncounterId, request.AssessmentId, cancellationToken);
+
+        _logger.LogInformation(
+            "Clinical intelligence evaluated for Patient {PatientId}: {GuidelineCount} guidelines, " +
+            "{RedFlagCount} red flags, {InteractionCount} drug interactions, Tiers: [{Tiers}]",
+            request.PatientId,
+            result.GuidelineResults.Count,
+            result.RedFlags.Count,
+            result.DrugInteractions.Count,
+            string.Join(", ", result.TiersExecuted));
+
+        var response = new ClinicalIntelligenceResponse(
+            Success: true,
+            Error: null,
+            Context: new ClinicalIntelligenceResponse.ContextSummary(
+                ChiefComplaint: result.Context.ChiefComplaint,
+                VitalsSummary: result.Context.Vitals?.ToStructuredSummary(),
+                RenalFunction: result.Context.RecentLabs?.RenalFunction.Status,
+                HepaticFunction: result.Context.RecentLabs?.HepaticFunction.Status,
+                PainSeverity: result.Context.PainSeverity,
+                ActiveMedicationCount: result.Context.CurrentMedications.Count,
+                RecentLabCount: result.Context.RecentLabs?.Results.Count ?? 0,
+                ActiveConditionCount: result.Context.ActiveConditions.Count),
+            GuidelineResults: result.GuidelineResults.Select(g => new GuidelineResultItem(
+                g.GuidelineName,
+                g.SourceCitation,
+                g.Score,
+                g.RiskCategory,
+                g.PreTestProbability,
+                g.Recommendation,
+                g.Criteria.Select(c => new ScoredCriterionItem(
+                    c.Name, c.Met, c.Points, c.PatientValue)).ToList())).ToList(),
+            RedFlags: result.RedFlags,
+            DrugInteractions: result.DrugInteractions,
+            TiersExecuted: result.TiersExecuted.Select(t => t.ToString()).ToList(),
+            TotalLatency: result.Duration.TotalMilliseconds.ToString("F0") + "ms");
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    /// Calibrated Diagnostic Reasoning — converts guideline scores into
+    /// quantitative pre/post-test probabilities with specific discriminating tests.
+    /// 
+    /// Always returns Tier 0 results (guideline-derived, &lt;5ms).
+    /// Each diagnosis includes post-test probability updates:
+    ///   "If troponin positive → ACS probability increases from 50% to 94%"
+    /// 
+    /// This is the diagnostic ROADMAP endpoint — the provider sees exactly
+    /// which test to order and how the result would change the clinical picture.
+    /// </summary>
+    [HttpPost("calibrated-diagnosis")]
+    [ProducesResponseType(typeof(CalibratedDiagnosticResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CalibratedDiagnosticResponse>> GetCalibratedDiagnosis(
+        [FromBody] CalibratedDiagnosticRequest request,
+        CancellationToken cancellationToken)
+    {
+        var patient = await _patientRepo.GetByIdAsync(request.PatientId, cancellationToken);
+        if (patient == null)
+            return NotFound(new ProblemDetails { Title = "Patient not found", Status = 404 });
+
+        var result = await _diagnosticReasoning.EvaluateAsync(
+            request.PatientId, request.EncounterId, request.AssessmentId, cancellationToken);
+
+        _logger.LogInformation(
+            "Calibrated diagnosis for Patient {PatientId}: {DiagnosisCount} diagnoses, " +
+            "{RedFlagCount} red flags in {Latency}ms",
+            request.PatientId, result.Diagnoses.Count, result.RedFlags.Count,
+            result.Duration.TotalMilliseconds);
+
+        var response = new CalibratedDiagnosticResponse(
+            Success: true,
+            Error: null,
+            Diagnoses: result.Diagnoses.Select(d => new CalibratedDiagnosisItem(
+                d.Icd10Code,
+                d.DiagnosisName,
+                d.PreTestProbability,
+                d.RiskCategory,
+                d.ClinicalReasoning,
+                d.KeyDiscriminators.Select(k => new PostTestUpdate(
+                    k.TestName, k.LoincCode,
+                    k.IfPositiveProbability, k.IfPositiveDescription,
+                    k.IfNegativeProbability, k.IfNegativeDescription,
+                    k.Priority, k.CptCode)).ToList(),
+                d.SupportingFeatures,
+                d.AgainstFeatures,
+                d.GuidelineSource,
+                d.Source)).ToList(),
+            IntelligenceSource: result.IntelligenceSource,
+            GuidelineAnchors: result.GuidelineResults.Select(g => new GuidelineResultItem(
+                g.GuidelineName, g.SourceCitation, g.Score, g.RiskCategory,
+                g.PreTestProbability, g.Recommendation,
+                g.Criteria.Select(c => new ScoredCriterionItem(
+                    c.Name, c.Met, c.Points, c.PatientValue)).ToList())).ToList(),
+            RedFlags: result.RedFlags,
+            DrugInteractions: result.DrugInteractions,
+            Latency: result.Duration.TotalMilliseconds.ToString("F0") + "ms",
+            EvaluatedAt: result.EvaluatedAt);
+
+        return Ok(response);
     }
 
     /// <summary>
@@ -51,7 +180,7 @@ public class ClinicalAiController : ControllerBase
         if (patient == null)
             return NotFound(new ProblemDetails { Title = "Patient not found", Status = 404 });
 
-        var context = new ClinicalContext
+        var context = new LegacyAi.ClinicalContext
         {
             ChiefComplaint = request.ChiefComplaint ?? "Not specified",
             HpiSummary = request.HpiSummary ?? "",

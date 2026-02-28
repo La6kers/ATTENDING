@@ -21,3 +21,12 @@ public record SubmitAiFeedbackRequest(
     string? ModelVersion = null,
     Guid? PatientId = null,
     Guid? EncounterId = null);
+
+/// <summary>
+/// Request for the Tiered Clinical Intelligence pipeline.
+/// PatientId is required. EncounterId and AssessmentId scope the context.
+/// </summary>
+public record ClinicalIntelligenceRequest(
+    Guid PatientId,
+    Guid? EncounterId = null,
+    Guid? AssessmentId = null);

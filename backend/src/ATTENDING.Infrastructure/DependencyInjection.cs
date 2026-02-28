@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ATTENDING.Application.Interfaces;
 using ATTENDING.Domain.Interfaces;
 using ATTENDING.Domain.Services;
@@ -117,22 +119,66 @@ public static class DependencyInjection
         // --------------------------------------------------------
         services.AddScoped<IRedFlagEvaluator, RedFlagEvaluator>();
 
-        // Drug Interaction Service — composite pattern:
-        //   External API (NIH RxNorm, etc.) as primary → local rules as fallback
+        // Drug Interaction Service — multi-source composite pattern:
+        //   1. External APIs (NIH RxNorm + OpenFDA) checked in parallel
+        //   2. Results cached in distributed cache (Redis / in-memory)
+        //   3. Local hardcoded rules as fallback if all external sources fail
+        //
+        // Pipeline: CompositeDrugInteractionService
+        //   → CachedDrugInteractionDecorator
+        //     → MultiSourceDrugInteractionClient
+        //       → NihDrugInteractionClient (pharmacokinetic interactions)
+        //       → OpenFdaAdverseEventClient (post-market adverse event signals)
         var drugApiConfig = configuration.GetSection("DrugInteractionApi");
         var drugApiBaseUrl = drugApiConfig.GetValue<string>("BaseUrl");
 
         if (!string.IsNullOrWhiteSpace(drugApiBaseUrl))
         {
-            // External API is configured — register HTTP client with resilience
+            // External APIs configured — register HTTP clients
             services.Configure<External.DrugInteraction.ExternalDrugInteractionOptions>(
                 opts => drugApiConfig.Bind(opts));
-            services.AddHttpClient<IExternalDrugInteractionApi,
-                External.DrugInteraction.NihDrugInteractionClient>(client =>
+
+            // NIH RxNorm client (named registration)
+            services.AddHttpClient<External.DrugInteraction.NihDrugInteractionClient>(client =>
             {
                 client.BaseAddress = new Uri(drugApiBaseUrl);
             })
             .AddClinicalResilienceHandler("DrugInteractionAPI");
+
+            // OpenFDA adverse event client
+            var openFdaConfig = configuration.GetSection("OpenFda");
+            var openFdaOptions = new External.DrugInteraction.OpenFdaOptions();
+            openFdaConfig.Bind(openFdaOptions);
+            services.AddSingleton(openFdaOptions);
+
+            services.AddHttpClient<External.DrugInteraction.OpenFdaAdverseEventClient>(client =>
+            {
+                client.BaseAddress = new Uri(openFdaOptions.BaseUrl);
+            })
+            .AddClinicalResilienceHandler("OpenFDA");
+
+            // Cache options
+            var cacheOptions = new External.DrugInteraction.DrugInteractionCacheOptions();
+            configuration.GetSection("DrugInteractionCache").Bind(cacheOptions);
+            services.AddSingleton(cacheOptions);
+
+            // Wire up: MultiSource(NIH + OpenFDA) → Cached → Composite
+            services.AddScoped<IExternalDrugInteractionApi>(sp =>
+            {
+                var nihClient = sp.GetRequiredService<External.DrugInteraction.NihDrugInteractionClient>();
+                var openFdaClient = sp.GetRequiredService<External.DrugInteraction.OpenFdaAdverseEventClient>();
+
+                var sources = new IExternalDrugInteractionApi[] { nihClient, openFdaClient };
+                var multiSource = new External.DrugInteraction.MultiSourceDrugInteractionClient(
+                    sources,
+                    sp.GetRequiredService<ILogger<External.DrugInteraction.MultiSourceDrugInteractionClient>>());
+
+                return new External.DrugInteraction.CachedDrugInteractionDecorator(
+                    multiSource,
+                    sp.GetRequiredService<Microsoft.Extensions.Caching.Distributed.IDistributedCache>(),
+                    sp.GetRequiredService<External.DrugInteraction.DrugInteractionCacheOptions>(),
+                    sp.GetRequiredService<ILogger<External.DrugInteraction.CachedDrugInteractionDecorator>>());
+            });
         }
         else
         {
@@ -177,6 +223,9 @@ public static class DependencyInjection
 
         // Tiered intelligence orchestrator — coordinates Tier 0 + Tier 2
         services.AddScoped<ITieredClinicalIntelligence, TieredClinicalIntelligenceService>();
+
+        // Calibrated diagnostic reasoning (d3) — guideline scores → post-test probabilities
+        services.AddScoped<Application.Services.DiagnosticReasoningService>();
 
         // --------------------------------------------------------
         // Event Bus (conditionally overrides InProcessEventBus from Application layer)

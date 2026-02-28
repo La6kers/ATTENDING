@@ -3,9 +3,8 @@ using ATTENDING.Application.Interfaces;
 using ATTENDING.Application.Services;
 using ATTENDING.Domain.ClinicalGuidelines;
 using ATTENDING.Domain.Services;
-using ATTENDING.Infrastructure.External.AI;
-// NOTE: References Infrastructure.External.AI.IClinicalAiService directly.
-// Future: migrate to Application.Interfaces.IClinicalAiService for proper Clean Architecture.
+// Use Application.Interfaces.IClinicalAiService (Clean Architecture).
+// Do NOT import ATTENDING.Infrastructure.External.AI to avoid ambiguity.
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 

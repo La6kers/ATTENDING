@@ -342,6 +342,70 @@ public class EmergencyProtocolTriggeredEvent : DomainEvent
 
 #endregion
 
+#region Emergency Access Events
+
+/// <summary>
+/// Raised when a patient enables emergency medical access
+/// </summary>
+public class EmergencyAccessEnabledEvent : DomainEvent
+{
+    public Guid ProfileId { get; }
+    public Guid PatientId { get; }
+
+    public EmergencyAccessEnabledEvent(Guid profileId, Guid patientId)
+    {
+        ProfileId = profileId;
+        PatientId = patientId;
+    }
+}
+
+/// <summary>
+/// Raised when a patient disables emergency medical access
+/// </summary>
+public class EmergencyAccessDisabledEvent : DomainEvent
+{
+    public Guid ProfileId { get; }
+    public Guid PatientId { get; }
+
+    public EmergencyAccessDisabledEvent(Guid profileId, Guid patientId)
+    {
+        ProfileId = profileId;
+        PatientId = patientId;
+    }
+}
+
+/// <summary>
+/// Raised when a first responder accesses a patient's emergency record.
+/// This event triggers audit logging and notification to the patient's emergency contacts.
+/// </summary>
+public class EmergencyRecordAccessedEvent : DomainEvent
+{
+    public Guid AccessLogId { get; }
+    public Guid PatientId { get; }
+    public string ResponderName { get; }
+    public string BadgeNumber { get; }
+    public string Agency { get; }
+    public decimal? PeakGForce { get; }
+
+    public EmergencyRecordAccessedEvent(
+        Guid accessLogId,
+        Guid patientId,
+        string responderName,
+        string badgeNumber,
+        string agency,
+        decimal? peakGForce)
+    {
+        AccessLogId = accessLogId;
+        PatientId = patientId;
+        ResponderName = responderName;
+        BadgeNumber = badgeNumber;
+        Agency = agency;
+        PeakGForce = peakGForce;
+    }
+}
+
+#endregion
+
 #region Audit Events
 
 /// <summary>

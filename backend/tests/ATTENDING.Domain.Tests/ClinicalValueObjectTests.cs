@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using ATTENDING.Domain.ValueObjects;
+using Xunit;
 
 namespace ATTENDING.Domain.Tests;
 
@@ -28,18 +30,23 @@ public class VitalSignsTests
     }
 
     [Theory]
-    [InlineData(-5, null, null, null, null, null)]   // Negative SBP
-    [InlineData(400, null, null, null, null, null)]   // SBP too high
-    [InlineData(null, null, 5, null, null, null)]     // HR too low
-    [InlineData(null, null, 350, null, null, null)]   // HR too high
-    [InlineData(null, null, null, null, 110, null)]   // SpO2 > 100
-    [InlineData(null, null, null, null, null, 50)]    // Temp > 45
+    [MemberData(nameof(InvalidVitalSignsData))]
     public void Create_WithInvalidValues_Throws(
         decimal? sbp, decimal? dbp, decimal? hr,
         decimal? rr, decimal? spo2, decimal? temp)
     {
         Assert.ThrowsAny<ArgumentOutOfRangeException>(() =>
             VitalSigns.Create(sbp, dbp, hr, rr, spo2, temp));
+    }
+
+    public static IEnumerable<object?[]> InvalidVitalSignsData()
+    {
+        yield return new object?[] { -5m,  null, null, null, null, null };   // Negative SBP
+        yield return new object?[] { 400m, null, null, null, null, null };   // SBP too high
+        yield return new object?[] { null, null, 5m,   null, null, null };   // HR too low
+        yield return new object?[] { null, null, 350m, null, null, null };   // HR too high
+        yield return new object?[] { null, null, null, null, 110m, null };   // SpO2 > 100
+        yield return new object?[] { null, null, null, null, null, 50m  };   // Temp > 45
     }
 
     // ── Calculated metrics ────────────────────────────────────────────────

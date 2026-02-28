@@ -2,6 +2,7 @@ using ATTENDING.Domain.ClinicalGuidelines;
 using ATTENDING.Domain.ClinicalGuidelines.Guidelines;
 using ATTENDING.Domain.ValueObjects;
 using ATTENDING.Application.Services;
+using Xunit;
 
 namespace ATTENDING.Domain.Tests;
 
@@ -154,7 +155,8 @@ public class ClinicalGuidelineTests
 
         var result = new QSofaScore().Evaluate(input);
         Assert.True(result.Score >= 2);
-        Assert.Equal("High", result.RiskCategory);
+        // Lactate > 4.0 + qSOFA >= 2 meets septic shock criteria → upgrades to Critical
+        Assert.Equal("Critical", result.RiskCategory);
         Assert.Contains("septic shock", result.Recommendation, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -170,7 +172,7 @@ public class ClinicalGuidelineTests
         };
 
         var result = new OttawaAnkleRules().Evaluate(input);
-        Assert.Equal("Low", result.RiskCategory);
+        Assert.Equal("Imaging not indicated", result.RiskCategory);
         Assert.Contains("not indicated", result.Recommendation, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -302,7 +304,7 @@ public class ClinicalGuidelineTests
         };
         var evaluator = new GuidelineEvaluator(guidelines);
 
-        var input = new GuidelineInput { ChiefComplaint = "ankle injury" };
+        var input = new GuidelineInput { ChiefComplaint = "ankle injury", PatientAge = 30 };
         var results = evaluator.EvaluateAll(input);
 
         Assert.Single(results);

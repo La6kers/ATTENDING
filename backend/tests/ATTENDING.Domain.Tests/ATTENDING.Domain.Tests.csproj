@@ -20,10 +20,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ATTENDING.Domain\ATTENDING.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ATTENDING.Application\ATTENDING.Application.csproj" />
+    <ProjectReference Include="..\..\src\ATTENDING.Infrastructure\ATTENDING.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
