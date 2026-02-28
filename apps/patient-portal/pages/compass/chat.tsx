@@ -1,70 +1,67 @@
-// =============================================================================
-// COMPASS Chat Page
+// ============================================================
+// ATTENDING AI — COMPASS Chat (Assessment Flow)
 // apps/patient-portal/pages/compass/chat.tsx
 //
-// The COMPASS landing page (/compass) redirects here after verification or
-// in demo mode. This page wires the useChatStore (Zustand) state to the
-// ChatContainer component from components/assessment/.
+// Rebranded for ATTENDING teal. Wires useChatStore (Zustand)
+// to ChatContainer for the OLDCARTS assessment flow.
 //
 // URL formats:
-//   /compass/chat?demo=true          — demo mode, no auth required
-//   /compass/chat?session=<id>       — after verify step on landing page
-//
-// Submission flow:
-//   User completes all phases → useChatStore.submitAssessment()
-//     → POST /api/assessments/submit
-//       → PatientAssessment row in DB
-//         → Provider dashboard queue shows it immediately
-// =============================================================================
+//   /compass/chat?demo=true      — demo mode
+//   /compass/chat?session=<id>   — after verify on landing page
+// ============================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { AlertTriangle, CheckCircle, Clock, WifiOff } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, WifiOff, Stethoscope, ArrowLeft, Home } from 'lucide-react';
 
 import { useChatStore } from '../../store/useChatStore';
 import { ChatContainer } from '../../components/assessment/ChatContainer';
 import { EmergencyModal } from '../../components/assessment/EmergencyModal';
 import type { QuickReply } from '../../components/assessment/QuickReplies';
 
-// =============================================================================
-// Submission Success Screen
-// =============================================================================
+// ============================================================
+// Submission Success
+// ============================================================
 
 const SubmissionSuccess: React.FC<{
   queuePosition?: number;
   triageLevel?: string;
   onNewAssessment: () => void;
-}> = ({ queuePosition, triageLevel, onNewAssessment }) => {
+  onGoHome: () => void;
+}> = ({ queuePosition, triageLevel, onNewAssessment, onGoHome }) => {
   const isUrgent = triageLevel === 'EMERGENCY' || triageLevel === 'HIGH';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface-bg flex items-center justify-center p-5">
       <div className="max-w-md w-full text-center">
-        <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg ${
-          isUrgent ? 'bg-red-100' : 'bg-green-100'
-        }`}>
-          {isUrgent
-            ? <AlertTriangle className="w-10 h-10 text-red-600" />
-            : <CheckCircle className="w-10 h-10 text-green-600" />
-          }
+        <div
+          className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
+            isUrgent ? 'bg-red-100' : 'bg-green-100'
+          }`}
+          style={{ boxShadow: isUrgent ? '0 4px 14px rgba(220,38,38,0.2)' : '0 4px 14px rgba(34,197,94,0.2)' }}
+        >
+          {isUrgent ? (
+            <AlertTriangle className="w-10 h-10 text-red-600" />
+          ) : (
+            <CheckCircle className="w-10 h-10 text-green-600" />
+          )}
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl font-bold text-attending-deep-navy mb-2">
           {isUrgent ? 'Urgent Assessment Submitted' : 'Assessment Submitted'}
         </h1>
 
-        <p className="text-gray-600 mb-6">
+        <p className="text-sm text-attending-200 mb-6">
           {isUrgent
-            ? 'Your assessment has been flagged as urgent and a provider has been notified immediately.'
-            : 'Your assessment is in the review queue. A provider will be prepared for your visit.'
-          }
+            ? 'Your assessment has been flagged as urgent. A provider has been notified.'
+            : 'Your assessment is in the review queue. Your provider will be prepared for your visit.'}
         </p>
 
         {queuePosition && (
-          <div className="inline-flex items-center gap-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-full px-4 py-2 mb-6">
+          <div className="inline-flex items-center gap-2 bg-attending-50 text-attending-primary border border-attending-200 rounded-full px-4 py-2 mb-6">
             <Clock className="w-4 h-4" />
-            <span className="font-medium">
+            <span className="font-medium text-sm">
               {isUrgent ? 'Priority review' : `Queue position: #${queuePosition}`}
             </span>
           </div>
@@ -73,24 +70,33 @@ const SubmissionSuccess: React.FC<{
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-left">
           <p className="text-sm font-semibold text-amber-800 mb-1">Medical Emergency?</p>
           <p className="text-sm text-amber-700">
-            If your condition worsens, call <strong>911</strong> immediately or go to your nearest emergency room.
+            If your condition worsens, call <strong>911</strong> or go to your nearest emergency room.
           </p>
         </div>
 
-        <button
-          onClick={onNewAssessment}
-          className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
-        >
-          Start New Assessment
-        </button>
+        <div className="space-y-3">
+          <button
+            onClick={onGoHome}
+            className="w-full py-3.5 bg-attending-primary text-white rounded-xl font-semibold hover:shadow-teal transition-all flex items-center justify-center gap-2"
+          >
+            <Home className="w-5 h-5" />
+            Back to Home
+          </button>
+          <button
+            onClick={onNewAssessment}
+            className="w-full py-3 bg-white border border-light text-attending-primary rounded-xl font-semibold hover:bg-attending-50 transition-all"
+          >
+            Start New Assessment
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-// =============================================================================
-// Main Component
-// =============================================================================
+// ============================================================
+// Main
+// ============================================================
 
 export default function CompassChatPage() {
   const router = useRouter();
@@ -111,7 +117,7 @@ export default function CompassChatPage() {
     submitAssessment,
     getProgress,
     assessmentData,
-    urgencyLevel,   // top-level store field, not inside assessmentData
+    urgencyLevel,
     redFlags,
   } = useChatStore();
 
@@ -123,81 +129,72 @@ export default function CompassChatPage() {
   } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Initialize or restore session on mount
+  // Init session
   useEffect(() => {
     if (!isInitialized) {
       if (session && typeof session === 'string') {
         try {
           const stored = sessionStorage.getItem('compass-session');
-          if (stored) {
-            JSON.parse(stored); // validate; actual merge handled by store
-          }
-        } catch (_) { /* ignore parse errors */ }
+          if (stored) JSON.parse(stored);
+        } catch { /* ignore */ }
       }
       initializeSession();
     }
   }, [isInitialized, initializeSession, session]);
 
-  // Extract quick replies from the latest assistant message
   const lastAssistantMessage = [...messages].reverse().find((m) => m.role === 'assistant');
   const quickReplies: QuickReply[] =
     (lastAssistantMessage?.metadata?.quickReplies as QuickReply[]) ?? [];
 
-  // Handle text send
-  const handleSend = useCallback(async (text: string) => {
-    if (!text.trim() || isAIProcessing) return;
-    setInputValue('');
+  const handleSend = useCallback(
+    async (text: string) => {
+      if (!text.trim() || isAIProcessing) return;
+      setInputValue('');
+      if (text === 'submit') {
+        await handleSubmitAssessment();
+        return;
+      }
+      await sendMessage(text);
+    },
+    [isAIProcessing, sendMessage] // eslint-disable-line
+  );
 
-    if (text === 'submit') {
-      await handleSubmitAssessment();
-      return;
-    }
+  const handleQuickReply = useCallback(
+    async (reply: QuickReply) => {
+      const value = reply.value || reply.text;
+      if (value === 'submit') {
+        await handleSubmitAssessment();
+        return;
+      }
+      await storeHandleQuickReply(reply);
+    },
+    [storeHandleQuickReply] // eslint-disable-line
+  );
 
-    await sendMessage(text);
-  }, [isAIProcessing, sendMessage]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Handle quick reply selection
-  const handleQuickReply = useCallback(async (reply: QuickReply) => {
-    const value = reply.value || reply.text;
-    if (value === 'submit') {
-      await handleSubmitAssessment();
-      return;
-    }
-    await storeHandleQuickReply(reply);
-  }, [storeHandleQuickReply]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Submit assessment to backend via the store action
-  // useChatStore.submitAssessment() calls POST /api/assessments/submit internally
   const handleSubmitAssessment = useCallback(async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError(null);
-
     try {
       await submitAssessment();
-      // Store transitions currentPhase to 'complete' on success
-      setSubmissionResult({
-        triageLevel: urgencyLevel?.toUpperCase(),
-      });
-    } catch (_) {
+      setSubmissionResult({ triageLevel: urgencyLevel?.toUpperCase() });
+    } catch {
       setSubmitError('Failed to submit assessment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   }, [isSubmitting, submitAssessment, urgencyLevel]);
 
-  // Back navigation — preserve progress warning
   const handleBack = useCallback(() => {
     if (currentPhase !== 'complete' && isInitialized) {
-      if (confirm('Are you sure you want to leave? Your progress will be saved.')) {
-        router.push('/compass');
+      if (confirm('Leave the assessment? Your progress will be saved.')) {
+        router.push('/home');
       }
     } else {
-      router.push('/compass');
+      router.push('/home');
     }
   }, [currentPhase, isInitialized, router]);
 
-  // Start fresh
   const handleNewAssessment = useCallback(() => {
     resetSession();
     setSubmissionResult(null);
@@ -205,13 +202,14 @@ export default function CompassChatPage() {
     initializeSession();
   }, [resetSession, initializeSession]);
 
-  // Show success screen after submission completes
+  // Success screen
   if (currentPhase === 'complete' && submissionResult) {
     return (
       <SubmissionSuccess
         queuePosition={submissionResult.queuePosition}
         triageLevel={submissionResult.triageLevel}
         onNewAssessment={handleNewAssessment}
+        onGoHome={() => router.push('/home')}
       />
     );
   }
@@ -220,39 +218,49 @@ export default function CompassChatPage() {
     <>
       <Head>
         <title>COMPASS Assessment | ATTENDING AI</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#7c3aed" />
+        <meta name="theme-color" content="#0C4C5E" />
       </Head>
 
-      <div className="h-screen flex flex-col bg-gradient-to-b from-purple-50 to-white">
+      <div className="h-screen h-[100dvh] flex flex-col bg-surface-bg">
+        {/* Header */}
+        <header className="bg-white border-b border-light safe-area-top">
+          <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
+            <button
+              onClick={handleBack}
+              className="w-9 h-9 rounded-full bg-attending-50 flex items-center justify-center"
+            >
+              <ArrowLeft className="w-5 h-5 text-attending-deep-navy" />
+            </button>
+            <div className="flex items-center gap-2">
+              <Stethoscope className="w-5 h-5 text-attending-primary" />
+              <span className="text-lg font-bold text-attending-deep-navy">COMPASS</span>
+            </div>
+          </div>
+        </header>
 
-        {/* Demo mode notice */}
+        {/* Demo notice */}
         {demo === 'true' && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center">
             <p className="text-xs text-amber-700 font-medium">
-              Demo Mode — responses will not be saved to a real patient record
+              Demo Mode — responses are not saved to a patient record
             </p>
           </div>
         )}
 
-        {/* Submission error */}
+        {/* Submit error */}
         {submitError && (
           <div className="bg-red-50 border-b border-red-200 px-4 py-2">
-            <div className="flex items-center gap-2 max-w-3xl mx-auto">
+            <div className="flex items-center gap-2 max-w-lg mx-auto">
               <WifiOff className="w-4 h-4 text-red-500 flex-shrink-0" />
               <p className="text-sm text-red-700 flex-1">{submitError}</p>
-              <button
-                onClick={() => setSubmitError(null)}
-                className="text-red-400 hover:text-red-600 text-lg leading-none"
-                aria-label="Dismiss"
-              >
+              <button onClick={() => setSubmitError(null)} className="text-red-400 hover:text-red-600 text-lg">
                 ×
               </button>
             </div>
           </div>
         )}
 
-        {/* Chat interface — fills remaining height */}
+        {/* Chat */}
         <div className="flex-1 overflow-hidden">
           {isInitialized ? (
             <ChatContainer
@@ -273,14 +281,14 @@ export default function CompassChatPage() {
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
-                <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-gray-600 text-sm">Initializing COMPASS...</p>
+                <div className="w-12 h-12 border-4 border-attending-200 border-t-attending-primary rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-sm text-attending-200">Initializing COMPASS...</p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Emergency Modal — triggered when critical red flags detected */}
+        {/* Emergency Modal */}
         <EmergencyModal
           isOpen={showEmergencyModal}
           emergencyType="Medical Emergency"
@@ -288,14 +296,11 @@ export default function CompassChatPage() {
           patientName={assessmentData.patientName?.split(' ')[0]}
           onClose={() => setEmergencyModal(false)}
           onCall911={() => {
-            if (typeof window !== 'undefined') {
-              window.location.href = 'tel:911';
-            }
+            if (typeof window !== 'undefined') window.location.href = 'tel:911';
           }}
           onFindER={() => {
-            if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined')
               window.open('https://www.google.com/maps/search/emergency+room+near+me', '_blank');
-            }
           }}
           onContinueAssessment={() => {
             setEmergencyModal(false);
