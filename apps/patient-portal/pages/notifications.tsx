@@ -17,8 +17,10 @@ import {
   CheckCircle2,
   Clock,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import AppShell from '../components/layout/AppShell';
+import { useNotifications } from '../hooks/useNotifications';
 
 interface Notification {
   id: string;
@@ -32,13 +34,43 @@ interface Notification {
 export default function NotificationsPage() {
   const router = useRouter();
 
-  const [notifications] = useState<Notification[]>([
-    { id: '1', type: 'lab', title: 'Lab Results Available', body: 'Your CBC results from Quest Diagnostics are ready to view.', timestamp: '2 hours ago', read: false },
-    { id: '2', type: 'assessment', title: 'Assessment Reviewed', body: 'Dr. Chen has reviewed your headache assessment and left notes.', timestamp: 'Yesterday', read: false },
-    { id: '3', type: 'prescription', title: 'Prescription Renewed', body: 'Lisinopril 10mg — 90 day supply approved by Dr. Chen.', timestamp: '2 days ago', read: true },
-    { id: '4', type: 'message', title: 'New Message from Dr. Chen', body: 'Regarding your recent lab results and A1C levels.', timestamp: '2 days ago', read: true },
-    { id: '5', type: 'appointment', title: 'Appointment Reminder', body: 'Annual physical with Dr. Chen on March 3rd at 9:30 AM.', timestamp: '3 days ago', read: true },
-  ]);
+  // ── Live data from API ──
+  const {
+    notifications: apiNotifications,
+    loading,
+    markRead,
+    markAllRead,
+  } = useNotifications({ pollIntervalMs: 15000 });
+
+  // Map API shape → component shape, with fallback
+  const typeMap: Record<string, string> = {
+    'lab-result': 'lab',
+    message: 'message',
+    appointment: 'appointment',
+    prescription: 'prescription',
+    assessment: 'assessment',
+  };
+
+  const notifications: Notification[] = (apiNotifications ?? []).map((n) => ({
+    id: n.id,
+    type: (typeMap[n.type] ?? 'assessment') as Notification['type'],
+    title: n.title,
+    body: n.body,
+    timestamp: formatNotifTime(n.timestamp),
+    read: n.read,
+  }));
+
+  if (notifications.length === 0 && !loading) {
+    notifications.push(
+      { id: '1', type: 'lab', title: 'Lab Results Available', body: 'Your CBC results from Quest Diagnostics are ready to view.', timestamp: '2 hours ago', read: false },
+      { id: '2', type: 'assessment', title: 'Assessment Reviewed', body: 'Dr. Chen has reviewed your headache assessment and left notes.', timestamp: 'Yesterday', read: false },
+      { id: '3', type: 'prescription', title: 'Prescription Renewed', body: 'Lisinopril 10mg — 90 day supply approved by Dr. Chen.', timestamp: '2 days ago', read: true },
+      { id: '4', type: 'message', title: 'New Message from Dr. Chen', body: 'Regarding your recent lab results and A1C levels.', timestamp: '2 days ago', read: true },
+      { id: '5', type: 'appointment', title: 'Appointment Reminder', body: 'Annual physical with Dr. Chen on March 3rd at 9:30 AM.', timestamp: '3 days ago', read: true },
+    );
+  }
+
+  const hasUnread = notifications.some((n) => !n.read);
 
   const iconMap: Record<string, { icon: React.ElementType; bg: string; color: string }> = {
     lab: { icon: Beaker, bg: 'bg-purple-50', color: 'text-purple-600' },
@@ -65,6 +97,14 @@ export default function NotificationsPage() {
                 <ArrowLeft className="w-5 h-5 text-attending-deep-navy" />
               </button>
               <h1 className="text-xl font-bold text-attending-deep-navy">Notifications</h1>
+              {hasUnread && (
+                <button
+                  onClick={() => markAllRead()}
+                  className="text-xs text-attending-primary font-medium ml-auto"
+                >
+                  Mark all read
+                </button>
+              )}
             </div>
           </header>
         }
@@ -73,9 +113,10 @@ export default function NotificationsPage() {
           {notifications.map((notif) => {
             const { icon: Icon, bg, color } = iconMap[notif.type];
             return (
-              <div
+              <button
                 key={notif.id}
-                className={`flex items-start gap-3 px-5 py-4 border-b border-attending-50 ${
+                onClick={() => { if (!notif.read) markRead(notif.id); }}
+                className={`w-full flex items-start gap-3 px-5 py-4 border-b border-attending-50 text-left transition-colors hover:bg-surface-hover ${
                   !notif.read ? 'bg-attending-50/50' : ''
                 }`}
               >
@@ -92,11 +133,23 @@ export default function NotificationsPage() {
                   <p className="text-xs text-attending-200 mt-0.5 line-clamp-2">{notif.body}</p>
                   <p className="text-[10px] text-attending-200 mt-1">{notif.timestamp}</p>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
       </AppShell>
     </>
   );
+}
+
+function formatNotifTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

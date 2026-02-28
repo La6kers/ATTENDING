@@ -11,7 +11,7 @@
 // - Lock-screen widget
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import {
@@ -32,8 +32,10 @@ import {
   Droplets,
   Activity,
   User,
+  CheckCircle2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { useEmergencySettings } from '../../hooks/useEmergencySettings';
 
 // ============================================================
 // Toggle Row
@@ -127,20 +129,28 @@ function SelectorRow({
 
 export default function AccessSettingsPage() {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const [showPIN, setShowPIN] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Settings state
+  // ── Live data from hook ──
+  const {
+    accessSettings,
+    setAccessSettings,
+    saveAccessSettings,
+    saving,
+    loading,
+  } = useEmergencySettings();
+
+  // Local settings mapped from hook
   const [settings, setSettings] = useState({
     enabled: true,
     pin: '2847',
-    showPIN: false,
     countdownSeconds: 30,
     accessDurationMinutes: 10,
     requirePhoto: true,
     lockScreenWidget: true,
     notifyOnAccess: true,
     notifyContacts: true,
-    // What's visible
     showAllergies: true,
     showConditions: true,
     showMedications: true,
@@ -150,15 +160,48 @@ export default function AccessSettingsPage() {
     showAdvancedDirective: true,
   });
 
+  // Sync from hook when loaded
+  useEffect(() => {
+    if (accessSettings) {
+      setSettings((prev) => ({
+        ...prev,
+        enabled: accessSettings.enabled ?? prev.enabled,
+        pin: accessSettings.pin ?? prev.pin,
+        countdownSeconds: accessSettings.countdownSeconds ?? prev.countdownSeconds,
+        accessDurationMinutes: accessSettings.accessDurationMinutes ?? prev.accessDurationMinutes,
+        showAllergies: accessSettings.visibleData?.allergies ?? prev.showAllergies,
+        showConditions: accessSettings.visibleData?.conditions ?? prev.showConditions,
+        showMedications: accessSettings.visibleData?.medications ?? prev.showMedications,
+        showBloodType: accessSettings.visibleData?.bloodType ?? prev.showBloodType,
+        showEmergencyContacts: accessSettings.visibleData?.emergencyContacts ?? prev.showEmergencyContacts,
+        showVitals: accessSettings.visibleData?.vitals ?? prev.showVitals,
+      }));
+    }
+  }, [accessSettings]);
+
   const update = (key: keyof typeof settings, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    router.back();
+    // Push local state into hook, then save
+    setAccessSettings({
+      enabled: settings.enabled,
+      pin: settings.pin,
+      countdownSeconds: settings.countdownSeconds,
+      accessDurationMinutes: settings.accessDurationMinutes,
+      visibleData: {
+        allergies: settings.showAllergies,
+        conditions: settings.showConditions,
+        medications: settings.showMedications,
+        bloodType: settings.showBloodType,
+        emergencyContacts: settings.showEmergencyContacts,
+        vitals: settings.showVitals,
+      },
+    });
+    await saveAccessSettings();
+    setSaveSuccess(true);
+    setTimeout(() => router.back(), 800);
   };
 
   return (
@@ -232,7 +275,7 @@ export default function AccessSettingsPage() {
                   </p>
                   <div className="flex items-center gap-3">
                     <input
-                      type={settings.showPIN ? 'text' : 'password'}
+                      type={showPIN ? 'text' : 'password'}
                       value={settings.pin}
                       onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -242,7 +285,7 @@ export default function AccessSettingsPage() {
                       className="flex-1 px-4 py-3 bg-attending-50 border-0 rounded-xl text-2xl font-mono text-center tracking-[0.5em] text-attending-deep-navy focus:ring-2 focus:ring-attending-primary/30"
                     />
                     <button
-                      onClick={() => update('showPIN', !settings.showPIN)}
+                      onClick={() => setShowPIN(!showPIN)}
                       className="w-10 h-10 rounded-lg bg-attending-50 flex items-center justify-center"
                     >
                       <Eye className="w-4 h-4 text-attending-primary" />

@@ -26,8 +26,10 @@ import {
   Clock,
   CheckCircle2,
   Heart,
+  Loader2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { usePatientData } from '../../hooks/usePatientData';
 
 // ============================================================
 // Types
@@ -114,18 +116,32 @@ function SegmentControl({
 // Summary Section
 // ============================================================
 
-function SummarySection() {
-  const conditions: Condition[] = [
-    { name: 'Hypertension', since: '2023', status: 'active' },
-    { name: 'Pre-diabetes', since: '2024', status: 'monitoring' },
-    { name: 'Seasonal Allergies', since: '2018', status: 'active' },
-  ];
+function SummarySection({ data }: { data: ReturnType<typeof usePatientData> }) {
+  const conditions: Condition[] = (data.health?.conditions ?? []).map((c) => ({
+    name: c.name,
+    since: c.onsetDate?.substring(0, 4) ?? '',
+    status: c.isActive ? 'active' : 'resolved',
+  }));
+  if (conditions.length === 0) {
+    conditions.push(
+      { name: 'Hypertension', since: '2023', status: 'active' },
+      { name: 'Pre-diabetes', since: '2024', status: 'monitoring' },
+      { name: 'Seasonal Allergies', since: '2018', status: 'active' },
+    );
+  }
 
-  const allergies: Allergy[] = [
-    { name: 'Penicillin', severity: 'severe', reaction: 'Anaphylaxis' },
-    { name: 'Sulfa drugs', severity: 'moderate', reaction: 'Rash' },
-    { name: 'Latex', severity: 'mild', reaction: 'Skin irritation' },
-  ];
+  const allergies: Allergy[] = (data.health?.allergies ?? []).map((a) => ({
+    name: a.allergen,
+    severity: a.severity.toLowerCase() as Allergy['severity'],
+    reaction: a.reaction,
+  }));
+  if (allergies.length === 0) {
+    allergies.push(
+      { name: 'Penicillin', severity: 'severe', reaction: 'Anaphylaxis' },
+      { name: 'Sulfa drugs', severity: 'moderate', reaction: 'Rash' },
+      { name: 'Latex', severity: 'mild', reaction: 'Skin irritation' },
+    );
+  }
 
   const severityColors = {
     mild: 'bg-yellow-50 text-yellow-700',
@@ -146,10 +162,28 @@ function SummarySection() {
         <h3 className="text-sm font-semibold text-attending-deep-navy mb-3">Latest Vitals</h3>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'Blood Pressure', value: '128/82', unit: 'mmHg', icon: Activity, status: 'warning' as const },
-            { label: 'Heart Rate', value: '72', unit: 'bpm', icon: Activity, status: 'normal' as const },
-            { label: 'Weight', value: '185', unit: 'lbs', icon: TrendingDown, status: 'normal' as const },
-            { label: 'Temperature', value: '98.6', unit: '°F', icon: Minus, status: 'normal' as const },
+            {
+              label: 'Blood Pressure',
+              value: data.vitals ? `${data.vitals.bloodPressureSystolic}/${data.vitals.bloodPressureDiastolic}` : '---',
+              unit: 'mmHg', icon: Activity,
+              status: (data.vitals && data.vitals.bloodPressureSystolic > 130 ? 'warning' : 'normal') as const,
+            },
+            {
+              label: 'Heart Rate',
+              value: data.vitals ? String(data.vitals.heartRate) : '---',
+              unit: 'bpm', icon: Activity,
+              status: (data.vitals && (data.vitals.heartRate > 100 || data.vitals.heartRate < 50) ? 'warning' : 'normal') as const,
+            },
+            {
+              label: 'Weight',
+              value: data.vitals ? String(data.vitals.weight) : '---',
+              unit: 'lbs', icon: TrendingDown, status: 'normal' as const,
+            },
+            {
+              label: 'Temperature',
+              value: data.vitals ? String(data.vitals.temperature) : '---',
+              unit: '°F', icon: Minus, status: 'normal' as const,
+            },
           ].map((vital) => (
             <div key={vital.label} className="card-attending p-3">
               <div className="flex items-center gap-2 mb-1">
@@ -215,15 +249,28 @@ function SummarySection() {
 // Labs Section
 // ============================================================
 
-function LabsSection() {
-  const results: LabResult[] = [
-    { id: '1', name: 'Hemoglobin A1C', value: '5.8', unit: '%', referenceRange: '4.0-5.6', status: 'high', date: '2 days ago', trend: 'down' },
-    { id: '2', name: 'Total Cholesterol', value: '195', unit: 'mg/dL', referenceRange: '<200', status: 'normal', date: '2 days ago', trend: 'stable' },
-    { id: '3', name: 'TSH', value: '2.1', unit: 'mIU/L', referenceRange: '0.4-4.0', status: 'normal', date: '2 days ago', trend: 'stable' },
-    { id: '4', name: 'Glucose (fasting)', value: '110', unit: 'mg/dL', referenceRange: '70-99', status: 'high', date: '2 days ago', trend: 'up' },
-    { id: '5', name: 'WBC', value: '7.2', unit: 'K/uL', referenceRange: '4.5-11.0', status: 'normal', date: '1 week ago' },
-    { id: '6', name: 'Creatinine', value: '1.0', unit: 'mg/dL', referenceRange: '0.7-1.3', status: 'normal', date: '1 week ago' },
-  ];
+function LabsSection({ data }: { data: ReturnType<typeof usePatientData> }) {
+  const statusMap: Record<string, LabResult['status']> = {
+    Normal: 'normal', Abnormal: 'high', Critical: 'critical',
+  };
+  const results: LabResult[] = (data.labs ?? []).map((l) => ({
+    id: l.id,
+    name: l.testName,
+    value: l.value,
+    unit: l.unit,
+    referenceRange: l.referenceRange,
+    status: statusMap[l.status] ?? 'normal',
+    date: formatLabDate(l.collectedAt),
+    trend: l.trend ?? undefined,
+  }));
+  if (results.length === 0) {
+    results.push(
+      { id: '1', name: 'Hemoglobin A1C', value: '5.8', unit: '%', referenceRange: '4.0-5.6', status: 'high', date: '2 days ago', trend: 'down' },
+      { id: '2', name: 'Total Cholesterol', value: '195', unit: 'mg/dL', referenceRange: '<200', status: 'normal', date: '2 days ago', trend: 'stable' },
+      { id: '3', name: 'TSH', value: '2.1', unit: 'mIU/L', referenceRange: '0.4-4.0', status: 'normal', date: '2 days ago', trend: 'stable' },
+      { id: '4', name: 'Glucose (fasting)', value: '110', unit: 'mg/dL', referenceRange: '70-99', status: 'high', date: '2 days ago', trend: 'up' },
+    );
+  }
 
   const statusStyles = {
     normal: { bg: 'bg-green-50', text: 'text-green-700', label: 'Normal' },
@@ -280,12 +327,23 @@ function LabsSection() {
 // Medications Section
 // ============================================================
 
-function MedicationsSection() {
-  const meds: Medication[] = [
-    { id: '1', name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily', prescriber: 'Dr. Chen', refillDate: '2026-03-15', pillsRemaining: 22 },
-    { id: '2', name: 'Metformin', dosage: '500mg', frequency: 'Twice daily', prescriber: 'Dr. Chen', refillDate: '2026-03-10', pillsRemaining: 14 },
-    { id: '3', name: 'Atorvastatin', dosage: '20mg', frequency: 'Once daily at bedtime', prescriber: 'Dr. Ruiz', refillDate: '2026-04-01', pillsRemaining: 45 },
-  ];
+function MedicationsSection({ data }: { data: ReturnType<typeof usePatientData> }) {
+  const meds: Medication[] = (data.medications ?? []).map((m) => ({
+    id: m.id,
+    name: m.name,
+    dosage: m.dosage,
+    frequency: m.frequency,
+    prescriber: m.prescribedBy,
+    refillDate: m.refillDate ?? '',
+    pillsRemaining: daysUntil(m.refillDate) ?? 30,
+  }));
+  if (meds.length === 0) {
+    meds.push(
+      { id: '1', name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily', prescriber: 'Dr. Chen', refillDate: '2026-03-15', pillsRemaining: 22 },
+      { id: '2', name: 'Metformin', dosage: '500mg', frequency: 'Twice daily', prescriber: 'Dr. Chen', refillDate: '2026-03-10', pillsRemaining: 14 },
+      { id: '3', name: 'Atorvastatin', dosage: '20mg', frequency: 'Once daily at bedtime', prescriber: 'Dr. Ruiz', refillDate: '2026-04-01', pillsRemaining: 45 },
+    );
+  }
 
   return (
     <div className="space-y-4 animate-fade-in-up">
@@ -330,33 +388,21 @@ function MedicationsSection() {
 // Appointments Section
 // ============================================================
 
-function AppointmentsSection() {
-  const appointments = [
-    {
-      id: '1',
-      provider: 'Dr. Sarah Chen',
-      specialty: 'Primary Care — Annual Physical',
-      date: '2026-03-03',
-      time: '9:30 AM',
-      status: 'confirmed' as const,
-    },
-    {
-      id: '2',
-      provider: 'Dr. Michael Ruiz',
-      specialty: 'Cardiology — Follow-up',
-      date: '2026-03-08',
-      time: '2:00 PM',
-      status: 'confirmed' as const,
-    },
-    {
-      id: '3',
-      provider: 'Quest Diagnostics',
-      specialty: 'Lab Work — Lipid Panel',
-      date: '2026-03-01',
-      time: '7:30 AM',
-      status: 'upcoming' as const,
-    },
-  ];
+function AppointmentsSection({ data }: { data: ReturnType<typeof usePatientData> }) {
+  const appointments = (data.appointments ?? []).filter((a) => a.status !== 'completed').map((a) => ({
+    id: a.id,
+    provider: a.provider,
+    specialty: `${a.specialty} — ${a.type}`,
+    date: a.date,
+    time: a.time,
+    status: a.status === 'confirmed' ? 'confirmed' as const : 'upcoming' as const,
+  }));
+  if (appointments.length === 0) {
+    appointments.push(
+      { id: '1', provider: 'Dr. Sarah Chen', specialty: 'Primary Care — Annual Physical', date: '2026-03-03', time: '9:30 AM', status: 'confirmed' as const },
+      { id: '2', provider: 'Dr. Michael Ruiz', specialty: 'Cardiology — Follow-up', date: '2026-03-08', time: '2:00 PM', status: 'confirmed' as const },
+    );
+  }
 
   const pastVisits = [
     {
@@ -432,12 +478,13 @@ function AppointmentsSection() {
 
 export default function HealthPage() {
   const [activeSection, setActiveSection] = useState<HealthSection>('summary');
+  const patientData = usePatientData({ autoRefreshMs: 60000 });
 
   const sectionMap: Record<HealthSection, React.ReactNode> = {
-    summary: <SummarySection />,
-    labs: <LabsSection />,
-    medications: <MedicationsSection />,
-    appointments: <AppointmentsSection />,
+    summary: <SummarySection data={patientData} />,
+    labs: <LabsSection data={patientData} />,
+    medications: <MedicationsSection data={patientData} />,
+    appointments: <AppointmentsSection data={patientData} />,
   };
 
   return (
@@ -462,4 +509,25 @@ export default function HealthPage() {
       </AppShell>
     </>
   );
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+function formatLabDate(iso: string | undefined): string {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 14) return '1 week ago';
+  return `${Math.floor(days / 7)} weeks ago`;
+}
+
+function daysUntil(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  const diff = new Date(iso).getTime() - Date.now();
+  return Math.max(0, Math.floor(diff / 86400000));
 }

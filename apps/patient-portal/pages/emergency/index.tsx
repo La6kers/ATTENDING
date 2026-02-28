@@ -28,14 +28,21 @@ import {
   Clock,
   Eye,
   Lock,
+  Loader2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { useEmergencySettings } from '../../hooks/useEmergencySettings';
+import { usePatientData } from '../../hooks/usePatientData';
 
 // ============================================================
 // Medical ID Card
 // ============================================================
 
-function MedicalIDCard() {
+function MedicalIDCard({ health }: { health: any }) {
+  const allergies = health?.allergies ?? [{ allergen: 'Penicillin' }, { allergen: 'Sulfa drugs' }];
+  const conditions = health?.conditions ?? [{ name: 'Hypertension' }, { name: 'Pre-diabetes' }];
+  const medications = health?.medications ?? [{ name: 'Lisinopril 10mg' }, { name: 'Metformin 500mg' }];
+
   return (
     <div
       className="rounded-2xl overflow-hidden"
@@ -69,24 +76,24 @@ function MedicalIDCard() {
             <AlertTriangle className="w-3 h-3 text-yellow-300" />
             <span className="text-[10px] text-white/60 font-semibold uppercase">Allergies</span>
           </div>
-          <p className="text-white font-bold text-sm">Penicillin</p>
-          <p className="text-white/70 text-xs">Sulfa drugs</p>
+          <p className="text-white font-bold text-sm">{allergies[0]?.allergen ?? allergies[0]?.name ?? 'None'}</p>
+          {allergies[1] && <p className="text-white/70 text-xs">{allergies[1]?.allergen ?? allergies[1]?.name}</p>}
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-1">
             <Heart className="w-3 h-3 text-pink-300" />
             <span className="text-[10px] text-white/60 font-semibold uppercase">Conditions</span>
           </div>
-          <p className="text-white font-bold text-sm">Hypertension</p>
-          <p className="text-white/70 text-xs">Pre-diabetes</p>
+          <p className="text-white font-bold text-sm">{conditions[0]?.name ?? 'None'}</p>
+          {conditions[1] && <p className="text-white/70 text-xs">{conditions[1]?.name}</p>}
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-1">
             <Pill className="w-3 h-3 text-green-300" />
             <span className="text-[10px] text-white/60 font-semibold uppercase">Medications</span>
           </div>
-          <p className="text-white font-bold text-sm">Lisinopril 10mg</p>
-          <p className="text-white/70 text-xs">Metformin 500mg</p>
+          <p className="text-white font-bold text-sm">{medications[0]?.name ?? 'None'}</p>
+          {medications[1] && <p className="text-white/70 text-xs">{medications[1]?.name}</p>}
         </div>
       </div>
 
@@ -110,11 +117,20 @@ function MedicalIDCard() {
 // Emergency Contacts
 // ============================================================
 
-function EmergencyContacts() {
-  const contacts = [
-    { id: '1', name: 'Kelli Isbell', relationship: 'Spouse', phone: '(555) 123-4567', isPrimary: true },
-    { id: '2', name: 'Ken Isbell', relationship: 'Father', phone: '(555) 987-6543', isPrimary: false },
-  ];
+function EmergencyContacts({ contactsData }: { contactsData: any[] | null }) {
+  const contacts = (contactsData ?? []).map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    relationship: c.relationship,
+    phone: c.phone,
+    isPrimary: c.isPrimary ?? false,
+  }));
+  if (contacts.length === 0) {
+    contacts.push(
+      { id: '1', name: 'Kelli Isbell', relationship: 'Spouse', phone: '(555) 123-4567', isPrimary: true },
+      { id: '2', name: 'Ken Isbell', relationship: 'Father', phone: '(555) 987-6543', isPrimary: false },
+    );
+  }
 
   return (
     <section>
@@ -267,6 +283,9 @@ function SettingsLinks() {
 // ============================================================
 
 export default function EmergencyPage() {
+  const { contacts, crashSettings, loading } = useEmergencySettings();
+  const { health } = usePatientData();
+
   return (
     <>
       <Head>
@@ -296,8 +315,8 @@ export default function EmergencyPage() {
             Call 911
           </a>
 
-          <MedicalIDCard />
-          <EmergencyContacts />
+          <MedicalIDCard health={health} />
+          <EmergencyContacts contactsData={contacts} />
           <CrashDetection />
           <SettingsLinks />
         </div>

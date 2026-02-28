@@ -18,8 +18,10 @@ import {
   Clock,
   CheckCheck,
   Paperclip,
+  Loader2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { useConversations } from '../../hooks/useMessages';
 
 // ============================================================
 // Types
@@ -109,48 +111,30 @@ function ConversationRow({ convo }: { convo: Conversation }) {
 export default function MessagesPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
-  const conversations: Conversation[] = [
-    {
-      id: '1',
-      provider: 'Dr. Sarah Chen',
-      practice: 'Parker Family Medicine',
-      lastMessage: 'Your lab results look good overall. Let\'s discuss the A1C at your next visit.',
-      timestamp: '2h ago',
-      unread: true,
-      unreadCount: 1,
-      hasAttachment: false,
-    },
-    {
-      id: '2',
-      provider: 'Dr. Michael Ruiz',
-      practice: 'Colorado Cardiology Associates',
-      lastMessage: 'ECG report attached. Everything looks normal.',
-      timestamp: 'Yesterday',
-      unread: false,
-      unreadCount: 0,
-      hasAttachment: true,
-    },
-    {
-      id: '3',
-      provider: 'Front Desk',
-      practice: 'Parker Family Medicine',
-      lastMessage: 'Reminder: Your annual physical is scheduled for March 3rd at 9:30 AM.',
-      timestamp: 'Feb 25',
-      unread: false,
-      unreadCount: 0,
-      hasAttachment: false,
-    },
-    {
-      id: '4',
-      provider: 'Quest Diagnostics',
-      practice: 'Lab Services',
-      lastMessage: 'Your lab order is ready. Please fast 12 hours before your appointment.',
-      timestamp: 'Feb 22',
-      unread: false,
-      unreadCount: 0,
-      hasAttachment: true,
-    },
-  ];
+  // ── Live data from API ──
+  const { conversations: apiConversations, loading, totalUnread, search } = useConversations();
+
+  // Map API conversations → component shape
+  const conversations: Conversation[] = (apiConversations ?? []).map((c) => ({
+    id: c.id,
+    provider: c.provider.name,
+    practice: c.provider.practice,
+    lastMessage: c.lastMessage.content,
+    timestamp: formatConvoTime(c.updatedAt),
+    unread: c.unreadCount > 0,
+    unreadCount: c.unreadCount,
+    hasAttachment: c.lastMessage.hasAttachment,
+  }));
+
+  // Fallback demo data when API hasn't returned yet
+  if (conversations.length === 0 && !loading) {
+    conversations.push(
+      { id: 'conv-1', provider: 'Dr. Sarah Chen', practice: 'Parker Family Medicine', lastMessage: 'Your lab results look good overall. Let\'s discuss the A1C at your next visit.', timestamp: '2h ago', unread: true, unreadCount: 1, hasAttachment: false },
+      { id: 'conv-2', provider: 'Dr. Michael Ruiz', practice: 'Colorado Cardiology Associates', lastMessage: 'ECG report attached. Everything looks normal.', timestamp: 'Yesterday', unread: false, unreadCount: 0, hasAttachment: true },
+      { id: 'conv-3', provider: 'Front Desk', practice: 'Parker Family Medicine', lastMessage: 'Reminder: Your annual physical is scheduled for March 3rd at 9:30 AM.', timestamp: 'Feb 25', unread: false, unreadCount: 0, hasAttachment: false },
+      { id: 'conv-4', provider: 'Quest Diagnostics', practice: 'Lab Services', lastMessage: 'Your lab order is ready. Please fast 12 hours before your appointment.', timestamp: 'Feb 22', unread: false, unreadCount: 0, hasAttachment: true },
+    );
+  }
 
   const filtered = searchQuery
     ? conversations.filter(
@@ -161,7 +145,7 @@ export default function MessagesPage() {
       )
     : conversations;
 
-  const unreadTotal = conversations.reduce((sum, c) => sum + c.unreadCount, 0);
+  const unreadTotal = totalUnread || conversations.reduce((sum, c) => sum + c.unreadCount, 0);
 
   return (
     <>
@@ -228,4 +212,16 @@ export default function MessagesPage() {
       </AppShell>
     </>
   );
+}
+
+function formatConvoTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }

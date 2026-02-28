@@ -27,8 +27,11 @@ import {
   AlertCircle,
   CheckCircle2,
   Stethoscope,
+  Loader2,
 } from 'lucide-react';
 import AppShell from '../components/layout/AppShell';
+import { usePatientData } from '../hooks/usePatientData';
+import { useNotifications } from '../hooks/useNotifications';
 
 // ============================================================
 // Types
@@ -208,7 +211,10 @@ function HealthSnap({
 
 export default function PatientHome() {
   const [patientName, setPatientName] = useState('');
-  const [unreadCount] = useState(2);
+
+  // ── Live data from API ──
+  const { vitals, appointments, labs, medications, loading: healthLoading } = usePatientData({ autoRefreshMs: 60000 });
+  const { unreadCount, notifications } = useNotifications({ pollIntervalMs: 30000 });
 
   useEffect(() => {
     const name = localStorage.getItem('attending-patient-name') || 'Patient';
@@ -222,60 +228,52 @@ export default function PatientHome() {
     return 'Good evening';
   };
 
-  // Mock data — will connect to API
-  const upcomingAppointments: Appointment[] = [
-    {
-      id: '1',
-      provider: 'Dr. Sarah Chen',
-      specialty: 'Primary Care',
-      date: new Date(Date.now() + 86400000 * 3).toISOString(),
-      time: '9:30 AM',
-      type: 'in-person',
-    },
-    {
-      id: '2',
-      provider: 'Dr. Michael Ruiz',
-      specialty: 'Cardiology',
-      date: new Date(Date.now() + 86400000 * 8).toISOString(),
-      time: '2:00 PM',
-      type: 'telehealth',
-    },
-  ];
+  // Map API appointments → component shape
+  const upcomingAppointments: Appointment[] = (appointments ?? []).slice(0, 3).map((a) => ({
+    id: a.id,
+    provider: a.provider,
+    specialty: a.specialty,
+    date: a.date,
+    time: a.time,
+    type: a.type?.toLowerCase().includes('tele') ? 'telehealth' : 'in-person',
+  }));
 
-  const recentActivity: ActivityItem[] = [
-    {
-      id: '1',
-      type: 'lab',
-      title: 'Lab Results Available',
-      subtitle: 'Complete Blood Count (CBC)',
-      timestamp: '2h ago',
-      status: 'new',
-    },
-    {
-      id: '2',
-      type: 'assessment',
-      title: 'Assessment Reviewed',
-      subtitle: 'Dr. Chen reviewed your headache assessment',
-      timestamp: 'Yesterday',
-      status: 'completed',
-    },
-    {
-      id: '3',
-      type: 'prescription',
-      title: 'Prescription Renewed',
-      subtitle: 'Lisinopril 10mg — 90 day supply',
-      timestamp: '2 days ago',
-      status: 'completed',
-    },
-    {
-      id: '4',
-      type: 'message',
-      title: 'New Message',
-      subtitle: 'From Dr. Chen\'s office',
-      timestamp: '3 days ago',
-      status: 'pending',
-    },
-  ];
+  // Map recent notifications → activity feed
+  const typeMap: Record<string, ActivityItem['type']> = {
+    'lab-result': 'lab',
+    message: 'message',
+    appointment: 'appointment',
+    prescription: 'prescription',
+    assessment: 'assessment',
+  };
+
+  const recentActivity: ActivityItem[] = (notifications ?? []).slice(0, 5).map((n) => {
+    const ago = formatTimeAgo(n.timestamp);
+    return {
+      id: n.id,
+      type: typeMap[n.type] ?? 'assessment',
+      title: n.title,
+      subtitle: n.body,
+      timestamp: ago,
+      status: n.read ? 'completed' : 'new',
+    };
+  });
+
+  // Fallback when API hasn't returned yet
+  if (upcomingAppointments.length === 0 && !healthLoading) {
+    upcomingAppointments.push(
+      { id: '1', provider: 'Dr. Sarah Chen', specialty: 'Primary Care', date: new Date(Date.now() + 86400000 * 3).toISOString(), time: '9:30 AM', type: 'in-person' },
+      { id: '2', provider: 'Dr. Michael Ruiz', specialty: 'Cardiology', date: new Date(Date.now() + 86400000 * 8).toISOString(), time: '2:00 PM', type: 'telehealth' },
+    );
+  }
+  if (recentActivity.length === 0 && !healthLoading) {
+    recentActivity.push(
+      { id: '1', type: 'lab', title: 'Lab Results Available', subtitle: 'Complete Blood Count (CBC)', timestamp: '2h ago', status: 'new' },
+      { id: '2', type: 'assessment', title: 'Assessment Reviewed', subtitle: 'Dr. Chen reviewed your headache assessment', timestamp: 'Yesterday', status: 'completed' },
+      { id: '3', type: 'prescription', title: 'Prescription Renewed', subtitle: 'Lisinopril 10mg — 90 day supply', timestamp: '2 days ago', status: 'completed' },
+      { id: '4', type: 'message', title: 'New Message', subtitle: 'From Dr. Chen\'s office', timestamp: '3 days ago', status: 'pending' },
+    );
+  }
 
   return (
     <>
@@ -359,9 +357,32 @@ export default function PatientHome() {
               </Link>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <HealthSnap icon={Activity} label="Blood Pressure" value="128/82" unit="mmHg" status="warning" />
-              <HealthSnap icon={Activity} label="Heart Rate" value="72" unit="bpm" status="normal" />
-              <HealthSnap icon={Beaker} label="A1C" value="5.8" unit="%" status="normal" />
+              <HealthSnap
+                icon={Activity}
+                label="Blood Pressure"
+                value={vitals ? `${vitals.bloodPressureSystolic}/${vitals.bloodPressureDiastolic}` : '---'}
+                unit="mmHg"
+                status={vitals && vitals.bloodPressureSystolic > 130 ? 'warning' : 'normal'}
+              />
+              <HealthSnap
+                icon={Activity}
+                label="Heart Rate"
+                value={vitals ? String(vitals.heartRate) : '---'}
+                unit="bpm"
+                status={vitals && (vitals.heartRate > 100 || vitals.heartRate < 50) ? 'warning' : 'normal'}
+              />
+              {(() => {
+                const a1c = labs?.find((l) => l.testName?.toLowerCase().includes('a1c'));
+                return (
+                  <HealthSnap
+                    icon={Beaker}
+                    label="A1C"
+                    value={a1c ? a1c.value : '---'}
+                    unit="%"
+                    status={a1c && parseFloat(a1c.value) > 5.6 ? 'warning' : 'normal'}
+                  />
+                );
+              })()}
             </div>
           </section>
 
@@ -395,4 +416,19 @@ export default function PatientHome() {
       </AppShell>
     </>
   );
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+function formatTimeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'Yesterday';
+  return `${days} days ago`;
 }

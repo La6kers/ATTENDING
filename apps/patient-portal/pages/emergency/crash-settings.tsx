@@ -10,7 +10,7 @@
 // - Rural area / extended response mode
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import {
@@ -27,8 +27,10 @@ import {
   Bike,
   PersonStanding,
   AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { useEmergencySettings } from '../../hooks/useEmergencySettings';
 
 // ============================================================
 // Threshold Visualization
@@ -80,27 +82,50 @@ function ThresholdVisual({ value, max }: { value: number; max: number }) {
 
 export default function CrashSettingsPage() {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // ── Live data from hook ──
+  const {
+    crashSettings: hookCrashSettings,
+    setCrashSettings: setHookCrashSettings,
+    saveCrashSettings,
+    saving,
+    loading,
+  } = useEmergencySettings();
 
   const [settings, setSettings] = useState({
     gForceThreshold: 4.0,
     sensitivityPreset: 'standard' as 'low' | 'standard' | 'high' | 'custom',
     activityAware: true,
     ignoreWhileStationary: true,
-    // Countdown
     countdownSeconds: 30,
     countdownAudio: true,
     countdownHaptic: true,
     alertSiren: true,
     sirenVolumeMax: true,
-    // Rural / extended mode
     extendedResponseMode: false,
     extendedCountdownSeconds: 120,
-    // Activity modes
     drivingMode: true,
     cyclingMode: false,
     hikingMode: false,
   });
+
+  // Sync from hook when loaded
+  useEffect(() => {
+    if (hookCrashSettings) {
+      setSettings((prev) => ({
+        ...prev,
+        gForceThreshold: hookCrashSettings.gForceThreshold ?? prev.gForceThreshold,
+        sensitivityPreset: hookCrashSettings.sensitivityPreset ?? prev.sensitivityPreset,
+        activityAware: hookCrashSettings.activityAware ?? prev.activityAware,
+        countdownSeconds: hookCrashSettings.countdownSeconds ?? prev.countdownSeconds,
+        countdownAudio: hookCrashSettings.countdownAudio ?? prev.countdownAudio,
+        countdownHaptic: hookCrashSettings.countdownHaptic ?? prev.countdownHaptic,
+        alertSiren: hookCrashSettings.alertSiren ?? prev.alertSiren,
+        drivingMode: hookCrashSettings.drivingMode ?? prev.drivingMode,
+      }));
+    }
+  }, [hookCrashSettings]);
 
   const update = (key: keyof typeof settings, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -118,10 +143,19 @@ export default function CrashSettingsPage() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    router.back();
+    setHookCrashSettings({
+      gForceThreshold: settings.gForceThreshold,
+      sensitivityPreset: settings.sensitivityPreset,
+      activityAware: settings.activityAware,
+      countdownSeconds: settings.countdownSeconds,
+      countdownAudio: settings.countdownAudio,
+      countdownHaptic: settings.countdownHaptic,
+      alertSiren: settings.alertSiren,
+      drivingMode: settings.drivingMode,
+    });
+    await saveCrashSettings();
+    setSaveSuccess(true);
+    setTimeout(() => router.back(), 800);
   };
 
   return (

@@ -3,7 +3,7 @@
 // apps/patient-portal/pages/emergency/medical-id.tsx
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import {
@@ -17,8 +17,11 @@ import {
   Pill,
   FileText,
   User,
+  Loader2,
+  CheckCircle2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { patientApi } from '../../lib/api';
 
 // ============================================================
 // Types
@@ -109,6 +112,8 @@ function EditableList<T extends Record<string, string>>({
 export default function EditMedicalID() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [medicalID, setMedicalID] = useState<MedicalID>({
     fullName: 'Scott Isbell',
@@ -133,16 +138,29 @@ export default function EditMedicalID() {
     organDonor: false,
   });
 
+  // Load from API on mount
+  useEffect(() => {
+    (async () => {
+      const res = await patientApi.getMedicalID();
+      if (res.ok && res.data) {
+        setMedicalID(res.data);
+      }
+      setLoading(false);
+    })();
+  }, []);
+
   const updateField = (field: keyof MedicalID, value: any) => {
     setMedicalID((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
     setSaving(true);
-    // TODO: POST to /api/patient/medical-id
-    await new Promise((r) => setTimeout(r, 800));
+    const res = await patientApi.saveMedicalID(medicalID);
     setSaving(false);
-    router.back();
+    if (res.ok) {
+      setSaveSuccess(true);
+      setTimeout(() => router.back(), 1000);
+    }
   };
 
   return (

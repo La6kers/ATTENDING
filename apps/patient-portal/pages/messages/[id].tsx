@@ -22,8 +22,10 @@ import {
   MoreVertical,
   Phone,
   Video,
+  Loader2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { useMessageThread } from '../../hooks/useMessages';
 
 // ============================================================
 // Types
@@ -126,69 +128,40 @@ function MessageBubble({ message }: { message: Message }) {
 export default function ConversationPage() {
   const router = useRouter();
   const { id } = router.query;
+  const conversationId = id ? String(id) : undefined;
   const scrollRef = useRef<HTMLDivElement>(null);
   const [inputText, setInputText] = useState('');
 
-  // Mock conversation data
+  // ── Live data from API ──
+  const {
+    messages: apiMessages,
+    loading,
+    sending,
+    sendMessage,
+    loadMore,
+    hasMore,
+  } = useMessageThread(conversationId);
+
+  // Map API messages → component shape, with fallback
+  const messages: Message[] = (apiMessages ?? []).map((m) => ({
+    id: m.id,
+    sender: m.sender,
+    senderName: m.senderName,
+    content: m.content,
+    timestamp: formatMsgTime(m.timestamp),
+    status: m.status === 'sending' ? 'sent' : m.status === 'failed' ? 'sent' : m.status,
+    attachment: m.attachment
+      ? { type: m.attachment.type, name: m.attachment.name, size: m.attachment.size }
+      : undefined,
+  }));
+
+  // Provider info from first provider message, or default
+  const firstProviderMsg = apiMessages?.find((m) => m.sender === 'provider');
   const conversation: ConversationData = {
-    id: String(id),
-    provider: 'Dr. Sarah Chen',
+    id: conversationId ?? '',
+    provider: firstProviderMsg?.senderName ?? 'Dr. Sarah Chen',
     practice: 'Parker Family Medicine',
-    messages: [
-      {
-        id: '1',
-        sender: 'provider',
-        senderName: 'Dr. Sarah Chen',
-        content: 'Hi Scott, I\'ve reviewed your recent lab work. Overall things are looking good.',
-        timestamp: '10:15 AM',
-        status: 'read',
-      },
-      {
-        id: '2',
-        sender: 'provider',
-        senderName: 'Dr. Sarah Chen',
-        content: 'Your A1C came back at 5.8%, which is slightly above the normal range of 4.0–5.6%. This puts you in the pre-diabetes range, but it\'s improved from your last test.',
-        timestamp: '10:15 AM',
-        status: 'read',
-        attachment: {
-          type: 'lab-result',
-          name: 'CBC_LabResults_Feb2026.pdf',
-          size: '245 KB',
-        },
-      },
-      {
-        id: '3',
-        sender: 'patient',
-        senderName: 'You',
-        content: 'Thanks for letting me know. Is there anything I should change in my diet or exercise?',
-        timestamp: '10:32 AM',
-        status: 'read',
-      },
-      {
-        id: '4',
-        sender: 'provider',
-        senderName: 'Dr. Sarah Chen',
-        content: 'Great question. I\'d recommend continuing to limit refined carbs and sugary drinks. Your current exercise routine is helping — keep that up. We can discuss more detail at your annual physical on March 3rd.',
-        timestamp: '11:05 AM',
-        status: 'read',
-      },
-      {
-        id: '5',
-        sender: 'patient',
-        senderName: 'You',
-        content: 'Sounds good. See you then!',
-        timestamp: '11:12 AM',
-        status: 'read',
-      },
-      {
-        id: '6',
-        sender: 'provider',
-        senderName: 'Dr. Sarah Chen',
-        content: 'Your lab results look good overall. Let\'s discuss the A1C at your next visit. If you have any concerns before then, don\'t hesitate to reach out.',
-        timestamp: '2:30 PM',
-        status: 'delivered',
-      },
-    ],
+    messages,
   };
 
   const initials = conversation.provider
@@ -202,12 +175,13 @@ export default function ConversationPage() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [conversation.messages.length]);
+  }, [messages.length]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim()) return;
-    // TODO: POST to message API
+    const text = inputText;
     setInputText('');
+    await sendMessage(text);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -265,12 +239,33 @@ export default function ConversationPage() {
           className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
           style={{ height: 'calc(100dvh - 130px)' }}
         >
+          {/* Load more */}
+          {hasMore && (
+            <div className="flex justify-center">
+              <button
+                onClick={loadMore}
+                className="text-xs text-attending-primary font-medium px-3 py-1 rounded-full bg-attending-50 hover:bg-attending-100 transition-colors"
+              >
+                Load earlier messages
+              </button>
+            </div>
+          )}
+
+          {/* Loading */}
+          {loading && (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 text-attending-primary animate-spin" />
+            </div>
+          )}
+
           {/* Date separator */}
-          <div className="flex items-center justify-center">
-            <span className="text-[10px] text-attending-200 font-medium bg-attending-50 px-3 py-1 rounded-full">
-              Today
-            </span>
-          </div>
+          {!loading && (
+            <div className="flex items-center justify-center">
+              <span className="text-[10px] text-attending-200 font-medium bg-attending-50 px-3 py-1 rounded-full">
+                Today
+              </span>
+            </div>
+          )}
 
           {conversation.messages.map((msg) => (
             <MessageBubble key={msg.id} message={msg} />
@@ -312,4 +307,9 @@ export default function ConversationPage() {
       </AppShell>
     </>
   );
+}
+
+function formatMsgTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }

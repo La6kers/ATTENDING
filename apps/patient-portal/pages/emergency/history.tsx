@@ -9,7 +9,7 @@
 // - Duration of access session
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import {
@@ -25,8 +25,10 @@ import {
   CheckCircle2,
   User,
   FileText,
+  Loader2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { useEmergencySettings } from '../../hooks/useEmergencySettings';
 
 // ============================================================
 // Types
@@ -196,45 +198,67 @@ function AccessEventCard({ event }: { event: AccessEvent }) {
 
 export default function AccessHistoryPage() {
   const router = useRouter();
+  const { accessHistory, loadAccessHistory, loading } = useEmergencySettings();
 
-  const events: AccessEvent[] = [
-    {
-      id: '1',
-      timestamp: '2026-02-20T14:32:00Z',
-      accessor: 'Badge #4521 — Parker Fire Dept.',
-      accessorType: 'first-responder',
-      accessType: 'full-facesheet',
-      location: 'E Parker Rd & S Jordan Rd, Parker, CO',
-      coordinates: { lat: 39.5186, lng: -104.7614 },
-      duration: '4 min 32 sec',
-      photoUrl: '/photos/access-1.jpg',
-      dataAccessed: ['Allergies', 'Medications', 'Conditions', 'Blood Type', 'Emergency Contacts', 'Vitals'],
-      verified: true,
-    },
-    {
-      id: '2',
-      timestamp: '2026-02-20T14:28:00Z',
-      accessor: 'Unknown — Quick Access View',
-      accessorType: 'first-responder',
-      accessType: 'quick-access',
-      location: 'E Parker Rd & S Jordan Rd, Parker, CO',
-      coordinates: { lat: 39.5186, lng: -104.7614 },
-      duration: '1 min 15 sec',
-      dataAccessed: ['Allergies', 'Blood Type', 'Emergency Contacts'],
-      verified: false,
-    },
-    {
-      id: '3',
-      timestamp: '2026-01-15T10:00:00Z',
-      accessor: 'Scott Isbell (You) — Test',
-      accessorType: 'test',
-      accessType: 'full-facesheet',
-      location: 'Home — Parker, CO',
-      duration: '2 min 10 sec',
-      dataAccessed: ['Allergies', 'Medications', 'Conditions', 'Blood Type'],
-      verified: true,
-    },
-  ];
+  useEffect(() => {
+    loadAccessHistory();
+  }, []);
+
+  // Map API data → component shape, with fallback
+  const events: AccessEvent[] = (accessHistory ?? []).map((e: any) => ({
+    id: e.id,
+    timestamp: e.timestamp,
+    accessor: e.accessor,
+    accessorType: e.accessorType ?? 'first-responder',
+    accessType: e.accessType ?? 'quick-access',
+    location: e.location ?? 'Unknown location',
+    coordinates: e.coordinates,
+    duration: e.duration ?? 'Unknown',
+    photoUrl: e.photoUrl,
+    dataAccessed: e.dataAccessed ?? [],
+    verified: e.verified ?? false,
+  }));
+
+  if (events.length === 0 && !loading) {
+    events.push(
+      {
+        id: '1',
+        timestamp: '2026-02-20T14:32:00Z',
+        accessor: 'Badge #4521 — Parker Fire Dept.',
+        accessorType: 'first-responder',
+        accessType: 'full-facesheet',
+        location: 'E Parker Rd & S Jordan Rd, Parker, CO',
+        coordinates: { lat: 39.5186, lng: -104.7614 },
+        duration: '4 min 32 sec',
+        photoUrl: '/photos/access-1.jpg',
+        dataAccessed: ['Allergies', 'Medications', 'Conditions', 'Blood Type', 'Emergency Contacts', 'Vitals'],
+        verified: true,
+      },
+      {
+        id: '2',
+        timestamp: '2026-02-20T14:28:00Z',
+        accessor: 'Unknown — Quick Access View',
+        accessorType: 'first-responder',
+        accessType: 'quick-access',
+        location: 'E Parker Rd & S Jordan Rd, Parker, CO',
+        coordinates: { lat: 39.5186, lng: -104.7614 },
+        duration: '1 min 15 sec',
+        dataAccessed: ['Allergies', 'Blood Type', 'Emergency Contacts'],
+        verified: false,
+      },
+      {
+        id: '3',
+        timestamp: '2026-01-15T10:00:00Z',
+        accessor: 'Scott Isbell (You) — Test',
+        accessorType: 'test',
+        accessType: 'full-facesheet',
+        location: 'Home — Parker, CO',
+        duration: '2 min 10 sec',
+        dataAccessed: ['Allergies', 'Medications', 'Conditions', 'Blood Type'],
+        verified: true,
+      },
+    );
+  }
 
   return (
     <>

@@ -3,7 +3,7 @@
 // apps/patient-portal/pages/emergency/contacts.tsx
 // ============================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import {
@@ -15,8 +15,10 @@ import {
   Phone,
   Star,
   GripVertical,
+  CheckCircle2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { useEmergencySettings } from '../../hooks/useEmergencySettings';
 
 interface EmergencyContact {
   id: string;
@@ -28,12 +30,34 @@ interface EmergencyContact {
 
 export default function EmergencyContactsPage() {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // ── Live data from hook ──
+  const {
+    contacts: hookContacts,
+    setContacts: setHookContacts,
+    saveContacts,
+    saving,
+    loading,
+  } = useEmergencySettings();
 
   const [contacts, setContacts] = useState<EmergencyContact[]>([
     { id: '1', name: 'Kelli Isbell', relationship: 'Spouse', phone: '(555) 123-4567', isPrimary: true },
     { id: '2', name: 'Ken Isbell', relationship: 'Father', phone: '(555) 987-6543', isPrimary: false },
   ]);
+
+  // Sync from hook when loaded
+  useEffect(() => {
+    if (hookContacts && hookContacts.length > 0) {
+      setContacts(hookContacts.map((c: any) => ({
+        id: c.id ?? String(Date.now()),
+        name: c.name ?? '',
+        relationship: c.relationship ?? '',
+        phone: c.phone ?? '',
+        isPrimary: c.isPrimary ?? false,
+      })));
+    }
+  }, [hookContacts]);
 
   const addContact = () => {
     setContacts((prev) => [
@@ -56,10 +80,10 @@ export default function EmergencyContactsPage() {
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSaving(false);
-    router.back();
+    setHookContacts(contacts);
+    await saveContacts();
+    setSaveSuccess(true);
+    setTimeout(() => router.back(), 800);
   };
 
   return (
