@@ -1,335 +1,301 @@
-/* Import shared design system tokens */
-@import '../../shared/styles/design-system.css';
+/* ============================================================
+   ATTENDING AI — Patient App
+   Global Styles + ATTENDING Teal Brand Theme
+   ============================================================ */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ========================================
+   ATTENDING AI — Teal Brand Design Tokens
+   ======================================== */
 @layer base {
   :root {
-    /* ATTENDING AI Purple Theme */
-    --background: 270 50% 98%;
-    --foreground: 270 50% 10%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 270 50% 10%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 270 50% 10%;
-    
-    /* Primary purple palette */
-    --primary: 271 81% 56%;              /* #8b5cf6 */
-    --primary-foreground: 0 0% 100%;
-    
-    /* Secondary - lighter purple */
-    --secondary: 270 60% 95%;
-    --secondary-foreground: 271 81% 40%;
-    
-    --muted: 270 30% 96%;
-    --muted-foreground: 270 20% 45%;
-    
-    /* Accent - complementary purple */
-    --accent: 280 70% 94%;
-    --accent-foreground: 280 70% 35%;
-    
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --border: 270 30% 90%;
-    --input: 270 30% 90%;
-    --ring: 271 81% 56%;
-    --radius: 0.5rem;
-    
-    /* ========================================
-       ATTENDING AI Brand Gradient Colors
-       ======================================== */
-    /* ATTENDING AI Standard Gradient Endpoints */
-    --brand-gradient-start: #667eea;
-    --brand-gradient-end: #764ba2;
-    
-    /* Brand purple scale */
-    --brand-purple: 271 81% 56%;
-    --brand-purple-dark: 271 81% 45%;
-    --brand-purple-light: 270 60% 95%;
-    --brand-indigo: 239 84% 67%;
-    
-    /* COMPASS specific colors */
-    --compass-chat-bg: 270 50% 99%;
-    --compass-user-bubble: 271 81% 56%;
-    --compass-ai-bubble: 270 30% 96%;
-    
-    /* Clinical alert colors */
-    --clinical-urgent: 0 84% 60%;
-    --clinical-warning: 38 92% 50%;
-    --clinical-success: 142 76% 36%;
-    --clinical-info: 217 91% 60%;
-  }
+    /* Core brand palette */
+    --attending-deep-navy: #0C3547;
+    --attending-header-dark: #0C4C5E;
+    --attending-primary-teal: #1A8FA8;
+    --attending-light-teal: #25B8A9;
+    --attending-gold: #F0A500;
+    --attending-coral: #E87461;
 
-  .dark {
-    --background: 270 50% 8%;
-    --foreground: 270 20% 95%;
-    
-    --card: 270 40% 12%;
-    --card-foreground: 270 20% 95%;
-    
-    --popover: 270 40% 12%;
-    --popover-foreground: 270 20% 95%;
-    
-    --primary: 271 81% 60%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 270 40% 20%;
-    --secondary-foreground: 270 20% 90%;
-    
-    --muted: 270 40% 18%;
-    --muted-foreground: 270 20% 65%;
-    
-    --accent: 280 50% 25%;
-    --accent-foreground: 280 50% 90%;
-    
-    --destructive: 0 63% 45%;
-    --destructive-foreground: 0 0% 100%;
-    
-    --border: 270 40% 20%;
-    --input: 270 40% 20%;
-    --ring: 271 81% 60%;
-    
-    --compass-chat-bg: 270 50% 10%;
-    --compass-user-bubble: 271 81% 50%;
-    --compass-ai-bubble: 270 40% 18%;
-  }
-}
+    /* Surface system */
+    --surface-bg: #F0F7F9;
+    --surface-card: #FFFFFF;
+    --surface-card-hover: #F7FBFC;
+    --surface-elevated: #FFFFFF;
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  
-  body {
-    @apply text-foreground antialiased;
-    /* ATTENDING AI Standard Background Gradient */
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
+    /* Text system */
+    --text-primary: #0C3547;
+    --text-secondary: #4A7A8A;
+    --text-muted: #7BA3B0;
+    --text-inverse: #FFFFFF;
+
+    /* Semantic colors */
+    --color-success: #22C55E;
+    --color-warning: #F0A500;
+    --color-danger: #DC2626;
+    --color-info: #1A8FA8;
+
+    /* Borders */
+    --border-light: #D4EEF6;
+    --border-default: #B0D8E4;
+    --border-strong: #1A8FA8;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(12, 53, 71, 0.06);
+    --shadow-md: 0 4px 12px rgba(12, 53, 71, 0.08);
+    --shadow-lg: 0 8px 24px rgba(12, 53, 71, 0.12);
+    --shadow-teal: 0 4px 14px rgba(26, 143, 168, 0.2);
+
+    /* Radii */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* Bottom nav safe area */
+    --bottom-nav-height: 80px;
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
 /* ========================================
-   ATTENDING AI BRAND GRADIENTS
+   BASE STYLES
+   ======================================== */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+      Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--surface-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
+  }
+
+  /* Prevent pull-to-refresh on mobile */
+  html {
+    overscroll-behavior: none;
+  }
+}
+
+/* ========================================
+   BRAND UTILITIES
    ======================================== */
 @layer utilities {
-  /* Primary brand gradient - ATTENDING AI Standard */
-  .bg-brand-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Teal gradient */
+  .bg-attending-gradient {
+    background: linear-gradient(135deg, var(--attending-header-dark) 0%, var(--attending-primary-teal) 100%);
   }
-  
-  /* Lighter variant for hover states */
-  .bg-brand-gradient-hover {
-    background: linear-gradient(135deg, #5a6fd6 0%, #6a4292 100%);
+
+  .bg-attending-gradient-light {
+    background: linear-gradient(135deg, #E8F6F8 0%, #D4F0EC 100%);
   }
-  
-  /* Subtle gradient for light backgrounds */
-  .bg-brand-gradient-subtle {
-    background: linear-gradient(135deg, 
-      hsl(270 50% 98%) 0%, 
-      hsl(280 40% 97%) 50%, 
-      hsl(270 45% 96%) 100%);
+
+  /* Card styles */
+  .card-attending {
+    background: var(--surface-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
   }
-  
-  /* Page background with ATTENDING AI standard gradient */
-  .bg-brand-page {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    min-height: 100vh;
+
+  .card-attending-interactive {
+    background: var(--surface-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
   }
-  
-  /* Text gradient for headings */
-  .text-brand-gradient {
-    background: linear-gradient(135deg, 
-      #4c51bf 0%, 
-      #8b5cf6 100%);
+
+  .card-attending-interactive:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .card-attending-interactive:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Button styles */
+  .btn-attending-primary {
+    background: var(--attending-primary-teal);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-attending-primary:hover {
+    background: #178DA5;
+    box-shadow: var(--shadow-teal);
+    transform: translateY(-1px);
+  }
+
+  .btn-attending-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Status badge */
+  .badge-attending {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* Page with bottom nav padding */
+  .page-with-nav {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 16px);
+  }
+
+  /* Text gradient */
+  .text-attending-gradient {
+    background: linear-gradient(135deg, var(--attending-primary-teal), var(--attending-light-teal));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
-  /* Glass morphism card effect */
-  .glass-card {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(139, 92, 246, 0.1);
-  }
-  
-  .glass-card-dark {
-    background: rgba(31, 41, 55, 0.95);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-  }
-  
-  .border-brand {
-    border-color: hsl(271 81% 56% / 0.3);
-  }
-  
-  .shadow-brand {
-    box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.15);
-  }
-  
-  .shadow-brand-lg {
-    box-shadow: 0 10px 25px -3px rgba(139, 92, 246, 0.2);
-  }
-  
-  .ring-brand {
-    --tw-ring-color: hsl(271 81% 56% / 0.5);
-  }
-  
-  /* COMPASS chat utilities */
-  .chat-container {
-    background: hsl(var(--compass-chat-bg));
-  }
-  
-  .user-message {
-    background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
-    color: white;
-  }
-  
-  .ai-message {
-    background: hsl(var(--compass-ai-bubble));
-    color: hsl(var(--foreground));
-  }
-}
 
-/* ========================================
-   TYPOGRAPHY & BASE STYLES
-   ======================================== */
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-}
+  /* Emergency pulse */
+  .pulse-emergency {
+    animation: pulse-emergency 1.5s ease-in-out infinite;
+  }
 
-* {
-  box-sizing: border-box;
-}
-
-/* ========================================
-   SCROLLBAR STYLING
-   ======================================== */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: hsl(270 30% 96%);
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(271 81% 56% / 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(271 81% 56% / 0.5);
-}
-
-/* ========================================
-   FOCUS & SELECTION STYLES
-   ======================================== */
-:focus-visible {
-  outline: 2px solid hsl(271 81% 56%);
-  outline-offset: 2px;
-}
-
-::selection {
-  background: hsl(271 81% 56% / 0.2);
-  color: hsl(270 50% 10%);
+  /* Teal glow for active states */
+  .glow-teal {
+    box-shadow: 0 0 0 3px rgba(26, 143, 168, 0.25);
+  }
 }
 
 /* ========================================
    ANIMATIONS
    ======================================== */
-@keyframes pulse-urgent {
+@keyframes pulse-emergency {
   0%, 100% {
-    opacity: 1;
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
   }
   50% {
-    opacity: 0.9;
-    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+    box-shadow: 0 0 0 12px rgba(220, 38, 38, 0);
   }
 }
 
-@keyframes pulse-purple {
-  0%, 100% {
-    opacity: 0.4;
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
     transform: scale(1);
   }
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
 }
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out;
 }
 
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.animate-slide-in-bottom {
+  animation: slide-in-bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.animate-pulse-urgent {
-  animation: pulse-urgent 1.5s ease-in-out infinite;
-}
-
-.animate-pulse-purple {
-  animation: pulse-purple 2s ease-in-out infinite;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
-}
-
-.animate-slide-up {
-  animation: slide-up 0.4s ease-out;
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
 }
 
 /* ========================================
-   COMPONENT STYLES
+   SCROLLBAR
    ======================================== */
-
-/* Primary button with gradient */
-.btn-brand {
-  @apply px-4 py-2 rounded-lg font-medium text-white transition-all duration-200;
-  background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-.btn-brand:hover {
-  @apply shadow-lg;
-  background: linear-gradient(135deg, #553c9a 0%, #7c3aed 100%);
-  transform: translateY(-1px);
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* Secondary button */
-.btn-brand-secondary {
-  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
-  @apply bg-white text-purple-700 border-2 border-purple-200;
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
 }
 
-.btn-brand-secondary:hover {
-  @apply bg-purple-50 border-purple-400;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
+
+/* ========================================
+   SELECTION & FOCUS
+   ======================================== */
+::selection {
+  background: rgba(26, 143, 168, 0.2);
+  color: var(--text-primary);
+}
+
+:focus-visible {
+  outline: 2px solid var(--attending-primary-teal);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   SAFE AREA (iOS)
+   ======================================== */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* ========================================
+   GOOGLE FONTS (DM Sans)
+   ======================================== */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');

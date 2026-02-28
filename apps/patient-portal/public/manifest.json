@@ -1,106 +1,55 @@
 {
-  "name": "COMPASS - Patient Health Assistant",
-  "short_name": "COMPASS",
-  "description": "AI-powered symptom assessment and health guidance for rural healthcare",
-  "start_url": "/",
+  "name": "ATTENDING AI — Patient",
+  "short_name": "ATTENDING",
+  "description": "Your personal health companion — assessments, emergency access, and medical records",
+  "start_url": "/home",
   "display": "standalone",
-  "background_color": "#0F172A",
-  "theme_color": "#3B82F6",
-  "orientation": "portrait-primary",
+  "background_color": "#F0F7F9",
+  "theme_color": "#0C4C5E",
+  "orientation": "portrait",
   "scope": "/",
-  "lang": "en-US",
-  "dir": "ltr",
-  "categories": ["health", "medical", "lifestyle"],
-  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+  "categories": ["health", "medical"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
       "src": "/icons/icon-96x96.png",
       "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
       "src": "/icons/icon-128x128.png",
       "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
       "src": "/icons/icon-144x144.png",
       "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
       "src": "/icons/icon-152x152.png",
       "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-384x384.png",
       "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/assessment-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "COMPASS symptom assessment on mobile"
-    },
-    {
-      "src": "/screenshots/assessment-desktop.png",
-      "sizes": "1920x1080",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "COMPASS symptom assessment on desktop"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Start Assessment",
-      "short_name": "Assess",
-      "description": "Begin a new symptom assessment",
-      "url": "/assess",
-      "icons": [{ "src": "/icons/shortcut-assess.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Emergency",
-      "short_name": "911",
-      "description": "Access emergency resources",
-      "url": "/emergency",
-      "icons": [{ "src": "/icons/shortcut-emergency.png", "sizes": "96x96" }]
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "handle_links": "preferred",
-  "launch_handler": {
-    "client_mode": ["navigate-existing", "auto"]
-  },
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+  ]
 }
