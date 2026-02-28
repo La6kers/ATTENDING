@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATTENDING — Emergency Medical Access</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   ATTENDING AI — BRAND COLOR SYSTEM
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  /* Core Brand */
+  --deep-navy: #0c3547;
+  --header-dark: #0c4c5e;
+  --mid-teal: #0f5f76;
+  --primary-teal: #1a8fa8;
+  --light-teal: #25b8a9;
+  --pale-mint: rgba(37,184,169,0.12);
+
+  /* Accent — Gold */
+  --gold: #f0a500;
+  --gold-dark: #d48f00;
+  --gold-light: rgba(240,165,0,0.1);
+
+  /* Accent — Coral */
+  --coral: #e87461;
+  --coral-light: rgba(232,116,97,0.12);
+
+  /* Neutrals */
+  --white: #ffffff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-500: #64748b;
+  --gray-700: #334155;
+  --gray-900: #0f172a;
+
+  /* Emergency */
+  --red: #ef4444;
+  --red-dark: #b91c1c;
+  --red-light: rgba(239,68,68,0.1);
+  --red-glow: rgba(239,68,68,0.08);
+
+  /* Gradients */
+  --grad-header: linear-gradient(180deg, #1a8fa8 0%, #0c4c5e 100%);
+  --grad-body: linear-gradient(135deg, #0c3547 0%, #1a8fa8 100%);
+  --grad-gold: linear-gradient(135deg, #f0a500 0%, #d48f00 100%);
+
+  /* Aliases */
+  --bg: #0c4c5e;
+  --bg-light: #0e5a6e;
+  --surface: #0a3d4e;
+  --surface-raised: #0c4858;
+  --border: rgba(255,255,255,0.16);
+  --border-light: rgba(255,255,255,0.09);
+  --text: #ffffff;
+  --text-secondary: #d4eef6;
+  --text-muted: #a2d0de;
+  --text-faint: #6ba4b6;
+
+  --font: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'DM Mono', 'Menlo', monospace;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; }
+.app { max-width:430px; margin:0 auto; min-height:100vh; position:relative; background:var(--bg); }
+.screen { display:none; min-height:100vh; padding:0 20px 40px; animation:screenIn 0.35s ease-out; }
+.screen.active { display:flex; flex-direction:column; }
+@keyframes screenIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+.status-bar { display:flex; justify-content:space-between; align-items:center; padding:14px 0; font-size:11px; font-family:var(--mono); color:var(--text-muted); letter-spacing:0.04em; }
+
+.btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:16px 24px; border:none; border-radius:var(--radius); font-family:var(--font); font-size:15px; font-weight:600; cursor:pointer; transition:all 0.2s; letter-spacing:0.01em; }
+.btn:active { transform:scale(0.97); }
+.btn-primary { background:var(--primary-teal); color:white; box-shadow:0 2px 8px rgba(26,143,168,0.25); }
+.btn-primary:hover { background:var(--mid-teal); }
+.btn-red { background:var(--red); color:white; box-shadow:0 2px 8px rgba(239,68,68,0.25); }
+.btn-red:hover { background:var(--red-dark); }
+.btn-gold { background:var(--grad-gold); color:var(--white); box-shadow:0 2px 8px rgba(240,165,0,0.25); }
+.btn-teal-outline { background:transparent; color:var(--primary-teal); border:2px solid var(--primary-teal); }
+.btn-teal-outline:hover { background:rgba(37,184,169,0.1); }
+.btn-outline { background:transparent; color:var(--text-secondary); border:1.5px solid rgba(255,255,255,0.2); }
+.btn-outline:hover { background:rgba(255,255,255,0.08); color:var(--text); border-color:rgba(255,255,255,0.3); }
+.btn-ghost { background:transparent; color:var(--text-secondary); border:none; }
+.btn-ghost:hover { color:var(--text); }
+.btn-sm { padding:10px 16px; font-size:13px; }
+.btn-call { background:linear-gradient(135deg, #ef4444, #b91c1c); color:white; font-size:18px; font-weight:800; padding:20px; border-radius:16px; letter-spacing:0.02em; box-shadow:0 4px 24px rgba(239,68,68,0.3); }
+
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:12px; box-shadow:var(--shadow-sm); }
+.card-header { font-size:10px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-secondary); margin-bottom:12px; font-family:var(--mono); }
+
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border-light); }
+.toggle-row:last-child { border-bottom:none; }
+.toggle-label { font-size:14px; font-weight:600; color:var(--text); }
+.toggle-desc { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.toggle { width:48px; height:28px; background:rgba(255,255,255,0.2); border-radius:14px; position:relative; cursor:pointer; transition:background 0.25s; flex-shrink:0; border:none; }
+.toggle.on { background:var(--light-teal); }
+.toggle::after { content:''; width:22px; height:22px; background:white; border-radius:50%; position:absolute; top:3px; left:3px; transition:transform 0.25s; box-shadow:0 1px 4px rgba(0,0,0,0.25); }
+.toggle.on::after { transform:translateX(20px); }
+
+.form-group { margin-bottom:16px; }
+.form-label { display:block; font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-secondary); margin-bottom:6px; font-family:var(--mono); }
+.form-input { width:100%; padding:14px 16px; background:rgba(255,255,255,0.1); border:1.5px solid rgba(255,255,255,0.18); border-radius:var(--radius-sm); color:var(--text); font-family:var(--font); font-size:15px; outline:none; transition:border-color 0.2s; }
+.form-input:focus { border-color:var(--light-teal); box-shadow:0 0 0 3px rgba(37,184,169,0.2); }
+.form-input::placeholder { color:var(--text-faint); }
+.row { display:flex; gap:10px; }
+.row > * { flex:1; }
+
+.impact-type-grid { display:flex; flex-direction:column; gap:8px; }
+.impact-type-option { display:flex; align-items:center; gap:14px; padding:16px; border-radius:var(--radius); background:var(--surface); border:2px solid var(--border); cursor:pointer; transition:all 0.2s; }
+.impact-type-option:hover { border-color:rgba(255,255,255,0.18); background:var(--surface-raised); }
+.impact-type-option.selected { border-color:var(--coral); background:rgba(232,116,97,0.12); }
+.impact-type-option .icon { font-size:28px; flex-shrink:0; width:44px; text-align:center; }
+.impact-type-option .info { flex:1; }
+.impact-type-option .title { font-size:15px; font-weight:600; color:var(--text-secondary); }
+.impact-type-option.selected .title { color:var(--text); }
+.impact-type-option .desc { font-size:12px; color:var(--text-muted); margin-top:2px; line-height:1.4; }
+.impact-type-option .examples { font-size:11px; color:var(--text-faint); font-family:var(--mono); margin-top:4px; }
+.impact-radio { width:20px; height:20px; border-radius:50%; border:2px solid rgba(255,255,255,0.2); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+.impact-type-option.selected .impact-radio { border-color:var(--coral); background:var(--coral); }
+.impact-type-option.selected .impact-radio::after { content:''; width:8px; height:8px; border-radius:50%; background:white; }
+
+.access-window-options { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.window-option { padding:14px 8px; text-align:center; border-radius:var(--radius-sm); background:var(--surface); border:2px solid var(--border); cursor:pointer; transition:all 0.2s; }
+.window-option:hover { border-color:rgba(255,255,255,0.18); }
+.window-option.selected { border-color:var(--light-teal); background:rgba(37,184,169,0.12); }
+.window-option .val { font-size:22px; font-weight:800; color:var(--text-secondary); }
+.window-option.selected .val { color:var(--light-teal); }
+.window-option .unit { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.cancel-window-options { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; }
+.cw-option { padding:14px 8px; text-align:center; border-radius:var(--radius-sm); background:var(--surface); border:2px solid var(--border); cursor:pointer; transition:all 0.2s; }
+.cw-option:hover { border-color:rgba(255,255,255,0.18); }
+.cw-option.selected { border-color:var(--gold); background:rgba(240,165,0,0.1); }
+.cw-option .cw-val { font-size:22px; font-weight:800; color:var(--text-secondary); }
+.cw-option.selected .cw-val { color:var(--gold); }
+.cw-option .cw-unit { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.window-hint { font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px; line-height:1.5; padding:10px; background:var(--surface); border-radius:var(--radius-sm); border:1px solid var(--border); }
+
+.impact-screen { background:linear-gradient(180deg, #2a1a1a 0%, var(--bg) 40%); }
+.impact-icon { width:120px; height:120px; border-radius:50%; margin:20px auto; background:rgba(239,68,68,0.1); border:3px solid var(--red); display:flex; align-items:center; justify-content:center; font-size:56px; animation:impactPulse 1.5s ease-in-out infinite; position:relative; }
+.impact-icon::before { content:''; position:absolute; inset:-12px; border-radius:50%; border:2px solid rgba(239,68,68,0.25); animation:ringPulse 1.5s ease-out infinite; }
+.impact-icon::after { content:''; position:absolute; inset:-24px; border-radius:50%; border:1px solid rgba(239,68,68,0.12); animation:ringPulse 1.5s ease-out infinite 0.4s; }
+@keyframes impactPulse { 0%,100%{box-shadow:0 0 20px rgba(239,68,68,0.2)} 50%{box-shadow:0 0 50px rgba(239,68,68,0.4)} }
+@keyframes ringPulse { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.3);opacity:0} }
+@keyframes soundPulse { 0%,100%{transform:scaleY(0.4);opacity:0.4} 50%{transform:scaleY(1);opacity:1} }
+
+.impact-type-label { text-align:center; margin:16px 0 6px; font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--red); font-family:var(--mono); }
+.impact-title { text-align:center; font-size:22px; font-weight:800; color:var(--text); margin-bottom:6px; }
+.impact-subtitle { text-align:center; font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:20px; max-width:340px; margin-left:auto; margin-right:auto; }
+
+.calling-911 { background:linear-gradient(135deg, rgba(239,68,68,0.12), rgba(185,28,28,0.12)); border:2px solid var(--red); border-radius:var(--radius); padding:18px; text-align:center; margin-bottom:16px; animation:call911Pulse 2s ease-in-out infinite; }
+@keyframes call911Pulse { 0%,100%{box-shadow:0 0 12px rgba(239,68,68,0.15)} 50%{box-shadow:0 0 30px rgba(239,68,68,0.3)} }
+.calling-911 h3 { font-size:16px; font-weight:800; color:var(--red); letter-spacing:0.04em; }
+.calling-911 p { font-size:12px; color:var(--text-muted); margin-top:4px; }
+.calling-911 .phone-number { font-size:28px; font-weight:900; color:var(--red); margin-top:8px; font-family:var(--mono); letter-spacing:0.1em; }
+
+.countdown-row { display:flex; align-items:center; gap:16px; padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; box-shadow:var(--shadow-sm); }
+.countdown-number { font-size:42px; font-weight:900; color:var(--gold); font-variant-numeric:tabular-nums; line-height:1; flex-shrink:0; min-width:70px; text-align:center; }
+.countdown-info .label { font-size:10px; letter-spacing:0.1em; color:var(--text-secondary); text-transform:uppercase; font-family:var(--mono); }
+.countdown-info .desc { font-size:13px; color:var(--text-muted); margin-top:3px; line-height:1.4; }
+.sound-indicator { display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; background:rgba(240,165,0,0.08); border:1px solid rgba(240,165,0,0.2); border-radius:var(--radius-sm); margin-bottom:12px; }
+
+.quick-access-header { text-align:center; padding:16px 0 20px; }
+.quick-access-header .icon { font-size:40px; margin-bottom:10px; }
+.quick-access-header h1 { font-size:20px; font-weight:800; color:var(--text); }
+.quick-access-header p { font-size:13px; color:var(--text-muted); margin-top:6px; line-height:1.5; }
+.acknowledge-box { background:rgba(240,165,0,0.08); border:1px solid rgba(240,165,0,0.2); border-radius:var(--radius); padding:16px; margin-bottom:16px; text-align:center; }
+.acknowledge-box p { font-size:12px; color:var(--text-secondary); line-height:1.5; margin-bottom:12px; }
+
+.critical-card { border-radius:var(--radius); padding:16px; margin-bottom:10px; position:relative; overflow:hidden; }
+.critical-card.dnr { background:linear-gradient(135deg, rgba(239,68,68,0.12), rgba(185,28,28,0.1)); border:2px solid var(--red); animation:dnrPulse 2s ease-in-out infinite; }
+.critical-card.dnr::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(-45deg,transparent,transparent 14px,rgba(255,255,255,0.02) 14px,rgba(255,255,255,0.02) 28px); }
+@keyframes dnrPulse { 0%,100%{box-shadow:0 0 12px rgba(239,68,68,0.15)} 50%{box-shadow:0 0 30px rgba(239,68,68,0.3)} }
+.critical-card.dnr h2 { font-size:20px; font-weight:900; color:var(--red); letter-spacing:0.06em; position:relative; text-align:center; }
+.critical-card.dnr .detail { font-size:11px; color:var(--text-muted); margin-top:8px; line-height:1.5; position:relative; text-align:center; font-family:var(--mono); }
+.critical-card.warning { background:var(--surface); border:2px solid var(--coral); box-shadow:var(--shadow-sm); }
+.critical-card.warning .header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.critical-card.warning .header span { font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--coral); font-family:var(--mono); }
+
+.critical-med { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; background:rgba(0,0,0,0.2); border-radius:var(--radius-sm); margin-bottom:6px; }
+.critical-med .name { font-size:15px; font-weight:700; color:var(--text); }
+.critical-med .dose { font-size:12px; color:var(--text-secondary); margin-top:1px; }
+.critical-med .flag { font-size:10px; font-weight:700; color:#ff6b6b; font-family:var(--mono); background:rgba(239,68,68,0.15); padding:3px 8px; border-radius:4px; border:1px solid rgba(239,68,68,0.25); white-space:nowrap; }
+
+.critical-allergy { display:flex; align-items:center; gap:10px; padding:10px 12px; background:rgba(0,0,0,0.2); border-radius:var(--radius-sm); margin-bottom:6px; }
+.critical-allergy .severity { font-size:9px; font-weight:700; padding:2px 7px; border-radius:3px; font-family:var(--mono); flex-shrink:0; }
+.sev-severe { background:var(--red); color:white; }
+.sev-moderate { background:var(--gold); color:white; }
+.sev-mild { background:rgba(255,255,255,0.2); color:var(--text); }
+.critical-allergy .info .name { font-size:14px; font-weight:600; color:var(--text); }
+.critical-allergy .info .reaction { font-size:12px; color:var(--text-secondary); }
+
+.code-status-mini { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+.code-mini-item { padding:10px 12px; background:var(--surface); border-radius:var(--radius-sm); border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.code-mini-item .label { font-size:9px; color:var(--text-secondary); font-family:var(--mono); letter-spacing:0.08em; }
+.code-mini-item .val { font-size:13px; font-weight:600; margin-top:2px; }
+.val-yes { color:var(--light-teal); }
+.val-no { color:var(--text-muted); }
+
+.photo-capture { width:100%; height:120px; background:var(--surface); border:2px dashed rgba(255,255,255,0.15); border-radius:var(--radius); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer; transition:all 0.2s; margin-bottom:16px; }
+.photo-capture:hover { border-color:var(--light-teal); background:var(--surface-raised); }
+.photo-capture .cam-icon { font-size:24px; opacity:0.5; }
+.photo-capture span { font-size:12px; color:var(--text-secondary); }
+.photo-capture.captured { border-style:solid; border-color:var(--light-teal); background:rgba(37,184,169,0.08); }
+.photo-capture.captured .cam-icon { opacity:1; }
+.hipaa-notice { background:rgba(240,165,0,0.08); border:1px solid rgba(240,165,0,0.2); border-radius:var(--radius-sm); padding:14px; margin:12px 0; }
+.hipaa-notice h4 { font-size:11px; font-weight:700; color:var(--gold); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:6px; font-family:var(--mono); }
+.hipaa-notice p { font-size:12px; color:var(--text-secondary); line-height:1.6; }
+.checkbox-row { display:flex; align-items:flex-start; gap:12px; padding:12px 0; cursor:pointer; }
+.checkbox { width:22px; height:22px; border:2px solid rgba(255,255,255,0.3); border-radius:5px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px; transition:all 0.2s; margin-top:1px; }
+.checkbox.checked { background:var(--light-teal); border-color:var(--light-teal); color:white; }
+.checkbox-text { font-size:13px; color:var(--text-secondary); line-height:1.5; }
+
+.session-timer-bar { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:4px; box-shadow:var(--shadow-sm); }
+.timer-left { display:flex; align-items:center; gap:10px; }
+.timer-label { font-size:10px; font-family:var(--mono); letter-spacing:0.1em; color:var(--text-secondary); text-transform:uppercase; }
+.timer-value { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; font-family:var(--mono); }
+.timer-green { color:var(--light-teal); }
+.timer-amber { color:var(--gold); }
+.timer-red { color:var(--red); }
+.timer-bar { height:3px; background:rgba(255,255,255,0.1); border-radius:2px; margin-bottom:14px; overflow:hidden; }
+.timer-bar-fill { height:100%; border-radius:2px; transition:width 1s linear, background 0.5s; }
+.extend-btn { padding:7px 14px; font-size:11px; font-weight:600; background:rgba(37,184,169,0.1); border:1px solid rgba(37,184,169,0.25); border-radius:var(--radius-sm); color:var(--light-teal); cursor:pointer; font-family:var(--font); transition:all 0.2s; white-space:nowrap; }
+.extend-btn:hover { background:var(--light-teal); color:white; }
+.read-only-badge { display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:700; letter-spacing:0.1em; color:var(--gold); background:var(--gold-light); border:1px solid rgba(240,165,0,0.25); padding:4px 10px; border-radius:20px; font-family:var(--mono); }
+
+.patient-header { display:flex; gap:14px; align-items:flex-start; padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; box-shadow:var(--shadow-sm); }
+.patient-avatar { width:52px; height:52px; border-radius:50%; background:var(--grad-header); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:white; flex-shrink:0; }
+.patient-info { flex:1; }
+.patient-name { font-size:18px; font-weight:700; color:var(--text); }
+.patient-meta { font-size:12px; color:var(--text-secondary); margin-top:3px; display:flex; flex-wrap:wrap; gap:6px 14px; }
+.blood-type { display:inline-flex; align-items:center; gap:4px; background:rgba(232,116,97,0.15); color:var(--coral); font-weight:700; font-size:11px; padding:2px 8px; border-radius:4px; font-family:var(--mono); }
+
+.section-title { font-size:10px; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--text-secondary); margin:20px 0 10px; font-family:var(--mono); display:flex; align-items:center; gap:8px; }
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+.allergy-item { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; background:var(--surface); border-radius:var(--radius-sm); margin-bottom:6px; border-left:3px solid transparent; border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.allergy-item.severe { border-left:3px solid var(--red); background:var(--red-light); border-color:rgba(239,68,68,0.2); border-left-color:var(--red); }
+.allergy-item.moderate { border-left:3px solid var(--gold); background:var(--gold-light); border-color:rgba(240,165,0,0.15); border-left-color:var(--gold); }
+.allergy-item.mild { border-left:3px solid rgba(255,255,255,0.2); }
+.allergy-severity { font-size:9px; font-weight:700; letter-spacing:0.1em; padding:2px 7px; border-radius:3px; flex-shrink:0; font-family:var(--mono); }
+.allergy-content .name { font-size:14px; font-weight:600; color:var(--text); }
+.allergy-content .reaction { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+
+.med-item { display:flex; justify-content:space-between; align-items:flex-start; padding:12px 14px; background:var(--surface); border-radius:var(--radius-sm); margin-bottom:6px; border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.med-item .name { font-size:14px; font-weight:600; color:var(--text); }
+.med-item .dose { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+.med-item .purpose { font-size:11px; color:var(--text-secondary); font-family:var(--mono); text-align:right; }
+.med-warn { display:inline-flex; align-items:center; gap:4px; background:rgba(240,165,0,0.1); border:1px solid rgba(240,165,0,0.25); color:var(--gold); font-size:10px; font-weight:600; padding:2px 8px; border-radius:4px; margin-top:4px; font-family:var(--mono); }
+
+.dx-item { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--surface); border-radius:var(--radius-sm); margin-bottom:6px; border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.dx-item .name { font-size:14px; font-weight:500; color:var(--text); }
+.dx-item .code { font-size:11px; font-family:var(--mono); color:var(--text-secondary); background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:4px; }
+
+.contact-item { display:flex; align-items:center; gap:12px; padding:14px; background:var(--surface); border-radius:var(--radius-sm); margin-bottom:6px; border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.contact-avatar { width:40px; height:40px; border-radius:50%; background:var(--pale-mint); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:var(--primary-teal); flex-shrink:0; }
+.contact-info { flex:1; }
+.contact-info .name { font-size:14px; font-weight:600; color:var(--text); }
+.contact-info .relation { font-size:12px; color:var(--text-secondary); }
+.contact-phone { font-family:var(--mono); font-size:13px; color:var(--primary-teal); text-decoration:none; }
+.primary-badge { font-size:9px; font-weight:700; letter-spacing:0.08em; color:var(--light-teal); background:var(--pale-mint); padding:2px 7px; border-radius:3px; font-family:var(--mono); }
+
+.implant-item { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--surface); border-radius:var(--radius-sm); margin-bottom:6px; border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.implant-item .name { font-size:14px; font-weight:500; color:var(--text); }
+.implant-item .date { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+.mri-badge { font-size:9px; font-weight:700; letter-spacing:0.06em; padding:3px 8px; border-radius:4px; font-family:var(--mono); white-space:nowrap; }
+.mri-conditional { background:rgba(240,165,0,0.1); color:var(--gold); border:1px solid rgba(240,165,0,0.25); }
+.mri-safe { background:rgba(37,184,169,0.12); color:var(--light-teal); border:1px solid rgba(37,184,169,0.25); }
+
+.dnr-banner { background:linear-gradient(135deg, rgba(239,68,68,0.12), rgba(185,28,28,0.1)); border:2px solid var(--red); border-radius:var(--radius); padding:18px; text-align:center; margin-bottom:14px; animation:dnrPulse 2s ease-in-out infinite; position:relative; overflow:hidden; }
+.dnr-banner::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(-45deg,transparent,transparent 14px,rgba(255,255,255,0.02) 14px,rgba(255,255,255,0.02) 28px); }
+.dnr-banner h2 { font-size:22px; font-weight:900; color:var(--red); letter-spacing:0.08em; position:relative; }
+.dnr-banner .dnr-details { font-size:11px; color:var(--text-muted); margin-top:8px; line-height:1.5; position:relative; font-family:var(--mono); }
+.code-status-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.code-status-item { padding:12px; background:var(--surface); border-radius:var(--radius-sm); border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+.code-status-item .label { font-size:10px; color:var(--text-secondary); font-family:var(--mono); letter-spacing:0.08em; margin-bottom:4px; }
+.code-status-item .val { font-size:14px; font-weight:600; }
+.hipaa-footer { text-align:center; padding:20px 0 10px; font-size:10px; color:var(--text-muted); line-height:1.6; border-top:1px solid var(--border); margin-top:24px; font-family:var(--mono); }
+
+.audit-item { padding:16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; box-shadow:var(--shadow-sm); }
+.audit-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.audit-responder { font-size:14px; font-weight:600; color:var(--text); }
+.audit-agency { font-size:12px; color:var(--text-muted); }
+.audit-badge-num { font-size:11px; font-family:var(--mono); color:var(--primary-teal); background:var(--pale-mint); padding:2px 8px; border-radius:4px; }
+.audit-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.audit-field .label { font-size:10px; color:var(--text-secondary); font-family:var(--mono); }
+.audit-field .val { font-size:12px; font-weight:500; margin-top:2px; color:var(--text); }
+
+.nav-dots { display:flex; justify-content:center; gap:8px; padding:20px 0 10px; }
+.nav-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.2); border:none; cursor:pointer; transition:all 0.2s; }
+.nav-dot.active { background:var(--gold); width:24px; border-radius:4px; }
+.settings-note { font-size:11px; color:var(--text-muted); text-align:center; line-height:1.5; margin-top:12px; padding:12px; background:var(--surface); border-radius:var(--radius-sm); border:1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SCREEN 1: PATIENT SETTINGS -->
+<div class="screen active" id="screen-settings">
+  <div class="status-bar"><span style="color:var(--primary-teal);font-weight:600">ATTENDING</span><span>9:41 AM</span></div>
+  <div style="text-align:center; padding:16px 0 24px">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--coral-light);border:2px solid rgba(232,116,97,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px">&#x1f6e1;&#xfe0f;</div>
+    <h1 style="font-size:22px;font-weight:800;color:var(--text)">Emergency Medical Access</h1>
+    <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;max-width:320px;margin:8px auto 0">Allow first responders to view critical medical info after a vehicle accident or impact event.</p>
+  </div>
+  <div class="card"><div class="toggle-row"><div><div class="toggle-label">Enable Emergency Access</div><div class="toggle-desc">Requires explicit opt-in</div></div><button class="toggle" id="toggle-main" onclick="toggleMain()"></button></div></div>
+  <div id="settings-body" style="display:none">
+    <div class="card">
+      <div class="card-header">Trigger Sensitivity</div>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.5">Choose the minimum impact level that will activate emergency access.</p>
+      <div class="impact-type-grid">
+        <div class="impact-type-option" onclick="selectImpact(this, 0)"><span class="icon">&#x1f4a5;</span><div class="info"><div class="title">Any Significant Impact</div><div class="desc">Triggers on fender benders, hard falls, or bike crashes</div><div class="examples">~2-3G equivalent</div></div><div class="impact-radio"></div></div>
+        <div class="impact-type-option selected" onclick="selectImpact(this, 1)"><span class="icon">&#x1f697;</span><div class="info"><div class="title">Moderate Collision</div><div class="desc">Rollovers, T-bone collisions, high-speed rear-ends</div><div class="examples">~4-6G equivalent</div></div><div class="impact-radio"></div></div>
+        <div class="impact-type-option" onclick="selectImpact(this, 2)"><span class="icon">&#x1f525;</span><div class="info"><div class="title">Catastrophic Event Only</div><div class="desc">Head-on at highway speed, multi-vehicle pileup</div><div class="examples">~8G+ equivalent</div></div><div class="impact-radio"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Response Time Before Auto-Grant</div>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.5">After an impact, you may be disoriented. Choose how long the app waits before granting emergency access and calling 911.</p>
+      <div class="cancel-window-options">
+        <div class="cw-option" onclick="selectCancelWindow(this, 120)"><div class="cw-val">2</div><div class="cw-unit">min</div></div>
+        <div class="cw-option selected" onclick="selectCancelWindow(this, 180)"><div class="cw-val">3</div><div class="cw-unit">min</div></div>
+        <div class="cw-option" onclick="selectCancelWindow(this, 240)"><div class="cw-val">4</div><div class="cw-unit">min</div></div>
+        <div class="cw-option" onclick="selectCancelWindow(this, 300)"><div class="cw-val">5</div><div class="cw-unit">min</div></div>
+      </div>
+      <div class="window-hint">Recommended: 3 minutes gives you time to recover from disorientation while still getting help quickly.</div>
+    </div>
+    <div class="card">
+      <div class="card-header">Access Window After Incident</div>
+      <p style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.5">How long after the impact should first responders be able to request access?</p>
+      <div class="access-window-options">
+        <div class="window-option" onclick="selectWindow(this)"><div class="val">2</div><div class="unit">hours</div></div>
+        <div class="window-option selected" onclick="selectWindow(this)"><div class="val">4</div><div class="unit">hours</div></div>
+        <div class="window-option" onclick="selectWindow(this)"><div class="val">6</div><div class="unit">hours</div></div>
+      </div>
+      <div class="window-hint">Recommended: 4 hours for suburban, 6 hours for rural areas with longer EMS response times.</div>
+    </div>
+    <div class="card">
+      <div class="card-header">Alert &amp; Emergency Call</div>
+      <div class="toggle-row"><div><div class="toggle-label">Play alert sound during countdown</div><div class="toggle-desc">Loud repeating tone to get your attention</div></div><button class="toggle on" id="toggle-sound" onclick="this.classList.toggle('on')"></button></div>
+      <div class="toggle-row"><div><div class="toggle-label">Auto-call 911</div><div class="toggle-desc">Calls 911 and sends GPS if you don't cancel in time</div></div><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+    <div class="card">
+      <div class="card-header">Visible Sections</div>
+      <div class="toggle-row"><span class="toggle-label">DNR / Advance Directives</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="toggle-row"><span class="toggle-label">Allergies</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="toggle-row"><span class="toggle-label">Medications</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="toggle-row"><span class="toggle-label">Diagnoses</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="toggle-row"><span class="toggle-label">Emergency Contacts</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+      <div class="toggle-row"><span class="toggle-label">Implanted Devices</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+    </div>
+    <div class="settings-note">Your emergency data is cached on this device for offline use. Review your profile regularly to keep it current.</div>
+    <div style="padding:20px 0"><button class="btn btn-red" onclick="showScreen('screen-impact')">&#x26a1; Simulate Impact Event</button></div>
+  </div>
+  <div class="nav-dots" id="nav-settings"><button class="nav-dot active"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button></div>
+</div>
+
+<!-- SCREEN 2: IMPACT DETECTED -->
+<div class="screen impact-screen" id="screen-impact">
+  <div class="status-bar"><span style="color:var(--red);font-weight:600">&#x26a0; EMERGENCY</span><span>9:41 AM</span></div>
+  <div class="impact-icon">&#x1f697;</div>
+  <div class="impact-type-label">MODERATE COLLISION DETECTED</div>
+  <div class="impact-title">Impact Event Recorded</div>
+  <div class="impact-subtitle">Your device detected a significant impact consistent with a vehicle collision. You have a few minutes to cancel if you're safe &#x2014; otherwise 911 and emergency access will activate.</div>
+  <div class="calling-911"><h3>&#x1f4de; 911 WILL BE CALLED</h3><div class="phone-number">9-1-1</div><p>If you don't respond, 911 will be called with your GPS location</p><p style="margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--text-muted)">37.5485&#xb0; N, 121.9886&#xb0; W</p></div>
+  <div class="countdown-row"><div class="countdown-number" id="countdown">3:00</div><div class="countdown-info"><div class="label">WAITING FOR YOUR RESPONSE</div><div class="desc">If you don't cancel, emergency access and 911 will activate automatically.</div></div></div>
+  <div class="sound-indicator" id="sound-indicator"><span style="font-size:20px" id="sound-icon">&#x1f50a;</span><div style="display:flex;gap:3px;align-items:center" id="sound-bars"><span style="width:3px;height:8px;background:var(--gold);border-radius:1px;animation:soundPulse 0.6s ease-in-out infinite"></span><span style="width:3px;height:14px;background:var(--gold);border-radius:1px;animation:soundPulse 0.6s ease-in-out infinite 0.1s"></span><span style="width:3px;height:20px;background:var(--gold);border-radius:1px;animation:soundPulse 0.6s ease-in-out infinite 0.2s"></span><span style="width:3px;height:14px;background:var(--gold);border-radius:1px;animation:soundPulse 0.6s ease-in-out infinite 0.3s"></span><span style="width:3px;height:8px;background:var(--gold);border-radius:1px;animation:soundPulse 0.6s ease-in-out infinite 0.4s"></span></div><span style="font-size:12px;color:var(--gold-dark);font-family:var(--mono);font-weight:600" id="sound-label">ALERT TONE PLAYING</span><button onclick="muteSound()" style="margin-left:auto;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 12px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:var(--font)" id="mute-btn">Mute</button></div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:auto;padding-bottom:16px"><button class="btn btn-outline" onclick="showScreen('screen-settings')">&#x2715; &nbsp; I'm OK &#x2014; Cancel Everything</button><button class="btn btn-red" onclick="showScreen('screen-quick')">Skip Countdown &#x2014; Grant Access Now</button></div>
+  <div class="nav-dots" id="nav-impact"><button class="nav-dot"></button><button class="nav-dot active"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button></div>
+</div>
+
+<!-- SCREEN 3: QUICK ACCESS -->
+<div class="screen" id="screen-quick">
+  <div class="status-bar"><span style="color:var(--red);font-weight:600">&#x1f6a8; EMERGENCY ACCESS</span><span>9:42 AM</span></div>
+  <div class="quick-access-header"><div class="icon">&#x26a1;</div><h1>Critical Medical Info</h1><p>Life-threatening information available immediately. Tap below to acknowledge, then verify identity for full chart access.</p></div>
+  <div class="acknowledge-box"><p>By viewing this information, you acknowledge you are providing emergency medical care to this patient.</p><button class="btn btn-gold btn-sm" onclick="document.getElementById('critical-info').style.display='block';this.parentElement.style.display='none'">I Acknowledge &#x2014; Show Critical Info</button></div>
+  <div id="critical-info" style="display:none">
+    <div class="critical-card dnr"><h2>&#x26d4; DO NOT RESUSCITATE</h2><div class="detail">Documented: Jan 15, 2024 &#xb7; Dr. Sarah Chen, MD<br>Patient has a valid DNR and Living Will</div></div>
+    <div class="code-status-mini"><div class="code-mini-item"><div class="label">FULL CODE</div><div class="val val-no">No &#x2014; DNR</div></div><div class="code-mini-item"><div class="label">LIVING WILL</div><div class="val val-yes">Yes</div></div><div class="code-mini-item"><div class="label">ORGAN DONOR</div><div class="val val-no">No</div></div><div class="code-mini-item"><div class="label">POA</div><div class="val" style="font-size:11px;color:var(--text-secondary)">Robert Hernandez</div></div></div>
+    <div class="critical-card warning" style="margin-top:14px"><div class="header"><span>&#x26a0; CRITICAL MEDICATIONS</span></div><div class="critical-med"><div><div class="name">Warfarin (Coumadin)</div><div class="dose">5 mg daily</div></div><div class="flag">BLEEDING RISK</div></div><div class="critical-med"><div><div class="name">Metformin</div><div class="dose">1000 mg twice daily</div></div><div class="flag">HOLD FOR CONTRAST</div></div></div>
+    <div class="critical-card warning" style="margin-top:10px"><div class="header"><span>&#x26a0; SEVERE ALLERGIES</span></div><div class="critical-allergy"><span class="severity sev-severe">SEVERE</span><div class="info"><div class="name">Penicillin</div><div class="reaction">Anaphylaxis &#x2014; requires epinephrine</div></div></div><div class="critical-allergy"><span class="severity sev-severe">SEVERE</span><div class="info"><div class="name">Sulfonamides</div><div class="reaction">Stevens-Johnson Syndrome</div></div></div><div class="critical-allergy"><span class="severity sev-moderate">MODERATE</span><div class="info"><div class="name">Iodinated Contrast</div><div class="reaction">Urticaria, bronchospasm</div></div></div></div>
+    <div class="critical-card warning" style="margin-top:10px"><div class="header"><span>&#x1f527; IMPLANTED DEVICE</span></div><div class="critical-med"><div><div class="name">Dual-Chamber Pacemaker</div><div class="dose">Medtronic Azure XT &#xb7; Implanted Jun 2022</div></div><div class="flag" style="background:rgba(240,165,0,0.12);color:var(--gold);border-color:rgba(240,165,0,0.25)">MRI CONDITIONAL</div></div></div>
+    <div style="padding:20px 0;display:flex;flex-direction:column;gap:10px"><button class="btn btn-primary" onclick="showScreen('screen-verify')">&#x1faaa; Verify Identity for Full Chart + Contacts</button><button class="btn btn-ghost" style="font-size:13px">This is enough &#x2014; don't need full chart</button></div>
+  </div>
+  <div class="nav-dots" id="nav-quick"><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot active"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button></div>
+</div>
+
+<!-- SCREEN 4: RESPONDER VERIFICATION -->
+<div class="screen" id="screen-verify">
+  <div class="status-bar"><span style="color:var(--primary-teal);font-weight:600">&#x1f512; VERIFICATION</span><span>9:42 AM</span></div>
+  <div style="text-align:center;padding:16px 0 20px"><div style="width:56px;height:56px;border-radius:14px;background:var(--pale-mint);border:1px solid rgba(26,143,168,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px">&#x1faaa;</div><h1 style="font-size:20px;font-weight:800;color:var(--text)">Verify Your Identity</h1><p style="font-size:13px;color:var(--text-secondary);margin-top:6px">Required for full chart access, family contacts, and medication details. All access is audited.</p></div>
+  <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" type="text" placeholder="Jane Rodriguez" value="Jane Rodriguez"></div>
+  <div class="row"><div class="form-group"><label class="form-label">Badge Number</label><input class="form-input" type="text" value="EMS-4421"></div><div class="form-group"><label class="form-label">Agency</label><input class="form-input" type="text" value="Metro Fire Dept"></div></div>
+  <div class="form-group"><label class="form-label">Responder Photo</label><div class="photo-capture captured" id="photo-area" onclick="togglePhoto()"><span class="cam-icon">&#x1f4f8;</span><span id="photo-text">Photo captured</span></div></div>
+  <div class="hipaa-notice"><h4>HIPAA Notice</h4><p>This patient's records are protected under 42 U.S.C. &#xa7; 1320d-6. Unauthorized access carries civil and criminal penalties. Your identity, photo, and all activity will be logged.</p></div>
+  <div class="checkbox-row" onclick="toggleHipaa()"><div class="checkbox checked" id="hipaa-check">&#x2713;</div><span class="checkbox-text">I am a first responder providing emergency care and I accept that my access is audited.</span></div>
+  <div style="padding:16px 0"><button class="btn btn-primary" onclick="showScreen('screen-facesheet')">&#x1f513; Access Full Medical Record</button><div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-muted)">30-minute session &#xb7; extendable</div></div>
+  <div class="nav-dots" id="nav-verify"><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot active"></button><button class="nav-dot"></button><button class="nav-dot"></button></div>
+</div>
+
+<!-- SCREEN 5: FULL FACESHEET -->
+<div class="screen" id="screen-facesheet">
+  <div class="status-bar"><span style="color:var(--red);font-weight:600">&#x1f6a8; EMERGENCY ACCESS</span><span class="read-only-badge">&#x1f512; READ-ONLY</span></div>
+  <div class="session-timer-bar"><div class="timer-left"><div><div class="timer-label">Session expires in</div><div class="timer-value timer-green" id="fs-timer">29:47</div></div></div><button class="extend-btn" id="extend-btn" onclick="extendSession()">+ 30 min</button></div>
+  <div class="timer-bar"><div class="timer-bar-fill" id="timer-bar-fill" style="width:99%;background:var(--light-teal)"></div></div>
+  <div class="dnr-banner"><h2>&#x26d4; DO NOT RESUSCITATE</h2><div class="dnr-details">Documented: Jan 15, 2024 &#xb7; Dr. Sarah Chen, MD<br>Patient has a valid DNR and Living Will on file</div></div>
+  <div class="code-status-grid"><div class="code-status-item"><div class="label">FULL CODE</div><div class="val val-no">No &#x2014; DNR</div></div><div class="code-status-item"><div class="label">ORGAN DONOR</div><div class="val val-no">No</div></div><div class="code-status-item"><div class="label">LIVING WILL</div><div class="val val-yes">Yes</div></div><div class="code-status-item"><div class="label">POA</div><div class="val" style="font-size:12px;color:var(--text-secondary)">Robert Hernandez<br><span style="font-size:11px;color:var(--primary-teal);font-family:var(--mono)">(555) 019-9284</span></div></div></div>
+  <div class="patient-header"><div class="patient-avatar">MH</div><div class="patient-info"><div class="patient-name">Maria Hernandez</div><div class="patient-meta"><span>DOB: Mar 15, 1961</span><span>Age: 64</span><span>Female</span><span class="blood-type">&#x1fa78; O+</span></div><div class="patient-meta" style="margin-top:4px"><span>MRN: MRN-00847291</span><span>165 cm &#xb7; 68 kg</span><span>English / Spanish</span></div></div></div>
+  <div class="section-title">&#x26a0;&#xfe0f; Allergies</div>
+  <div class="allergy-item severe"><div><span class="allergy-severity sev-severe">SEVERE</span></div><div class="allergy-content"><div class="name">Penicillin</div><div class="reaction">Anaphylaxis &#x2014; requires epinephrine</div></div></div>
+  <div class="allergy-item severe"><div><span class="allergy-severity sev-severe">SEVERE</span></div><div class="allergy-content"><div class="name">Sulfonamides</div><div class="reaction">Stevens-Johnson Syndrome</div></div></div>
+  <div class="allergy-item moderate"><div><span class="allergy-severity sev-moderate">MODERATE</span></div><div class="allergy-content"><div class="name">Iodinated Contrast</div><div class="reaction">Urticaria, bronchospasm</div></div></div>
+  <div class="allergy-item mild"><div><span class="allergy-severity sev-mild">MILD</span></div><div class="allergy-content"><div class="name">Latex</div><div class="reaction">Contact dermatitis</div></div></div>
+  <div class="section-title">&#x1f48a; Active Medications</div>
+  <div class="med-item"><div><div class="name">Warfarin (Coumadin)</div><div class="dose">5 mg &#xb7; Once daily (evening)</div><div class="med-warn">&#x26a0; ANTICOAGULANT &#x2014; BLEEDING RISK</div></div><div class="purpose">AFib</div></div>
+  <div class="med-item"><div><div class="name">Metoprolol</div><div class="dose">50 mg &#xb7; Twice daily</div></div><div class="purpose">HTN</div></div>
+  <div class="med-item"><div><div class="name">Lisinopril</div><div class="dose">20 mg &#xb7; Once daily</div></div><div class="purpose">CHF</div></div>
+  <div class="med-item"><div><div class="name">Furosemide</div><div class="dose">40 mg &#xb7; Once daily (morning)</div></div><div class="purpose">Edema</div></div>
+  <div class="med-item"><div><div class="name">Metformin</div><div class="dose">1000 mg &#xb7; Twice daily with meals</div><div class="med-warn">&#x26a0; HOLD IF CONTRAST DYE STUDY</div></div><div class="purpose">DM2</div></div>
+  <div class="section-title">&#x1f3e5; Active Diagnoses</div>
+  <div class="dx-item"><div class="name">Atrial Fibrillation</div><div class="code">I48.0</div></div>
+  <div class="dx-item"><div class="name">Type 2 Diabetes Mellitus</div><div class="code">E11.9</div></div>
+  <div class="dx-item"><div class="name">Congestive Heart Failure</div><div class="code">I50.9</div></div>
+  <div class="dx-item"><div class="name">Essential Hypertension</div><div class="code">I10</div></div>
+  <div class="dx-item"><div class="name">Chronic Kidney Disease, Stage 3</div><div class="code">N18.3</div></div>
+  <div class="section-title">&#x1f4de; Emergency Contacts</div>
+  <div class="contact-item"><div class="contact-avatar">RH</div><div class="contact-info"><div class="name">Robert Hernandez <span class="primary-badge">PRIMARY</span></div><div class="relation">Spouse &#xb7; Power of Attorney</div></div><a class="contact-phone" href="tel:5550199284">(555) 019-9284</a></div>
+  <div class="contact-item"><div class="contact-avatar">AH</div><div class="contact-info"><div class="name">Ana Hernandez</div><div class="relation">Daughter</div></div><a class="contact-phone" href="tel:5550278341">(555) 027-8341</a></div>
+  <div class="section-title">&#x1f527; Implanted Devices</div>
+  <div class="implant-item"><div><div class="name">Dual-Chamber Pacemaker</div><div class="date">Implanted: Jun 12, 2022 &#xb7; Medtronic Azure XT</div></div><span class="mri-badge mri-conditional">MRI CONDITIONAL</span></div>
+  <div class="implant-item"><div><div class="name">Left Knee Prosthesis</div><div class="date">Implanted: Nov 3, 2019 &#xb7; Titanium</div></div><span class="mri-badge mri-safe">MRI SAFE</span></div>
+  <div class="hipaa-footer">EMERGENCY ACCESS &#xb7; HIPAA PROTECTED<br>Accessed by: Jane Rodriguez &#xb7; EMS-4421 &#xb7; Metro Fire Dept<br>Session: Feb 27, 2026 09:42:13 UTC &#xb7; 30 min + extendable<br>42 U.S.C. &#xa7; 1320d-6</div>
+  <div style="padding:10px 0"><button class="btn btn-outline btn-sm" onclick="showScreen('screen-audit')">End Session &amp; View Audit Log</button></div>
+  <div class="nav-dots" id="nav-facesheet"><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot active"></button><button class="nav-dot"></button></div>
+</div>
+
+<!-- SCREEN 6: AUDIT LOG -->
+<div class="screen" id="screen-audit">
+  <div class="status-bar"><span style="color:var(--primary-teal);font-weight:600">ATTENDING</span><span>10:12 AM</span></div>
+  <div style="text-align:center;padding:12px 0 24px"><div style="font-size:10px;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px">ATTENDING AI</div><h1 style="font-size:22px;font-weight:800;color:var(--text)">Access History</h1><p style="font-size:13px;color:var(--text-secondary);margin-top:6px">Every emergency access is logged with full responder identity for your review.</p></div>
+  <div class="audit-item"><div class="audit-header"><div><div class="audit-responder">Jane Rodriguez</div><div class="audit-agency">Metro Fire Department</div></div><span class="audit-badge-num">EMS-4421</span></div><div class="audit-grid"><div class="audit-field"><div class="label">TRIGGER</div><div class="val">Moderate Collision</div></div><div class="audit-field"><div class="label">CONSENT</div><div class="val">Auto-grant (3 min)</div></div><div class="audit-field"><div class="label">911 CALLED</div><div class="val" style="color:var(--light-teal)">Yes &#x2014; auto-dialed</div></div><div class="audit-field"><div class="label">QUICK ACCESS</div><div class="val">09:42 UTC</div></div><div class="audit-field"><div class="label">FULL CHART</div><div class="val">09:43 UTC (verified)</div></div><div class="audit-field"><div class="label">SESSION ENDED</div><div class="val">10:12 UTC</div></div><div class="audit-field"><div class="label">SECTIONS VIEWED</div><div class="val">DNR, Allergies, Meds, Dx, Contacts, Devices</div></div><div class="audit-field"><div class="label">PHOTO</div><div class="val" style="color:var(--light-teal)">Captured</div></div><div class="audit-field"><div class="label">EXTENDED</div><div class="val">No</div></div><div class="audit-field"><div class="label">GPS</div><div class="val" style="font-family:var(--mono);font-size:11px">37.5485&#xb0;N 121.9886&#xb0;W</div></div></div></div>
+  <div class="audit-item" style="opacity:0.55"><div class="audit-header"><div><div class="audit-responder">Thomas Park</div><div class="audit-agency">County EMS Station 7</div></div><span class="audit-badge-num">P-2287</span></div><div class="audit-grid"><div class="audit-field"><div class="label">TRIGGER</div><div class="val">Any Impact</div></div><div class="audit-field"><div class="label">CONSENT</div><div class="val">Patient approved</div></div><div class="audit-field"><div class="label">FULL CHART</div><div class="val">Jan 14, 14:08 UTC</div></div><div class="audit-field"><div class="label">SESSION ENDED</div><div class="val">Jan 14, 14:12 UTC</div></div></div></div>
+  <div style="padding:24px 0"><button class="btn btn-outline" onclick="showScreen('screen-settings')">&#x2190; Back to Settings</button></div>
+  <div class="nav-dots" id="nav-audit"><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot"></button><button class="nav-dot active"></button></div>
+</div>
+
+</div>
+<script>
+const screens = ['screen-settings','screen-impact','screen-quick','screen-verify','screen-facesheet','screen-audit'];
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); const idx = screens.indexOf(id); document.querySelectorAll('.nav-dots').forEach(nav => { nav.querySelectorAll('.nav-dot').forEach((dot,i) => { dot.classList.toggle('active', i === idx); }); }); if (id === 'screen-impact') startCountdown(); if (id === 'screen-facesheet') startFacesheetTimer(); window.scrollTo(0,0); }
+document.querySelectorAll('.nav-dots').forEach(nav => { nav.querySelectorAll('.nav-dot').forEach((dot,i) => { dot.addEventListener('click', () => showScreen(screens[i])); }); });
+function toggleMain() { const btn = document.getElementById('toggle-main'); const body = document.getElementById('settings-body'); btn.classList.toggle('on'); body.style.display = btn.classList.contains('on') ? 'block' : 'none'; }
+function selectImpact(el) { document.querySelectorAll('.impact-type-option').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); }
+function selectWindow(el) { document.querySelectorAll('.window-option').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); }
+let cancelWindowSeconds = 180;
+function selectCancelWindow(el, seconds) { document.querySelectorAll('.cw-option').forEach(o => o.classList.remove('selected')); el.classList.add('selected'); cancelWindowSeconds = seconds; }
+function togglePhoto() { const el = document.getElementById('photo-area'); const txt = document.getElementById('photo-text'); el.classList.toggle('captured'); txt.textContent = el.classList.contains('captured') ? 'Photo captured' : 'Tap to capture photo'; }
+function toggleHipaa() { const el = document.getElementById('hipaa-check'); el.classList.toggle('checked'); el.textContent = el.classList.contains('checked') ? '\u2713' : ''; }
+let countdownInterval;
+function startCountdown() { clearInterval(countdownInterval); let s = cancelWindowSeconds; const el = document.getElementById('countdown'); formatCountdown(el, s); countdownInterval = setInterval(() => { s--; formatCountdown(el, s); if (s <= 0) { clearInterval(countdownInterval); showScreen('screen-quick'); } }, 1000); }
+function formatCountdown(el, s) { const m = Math.floor(s / 60); const sec = s % 60; el.textContent = m + ':' + String(sec).padStart(2,'0'); }
+function muteSound() { const btn = document.getElementById('mute-btn'); const icon = document.getElementById('sound-icon'); const bars = document.getElementById('sound-bars'); const label = document.getElementById('sound-label'); if (btn.textContent === 'Mute') { bars.style.display='none'; icon.textContent='\ud83d\udd07'; btn.textContent='Unmute'; label.textContent='MUTED'; label.style.color='var(--text-muted)'; } else { bars.style.display='flex'; icon.textContent='\ud83d\udd0a'; btn.textContent='Mute'; label.textContent='ALERT TONE PLAYING'; label.style.color='var(--gold-dark)'; } }
+let fsInterval; let totalSeconds = 1787; const maxSeconds = 1800;
+function startFacesheetTimer() { clearInterval(fsInterval); totalSeconds = 1787; updateTimerDisplay(); fsInterval = setInterval(() => { totalSeconds--; if (totalSeconds < 0) { clearInterval(fsInterval); return; } updateTimerDisplay(); }, 1000); }
+function updateTimerDisplay() { const el = document.getElementById('fs-timer'); const bar = document.getElementById('timer-bar-fill'); const m = Math.floor(totalSeconds / 60); const s = totalSeconds % 60; el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); const pct = (totalSeconds / maxSeconds) * 100; bar.style.width = pct + '%'; if (totalSeconds > 900) { el.className='timer-value timer-green'; bar.style.background='var(--light-teal)'; } else if (totalSeconds > 300) { el.className='timer-value timer-amber'; bar.style.background='var(--gold)'; } else { el.className='timer-value timer-red'; bar.style.background='var(--red)'; } }
+function extendSession() { totalSeconds += 1800; updateTimerDisplay(); const btn = document.getElementById('extend-btn'); btn.textContent = 'Extended!'; btn.style.background = 'var(--light-teal)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--light-teal)'; setTimeout(() => { btn.textContent = '+ 30 min'; btn.style.background = ''; btn.style.color = ''; btn.style.borderColor = ''; }, 2000); }
+</script>
+</body>
+</html>
