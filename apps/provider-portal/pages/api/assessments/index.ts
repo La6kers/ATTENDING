@@ -31,7 +31,10 @@ interface AssessmentListItem {
   allergies: string[];
   medicalHistory: string[];
   triageLevel: string | null;
-  redFlags: Array<{ flag: string; severity: string; category?: string }>;
+  // NOTE: COMPASS submit stores redFlags as string[] (symptom names).
+  // The .NET backend may store structured objects in the future.
+  // Consumers should handle both shapes.
+  redFlags: string[];
   status: string;
   phase: string;
   assignedProviderId: string | null;

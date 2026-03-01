@@ -10,6 +10,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 // =============================================================================
 // Helpers
@@ -38,6 +39,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Assessment ID is required' });
   }
 
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, `/api/v1/assessments/${id}`);
+  if (proxied) return;
+
+  // Fallback: direct Prisma
   try {
     switch (req.method) {
       case 'GET': return handleGet(id, res);

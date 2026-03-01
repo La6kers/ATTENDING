@@ -26,13 +26,21 @@
 //   /_next/*           — static assets
 //
 // PROTECTED PATHS (requires session):
-//   /dashboard         — patient health dashboard
-//   /profile           — patient profile
-//   /health-summary    — health records
+//   === Rebrand (current) ===
+//   /home              — patient health dashboard
+//   /health/*          — health records
+//   /messages/*        — secure messaging
+//   /emergency/*       — emergency settings, crash settings, contacts, history
+//   /notifications     — notification center
+//   /companion         — AI health companion
+//   /profile/*         — patient profile
+//   === Legacy (pre-rebrand, still present) ===
+//   /dashboard         — old patient dashboard
+//   /health-summary    — old health records page
 //   /care-resources    — care resource library
-//   /companion         — AI companion
 //   /results/*         — lab/imaging results
-//   /emergency-*       — emergency settings / emergency access
+//   /emergency-access  — old emergency access page
+//   /emergency-settings — old emergency settings page
 // =============================================================================
 
 import { withAuth } from 'next-auth/middleware';
@@ -66,11 +74,19 @@ export default withAuth(
 // /compass, /chat, and all API routes used by the pre-visit flow remain open.
 export const config = {
   matcher: [
-    '/dashboard/:path*',
+    // === Rebrand routes (current) ===
+    '/home',
+    '/health/:path*',
+    '/messages/:path*',
+    '/emergency/:path*',
+    '/notifications',
+    '/companion',
     '/profile/:path*',
-    '/health-summary/:path*',
-    '/care-resources/:path*',
-    '/companion/:path*',
+
+    // === Legacy routes (pre-rebrand, still accessible) ===
+    '/dashboard',
+    '/health-summary',
+    '/care-resources',
     '/results/:path*',
     '/emergency-access/:path*',
     '/emergency-settings/:path*',

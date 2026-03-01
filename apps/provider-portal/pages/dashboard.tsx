@@ -217,23 +217,25 @@ export default function ProviderDashboard() {
         });
 
         // Build patient queue from unassigned assessments (top 6)
+        // NOTE: The /api/assessments list endpoint returns FLATTENED fields:
+        //   patientName, patientMRN, patientDOB, patientGender, assignedProviderName
+        // NOT a nested `patient` object.
         const triageMap: Record<string, QueueItem['urgencyLevel']> = {
           EMERGENCY: 'emergency', URGENT: 'high', MODERATE: 'moderate', ROUTINE: 'standard',
         };
         const queue: QueueItem[] = assessments
-          .filter((a: any) => !a.assignedProvider)
+          .filter((a: any) => !a.assignedProviderName)
           .slice(0, 6)
           .map((a: any) => {
-            const p = a.patient || {};
             const redFlags: string[] = Array.isArray(a.redFlags) ? a.redFlags : [];
             const completedAt = a.completedAt ? new Date(a.completedAt) : new Date();
             const waitMs = Date.now() - completedAt.getTime();
             const waitMin = Math.max(1, Math.floor(waitMs / 60000));
-            const dob = p.dateOfBirth ? new Date(p.dateOfBirth) : null;
+            const dob = a.patientDOB ? new Date(a.patientDOB) : null;
             const age = dob ? Math.floor((Date.now() - dob.getTime()) / 31557600000) : 0;
             return {
               id: a.id,
-              patientName: [p.firstName, p.lastName].filter(Boolean).join(' ') || 'Unknown',
+              patientName: a.patientName || 'Unknown Patient',
               age,
               chiefComplaint: a.chiefComplaint || '',
               urgencyLevel: triageMap[a.triageLevel] || 'standard',
