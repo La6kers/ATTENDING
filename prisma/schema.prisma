@@ -1074,3 +1074,74 @@ model RedFlagRule {
   @@index([severity])
   @@index([isActive])
 }
+
+// ============== WEBHOOK INTEGRATION ==============
+// COMPASS standalone webhook system — enables practices to push
+// assessment data to their EHR, Slack, or any HTTP endpoint.
+// Supports COMPASS JSON, FHIR R4 Bundle, and HL7v2 ORU formats.
+
+model WebhookConfig {
+  id                  String    @id @default(cuid())
+  name                String                          // "Epic Integration", "Slack Alerts"
+  url                 String                          // https://ehr.practice.com/api/intake
+  secret              String                          // HMAC-SHA256 signing secret (encrypted at rest)
+  format              String    @default("json")      // json | fhir_r4 | hl7v2
+  events              String    @db.NVarChar(Max)     // JSON array: ["assessment.completed", "assessment.emergency"]
+  isActive            Boolean   @default(true)
+  headers             String?   @db.NVarChar(Max)     // Custom headers as JSON (e.g., auth bearer tokens)
+
+  // Health tracking — auto-disable after consecutive failures
+  consecutiveFailures Int       @default(0)
+  lastSuccessAt       DateTime?
+  lastFailureAt       DateTime?
+  disabledAt          DateTime?                       // Set when auto-disabled
+  disabledReason      String?
+
+  // Audit
+  createdAt           DateTime  @default(now())
+  createdBy           String?
+  updatedAt           DateTime  @updatedAt
+  updatedBy           String?
+
+  // Multi-tenant (optional — null for standalone COMPASS)
+  organizationId      String?
+
+  deliveries          WebhookDelivery[]
+
+  @@index([isActive])
+  @@index([organizationId])
+  @@map("webhook_configs")
+}
+
+model WebhookDelivery {
+  id              String    @id @default(cuid())
+  webhookId       String
+  webhook         WebhookConfig @relation(fields: [webhookId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // What triggered this delivery
+  event           String                              // assessment.completed, assessment.emergency, etc.
+  assessmentId    String?
+  patientId       String?
+
+  // Delivery details
+  deliveryId      String    @unique                   // Idempotency key sent as X-Compass-Delivery-Id
+  attemptNumber   Int       @default(1)               // 1 = initial, 2-6 = retries
+  status          String                              // pending | success | failed | retrying
+  httpStatus      Int?                                // 200, 404, 500, etc.
+  responseBody    String?   @db.NVarChar(1000)        // Truncated response for debugging
+  latencyMs       Int?                                // Round-trip time in milliseconds
+  errorMessage    String?                             // Connection refused, timeout, etc.
+
+  // Retry scheduling
+  scheduledAt     DateTime                            // When this attempt was scheduled
+  attemptedAt     DateTime?                           // When delivery was actually attempted
+  nextRetryAt     DateTime?                           // When to retry (null if success or final failure)
+
+  createdAt       DateTime  @default(now())
+
+  @@index([webhookId, createdAt])
+  @@index([status, scheduledAt])                      // For retry queue queries
+  @@index([assessmentId])
+  @@index([deliveryId])
+  @@map("webhook_deliveries")
+}

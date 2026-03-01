@@ -12,6 +12,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
 import { proxyToBackend } from '../../../lib/backendProxy';
+import { buildWebhookPayload, dispatchWebhooks } from '../../../lib/webhooks';
 
 // =============================================================================
 // Types — matches what useChatStore.submitAssessment() sends
@@ -266,6 +267,60 @@ export default async function handler(
     } catch (notifErr) {
       // Best effort — don't fail the submission if notification creation fails
       console.warn('[ASSESSMENT SUBMIT] Failed to create provider notifications:', notifErr);
+    }
+
+    // =========================================================================
+    // Dispatch webhooks (fire-and-forget — never blocks patient response)
+    // Fires assessment.completed for all assessments, plus assessment.emergency
+    // for those with critical red flags. Errors are caught internally.
+    // =========================================================================
+    try {
+      const webhookPayload = buildWebhookPayload(
+        'assessment.completed',
+        assessment.id,
+        {
+          sessionId: data.sessionId,
+          patientName: data.patientName,
+          dateOfBirth: data.dateOfBirth,
+          gender: data.gender,
+          chiefComplaint: data.chiefComplaint!,
+          hpi: data.hpi,
+          hpiNarrative: hpiNarrative || undefined,
+          reviewOfSystems: data.reviewOfSystems,
+          medications: data.medications,
+          allergies: data.allergies,
+          medicalHistory: data.medicalHistory,
+          socialHistory: data.socialHistory,
+          familyHistory: data.familyHistory,
+          redFlags: data.redFlags,
+          triageLevel,
+          urgencyScore: data.urgencyScore,
+          completedAt: assessment.completedAt?.toISOString(),
+        },
+      );
+
+      // Fire-and-forget: don't await — patient response should not wait for webhooks
+      dispatchWebhooks('assessment.completed', webhookPayload, assessment.id, patient.id)
+        .then((results) => {
+          const successes = results.filter(r => r.status === 'success').length;
+          const failures = results.filter(r => r.status === 'failed').length;
+          if (results.length > 0) {
+            console.log(`[WEBHOOK] assessment.completed → ${successes} success, ${failures} failed`);
+          }
+        })
+        .catch((err) => console.error('[WEBHOOK] Dispatch error:', err));
+
+      // Additionally fire assessment.emergency for critical red flags
+      if (triageLevel === 'EMERGENCY' || data.redFlags?.some(rf =>
+        typeof rf === 'string' ? false : (rf as any).severity === 'critical'
+      )) {
+        const emergencyPayload = { ...webhookPayload, event: 'assessment.emergency' as const };
+        dispatchWebhooks('assessment.emergency', emergencyPayload, assessment.id, patient.id)
+          .catch((err) => console.error('[WEBHOOK] Emergency dispatch error:', err));
+      }
+    } catch (webhookErr) {
+      // Never fail assessment submission due to webhook issues
+      console.warn('[WEBHOOK] Failed to build/dispatch webhooks:', webhookErr);
     }
 
     // =========================================================================
