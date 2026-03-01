@@ -39,6 +39,9 @@ import {
 // =============================================================================
 export type { Medication, DrugInteraction, DrugCategory, DosageForm, DrugSchedule, OrderPriority, OrderingContext, PatientContext };
 export type { MedicationRecommendation };
+// Backward-compat aliases — consumers still reference old names
+export type PrescriptionPriority = OrderPriority;
+export type AIMedicationRecommendation = MedicationRecommendation;
 export { MEDICATION_CATALOG, DRUG_INTERACTIONS };
 
 // =============================================================================

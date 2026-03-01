@@ -10,8 +10,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, '/api/v1/appointments');
+  if (proxied) return;
+
+  // Fallback: direct Prisma
   switch (req.method) {
     case 'GET':
       return getAppointments(req, res, session);

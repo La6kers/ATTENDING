@@ -2,8 +2,9 @@
 // apps/provider-portal/pages/api/prescriptions/[id].ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/api/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
   const { id } = req.query;
@@ -11,7 +12,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
   if (!id || typeof id !== 'string') {
     return res.status(400).json({ error: 'Prescription ID is required' });
   }
-  
+
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, `/api/v1/prescriptions/${id}`);
+  if (proxied) return;
+
+  // Fallback: direct Prisma
   switch (req.method) {
     case 'GET':
       return getPrescription(req, res, session, id);

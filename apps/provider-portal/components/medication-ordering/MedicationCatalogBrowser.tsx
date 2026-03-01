@@ -13,7 +13,7 @@ import type { Medication, DrugCategory, SelectedMedication, PrescriptionPriority
 interface MedicationCatalogBrowserProps {
   medications: Medication[];
   selectedIds: Set<string>;
-  selectedMedications: Map<string, SelectedMedication>;
+  selectedMedications: Record<string, SelectedMedication>;
   searchQuery: string;
   categoryFilter: DrugCategory | 'all';
   onSearchChange: (query: string) => void;
@@ -168,7 +168,7 @@ export const MedicationCatalogBrowser: React.FC<MedicationCatalogBrowserProps> =
                       key={med.id}
                       medication={med}
                       selected={selectedIds.has(med.id)}
-                      selectedMed={selectedMedications.get(med.id)}
+                      selectedMed={selectedMedications[med.id]}
                       onToggle={onToggleMedication}
                       onPriorityChange={onPriorityChange}
                       onStrengthChange={onStrengthChange}
@@ -194,7 +194,7 @@ export const MedicationCatalogBrowser: React.FC<MedicationCatalogBrowserProps> =
                 key={med.id}
                 medication={med}
                 selected={selectedIds.has(med.id)}
-                selectedMed={selectedMedications.get(med.id)}
+                selectedMed={selectedMedications[med.id]}
                 onToggle={onToggleMedication}
                 onPriorityChange={onPriorityChange}
                 onStrengthChange={onStrengthChange}

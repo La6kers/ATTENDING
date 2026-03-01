@@ -10,6 +10,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
   const { id } = req.query;
@@ -18,6 +19,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
     return res.status(400).json({ error: 'Patient ID is required' });
   }
 
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, `/api/v1/patients/${id}`);
+  if (proxied) return;
+
+  // Fallback: direct Prisma
   switch (req.method) {
     case 'GET':
       return getPatient(id, res);

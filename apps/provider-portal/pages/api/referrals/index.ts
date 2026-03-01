@@ -3,20 +3,16 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
+import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 import { CreateReferralSchema, validate } from '@attending/shared/schemas';
 
-// Development bypass for auth
-const isDev = process.env.NODE_ENV === 'development';
+async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, '/api/v1/referrals');
+  if (proxied) return;
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = isDev 
-    ? { user: { id: 'dev-provider-1', name: 'Dr. Development' } }
-    : null;
-
-  if (!session) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
+  // Fallback: direct Prisma
   if (req.method === 'GET') {
     return getReferrals(req, res);
   } else if (req.method === 'POST') {
@@ -138,16 +134,16 @@ async function createReferral(req: NextApiRequest, res: NextApiResponse, session
           await prisma.notification.create({
             data: {
               userId: session.user.id,
-              type: 'ALERT',
+              type: urgency === 'STAT' ? 'URGENT_REFERRAL' : 'NEW_REFERRAL',
               title: `${urgency} Referral`,
               message: `${urgency} referral to ${specialtyName || specialty} created`,
-              priority: urgency === 'STAT' ? 'HIGH' : 'NORMAL',
-              relatedType: 'Referral',
-              relatedId: referral.id,
+              priority: urgency === 'STAT' ? 'URGENT' : 'NORMAL',
+              data: JSON.stringify({ referralId: referral.id, specialty }),
+              actionUrl: `/referrals/${referral.id}`,
             },
           });
         } catch (notifError) {
-          console.log('Could not create notification:', notifError);
+          console.warn('[Referrals] Could not create notification:', notifError);
         }
       }
       
@@ -203,4 +199,4 @@ function getMockReferrals() {
   ];
 }
 
-export default handler;
+export default requireAuth(handler);

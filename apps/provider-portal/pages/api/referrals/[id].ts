@@ -2,8 +2,9 @@
 // apps/provider-portal/pages/api/referrals/[id].ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/api/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
   const { id } = req.query;
@@ -12,6 +13,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
     return res.status(400).json({ error: 'Referral ID is required' });
   }
 
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, `/api/v1/referrals/${id}`);
+  if (proxied) return;
+
+  // Fallback: direct Prisma
   switch (req.method) {
     case 'GET':
       return getReferral(id, req, res);

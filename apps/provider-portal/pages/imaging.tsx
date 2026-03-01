@@ -22,13 +22,15 @@ import {
   useImagingOrderingStore,
   IMAGING_CATALOG,
   type OrderPriority,
+  type OrderingContext,
 } from '../store/imagingOrderingStore';
+import { fetchPatientContext } from '../lib/fetchPatientContext';
 
 const theme = {
   gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 };
 
-const DEMO_PATIENT = {
+const DEMO_PATIENT: OrderingContext = {
   id: 'patient-001',
   name: 'Sarah Johnson',
   age: 34,
@@ -56,8 +58,10 @@ export default function Imaging() {
   const [alertDismissed, setAlertDismissed] = useState(false);
   const toast = useToast();
 
+  const { patientId, assessmentId, chiefComplaint: ccParam } = router.query;
+
   const {
-    patientContext, selectedStudies, aiRecommendations, isLoadingRecommendations,
+    patientContext, selectedStudies, aiRecommendations, loadingRecommendations,
     searchQuery, modalityFilter, clinicalIndication, submitting, error,
     setPatientContext, addStudy, removeStudy, updateStudyPriority, updateStudyContrast,
     setClinicalIndication, setSearchQuery, setModalityFilter,
@@ -66,9 +70,27 @@ export default function Imaging() {
     hasContrastStudies, getRadiationTotal,
   } = useImagingOrderingStore();
 
+  // Load real patient context when patientId is in URL, otherwise demo
   useEffect(() => {
-    if (!patientContext) setPatientContext(DEMO_PATIENT);
-  }, [patientContext, setPatientContext]);
+    const pid = patientId as string | undefined;
+    const aid = assessmentId as string | undefined;
+    if (!pid) {
+      if (!patientContext) setPatientContext(DEMO_PATIENT);
+      return;
+    }
+    fetchPatientContext(pid, aid)
+      .then((ctx) => {
+        // If chiefComplaint came via URL param, prefer it
+        if (ccParam && !ctx.chiefComplaint) {
+          ctx.chiefComplaint = decodeURIComponent(ccParam as string);
+        }
+        setPatientContext(ctx as OrderingContext);
+      })
+      .catch((err) => {
+        console.error('[Imaging] Failed to load patient context:', err);
+        setPatientContext(DEMO_PATIENT);
+      });
+  }, [patientId, assessmentId, ccParam]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedStudiesArray = getSelectedStudiesArray();
   const filteredCatalog = getFilteredCatalog();
@@ -82,16 +104,18 @@ export default function Imaging() {
     allergies: patientContext.allergies?.map(a => typeof a === 'string' ? a : a.allergen),
   } : null;
 
-  const selectedCodes = new Set(selectedStudies.keys());
+  const selectedCodes = new Set(Object.keys(selectedStudies));
 
   const handleToggleStudy = (code: string) => {
-    if (selectedStudies.has(code)) { removeStudy(code); } else { addStudy(code); }
+    if (code in selectedStudies) { removeStudy(code); } else { addStudy(code); }
   };
 
   const handleSubmit = async () => {
     try {
       toast.loading('Submitting imaging orders...');
-      const orderIds = await submitOrder('encounter-demo-001');
+      // encounterId is optional — pre-visit imaging orders don't require an encounter
+      const encounterId = router.query.encounterId as string | undefined;
+      const orderIds = await submitOrder(encounterId as string);
       toast.success('Imaging orders submitted!', `Order IDs: ${orderIds.join(', ')}`);
     } catch (err) {
       toast.error('Failed to submit', 'Please try again.');
@@ -209,7 +233,7 @@ export default function Imaging() {
                     {activeTab === 'ai' && (
                       <AIImagingRecommendationsPanel
                         recommendations={aiRecommendations}
-                        isLoading={isLoadingRecommendations}
+                        isLoading={loadingRecommendations}
                         selectedCodes={selectedCodes}
                         onAddCategory={addAIRecommendedStudies}
                         onAddSingle={(code, priority, rationale) => addStudy(code, { priority, rationale, aiRecommended: true })}

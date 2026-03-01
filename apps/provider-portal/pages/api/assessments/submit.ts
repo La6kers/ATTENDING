@@ -12,6 +12,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,6 +22,12 @@ export default async function handler(
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
   }
+
+  // Try .NET backend first (CQRS + domain events → SignalR)
+  const proxied = await proxyToBackend(req, res, '/api/v1/assessments/submit');
+  if (proxied) return;
+
+  // Fallback: direct Prisma
 
   try {
     const {

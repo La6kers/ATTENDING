@@ -81,7 +81,8 @@ export function ReferralOrderingPanel({
     searchQuery,
     submitting,
     error,
-    loadAIRecommendations,
+    setPatientContext: setStorePatientContext,
+    generateAIRecommendations,
     addReferral,
     removeReferral,
     updateReferral,
@@ -95,12 +96,13 @@ export function ReferralOrderingPanel({
     getAuthRequiredCount,
   } = useReferralOrderingStore();
 
-  // Load AI recommendations on mount
+  // Sync patient context into store, then generate AI recommendations
   useEffect(() => {
     if (patientContext) {
-      loadAIRecommendations(patientContext.id, patientContext as any);
+      setStorePatientContext(patientContext as any);
+      generateAIRecommendations();
     }
-  }, [patientContext, loadAIRecommendations]);
+  }, [patientContext]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedArray = getSelectedReferralsArray();
   const filteredSpecialties = getFilteredCatalog();
@@ -213,7 +215,7 @@ export function ReferralOrderingPanel({
           <AIRecommendationsPanel
             recommendations={aiRecommendations}
             specialtyCatalog={specialtyCatalog}
-            selectedReferrals={new Set(selectedReferrals.keys())}
+            selectedReferrals={new Set(Object.keys(selectedReferrals))}
             loading={loadingRecommendations}
             onAddRecommendation={handleAddRecommendation}
             onRemoveRecommendation={removeReferral}
@@ -331,7 +333,7 @@ export function ReferralOrderingPanel({
               {filteredSpecialties
                 .filter(spec => activeCategory === 'all' || spec.category === activeCategory)
                 .map(specialty => {
-                  const isSelected = selectedReferrals.has(specialty.code);
+                  const isSelected = specialty.code in selectedReferrals;
                   const recommendation = aiRecommendations.find(r => r.specialty === specialty.code);
                   
                   return (

@@ -12,6 +12,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 
 // =============================================================================
 // Helpers
@@ -28,9 +29,16 @@ function safeJsonParse<T>(value: string | null, fallback: T): T {
 
 async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
   const { id } = req.query;
-  if (typeof id !== 'string') {
-    return res.status(400).json({ error: 'Invalid lab order ID' });
+
+  if (!id || typeof id !== 'string') {
+    return res.status(400).json({ error: 'Lab order ID is required' });
   }
+
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, `/api/v1/laborders/${id}`);
+  if (proxied) return;
+
+  // Fallback: direct Prisma
 
   switch (req.method) {
     case 'GET': return getLabOrder(id, res);

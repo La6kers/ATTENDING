@@ -26,6 +26,7 @@ import {
 } from '../store/labOrderingStore';
 import { useLabResults, useFhirConnected } from '@attending/shared/lib/fhir/hooks';
 import { useFhirContext } from '@attending/shared/lib/fhir/FhirProvider';
+import { fetchPatientContext as fetchPatientContextShared } from '../lib/fetchPatientContext';
 
 const theme = {
   gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -43,78 +44,6 @@ const DEMO_PATIENT = {
   medicalHistory: ['Type 2 Diabetes', 'Hypertension', 'Migraines'],
   redFlags: ['Worst headache of life', 'Visual changes'],
 };
-
-/**
- * Fetch real patient context from the API when patientId is provided via URL.
- * When assessmentId is also provided, merges assessment-level clinical data
- * (chiefComplaint, redFlags, medications, allergies) since COMPASS stores
- * these as JSON on the assessment, not as separate patient records.
- * Falls back to DEMO_PATIENT for standalone browsing / demo mode.
- */
-async function fetchPatientContext(
-  patientId: string,
-  assessmentId?: string,
-): Promise<typeof DEMO_PATIENT | null> {
-  try {
-    // Fetch patient record + assessment in parallel when both IDs available
-    const [patientRes, assessmentRes] = await Promise.allSettled([
-      fetch(`/api/patients/${patientId}`),
-      assessmentId ? fetch(`/api/assessments/${assessmentId}`) : Promise.reject('no assessmentId'),
-    ]);
-
-    if (patientRes.status !== 'fulfilled' || !patientRes.value.ok) return null;
-    const data = await patientRes.value.json();
-    const patient = data.patient || data;
-
-    // Assessment data provides chiefComplaint, redFlags, and clinical lists
-    // that COMPASS stored as JSON (not as separate patient record rows)
-    let assessment: any = null;
-    if (assessmentRes.status === 'fulfilled' && assessmentRes.value.ok) {
-      assessment = await assessmentRes.value.json();
-    }
-
-    const dob = patient.dateOfBirth ? new Date(patient.dateOfBirth) : null;
-    const age = dob ? Math.floor((Date.now() - dob.getTime()) / 31557600000) : 0;
-
-    // Allergies: prefer patient record rows, fall back to assessment JSON strings
-    const patientAllergies = (patient.allergies || []).map((a: any) =>
-      typeof a === 'string'
-        ? { allergen: a, reaction: 'Unknown', severity: 'moderate' as const }
-        : { allergen: a.allergen || a.name || a, reaction: a.reaction || 'Unknown', severity: (a.severity || 'moderate') as 'moderate' }
-    );
-    const assessmentAllergies = (assessment?.allergies || []).map((a: any) =>
-      typeof a === 'string'
-        ? { allergen: a, reaction: 'See chart', severity: 'moderate' as const }
-        : { allergen: a.allergen || a, reaction: a.reaction || 'See chart', severity: (a.severity || 'moderate') as 'moderate' }
-    );
-
-    // Medications: prefer patient record, fall back to assessment strings
-    const patientMeds = (patient.medications || []).map((m: any) =>
-      typeof m === 'string' ? m : m.name ? `${m.name}${m.dose ? ' ' + m.dose : ''}` : String(m)
-    );
-    const assessmentMeds = (assessment?.medications || []).map((m: any) =>
-      typeof m === 'string' ? m : String(m)
-    );
-
-    return {
-      id: patient.id,
-      name: [patient.firstName, patient.lastName].filter(Boolean).join(' ') || 'Unknown',
-      age,
-      gender: patient.gender || 'Unknown',
-      mrn: patient.mrn || '',
-      chiefComplaint: assessment?.chiefComplaint || '',
-      allergies: patientAllergies.length > 0 ? patientAllergies : assessmentAllergies,
-      currentMedications: patientMeds.length > 0 ? patientMeds : assessmentMeds,
-      medicalHistory: (patient.conditions || []).map((c: any) =>
-        typeof c === 'string' ? c : c.description || c.icdCode || String(c)
-      ).concat(assessment?.medicalHistory || []).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i),
-      redFlags: assessment?.redFlags || [],
-    };
-  } catch (err) {
-    console.error('[Labs] Failed to fetch patient:', err);
-    return null;
-  }
-}
 
 type ViewMode = 'order' | 'results';
 type OrderTab = 'ai' | 'panels' | 'catalog';
@@ -148,21 +77,24 @@ export default function Labs() {
       // If a real patientId is in the URL, fetch from API
       if (patientId && typeof patientId === 'string') {
         setPatientLoading(true);
-        const asmId = typeof assessmentId === 'string' ? assessmentId : undefined;
-        const ctx = await fetchPatientContext(patientId, asmId);
-        if (!cancelled) {
-          if (ctx) {
+        try {
+          const asmId = typeof assessmentId === 'string' ? assessmentId : undefined;
+          const ctx = await fetchPatientContextShared(patientId, asmId);
+          if (!cancelled) {
             // Overlay chiefComplaint from URL if provided and assessment didn't supply one
             if (!ctx.chiefComplaint && chiefComplaint && typeof chiefComplaint === 'string') {
               ctx.chiefComplaint = chiefComplaint;
             }
             setPatientContext(ctx);
-          } else {
-            // Patient not found — fall back to demo
+            setPatientLoading(false);
+          }
+        } catch (err) {
+          console.error('[Labs] Failed to load patient context:', err);
+          if (!cancelled) {
             toast.error('Patient not found', 'Using demo patient data');
             setPatientContext(DEMO_PATIENT);
+            setPatientLoading(false);
           }
-          setPatientLoading(false);
         }
       } else if (!patientContext) {
         // No patientId in URL — use demo patient

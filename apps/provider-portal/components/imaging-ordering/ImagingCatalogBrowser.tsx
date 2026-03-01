@@ -18,7 +18,7 @@ import type {
 
 interface ImagingCatalogBrowserProps {
   catalog: ImagingStudy[];
-  selectedStudies: Map<string, SelectedStudy>;
+  selectedStudies: Record<string, SelectedStudy>;
   searchQuery: string;
   modalityFilter: ImagingModality | 'all';
   showCosts?: boolean;
@@ -125,7 +125,7 @@ export const ImagingCatalogBrowser: React.FC<ImagingCatalogBrowserProps> = ({
           />
         ) : (
           catalog.map((study) => {
-            const selectedStudy = selectedStudies.get(study.code);
+            const selectedStudy = selectedStudies[study.code];
             return (
               <ImagingStudyCard
                 key={study.code}

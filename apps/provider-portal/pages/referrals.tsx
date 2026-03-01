@@ -15,13 +15,14 @@ import { SimpleCriticalAlert, useToast } from '@/components/shared';
 import { ReferralOrderingPanel } from '@/components/referral-ordering';
 import type { PatientContext as StorePatientContext } from '@/store/referralOrderingStore';
 import type { PatientContext as PanelPatientContext } from '@/components/referral-ordering/types';
+import { fetchPatientContext } from '@/lib/fetchPatientContext';
 
 const theme = {
   gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 };
 
-const getMockPatientContext = (patientId?: string): StorePatientContext => ({
-  id: patientId || 'pat-001',
+const DEMO_PATIENT: StorePatientContext = {
+  id: 'pat-001',
   name: 'Maria Santos',
   age: 42,
   gender: 'Female',
@@ -34,11 +35,11 @@ const getMockPatientContext = (patientId?: string): StorePatientContext => ({
   insurancePlan: 'Blue Cross',
   pcp: 'Dr. Robert Johnson',
   redFlags: ['Worst headache of life', 'Neck stiffness', 'Visual changes'],
-});
+};
 
 export default function ReferralsPage() {
   const router = useRouter();
-  const { patientId, encounterId } = router.query;
+  const { patientId, assessmentId, encounterId } = router.query;
   
   const [patientContext, setPatientContext] = useState<StorePatientContext | null>(null);
   const [activeTab, setActiveTab] = useState<'new' | 'pending' | 'history'>('new');
@@ -55,9 +56,27 @@ export default function ReferralsPage() {
     redFlags: patientContext.redFlags || [],
   } : null;
 
+  // Load real patient context when patientId is in URL, otherwise demo
   useEffect(() => {
-    setPatientContext(getMockPatientContext(patientId as string));
-    
+    const pid = patientId as string | undefined;
+    const aid = assessmentId as string | undefined;
+    if (!pid) {
+      setPatientContext(DEMO_PATIENT);
+    } else {
+      fetchPatientContext(pid, aid)
+        .then((ctx) => {
+          // Referral store expects allergies as string[] (not objects)
+          setPatientContext({
+            ...ctx,
+            allergies: ctx.allergyNames,
+          } as StorePatientContext);
+        })
+        .catch((err) => {
+          console.error('[Referrals] Failed to load patient context:', err);
+          setPatientContext(DEMO_PATIENT);
+        });
+    }
+
     fetch('/api/referrals?status=PENDING')
       .then(res => res.json())
       .then(data => {
@@ -65,7 +84,7 @@ export default function ReferralsPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [patientId]);
+  }, [patientId, assessmentId]);
 
   const handleOrderComplete = (referralIds: string[]) => {
     toast.success('Referrals submitted!', `${referralIds.length} referral(s) sent`);
@@ -164,7 +183,7 @@ export default function ReferralsPage() {
               {activeTab === 'new' && normalizedPatientContext && (
                 <ReferralOrderingPanel
                   patientContext={normalizedPatientContext}
-                  encounterId={encounterId as string || 'enc-001'}
+                  encounterId={encounterId as string || ''}
                   onOrderComplete={handleOrderComplete}
                 />
               )}

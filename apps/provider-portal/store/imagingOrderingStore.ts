@@ -35,6 +35,9 @@ import {
 // =============================================================================
 export type { ImagingStudy, ImagingModality, OrderPriority, OrderingContext, PatientContext };
 export type { ImagingRecommendation };
+// Backward-compat aliases — consumers still reference old names
+export type ImagingPriority = OrderPriority;
+export type AIImagingRecommendation = ImagingRecommendation;
 export { IMAGING_CATALOG };
 
 // =============================================================================

@@ -8,6 +8,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProviderShell } from '@/components/layout/ProviderShell';
+import { fetchPatientContext } from '@/lib/fetchPatientContext';
 import { 
   ArrowLeft,
   Home,
@@ -360,9 +361,9 @@ const PharmacyCard: React.FC<{
 
 export default function MedicationsPage() {
   const router = useRouter();
-  const { patientId } = router.query;
+  const { patientId, assessmentId } = router.query;
   
-  const [patient] = useState<PatientContext>(mockPatient);
+  const [patient, setPatient] = useState<PatientContext>(mockPatient);
   const [medications] = useState<Medication[]>(mockSelectedMedications);
   const [pharmacies] = useState<Pharmacy[]>(mockPharmacies);
   const [selectedPharmacy, setSelectedPharmacy] = useState<string>('pharm-001');
@@ -370,6 +371,29 @@ export default function MedicationsPage() {
   const [filterInStock, setFilterInStock] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
+
+  // Load real patient context when patientId is in URL
+  useEffect(() => {
+    const pid = patientId as string | undefined;
+    const aid = assessmentId as string | undefined;
+    if (!pid) return; // keep mock patient for standalone browsing
+    fetchPatientContext(pid, aid)
+      .then((ctx) => {
+        setPatient({
+          id: ctx.id,
+          name: ctx.name,
+          age: ctx.age,
+          gender: ctx.gender,
+          mrn: ctx.mrn,
+          allergies: ctx.allergies,
+          currentMedications: ctx.currentMedications,
+        });
+      })
+      .catch((err) => {
+        console.error('[Medications] Failed to load patient context:', err);
+        // keep mock patient on failure
+      });
+  }, [patientId, assessmentId]);
 
   // Filter pharmacies
   const filteredPharmacies = pharmacies.filter(pharmacy => {

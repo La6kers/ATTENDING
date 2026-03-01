@@ -310,10 +310,14 @@ export default function PreVisitPage() {
       <PreVisitSummary
         data={preVisitData}
         onStartEncounter={handleStartEncounter}
-        onOrderLabs={() => router.push(`/labs?patientId=${rawAssessment?.patient?.id || id}`)}
-        onOrderImaging={() => router.push(`/imaging?patientId=${rawAssessment?.patient?.id || id}`)}
-        onPrescribe={() => router.push(`/medications?patientId=${rawAssessment?.patient?.id || id}`)}
-        onRefer={() => router.push(`/referrals?patientId=${rawAssessment?.patient?.id || id}`)}
+        onOrderLabs={() => {
+          const pid = rawAssessment?.patient?.id || id;
+          const cc = encodeURIComponent(rawAssessment?.chiefComplaint || '');
+          router.push(`/labs?patientId=${pid}&assessmentId=${id}&chiefComplaint=${cc}`);
+        }}
+        onOrderImaging={() => router.push(`/imaging?patientId=${rawAssessment?.patient?.id || id}&assessmentId=${id}`)}
+        onPrescribe={() => router.push(`/medications?patientId=${rawAssessment?.patient?.id || id}&assessmentId=${id}`)}
+        onRefer={() => router.push(`/referrals?patientId=${rawAssessment?.patient?.id || id}&assessmentId=${id}`)}
         onScheduleFollowup={() => {
           const name = `${preVisitData.patient.firstName} ${preVisitData.patient.lastName}`;
           router.push(`/schedule?action=new&patientId=${rawAssessment?.patient?.id || id}&patientName=${encodeURIComponent(name)}&type=followup`);

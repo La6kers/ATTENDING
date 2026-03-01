@@ -2,14 +2,20 @@
 // apps/provider-portal/pages/api/imaging/index.ts
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { prisma } from '@/lib/api/prisma';
+import { prisma } from '@attending/shared/lib/prisma';
 import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { proxyToBackend } from '@/lib/api/backendProxy';
 import { 
   CreateImagingOrderSchema, 
   validate, 
 } from '@attending/shared/schemas';
 
 async function handler(req: NextApiRequest, res: NextApiResponse, _session: any) {
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, '/api/v1/imagingorders');
+  if (proxied) return;
+
+  // Fallback: direct Prisma
   if (req.method === 'GET') {
     return getImagingOrders(req, res);
   } else if (req.method === 'POST') {

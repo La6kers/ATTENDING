@@ -13,7 +13,7 @@ import type { LabTest, LabCategory, LabPriority, SelectedLab } from '../../store
 
 interface LabCatalogBrowserProps {
   catalog: LabTest[];
-  selectedLabs: Map<string, SelectedLab>;
+  selectedLabs: Record<string, SelectedLab>;
   searchQuery: string;
   categoryFilter: LabCategory | 'all';
   showCosts?: boolean;
@@ -102,7 +102,7 @@ export const LabCatalogBrowser: React.FC<LabCatalogBrowserProps> = ({
           />
         ) : (
           catalog.map((test) => {
-            const selectedLab = selectedLabs.get(test.code);
+            const selectedLab = selectedLabs[test.code];
             return (
               <LabTestCard
                 key={test.code}

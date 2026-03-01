@@ -302,6 +302,11 @@ const ActionItemRow: React.FC<{
 export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
   data,
   onStartEncounter,
+  onOrderLabs,
+  onOrderImaging,
+  onPrescribe,
+  onRefer,
+  onScheduleFollowup,
   onEmergencyProtocol,
   onReviewChart,
   onNavigatePatient,
@@ -422,27 +427,32 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
               <QuickActionButton
                 icon={<FlaskConical className="w-5 h-5" />}
                 label="Order Labs"
-                href={`/labs?patientId=${patientId}`}
+                onClick={onOrderLabs}
+                href={onOrderLabs ? undefined : `/labs?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<Pill className="w-5 h-5" />}
                 label="E-Prescribe"
-                href={`/medications?patientId=${patientId}`}
+                onClick={onPrescribe}
+                href={onPrescribe ? undefined : `/medications?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<ImageIcon className="w-5 h-5" />}
                 label="Order Imaging"
-                href={`/imaging?patientId=${patientId}`}
+                onClick={onOrderImaging}
+                href={onOrderImaging ? undefined : `/imaging?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<UserPlus className="w-5 h-5" />}
                 label="Refer Specialist"
-                href={`/referrals?patientId=${patientId}`}
+                onClick={onRefer}
+                href={onRefer ? undefined : `/referrals?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<Calendar className="w-5 h-5" />}
                 label="Schedule Follow-up"
-                href={`/schedule?patientId=${patientId}`}
+                onClick={onScheduleFollowup}
+                href={onScheduleFollowup ? undefined : `/schedule?patientId=${patientId}`}
               />
               <QuickActionButton
                 icon={<BookOpen className="w-5 h-5" />}
