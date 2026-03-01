@@ -185,22 +185,34 @@ export default function ProviderDashboard() {
 
   const [patientQueue, setPatientQueue] = useState<QueueItem[]>([]);
 
-  // Fetch real data from assessments API
+  // Fetch real data from assessments API + notification count
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const res = await fetch('/api/assessments?pageSize=100');
-        if (!res.ok) return;
-        const data = await res.json();
-        const assessments = data.assessments || [];
+        const [assessmentRes, notifRes] = await Promise.allSettled([
+          fetch('/api/assessments?pageSize=100'),
+          fetch('/api/notifications?unreadOnly=true&limit=1'),
+        ]);
+
+        let assessments: any[] = [];
+        if (assessmentRes.status === 'fulfilled' && assessmentRes.value.ok) {
+          const data = await assessmentRes.value.json();
+          assessments = data.assessments || [];
+        }
+
+        let unreadCount = 0;
+        if (notifRes.status === 'fulfilled' && notifRes.value.ok) {
+          const notifData = await notifRes.value.json();
+          unreadCount = notifData.unreadCount || 0;
+        }
 
         // Calculate stats from real data
-        const pending = assessments.filter((a: any) => !a.assignedProvider).length;
+        const pending = assessments.filter((a: any) => !a.assignedProvider && !a.assignedProviderName).length;
         const completed = assessments.filter((a: any) => a.status === 'REVIEWED').length;
         setStats({
           pendingAssessments: pending,
           patientsToday: assessments.length,
-          unreadMessages: 0,
+          unreadMessages: unreadCount,
           completedVisits: completed,
         });
 
@@ -235,6 +247,10 @@ export default function ProviderDashboard() {
       }
     }
     loadDashboard();
+
+    // Poll every 30s for new assessments/notifications
+    const interval = setInterval(loadDashboard, 30_000);
+    return () => clearInterval(interval);
   }, []);
 
   // Redirect to login if not authenticated

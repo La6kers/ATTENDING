@@ -11,6 +11,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
+import { proxyToBackend } from '../../../lib/backendProxy';
 
 // =============================================================================
 // Types — matches what useChatStore.submitAssessment() sends
@@ -99,6 +100,37 @@ export default async function handler(
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
+  // =========================================================================
+  // Try .NET backend first (CQRS pipeline with domain events → SignalR)
+  // When available, the .NET backend handles validation, persistence,
+  // and fires domain events that notify providers via SignalR in real-time.
+  // =========================================================================
+  const proxied = await proxyToBackend(req, res, '/api/v1/assessments/submit', {
+    transformRequest: (body: any) => ({
+      sessionId: body.sessionId,
+      patientName: body.patientName,
+      dateOfBirth: body.dateOfBirth,
+      gender: body.gender,
+      chiefComplaint: body.chiefComplaint,
+      hpiData: body.hpi,
+      reviewOfSystems: body.reviewOfSystems,
+      medications: body.medications,
+      allergies: body.allergies,
+      medicalHistory: body.medicalHistory,
+      surgicalHistory: body.surgicalHistory,
+      socialHistory: body.socialHistory,
+      familyHistory: body.familyHistory,
+      redFlags: body.redFlags,
+      urgencyLevel: body.urgencyLevel,
+      urgencyScore: body.urgencyScore,
+      conversationHistory: body.conversationHistory,
+    }),
+  });
+  if (proxied) return;
+
+  // =========================================================================
+  // Fallback: direct Prisma access (works without .NET backend running)
+  // =========================================================================
   try {
     const data: SubmitPayload = req.body;
 
@@ -109,6 +141,8 @@ export default async function handler(
     if (!data.chiefComplaint) {
       return res.status(400).json({ error: 'Chief complaint is required' });
     }
+
+    console.log('[ASSESSMENT SUBMIT] .NET backend unavailable, using Prisma fallback');
 
     const redFlagCount = data.redFlags?.length || 0;
     const triageLevel = mapTriageLevel(data.urgencyLevel, redFlagCount);
@@ -196,6 +230,43 @@ export default async function handler(
         success: true,
       },
     });
+
+    // =========================================================================
+    // Notify providers (Prisma fallback path — .NET uses domain events/SignalR)
+    // Create a Notification record for each active provider so the provider
+    // dashboard shows a badge and the notification list includes the new assessment.
+    // =========================================================================
+    try {
+      const activeProviders = await prisma.user.findMany({
+        where: { role: 'PROVIDER', isActive: true },
+        select: { id: true },
+        take: 50,
+      });
+
+      if (activeProviders.length > 0) {
+        await prisma.notification.createMany({
+          data: activeProviders.map((p) => ({
+            userId: p.id,
+            type: hasRedFlags ? 'URGENT_ASSESSMENT' : 'NEW_ASSESSMENT',
+            priority: hasRedFlags ? 'URGENT' : 'NORMAL',
+            title: hasRedFlags
+              ? `🚨 Urgent: ${data.chiefComplaint}`
+              : `New Assessment: ${data.chiefComplaint}`,
+            message: `Patient ${data.patientName || 'Anonymous'} submitted a COMPASS assessment${hasRedFlags ? ` with ${redFlagCount} red flag(s)` : ''}.`,
+            data: JSON.stringify({
+              assessmentId: assessment.id,
+              patientId: patient.id,
+              triageLevel,
+              redFlagCount,
+            }),
+            actionUrl: `/previsit/${assessment.id}`,
+          })),
+        });
+      }
+    } catch (notifErr) {
+      // Best effort — don't fail the submission if notification creation fails
+      console.warn('[ASSESSMENT SUBMIT] Failed to create provider notifications:', notifErr);
+    }
 
     // =========================================================================
     // Queue position

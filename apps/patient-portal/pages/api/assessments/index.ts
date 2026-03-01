@@ -18,6 +18,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
+import { proxyToBackend } from '../../../lib/backendProxy';
 
 // =============================================================================
 // Types — matches the payload syncManager.submitAssessment() sends
@@ -91,6 +92,10 @@ function mapTriageLevel(urgency: string | undefined, redFlagCount: number): stri
 // =============================================================================
 
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
+  // Try .NET backend first
+  const proxied = await proxyToBackend(req, res, '/api/v1/assessments');
+  if (proxied) return;
+
   const { sessionId, limit = '10' } = req.query;
 
   try {
@@ -125,6 +130,11 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 // =============================================================================
 
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
+  // Try .NET backend first (domain events + SignalR notification to providers)
+  const proxied = await proxyToBackend(req, res, '/api/v1/assessments');
+  if (proxied) return;
+
+  console.log('[ASSESSMENTS POST] .NET backend unavailable, using Prisma fallback');
   const isOfflineSync = req.headers['x-offline-sync'] === 'true';
   const data: AssessmentPostBody = req.body;
 

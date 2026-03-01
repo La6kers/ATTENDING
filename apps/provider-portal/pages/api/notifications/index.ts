@@ -2,7 +2,10 @@
 // ATTENDING AI - Notifications API Route
 // apps/provider-portal/pages/api/notifications/index.ts
 //
-// Get and manage provider notifications
+// Get and manage provider notifications.
+// Reads from the Notification table populated by:
+//   1. .NET domain events (when backend is running)
+//   2. Patient portal Prisma fallback (assessment submit)
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -23,7 +26,7 @@ export default async function handler(
         return res.status(405).json({ error: `Method ${req.method} not allowed` });
     }
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('[NOTIFICATIONS API ERROR]', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -47,14 +50,13 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   };
 
   if (unreadOnly === 'true') {
-    where.isRead = false;
+    where.read = false;
   }
 
   const [notifications, unreadCount] = await Promise.all([
     prisma.notification.findMany({
       where,
       orderBy: [
-        { priority: 'desc' },
         { createdAt: 'desc' },
       ],
       take: parseInt(limit as string),
@@ -62,24 +64,35 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     prisma.notification.count({
       where: {
         userId: provider.id,
-        isRead: false,
+        read: false,
       },
     }),
   ]);
 
-  const transformed = notifications.map(n => ({
-    id: n.id,
-    type: n.type.toLowerCase(),
-    title: n.title,
-    message: n.message,
-    priority: n.priority.toLowerCase(),
-    isRead: n.isRead,
-    readAt: n.readAt?.toISOString(),
-    relatedType: n.relatedType,
-    relatedId: n.relatedId,
-    actionUrl: n.actionUrl,
-    createdAt: n.createdAt.toISOString(),
-  }));
+  // Parse the JSON `data` field to extract relatedType/relatedId
+  const transformed = notifications.map((n) => {
+    let parsedData: any = {};
+    if (n.data) {
+      try { parsedData = JSON.parse(n.data); } catch { /* ignore */ }
+    }
+
+    return {
+      id: n.id,
+      type: n.type.toLowerCase(),
+      title: n.title,
+      message: n.message,
+      priority: n.priority.toLowerCase(),
+      isRead: n.read,
+      readAt: n.readAt?.toISOString() ?? null,
+      actionUrl: n.actionUrl,
+      // Extract useful fields from the data payload
+      assessmentId: parsedData.assessmentId ?? null,
+      patientId: parsedData.patientId ?? null,
+      triageLevel: parsedData.triageLevel ?? null,
+      redFlagCount: parsedData.redFlagCount ?? 0,
+      createdAt: n.createdAt.toISOString(),
+    };
+  });
 
   return res.status(200).json({
     notifications: transformed,
@@ -101,26 +114,24 @@ async function handleMarkRead(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (markAll) {
-    // Mark all unread as read
     await prisma.notification.updateMany({
       where: {
         userId: provider.id,
-        isRead: false,
+        read: false,
       },
       data: {
-        isRead: true,
+        read: true,
         readAt: new Date(),
       },
     });
   } else if (notificationIds && Array.isArray(notificationIds)) {
-    // Mark specific notifications as read
     await prisma.notification.updateMany({
       where: {
         id: { in: notificationIds },
         userId: provider.id,
       },
       data: {
-        isRead: true,
+        read: true,
         readAt: new Date(),
       },
     });
@@ -129,7 +140,7 @@ async function handleMarkRead(req: NextApiRequest, res: NextApiResponse) {
   const unreadCount = await prisma.notification.count({
     where: {
       userId: provider.id,
-      isRead: false,
+      read: false,
     },
   });
 
