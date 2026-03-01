@@ -8,14 +8,14 @@
 import React from 'react';
 import Head from 'next/head';
 import { HealthCompanion } from '../components/companion';
-
-// In production, this would come from auth context
-const mockPatient = {
-  id: 'patient-123',
-  name: 'John Smith',
-};
+import { usePatientData } from '../hooks/usePatientData';
 
 export default function CompanionPage() {
+  const { profile } = usePatientData();
+
+  const patientId = profile?.id ?? 'patient-123';
+  const patientName = profile?.fullName ?? `${profile?.firstName ?? 'Scott'} ${profile?.lastName ?? 'Isbell'}`;
+
   return (
     <>
       <Head>
@@ -27,8 +27,8 @@ export default function CompanionPage() {
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </Head>
       <HealthCompanion 
-        patientId={mockPatient.id}
-        patientName={mockPatient.name}
+        patientId={patientId}
+        patientName={patientName}
       />
     </>
   );

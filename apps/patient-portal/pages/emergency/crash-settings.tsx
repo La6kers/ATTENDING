@@ -144,14 +144,20 @@ export default function CrashSettingsPage() {
 
   const handleSave = async () => {
     setHookCrashSettings({
+      ...hookCrashSettings!,
       gForceThreshold: settings.gForceThreshold,
       sensitivityPreset: settings.sensitivityPreset,
       activityAware: settings.activityAware,
+      ignoreWhileStationary: settings.ignoreWhileStationary,
       countdownSeconds: settings.countdownSeconds,
       countdownAudio: settings.countdownAudio,
       countdownHaptic: settings.countdownHaptic,
       alertSiren: settings.alertSiren,
+      extendedResponseMode: settings.extendedResponseMode,
+      extendedCountdownSeconds: settings.extendedCountdownSeconds,
       drivingMode: settings.drivingMode,
+      cyclingMode: settings.cyclingMode,
+      hikingMode: settings.hikingMode,
     });
     await saveCrashSettings();
     setSaveSuccess(true);

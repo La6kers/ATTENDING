@@ -23,21 +23,27 @@ import {
   Share2,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
+import { usePatientData } from '../../hooks/usePatientData';
 
 // ============================================================
 // Profile Header
 // ============================================================
 
-function ProfileHeader() {
+function ProfileHeader({ profile }: { profile: any }) {
+  const name = profile?.fullName ?? `${profile?.firstName ?? 'Scott'} ${profile?.lastName ?? 'Isbell'}`;
+  const email = profile?.email ?? 'scott.isbell@email.com';
+  const patientId = profile?.mrn ?? 'ATT-2024-0892';
+  const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
+
   return (
     <div className="flex items-center gap-4 p-5">
       <div className="w-16 h-16 rounded-full bg-attending-gradient flex items-center justify-center flex-shrink-0">
-        <span className="text-white font-bold text-xl">SI</span>
+        <span className="text-white font-bold text-xl">{initials}</span>
       </div>
       <div className="flex-1">
-        <h2 className="text-lg font-bold text-attending-deep-navy">Scott Isbell</h2>
-        <p className="text-sm text-attending-200">scott.isbell@email.com</p>
-        <p className="text-xs text-attending-200 mt-0.5">Patient ID: ATT-2024-0892</p>
+        <h2 className="text-lg font-bold text-attending-deep-navy">{name}</h2>
+        <p className="text-sm text-attending-200">{email}</p>
+        <p className="text-xs text-attending-200 mt-0.5">Patient ID: {patientId}</p>
       </div>
       <Link
         href="/profile/edit"
@@ -108,6 +114,8 @@ function SettingsGroup({ title, items }: { title: string; items: SettingItem[] }
 // ============================================================
 
 export default function ProfilePage() {
+  const { profile } = usePatientData();
+
   return (
     <>
       <Head>
@@ -118,7 +126,7 @@ export default function ProfilePage() {
         header={
           <header className="bg-white border-b border-light safe-area-top">
             <div className="max-w-lg mx-auto">
-              <ProfileHeader />
+              <ProfileHeader profile={profile} />
             </div>
           </header>
         }

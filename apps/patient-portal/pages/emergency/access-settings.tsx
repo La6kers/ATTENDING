@@ -169,12 +169,12 @@ export default function AccessSettingsPage() {
         pin: accessSettings.pin ?? prev.pin,
         countdownSeconds: accessSettings.countdownSeconds ?? prev.countdownSeconds,
         accessDurationMinutes: accessSettings.accessDurationMinutes ?? prev.accessDurationMinutes,
-        showAllergies: accessSettings.visibleData?.allergies ?? prev.showAllergies,
-        showConditions: accessSettings.visibleData?.conditions ?? prev.showConditions,
-        showMedications: accessSettings.visibleData?.medications ?? prev.showMedications,
-        showBloodType: accessSettings.visibleData?.bloodType ?? prev.showBloodType,
-        showEmergencyContacts: accessSettings.visibleData?.emergencyContacts ?? prev.showEmergencyContacts,
-        showVitals: accessSettings.visibleData?.vitals ?? prev.showVitals,
+        showAllergies: accessSettings.showAllergies ?? prev.showAllergies,
+        showConditions: accessSettings.showConditions ?? prev.showConditions,
+        showMedications: accessSettings.showMedications ?? prev.showMedications,
+        showBloodType: accessSettings.showBloodType ?? prev.showBloodType,
+        showEmergencyContacts: accessSettings.showEmergencyContacts ?? prev.showEmergencyContacts,
+        showVitals: accessSettings.showVitals ?? prev.showVitals,
       }));
     }
   }, [accessSettings]);
@@ -186,18 +186,21 @@ export default function AccessSettingsPage() {
   const handleSave = async () => {
     // Push local state into hook, then save
     setAccessSettings({
+      ...accessSettings,
       enabled: settings.enabled,
       pin: settings.pin,
       countdownSeconds: settings.countdownSeconds,
       accessDurationMinutes: settings.accessDurationMinutes,
-      visibleData: {
-        allergies: settings.showAllergies,
-        conditions: settings.showConditions,
-        medications: settings.showMedications,
-        bloodType: settings.showBloodType,
-        emergencyContacts: settings.showEmergencyContacts,
-        vitals: settings.showVitals,
-      },
+      requirePhoto: settings.requirePhoto,
+      lockScreenWidget: settings.lockScreenWidget,
+      notifyOnAccess: settings.notifyOnAccess,
+      notifyContacts: settings.notifyContacts,
+      showAllergies: settings.showAllergies,
+      showConditions: settings.showConditions,
+      showMedications: settings.showMedications,
+      showBloodType: settings.showBloodType,
+      showEmergencyContacts: settings.showEmergencyContacts,
+      showVitals: settings.showVitals,
     });
     await saveAccessSettings();
     setSaveSuccess(true);
