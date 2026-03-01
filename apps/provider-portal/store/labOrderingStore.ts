@@ -40,6 +40,8 @@ import {
 // =============================================================================
 export type { LabTest, LabPanel, LabCategory, OrderPriority, OrderingContext, PatientContext };
 export type { LabRecommendation };
+// Backward-compat aliases — consumers still reference old names
+export type LabPriority = OrderPriority;
 export const LAB_CATALOG = LAB_CATALOG_OBJ;
 export const LAB_PANELS = LAB_PANELS_OBJ;
 
@@ -85,6 +87,8 @@ export interface AIRecommendation {
   category: 'critical' | 'recommended' | 'optional';
   confidence: number;
 }
+// Backward-compat alias — AIRecommendationsPanel still imports this name
+export type AILabRecommendation = AIRecommendation;
 
 interface ClinicalContext {
   chiefComplaint: string;

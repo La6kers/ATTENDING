@@ -46,18 +46,55 @@ const DEMO_PATIENT = {
 
 /**
  * Fetch real patient context from the API when patientId is provided via URL.
+ * When assessmentId is also provided, merges assessment-level clinical data
+ * (chiefComplaint, redFlags, medications, allergies) since COMPASS stores
+ * these as JSON on the assessment, not as separate patient records.
  * Falls back to DEMO_PATIENT for standalone browsing / demo mode.
  */
-async function fetchPatientContext(patientId: string): Promise<typeof DEMO_PATIENT | null> {
+async function fetchPatientContext(
+  patientId: string,
+  assessmentId?: string,
+): Promise<typeof DEMO_PATIENT | null> {
   try {
-    const res = await fetch(`/api/patients/${patientId}`);
-    if (!res.ok) return null;
-    const data = await res.json();
+    // Fetch patient record + assessment in parallel when both IDs available
+    const [patientRes, assessmentRes] = await Promise.allSettled([
+      fetch(`/api/patients/${patientId}`),
+      assessmentId ? fetch(`/api/assessments/${assessmentId}`) : Promise.reject('no assessmentId'),
+    ]);
+
+    if (patientRes.status !== 'fulfilled' || !patientRes.value.ok) return null;
+    const data = await patientRes.value.json();
     const patient = data.patient || data;
 
-    // Map API response to the shape the lab ordering store expects
+    // Assessment data provides chiefComplaint, redFlags, and clinical lists
+    // that COMPASS stored as JSON (not as separate patient record rows)
+    let assessment: any = null;
+    if (assessmentRes.status === 'fulfilled' && assessmentRes.value.ok) {
+      assessment = await assessmentRes.value.json();
+    }
+
     const dob = patient.dateOfBirth ? new Date(patient.dateOfBirth) : null;
     const age = dob ? Math.floor((Date.now() - dob.getTime()) / 31557600000) : 0;
+
+    // Allergies: prefer patient record rows, fall back to assessment JSON strings
+    const patientAllergies = (patient.allergies || []).map((a: any) =>
+      typeof a === 'string'
+        ? { allergen: a, reaction: 'Unknown', severity: 'moderate' as const }
+        : { allergen: a.allergen || a.name || a, reaction: a.reaction || 'Unknown', severity: (a.severity || 'moderate') as 'moderate' }
+    );
+    const assessmentAllergies = (assessment?.allergies || []).map((a: any) =>
+      typeof a === 'string'
+        ? { allergen: a, reaction: 'See chart', severity: 'moderate' as const }
+        : { allergen: a.allergen || a, reaction: a.reaction || 'See chart', severity: (a.severity || 'moderate') as 'moderate' }
+    );
+
+    // Medications: prefer patient record, fall back to assessment strings
+    const patientMeds = (patient.medications || []).map((m: any) =>
+      typeof m === 'string' ? m : m.name ? `${m.name}${m.dose ? ' ' + m.dose : ''}` : String(m)
+    );
+    const assessmentMeds = (assessment?.medications || []).map((m: any) =>
+      typeof m === 'string' ? m : String(m)
+    );
 
     return {
       id: patient.id,
@@ -65,15 +102,13 @@ async function fetchPatientContext(patientId: string): Promise<typeof DEMO_PATIE
       age,
       gender: patient.gender || 'Unknown',
       mrn: patient.mrn || '',
-      chiefComplaint: patient.chiefComplaint || data.chiefComplaint || '',
-      allergies: (patient.allergies || []).map((a: any) =>
-        typeof a === 'string'
-          ? { allergen: a, reaction: 'Unknown', severity: 'moderate' as const }
-          : { allergen: a.allergen || a.name || a, reaction: a.reaction || 'Unknown', severity: (a.severity || 'moderate') as 'moderate' }
-      ),
-      currentMedications: patient.medications || patient.currentMedications || [],
-      medicalHistory: patient.medicalHistory || patient.conditions || [],
-      redFlags: patient.redFlags || data.redFlags || [],
+      chiefComplaint: assessment?.chiefComplaint || '',
+      allergies: patientAllergies.length > 0 ? patientAllergies : assessmentAllergies,
+      currentMedications: patientMeds.length > 0 ? patientMeds : assessmentMeds,
+      medicalHistory: (patient.conditions || []).map((c: any) =>
+        typeof c === 'string' ? c : c.description || c.icdCode || String(c)
+      ).concat(assessment?.medicalHistory || []).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i),
+      redFlags: assessment?.redFlags || [],
     };
   } catch (err) {
     console.error('[Labs] Failed to fetch patient:', err);
@@ -94,9 +129,10 @@ export default function Labs() {
   const toast = useToast();
 
   const {
-    patientContext, selectedLabs, aiRecommendations, isLoadingRecommendations,
+    patientContext, selectedLabs, aiRecommendations,
+    loadingRecommendations, // was isLoadingRecommendations before store refactor
     searchQuery, categoryFilter, clinicalIndication, specialInstructions, submitting, error,
-    setPatientContext, addLab, addPanel, removeLab, updateLabPriority,
+    setPatientContext, addLab, addLabPanel, removeLab, updateLabPriority,
     setClinicalIndication, setSpecialInstructions, setSearchQuery, setCategoryFilter,
     addAIRecommendedLabs, submitOrder, clearOrder,
     getSelectedLabsArray, getFilteredCatalog, getTotalCost, getStatCount, getFastingRequired,
@@ -112,11 +148,12 @@ export default function Labs() {
       // If a real patientId is in the URL, fetch from API
       if (patientId && typeof patientId === 'string') {
         setPatientLoading(true);
-        const ctx = await fetchPatientContext(patientId);
+        const asmId = typeof assessmentId === 'string' ? assessmentId : undefined;
+        const ctx = await fetchPatientContext(patientId, asmId);
         if (!cancelled) {
           if (ctx) {
-            // Overlay chiefComplaint from URL if provided (e.g., from assessment)
-            if (chiefComplaint && typeof chiefComplaint === 'string') {
+            // Overlay chiefComplaint from URL if provided and assessment didn't supply one
+            if (!ctx.chiefComplaint && chiefComplaint && typeof chiefComplaint === 'string') {
               ctx.chiefComplaint = chiefComplaint;
             }
             setPatientContext(ctx);
@@ -136,7 +173,7 @@ export default function Labs() {
     loadPatient();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId, chiefComplaint]);
+  }, [patientId, assessmentId, chiefComplaint]);
 
   const selectedLabsArray = getSelectedLabsArray();
   const filteredCatalog = getFilteredCatalog();
@@ -149,16 +186,19 @@ export default function Labs() {
     allergies: patientContext.allergies?.map(a => typeof a === 'string' ? a : a.allergen),
   } : null;
 
-  const selectedCodes = new Set(selectedLabs.keys());
+  // selectedLabs is a Record<string, SelectedLab> (was Map before store refactor)
+  const selectedCodes = new Set(Object.keys(selectedLabs));
 
   const handleToggleLab = (code: string) => {
-    if (selectedLabs.has(code)) { removeLab(code); } else { addLab(code); }
+    if (code in selectedLabs) { removeLab(code); } else { addLab(code); }
   };
 
   const handleSubmit = async () => {
     try {
       toast.loading('Submitting lab orders...');
-      const eid = (encounterId && typeof encounterId === 'string') ? encounterId : 'encounter-demo-001';
+      // encounterId is optional — COMPASS pre-visit assessments don't create encounters.
+      // Only pass it if explicitly provided in the URL (e.g., from an active visit).
+      const eid = (encounterId && typeof encounterId === 'string') ? encounterId : undefined;
       const orderIds = await submitOrder(eid);
       toast.success('Lab orders submitted!', `Order IDs: ${Array.isArray(orderIds) ? orderIds.join(', ') : orderIds}`);
       // If we came from an assessment, navigate back to it
@@ -273,7 +313,7 @@ export default function Labs() {
                     {activeTab === 'ai' && (
                       <AIRecommendationsPanel
                         recommendations={aiRecommendations}
-                        isLoading={isLoadingRecommendations}
+                        isLoading={loadingRecommendations}
                         selectedCodes={selectedCodes}
                         onAddCategory={addAIRecommendedLabs}
                         onAddSingle={(code, priority, rationale) => addLab(code, { priority, rationale, aiRecommended: true })}
@@ -284,7 +324,7 @@ export default function Labs() {
                         panels={LAB_PANELS}
                         selectedLabs={selectedLabs}
                         showCosts={showCosts}
-                        onAddPanel={addPanel}
+                        onAddPanel={addLabPanel}
                       />
                     )}
                     {activeTab === 'catalog' && (

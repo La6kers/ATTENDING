@@ -11,7 +11,7 @@ import type { LabPanel, SelectedLab } from '../../store/labOrderingStore';
 
 interface LabPanelsSelectorProps {
   panels: Record<string, LabPanel>;
-  selectedLabs: Map<string, SelectedLab>;
+  selectedLabs: Record<string, SelectedLab>;
   showCosts?: boolean;
   onAddPanel: (panelId: string) => void;
 }
@@ -26,12 +26,12 @@ export const LabPanelsSelector: React.FC<LabPanelsSelectorProps> = ({
 
   // Check if all tests in a panel are already selected
   const isPanelComplete = (panel: LabPanel): boolean => {
-    return panel.tests.every((testCode) => selectedLabs.has(testCode));
+    return panel.tests.every((testCode) => testCode in selectedLabs);
   };
 
   // Count how many tests in the panel are selected
   const getSelectedCount = (panel: LabPanel): number => {
-    return panel.tests.filter((testCode) => selectedLabs.has(testCode)).length;
+    return panel.tests.filter((testCode) => testCode in selectedLabs).length;
   };
 
   return (
@@ -83,7 +83,7 @@ export const LabPanelsSelector: React.FC<LabPanelsSelectorProps> = ({
                       <span
                         key={testCode}
                         className={`text-xs px-1.5 py-0.5 rounded ${
-                          selectedLabs.has(testCode)
+                          testCode in selectedLabs
                             ? 'bg-green-100 text-green-700'
                             : 'bg-gray-100 text-gray-600'
                         }`}
