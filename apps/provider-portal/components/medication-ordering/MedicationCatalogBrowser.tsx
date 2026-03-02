@@ -84,7 +84,7 @@ export const MedicationCatalogBrowser: React.FC<MedicationCatalogBrowserProps> =
       {/* Search Header */}
       <div className="p-4 border-b">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-teal-700 rounded-lg flex items-center justify-center">
             <Pill className="w-6 h-6 text-white" />
           </div>
           <div className="flex-1">
@@ -103,7 +103,7 @@ export const MedicationCatalogBrowser: React.FC<MedicationCatalogBrowserProps> =
             placeholder="Search by name, generic, or indication..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
           />
           {searchQuery && (
             <button
@@ -128,7 +128,7 @@ export const MedicationCatalogBrowser: React.FC<MedicationCatalogBrowserProps> =
                 onClick={() => onCategoryChange(cat)}
                 className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
                   categoryFilter === cat
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-teal-600 text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -177,7 +177,7 @@ export const MedicationCatalogBrowser: React.FC<MedicationCatalogBrowserProps> =
                   {meds.length > 3 && (
                     <button
                       onClick={() => onCategoryChange(category as DrugCategory)}
-                      className="w-full py-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+                      className="w-full py-2 text-sm text-teal-600 hover:text-teal-800 font-medium"
                     >
                       View all {meds.length} {categoryLabels[category as DrugCategory] || category}
                     </button>

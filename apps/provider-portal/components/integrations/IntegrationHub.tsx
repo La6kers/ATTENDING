@@ -377,7 +377,7 @@ const IntegrationCard: React.FC<{
         {integration.resources && (
           <div className="flex flex-wrap gap-1 mb-3">
             {integration.resources.slice(0, 4).map(resource => (
-              <span key={resource} className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
+              <span key={resource} className="text-xs px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full">
                 {resource}
               </span>
             ))}
@@ -393,7 +393,7 @@ const IntegrationCard: React.FC<{
           <button
             onClick={() => onSync(integration.id)}
             disabled={integration.status === 'syncing'}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-100 text-purple-700 text-sm font-medium rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-teal-100 text-teal-700 text-sm font-medium rounded-lg hover:bg-teal-200 transition-colors disabled:opacity-50"
           >
             <RefreshCw size={14} className={integration.status === 'syncing' ? 'animate-spin' : ''} />
             Sync Now
@@ -457,7 +457,7 @@ const WebhookCard: React.FC<{
     <div className="bg-white rounded-xl border border-slate-200 p-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Webhook size={18} className="text-purple-600" />
+          <Webhook size={18} className="text-teal-600" />
           <h4 className="font-semibold text-slate-900">{webhook.name}</h4>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -565,7 +565,7 @@ const APIKeyCard: React.FC<{
 
       <div className="flex flex-wrap gap-1 mb-3">
         {apiKey.permissions.slice(0, 3).map(perm => (
-          <span key={perm} className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
+          <span key={perm} className="text-xs px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full">
             {perm}
           </span>
         ))}
@@ -602,7 +602,7 @@ const SyncLogRow: React.FC<{ log: SyncLog }> = ({ log }) => (
     <div className="flex items-center justify-between mb-2">
       <div className="flex items-center gap-2">
         <span className={`p-1 rounded ${
-          log.type === 'inbound' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'
+          log.type === 'inbound' ? 'bg-blue-100 text-blue-600' : 'bg-teal-100 text-teal-600'
         }`}>
           {log.type === 'inbound' ? '↓' : '↑'}
         </span>
@@ -669,7 +669,7 @@ export const IntegrationHub: React.FC = () => {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -677,7 +677,7 @@ export const IntegrationHub: React.FC = () => {
             </div>
             <div>
               <h2 className="text-lg font-semibold">Integration Hub</h2>
-              <p className="text-violet-200 text-sm">Connect, manage, and monitor all integrations</p>
+              <p className="text-teal-200 text-sm">Connect, manage, and monitor all integrations</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -716,7 +716,7 @@ export const IntegrationHub: React.FC = () => {
               onClick={() => setActiveTab(tab.key as any)}
               className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'text-violet-600 border-b-2 border-violet-600'
+                  ? 'text-teal-600 border-b-2 border-teal-600'
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -752,7 +752,7 @@ export const IntegrationHub: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-900">Webhook Configurations</h3>
-              <button className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
                 <Plus size={16} />
                 Create Webhook
               </button>
@@ -775,7 +775,7 @@ export const IntegrationHub: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-900">API Keys</h3>
-              <button className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
                 <Plus size={16} />
                 Generate New Key
               </button>

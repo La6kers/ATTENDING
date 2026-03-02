@@ -117,7 +117,7 @@ export const QuickFeedback: React.FC<{
         <span>Thanks for the feedback!</span>
         <button
           onClick={onExpandedFeedback}
-          className="text-purple-600 hover:text-purple-700 dark:text-purple-400 underline"
+          className="text-teal-600 hover:text-teal-700 dark:text-teal-400 underline"
         >
           Add details
         </button>
@@ -199,7 +199,7 @@ export const DetailedFeedbackModal: React.FC<{
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-purple-600" />
+            <Brain className="w-5 h-5 text-teal-600" />
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               AI Feedback
             </h2>
@@ -310,7 +310,7 @@ export const DetailedFeedbackModal: React.FC<{
                   onClick={() => setFeedback(f => ({ ...f, wouldRecommendToColleague: option.value }))}
                   className={`flex-1 py-2 rounded-lg border-2 transition-colors ${
                     feedback.wouldRecommendToColleague === option.value
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300'
                       : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 text-gray-600 dark:text-gray-400'
                   }`}
                 >
@@ -323,7 +323,7 @@ export const DetailedFeedbackModal: React.FC<{
           {/* Advanced Options Toggle */}
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 dark:text-purple-400"
+            className="flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 dark:text-teal-400"
           >
             {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             {showAdvanced ? 'Hide' : 'Show'} advanced options
@@ -376,7 +376,7 @@ export const DetailedFeedbackModal: React.FC<{
             <button
               onClick={handleSubmit}
               disabled={!feedback.rating || isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-4 h-4" />
               {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
@@ -406,7 +406,7 @@ export const AIRecommendationCard: React.FC<{
       case 'redFlag':
         return <AlertTriangle className="w-5 h-5 text-red-500" />;
       case 'pathway':
-        return <Target className="w-5 h-5 text-purple-500" />;
+        return <Target className="w-5 h-5 text-teal-500" />;
       case 'order':
         return <Lightbulb className="w-5 h-5 text-yellow-500" />;
       default:
@@ -495,7 +495,7 @@ export const FeedbackSummaryWidget: React.FC<{
   };
 }> = ({ stats = defaultStats }) => {
   return (
-    <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl p-4 text-white">
+    <div className="bg-gradient-to-r from-teal-600 to-teal-700 rounded-xl p-4 text-white">
       <div className="flex items-center gap-2 mb-3">
         <Brain className="w-5 h-5" />
         <h3 className="font-semibold">AI Learning Progress</h3>
@@ -503,11 +503,11 @@ export const FeedbackSummaryWidget: React.FC<{
       
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-purple-200 text-sm">Feedback Received</p>
+          <p className="text-teal-200 text-sm">Feedback Received</p>
           <p className="text-2xl font-bold">{stats.totalFeedback.toLocaleString()}</p>
         </div>
         <div>
-          <p className="text-purple-200 text-sm">Current Accuracy</p>
+          <p className="text-teal-200 text-sm">Current Accuracy</p>
           <div className="flex items-center gap-1">
             <p className="text-2xl font-bold">{stats.accuracyRate}%</p>
             {stats.lastWeekTrend === 'up' && (
@@ -517,7 +517,7 @@ export const FeedbackSummaryWidget: React.FC<{
         </div>
       </div>
 
-      <p className="text-purple-200 text-xs mt-3">
+      <p className="text-teal-200 text-xs mt-3">
         Your feedback directly improves diagnosis accuracy
       </p>
     </div>

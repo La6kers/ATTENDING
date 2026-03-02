@@ -40,7 +40,7 @@ export const LabTestCard: React.FC<LabTestCardProps> = ({
   return (
     <div
       className={`bg-white rounded-lg border-2 transition-all ${
-        selected ? 'border-indigo-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
+        selected ? 'border-teal-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
       }`}
     >
       <div className="p-4">
@@ -49,7 +49,7 @@ export const LabTestCard: React.FC<LabTestCardProps> = ({
             type="checkbox"
             checked={selected}
             onChange={() => onToggle(test.code)}
-            className="mt-1 h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            className="mt-1 h-4 w-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
@@ -60,7 +60,7 @@ export const LabTestCard: React.FC<LabTestCardProps> = ({
                     {test.code}
                   </span>
                   {selectedLab?.aiRecommended && (
-                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full flex items-center gap-1">
                       <Brain className="w-3 h-3" />
                       AI
                     </span>

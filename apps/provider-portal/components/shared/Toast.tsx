@@ -52,7 +52,7 @@ const toastIcons: Record<ToastType, React.ReactNode> = {
   error: <XCircle className="w-5 h-5 text-red-500" />,
   warning: <AlertTriangle className="w-5 h-5 text-amber-500" />,
   info: <Info className="w-5 h-5 text-blue-500" />,
-  loading: <Loader2 className="w-5 h-5 text-purple-500 animate-spin" />,
+  loading: <Loader2 className="w-5 h-5 text-teal-500 animate-spin" />,
 };
 
 // Toast styles by type
@@ -61,7 +61,7 @@ const toastStyles: Record<ToastType, string> = {
   error: 'border-l-red-500 bg-red-50',
   warning: 'border-l-amber-500 bg-amber-50',
   info: 'border-l-blue-500 bg-blue-50',
-  loading: 'border-l-purple-500 bg-purple-50',
+  loading: 'border-l-teal-500 bg-teal-50',
 };
 
 // Individual Toast Component
@@ -99,7 +99,7 @@ const ToastItem: React.FC<{
         {toast.action && (
           <button
             onClick={toast.action.onClick}
-            className="mt-2 text-sm font-medium text-purple-600 hover:text-purple-800"
+            className="mt-2 text-sm font-medium text-teal-600 hover:text-teal-800"
           >
             {toast.action.label}
           </button>

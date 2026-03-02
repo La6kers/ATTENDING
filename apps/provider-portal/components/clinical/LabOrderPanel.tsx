@@ -25,7 +25,7 @@ const priorityColors: Record<string, string> = {
 const statusColors: Record<string, string> = {
   Pending: 'bg-blue-100 text-blue-800',
   Collected: 'bg-indigo-100 text-indigo-800',
-  InProcess: 'bg-purple-100 text-purple-800',
+  InProcess: 'bg-teal-100 text-teal-800',
   Completed: 'bg-green-100 text-green-800',
   Cancelled: 'bg-gray-100 text-gray-500',
 };
@@ -132,7 +132,7 @@ export function LabOrderPanel({
           {/* New Order Button */}
           <button
             onClick={() => setShowOrderForm(true)}
-            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded transition-colors"
+            className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded transition-colors"
           >
             + New Lab Order
           </button>
@@ -219,7 +219,7 @@ function LabOrderRow({ order, onViewResult, onCancel, isCancelling }: LabOrderRo
           {order.hasResult && (
             <button
               onClick={() => onViewResult?.(order.id)}
-              className="px-3 py-1 text-sm text-purple-600 hover:text-purple-800 font-medium"
+              className="px-3 py-1 text-sm text-teal-600 hover:text-teal-800 font-medium"
             >
               View Result
             </button>
@@ -348,7 +348,7 @@ function LabOrderForm({ patientId, encounterId, onSubmit, onClose, isSubmitting 
                   onClick={() => setSelectedTest(test)}
                   className={`p-3 text-left border rounded-lg transition-colors ${
                     selectedTest?.code === test.code
-                      ? 'border-purple-500 bg-purple-50'
+                      ? 'border-teal-500 bg-teal-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -433,7 +433,7 @@ function LabOrderForm({ patientId, encounterId, onSubmit, onClose, isSubmitting 
               id="fasting"
               checked={requiresFasting}
               onChange={(e) => setRequiresFasting(e.target.checked)}
-              className="w-4 h-4 text-purple-600 rounded"
+              className="w-4 h-4 text-teal-600 rounded"
             />
             <label htmlFor="fasting" className="text-sm text-gray-700">
               Requires fasting
@@ -452,7 +452,7 @@ function LabOrderForm({ patientId, encounterId, onSubmit, onClose, isSubmitting 
             <button
               type="submit"
               disabled={!selectedTest || !clinicalIndication || !diagnosisCode || isSubmitting}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
             >
               {isSubmitting ? 'Creating...' : 'Create Order'}
             </button>

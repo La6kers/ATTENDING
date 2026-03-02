@@ -27,7 +27,7 @@ import type { PatientContext } from '@/store/treatmentPlanStore';
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // Mock patient context - in production this would come from the assessment
@@ -125,7 +125,7 @@ export default function TreatmentPlanPage() {
           <div className="bg-white rounded-2xl shadow-lg p-5">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-lg font-bold">
+                <div className="w-14 h-14 bg-gradient-to-br from-teal-600 to-teal-800 rounded-xl flex items-center justify-center text-white text-lg font-bold">
                   {patientContext.name.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
@@ -133,7 +133,7 @@ export default function TreatmentPlanPage() {
                   <p className="text-gray-600">
                     {patientContext.age}yo {patientContext.gender} | MRN: {patientContext.mrn}
                   </p>
-                  <p className="text-sm text-purple-600 mt-1">
+                  <p className="text-sm text-teal-600 mt-1">
                     Chief Complaint: {patientContext.chiefComplaint}
                   </p>
                 </div>
@@ -180,14 +180,14 @@ export default function TreatmentPlanPage() {
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
                       activeTab === tab.id
-                        ? 'border-purple-600 text-purple-600 bg-purple-50 rounded-t-lg'
+                        ? 'border-teal-600 text-teal-600 bg-teal-50 rounded-t-lg'
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
                     {tab.label}
                     {tab.count !== undefined && tab.count > 0 && (
-                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">
+                      <span className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full text-xs">
                         {tab.count}
                       </span>
                     )}
@@ -237,7 +237,7 @@ export default function TreatmentPlanPage() {
                               Last updated: {new Date(plan.updatedAt).toLocaleDateString()}
                             </p>
                           </div>
-                          <button className="px-4 py-2 text-purple-600 hover:bg-purple-50 rounded-lg font-medium">
+                          <button className="px-4 py-2 text-teal-600 hover:bg-teal-50 rounded-lg font-medium">
                             Continue
                           </button>
                         </div>

@@ -44,7 +44,7 @@ export function LoginPage({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-teal-900 flex">
       {/* Left Side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12">
         <div>
@@ -90,7 +90,7 @@ export function LoginPage({
           <div className="bg-white rounded-2xl shadow-2xl p-8">
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-              <Stethoscope className="w-8 h-8 text-indigo-600" />
+              <Stethoscope className="w-8 h-8 text-teal-600" />
               <span className="text-xl font-bold text-gray-900">ATTENDING AI</span>
             </div>
 
@@ -161,7 +161,7 @@ export function LoginPage({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@hospital.org"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                     disabled={isLoading}
                   />
                 </div>
@@ -170,7 +170,7 @@ export function LoginPage({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 font-medium"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 font-medium"
               >
                 {isLoading ? (
                   <>
@@ -190,7 +190,7 @@ export function LoginPage({
             <div className="mt-6 text-center">
               <button
                 onClick={onForgotPassword}
-                className="text-sm text-indigo-600 hover:text-indigo-700"
+                className="text-sm text-teal-600 hover:text-teal-700"
               >
                 Forgot your password?
               </button>
@@ -199,7 +199,7 @@ export function LoginPage({
             <div className="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
               <p>
                 Don't have an account?{' '}
-                <a href="/contact" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                <a href="/contact" className="text-teal-600 hover:text-teal-700 font-medium">
                   Contact your administrator
                 </a>
               </p>

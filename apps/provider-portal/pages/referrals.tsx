@@ -18,7 +18,7 @@ import type { PatientContext as PanelPatientContext } from '@/components/referra
 import { fetchPatientContext } from '@/lib/fetchPatientContext';
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 const DEMO_PATIENT: StorePatientContext = {
@@ -116,7 +116,7 @@ export default function ReferralsPage() {
           <div className="bg-white rounded-2xl p-5 shadow-lg mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold">
+                <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 font-bold">
                   {patientContext.name.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
@@ -162,7 +162,7 @@ export default function ReferralsPage() {
                   onClick={() => setActiveTab(tab.id as 'new' | 'pending' | 'history')}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-purple-600 text-purple-600 bg-purple-50'
+                      ? 'border-teal-600 text-teal-600 bg-teal-50'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
                 >
@@ -170,7 +170,7 @@ export default function ReferralsPage() {
                   {tab.label}
                   {tab.count !== undefined && tab.count > 0 && (
                     <span className={`px-2 py-0.5 rounded-full text-xs ${
-                      activeTab === tab.id ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
+                      activeTab === tab.id ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'
                     }`}>
                       {tab.count}
                     </span>
@@ -199,7 +199,7 @@ export default function ReferralsPage() {
                     </div>
                   ) : (
                     pendingReferrals.map(ref => (
-                      <div key={ref.id} className="p-4 border border-gray-200 rounded-xl hover:border-purple-300 transition-colors">
+                      <div key={ref.id} className="p-4 border border-gray-200 rounded-xl hover:border-teal-300 transition-colors">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium text-gray-900">{ref.specialtyName}</p>

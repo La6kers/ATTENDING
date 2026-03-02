@@ -48,11 +48,11 @@ const modalityIcons: Record<ImagingModality, React.ReactNode> = {
 
 const modalityColors: Record<ImagingModality, string> = {
   CT: 'bg-blue-100 text-blue-700',
-  MRI: 'bg-purple-100 text-purple-700',
+  MRI: 'bg-cyan-100 text-cyan-700',
   XRAY: 'bg-gray-100 text-gray-700',
   US: 'bg-teal-100 text-teal-700',
   NM: 'bg-yellow-100 text-yellow-700',
-  FLUORO: 'bg-indigo-100 text-indigo-700',
+  FLUORO: 'bg-slate-100 text-slate-700',
   MAMMO: 'bg-pink-100 text-pink-700',
   DEXA: 'bg-green-100 text-green-700',
 };
@@ -73,7 +73,7 @@ export const ImagingStudyCard: React.FC<ImagingStudyCardProps> = ({
   return (
     <div
       className={`bg-white rounded-lg border-2 transition-all ${
-        selected ? 'border-indigo-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
+        selected ? 'border-teal-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
       }`}
     >
       <div className="p-4">
@@ -82,7 +82,7 @@ export const ImagingStudyCard: React.FC<ImagingStudyCardProps> = ({
             type="checkbox"
             checked={selected}
             onChange={() => onToggle(study.code)}
-            className="mt-1 h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            className="mt-1 h-4 w-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
@@ -94,7 +94,7 @@ export const ImagingStudyCard: React.FC<ImagingStudyCardProps> = ({
                     {study.modality}
                   </span>
                   {selectedStudy?.aiRecommended && (
-                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full flex items-center gap-1">
                       <Brain className="w-3 h-3" />
                       AI
                     </span>
@@ -173,7 +173,7 @@ export const ImagingStudyCard: React.FC<ImagingStudyCardProps> = ({
                       type="checkbox"
                       checked={hasContrast}
                       onChange={(e) => onContrastChange(study.code, e.target.checked)}
-                      className="h-3 w-3 rounded text-indigo-600 focus:ring-indigo-500"
+                      className="h-3 w-3 rounded text-teal-600 focus:ring-teal-500"
                     />
                     <span className={hasContrast ? 'text-blue-600 font-medium' : 'text-gray-500'}>
                       Contrast

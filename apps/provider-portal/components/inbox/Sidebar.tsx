@@ -129,11 +129,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   style={{
                     background: isActive ? theme.gradient.primary : 'transparent',
                     color: isActive ? 'white' : theme.purple[300],
-                    boxShadow: isActive ? '0 4px 12px rgba(139, 92, 246, 0.3)' : 'none',
+                    boxShadow: isActive ? '0 4px 12px rgba(26, 143, 168, 0.3)' : 'none',
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)';
+                      e.currentTarget.style.background = 'rgba(26, 143, 168, 0.2)';
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -151,7 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       }}
                     />
                     <IconComponent
-                      className={`w-5 h-5 ${isActive ? 'text-white' : 'text-purple-400'}`}
+                      className={`w-5 h-5 ${isActive ? 'text-white' : 'text-teal-400'}`}
                     />
                     <span className="font-medium">{config.label}</span>
                   </div>

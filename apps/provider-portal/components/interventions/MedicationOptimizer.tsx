@@ -266,7 +266,7 @@ const mockReport: MedicationReviewReport = {
 // =============================================================================
 
 const typeConfig: Record<OptimizationType, { icon: any; label: string; color: string }> = {
-  deprescribe: { icon: TrendingDown, label: 'Deprescribe', color: 'bg-purple-100 text-purple-700' },
+  deprescribe: { icon: TrendingDown, label: 'Deprescribe', color: 'bg-teal-100 text-teal-700' },
   therapeutic_substitution: { icon: RefreshCw, label: 'Substitution', color: 'bg-blue-100 text-blue-700' },
   dose_optimization: { icon: Target, label: 'Dose Adjustment', color: 'bg-amber-100 text-amber-700' },
   duplicate_therapy: { icon: Combine, label: 'Duplicate', color: 'bg-red-100 text-red-700' },
@@ -418,7 +418,7 @@ const OptimizationCard: React.FC<{
               {optimization.guidelines && (
                 <div className="flex flex-wrap gap-1">
                   {optimization.guidelines.map((g, idx) => (
-                    <span key={idx} className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full">
+                    <span key={idx} className="px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full">
                       {g}
                     </span>
                   ))}

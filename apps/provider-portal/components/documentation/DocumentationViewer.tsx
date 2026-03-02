@@ -200,7 +200,7 @@ export function DocumentationViewer({
         ) : (
           <ChevronRight className="w-4 h-4 text-gray-500" />
         )}
-        <Icon className="w-4 h-4 text-purple-600" />
+        <Icon className="w-4 h-4 text-teal-600" />
         <span className="font-medium text-gray-900">{title}</span>
       </div>
       {isEditable && !isSigned && expandedSections.has(section) && (
@@ -209,7 +209,7 @@ export function DocumentationViewer({
             e.stopPropagation();
             startEditing(section);
           }}
-          className="p-1 text-gray-400 hover:text-purple-600 transition-colors"
+          className="p-1 text-gray-400 hover:text-teal-600 transition-colors"
         >
           <Edit3 className="w-4 h-4" />
         </button>
@@ -220,13 +220,13 @@ export function DocumentationViewer({
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-white" />
             <div>
               <h2 className="text-lg font-bold text-white">Clinical Documentation</h2>
-              <p className="text-purple-200 text-sm">{patientName} • Encounter #{encounterId}</p>
+              <p className="text-teal-200 text-sm">{patientName} • Encounter #{encounterId}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -251,7 +251,7 @@ export function DocumentationViewer({
           {onRegenerate && !isSigned && (
             <button
               onClick={onRegenerate}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
               Regenerate
@@ -259,14 +259,14 @@ export function DocumentationViewer({
           )}
           <button
             onClick={() => copyToClipboard(documentation.fullNote)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
           >
             <Copy className="w-4 h-4" />
             Copy All
           </button>
           {onExport && (
             <div className="relative group">
-              <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
                 <Download className="w-4 h-4" />
                 Export
               </button>
@@ -327,9 +327,9 @@ export function DocumentationViewer({
       {/* Content */}
       <div className="p-6 space-y-4">
         {/* Chief Complaint */}
-        <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-          <h3 className="text-sm font-medium text-purple-800 mb-1">Chief Complaint</h3>
-          <p className="text-purple-900">{documentation.assessment.chiefComplaint}</p>
+        <div className="p-4 bg-teal-50 border border-teal-200 rounded-lg">
+          <h3 className="text-sm font-medium text-teal-800 mb-1">Chief Complaint</h3>
+          <p className="text-teal-900">{documentation.assessment.chiefComplaint}</p>
         </div>
 
         {/* HPI Section */}
@@ -342,7 +342,7 @@ export function DocumentationViewer({
                   <textarea
                     value={editedContent.hpi}
                     onChange={(e) => setEditedContent(prev => ({ ...prev, hpi: e.target.value }))}
-                    className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    className="w-full h-40 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
                   />
                   <div className="flex justify-end gap-2 mt-2">
                     <button
@@ -353,7 +353,7 @@ export function DocumentationViewer({
                     </button>
                     <button
                       onClick={saveEdits}
-                      className="px-3 py-1.5 text-sm bg-purple-600 text-white hover:bg-purple-700 rounded-lg"
+                      className="px-3 py-1.5 text-sm bg-teal-600 text-white hover:bg-teal-700 rounded-lg"
                     >
                       Save
                     </button>
@@ -376,11 +376,11 @@ export function DocumentationViewer({
                   <textarea
                     value={editedContent.ros}
                     onChange={(e) => setEditedContent(prev => ({ ...prev, ros: e.target.value }))}
-                    className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none font-mono text-sm"
+                    className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none font-mono text-sm"
                   />
                   <div className="flex justify-end gap-2 mt-2">
                     <button onClick={() => cancelEdits('ros')} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                    <button onClick={saveEdits} className="px-3 py-1.5 text-sm bg-purple-600 text-white hover:bg-purple-700 rounded-lg">Save</button>
+                    <button onClick={saveEdits} className="px-3 py-1.5 text-sm bg-teal-600 text-white hover:bg-teal-700 rounded-lg">Save</button>
                   </div>
                 </div>
               ) : (
@@ -427,11 +427,11 @@ export function DocumentationViewer({
                     <textarea
                       value={editedContent.assessment}
                       onChange={(e) => setEditedContent(prev => ({ ...prev, assessment: e.target.value }))}
-                      className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                      className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
                     />
                     <div className="flex justify-end gap-2 mt-2">
                       <button onClick={() => cancelEdits('assessment')} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                      <button onClick={saveEdits} className="px-3 py-1.5 text-sm bg-purple-600 text-white hover:bg-purple-700 rounded-lg">Save</button>
+                      <button onClick={saveEdits} className="px-3 py-1.5 text-sm bg-teal-600 text-white hover:bg-teal-700 rounded-lg">Save</button>
                     </div>
                   </div>
                 ) : (
@@ -453,7 +453,7 @@ export function DocumentationViewer({
                   <ul className="space-y-1">
                     {documentation.plan.diagnosticPlan.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-gray-700">
-                        <span className="text-purple-500 mt-1">•</span>
+                        <span className="text-teal-500 mt-1">•</span>
                         {item}
                       </li>
                     ))}

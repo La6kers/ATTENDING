@@ -48,7 +48,7 @@ export function CompassAdminShell({ children, title }: CompassAdminShellProps) {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ background: '#E6F7F5' }}>
       {/* Top Header */}
       <header className="bg-compass-gradient text-white shadow-lg sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto px-4 lg:px-6">

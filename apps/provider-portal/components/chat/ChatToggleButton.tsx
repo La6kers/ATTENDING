@@ -23,7 +23,7 @@ const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({ className = '' }) =
         hover:shadow-xl hover:scale-105 active:scale-95
         ${urgentCount > 0 
           ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
-          : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700'
+          : 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800'
         }
         ${className}
       `}

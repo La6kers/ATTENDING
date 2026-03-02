@@ -391,7 +391,7 @@ const PatientRiskCard: React.FC<{
   const overdueCareGaps = patient.careGaps.filter(g => g.isOverdue);
   
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-4 hover:border-purple-300 transition-colors">
+    <div className="bg-white rounded-lg border border-slate-200 p-4 hover:border-teal-300 transition-colors">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
@@ -455,7 +455,7 @@ const PatientRiskCard: React.FC<{
       <div className="flex items-center gap-2">
         <button
           onClick={() => onSelect(patient.id)}
-          className="flex-1 px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-200 transition-colors"
+          className="flex-1 px-3 py-1.5 bg-teal-100 text-teal-700 text-xs font-medium rounded-lg hover:bg-teal-200 transition-colors"
         >
           View Details
         </button>
@@ -523,7 +523,7 @@ const QualityMetricCard: React.FC<{ metric: QualityMetric }> = ({ metric }) => {
             Benchmark
           </span>
         </div>
-        <span className="text-purple-600 font-medium">{metric.pointsValue} points</span>
+        <span className="text-teal-600 font-medium">{metric.pointsValue} points</span>
       </div>
 
       <button className="w-full mt-3 px-3 py-2 bg-slate-50 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-100 transition-colors flex items-center justify-center gap-1">
@@ -657,7 +657,7 @@ export const PopulationHealthDashboard: React.FC = () => {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -665,7 +665,7 @@ export const PopulationHealthDashboard: React.FC = () => {
             </div>
             <div>
               <h2 className="text-lg font-semibold">Population Health Intelligence</h2>
-              <p className="text-indigo-200 text-sm">Proactive care for your entire patient panel</p>
+              <p className="text-teal-200 text-sm">Proactive care for your entire patient panel</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -688,8 +688,8 @@ export const PopulationHealthDashboard: React.FC = () => {
               <p className="text-sm text-slate-500">Total Patients</p>
               <p className="text-2xl font-bold text-slate-900">{totalPatients.toLocaleString()}</p>
             </div>
-            <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-indigo-600" />
+            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+              <Users className="w-5 h-5 text-teal-600" />
             </div>
           </div>
         </div>
@@ -743,7 +743,7 @@ export const PopulationHealthDashboard: React.FC = () => {
               onClick={() => setActiveTab(tab.key as any)}
               className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'text-indigo-600 border-b-2 border-indigo-600'
+                  ? 'text-teal-600 border-b-2 border-teal-600'
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
@@ -795,7 +795,7 @@ export const PopulationHealthDashboard: React.FC = () => {
             <div className="col-span-2 bg-slate-50 rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-slate-900">Active Outreach Campaigns</h3>
-                <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                <button className="text-sm text-teal-600 hover:text-teal-700 font-medium">
                   View All
                 </button>
               </div>
@@ -820,7 +820,7 @@ export const PopulationHealthDashboard: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search patients by name or condition..."
-                  className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -831,7 +831,7 @@ export const PopulationHealthDashboard: React.FC = () => {
                     onClick={() => setRiskFilter(level)}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                       riskFilter === level
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-teal-600 text-white'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -869,7 +869,7 @@ export const PopulationHealthDashboard: React.FC = () => {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-slate-900">Outreach Campaigns</h3>
-              <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors">
                 <Sparkles size={16} />
                 Create AI Campaign
               </button>

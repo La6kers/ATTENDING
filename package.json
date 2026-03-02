@@ -7,10 +7,12 @@
     "packages/*",
     "apps/shared",
     "apps/provider-portal",
-    "apps/patient-portal"
+    "apps/patient-portal",
+    "apps/compass-admin"
   ],
   "prisma": {
-    "schema": "prisma/schema.prisma"
+    "schema": "prisma/schema.prisma",
+    "seed": "npx ts-node prisma/seed-demo.ts"
   },
   "ts-node": {
     "compilerOptions": {

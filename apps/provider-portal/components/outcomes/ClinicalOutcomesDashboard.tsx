@@ -407,7 +407,7 @@ const AIPerformanceCard: React.FC<{ performance: AIPerformanceMetric }> = ({ per
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <div className="flex items-center gap-2 mb-6">
-        <Brain className="w-6 h-6 text-purple-600" />
+        <Brain className="w-6 h-6 text-teal-600" />
         <h3 className="text-xl font-semibold text-slate-900">AI Performance</h3>
       </div>
 
@@ -429,7 +429,7 @@ const AIPerformanceCard: React.FC<{ performance: AIPerformanceMetric }> = ({ per
                 cy="64"
                 r="56"
                 fill="none"
-                stroke="#8b5cf6"
+                stroke="#1A8FA8"
                 strokeWidth="12"
                 strokeDasharray={`${(performance.accuracyRate / 100) * 352} 352`}
                 strokeLinecap="round"
@@ -531,7 +531,7 @@ export const ClinicalOutcomesDashboard: React.FC = () => {
                 onClick={() => setSelectedPeriod(period)}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   selectedPeriod === period
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-teal-600 text-white'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -578,8 +578,8 @@ export const ClinicalOutcomesDashboard: React.FC = () => {
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-              <Users className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center">
+              <Users className="w-6 h-6 text-teal-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">Additional Patients/Day</p>
@@ -603,7 +603,7 @@ export const ClinicalOutcomesDashboard: React.FC = () => {
       {/* Quality Metrics */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-5 h-5 text-purple-600" />
+          <Activity className="w-5 h-5 text-teal-600" />
           <h2 className="text-xl font-semibold text-slate-900">Quality Metrics</h2>
         </div>
         <div className="grid grid-cols-3 gap-4">

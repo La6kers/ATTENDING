@@ -256,7 +256,7 @@ const KPICard: React.FC<{ kpi: KPIMetric }> = ({ kpi }) => {
   const categoryColors: Record<string, string> = {
     financial: 'text-emerald-600',
     operational: 'text-blue-600',
-    quality: 'text-purple-600',
+    quality: 'text-teal-600',
     satisfaction: 'text-amber-600',
   };
 
@@ -289,7 +289,7 @@ const KPICard: React.FC<{ kpi: KPIMetric }> = ({ kpi }) => {
   );
 };
 
-const MiniChart: React.FC<{ data: ChartDataPoint[]; color?: string }> = ({ data, color = '#8b5cf6' }) => {
+const MiniChart: React.FC<{ data: ChartDataPoint[]; color?: string }> = ({ data, color = '#1A8FA8' }) => {
   const maxValue = Math.max(...data.map(d => d.value));
   const minValue = Math.min(...data.map(d => d.value));
   const range = maxValue - minValue;
@@ -516,7 +516,7 @@ export const ExecutiveAnalytics: React.FC = () => {
             {/* Quality & Satisfaction */}
             <div>
               <h3 className="flex items-center gap-2 font-semibold text-slate-900 mb-4">
-                <Heart size={18} className="text-purple-600" />
+                <Heart size={18} className="text-teal-600" />
                 Quality & Satisfaction
               </h3>
               <div className="grid grid-cols-4 gap-4">
@@ -578,7 +578,7 @@ export const ExecutiveAnalytics: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm text-slate-500">Utilization</p>
-                    <p className="text-xl font-bold text-purple-600">{dept.utilization}%</p>
+                    <p className="text-xl font-bold text-teal-600">{dept.utilization}%</p>
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between text-sm">

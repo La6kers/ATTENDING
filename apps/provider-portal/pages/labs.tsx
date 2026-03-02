@@ -29,7 +29,7 @@ import { useFhirContext } from '@attending/shared/lib/fhir/FhirProvider';
 import { fetchPatientContext as fetchPatientContextShared } from '../lib/fetchPatientContext';
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 const DEMO_PATIENT = {
@@ -160,12 +160,12 @@ export default function Labs() {
         headerRight={
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-              <input type="checkbox" checked={showCosts} onChange={(e) => setShowCosts(e.target.checked)} className="rounded text-purple-600" />
+              <input type="checkbox" checked={showCosts} onChange={(e) => setShowCosts(e.target.checked)} className="rounded text-teal-600" />
               Show Costs
             </label>
             <div className="flex bg-gray-100 rounded-lg p-1">
-              <button onClick={() => setViewMode('order')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'order' ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>Order Labs</button>
-              <button onClick={() => setViewMode('results')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'results' ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>View Results</button>
+              <button onClick={() => setViewMode('order')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'order' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>Order Labs</button>
+              <button onClick={() => setViewMode('results')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'results' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>View Results</button>
             </div>
           </div>
         }
@@ -191,7 +191,7 @@ export default function Labs() {
                 {patientForBanner && (
                   <div className="bg-white rounded-2xl p-5 shadow-lg">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-700 font-bold">
+                      <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 font-bold">
                         {patientForBanner.name.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div className="flex-1">
@@ -224,7 +224,7 @@ export default function Labs() {
                         onClick={() => setActiveTab(tab.id as OrderTab)}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                           activeTab === tab.id
-                            ? 'border-purple-600 text-purple-600 bg-purple-50'
+                            ? 'border-teal-600 text-teal-600 bg-teal-50'
                             : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                       >
@@ -232,7 +232,7 @@ export default function Labs() {
                         {tab.label}
                         {tab.count !== undefined && (
                           <span className={`px-2 py-0.5 rounded-full text-xs ${
-                            activeTab === tab.id ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
+                            activeTab === tab.id ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'
                           }`}>
                             {tab.count}
                           </span>
@@ -349,7 +349,7 @@ function LabResultsView() {
           { label: 'Normal', value: isConnected ? counts.normal : 13, color: 'text-green-400' },
         ].map((stat) => (
           <div key={stat.label} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-            <p className="text-purple-200 text-sm">{stat.label}</p>
+            <p className="text-teal-200 text-sm">{stat.label}</p>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
           </div>
         ))}
@@ -369,10 +369,10 @@ function LabResultsView() {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search labs..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500" />
+              placeholder="Search labs..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500" />
           </div>
           <select value={filterInterpretation} onChange={(e) => setFilterInterpretation(e.target.value)}
-            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200">
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200">
             <option value="all">All Results</option>
             <option value="critical">Critical Only</option>
             <option value="abnormal">Abnormal Only</option>

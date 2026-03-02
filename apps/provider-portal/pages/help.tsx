@@ -143,12 +143,12 @@ export default function HelpPage() {
           {/* Header */}
           <div className="mb-8">
             <nav className="text-sm text-gray-500 mb-2">
-              <Link href="/" className="hover:text-purple-600">Dashboard</Link>
+              <Link href="/" className="hover:text-teal-600">Dashboard</Link>
               <span className="mx-2">/</span>
               <span className="text-gray-900">Help & Support</span>
             </nav>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <HelpCircle className="w-8 h-8 text-purple-600" />
+              <HelpCircle className="w-8 h-8 text-teal-600" />
               Help & Support
             </h1>
             <p className="text-gray-600 mt-2">Find answers, learn features, and get assistance</p>
@@ -163,13 +163,13 @@ export default function HelpPage() {
                 placeholder="Search help articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-lg"
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-lg"
               />
             </div>
           </div>
 
           {/* Quick Tips */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 mb-8 text-white">
+          <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-6 mb-8 text-white">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <Lightbulb className="w-5 h-5" />
               Quick Tips
@@ -191,10 +191,10 @@ export default function HelpPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <a
               href="mailto:support@attending.ai"
-              className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all"
+              className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all"
             >
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Mail className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                <Mail className="w-6 h-6 text-teal-600" />
               </div>
               <div>
                 <p className="font-medium text-gray-900">Email Support</p>
@@ -204,7 +204,7 @@ export default function HelpPage() {
 
             <a
               href="tel:+18001234567"
-              className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all"
+              className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all"
             >
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Phone className="w-6 h-6 text-green-600" />
@@ -217,7 +217,7 @@ export default function HelpPage() {
 
             <button
               onClick={() => alert('Live chat coming soon!')}
-              className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all text-left"
+              className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border border-gray-200 hover:border-teal-300 hover:shadow-md transition-all text-left"
             >
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <MessageCircle className="w-6 h-6 text-blue-600" />
@@ -233,10 +233,10 @@ export default function HelpPage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <Video className="w-5 h-5 text-purple-600" />
+                <Video className="w-5 h-5 text-teal-600" />
                 Video Tutorials
               </h2>
-              <button className="text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center gap-1">
+              <button className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1">
                 View all <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -248,11 +248,11 @@ export default function HelpPage() {
                   <button
                     key={index}
                     onClick={() => alert('Video tutorial coming soon!')}
-                    className="flex flex-col p-4 bg-gray-50 rounded-xl hover:bg-purple-50 transition-colors text-left group"
+                    className="flex flex-col p-4 bg-gray-50 rounded-xl hover:bg-teal-50 transition-colors text-left group"
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                        <Icon className="w-5 h-5 text-purple-600" />
+                      <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                        <Icon className="w-5 h-5 text-teal-600" />
                       </div>
                       {guide.duration && (
                         <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded-full">
@@ -271,7 +271,7 @@ export default function HelpPage() {
           {/* FAQs */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-              <Book className="w-5 h-5 text-purple-600" />
+              <Book className="w-5 h-5 text-teal-600" />
               Frequently Asked Questions
             </h2>
 
@@ -312,53 +312,53 @@ export default function HelpPage() {
           {/* Documentation Links */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
             <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-purple-600" />
+              <FileText className="w-5 h-5 text-teal-600" />
               Documentation
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <a
                 href="#"
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-purple-50 transition-colors group"
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-teal-50 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <Book className="w-5 h-5 text-purple-600" />
+                  <Book className="w-5 h-5 text-teal-600" />
                   <span className="font-medium text-gray-900">User Guide</span>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600" />
+                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
               </a>
 
               <a
                 href="#"
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-purple-50 transition-colors group"
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-teal-50 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-purple-600" />
+                  <Shield className="w-5 h-5 text-teal-600" />
                   <span className="font-medium text-gray-900">Security & Privacy</span>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600" />
+                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
               </a>
 
               <a
                 href="#"
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-purple-50 transition-colors group"
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-teal-50 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <Activity className="w-5 h-5 text-purple-600" />
+                  <Activity className="w-5 h-5 text-teal-600" />
                   <span className="font-medium text-gray-900">Clinical Guidelines</span>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600" />
+                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
               </a>
 
               <a
                 href="#"
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-purple-50 transition-colors group"
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-teal-50 transition-colors group"
               >
                 <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-purple-600" />
+                  <FileText className="w-5 h-5 text-teal-600" />
                   <span className="font-medium text-gray-900">Release Notes</span>
                 </div>
-                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-purple-600" />
+                <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-600" />
               </a>
             </div>
           </div>
@@ -366,7 +366,7 @@ export default function HelpPage() {
           {/* Status */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-purple-600" />
+              <Activity className="w-5 h-5 text-teal-600" />
               System Status
             </h2>
 

@@ -52,10 +52,10 @@ const CATEGORY_STYLES: Record<string, {
     icon: 'text-gray-400',
   },
   new: {
-    border: 'border-l-purple-500',
-    bg: 'bg-purple-50',
-    badge: 'bg-purple-100 text-purple-700',
-    icon: 'text-purple-600',
+    border: 'border-l-teal-500',
+    bg: 'bg-teal-50',
+    badge: 'bg-teal-100 text-teal-700',
+    icon: 'text-teal-600',
   },
 };
 
@@ -76,10 +76,10 @@ export function AIRecommendationsPanel({
 }: AIRecommendationsPanelProps) {
   if (loading) {
     return (
-      <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-200">
+      <div className="bg-gradient-to-r from-teal-50 to-teal-50/50 rounded-xl p-6 border border-teal-200">
         <div className="flex items-center justify-center gap-3">
-          <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
-          <span className="text-purple-700 font-medium">
+          <Loader2 className="w-5 h-5 text-teal-600 animate-spin" />
+          <span className="text-teal-700 font-medium">
             Analyzing clinical context for referral recommendations...
           </span>
         </div>
@@ -97,13 +97,13 @@ export function AIRecommendationsPanel({
   const consider = recommendations.filter(r => r.category === 'consider');
 
   return (
-    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-200 space-y-4">
+    <div className="bg-gradient-to-r from-teal-50 to-teal-50/50 rounded-xl p-5 border border-teal-200 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
-          <h3 className="font-semibold text-purple-900">AI Recommended Referrals</h3>
-          <span className="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
+          <Sparkles className="w-5 h-5 text-teal-600" />
+          <h3 className="font-semibold text-teal-900">AI Recommended Referrals</h3>
+          <span className="text-xs text-teal-600 bg-teal-100 px-2 py-0.5 rounded-full">
             {recommendations.length} suggested
           </span>
         </div>
@@ -199,7 +199,7 @@ function RecommendationCard({
   return (
     <div 
       className={`p-3 rounded-lg border-l-4 ${categoryStyle.border} ${categoryStyle.bg} ${
-        isSelected ? 'ring-2 ring-purple-500' : ''
+        isSelected ? 'ring-2 ring-teal-500' : ''
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -252,8 +252,8 @@ function RecommendationCard({
           onClick={isSelected ? onRemove : onAdd}
           className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
             isSelected
-              ? 'bg-purple-600 text-white hover:bg-purple-700'
-              : 'bg-white border border-purple-300 text-purple-700 hover:bg-purple-50'
+              ? 'bg-teal-600 text-white hover:bg-teal-700'
+              : 'bg-white border border-teal-300 text-teal-700 hover:bg-teal-50'
           }`}
         >
           {isSelected ? 'Added ✓' : 'Add'}

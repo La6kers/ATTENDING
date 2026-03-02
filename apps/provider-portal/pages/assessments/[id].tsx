@@ -599,7 +599,7 @@ export default function AssessmentDetailPage() {
                       chiefComplaint: assessment.chiefComplaint,
                     },
                   }}
-                  className="w-full border border-purple-300 bg-purple-50 text-purple-700 py-2.5 px-4 rounded-lg hover:bg-purple-100 transition-colors mb-3 flex items-center justify-center font-medium"
+                  className="w-full border border-teal-300 bg-teal-50 text-teal-700 py-2.5 px-4 rounded-lg hover:bg-teal-100 transition-colors mb-3 flex items-center justify-center font-medium"
                 >
                   <TestTube className="h-4 w-4 mr-2" />
                   Order Labs

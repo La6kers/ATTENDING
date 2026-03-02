@@ -70,7 +70,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
       className={`
         w-full text-left p-3 border-l-4 transition-colors
         ${urgencyColors[conversation.urgencyLevel] || ''}
-        ${isActive ? 'bg-purple-50 border-l-purple-600' : 'hover:bg-gray-100'}
+        ${isActive ? 'bg-teal-50 border-l-teal-600' : 'hover:bg-gray-100'}
       `}
     >
       <div className="flex items-start justify-between gap-2">
@@ -87,7 +87,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
           {conversation.lastMessage && (
             <p className="text-xs text-gray-500 truncate mt-0.5">
               {conversation.lastMessage.sender === 'provider' && (
-                <span className="text-purple-600">You: </span>
+                <span className="text-teal-600">You: </span>
               )}
               {conversation.lastMessage.content}
             </p>

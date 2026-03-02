@@ -92,12 +92,12 @@ export default function SettingsPage() {
           {/* Header */}
           <div className="mb-8">
             <nav className="text-sm text-gray-500 mb-2">
-              <Link href="/" className="hover:text-purple-600">Dashboard</Link>
+              <Link href="/" className="hover:text-teal-600">Dashboard</Link>
               <span className="mx-2">/</span>
               <span className="text-gray-900">Settings</span>
             </nav>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Settings className="w-8 h-8 text-purple-600" />
+              <Settings className="w-8 h-8 text-teal-600" />
               Settings
             </h1>
             <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
@@ -116,11 +116,11 @@ export default function SettingsPage() {
                       onClick={() => setActiveSection(section.id as SettingsSection)}
                       className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                         isActive 
-                          ? 'bg-purple-50 text-purple-700 border-l-4 border-purple-600' 
+                          ? 'bg-teal-50 text-teal-700 border-l-4 border-teal-600' 
                           : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
                       }`}
                     >
-                      <Icon className={`w-5 h-5 ${isActive ? 'text-purple-600' : 'text-gray-400'}`} />
+                      <Icon className={`w-5 h-5 ${isActive ? 'text-teal-600' : 'text-gray-400'}`} />
                       <span className="font-medium">{section.label}</span>
                     </button>
                   );
@@ -146,9 +146,9 @@ export default function SettingsPage() {
                           >
                             <div className="flex items-center gap-4">
                               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                notification.enabled ? 'bg-purple-100' : 'bg-gray-200'
+                                notification.enabled ? 'bg-teal-100' : 'bg-gray-200'
                               }`}>
-                                <Icon className={`w-5 h-5 ${notification.enabled ? 'text-purple-600' : 'text-gray-400'}`} />
+                                <Icon className={`w-5 h-5 ${notification.enabled ? 'text-teal-600' : 'text-gray-400'}`} />
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900">{notification.label}</p>
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                             <button
                               onClick={() => toggleNotification(notification.id)}
                               className={`relative w-12 h-6 rounded-full transition-colors ${
-                                notification.enabled ? 'bg-purple-600' : 'bg-gray-300'
+                                notification.enabled ? 'bg-teal-600' : 'bg-gray-300'
                               }`}
                             >
                               <span
@@ -182,8 +182,8 @@ export default function SettingsPage() {
                       {/* Theme */}
                       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            {darkMode ? <Moon className="w-5 h-5 text-purple-600" /> : <Sun className="w-5 h-5 text-purple-600" />}
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                            {darkMode ? <Moon className="w-5 h-5 text-teal-600" /> : <Sun className="w-5 h-5 text-teal-600" />}
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">Dark Mode</p>
@@ -193,7 +193,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => setDarkMode(!darkMode)}
                           className={`relative w-12 h-6 rounded-full transition-colors ${
-                            darkMode ? 'bg-purple-600' : 'bg-gray-300'
+                            darkMode ? 'bg-teal-600' : 'bg-gray-300'
                           }`}
                         >
                           <span
@@ -207,8 +207,8 @@ export default function SettingsPage() {
                       {/* Compact Mode */}
                       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Monitor className="w-5 h-5 text-purple-600" />
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                            <Monitor className="w-5 h-5 text-teal-600" />
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">Compact Mode</p>
@@ -218,7 +218,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => setCompactMode(!compactMode)}
                           className={`relative w-12 h-6 rounded-full transition-colors ${
-                            compactMode ? 'bg-purple-600' : 'bg-gray-300'
+                            compactMode ? 'bg-teal-600' : 'bg-gray-300'
                           }`}
                         >
                           <span
@@ -233,15 +233,15 @@ export default function SettingsPage() {
                       <div className="p-4 bg-gray-50 rounded-lg">
                         <p className="font-medium text-gray-900 mb-4">Color Theme</p>
                         <div className="flex gap-3">
-                          {['purple', 'blue', 'green', 'indigo'].map((color) => (
+                          {['teal', 'blue', 'green', 'indigo'].map((color) => (
                             <button
                               key={color}
                               className={`w-10 h-10 rounded-full bg-${color}-600 ring-2 ring-offset-2 ${
-                                color === 'purple' ? 'ring-purple-600' : 'ring-transparent'
+                                color === 'teal' ? 'ring-teal-600' : 'ring-transparent'
                               }`}
                               title={color}
                             >
-                              {color === 'purple' && <Check className="w-5 h-5 text-white mx-auto" />}
+                              {color === 'teal' && <Check className="w-5 h-5 text-white mx-auto" />}
                             </button>
                           ))}
                         </div>
@@ -258,7 +258,7 @@ export default function SettingsPage() {
                       {/* Change Password */}
                       <div className="p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3 mb-4">
-                          <Lock className="w-5 h-5 text-purple-600" />
+                          <Lock className="w-5 h-5 text-teal-600" />
                           <h3 className="font-medium text-gray-900">Change Password</h3>
                         </div>
                         <div className="space-y-4">
@@ -267,7 +267,7 @@ export default function SettingsPage() {
                             <div className="relative">
                               <input
                                 type={showPassword ? 'text' : 'password'}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                                 placeholder="••••••••"
                               />
                               <button
@@ -283,11 +283,11 @@ export default function SettingsPage() {
                             <label className="block text-sm text-gray-600 mb-1">New Password</label>
                             <input
                               type="password"
-                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                               placeholder="••••••••"
                             />
                           </div>
-                          <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                          <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
                             Update Password
                           </button>
                         </div>
@@ -297,7 +297,7 @@ export default function SettingsPage() {
                       <div className="p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <Key className="w-5 h-5 text-purple-600" />
+                            <Key className="w-5 h-5 text-teal-600" />
                             <div>
                               <h3 className="font-medium text-gray-900">Two-Factor Authentication</h3>
                               <p className="text-sm text-gray-500">Add an extra layer of security</p>
@@ -313,7 +313,7 @@ export default function SettingsPage() {
                       <div className="p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <Monitor className="w-5 h-5 text-purple-600" />
+                            <Monitor className="w-5 h-5 text-teal-600" />
                             <h3 className="font-medium text-gray-900">Active Sessions</h3>
                           </div>
                           <button className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1">
@@ -368,8 +368,8 @@ export default function SettingsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Volume2 className="w-5 h-5 text-purple-600" />
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                            <Volume2 className="w-5 h-5 text-teal-600" />
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">Audio Alerts</p>
@@ -379,7 +379,7 @@ export default function SettingsPage() {
                         <button
                           onClick={() => setAudioAlerts(!audioAlerts)}
                           className={`relative w-12 h-6 rounded-full transition-colors ${
-                            audioAlerts ? 'bg-purple-600' : 'bg-gray-300'
+                            audioAlerts ? 'bg-teal-600' : 'bg-gray-300'
                           }`}
                         >
                           <span
@@ -392,7 +392,7 @@ export default function SettingsPage() {
 
                       <div className="p-4 bg-gray-50 rounded-lg">
                         <p className="font-medium text-gray-900 mb-3">Alert Sound</p>
-                        <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                        <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                           <option>Default Alert</option>
                           <option>Urgent Chime</option>
                           <option>Soft Bell</option>
@@ -407,7 +407,7 @@ export default function SettingsPage() {
                           min="0"
                           max="100"
                           defaultValue="70"
-                          className="w-full accent-purple-600"
+                          className="w-full accent-teal-600"
                         />
                       </div>
                     </div>

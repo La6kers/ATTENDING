@@ -39,7 +39,7 @@ import {
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -244,8 +244,8 @@ const PharmacyCard: React.FC<{
       onClick={onSelect}
       className={`bg-white rounded-2xl p-5 shadow-lg border-2 transition-all cursor-pointer hover:shadow-xl ${
         isSelected 
-          ? 'border-purple-500 ring-2 ring-purple-200' 
-          : 'border-transparent hover:border-purple-200'
+          ? 'border-teal-500 ring-2 ring-teal-200' 
+          : 'border-transparent hover:border-teal-200'
       }`}
     >
       <div className="flex items-start justify-between mb-4">
@@ -259,7 +259,7 @@ const PharmacyCard: React.FC<{
             <h4 className="font-semibold text-gray-900 flex items-center gap-2">
               {pharmacy.name}
               {pharmacy.isPreferred && (
-                <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-xs rounded-full flex items-center gap-1">
                   <Star className="w-3 h-3" /> Preferred
                 </span>
               )}
@@ -277,7 +277,7 @@ const PharmacyCard: React.FC<{
         </div>
         
         {isSelected && (
-          <div className="px-3 py-1 bg-purple-600 text-white text-xs rounded-full font-medium">
+          <div className="px-3 py-1 bg-teal-600 text-white text-xs rounded-full font-medium">
             Selected
           </div>
         )}
@@ -454,11 +454,11 @@ export default function MedicationsPage() {
               {/* Patient Card */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <User className="w-5 h-5 text-purple-600" />
+                  <User className="w-5 h-5 text-teal-600" />
                   Patient
                 </h3>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold">
+                  <div className="w-12 h-12 bg-gradient-to-br from-teal-600 to-teal-800 rounded-xl flex items-center justify-center text-white font-bold">
                     {patient.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
@@ -494,18 +494,18 @@ export default function MedicationsPage() {
               {/* Medications to Send */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Pill className="w-5 h-5 text-purple-600" />
+                  <Pill className="w-5 h-5 text-teal-600" />
                   Prescriptions ({medications.length})
                 </h3>
                 <div className="space-y-3">
                   {medications.map((med) => (
-                    <div key={med.id} className="p-3 bg-purple-50 rounded-xl border border-purple-100">
+                    <div key={med.id} className="p-3 bg-teal-50 rounded-xl border border-teal-100">
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h4 className="font-semibold text-gray-900">{med.name}</h4>
                           <p className="text-xs text-gray-500">{med.genericName}</p>
                         </div>
-                        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium">
+                        <span className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs font-medium">
                           {med.strength}
                         </span>
                       </div>
@@ -526,7 +526,7 @@ export default function MedicationsPage() {
               <div className="bg-white rounded-2xl p-5 shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-purple-600" />
+                    <Building2 className="w-5 h-5 text-teal-600" />
                     Select Pharmacy
                   </h3>
                   <label className="flex items-center gap-2 text-sm">
@@ -534,7 +534,7 @@ export default function MedicationsPage() {
                       type="checkbox"
                       checked={filterInStock}
                       onChange={(e) => setFilterInStock(e.target.checked)}
-                      className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                      className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                     />
                     <span className="text-gray-600">Show only with all meds in stock</span>
                   </label>
@@ -547,7 +547,7 @@ export default function MedicationsPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search pharmacies by name or address..."
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500 outline-none"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500 outline-none"
                   />
                 </div>
               </div>
@@ -571,7 +571,7 @@ export default function MedicationsPage() {
                   <p className="text-gray-500">No pharmacies match your criteria</p>
                   <button 
                     onClick={() => { setSearchQuery(''); setFilterInStock(false); }}
-                    className="mt-2 text-purple-600 text-sm hover:underline"
+                    className="mt-2 text-teal-600 text-sm hover:underline"
                   >
                     Clear filters
                   </button>
@@ -594,8 +594,8 @@ export default function MedicationsPage() {
                       sentSuccess
                         ? 'bg-green-500 text-white cursor-default'
                         : isSending
-                          ? 'bg-purple-400 text-white cursor-wait'
-                          : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl'
+                          ? 'bg-teal-400 text-white cursor-wait'
+                          : 'bg-gradient-to-r from-teal-600 to-teal-800 text-white hover:from-teal-700 hover:to-teal-900 shadow-lg hover:shadow-xl'
                     }`}
                   >
                     {sentSuccess ? (

@@ -196,7 +196,7 @@ export const LabOrderSummary: React.FC<LabOrderSummaryProps> = ({
           value={clinicalIndication}
           onChange={(e) => onIndicationChange(e.target.value)}
           placeholder="Enter clinical indication for lab orders..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-teal-500 focus:border-teal-500"
           rows={2}
         />
       </div>
@@ -211,7 +211,7 @@ export const LabOrderSummary: React.FC<LabOrderSummaryProps> = ({
           value={specialInstructions}
           onChange={(e) => onInstructionsChange(e.target.value)}
           placeholder="e.g., Call with critical values, Trough level timing..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-teal-500 focus:border-teal-500"
         />
       </div>
 

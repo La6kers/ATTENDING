@@ -206,13 +206,13 @@ export function DocumentationGenerator({
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <FileText className="w-6 h-6 text-white" />
             <div>
               <h2 className="text-lg font-bold text-white">Documentation Generator</h2>
-              <p className="text-purple-200 text-sm">Auto-generate encounter notes from assessment</p>
+              <p className="text-teal-200 text-sm">Auto-generate encounter notes from assessment</p>
             </div>
           </div>
           
@@ -240,8 +240,8 @@ export function DocumentationGenerator({
             <button
               onClick={generateDocumentation}
               disabled={isGenerating}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-purple-600 rounded-lg 
-                       hover:bg-purple-50 transition-colors text-sm font-medium
+              className="flex items-center gap-2 px-4 py-2 bg-white text-teal-600 rounded-lg 
+                       hover:bg-teal-50 transition-colors text-sm font-medium
                        disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
@@ -315,7 +315,7 @@ export function DocumentationGenerator({
                     e.stopPropagation();
                     startEditing(section.id, section.content);
                   }}
-                  className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700"
+                  className="flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700"
                 >
                   <Edit3 className="w-4 h-4" />
                   Edit
@@ -332,15 +332,15 @@ export function DocumentationGenerator({
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
                       className="w-full h-48 px-4 py-3 border-2 border-gray-200 rounded-xl 
-                               focus:ring-2 focus:ring-purple-500 focus:border-purple-400
+                               focus:ring-2 focus:ring-teal-500 focus:border-teal-400
                                text-sm clinical-note-modern resize-none
                                transition-all duration-200"
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={saveEdit}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white 
-                                 rounded-lg hover:bg-purple-700 text-sm"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-teal-600 text-white 
+                                 rounded-lg hover:bg-teal-700 text-sm"
                       >
                         <Save className="w-4 h-4" />
                         Save

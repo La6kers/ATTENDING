@@ -34,7 +34,7 @@ import {
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -161,7 +161,7 @@ const AssessmentListRow: React.FC<{ assessment: Assessment; onClick: () => void 
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-md cursor-pointer transition-all group"
+      className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md cursor-pointer transition-all group"
     >
       {/* Urgency Indicator */}
       <div className={`w-1.5 h-14 rounded-full flex-shrink-0 ${getUrgencyColor(assessment.urgencyLevel)}`} />
@@ -177,9 +177,9 @@ const AssessmentListRow: React.FC<{ assessment: Assessment; onClick: () => void 
         <p className="text-gray-900 truncate">{assessment.chiefComplaint}</p>
         {assessment.primaryDiagnosis && (
           <div className="flex items-center gap-2 mt-1">
-            <Sparkles className="w-3 h-3 text-purple-500" />
-            <span className="text-sm text-purple-600">{assessment.primaryDiagnosis}</span>
-            <span className="text-xs text-purple-500 font-medium">({Math.round(assessment.aiConfidence * 100)}%)</span>
+            <Sparkles className="w-3 h-3 text-teal-500" />
+            <span className="text-sm text-teal-600">{assessment.primaryDiagnosis}</span>
+            <span className="text-xs text-teal-500 font-medium">({Math.round(assessment.aiConfidence * 100)}%)</span>
           </div>
         )}
       </div>
@@ -208,7 +208,7 @@ const AssessmentListRow: React.FC<{ assessment: Assessment; onClick: () => void 
       </div>
 
       {/* Arrow */}
-      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
+      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
     </div>
   );
 };
@@ -271,13 +271,13 @@ const AssessmentCard: React.FC<{ assessment: Assessment; onClick: () => void }> 
 
         {/* AI Diagnosis */}
         {assessment.primaryDiagnosis && (
-          <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl mb-3">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+          <div className="flex items-center gap-3 p-3 bg-teal-50 rounded-xl mb-3">
+            <Sparkles className="w-5 h-5 text-teal-600" />
             <div className="flex-1">
-              <p className="text-xs text-purple-600 font-medium">AI Diagnosis</p>
-              <p className="text-sm font-semibold text-purple-900">{assessment.primaryDiagnosis}</p>
+              <p className="text-xs text-teal-600 font-medium">AI Diagnosis</p>
+              <p className="text-sm font-semibold text-teal-900">{assessment.primaryDiagnosis}</p>
             </div>
-            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">
+            <span className="px-2 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-bold">
               {Math.round(assessment.aiConfidence * 100)}%
             </span>
           </div>
@@ -289,7 +289,7 @@ const AssessmentCard: React.FC<{ assessment: Assessment; onClick: () => void }> 
             <Clock className="w-4 h-4" />
             {getTimeAgo(assessment.submittedAt)}
           </div>
-          <div className="flex items-center gap-2 text-purple-600 font-medium text-sm">
+          <div className="flex items-center gap-2 text-teal-600 font-medium text-sm">
             Review
             <ChevronRight className="w-4 h-4" />
           </div>
@@ -378,7 +378,7 @@ export default function AssessmentsPage() {
                 </Link>
                 <div>
                   <h1 className="text-xl font-bold text-white">Pending Assessments</h1>
-                  <p className="text-purple-200 text-sm">COMPASS patient assessments awaiting review</p>
+                  <p className="text-teal-200 text-sm">COMPASS patient assessments awaiting review</p>
                 </div>
               </div>
 
@@ -387,14 +387,14 @@ export default function AssessmentsPage() {
                 <div className="flex items-center bg-white/10 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white text-purple-700' : 'text-white hover:bg-white/10'}`}
+                    className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white text-teal-700' : 'text-white hover:bg-white/10'}`}
                     title="List View"
                   >
                     <LayoutList className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('card')}
-                    className={`p-2 rounded-md transition-colors ${viewMode === 'card' ? 'bg-white text-purple-700' : 'text-white hover:bg-white/10'}`}
+                    className={`p-2 rounded-md transition-colors ${viewMode === 'card' ? 'bg-white text-teal-700' : 'text-white hover:bg-white/10'}`}
                     title="Card View"
                   >
                     <LayoutGrid className="w-4 h-4" />
@@ -422,7 +422,7 @@ export default function AssessmentsPage() {
                   <Activity className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-purple-200 text-sm">Pending Review</p>
+                  <p className="text-teal-200 text-sm">Pending Review</p>
                   <p className="text-2xl font-bold text-white">{pendingCount}</p>
                 </div>
               </div>
@@ -433,7 +433,7 @@ export default function AssessmentsPage() {
                   <Clock className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-purple-200 text-sm">In Review</p>
+                  <p className="text-teal-200 text-sm">In Review</p>
                   <p className="text-2xl font-bold text-white">{inReviewCount}</p>
                 </div>
               </div>
@@ -444,7 +444,7 @@ export default function AssessmentsPage() {
                   <AlertTriangle className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-purple-200 text-sm">High Priority</p>
+                  <p className="text-teal-200 text-sm">High Priority</p>
                   <p className="text-2xl font-bold text-white">
                     {assessments.filter(a => a.urgencyLevel === 'high' || a.urgencyLevel === 'emergency').length}
                   </p>
@@ -466,13 +466,13 @@ export default function AssessmentsPage() {
                   onClick={() => setFilter(f.value as typeof filter)}
                   className={`px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2 transition-colors ${
                     filter === f.value
-                      ? 'bg-white text-purple-700'
+                      ? 'bg-white text-teal-700'
                       : 'bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
                   {f.label}
                   <span className={`px-2 py-0.5 rounded-full text-xs ${
-                    filter === f.value ? 'bg-purple-100 text-purple-700' : 'bg-white/20'
+                    filter === f.value ? 'bg-teal-100 text-teal-700' : 'bg-white/20'
                   }`}>
                     {f.count}
                   </span>
@@ -481,13 +481,13 @@ export default function AssessmentsPage() {
             </div>
 
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-300" />
               <input
                 type="text"
                 placeholder="Search by patient name, complaint, or MRN..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-teal-300 focus:outline-none focus:ring-2 focus:ring-white/50"
               />
             </div>
           </div>
@@ -519,7 +519,7 @@ export default function AssessmentsPage() {
             <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
               <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">All caught up!</h3>
-              <p className="text-purple-200">No assessments match your current filter.</p>
+              <p className="text-teal-200">No assessments match your current filter.</p>
             </div>
           )}
         </main>

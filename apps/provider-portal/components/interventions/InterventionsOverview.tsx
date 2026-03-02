@@ -61,7 +61,7 @@ const interventionSummaries: InterventionSummary[] = [
     id: 'recommendations',
     module: 'Clinical Recommendations',
     icon: Brain,
-    gradient: 'from-indigo-600 to-purple-600',
+    gradient: 'from-teal-600 to-teal-700',
     totalItems: 5,
     urgentItems: 2,
     recentActivity: '2 new recommendations generated',
@@ -97,7 +97,7 @@ const interventionSummaries: InterventionSummary[] = [
     id: 'trials',
     module: 'Clinical Trial Matching',
     icon: FlaskConical,
-    gradient: 'from-purple-600 to-pink-600',
+    gradient: 'from-teal-600 to-cyan-600',
     totalItems: 3,
     urgentItems: 0,
     recentActivity: '1 strong match found',
@@ -303,7 +303,7 @@ export const InterventionsOverview: React.FC<{
               <p className="text-sm text-slate-400">Monthly Savings</p>
             </div>
             <div className="text-center">
-              <p className="text-4xl font-bold text-purple-400">3</p>
+              <p className="text-4xl font-bold text-teal-400">3</p>
               <p className="text-sm text-slate-400">Trial Matches</p>
             </div>
           </div>
@@ -374,8 +374,8 @@ export const InterventionsOverview: React.FC<{
           </div>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4">
-          <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-            <Target className="text-purple-600" size={24} />
+          <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+            <Target className="text-teal-600" size={24} />
           </div>
           <div>
             <p className="text-2xl font-bold text-slate-900">12</p>

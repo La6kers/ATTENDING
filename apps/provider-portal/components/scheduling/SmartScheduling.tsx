@@ -314,7 +314,7 @@ const MetricCard: React.FC<{
 
 const AppointmentTypeIcon: React.FC<{ type: AppointmentType }> = ({ type }) => {
   const icons: Record<AppointmentType, React.ReactNode> = {
-    new_patient: <User size={14} className="text-purple-500" />,
+    new_patient: <User size={14} className="text-teal-500" />,
     follow_up: <RefreshCw size={14} className="text-blue-500" />,
     urgent: <AlertTriangle size={14} className="text-red-500" />,
     procedure: <Star size={14} className="text-amber-500" />,
@@ -329,7 +329,7 @@ const StatusBadge: React.FC<{ status: AppointmentStatus }> = ({ status }) => {
     scheduled: { color: 'bg-slate-100 text-slate-700', label: 'Scheduled' },
     confirmed: { color: 'bg-blue-100 text-blue-700', label: 'Confirmed' },
     checked_in: { color: 'bg-green-100 text-green-700', label: 'Checked In' },
-    in_progress: { color: 'bg-purple-100 text-purple-700', label: 'In Progress' },
+    in_progress: { color: 'bg-teal-100 text-teal-700', label: 'In Progress' },
     completed: { color: 'bg-emerald-100 text-emerald-700', label: 'Completed' },
     no_show: { color: 'bg-red-100 text-red-700', label: 'No Show' },
     cancelled: { color: 'bg-slate-100 text-slate-400', label: 'Cancelled' },
@@ -407,7 +407,7 @@ const TimeSlotView: React.FC<{
             <span className="text-xs text-amber-600">Overbookable</span>
           )}
           {slot.aiScore && (
-            <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded">
+            <span className="text-xs px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded">
               AI: {slot.aiScore}%
             </span>
           )}
@@ -422,7 +422,7 @@ const TimeSlotView: React.FC<{
 
 const AIRecommendationCard: React.FC<{ recommendation: SchedulingRecommendation }> = ({ recommendation }) => {
   const icons: Record<string, React.ReactNode> = {
-    optimal_slot: <Star className="text-purple-500" size={18} />,
+    optimal_slot: <Star className="text-teal-500" size={18} />,
     overbook: <Plus className="text-amber-500" size={18} />,
     reschedule: <RefreshCw className="text-blue-500" size={18} />,
     no_show_risk: <AlertTriangle className="text-red-500" size={18} />,
@@ -430,7 +430,7 @@ const AIRecommendationCard: React.FC<{ recommendation: SchedulingRecommendation 
   };
 
   return (
-    <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-100">
+    <div className="p-3 bg-gradient-to-r from-teal-50 to-teal-50 rounded-lg border border-teal-100">
       <div className="flex items-start gap-3">
         <div className="p-2 bg-white rounded-lg shadow-sm">
           {icons[recommendation.type]}
@@ -439,7 +439,7 @@ const AIRecommendationCard: React.FC<{ recommendation: SchedulingRecommendation 
           <h4 className="font-medium text-slate-900">{recommendation.title}</h4>
           <p className="text-sm text-slate-600 mt-1">{recommendation.description}</p>
           {recommendation.impact && (
-            <p className="text-xs text-purple-600 mt-2 flex items-center gap-1">
+            <p className="text-xs text-teal-600 mt-2 flex items-center gap-1">
               <Zap size={12} />
               {recommendation.impact}
             </p>
@@ -519,7 +519,7 @@ export const SmartScheduling: React.FC = () => {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -570,8 +570,8 @@ export const SmartScheduling: React.FC = () => {
         <MetricCard
           label="Available Today"
           value={mockMetrics.slotsAvailable - mockMetrics.slotsBooked}
-          icon={<Calendar size={18} className="text-purple-600" />}
-          color="text-purple-600"
+          icon={<Calendar size={18} className="text-teal-600" />}
+          color="text-teal-600"
         />
         <MetricCard
           label="Satisfaction"
@@ -619,7 +619,7 @@ export const SmartScheduling: React.FC = () => {
           {/* AI Recommendations */}
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-3">
-              <Brain size={18} className="text-purple-600" />
+              <Brain size={18} className="text-teal-600" />
               <h3 className="font-semibold text-slate-900">AI Insights</h3>
             </div>
             <div className="space-y-3">

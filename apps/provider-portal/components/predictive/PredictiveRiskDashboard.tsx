@@ -131,7 +131,7 @@ const RISK_CATEGORIES: Record<RiskCategory, { name: string; description: string;
   medication_nonadherence: {
     name: 'Med Non-Adherence',
     description: 'Medication compliance risk',
-    icon: <Pill className="text-purple-500" />,
+    icon: <Pill className="text-teal-500" />,
   },
   readmission_30day: {
     name: '30-Day Readmission',
@@ -539,7 +539,7 @@ const PatientRiskCard: React.FC<{
             </div>
             <button
               onClick={() => onViewDetails(patient.patientId)}
-              className="px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-3 py-1.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
             >
               View Full Profile
             </button>
@@ -717,12 +717,12 @@ export const PredictiveRiskDashboard: React.FC = () => {
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Zap className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+              <Zap className="w-6 h-6 text-teal-600" />
             </div>
             <div>
               <p className="text-sm text-slate-500">Pending Interventions</p>
-              <p className="text-2xl font-bold text-purple-600">{pendingInterventions}</p>
+              <p className="text-2xl font-bold text-teal-600">{pendingInterventions}</p>
             </div>
           </div>
         </div>
@@ -755,7 +755,7 @@ export const PredictiveRiskDashboard: React.FC = () => {
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value as RiskCategory | 'all')}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <option value="all">All Categories</option>
           {Object.entries(RISK_CATEGORIES).map(([key, value]) => (
@@ -765,7 +765,7 @@ export const PredictiveRiskDashboard: React.FC = () => {
         <select
           value={selectedRiskLevel}
           onChange={(e) => setSelectedRiskLevel(e.target.value as RiskLevel | 'all')}
-          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <option value="all">All Risk Levels</option>
           <option value="critical">Critical</option>

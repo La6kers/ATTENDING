@@ -255,7 +255,7 @@ const TranscriptSegmentView: React.FC<{
   const [editText, setEditText] = useState(segment.text);
 
   const speakerConfig = {
-    provider: { icon: Stethoscope, color: 'text-purple-600', bg: 'bg-purple-100', label: 'Provider' },
+    provider: { icon: Stethoscope, color: 'text-teal-600', bg: 'bg-teal-100', label: 'Provider' },
     patient: { icon: User, color: 'text-blue-600', bg: 'bg-blue-100', label: 'Patient' },
     unknown: { icon: User, color: 'text-slate-600', bg: 'bg-slate-100', label: 'Unknown' },
   };
@@ -271,7 +271,7 @@ const TranscriptSegmentView: React.FC<{
   };
 
   return (
-    <div className={`flex gap-3 p-3 rounded-lg ${segment.speaker === 'provider' ? 'bg-purple-50' : 'bg-blue-50'}`}>
+    <div className={`flex gap-3 p-3 rounded-lg ${segment.speaker === 'provider' ? 'bg-teal-50' : 'bg-blue-50'}`}>
       <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center flex-shrink-0`}>
         <Icon size={16} className={config.color} />
       </div>
@@ -290,7 +290,7 @@ const TranscriptSegmentView: React.FC<{
             value={editText}
             onChange={(e) => setEditText(e.target.value)}
             onBlur={() => onEdit(segment.id, editText)}
-            className="w-full p-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full p-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
             rows={2}
           />
         ) : (
@@ -351,11 +351,11 @@ const SOAPNoteEditor: React.FC<{
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-indigo-50">
+      <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-teal-50/50">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600" />
+          <Sparkles className="w-5 h-5 text-teal-600" />
           <h3 className="font-semibold text-slate-900">AI-Generated SOAP Note</h3>
-          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+          <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">
             {note.confidence}% confidence
           </span>
         </div>
@@ -363,7 +363,7 @@ const SOAPNoteEditor: React.FC<{
           <button
             onClick={() => setIsEditing(!isEditing)}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              isEditing ? 'bg-purple-600 text-white' : 'bg-white text-slate-600 border border-slate-200'
+              isEditing ? 'bg-teal-600 text-white' : 'bg-white text-slate-600 border border-slate-200'
             }`}
           >
             <Edit3 size={14} />
@@ -389,7 +389,7 @@ const SOAPNoteEditor: React.FC<{
               onClick={() => setActiveSection(section.key)}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
                 activeSection === section.key
-                  ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
+                  ? 'text-teal-600 border-b-2 border-teal-600 bg-teal-50'
                   : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
               }`}
             >
@@ -411,7 +411,7 @@ const SOAPNoteEditor: React.FC<{
                   type="text"
                   value={note.subjective.chiefComplaint}
                   onChange={(e) => updateSubjective('chiefComplaint', e.target.value)}
-                  className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               ) : (
                 <p className="text-slate-900">{note.subjective.chiefComplaint}</p>
@@ -424,7 +424,7 @@ const SOAPNoteEditor: React.FC<{
                   value={note.subjective.hpi}
                   onChange={(e) => updateSubjective('hpi', e.target.value)}
                   rows={4}
-                  className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full p-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               ) : (
                 <p className="text-slate-900">{note.subjective.hpi}</p>
@@ -504,9 +504,9 @@ const SOAPNoteEditor: React.FC<{
               <label className="block text-sm font-medium text-slate-700 mb-1">Diagnoses</label>
               <div className="space-y-2">
                 {note.assessment.diagnoses.map((dx, idx) => (
-                  <div key={idx} className={`p-3 rounded-lg ${dx.isPrimary ? 'bg-purple-50 border border-purple-200' : 'bg-slate-50'}`}>
+                  <div key={idx} className={`p-3 rounded-lg ${dx.isPrimary ? 'bg-teal-50 border border-teal-200' : 'bg-slate-50'}`}>
                     {dx.isPrimary && (
-                      <span className="text-xs font-medium text-purple-600 mb-1 block">Primary Diagnosis</span>
+                      <span className="text-xs font-medium text-teal-600 mb-1 block">Primary Diagnosis</span>
                     )}
                     {isEditing ? (
                       <input
@@ -541,7 +541,7 @@ const SOAPNoteEditor: React.FC<{
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                         item.category === 'medication' ? 'bg-green-100 text-green-700' :
                         item.category === 'lab' ? 'bg-blue-100 text-blue-700' :
-                        item.category === 'imaging' ? 'bg-purple-100 text-purple-700' :
+                        item.category === 'imaging' ? 'bg-cyan-100 text-cyan-700' :
                         item.category === 'referral' ? 'bg-amber-100 text-amber-700' :
                         'bg-slate-200 text-slate-700'
                       }`}>
@@ -745,7 +745,7 @@ export const AmbientDocumentation: React.FC<{
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -753,7 +753,7 @@ export const AmbientDocumentation: React.FC<{
             </div>
             <div>
               <h2 className="text-lg font-semibold">Ambient Clinical Intelligence</h2>
-              <p className="text-purple-200 text-sm">Auto-generate documentation from your conversation</p>
+              <p className="text-teal-200 text-sm">Auto-generate documentation from your conversation</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -780,7 +780,7 @@ export const AmbientDocumentation: React.FC<{
                 type="checkbox"
                 checked={autoDetectSpeaker}
                 onChange={(e) => setAutoDetectSpeaker(e.target.checked)}
-                className="rounded border-slate-300 text-purple-600 focus:ring-purple-500"
+                className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
               />
               <span className="text-sm text-slate-700">Auto-detect speaker</span>
             </label>
@@ -861,8 +861,8 @@ export const AmbientDocumentation: React.FC<{
           )}
 
           {recordingState === 'processing' && (
-            <div className="flex items-center gap-3 px-6 py-3 bg-purple-100 text-purple-700 rounded-full">
-              <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-3 px-6 py-3 bg-teal-100 text-teal-700 rounded-full">
+              <div className="w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />
               Processing conversation...
             </div>
           )}
@@ -895,7 +895,7 @@ export const AmbientDocumentation: React.FC<{
               <button
                 onClick={() => setIsEditingTranscript(!isEditingTranscript)}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-sm ${
-                  isEditingTranscript ? 'bg-purple-100 text-purple-700' : 'text-slate-500 hover:bg-slate-100'
+                  isEditingTranscript ? 'bg-teal-100 text-teal-700' : 'text-slate-500 hover:bg-slate-100'
                 }`}
               >
                 <Edit3 size={14} />
@@ -925,7 +925,7 @@ export const AmbientDocumentation: React.FC<{
           {transcript.length > 0 && recordingState === 'complete' && (
             <button
               onClick={handleRegenerateNote}
-              className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 font-medium rounded-lg hover:bg-purple-200 transition-colors"
+              className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-teal-100 text-teal-700 font-medium rounded-lg hover:bg-teal-200 transition-colors"
             >
               <Wand2 size={16} />
               Regenerate Note from Edited Transcript

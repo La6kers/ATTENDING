@@ -390,11 +390,11 @@ const CategorySelector: React.FC<{
           onClick={() => onSelect(cat.value)}
           className={`p-4 rounded-xl border-2 transition-all text-left ${
             selected === cat.value
-              ? 'border-purple-500 bg-purple-50'
+              ? 'border-teal-500 bg-teal-50'
               : 'border-slate-200 hover:border-slate-300 bg-white'
           }`}
         >
-          <div className={`mb-2 ${selected === cat.value ? 'text-purple-600' : 'text-slate-400'}`}>
+          <div className={`mb-2 ${selected === cat.value ? 'text-teal-600' : 'text-slate-400'}`}>
             {cat.icon}
           </div>
           <p className="font-medium text-slate-900">{cat.label}</p>
@@ -454,7 +454,7 @@ const FindingCard: React.FC<{ finding: Finding; index: number }> = ({ finding, i
           <ul className="text-sm text-slate-600 space-y-1">
             {finding.characteristics.map((char, idx) => (
               <li key={idx} className="flex items-start gap-2">
-                <span className="text-purple-500 mt-1">•</span>
+                <span className="text-teal-500 mt-1">•</span>
                 {char}
               </li>
             ))}
@@ -493,7 +493,7 @@ const DifferentialCard: React.FC<{ differential: Differential; rank: number }> =
       >
         <div className="flex items-center gap-4">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-            rank === 1 ? 'bg-purple-100 text-purple-700' :
+            rank === 1 ? 'bg-teal-100 text-teal-700' :
             rank === 2 ? 'bg-blue-100 text-blue-700' :
             'bg-slate-100 text-slate-600'
           }`}>
@@ -508,7 +508,7 @@ const DifferentialCard: React.FC<{ differential: Differential; rank: number }> =
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-lg font-bold text-purple-600">{Math.round(differential.probability * 100)}%</p>
+            <p className="text-lg font-bold text-teal-600">{Math.round(differential.probability * 100)}%</p>
             <p className="text-xs text-slate-500">probability</p>
           </div>
           <ChevronRight className={`text-slate-400 transition-transform ${expanded ? 'rotate-90' : ''}`} />
@@ -640,7 +640,7 @@ export const ClinicalImageAnalysis: React.FC<{
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -648,7 +648,7 @@ export const ClinicalImageAnalysis: React.FC<{
             </div>
             <div>
               <h2 className="text-lg font-semibold">Multi-Modal Clinical AI</h2>
-              <p className="text-purple-200 text-sm">AI-powered image analysis for clinical decision support</p>
+              <p className="text-teal-200 text-sm">AI-powered image analysis for clinical decision support</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -682,7 +682,7 @@ export const ClinicalImageAnalysis: React.FC<{
         {/* Upload Area */}
         {!selectedImage && (
           <div 
-            className="border-2 border-dashed border-slate-300 rounded-xl p-12 text-center hover:border-purple-400 hover:bg-purple-50 transition-colors cursor-pointer"
+            className="border-2 border-dashed border-slate-300 rounded-xl p-12 text-center hover:border-teal-400 hover:bg-teal-50 transition-colors cursor-pointer"
             onClick={handleCapture}
           >
             <input
@@ -693,15 +693,15 @@ export const ClinicalImageAnalysis: React.FC<{
               onChange={handleFileSelect}
               className="hidden"
             />
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Camera className="w-8 h-8 text-purple-600" />
+            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Camera className="w-8 h-8 text-teal-600" />
             </div>
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Capture or Upload Image</h3>
             <p className="text-slate-500 mb-4">
               Take a photo or upload an existing image for AI analysis
             </p>
             <div className="flex items-center justify-center gap-4">
-              <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors">
                 <Camera size={18} />
                 Take Photo
               </button>
@@ -782,17 +782,17 @@ export const ClinicalImageAnalysis: React.FC<{
               {status === 'complete' && analysis && (
                 <>
                   {/* Summary */}
-                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-100">
+                  <div className="bg-gradient-to-r from-teal-50 to-teal-50 rounded-xl p-4 border border-teal-100">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <Brain className="w-5 h-5 text-purple-600" />
+                        <Brain className="w-5 h-5 text-teal-600" />
                         <h3 className="font-semibold text-slate-900">AI Analysis Complete</h3>
                       </div>
                       <UrgencyBadge urgency={analysis.urgency} />
                     </div>
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div>
-                        <p className="text-2xl font-bold text-purple-600">{analysis.confidence}%</p>
+                        <p className="text-2xl font-bold text-teal-600">{analysis.confidence}%</p>
                         <p className="text-xs text-slate-500">Confidence</p>
                       </div>
                       <div>
@@ -895,7 +895,7 @@ export const ClinicalImageAnalysis: React.FC<{
                 imageHistory.map(item => (
                   <div
                     key={item.id}
-                    className="border border-slate-200 rounded-lg overflow-hidden cursor-pointer hover:border-purple-300 transition-colors"
+                    className="border border-slate-200 rounded-lg overflow-hidden cursor-pointer hover:border-teal-300 transition-colors"
                     onClick={() => {
                       setSelectedImage(item.imageUrl);
                       setCategory(item.category);

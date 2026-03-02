@@ -110,7 +110,7 @@ export function CustomReferralForm({
               onFocus={() => setShowSpecialtyDropdown(true)}
               placeholder="Search specialties (e.g., Pulmonology, Rheumatology)"
               disabled={disabled}
-              className={`w-full pl-9 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+              className={`w-full pl-9 pr-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                 errors.specialty ? 'border-red-500' : 'border-gray-300'
               } ${disabled ? 'bg-gray-50 text-gray-500' : ''}`}
             />
@@ -144,7 +144,7 @@ export function CustomReferralForm({
                       setSpecialtySearch('');
                       setShowSpecialtyDropdown(false);
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-purple-50 text-sm"
+                    className="w-full text-left px-4 py-2 hover:bg-teal-50 text-sm"
                   >
                     <span className="font-medium">{spec.name}</span>
                     <span className="text-gray-400 ml-2">({spec.code})</span>
@@ -173,7 +173,7 @@ export function CustomReferralForm({
             onChange={(e) => setProvider(e.target.value)}
             placeholder="Dr. Name or leave blank for any available"
             disabled={disabled}
-            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
               disabled ? 'bg-gray-50 text-gray-500' : ''
             }`}
           />
@@ -188,7 +188,7 @@ export function CustomReferralForm({
             value={urgency}
             onChange={(e) => setUrgency(e.target.value as ReferralUrgency)}
             disabled={disabled}
-            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+            className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
               disabled ? 'bg-gray-50 text-gray-500' : ''
             }`}
           >
@@ -210,7 +210,7 @@ export function CustomReferralForm({
             placeholder="Brief clinical justification for this referral..."
             rows={3}
             disabled={disabled}
-            className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-y ${
+            className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-y ${
               errors.clinicalReason ? 'border-red-500' : 'border-gray-300'
             } ${disabled ? 'bg-gray-50 text-gray-500' : ''}`}
           />
@@ -224,7 +224,7 @@ export function CustomReferralForm({
           <button
             type="submit"
             disabled={disabled}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-xl font-medium hover:from-teal-700 hover:to-teal-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-4 h-4" />
             Create Referral

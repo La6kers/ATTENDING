@@ -97,7 +97,7 @@ export function ReferralCard({
   return (
     <article 
       className={`bg-white rounded-xl border-2 ${cardBorderClass} overflow-hidden transition-all hover:shadow-md ${
-        isSelected ? 'ring-2 ring-purple-500' : ''
+        isSelected ? 'ring-2 ring-teal-500' : ''
       }`}
     >
       {/* Header */}
@@ -135,7 +135,7 @@ export function ReferralCard({
               )}
               
               {recommendation && (
-                <span className="flex items-center gap-1 text-xs text-purple-600">
+                <span className="flex items-center gap-1 text-xs text-teal-600">
                   <Sparkles className="w-3 h-3" />
                   AI
                 </span>
@@ -168,10 +168,10 @@ export function ReferralCard({
         <div className="p-4 border-t border-gray-100 space-y-4">
           {/* AI Recommendation */}
           {recommendation && (
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-3 border border-purple-200">
+            <div className="bg-gradient-to-r from-teal-50 to-teal-50/50 rounded-lg p-3 border border-teal-200">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-purple-600" />
-                <span className="text-sm font-semibold text-purple-900">
+                <Sparkles className="w-4 h-4 text-teal-600" />
+                <span className="text-sm font-semibold text-teal-900">
                   {recommendation.redFlagRelated ? 'AI Priority Alert' : 'AI Recommendation'}
                 </span>
               </div>
@@ -192,7 +192,7 @@ export function ReferralCard({
               <ul className="space-y-1">
                 {recommendation.clinicalQuestion.split('.').filter(Boolean).map((point, i) => (
                   <li key={i} className="text-sm text-gray-700 bg-gray-50 rounded px-3 py-1.5 flex items-start gap-2">
-                    <span className="text-purple-600 font-bold">•</span>
+                    <span className="text-teal-600 font-bold">•</span>
                     {point.trim()}
                   </li>
                 ))}
@@ -236,7 +236,7 @@ export function ReferralCard({
                   value={selectedReferral.clinicalQuestion}
                   onChange={(e) => onUpdateClinicalQuestion?.(e.target.value)}
                   placeholder="What specific question would you like the specialist to address?"
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm min-h-[80px] focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm min-h-[80px] focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
 
@@ -249,7 +249,7 @@ export function ReferralCard({
                   value={selectedReferral.relevantHistory}
                   onChange={(e) => onUpdateHistory?.(e.target.value)}
                   placeholder="Brief summary of relevant medical history..."
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm min-h-[60px] focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm min-h-[60px] focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 />
               </div>
             </>
@@ -333,7 +333,7 @@ export function ReferralCard({
                   </div>
                   <button
                     onClick={onSelectProvider}
-                    className="text-sm text-purple-600 hover:underline font-medium"
+                    className="text-sm text-teal-600 hover:underline font-medium"
                   >
                     Change
                   </button>
@@ -341,7 +341,7 @@ export function ReferralCard({
               ) : (
                 <button
                   onClick={onSelectProvider}
-                  className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-purple-300 hover:text-purple-600 transition-colors text-sm"
+                  className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-teal-300 hover:text-teal-600 transition-colors text-sm"
                 >
                   + Select Preferred Provider
                 </button>
@@ -355,14 +355,14 @@ export function ReferralCard({
               <>
                 <button
                   onClick={onSubmit}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-xl font-medium hover:from-teal-700 hover:to-teal-800 transition-colors"
                 >
                   <Send className="w-4 h-4" />
                   {isUrgentCard ? 'Submit Urgent Referral' : 'Submit Referral'}
                 </button>
                 <button
                   onClick={onPreview}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-100 text-purple-700 rounded-xl font-medium hover:bg-purple-200 transition-colors"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-100 text-teal-700 rounded-xl font-medium hover:bg-teal-200 transition-colors"
                 >
                   <Eye className="w-4 h-4" />
                   Preview
@@ -377,7 +377,7 @@ export function ReferralCard({
             ) : (
               <button
                 onClick={onAdd}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-purple-300 text-purple-700 rounded-xl font-medium hover:bg-purple-50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-teal-300 text-teal-700 rounded-xl font-medium hover:bg-teal-50 transition-colors"
               >
                 Add Referral
               </button>

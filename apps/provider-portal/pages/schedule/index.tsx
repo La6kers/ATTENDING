@@ -35,7 +35,7 @@ import {
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -324,7 +324,7 @@ const getTypeColor = (type: Appointment['type']) => {
     case 'new': return 'bg-blue-100 text-blue-700';
     case 'follow-up': return 'bg-gray-100 text-gray-700';
     case 'urgent': return 'bg-red-100 text-red-700';
-    case 'telehealth': return 'bg-purple-100 text-purple-700';
+    case 'telehealth': return 'bg-teal-100 text-teal-700';
     case 'procedure': return 'bg-amber-100 text-amber-700';
   }
 };
@@ -347,15 +347,15 @@ const AppointmentRow: React.FC<{ appointment: Appointment }> = ({ appointment })
       }}
       className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
         isActive 
-          ? 'bg-purple-50 border-2 border-purple-300 shadow-md cursor-pointer hover:shadow-lg' 
+          ? 'bg-teal-50 border-2 border-teal-300 shadow-md cursor-pointer hover:shadow-lg' 
           : isPast 
             ? 'bg-gray-50 opacity-75'
-            : 'bg-white border border-gray-200 cursor-pointer hover:border-purple-300 hover:shadow-md'
+            : 'bg-white border border-gray-200 cursor-pointer hover:border-teal-300 hover:shadow-md'
       }`}
     >
       {/* Time */}
       <div className="w-24 flex-shrink-0">
-        <p className={`font-semibold ${isActive ? 'text-purple-700' : 'text-gray-900'}`}>
+        <p className={`font-semibold ${isActive ? 'text-teal-700' : 'text-gray-900'}`}>
           {appointment.time}
         </p>
         <p className="text-xs text-gray-500">{appointment.endTime}</p>
@@ -369,7 +369,7 @@ const AppointmentRow: React.FC<{ appointment: Appointment }> = ({ appointment })
       {/* Patient Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className={`font-semibold ${isActive ? 'text-purple-900' : 'text-gray-900'}`}>
+          <span className={`font-semibold ${isActive ? 'text-teal-900' : 'text-gray-900'}`}>
             {appointment.patientName}
           </span>
           <span className="text-gray-500 text-sm">
@@ -492,7 +492,7 @@ export default function SchedulePage() {
                 </Link>
                 <div>
                   <h1 className="text-xl font-bold text-white">Today's Schedule</h1>
-                  <p className="text-purple-200 text-sm">{dateStr}</p>
+                  <p className="text-teal-200 text-sm">{dateStr}</p>
                 </div>
               </div>
 
@@ -515,23 +515,23 @@ export default function SchedulePage() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-purple-200 text-sm">Total</p>
+              <p className="text-teal-200 text-sm">Total</p>
               <p className="text-2xl font-bold text-white">{stats.total}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-purple-200 text-sm">Completed</p>
+              <p className="text-teal-200 text-sm">Completed</p>
               <p className="text-2xl font-bold text-green-400">{stats.completed}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-purple-200 text-sm">In Progress</p>
+              <p className="text-teal-200 text-sm">In Progress</p>
               <p className="text-2xl font-bold text-blue-400">{stats.inProgress}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-purple-200 text-sm">Remaining</p>
+              <p className="text-teal-200 text-sm">Remaining</p>
               <p className="text-2xl font-bold text-amber-400">{stats.remaining}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-purple-200 text-sm">Urgent</p>
+              <p className="text-teal-200 text-sm">Urgent</p>
               <p className="text-2xl font-bold text-red-400">{stats.urgent}</p>
             </div>
           </div>
@@ -548,7 +548,7 @@ export default function SchedulePage() {
                 onClick={() => setFilter(f.value as typeof filter)}
                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-colors ${
                   filter === f.value
-                    ? 'bg-white text-purple-700'
+                    ? 'bg-white text-teal-700'
                     : 'bg-white/10 text-white hover:bg-white/20'
                 }`}
               >

@@ -38,7 +38,7 @@ import {
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -180,7 +180,7 @@ const getTypeColor = (type: CompletedVisit['visitType']) => {
     case 'new': return 'bg-blue-100 text-blue-700';
     case 'follow-up': return 'bg-gray-100 text-gray-700';
     case 'urgent': return 'bg-red-100 text-red-700';
-    case 'telehealth': return 'bg-purple-100 text-purple-700';
+    case 'telehealth': return 'bg-teal-100 text-teal-700';
     case 'procedure': return 'bg-amber-100 text-amber-700';
   }
 };
@@ -204,7 +204,7 @@ const VisitListRow: React.FC<{ visit: CompletedVisit; onClick: () => void }> = (
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-md cursor-pointer transition-all group"
+      className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-200 hover:border-teal-300 hover:shadow-md cursor-pointer transition-all group"
     >
       {/* Status Indicator */}
       <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -228,7 +228,7 @@ const VisitListRow: React.FC<{ visit: CompletedVisit; onClick: () => void }> = (
         <p className="text-gray-600 text-sm truncate">{visit.chiefComplaint}</p>
         <div className="flex items-center gap-2 mt-1">
           <span className="font-medium text-gray-900 truncate">{visit.primaryDiagnosis}</span>
-          <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-mono flex-shrink-0">
+          <span className="px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded text-xs font-mono flex-shrink-0">
             {visit.icdCode}
           </span>
         </div>
@@ -264,7 +264,7 @@ const VisitListRow: React.FC<{ visit: CompletedVisit; onClick: () => void }> = (
         </span>
         <div className="flex items-center justify-center gap-1">
           <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded text-xs font-mono">{visit.emLevel}</span>
-          {visit.aiAssisted && <Sparkles className="w-3 h-3 text-purple-500" />}
+          {visit.aiAssisted && <Sparkles className="w-3 h-3 text-teal-500" />}
         </div>
       </div>
 
@@ -277,7 +277,7 @@ const VisitListRow: React.FC<{ visit: CompletedVisit; onClick: () => void }> = (
       </div>
 
       {/* Arrow */}
-      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
+      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
     </div>
   );
 };
@@ -292,7 +292,7 @@ const VisitCard: React.FC<{ visit: CompletedVisit; onClick: () => void }> = ({ v
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all cursor-pointer border border-gray-100 hover:border-purple-200"
+      className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition-all cursor-pointer border border-gray-100 hover:border-teal-200"
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
@@ -325,7 +325,7 @@ const VisitCard: React.FC<{ visit: CompletedVisit; onClick: () => void }> = ({ v
             <p className="text-xs text-gray-500">Primary Diagnosis</p>
             <p className="font-medium text-gray-900">{visit.primaryDiagnosis}</p>
           </div>
-          <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-mono">
+          <span className="px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs font-mono">
             {visit.icdCode}
           </span>
         </div>
@@ -366,7 +366,7 @@ const VisitCard: React.FC<{ visit: CompletedVisit; onClick: () => void }> = ({ v
             {visit.emLevel}
           </span>
           {visit.aiAssisted && (
-            <span className="flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">
+            <span className="flex items-center gap-1 px-2 py-1 bg-teal-50 text-teal-700 rounded text-xs">
               <Sparkles className="w-3 h-3" />
               AI
             </span>
@@ -489,7 +489,7 @@ export default function CompletedVisitsPage() {
                 </Link>
                 <div>
                   <h1 className="text-xl font-bold text-white">Completed Visits</h1>
-                  <p className="text-purple-200 text-sm">Visit history and documentation</p>
+                  <p className="text-teal-200 text-sm">Visit history and documentation</p>
                 </div>
               </div>
 
@@ -498,14 +498,14 @@ export default function CompletedVisitsPage() {
                 <div className="flex items-center bg-white/10 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white text-purple-700' : 'text-white hover:bg-white/10'}`}
+                    className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white text-teal-700' : 'text-white hover:bg-white/10'}`}
                     title="List View"
                   >
                     <LayoutList className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('card')}
-                    className={`p-2 rounded-md transition-colors ${viewMode === 'card' ? 'bg-white text-purple-700' : 'text-white hover:bg-white/10'}`}
+                    className={`p-2 rounded-md transition-colors ${viewMode === 'card' ? 'bg-white text-teal-700' : 'text-white hover:bg-white/10'}`}
                     title="Card View"
                   >
                     <LayoutGrid className="w-4 h-4" />
@@ -553,28 +553,28 @@ export default function CompletedVisitsPage() {
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-400" />
-                <p className="text-purple-200 text-sm">Total Completed</p>
+                <p className="text-teal-200 text-sm">Total Completed</p>
               </div>
               <p className="text-2xl font-bold text-white mt-1">{stats.total}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-400" />
-                <p className="text-purple-200 text-sm">Today</p>
+                <p className="text-teal-200 text-sm">Today</p>
               </div>
               <p className="text-2xl font-bold text-white mt-1">{stats.todayCount}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <div className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-green-400" />
-                <p className="text-purple-200 text-sm">Total Billed</p>
+                <p className="text-teal-200 text-sm">Total Billed</p>
               </div>
               <p className="text-2xl font-bold text-white mt-1">${stats.totalBilling.toLocaleString()}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-purple-400" />
-                <p className="text-purple-200 text-sm">AI-Assisted</p>
+                <Sparkles className="w-5 h-5 text-teal-400" />
+                <p className="text-teal-200 text-sm">AI-Assisted</p>
               </div>
               <p className="text-2xl font-bold text-white mt-1">{stats.aiAssisted}</p>
             </div>
@@ -594,7 +594,7 @@ export default function CompletedVisitsPage() {
                   onClick={() => setDateFilter(f.value as typeof dateFilter)}
                   className={`px-4 py-2 rounded-xl font-medium text-sm transition-colors ${
                     dateFilter === f.value
-                      ? 'bg-white text-purple-700'
+                      ? 'bg-white text-teal-700'
                       : 'bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
@@ -604,13 +604,13 @@ export default function CompletedVisitsPage() {
             </div>
 
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-300" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-300" />
               <input
                 type="text"
                 placeholder="Search by patient, diagnosis, or MRN..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-teal-300 focus:outline-none focus:ring-2 focus:ring-white/50"
               />
             </div>
           </div>
@@ -653,9 +653,9 @@ export default function CompletedVisitsPage() {
 
           {filteredVisits.length === 0 && (
             <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
-              <FileText className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+              <FileText className="w-16 h-16 text-teal-300 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">No visits found</h3>
-              <p className="text-purple-200">Try adjusting your search or filter criteria.</p>
+              <p className="text-teal-200">Try adjusting your search or filter criteria.</p>
             </div>
           )}
         </main>

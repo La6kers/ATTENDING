@@ -187,7 +187,7 @@ const StrengthBadge: React.FC<{ strength: TrialMatch['recommendationStrength'] }
 };
 
 const PhaseBadge: React.FC<{ phase: string }> = ({ phase }) => {
-  const color = phase.includes('3') ? 'bg-purple-100 text-purple-700' : 
+  const color = phase.includes('3') ? 'bg-teal-100 text-teal-700' : 
                 phase.includes('2') ? 'bg-blue-100 text-blue-700' : 
                 'bg-slate-100 text-slate-600';
   return (
@@ -235,7 +235,7 @@ const TrialCard: React.FC<{
         {/* Conditions */}
         <div className="flex flex-wrap gap-2 mb-4">
           {trial.conditions.map((condition, idx) => (
-            <span key={idx} className="px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full">
+            <span key={idx} className="px-3 py-1 bg-teal-100 text-teal-700 text-sm rounded-full">
               {condition}
             </span>
           ))}
@@ -330,7 +330,7 @@ const TrialCard: React.FC<{
         <div className="flex items-center gap-3">
           <button
             onClick={() => onNotifyPatient(trial.id)}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 text-white font-medium rounded-lg hover:from-teal-700 hover:to-teal-800 transition-all"
           >
             <Send size={16} />
             Discuss with Patient
@@ -417,7 +417,7 @@ export const ClinicalTrialsMatcher: React.FC<{
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -425,7 +425,7 @@ export const ClinicalTrialsMatcher: React.FC<{
             </div>
             <div>
               <h2 className="text-lg font-semibold">Clinical Trial Matching</h2>
-              <p className="text-purple-100 text-sm">Connect patients to cutting-edge treatments</p>
+              <p className="text-teal-100 text-sm">Connect patients to cutting-edge treatments</p>
             </div>
           </div>
           {patientName && (
@@ -449,7 +449,7 @@ export const ClinicalTrialsMatcher: React.FC<{
           <p className="text-xs text-slate-500">Moderate Matches</p>
         </div>
         <div className="p-4 text-center">
-          <p className="text-2xl font-bold text-purple-600">3</p>
+          <p className="text-2xl font-bold text-teal-600">3</p>
           <p className="text-xs text-slate-500">Active Phases</p>
         </div>
       </div>
@@ -463,13 +463,13 @@ export const ClinicalTrialsMatcher: React.FC<{
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search trials by condition or title..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <select
           value={phaseFilter || ''}
           onChange={(e) => setPhaseFilter(e.target.value || null)}
-          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <option value="">All Phases</option>
           <option value="Phase 2">Phase 2</option>
@@ -478,7 +478,7 @@ export const ClinicalTrialsMatcher: React.FC<{
         <select
           value={strengthFilter || ''}
           onChange={(e) => setStrengthFilter(e.target.value || null)}
-          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
         >
           <option value="">All Matches</option>
           <option value="strong">Strong Only</option>

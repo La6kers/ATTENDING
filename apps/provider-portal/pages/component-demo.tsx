@@ -369,7 +369,7 @@ export default function ComponentDemoPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-600">Notification badge:</span>
-                    <div className="relative w-10 h-10 bg-purple-100 rounded-full">
+                    <div className="relative w-10 h-10 bg-teal-100 rounded-full">
                       <NotificationBadge count={7} />
                     </div>
                   </div>

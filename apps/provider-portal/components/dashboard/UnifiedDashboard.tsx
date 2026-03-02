@@ -92,7 +92,7 @@ interface AIInsight {
 
 const quickStats: QuickStat[] = [
   { id: 's1', label: 'Patients Today', value: 24, change: 3, trend: 'up', icon: <Users size={20} />, color: 'text-blue-600', href: '/patients' },
-  { id: 's2', label: 'Appointments', value: 18, change: -2, trend: 'down', icon: <Calendar size={20} />, color: 'text-purple-600', href: '/scheduling' },
+  { id: 's2', label: 'Appointments', value: 18, change: -2, trend: 'down', icon: <Calendar size={20} />, color: 'text-teal-600', href: '/scheduling' },
   { id: 's3', label: 'Pending Tasks', value: 12, trend: 'stable', icon: <FileText size={20} />, color: 'text-amber-600', href: '/tasks' },
   { id: 's4', label: 'Messages', value: 5, change: 2, trend: 'up', icon: <MessageSquare size={20} />, color: 'text-green-600', href: '/messages' },
 ];
@@ -118,7 +118,7 @@ const aiInsights: AIInsight[] = [
 ];
 
 const featureCards = [
-  { id: 'f1', title: 'AI Copilot', description: 'Real-time clinical suggestions', icon: Brain, color: 'from-purple-500 to-indigo-500', href: '/copilot', isAI: true },
+  { id: 'f1', title: 'AI Copilot', description: 'Real-time clinical suggestions', icon: Brain, color: 'from-teal-500 to-teal-600', href: '/copilot', isAI: true },
   { id: 'f2', title: 'Ambient Doc', description: 'Voice-powered documentation', icon: Mic, color: 'from-green-500 to-emerald-500', href: '/ambient', isAI: true },
   { id: 'f3', title: 'Image Analysis', description: 'AI-powered clinical imaging', icon: ImageIcon, color: 'from-blue-500 to-cyan-500', href: '/image-analysis', isAI: true },
   { id: 'f4', title: 'Decision Support', description: 'Calculators & drug reference', icon: Calculator, color: 'from-amber-500 to-orange-500', href: '/decision-support' },
@@ -133,7 +133,7 @@ const featureCards = [
 const QuickStatCard: React.FC<{ stat: QuickStat }> = ({ stat }) => (
   <Link 
     href={stat.href || '#'}
-    className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-purple-200 transition-all"
+    className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:border-teal-200 transition-all"
   >
     <div className="flex items-start justify-between">
       <div>
@@ -158,7 +158,7 @@ const QuickStatCard: React.FC<{ stat: QuickStat }> = ({ stat }) => (
 
 const AppointmentCard: React.FC<{ appointment: UpcomingAppointment }> = ({ appointment }) => {
   const typeConfig = {
-    new: { color: 'bg-purple-100 text-purple-700', label: 'New' },
+    new: { color: 'bg-teal-100 text-teal-700', label: 'New' },
     follow_up: { color: 'bg-blue-100 text-blue-700', label: 'Follow-up' },
     urgent: { color: 'bg-red-100 text-red-700', label: 'Urgent' },
     telehealth: { color: 'bg-green-100 text-green-700', label: 'Telehealth' },
@@ -167,7 +167,7 @@ const AppointmentCard: React.FC<{ appointment: UpcomingAppointment }> = ({ appoi
   const statusConfig = {
     scheduled: { color: 'text-slate-500', label: 'Scheduled' },
     checked_in: { color: 'text-green-600', label: 'Checked In' },
-    in_room: { color: 'text-purple-600', label: 'In Room' },
+    in_room: { color: 'text-teal-600', label: 'In Room' },
   };
 
   return (
@@ -201,7 +201,7 @@ const AppointmentCard: React.FC<{ appointment: UpcomingAppointment }> = ({ appoi
               <Video size={14} />
             </button>
           ) : (
-            <button className="p-1.5 bg-purple-100 text-purple-600 rounded hover:bg-purple-200 transition-colors">
+            <button className="p-1.5 bg-teal-100 text-teal-600 rounded hover:bg-teal-200 transition-colors">
               <Play size={14} />
             </button>
           )}
@@ -216,7 +216,7 @@ const TaskCard: React.FC<{ task: TaskItem }> = ({ task }) => {
     result: <Activity size={16} className="text-red-500" />,
     message: <MessageSquare size={16} className="text-blue-500" />,
     order: <FileText size={16} className="text-amber-500" />,
-    referral: <ArrowRight size={16} className="text-purple-500" />,
+    referral: <ArrowRight size={16} className="text-teal-500" />,
     document: <FileText size={16} className="text-green-500" />,
   };
   
@@ -245,11 +245,11 @@ const AIInsightCard: React.FC<{ insight: AIInsight }> = ({ insight }) => {
     risk: { color: 'text-red-600 bg-red-100', icon: <AlertTriangle size={16} /> },
     gap: { color: 'text-amber-600 bg-amber-100', icon: <Target size={16} /> },
     opportunity: { color: 'text-green-600 bg-green-100', icon: <Zap size={16} /> },
-    alert: { color: 'text-purple-600 bg-purple-100', icon: <Bell size={16} /> },
+    alert: { color: 'text-teal-600 bg-teal-100', icon: <Bell size={16} /> },
   };
 
   return (
-    <div className="p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg border border-purple-100">
+    <div className="p-3 bg-gradient-to-r from-teal-50 to-teal-50/50 rounded-lg border border-teal-100">
       <div className="flex items-start gap-3">
         <div className={`p-1.5 rounded ${typeConfig[insight.type].color}`}>
           {typeConfig[insight.type].icon}
@@ -260,7 +260,7 @@ const AIInsightCard: React.FC<{ insight: AIInsight }> = ({ insight }) => {
           {insight.action && (
             <Link 
               href={insight.href || '#'}
-              className="inline-flex items-center gap-1 mt-2 text-xs text-purple-600 hover:text-purple-700 font-medium"
+              className="inline-flex items-center gap-1 mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium"
             >
               {insight.action}
               <ChevronRight size={12} />
@@ -280,17 +280,17 @@ const FeatureCard: React.FC<{
   return (
     <Link
       href={feature.href}
-      className="group p-4 bg-white rounded-xl border border-slate-200 hover:shadow-lg hover:border-purple-200 transition-all"
+      className="group p-4 bg-white rounded-xl border border-slate-200 hover:shadow-lg hover:border-teal-200 transition-all"
     >
       <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3`}>
         <Icon size={20} className="text-white" />
       </div>
       <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-semibold text-slate-900 group-hover:text-purple-600 transition-colors">
+        <h3 className="font-semibold text-slate-900 group-hover:text-teal-600 transition-colors">
           {feature.title}
         </h3>
         {feature.isAI && (
-          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded">
+          <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded">
             AI
           </span>
         )}
@@ -312,22 +312,22 @@ export const UnifiedDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{greeting}, Dr. Chen</h1>
-            <p className="text-purple-100 mt-1">
+            <p className="text-teal-100 mt-1">
               {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-purple-200">Today's Schedule</p>
+              <p className="text-sm text-teal-200">Today's Schedule</p>
               <p className="text-2xl font-bold">18 patients</p>
             </div>
             <div className="w-px h-12 bg-white/20" />
             <div className="text-right">
-              <p className="text-sm text-purple-200">Next Patient</p>
+              <p className="text-sm text-teal-200">Next Patient</p>
               <p className="text-lg font-semibold">John Smith • 9:00 AM</p>
             </div>
           </div>
@@ -347,7 +347,7 @@ export const UnifiedDashboard: React.FC = () => {
         <div className="col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="p-4 border-b border-slate-200 flex items-center justify-between">
             <h2 className="font-semibold text-slate-900">Today's Appointments</h2>
-            <Link href="/scheduling" className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1">
+            <Link href="/scheduling" className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1">
               View all <ChevronRight size={14} />
             </Link>
           </div>
@@ -364,10 +364,10 @@ export const UnifiedDashboard: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles size={18} className="text-purple-600" />
+                <Sparkles size={18} className="text-teal-600" />
                 <h2 className="font-semibold text-slate-900">AI Insights</h2>
               </div>
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+              <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-medium rounded-full">
                 {aiInsights.length} new
               </span>
             </div>
@@ -382,7 +382,7 @@ export const UnifiedDashboard: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-200 flex items-center justify-between">
               <h2 className="font-semibold text-slate-900">Pending Tasks</h2>
-              <Link href="/tasks" className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1">
+              <Link href="/tasks" className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1">
                 View all <ChevronRight size={14} />
               </Link>
             </div>

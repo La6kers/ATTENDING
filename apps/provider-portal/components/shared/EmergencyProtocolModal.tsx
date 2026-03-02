@@ -376,7 +376,7 @@ const EmergencyProtocolModal: React.FC<EmergencyProtocolModalProps> = ({
                       className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                         isCompleted
                           ? 'bg-green-50 border-green-300'
-                          : 'bg-white border-gray-200 hover:border-purple-300'
+                          : 'bg-white border-gray-200 hover:border-teal-300'
                       }`}
                     >
                       <div className="flex items-start gap-4">
@@ -423,9 +423,9 @@ const EmergencyProtocolModal: React.FC<EmergencyProtocolModalProps> = ({
                 {protocol.dispositionOptions.map((option, idx) => (
                   <button
                     key={idx}
-                    className="p-3 text-left rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all flex items-center gap-2"
+                    className="p-3 text-left rounded-lg border border-gray-200 hover:border-teal-300 hover:bg-teal-50 transition-all flex items-center gap-2"
                   >
-                    <ArrowRight className="w-4 h-4 text-purple-600" />
+                    <ArrowRight className="w-4 h-4 text-teal-600" />
                     {option}
                   </button>
                 ))}
@@ -451,7 +451,7 @@ const EmergencyProtocolModal: React.FC<EmergencyProtocolModalProps> = ({
                   const allStepIds = new Set(protocol.steps.map(s => s.id));
                   setCompletedSteps(allStepIds);
                 }}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
               >
                 Mark Protocol Complete
               </button>

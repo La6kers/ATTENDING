@@ -292,8 +292,8 @@ const mockMessages: SecureMessage[] = [
 
 const categoryConfig: Record<TaskCategory, { icon: any; label: string; color: string }> = {
   follow_up: { icon: Calendar, label: 'Follow-up', color: 'bg-blue-100 text-blue-700' },
-  lab_review: { icon: TestTube, label: 'Lab Review', color: 'bg-purple-100 text-purple-700' },
-  imaging_review: { icon: Activity, label: 'Imaging', color: 'bg-indigo-100 text-indigo-700' },
+  lab_review: { icon: TestTube, label: 'Lab Review', color: 'bg-teal-100 text-teal-700' },
+  imaging_review: { icon: Activity, label: 'Imaging', color: 'bg-cyan-100 text-cyan-700' },
   referral: { icon: Stethoscope, label: 'Referral', color: 'bg-teal-100 text-teal-700' },
   prior_auth: { icon: FileText, label: 'Prior Auth', color: 'bg-orange-100 text-orange-700' },
   phone_call: { icon: Phone, label: 'Phone Call', color: 'bg-green-100 text-green-700' },
@@ -402,7 +402,7 @@ const HandoffCard: React.FC<{
 
   return (
     <div className="rounded-xl border-2 border-blue-200 bg-blue-50/50 overflow-hidden">
-      <div className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+      <div className="p-4 bg-gradient-to-r from-blue-600 to-teal-600 text-white">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <ArrowRightLeft size={20} />
@@ -491,7 +491,7 @@ const HandoffCard: React.FC<{
                 <h4 className="text-xs font-semibold text-slate-500 mb-2">DIAGNOSES</h4>
                 <div className="flex flex-wrap gap-1">
                   {handoff.activeDiagnoses.map((dx, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                    <span key={idx} className="px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded-full">
                       {dx}
                     </span>
                   ))}
@@ -537,7 +537,7 @@ const HandoffCard: React.FC<{
                   {handoff.pendingResults.map((result, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200">
                       <div className="flex items-center gap-2">
-                        {result.type === 'lab' ? <TestTube size={14} className="text-purple-500" /> : <Activity size={14} className="text-blue-500" />}
+                        {result.type === 'lab' ? <TestTube size={14} className="text-teal-500" /> : <Activity size={14} className="text-blue-500" />}
                         <span className="text-sm text-slate-700">{result.name}</span>
                       </div>
                       {result.actionIfAbnormal && (
@@ -555,7 +555,7 @@ const HandoffCard: React.FC<{
         {handoff.status === 'pending' && (
           <button
             onClick={() => onAcknowledge(handoff.id)}
-            className="w-full mt-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2"
+            className="w-full mt-4 py-3 bg-gradient-to-r from-blue-600 to-teal-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-teal-700 transition-all flex items-center justify-center gap-2"
           >
             <CheckCircle size={18} />
             Acknowledge Handoff

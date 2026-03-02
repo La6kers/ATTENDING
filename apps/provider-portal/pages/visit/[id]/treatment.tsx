@@ -40,7 +40,7 @@ import type { PharmacyInfo } from '@attending/shared/services/PharmacyInventoryS
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -238,7 +238,7 @@ const TreatmentOption: React.FC<TreatmentOptionProps> = ({
 
   return (
     <div className={`border rounded-xl overflow-hidden transition-all ${
-      treatment.selected ? 'border-purple-300 bg-purple-50' : 'border-gray-200 bg-white'
+      treatment.selected ? 'border-teal-300 bg-teal-50' : 'border-gray-200 bg-white'
     }`}>
       <div className="p-4">
         <div className="flex items-start gap-4">
@@ -247,8 +247,8 @@ const TreatmentOption: React.FC<TreatmentOptionProps> = ({
             onClick={onToggle}
             className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
               treatment.selected
-                ? 'bg-purple-600 border-purple-600 text-white'
-                : 'border-gray-300 hover:border-purple-400'
+                ? 'bg-teal-600 border-teal-600 text-white'
+                : 'border-gray-300 hover:border-teal-400'
             }`}
           >
             {treatment.selected && <CheckCircle className="w-4 h-4" />}
@@ -301,7 +301,7 @@ const TreatmentOption: React.FC<TreatmentOptionProps> = ({
             {hasWarnings && (
               <button
                 onClick={onExpand}
-                className="text-sm text-purple-600 hover:text-purple-800 mt-2 flex items-center gap-1"
+                className="text-sm text-teal-600 hover:text-teal-800 mt-2 flex items-center gap-1"
               >
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 {expanded ? 'Hide Details' : 'View Warnings'}
@@ -468,18 +468,18 @@ export default function TreatmentPage() {
                 <div>
                   <div className="flex items-center gap-3">
                     <h1 className="text-xl font-bold text-white">Treatment Planning</h1>
-                    <span className="px-3 py-1 bg-purple-500 text-white text-xs font-bold rounded-full">
+                    <span className="px-3 py-1 bg-teal-500 text-white text-xs font-bold rounded-full">
                       STEP 2 OF 3
                     </span>
                   </div>
-                  <p className="text-purple-200 text-sm">
+                  <p className="text-teal-200 text-sm">
                     {patientContext ? `${patientContext.name} • ${patientContext.age}yo ${patientContext.gender}` : 'Loading...'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="text-right text-purple-200 text-sm">
+                <div className="text-right text-teal-200 text-sm">
                   <p className="font-medium text-white">{selectedTreatments.length} items selected</p>
                   <p>Select treatment options</p>
                 </div>
@@ -495,14 +495,14 @@ export default function TreatmentPage() {
               {/* Selected Diagnoses */}
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-600" />
+                  <FileText className="w-5 h-5 text-teal-600" />
                   Working Diagnoses
                 </h3>
                 <div className="space-y-2">
                   {selectedDiagnoses.map((dx) => (
-                    <div key={dx.id} className="p-3 bg-purple-50 rounded-xl">
+                    <div key={dx.id} className="p-3 bg-teal-50 rounded-xl">
                       <p className="font-medium text-gray-900 text-sm">{dx.name}</p>
-                      <p className="text-purple-600 text-xs font-mono">{dx.icdCode}</p>
+                      <p className="text-teal-600 text-xs font-mono">{dx.icdCode}</p>
                     </div>
                   ))}
                 </div>
@@ -560,7 +560,7 @@ export default function TreatmentPage() {
                   </div>
                   <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
                     <span>Total Items</span>
-                    <span className="text-purple-700">{selectedTreatments.length}</span>
+                    <span className="text-teal-700">{selectedTreatments.length}</span>
                   </div>
                 </div>
               </div>
@@ -653,9 +653,9 @@ export default function TreatmentPage() {
 
               {/* Follow-up & Referrals */}
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div className="p-4 border-b bg-gradient-to-r from-purple-50 to-pink-50 flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-xl">
-                    <Calendar className="w-5 h-5 text-purple-600" />
+                <div className="p-4 border-b bg-gradient-to-r from-teal-50 to-teal-100 flex items-center gap-3">
+                  <div className="p-2 bg-teal-100 rounded-xl">
+                    <Calendar className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>
                     <h2 className="font-bold text-gray-900">Follow-up & Referrals</h2>
@@ -682,7 +682,7 @@ export default function TreatmentPage() {
                   disabled={!canProceed}
                   className={`px-8 py-4 rounded-2xl font-semibold text-lg flex items-center gap-3 transition-all ${
                     canProceed
-                      ? 'bg-white text-purple-700 hover:bg-purple-50 shadow-lg hover:shadow-xl'
+                      ? 'bg-white text-teal-700 hover:bg-teal-50 shadow-lg hover:shadow-xl'
                       : 'bg-white/30 text-white/60 cursor-not-allowed'
                   }`}
                 >

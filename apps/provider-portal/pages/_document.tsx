@@ -44,7 +44,7 @@ class AttendingDocument extends Document<DocumentProps> {
           
           {/* Meta */}
           <meta name="description" content="ATTENDING AI - Clinical Intelligence Platform" />
-          <meta name="theme-color" content="#8b5cf6" />
+          <meta name="theme-color" content="#1A8FA8" />
         </Head>
         <body>
           <Main />

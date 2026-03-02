@@ -48,7 +48,7 @@ export function ReferralPreviewModal({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <FileText className="w-5 h-5 text-purple-600" />
+            <FileText className="w-5 h-5 text-teal-600" />
             <h2 id="preview-title" className="text-lg font-semibold text-gray-900">
               Referral Preview
             </h2>
@@ -136,7 +136,7 @@ export function ReferralPreviewModal({
           {/* Clinical Question */}
           <div>
             <h4 className="font-semibold text-gray-900 mb-2">Clinical Question for Specialist</h4>
-            <p className="text-gray-700 bg-purple-50 p-3 rounded-lg border border-purple-100">
+            <p className="text-gray-700 bg-teal-50 p-3 rounded-lg border border-teal-100">
               {referral.clinicalQuestion || 'No specific clinical question provided'}
             </p>
           </div>
@@ -224,7 +224,7 @@ export function ReferralPreviewModal({
             <button
               onClick={onConfirmSubmit}
               disabled={isSubmitting}
-              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-lg font-medium hover:from-teal-700 hover:to-teal-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send className="w-4 h-4" />
               {isSubmitting ? 'Submitting...' : 'Confirm & Submit'}

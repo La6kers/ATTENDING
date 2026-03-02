@@ -362,7 +362,7 @@ const MetricCard: React.FC<{ metric: ProviderMetric }> = ({ metric }) => {
   const categoryColors = {
     quality: 'border-l-emerald-500',
     efficiency: 'border-l-blue-500',
-    patient_experience: 'border-l-purple-500',
+    patient_experience: 'border-l-teal-500',
     ai_adoption: 'border-l-amber-500',
   };
 
@@ -418,7 +418,7 @@ const MetricCard: React.FC<{ metric: ProviderMetric }> = ({ metric }) => {
           <span className="text-xs text-slate-500 w-12">You</span>
           <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-purple-500 rounded-full"
+              className="h-full bg-teal-500 rounded-full"
               style={{ width: `${Math.min((metric.value / Math.max(metric.target, metric.peerAverage, metric.value)) * 100, 100)}%` }}
             />
           </div>
@@ -440,7 +440,7 @@ const MetricCard: React.FC<{ metric: ProviderMetric }> = ({ metric }) => {
 const BadgeDisplay: React.FC<{ badge: Badge }> = ({ badge }) => {
   const iconMap = {
     star: <Star className="w-5 h-5 text-amber-500" />,
-    medal: <Medal className="w-5 h-5 text-purple-500" />,
+    medal: <Medal className="w-5 h-5 text-teal-500" />,
     trophy: <Award className="w-5 h-5 text-emerald-500" />,
     target: <Target className="w-5 h-5 text-blue-500" />,
     zap: <Zap className="w-5 h-5 text-orange-500" />,
@@ -449,7 +449,7 @@ const BadgeDisplay: React.FC<{ badge: Badge }> = ({ badge }) => {
   const categoryColors = {
     quality: 'bg-emerald-50 border-emerald-200',
     efficiency: 'bg-blue-50 border-blue-200',
-    innovation: 'bg-purple-50 border-purple-200',
+    innovation: 'bg-teal-50 border-teal-200',
     leadership: 'bg-amber-50 border-amber-200',
   };
 
@@ -521,7 +521,7 @@ const ImprovementAreaCard: React.FC<{ area: ImprovementArea }> = ({ area }) => {
               <a
                 key={idx}
                 href={resource.link}
-                className="text-sm text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                className="text-sm text-teal-600 hover:text-teal-800 flex items-center gap-1"
               >
                 <BookOpen size={12} />
                 {resource.title}
@@ -536,15 +536,15 @@ const ImprovementAreaCard: React.FC<{ area: ImprovementArea }> = ({ area }) => {
 
 const AIUsageCard: React.FC<{ stats: AIUsageStats }> = ({ stats }) => {
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
+    <div className="bg-gradient-to-br from-teal-50 to-teal-50 rounded-xl p-6 border border-teal-100">
       <div className="flex items-center gap-2 mb-4">
-        <Brain className="w-6 h-6 text-purple-600" />
+        <Brain className="w-6 h-6 text-teal-600" />
         <h3 className="text-lg font-semibold text-slate-900">AI Usage Statistics</h3>
       </div>
 
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div className="text-center">
-          <p className="text-2xl font-bold text-purple-600">{stats.totalRecommendationsReviewed}</p>
+          <p className="text-2xl font-bold text-teal-600">{stats.totalRecommendationsReviewed}</p>
           <p className="text-xs text-slate-500">Recommendations Reviewed</p>
         </div>
         <div className="text-center">
@@ -570,7 +570,7 @@ const AIUsageCard: React.FC<{ stats: AIUsageStats }> = ({ stats }) => {
               <div className="flex items-center gap-2">
                 <div className="w-24 h-2 bg-white rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-purple-500 rounded-full"
+                    className="h-full bg-teal-500 rounded-full"
                     style={{ width: `${(feature.count / stats.topUsedFeatures[0].count) * 100}%` }}
                   />
                 </div>
@@ -616,8 +616,8 @@ export const ProviderPerformanceDashboard: React.FC<{
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-            <User className="w-8 h-8 text-purple-600" />
+          <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center">
+            <User className="w-8 h-8 text-teal-600" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">{data.providerName}</h1>
@@ -659,7 +659,7 @@ export const ProviderPerformanceDashboard: React.FC<{
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-600">Badges Earned</span>
-              <span className="text-lg font-bold text-purple-600">
+              <span className="text-lg font-bold text-teal-600">
                 {data.badges.length}
               </span>
             </div>
@@ -694,7 +694,7 @@ export const ProviderPerformanceDashboard: React.FC<{
                 onClick={() => setSelectedCategory(cat.value)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   selectedCategory === cat.value
-                    ? 'bg-purple-600 text-white'
+                    ? 'bg-teal-600 text-white'
                     : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
                 }`}
               >

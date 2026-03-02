@@ -133,7 +133,7 @@ export const MedicationOrderSummary: React.FC<MedicationOrderSummaryProps> = ({
                           {selected.strength} {selected.form}
                         </span>
                         {selected.aiRecommended && (
-                          <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">AI</span>
+                          <span className="text-xs bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">AI</span>
                         )}
                         {selected.medication.isControlled && (
                           <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">
@@ -150,14 +150,14 @@ export const MedicationOrderSummary: React.FC<MedicationOrderSummaryProps> = ({
                             placeholder="Clinical indication (required)"
                             value={selected.indication}
                             onChange={(e) => onUpdateMed(selected.medication.id, { indication: e.target.value })}
-                            className="w-full text-sm px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                            className="w-full text-sm px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-teal-500"
                           />
                           <textarea
                             placeholder="Directions"
                             value={selected.directions}
                             onChange={(e) => onUpdateMed(selected.medication.id, { directions: e.target.value })}
                             rows={2}
-                            className="w-full text-sm px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-indigo-500"
+                            className="w-full text-sm px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-teal-500"
                           />
                           <div className="grid grid-cols-3 gap-2">
                             <div>
@@ -203,7 +203,7 @@ export const MedicationOrderSummary: React.FC<MedicationOrderSummaryProps> = ({
                           </div>
                           <button
                             onClick={() => setEditingId(null)}
-                            className="text-xs text-indigo-600 hover:text-indigo-800"
+                            className="text-xs text-teal-600 hover:text-teal-800"
                           >
                             Done editing
                           </button>
@@ -242,7 +242,7 @@ export const MedicationOrderSummary: React.FC<MedicationOrderSummaryProps> = ({
                       <div className="flex gap-1">
                         <button
                           onClick={() => setEditingId(isEditing ? null : selected.medication.id)}
-                          className="p-1 text-gray-400 hover:text-indigo-600"
+                          className="p-1 text-gray-400 hover:text-teal-600"
                           title="Edit"
                         >
                           <Edit2 className="w-4 h-4" />

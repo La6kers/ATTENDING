@@ -262,8 +262,8 @@ export const AIScribe: React.FC<{ patientId: string; patientName: string }> = ({
                 defaultValue={soapNote.assessment}
               />
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-purple-800 mb-2">Plan</h4>
+            <div className="bg-teal-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-teal-800 mb-2">Plan</h4>
               <textarea
                 className="w-full bg-white border rounded p-2 text-sm"
                 rows={4}

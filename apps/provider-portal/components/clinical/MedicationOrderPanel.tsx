@@ -98,7 +98,7 @@ export function MedicationOrderPanel({
         <h3 className="text-lg font-semibold text-gray-900">Active Medications</h3>
         <button
           onClick={() => setShowOrderForm(true)}
-          className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded transition-colors"
+          className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded transition-colors"
         >
           + New Prescription
         </button>
@@ -340,7 +340,7 @@ function MedicationOrderForm({ patientId, encounterId, onSubmit, onClose, isSubm
                   onClick={() => setSelectedMed(med)}
                   className={`p-3 text-left border rounded-lg transition-colors ${
                     selectedMed?.code === med.code
-                      ? 'border-purple-500 bg-purple-50'
+                      ? 'border-teal-500 bg-teal-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -472,7 +472,7 @@ function MedicationOrderForm({ patientId, encounterId, onSubmit, onClose, isSubm
             <button
               type="submit"
               disabled={!selectedMed || !clinicalIndication || !diagnosisCode || hasContraindication || isSubmitting}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
             >
               {isSubmitting ? 'Prescribing...' : 'Send to Pharmacy'}
             </button>

@@ -193,7 +193,7 @@ export default function OnboardingWizard() {
   // Render helpers
   // ============================================================
 
-  const inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500';
+  const inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500';
 
   const renderStep1 = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -250,7 +250,7 @@ export default function OnboardingWizard() {
           <label className="block text-xs font-medium text-gray-600 mb-1">NPI Number</label>
           <div className="flex gap-2">
             <input type="text" maxLength={10} value={newNpi} onChange={e => setNewNpi(e.target.value)} className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-sm" placeholder="1234567890" />
-            <button onClick={lookupNPI} disabled={npiLoading} className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50">
+            <button onClick={lookupNPI} disabled={npiLoading} className="px-3 py-1.5 bg-teal-600 text-white text-sm rounded hover:bg-teal-700 disabled:opacity-50">
               {npiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Lookup'}
             </button>
           </div>
@@ -311,7 +311,7 @@ export default function OnboardingWizard() {
           <input type="password" value={ehr.clientSecret} onChange={e => setEhr(c => ({...c, clientSecret: e.target.value}))} className={inputCls} />
         </div>
         <div className="md:col-span-2 flex items-center gap-3">
-          <button onClick={testEHR} disabled={ehr.connectionStatus === 'testing'} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
+          <button onClick={testEHR} disabled={ehr.connectionStatus === 'testing'} className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700 disabled:opacity-50 flex items-center gap-2">
             {ehr.connectionStatus === 'testing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wifi className="w-4 h-4" />} Test Connection
           </button>
           {ehr.connectionStatus === 'connected' && <span className="flex items-center gap-1 text-green-600 text-sm"><CheckCircle className="w-4 h-4" /> Connected</span>}
@@ -329,7 +329,7 @@ export default function OnboardingWizard() {
           <label key={key} className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
             <input type="checkbox" checked={protocols[key as keyof ProtocolConfig] as boolean}
               onChange={e => setProtocols(p => ({...p, [key]: e.target.checked}))}
-              className="mt-0.5 w-4 h-4 text-indigo-600 rounded" />
+              className="mt-0.5 w-4 h-4 text-teal-600 rounded" />
             <div><div className="text-sm font-medium text-gray-900">{label}</div><div className="text-xs text-gray-500">{desc}</div></div>
           </label>
         ))}
@@ -342,8 +342,8 @@ export default function OnboardingWizard() {
       <p className="text-sm text-gray-600 mb-4">Automated test using a synthetic patient to verify all systems are operational.</p>
       {smokeTests.length === 0 ? (
         <div className="text-center py-12">
-          <PlayCircle className="w-16 h-16 text-indigo-300 mx-auto mb-4" />
-          <button onClick={runSmokeTest} className="px-6 py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 flex items-center gap-2 mx-auto">
+          <PlayCircle className="w-16 h-16 text-teal-300 mx-auto mb-4" />
+          <button onClick={runSmokeTest} className="px-6 py-3 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-2 mx-auto">
             <PlayCircle className="w-5 h-5" /> Run Smoke Test
           </button>
         </div>
@@ -377,10 +377,10 @@ export default function OnboardingWizard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-8">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-8">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-2xl font-bold">ATTENDING AI — Pilot Onboarding</h1>
-          <p className="text-indigo-200 mt-1">Get your site live in under 4 hours</p>
+          <p className="text-teal-200 mt-1">Get your site live in under 4 hours</p>
         </div>
       </div>
 
@@ -391,10 +391,10 @@ export default function OnboardingWizard() {
               <React.Fragment key={s}>
                 <button onClick={() => setStep(s as WizardStep)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                    step === s ? 'bg-indigo-50 text-indigo-700 font-medium' : completed.has(s as WizardStep) ? 'text-green-600' : 'text-gray-400'
+                    step === s ? 'bg-teal-50 text-teal-700 font-medium' : completed.has(s as WizardStep) ? 'text-green-600' : 'text-gray-400'
                   }`}>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    completed.has(s as WizardStep) ? 'bg-green-100 text-green-600' : step === s ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-400'
+                    completed.has(s as WizardStep) ? 'bg-green-100 text-green-600' : step === s ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'
                   }`}>
                     {completed.has(s as WizardStep) ? <CheckCircle className="w-4 h-4" /> : s}
                   </div>
@@ -423,7 +423,7 @@ export default function OnboardingWizard() {
             <ChevronLeft className="w-4 h-4" /> Back
           </button>
           {step < 5 ? (
-            <button onClick={goNext} className="px-6 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 flex items-center gap-1">
+            <button onClick={goNext} className="px-6 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 flex items-center gap-1">
               Next <ArrowRight className="w-4 h-4" />
             </button>
           ) : (

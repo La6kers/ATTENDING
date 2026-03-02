@@ -19,7 +19,7 @@ export default function PatientsIndex() {
   return (
     <div 
       className="min-h-screen flex items-center justify-center"
-      style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)' }}
     >
       <div className="text-center text-white">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>

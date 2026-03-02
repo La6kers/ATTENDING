@@ -36,7 +36,7 @@ export function ReferralStatusSidebar({
       {/* Status Tracking */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-4">
-          <CheckCircle className="w-4 h-4 text-purple-600" />
+          <CheckCircle className="w-4 h-4 text-teal-600" />
           Referral Status Tracking
         </h3>
         
@@ -87,7 +87,7 @@ export function ReferralStatusSidebar({
       {/* Active Referrals */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-4">
-          <Calendar className="w-4 h-4 text-purple-600" />
+          <Calendar className="w-4 h-4 text-teal-600" />
           Active Referrals ({activeReferrals.length})
         </h3>
         
@@ -124,7 +124,7 @@ export function ReferralStatusSidebar({
 
         <button
           onClick={onViewAllReferrals}
-          className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors"
+          className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-teal-50 text-teal-700 rounded-lg text-sm font-medium hover:bg-teal-100 transition-colors"
         >
           View All Referrals
           <ChevronRight className="w-4 h-4" />
@@ -134,7 +134,7 @@ export function ReferralStatusSidebar({
       {/* Appeal Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
         <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2 mb-4">
-          <FileText className="w-4 h-4 text-purple-600" />
+          <FileText className="w-4 h-4 text-teal-600" />
           Appeal Assistance
         </h3>
         
@@ -171,7 +171,7 @@ export function ReferralStatusSidebar({
       </div>
 
       {/* Quick Stats */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-sm p-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 rounded-xl shadow-sm p-4 text-white">
         <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
           <RefreshCw className="w-4 h-4" />
           Quick Stats
@@ -179,25 +179,25 @@ export function ReferralStatusSidebar({
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white/10 rounded-lg p-2 text-center">
             <p className="text-2xl font-bold">{activeReferrals.length}</p>
-            <p className="text-xs text-purple-200">Active</p>
+            <p className="text-xs text-teal-200">Active</p>
           </div>
           <div className="bg-white/10 rounded-lg p-2 text-center">
             <p className="text-2xl font-bold">
               {activeReferrals.filter(r => r.status === 'PENDING').length}
             </p>
-            <p className="text-xs text-purple-200">Pending</p>
+            <p className="text-xs text-teal-200">Pending</p>
           </div>
           <div className="bg-white/10 rounded-lg p-2 text-center">
             <p className="text-2xl font-bold">
               {activeReferrals.filter(r => r.status === 'SCHEDULED').length}
             </p>
-            <p className="text-xs text-purple-200">Scheduled</p>
+            <p className="text-xs text-teal-200">Scheduled</p>
           </div>
           <div className="bg-white/10 rounded-lg p-2 text-center">
             <p className="text-2xl font-bold">
               {activeReferrals.filter(r => r.status === 'COMPLETED').length}
             </p>
-            <p className="text-xs text-purple-200">Completed</p>
+            <p className="text-xs text-teal-200">Completed</p>
           </div>
         </div>
       </div>

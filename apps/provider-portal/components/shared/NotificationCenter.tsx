@@ -197,7 +197,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         aria-label="Notification Center"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4">
+        <div className="bg-gradient-to-r from-teal-600 to-teal-700 text-white p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-lg">Notification Center</h2>
             <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <button
               onClick={() => setActiveTab('notifications')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'notifications' ? 'bg-white text-purple-700' : 'text-white/80 hover:bg-white/10'
+                activeTab === 'notifications' ? 'bg-white text-teal-700' : 'text-white/80 hover:bg-white/10'
               }`}
             >
               <Bell className="w-4 h-4" />
@@ -236,7 +236,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <button
               onClick={() => setActiveTab('team')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'team' ? 'bg-white text-purple-700' : 'text-white/80 hover:bg-white/10'
+                activeTab === 'team' ? 'bg-white text-teal-700' : 'text-white/80 hover:bg-white/10'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -257,7 +257,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b text-sm">
                   <button
                     onClick={handleMarkAllRead}
-                    className="text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1"
+                    className="text-teal-600 hover:text-teal-800 font-medium flex items-center gap-1"
                     disabled={unreadCount === 0}
                   >
                     <CheckCheck className="w-4 h-4" />
@@ -313,7 +313,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                                 {notification.title}
                               </p>
                               {!notification.read && (
-                                <span className="flex-shrink-0 w-2 h-2 bg-purple-500 rounded-full mt-1.5" />
+                                <span className="flex-shrink-0 w-2 h-2 bg-teal-500 rounded-full mt-1.5" />
                               )}
                             </div>
                             <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">
@@ -347,7 +347,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="relative">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                    <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
                       {member.initials}
                     </div>
                     <span
@@ -359,19 +359,19 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     <p className="font-medium text-gray-900 text-sm">{member.name}</p>
                     <p className="text-xs text-gray-500">{member.role}</p>
                     {member.currentActivity && member.status !== 'offline' && (
-                      <p className="text-xs text-purple-600 truncate mt-0.5">
+                      <p className="text-xs text-teal-600 truncate mt-0.5">
                         📝 {member.currentActivity}
                       </p>
                     )}
                   </div>
-                  <button className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
+                  <button className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
                     <MessageSquare className="w-4 h-4" />
                   </button>
                 </div>
               ))}
 
               {/* Team Huddle Button */}
-              <button className="w-full mt-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
+              <button className="w-full mt-4 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
                 <Users className="w-5 h-5" />
                 Start Team Huddle
               </button>
@@ -383,7 +383,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         <div className="p-3 border-t bg-gray-50">
           <Link
             href="/notifications"
-            className="block text-center text-sm font-medium text-purple-600 hover:text-purple-800"
+            className="block text-center text-sm font-medium text-teal-600 hover:text-teal-800"
             onClick={onClose}
           >
             View all notifications →

@@ -86,7 +86,7 @@ export const AIMedicationRecommendationsPanel: React.FC<AIMedicationRecommendati
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-teal-700 rounded-lg flex items-center justify-center">
             <Brain className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -103,7 +103,7 @@ export const AIMedicationRecommendationsPanel: React.FC<AIMedicationRecommendati
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 p-4 text-white">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
             <Brain className="w-6 h-6" />
@@ -153,7 +153,7 @@ export const AIMedicationRecommendationsPanel: React.FC<AIMedicationRecommendati
                     <div
                       key={rec.id}
                       className={`bg-white rounded-lg p-3 border ${
-                        isSelected ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200'
+                        isSelected ? 'border-teal-300 bg-teal-50' : 'border-gray-200'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -180,7 +180,7 @@ export const AIMedicationRecommendationsPanel: React.FC<AIMedicationRecommendati
                           )}
 
                           {rec.dosageRecommendation && (
-                            <div className="mt-1 text-xs text-indigo-600">
+                            <div className="mt-1 text-xs text-teal-600">
                               <span className="font-medium">Dosing:</span> {rec.dosageRecommendation}
                             </div>
                           )}
@@ -217,7 +217,7 @@ export const AIMedicationRecommendationsPanel: React.FC<AIMedicationRecommendati
                           {!isSelected && !isAvoid && (
                             <button
                               onClick={() => onAddRecommendation(rec.medicationId, rec.priority, rec.rationale)}
-                              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                              className="text-xs text-teal-600 hover:text-teal-800 font-medium"
                             >
                               + Prescribe
                             </button>

@@ -95,7 +95,7 @@ const TopBar: React.FC<{
           <input
             type="text"
             placeholder="Search patients, encounters, orders..."
-            className="w-full pl-11 pr-4 py-2.5 bg-slate-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+            className="w-full pl-11 pr-4 py-2.5 bg-slate-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
           />
           <kbd className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-slate-200 text-slate-500 text-xs rounded hidden md:inline">
             ⌘K
@@ -111,7 +111,7 @@ const TopBar: React.FC<{
             onClick={() => setIsListening(!isListening)}
             className={`p-2.5 rounded-xl transition-all ${
               isListening 
-                ? 'bg-purple-100 text-purple-600 ring-2 ring-purple-300 animate-pulse' 
+                ? 'bg-teal-100 text-teal-600 ring-2 ring-teal-300 animate-pulse' 
                 : 'hover:bg-slate-100 text-slate-500'
             }`}
             title={isListening ? 'Stop listening' : 'Start AI voice assistant'}
@@ -122,7 +122,7 @@ const TopBar: React.FC<{
         
         {/* AI Quick Actions */}
         <button
-          className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all"
+          className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white text-sm font-medium rounded-xl hover:from-teal-700 hover:to-teal-800 transition-all"
         >
           <Sparkles size={16} />
           <span className="hidden md:inline">AI Assist</span>
@@ -147,14 +147,14 @@ const TopBar: React.FC<{
             <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden z-50">
               <div className="p-3 border-b border-slate-200 flex items-center justify-between">
                 <h3 className="font-semibold text-slate-900">Notifications</h3>
-                <button className="text-xs text-purple-600 hover:underline">Mark all read</button>
+                <button className="text-xs text-teal-600 hover:underline">Mark all read</button>
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {notifications.map(notification => (
                   <div 
                     key={notification.id}
                     className={`p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors ${
-                      !notification.read ? 'bg-purple-50' : ''
+                      !notification.read ? 'bg-teal-50' : ''
                     }`}
                   >
                     <div className="flex items-start gap-2">
@@ -179,7 +179,7 @@ const TopBar: React.FC<{
                 ))}
               </div>
               <div className="p-2 border-t border-slate-200">
-                <button className="w-full py-2 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
+                <button className="w-full py-2 text-sm text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
                   View all notifications
                 </button>
               </div>
@@ -227,9 +227,9 @@ const AIFloatingAssistant: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className={`
           fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg
-          bg-gradient-to-r from-purple-600 to-indigo-600 text-white
+          bg-gradient-to-r from-teal-600 to-teal-700 text-white
           flex items-center justify-center
-          hover:from-purple-700 hover:to-indigo-700
+          hover:from-teal-700 hover:to-teal-800
           transition-all z-50
           ${isOpen ? 'scale-0' : 'scale-100'}
         `}
@@ -241,7 +241,7 @@ const AIFloatingAssistant: React.FC = () => {
       {isOpen && (
         <div className="fixed bottom-6 right-6 w-96 h-[500px] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden z-50">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 text-white flex items-center justify-between">
+          <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles size={20} />
               <span className="font-semibold">AI Assistant</span>
@@ -277,9 +277,9 @@ const AIFloatingAssistant: React.FC = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Ask anything..."
-                className="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
-              <button className="p-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors">
+              <button className="p-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors">
                 <Mic size={20} />
               </button>
             </div>

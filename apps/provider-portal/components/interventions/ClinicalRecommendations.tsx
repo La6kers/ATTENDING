@@ -321,7 +321,7 @@ const typeLabels: Record<RecommendationType, string> = {
 
 const typeColors: Record<RecommendationType, string> = {
   therapeutic: 'bg-blue-100 text-blue-700 border-blue-200',
-  diagnostic: 'bg-purple-100 text-purple-700 border-purple-200',
+  diagnostic: 'bg-teal-100 text-teal-700 border-teal-200',
   preventive: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   safety: 'bg-red-100 text-red-700 border-red-200',
   monitoring: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -445,7 +445,7 @@ const RecommendationCard: React.FC<{
               onClick={() => onAccept(recommendation.id, idx)}
               className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
                 idx === 0
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+                  ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:from-teal-700 hover:to-teal-800'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
@@ -677,7 +677,7 @@ export const ClinicalRecommendations: React.FC<{
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -685,7 +685,7 @@ export const ClinicalRecommendations: React.FC<{
             </div>
             <div>
               <h2 className="text-lg font-semibold">Clinical Recommendations</h2>
-              <p className="text-indigo-100 text-sm">Evidence-based guidance with guideline citations</p>
+              <p className="text-teal-100 text-sm">Evidence-based guidance with guideline citations</p>
             </div>
           </div>
           {patientName && (
@@ -724,7 +724,7 @@ export const ClinicalRecommendations: React.FC<{
             onClick={() => setFilter(f.key as any)}
             className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               filter === f.key
-                ? 'bg-indigo-100 text-indigo-700'
+                ? 'bg-teal-100 text-teal-700'
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >

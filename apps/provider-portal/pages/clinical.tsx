@@ -84,16 +84,16 @@ const PrevisitSummaryTab: React.FC<{ patient: PatientContextData }> = ({ patient
   return (
     <div className="space-y-6">
       {/* AI Summary Card */}
-      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-6">
+      <div className="bg-gradient-to-br from-teal-50 to-teal-100/50 rounded-xl border border-teal-200 p-6">
         <div className="flex items-start gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-teal-800 rounded-xl flex items-center justify-center">
             <Brain className="w-5 h-5 text-white" />
           </div>
           <div>
             <h3 className="font-semibold text-gray-900">AI Clinical Summary</h3>
             <p className="text-sm text-gray-500">Generated from COMPASS assessment</p>
           </div>
-          <span className="ml-auto flex items-center gap-1 text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+          <span className="ml-auto flex items-center gap-1 text-xs text-teal-600 bg-teal-100 px-2 py-1 rounded-full">
             <Sparkles className="w-3 h-3" />
             AI Generated
           </span>
@@ -139,16 +139,16 @@ const PrevisitSummaryTab: React.FC<{ patient: PatientContextData }> = ({ patient
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { icon: TestTube, label: 'Order Labs', desc: 'CBC, BMP, ESR', color: 'text-blue-600' },
-          { icon: FileImage, label: 'Order Imaging', desc: 'CT Head, MRI', color: 'text-purple-600' },
+          { icon: FileImage, label: 'Order Imaging', desc: 'CT Head, MRI', color: 'text-teal-600' },
           { icon: Users, label: 'Refer to Neuro', desc: 'Urgent consult', color: 'text-orange-600' },
           { icon: Pill, label: 'Prescribe', desc: 'Pain management', color: 'text-green-600' },
         ].map((action, i) => (
           <button
             key={i}
-            className="bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all group"
+            className="bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-teal-300 hover:shadow-md transition-all group"
           >
             <action.icon className={`w-6 h-6 mb-2 ${action.color}`} />
-            <p className="font-medium text-gray-900 group-hover:text-purple-700">{action.label}</p>
+            <p className="font-medium text-gray-900 group-hover:text-teal-700">{action.label}</p>
             <p className="text-xs text-gray-500">{action.desc}</p>
           </button>
         ))}
@@ -157,7 +157,7 @@ const PrevisitSummaryTab: React.FC<{ patient: PatientContextData }> = ({ patient
       {/* Differential Diagnosis */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Brain className="w-5 h-5 text-purple-600" />
+          <Brain className="w-5 h-5 text-teal-600" />
           AI Differential Diagnosis
         </h3>
         <div className="space-y-3">
@@ -214,7 +214,7 @@ const PrevisitSummaryTab: React.FC<{ patient: PatientContextData }> = ({ patient
           </div>
           <div>
             <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <FileImage className="w-4 h-4 text-purple-600" />
+              <FileImage className="w-4 h-4 text-teal-600" />
               Imaging
             </h4>
             <ul className="space-y-1 text-sm text-gray-600">
@@ -256,17 +256,17 @@ const LabsTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patient 
   return (
     <div className="space-y-6">
       {/* AI Recommendations */}
-      <div className="bg-purple-50 rounded-xl border border-purple-200 p-4">
+      <div className="bg-teal-50 rounded-xl border border-teal-200 p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-5 h-5 text-purple-600" />
-          <h3 className="font-semibold text-purple-900">AI Recommended Labs</h3>
+          <Sparkles className="w-5 h-5 text-teal-600" />
+          <h3 className="font-semibold text-teal-900">AI Recommended Labs</h3>
         </div>
-        <p className="text-sm text-purple-700 mb-3">
+        <p className="text-sm text-teal-700 mb-3">
           Based on the presentation of severe headache with red flags, the following labs are recommended:
         </p>
         <div className="flex flex-wrap gap-2">
           {['CBC', 'BMP', 'ESR/CRP', 'Coagulation'].map(lab => (
-            <span key={lab} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+            <span key={lab} className="px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-sm font-medium">
               {lab}
             </span>
           ))}
@@ -284,14 +284,14 @@ const LabsTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patient 
             <label
               key={lab.id}
               className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                selectedLabs.includes(lab.id) ? 'bg-purple-50' : ''
+                selectedLabs.includes(lab.id) ? 'bg-teal-50' : ''
               }`}
             >
               <input
                 type="checkbox"
                 checked={selectedLabs.includes(lab.id)}
                 onChange={() => toggleLab(lab.id)}
-                className="w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                className="w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500"
               />
               <div className="flex-1">
                 <p className="font-medium text-gray-900">{lab.name}</p>
@@ -308,11 +308,11 @@ const LabsTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patient 
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-gray-900">Order Summary</h3>
-            <span className="text-sm font-medium text-purple-600">
+            <span className="text-sm font-medium text-teal-600">
               {selectedLabs.length} test{selectedLabs.length > 1 ? 's' : ''}
             </span>
           </div>
-          <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
+          <button className="w-full py-3 bg-gradient-to-r from-teal-600 to-teal-800 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
             <Send className="w-4 h-4" />
             Submit Lab Orders
           </button>
@@ -361,7 +361,7 @@ const ImagingTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patie
             <label
               key={study.id}
               className={`flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                selectedStudy === study.id ? 'bg-purple-50' : ''
+                selectedStudy === study.id ? 'bg-teal-50' : ''
               }`}
             >
               <input
@@ -369,7 +369,7 @@ const ImagingTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patie
                 name="imaging"
                 checked={selectedStudy === study.id}
                 onChange={() => setSelectedStudy(study.id)}
-                className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                className="w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500"
               />
               <div className="flex-1">
                 <p className="font-medium text-gray-900">{study.name}</p>
@@ -389,7 +389,7 @@ const ImagingTab: React.FC<{ patient: PatientContextData }> = ({ patient: _patie
 
       {/* Order Button */}
       {selectedStudy && (
-        <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
+        <button className="w-full py-3 bg-gradient-to-r from-teal-600 to-teal-800 text-white rounded-xl font-medium hover:shadow-lg transition-all flex items-center justify-center gap-2">
           <Send className="w-4 h-4" />
           Order Imaging Study
         </button>
@@ -407,7 +407,7 @@ const MedicationsTab: React.FC<{ patient: PatientContextData }> = ({ patient: _p
     <Pill className="w-12 h-12 text-gray-300 mx-auto mb-4" />
     <h3 className="text-lg font-semibold text-gray-900 mb-2">E-Prescribe Module</h3>
     <p className="text-gray-500 mb-4">Prescribe medications with drug interaction checking</p>
-    <button className="px-6 py-2 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors">
+    <button className="px-6 py-2 bg-teal-100 text-teal-700 rounded-lg font-medium hover:bg-teal-200 transition-colors">
       Open Full Prescribing Module
     </button>
   </div>
@@ -418,7 +418,7 @@ const ReferralsTab: React.FC<{ patient: PatientContextData }> = ({ patient: _pat
     <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
     <h3 className="text-lg font-semibold text-gray-900 mb-2">Specialty Referrals</h3>
     <p className="text-gray-500 mb-4">Create and track specialist referrals</p>
-    <button className="px-6 py-2 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors">
+    <button className="px-6 py-2 bg-teal-100 text-teal-700 rounded-lg font-medium hover:bg-teal-200 transition-colors">
       Open Referrals Module
     </button>
   </div>
@@ -429,7 +429,7 @@ const TreatmentTab: React.FC<{ patient: PatientContextData }> = ({ patient: _pat
     <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
     <h3 className="text-lg font-semibold text-gray-900 mb-2">Treatment Plan</h3>
     <p className="text-gray-500 mb-4">Create comprehensive treatment plans with follow-up scheduling</p>
-    <button className="px-6 py-2 bg-purple-100 text-purple-700 rounded-lg font-medium hover:bg-purple-200 transition-colors">
+    <button className="px-6 py-2 bg-teal-100 text-teal-700 rounded-lg font-medium hover:bg-teal-200 transition-colors">
       Open Treatment Planner
     </button>
   </div>
@@ -502,7 +502,7 @@ export default function ClinicalWorkspace() {
                     flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap
                     border-b-2 transition-all
                     ${isActive 
-                      ? 'border-purple-600 text-purple-600 bg-purple-50' 
+                      ? 'border-teal-600 text-teal-600 bg-teal-50' 
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }
                   `}

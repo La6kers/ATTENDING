@@ -375,13 +375,13 @@ const TeamMemberCard: React.FC<{
   onClick?: () => void;
 }> = ({ member, isSelected, onClick }) => {
   const roleConfig: Record<TeamMemberRole, { color: string; label: string }> = {
-    pcp: { color: 'bg-purple-100 text-purple-700', label: 'PCP' },
+    pcp: { color: 'bg-teal-100 text-teal-700', label: 'PCP' },
     specialist: { color: 'bg-blue-100 text-blue-700', label: 'Specialist' },
     nurse: { color: 'bg-green-100 text-green-700', label: 'Nurse' },
     care_manager: { color: 'bg-teal-100 text-teal-700', label: 'Care Manager' },
     pharmacist: { color: 'bg-amber-100 text-amber-700', label: 'Pharmacist' },
     social_worker: { color: 'bg-pink-100 text-pink-700', label: 'Social Worker' },
-    therapist: { color: 'bg-indigo-100 text-indigo-700', label: 'Therapist' },
+    therapist: { color: 'bg-teal-100 text-teal-700', label: 'Therapist' },
     dietitian: { color: 'bg-orange-100 text-orange-700', label: 'Dietitian' },
   };
 
@@ -402,7 +402,7 @@ const TeamMemberCard: React.FC<{
       onClick={onClick}
       className={`p-3 rounded-xl border transition-all cursor-pointer ${
         isSelected 
-          ? 'border-purple-300 bg-purple-50' 
+          ? 'border-teal-300 bg-teal-50' 
           : 'border-slate-200 hover:border-slate-300 bg-white'
       }`}
     >
@@ -549,7 +549,7 @@ const ReferralCard: React.FC<{
           <FileText size={14} />
           View Details
         </button>
-        <button className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-purple-100 text-purple-700 text-sm rounded-lg hover:bg-purple-200 transition-colors">
+        <button className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-teal-100 text-teal-700 text-sm rounded-lg hover:bg-teal-200 transition-colors">
           <MessageSquare size={14} />
           Message
         </button>
@@ -616,7 +616,7 @@ const TransitionCard: React.FC<{
 
       <button
         onClick={() => onReview(transition.id)}
-        className="w-full px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+        className="w-full px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
       >
         Review & Acknowledge
       </button>
@@ -649,7 +649,7 @@ const PatientJourney: React.FC<{ events: PatientJourneyEvent[] }> = ({ events })
             <div key={event.id} className="relative flex gap-4">
               {/* Timeline dot */}
               <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${
-                isPast ? 'bg-purple-100 text-purple-600' : 'bg-slate-100 text-slate-400'
+                isPast ? 'bg-teal-100 text-teal-600' : 'bg-slate-100 text-slate-400'
               }`}>
                 {typeIcons[event.type]}
               </div>
@@ -724,7 +724,7 @@ export const CareCoordinationHub: React.FC<{
     { key: 'referrals', label: 'Referrals', icon: Share2, badge: pendingReferrals },
     { key: 'transitions', label: 'Transitions', icon: RefreshCw, badge: actionTransitions, badgeColor: 'bg-red-500' },
     { key: 'journey', label: 'Patient Journey', icon: MapPin },
-    { key: 'messages', label: 'Messages', icon: MessageSquare, badge: unreadMessages, badgeColor: 'bg-purple-500' },
+    { key: 'messages', label: 'Messages', icon: MessageSquare, badge: unreadMessages, badgeColor: 'bg-teal-500' },
   ];
 
   return (

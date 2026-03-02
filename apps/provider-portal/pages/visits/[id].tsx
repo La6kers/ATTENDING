@@ -40,7 +40,7 @@ import {
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -325,13 +325,13 @@ export default function VisitDetailPage() {
                       Completed
                     </span>
                     {visit.aiAssisted && (
-                      <span className="px-2 py-1 bg-purple-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
+                      <span className="px-2 py-1 bg-teal-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
                         AI-Assisted
                       </span>
                     )}
                   </div>
-                  <p className="text-purple-200 text-sm">
+                  <p className="text-teal-200 text-sm">
                     {visit.patient.age}yo {visit.patient.gender} • {visit.patient.mrn} • {visit.visit.date}
                   </p>
                 </div>
@@ -339,7 +339,7 @@ export default function VisitDetailPage() {
 
               <div className="flex items-center gap-3">
                 {lastSaved && (
-                  <span className="text-purple-200 text-sm">
+                  <span className="text-teal-200 text-sm">
                     Last saved: {lastSaved.toLocaleTimeString()}
                   </span>
                 )}
@@ -370,7 +370,7 @@ export default function VisitDetailPage() {
               {/* Patient Info */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <User className="w-5 h-5 text-purple-600" />
+                  <User className="w-5 h-5 text-teal-600" />
                   Patient Information
                 </h3>
                 <div className="space-y-3 text-sm">
@@ -396,7 +396,7 @@ export default function VisitDetailPage() {
               {/* Vitals */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-purple-600" />
+                  <Heart className="w-5 h-5 text-teal-600" />
                   Vital Signs
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -422,19 +422,19 @@ export default function VisitDetailPage() {
               {/* Diagnoses */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Stethoscope className="w-5 h-5 text-purple-600" />
+                  <Stethoscope className="w-5 h-5 text-teal-600" />
                   Diagnoses
                 </h3>
                 <div className="space-y-2">
                   {visit.diagnoses.map((dx, i) => (
                     <div 
                       key={i} 
-                      className={`p-3 rounded-lg ${dx.isPrimary ? 'bg-purple-50 border border-purple-200' : 'bg-gray-50'}`}
+                      className={`p-3 rounded-lg ${dx.isPrimary ? 'bg-teal-50 border border-teal-200' : 'bg-gray-50'}`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono text-sm text-purple-700">{dx.code}</span>
+                        <span className="font-mono text-sm text-teal-700">{dx.code}</span>
                         {dx.isPrimary && (
-                          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">Primary</span>
+                          <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded">Primary</span>
                         )}
                       </div>
                       <p className="text-sm text-gray-700">{dx.description}</p>
@@ -446,7 +446,7 @@ export default function VisitDetailPage() {
               {/* Billing Summary */}
               <div className="bg-white rounded-2xl p-5 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-purple-600" />
+                  <DollarSign className="w-5 h-5 text-teal-600" />
                   Billing
                 </h3>
                 <div className="space-y-3">
@@ -483,7 +483,7 @@ export default function VisitDetailPage() {
                     onClick={() => setActiveTab(tab.value as typeof activeTab)}
                     className={`px-4 py-2 rounded-xl font-medium text-sm flex items-center gap-2 transition-colors ${
                       activeTab === tab.value
-                        ? 'bg-white text-purple-700'
+                        ? 'bg-white text-teal-700'
                         : 'bg-white/10 text-white hover:bg-white/20'
                     }`}
                   >
@@ -499,12 +499,12 @@ export default function VisitDetailPage() {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-purple-600" />
+                        <FileText className="w-5 h-5 text-teal-600" />
                         Clinical Documentation
                       </h3>
                       <div className="flex items-center gap-2">
                         {visit.aiAssisted && !isEditing && (
-                          <span className="flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">
+                          <span className="flex items-center gap-1 px-2 py-1 bg-teal-50 text-teal-700 rounded text-xs">
                             <Sparkles className="w-3 h-3" />
                             AI-Generated
                           </span>
@@ -530,7 +530,7 @@ export default function VisitDetailPage() {
                         ) : (
                           <button
                             onClick={handleStartEdit}
-                            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg flex items-center gap-1.5 text-sm transition-colors"
+                            className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg flex items-center gap-1.5 text-sm transition-colors"
                           >
                             <Edit className="w-4 h-4" />
                             Edit Documentation
@@ -543,7 +543,7 @@ export default function VisitDetailPage() {
                       <textarea
                         value={editedNote}
                         onChange={(e) => setEditedNote(e.target.value)}
-                        className="w-full h-[600px] font-mono text-sm text-gray-700 bg-gray-50 p-6 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none resize-none"
+                        className="w-full h-[600px] font-mono text-sm text-gray-700 bg-gray-50 p-6 rounded-xl border border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none resize-none"
                         placeholder="Enter clinical documentation..."
                       />
                     ) : (
@@ -630,7 +630,7 @@ export default function VisitDetailPage() {
                     <div className="space-y-4">
                       <div className="p-4 bg-gray-50 rounded-xl">
                         <p className="text-sm text-gray-500 mb-1">E&M Level</p>
-                        <p className="text-xl font-bold text-purple-700">{visit.billing.emLevel}</p>
+                        <p className="text-xl font-bold text-teal-700">{visit.billing.emLevel}</p>
                         <p className="text-sm text-gray-600">Office visit, established patient, moderate complexity</p>
                       </div>
 
@@ -640,7 +640,7 @@ export default function VisitDetailPage() {
                           {visit.billing.cptCodes.map((cpt, i) => (
                             <div key={i} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
                               <div>
-                                <span className="font-mono font-semibold text-purple-700">{cpt.code}</span>
+                                <span className="font-mono font-semibold text-teal-700">{cpt.code}</span>
                                 <p className="text-sm text-gray-600">{cpt.description}</p>
                               </div>
                               <span className="font-bold text-green-600">${cpt.amount.toFixed(2)}</span>

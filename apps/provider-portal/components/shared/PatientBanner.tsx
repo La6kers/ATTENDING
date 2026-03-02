@@ -54,7 +54,7 @@ const accentGradients: Record<string, string> = {
 };
 
 const accentBorders: Record<string, string> = {
-  purple: 'border-l-purple-500',
+  purple: 'border-l-teal-500',
   blue: 'border-l-blue-500',
   green: 'border-l-green-500',
   indigo: 'border-l-indigo-500',
@@ -185,7 +185,7 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium',
               'text-gray-700 bg-white border-2 border-gray-200 rounded-xl',
-              'hover:border-purple-400 hover:bg-purple-50',
+              'hover:border-teal-400 hover:bg-teal-50',
               'hover:-translate-y-0.5 hover:shadow-md',
               'transition-all duration-200'
             )}
@@ -200,11 +200,11 @@ const PatientBanner: React.FC<PatientBannerProps> = ({
               className={cn(
                 'inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium',
                 'text-gray-700 bg-white border-2 border-gray-200 rounded-xl',
-                'hover:border-purple-400 hover:bg-purple-50',
+                'hover:border-teal-400 hover:bg-teal-50',
                 'hover:-translate-y-0.5 hover:shadow-md',
                 'transition-all duration-200'
-              )}
-            >
+                )}
+                >
               {allCollapsed ? (
                 <>
                   <ChevronDown className="w-4 h-4" />

@@ -142,7 +142,7 @@ const OrderTypeIcon: React.FC<{ type: OrderType; size?: number }> = ({ type, siz
 };
 
 const typeColors: Record<OrderType, string> = {
-  lab: 'bg-purple-100 text-purple-700',
+  lab: 'bg-teal-100 text-teal-700',
   imaging: 'bg-blue-100 text-blue-700',
   medication: 'bg-emerald-100 text-emerald-700',
   referral: 'bg-amber-100 text-amber-700',
@@ -283,7 +283,7 @@ const OrderSetCard: React.FC<{
         className="w-full p-3 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <Package size={18} className="text-indigo-600" />
+          <Package size={18} className="text-teal-600" />
           <div className="text-left">
             <p className="font-medium text-slate-900">{orderSet.name}</p>
             <p className="text-xs text-slate-500">{orderSet.orders.length} orders</p>
@@ -310,7 +310,7 @@ const OrderSetCard: React.FC<{
           </div>
           <button
             onClick={() => onApply(orderSet.orders)}
-            className="w-full py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            className="w-full py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
           >
             Apply Order Set
           </button>
@@ -690,7 +690,7 @@ export const SmartOrderAssistant: React.FC<{
         <div className="mt-4">
           <button
             onClick={() => setShowOrderSets(!showOrderSets)}
-            className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700"
+            className="flex items-center gap-2 text-sm text-teal-600 hover:text-teal-700"
           >
             <Package size={16} />
             {showOrderSets ? 'Hide Order Sets' : 'View Order Sets'}

@@ -337,7 +337,7 @@ const DashboardSection: React.FC = () => {
           { label: 'Active Now', value: metrics.activeNow, icon: Activity, color: '#22c55e' },
           { label: 'Pending Invites', value: metrics.pendingInvites, icon: Mail, color: '#f59e0b' },
           { label: 'Locked Accounts', value: metrics.lockedAccounts, icon: Lock, color: '#ef4444' },
-          { label: 'Avg Response', value: `${metrics.avgResponseTime}ms`, icon: Timer, color: '#8b5cf6' },
+          { label: 'Avg Response', value: `${metrics.avgResponseTime}ms`, icon: Timer, color: '#1A8FA8' },
           { label: 'Uptime', value: `${metrics.uptime}%`, icon: TrendingUp, color: '#14b8a6' },
           { label: 'Open Alerts', value: metrics.openAlerts, icon: AlertTriangle, color: '#f59e0b' },
           { label: "Today's Logins", value: metrics.todayLogins, icon: LogIn, color: '#3b82f6' },
@@ -647,7 +647,7 @@ const FeatureFlagsSection: React.FC = () => {
             </div>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-              background: f.tier === 'MVP' ? '#dbeafe' : '#faf5ff', color: f.tier === 'MVP' ? '#1e40af' : '#7c3aed',
+              background: f.tier === 'MVP' ? '#dbeafe' : '#E6F7F5', color: f.tier === 'MVP' ? '#1e40af' : '#0C4C5E',
             }}>
               {f.tier}
             </span>
@@ -781,7 +781,7 @@ export default function ITAdminPortal() {
         <div style={{ padding: '16px 16px', borderBottom: '1px solid #1f2937', display: 'flex', alignItems: 'center', gap: 10 }}>
           {!sidebarCollapsed && (
             <>
-              <Shield size={20} color="#818cf8" />
+              <Shield size={20} color="#1A8FA8" />
               <div>
                 <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: -0.3 }}>Admin Portal</div>
                 <div style={{ fontSize: 10, color: '#6b7280' }}>ATTENDING AI</div>
@@ -823,7 +823,7 @@ export default function ITAdminPortal() {
                 background: activeNav === item.id ? '#1f2937' : 'transparent',
                 border: 'none', color: activeNav === item.id ? 'white' : '#9ca3af',
                 cursor: 'pointer', fontSize: 13, fontWeight: activeNav === item.id ? 600 : 400,
-                borderLeft: activeNav === item.id ? '3px solid #818cf8' : '3px solid transparent',
+                borderLeft: activeNav === item.id ? '3px solid #1A8FA8' : '3px solid transparent',
               }}>
                 <item.icon size={16} />
                 {!sidebarCollapsed && (
@@ -839,7 +839,7 @@ export default function ITAdminPortal() {
                   {item.subItems.map(sub => (
                     <button key={sub.id} onClick={() => { setActiveNav(item.id); setActiveSubNav(sub.id); }} style={{
                       width: '100%', textAlign: 'left', padding: '7px 12px', background: activeSubNav === sub.id ? '#1f2937' : 'transparent',
-                      border: 'none', color: activeSubNav === sub.id ? '#818cf8' : '#6b7280',
+                      border: 'none', color: activeSubNav === sub.id ? '#1A8FA8' : '#6b7280',
                       cursor: 'pointer', fontSize: 12, borderRadius: 6,
                     }}>
                       {sub.label}

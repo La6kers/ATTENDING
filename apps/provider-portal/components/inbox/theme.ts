@@ -7,23 +7,23 @@ import type { CategoryType } from './types';
 
 export const theme = {
   gradient: {
-    // ATTENDING AI Standard Brand Gradient - Indigo/Violet
-    primary: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    sidebar: 'linear-gradient(180deg, #667eea 0%, #764ba2 50%, #667eea 100%)',
-    header: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    // ATTENDING AI Standard Brand Gradient - Deep Navy/Teal
+    primary: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
+    sidebar: 'linear-gradient(180deg, #0C3547 0%, #1A8FA8 50%, #0C3547 100%)',
+    header: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
   },
   purple: {
-    50: '#faf5ff',
-    100: '#ede9fe',
-    200: '#ddd6fe',
-    300: '#c4b5fd',
-    400: '#a78bfa',
-    500: '#8b5cf6',
-    600: '#7c3aed',
-    700: '#6d28d9',
-    800: '#5b21b6',
-    900: '#4c1d95',
-    950: '#1e1b4b',
+    50: '#E6F7F5',
+    100: '#C3ECE7',
+    200: '#8ED9CE',
+    300: '#5AC5B5',
+    400: '#25B8A9',
+    500: '#1A8FA8',
+    600: '#0F5F76',
+    700: '#0C4C5E',
+    800: '#0C3547',
+    900: '#082630',
+    950: '#041318',
   },
   semantic: {
     success: '#10b981',
@@ -36,26 +36,26 @@ export const theme = {
     secondary: '#6b7280',
     muted: '#9ca3af',
     inverse: '#ffffff',
-    accent: '#7c3aed',
+    accent: '#1A8FA8',
   },
   background: {
-    main: '#ede9fe',
+    main: '#E6F7F5',
     card: '#ffffff',
-    cardHover: '#faf5ff',
-    section: '#ede9fe',
-    subtle: '#faf5ff',
+    cardHover: '#F0FAF9',
+    section: '#E6F7F5',
+    subtle: '#F0FAF9',
   },
   border: {
-    light: '#ede9fe',
-    medium: '#ddd6fe',
-    dark: '#c4b5fd',
-    accent: '#8b5cf6',
+    light: '#C3ECE7',
+    medium: '#8ED9CE',
+    dark: '#5AC5B5',
+    accent: '#1A8FA8',
   },
   shadow: {
-    sm: '0 2px 8px rgba(139, 92, 246, 0.1)',
-    md: '0 4px 16px rgba(139, 92, 246, 0.15)',
-    lg: '0 8px 32px rgba(139, 92, 246, 0.2)',
-    glow: '0 0 20px rgba(139, 92, 246, 0.3)',
+    sm: '0 2px 8px rgba(26, 143, 168, 0.1)',
+    md: '0 4px 16px rgba(26, 143, 168, 0.15)',
+    lg: '0 8px 32px rgba(26, 143, 168, 0.2)',
+    glow: '0 0 20px rgba(26, 143, 168, 0.3)',
   },
 } as const;
 
@@ -88,9 +88,9 @@ export const categoryConfig: Record<CategoryType, CategoryAccent> = {
   charts: {
     id: 'charts',
     label: "CC'd Charts",
-    accent: '#8b5cf6',
-    accentLight: '#ede9fe',
-    accentDark: '#5b21b6',
+    accent: '#1A8FA8',
+    accentLight: '#E6F7F5',
+    accentDark: '#0C3547',
     icon: 'file-text',
   },
   messages: {
@@ -104,9 +104,9 @@ export const categoryConfig: Record<CategoryType, CategoryAccent> = {
   refills: {
     id: 'refills',
     label: 'Rx Refills',
-    accent: '#a855f7',
-    accentLight: '#f3e8ff',
-    accentDark: '#7e22ce',
+    accent: '#0F5F76',
+    accentLight: '#E6F7F5',
+    accentDark: '#0C3547',
     icon: 'pill',
   },
   labs: {
@@ -138,13 +138,13 @@ export const categoryConfig: Record<CategoryType, CategoryAccent> = {
 export const priorityColors = {
   urgent: { bg: '#fee2e2', text: '#dc2626', border: '#fca5a5', dot: '#ef4444' },
   high: { bg: '#fef3c7', text: '#d97706', border: '#fcd34d', dot: '#f59e0b' },
-  normal: { bg: '#ede9fe', text: '#7c3aed', border: '#c4b5fd', dot: '#8b5cf6' },
+  normal: { bg: '#E6F7F5', text: '#1A8FA8', border: '#8ED9CE', dot: '#1A8FA8' },
   low: { bg: '#f3f4f6', text: '#6b7280', border: '#d1d5db', dot: '#9ca3af' },
 } as const;
 
 export const statusColors = {
-  unread: { bg: '#ede9fe', dot: '#8b5cf6' },
-  read: { bg: '#faf5ff', dot: 'transparent' },
+  unread: { bg: '#E6F7F5', dot: '#1A8FA8' },
+  read: { bg: '#F0FAF9', dot: 'transparent' },
   pending: { bg: '#fef3c7', dot: '#f59e0b' },
   in_progress: { bg: '#dbeafe', dot: '#3b82f6' },
   completed: { bg: '#d1fae5', dot: '#10b981' },
@@ -165,9 +165,12 @@ export function getCategoryBorderStyle(category: CategoryType): React.CSSPropert
   };
 }
 
-export function getPurpleGradientStyle(): React.CSSProperties {
+export function getBrandGradientStyle(): React.CSSProperties {
   return { background: theme.gradient.primary };
 }
+
+/** @deprecated Use getBrandGradientStyle instead */
+export const getPurpleGradientStyle = getBrandGradientStyle;
 
 export function getPriorityStyle(priority: keyof typeof priorityColors) {
   return priorityColors[priority];

@@ -38,7 +38,7 @@ import {
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -342,7 +342,7 @@ export default function CompletePage() {
                       STEP 3 OF 3
                     </span>
                   </div>
-                  <p className="text-purple-200 text-sm">
+                  <p className="text-teal-200 text-sm">
                     {patientContext ? `${patientContext.name} • ${patientContext.mrn}` : 'Loading...'}
                   </p>
                 </div>
@@ -386,18 +386,18 @@ export default function CompletePage() {
                       <div
                         key={bc.code}
                         className={`p-3 rounded-xl border mb-2 cursor-pointer transition-colors ${
-                          bc.selected ? 'border-purple-300 bg-purple-50' : 'border-gray-200 hover:border-purple-200'
+                          bc.selected ? 'border-teal-300 bg-teal-50' : 'border-gray-200 hover:border-teal-200'
                         }`}
                         onClick={() => toggleBillingCode(bc.code)}
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                            bc.selected ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
+                            bc.selected ? 'bg-teal-600 border-teal-600' : 'border-gray-300'
                           }`}>
                             {bc.selected && <CheckCircle className="w-3 h-3 text-white" />}
                           </div>
                           <div className="flex-1">
-                            <p className="font-mono text-sm font-semibold text-purple-700">{bc.code}</p>
+                            <p className="font-mono text-sm font-semibold text-teal-700">{bc.code}</p>
                             <p className="text-gray-600 text-xs">{bc.description}</p>
                           </div>
                         </div>
@@ -412,19 +412,19 @@ export default function CompletePage() {
                       <div
                         key={bc.code}
                         className={`p-3 rounded-xl border mb-2 cursor-pointer transition-colors ${
-                          bc.selected ? 'border-purple-300 bg-purple-50' : 'border-gray-200 hover:border-purple-200'
+                          bc.selected ? 'border-teal-300 bg-teal-50' : 'border-gray-200 hover:border-teal-200'
                         }`}
                         onClick={() => toggleBillingCode(bc.code)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                              bc.selected ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
+                              bc.selected ? 'bg-teal-600 border-teal-600' : 'border-gray-300'
                             }`}>
                               {bc.selected && <CheckCircle className="w-3 h-3 text-white" />}
                             </div>
                             <div>
-                              <p className="font-mono text-sm font-semibold text-purple-700">{bc.code}</p>
+                              <p className="font-mono text-sm font-semibold text-teal-700">{bc.code}</p>
                               <p className="text-gray-600 text-xs">{bc.description}</p>
                             </div>
                           </div>
@@ -443,19 +443,19 @@ export default function CompletePage() {
                       <div
                         key={bc.code}
                         className={`p-3 rounded-xl border mb-2 cursor-pointer transition-colors ${
-                          bc.selected ? 'border-purple-300 bg-purple-50' : 'border-gray-200 hover:border-purple-200'
+                          bc.selected ? 'border-teal-300 bg-teal-50' : 'border-gray-200 hover:border-teal-200'
                         }`}
                         onClick={() => toggleBillingCode(bc.code)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                              bc.selected ? 'bg-purple-600 border-purple-600' : 'border-gray-300'
+                              bc.selected ? 'bg-teal-600 border-teal-600' : 'border-gray-300'
                             }`}>
                               {bc.selected && <CheckCircle className="w-3 h-3 text-white" />}
                             </div>
                             <div>
-                              <p className="font-mono text-sm font-semibold text-purple-700">{bc.code}</p>
+                              <p className="font-mono text-sm font-semibold text-teal-700">{bc.code}</p>
                               <p className="text-gray-600 text-xs">{bc.description}</p>
                             </div>
                           </div>
@@ -480,7 +480,7 @@ export default function CompletePage() {
               {/* Visit Summary */}
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <ClipboardCheck className="w-5 h-5 text-purple-600" />
+                  <ClipboardCheck className="w-5 h-5 text-teal-600" />
                   Visit Summary
                 </h3>
                 <div className="space-y-3 text-sm">
@@ -515,10 +515,10 @@ export default function CompletePage() {
             {/* Right: Clinical Note */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div className="p-4 border-b bg-gradient-to-r from-purple-50 to-indigo-50 flex items-center justify-between">
+                <div className="p-4 border-b bg-gradient-to-r from-teal-50 to-teal-100 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-100 rounded-xl">
-                      <FileText className="w-5 h-5 text-purple-600" />
+                    <div className="p-2 bg-teal-100 rounded-xl">
+                      <FileText className="w-5 h-5 text-teal-600" />
                     </div>
                     <div>
                       <h2 className="font-bold text-gray-900">Clinical Documentation</h2>
@@ -526,20 +526,20 @@ export default function CompletePage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 rounded-full">
-                      <Sparkles className="w-3 h-3 text-purple-600" />
-                      <span className="text-purple-700 text-xs font-medium">AI-Generated</span>
+                    <div className="flex items-center gap-1 px-2 py-1 bg-teal-100 rounded-full">
+                      <Sparkles className="w-3 h-3 text-teal-600" />
+                      <span className="text-teal-700 text-xs font-medium">AI-Generated</span>
                     </div>
                     <button
                       onClick={() => setIsEditing(!isEditing)}
-                      className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 bg-teal-100 text-teal-700 rounded-lg text-sm font-medium hover:bg-teal-200 transition-colors flex items-center gap-1"
                     >
                       <Edit className="w-4 h-4" />
                       {isEditing ? 'Preview' : 'Edit'}
                     </button>
                     <button
                       onClick={() => navigator.clipboard.writeText(note)}
-                      className="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
                       title="Copy to clipboard"
                     >
                       <Copy className="w-4 h-4" />
@@ -552,7 +552,7 @@ export default function CompletePage() {
                     <textarea
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      className="w-full h-[600px] p-4 font-mono text-sm border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                      className="w-full h-[600px] p-4 font-mono text-sm border rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
                     />
                   ) : (
                     <pre className="whitespace-pre-wrap font-mono text-sm text-gray-700 bg-gray-50 p-6 rounded-xl overflow-auto max-h-[600px]">
@@ -572,7 +572,7 @@ export default function CompletePage() {
                 </button>
                 <button
                   onClick={handleCompleteVisit}
-                  className="px-8 py-4 bg-white text-purple-700 rounded-2xl font-semibold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl hover:bg-purple-50 transition-all"
+                  className="px-8 py-4 bg-white text-teal-700 rounded-2xl font-semibold text-lg flex items-center gap-3 shadow-lg hover:shadow-xl hover:bg-teal-50 transition-all"
                 >
                   <CheckCircle className="w-5 h-5" />
                   Complete Visit & Sign Note

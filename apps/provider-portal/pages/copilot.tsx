@@ -66,9 +66,9 @@ export default function CopilotPage() {
               </div>
             </div>
             
-            <div className="mt-6 p-4 bg-purple-50 rounded-lg">
-              <h3 className="font-medium text-purple-900 mb-2">Try These Demo Inputs:</h3>
-              <ul className="text-sm text-purple-700 space-y-1">
+            <div className="mt-6 p-4 bg-teal-50 rounded-lg">
+              <h3 className="font-medium text-teal-900 mb-2">Try These Demo Inputs:</h3>
+              <ul className="text-sm text-teal-700 space-y-1">
                 <li>• "Patient reports worst headache of life" - triggers SAH red flag</li>
                 <li>• "Chest pain radiating to left arm with sweating" - triggers ACS alert</li>
                 <li>• "Patient wants to try ibuprofen" - triggers drug interaction (warfarin)</li>

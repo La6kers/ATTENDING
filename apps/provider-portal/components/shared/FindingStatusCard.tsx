@@ -70,7 +70,7 @@ const FindingStatusCard: React.FC<FindingStatusCardProps> = ({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {finding.aiSuggested && (
             <span title="AI Suggested">
-              <Brain className="w-4 h-4 text-purple-500 flex-shrink-0" aria-hidden="true" />
+              <Brain className="w-4 h-4 text-teal-500 flex-shrink-0" aria-hidden="true" />
             </span>
           )}
           {finding.critical && (
@@ -82,7 +82,7 @@ const FindingStatusCard: React.FC<FindingStatusCardProps> = ({
           {finding.source && (
             <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
               finding.source === 'ai-detected' 
-                ? 'bg-purple-100 text-purple-700' 
+                ? 'bg-teal-100 text-teal-700' 
                 : finding.source === 'patient-reported'
                 ? 'bg-blue-100 text-blue-700'
                 : 'bg-gray-100 text-gray-700'
@@ -140,7 +140,7 @@ const FindingStatusCard: React.FC<FindingStatusCardProps> = ({
       {/* Rationale - HTML Prototype Style */}
       {showRationale && finding.rationale && expanded && (
         <div className="finding-rationale">
-          <span className="text-purple-600 font-medium">AI Rationale:</span>{' '}
+          <span className="text-teal-600 font-medium">AI Rationale:</span>{' '}
           {finding.rationale}
         </div>
       )}

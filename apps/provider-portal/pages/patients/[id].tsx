@@ -40,19 +40,7 @@ import {
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  purple: {
-    50: '#faf5ff',
-    100: '#ede9fe',
-    200: '#ddd6fe',
-    300: '#c4b5fd',
-    400: '#a78bfa',
-    500: '#8b5cf6',
-    600: '#7c3aed',
-    700: '#6d28d9',
-    800: '#5b21b6',
-    900: '#4c1d95',
-  },
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -208,13 +196,13 @@ const SectionCard: React.FC<{
   const variants = {
     default: 'bg-white',
     warning: 'bg-red-50 border-red-200',
-    ai: 'bg-gradient-to-br from-indigo-50 to-purple-50 border-purple-200',
+    ai: 'bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200',
   };
 
   return (
     <div className={`rounded-2xl border shadow-sm overflow-hidden ${variants[variant]}`}>
       <div className="px-6 py-4 border-b bg-white/50 flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-purple-100 text-purple-600">
+        <div className="p-2 rounded-lg bg-teal-100 text-teal-600">
           {icon}
         </div>
         <h3 className="font-semibold text-gray-900">{title}</h3>
@@ -261,7 +249,7 @@ export default function PatientChartPage() {
         <div className="text-center text-white">
           <AlertTriangle className="w-12 h-12 mx-auto mb-4" />
           <p>Patient not found</p>
-          <Link href="/inbox" className="text-purple-200 hover:text-white underline mt-4 inline-block">
+          <Link href="/inbox" className="text-teal-200 hover:text-white underline mt-4 inline-block">
             Return to Inbox
           </Link>
         </div>
@@ -301,7 +289,7 @@ export default function PatientChartPage() {
                       {patient.urgencyLevel.toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-purple-200 text-sm">
+                  <p className="text-teal-200 text-sm">
                     {patient.age}yo {patient.gender} • MRN: {patient.mrn} • DOB: {patient.dob}
                   </p>
                 </div>
@@ -312,7 +300,7 @@ export default function PatientChartPage() {
                   <MessageSquare className="w-4 h-4" />
                   Message
                 </button>
-                <button className="px-4 py-2 bg-white text-purple-700 rounded-lg font-medium flex items-center gap-2 hover:bg-purple-50 transition-colors">
+                <button className="px-4 py-2 bg-white text-teal-700 rounded-lg font-medium flex items-center gap-2 hover:bg-teal-50 transition-colors">
                   <CheckCircle className="w-4 h-4" />
                   Complete Visit
                 </button>
@@ -327,7 +315,7 @@ export default function PatientChartPage() {
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600 mb-1">CHIEF COMPLAINT</p>
+                <p className="text-sm font-medium text-teal-600 mb-1">CHIEF COMPLAINT</p>
                 <h2 className="text-2xl font-bold text-gray-900">{patient.chiefComplaint}</h2>
                 <p className="text-gray-500 mt-1">
                   Assessment submitted {new Date(patient.submittedAt).toLocaleString()}
@@ -425,20 +413,20 @@ export default function PatientChartPage() {
               <SectionCard title="History of Present Illness" icon={<ClipboardList className="w-5 h-5" />}>
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-purple-50 rounded-xl">
-                      <p className="text-xs font-semibold text-purple-600 uppercase mb-1">Onset</p>
+                    <div className="p-4 bg-teal-50 rounded-xl">
+                      <p className="text-xs font-semibold text-teal-600 uppercase mb-1">Onset</p>
                       <p className="text-gray-900 font-medium">{patient.hpi.onset}</p>
                     </div>
-                    <div className="p-4 bg-purple-50 rounded-xl">
-                      <p className="text-xs font-semibold text-purple-600 uppercase mb-1">Location</p>
+                    <div className="p-4 bg-teal-50 rounded-xl">
+                      <p className="text-xs font-semibold text-teal-600 uppercase mb-1">Location</p>
                       <p className="text-gray-900 font-medium">{patient.hpi.location}</p>
                     </div>
-                    <div className="p-4 bg-purple-50 rounded-xl">
-                      <p className="text-xs font-semibold text-purple-600 uppercase mb-1">Duration</p>
+                    <div className="p-4 bg-teal-50 rounded-xl">
+                      <p className="text-xs font-semibold text-teal-600 uppercase mb-1">Duration</p>
                       <p className="text-gray-900 font-medium">{patient.hpi.duration}</p>
                     </div>
-                    <div className="p-4 bg-purple-50 rounded-xl">
-                      <p className="text-xs font-semibold text-purple-600 uppercase mb-1">Severity</p>
+                    <div className="p-4 bg-teal-50 rounded-xl">
+                      <p className="text-xs font-semibold text-teal-600 uppercase mb-1">Severity</p>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                           <div 
@@ -507,7 +495,7 @@ export default function PatientChartPage() {
                     <ul className="space-y-2">
                       {patient.medicalHistory.map((h, i) => (
                         <li key={i} className="text-gray-800 text-sm flex items-center gap-2">
-                          <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                          <span className="w-2 h-2 bg-teal-400 rounded-full"></span>
                           {h}
                         </li>
                       ))}
@@ -518,7 +506,7 @@ export default function PatientChartPage() {
                     <ul className="space-y-2">
                       {patient.medications.map((m, i) => (
                         <li key={i} className="text-gray-800 text-sm flex items-center gap-2">
-                          <Pill className="w-4 h-4 text-purple-400" />
+                          <Pill className="w-4 h-4 text-teal-400" />
                           {m}
                         </li>
                       ))}
@@ -567,17 +555,17 @@ export default function PatientChartPage() {
 
                   {/* Differential Diagnosis */}
                   <div>
-                    <p className="text-sm font-bold text-purple-800 mb-3 flex items-center gap-2">
+                    <p className="text-sm font-bold text-teal-800 mb-3 flex items-center gap-2">
                       <Sparkles className="w-4 h-4" />
                       Differential Diagnosis
                     </p>
                     <div className="space-y-3">
                       {patient.aiRecommendations.differentialDiagnosis.map((dx, i) => (
-                        <div key={i} className="p-3 bg-white rounded-xl border border-purple-100">
+                        <div key={i} className="p-3 bg-white rounded-xl border border-teal-100">
                           <div className="flex items-center justify-between mb-2">
                             <span className="font-semibold text-gray-900 text-sm">{dx.name}</span>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                              dx.probability > 0.5 ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
+                              dx.probability > 0.5 ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'
                             }`}>
                               {Math.round(dx.probability * 100)}%
                             </span>
@@ -590,13 +578,13 @@ export default function PatientChartPage() {
 
                   {/* Suggested Labs */}
                   <div>
-                    <p className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
+                    <p className="text-sm font-bold text-teal-800 mb-2 flex items-center gap-2">
                       <FlaskConical className="w-4 h-4" />
                       Suggested Labs
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {patient.aiRecommendations.suggestedLabs.map((lab, i) => (
-                        <button key={i} className="px-3 py-1.5 bg-white border border-purple-200 text-purple-700 rounded-lg text-sm hover:bg-purple-50 transition-colors">
+                        <button key={i} className="px-3 py-1.5 bg-white border border-teal-200 text-teal-700 rounded-lg text-sm hover:bg-teal-50 transition-colors">
                           + {lab}
                         </button>
                       ))}
@@ -605,13 +593,13 @@ export default function PatientChartPage() {
 
                   {/* Suggested Imaging */}
                   <div>
-                    <p className="text-sm font-bold text-purple-800 mb-2 flex items-center gap-2">
+                    <p className="text-sm font-bold text-teal-800 mb-2 flex items-center gap-2">
                       <ImageIcon className="w-4 h-4" />
                       Suggested Imaging
                     </p>
                     <div className="flex flex-wrap gap-2">
                       {patient.aiRecommendations.suggestedImaging.map((img, i) => (
-                        <button key={i} className="px-3 py-1.5 bg-white border border-purple-200 text-purple-700 rounded-lg text-sm hover:bg-purple-50 transition-colors">
+                        <button key={i} className="px-3 py-1.5 bg-white border border-teal-200 text-teal-700 rounded-lg text-sm hover:bg-teal-50 transition-colors">
                           + {img}
                         </button>
                       ))}
@@ -619,15 +607,15 @@ export default function PatientChartPage() {
                   </div>
 
                   {/* Clinical Pearls */}
-                  <div className="p-4 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl">
-                    <p className="text-sm font-bold text-purple-800 mb-3 flex items-center gap-2">
+                  <div className="p-4 bg-gradient-to-br from-teal-100 to-teal-200 rounded-xl">
+                    <p className="text-sm font-bold text-teal-800 mb-3 flex items-center gap-2">
                       <Stethoscope className="w-4 h-4" />
                       Clinical Pearls
                     </p>
                     <ul className="space-y-2">
                       {patient.aiRecommendations.clinicalPearls.map((pearl, i) => (
-                        <li key={i} className="text-purple-900 text-sm flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 bg-purple-400 rounded-full mt-1.5 flex-shrink-0"></span>
+                        <li key={i} className="text-teal-900 text-sm flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 bg-teal-400 rounded-full mt-1.5 flex-shrink-0"></span>
                           {pearl}
                         </li>
                       ))}
@@ -642,40 +630,40 @@ export default function PatientChartPage() {
                 <div className="space-y-3">
                   <Link
                     href={`/labs?patient=${patient.id}`}
-                    className="w-full flex items-center justify-between p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+                    className="w-full flex items-center justify-between p-3 bg-teal-50 hover:bg-teal-100 rounded-xl transition-colors"
                   >
                     <span className="flex items-center gap-3">
-                      <FlaskConical className="w-5 h-5 text-purple-600" />
+                      <FlaskConical className="w-5 h-5 text-teal-600" />
                       <span className="font-medium text-gray-900">Order Labs</span>
                     </span>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
                   </Link>
                   <Link
                     href={`/imaging?patient=${patient.id}`}
-                    className="w-full flex items-center justify-between p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+                    className="w-full flex items-center justify-between p-3 bg-teal-50 hover:bg-teal-100 rounded-xl transition-colors"
                   >
                     <span className="flex items-center gap-3">
-                      <ImageIcon className="w-5 h-5 text-purple-600" />
+                      <ImageIcon className="w-5 h-5 text-teal-600" />
                       <span className="font-medium text-gray-900">Order Imaging</span>
                     </span>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
                   </Link>
                   <Link
                     href={`/medications?patient=${patient.id}`}
-                    className="w-full flex items-center justify-between p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+                    className="w-full flex items-center justify-between p-3 bg-teal-50 hover:bg-teal-100 rounded-xl transition-colors"
                   >
                     <span className="flex items-center gap-3">
-                      <Pill className="w-5 h-5 text-purple-600" />
+                      <Pill className="w-5 h-5 text-teal-600" />
                       <span className="font-medium text-gray-900">Prescribe Medication</span>
                     </span>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
                   </Link>
                   <Link
                     href={`/referrals?patient=${patient.id}`}
-                    className="w-full flex items-center justify-between p-3 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors"
+                    className="w-full flex items-center justify-between p-3 bg-teal-50 hover:bg-teal-100 rounded-xl transition-colors"
                   >
                     <span className="flex items-center gap-3">
-                      <Send className="w-5 h-5 text-purple-600" />
+                      <Send className="w-5 h-5 text-teal-600" />
                       <span className="font-medium text-gray-900">Create Referral</span>
                     </span>
                     <ChevronRight className="w-5 h-5 text-gray-400" />

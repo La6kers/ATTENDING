@@ -94,7 +94,7 @@ export function AssessmentQueue({ onSelectAssessment }: AssessmentQueueProps) {
             onClick={() => setActiveTab('pending')}
             className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'pending'
-                ? 'border-purple-600 text-purple-600'
+                ? 'border-teal-600 text-teal-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -127,7 +127,7 @@ export function AssessmentQueue({ onSelectAssessment }: AssessmentQueueProps) {
       <div className="divide-y divide-gray-100">
         {isLoading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto"></div>
+            <div className="animate-spin w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full mx-auto"></div>
             <p className="mt-2 text-gray-500">Loading assessments...</p>
           </div>
         ) : activeTab === 'emergency' ? (
@@ -235,7 +235,7 @@ function AssessmentCard({ assessment, isEmergency, onClick }: AssessmentCardProp
             </span>
 
             {/* Assessment Number */}
-            <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-600 rounded">
+            <span className="px-2 py-0.5 text-xs font-medium bg-teal-100 text-teal-600 rounded">
               {assessment.assessmentNumber}
             </span>
           </div>

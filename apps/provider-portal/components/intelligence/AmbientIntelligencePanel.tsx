@@ -146,7 +146,7 @@ export function AmbientIntelligencePanel({
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -154,7 +154,7 @@ export function AmbientIntelligencePanel({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">Ambient Intelligence</h2>
-              <p className="text-indigo-200 text-sm">Real-time clinical extraction</p>
+              <p className="text-teal-200 text-sm">Real-time clinical extraction</p>
             </div>
           </div>
           
@@ -181,7 +181,7 @@ export function AmbientIntelligencePanel({
         </div>
 
         {/* Status bar */}
-        <div className="mt-4 flex items-center gap-4 text-sm text-indigo-200">
+        <div className="mt-4 flex items-center gap-4 text-sm text-teal-200">
           <span className="flex items-center gap-1">
             <Stethoscope className="w-4 h-4" />
             {symptomCount} symptoms
@@ -288,7 +288,7 @@ export function AmbientIntelligencePanel({
                 className="w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50"
               >
                 <div className="flex items-center gap-2">
-                  <Stethoscope className="w-5 h-5 text-purple-500" />
+                  <Stethoscope className="w-5 h-5 text-teal-500" />
                   <span className="font-medium text-gray-900">Symptoms ({symptomCount})</span>
                 </div>
                 {expandedSections.includes('symptoms') ? (
@@ -304,21 +304,21 @@ export function AmbientIntelligencePanel({
                     {extractionResult.symptoms.map((symptom, index) => (
                       <div
                         key={index}
-                        className="p-3 bg-purple-50 rounded-lg border border-purple-200"
+                        className="p-3 bg-teal-50 rounded-lg border border-teal-200"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-purple-900">{symptom.term}</span>
-                          <span className="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
+                          <span className="font-medium text-teal-900">{symptom.term}</span>
+                          <span className="text-xs text-teal-600 bg-teal-100 px-2 py-0.5 rounded">
                             {Math.round(symptom.confidence * 100)}% confident
                           </span>
                         </div>
-                        <div className="mt-1 text-sm text-purple-700 space-x-3">
+                        <div className="mt-1 text-sm text-teal-700 space-x-3">
                           {symptom.severity && <span>Severity: {symptom.severity}/10</span>}
                           {symptom.duration && <span>Duration: {symptom.duration}</span>}
                           {symptom.location && <span>Location: {symptom.location}</span>}
                         </div>
                         {symptom.sourceUtterance && (
-                          <div className="mt-2 text-xs text-purple-600 italic">
+                          <div className="mt-2 text-xs text-teal-600 italic">
                             "{symptom.sourceUtterance}"
                           </div>
                         )}
@@ -513,7 +513,7 @@ export function AmbientIntelligencePanel({
                 className="w-full px-6 py-3 flex items-center justify-between hover:bg-gray-50"
               >
                 <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-500" />
+                  <FileText className="w-5 h-5 text-teal-500" />
                   <span className="font-medium text-gray-900">Documentation Draft</span>
                 </div>
                 {expandedSections.includes('draft') ? (
@@ -531,7 +531,7 @@ export function AmbientIntelligencePanel({
                       <span className="text-sm font-medium text-gray-700">HPI</span>
                       <button
                         onClick={() => handleCopy('hpi', extractionResult.documentationDraft.hpiSnippet)}
-                        className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700"
+                        className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700"
                       >
                         {copiedSection === 'hpi' ? (
                           <>
@@ -558,7 +558,7 @@ export function AmbientIntelligencePanel({
                         <span className="text-sm font-medium text-gray-700">Review of Systems</span>
                         <button
                           onClick={() => handleCopy('ros', extractionResult.documentationDraft.rosSnippet)}
-                          className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700"
+                          className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700"
                         >
                           {copiedSection === 'ros' ? (
                             <>
@@ -586,7 +586,7 @@ export function AmbientIntelligencePanel({
                         <span className="text-sm font-medium text-gray-700">Assessment</span>
                         <button
                           onClick={() => handleCopy('assessment', extractionResult.documentationDraft.assessmentSnippet)}
-                          className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700"
+                          className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700"
                         >
                           {copiedSection === 'assessment' ? (
                             <>

@@ -41,7 +41,7 @@ const defaultActions: FABAction[] = [
     label: 'New Assessment', 
     icon: Stethoscope, 
     href: '/patient-assessment',
-    color: 'bg-purple-500 hover:bg-purple-600'
+    color: 'bg-teal-500 hover:bg-teal-600'
   },
   { 
     id: 'order-labs', 
@@ -170,7 +170,7 @@ const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`
           fab w-14 h-14 rounded-full flex items-center justify-center
-          bg-gradient-to-br from-purple-500 to-indigo-600
+          bg-gradient-to-br from-teal-500 to-teal-600
           shadow-lg hover:shadow-xl
           transition-all duration-300 ease-out
           ${isOpen ? 'rotate-45 scale-110' : 'hover:scale-110'}
@@ -210,7 +210,7 @@ export const SimpleFAB: React.FC<{
   label,
   href,
   onClick,
-  color = 'from-purple-500 to-indigo-600',
+  color = 'from-teal-500 to-teal-600',
   position = 'bottom-right',
   className = '',
 }) => {

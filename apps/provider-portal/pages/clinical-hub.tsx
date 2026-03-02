@@ -164,7 +164,7 @@ export default function ClinicalHubPage() {
 
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="bg-gradient-to-r from-teal-600 to-teal-800 text-white">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
@@ -172,7 +172,7 @@ export default function ClinicalHubPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Clinical Decision Hub</h1>
-                <p className="text-purple-200">AI-Powered Diagnostic Support & Order Management</p>
+                <p className="text-teal-200">AI-Powered Diagnostic Support & Order Management</p>
               </div>
             </div>
           </div>
@@ -192,7 +192,7 @@ export default function ClinicalHubPage() {
           {/* Patient Banner */}
           <PatientBanner
             patient={patient}
-            accentColor="purple"
+            accentColor="teal"
             showRedFlags={true}
             showActions={true}
             className="mb-6"
@@ -213,12 +213,12 @@ export default function ClinicalHubPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* AI Differential Diagnosis Panel */}
               <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 text-white">
+                <div className="bg-gradient-to-r from-teal-600 to-teal-800 p-4 text-white">
                   <div className="flex items-center gap-3">
                     <Brain className="w-6 h-6" />
                     <div>
                       <h2 className="font-semibold">AI Differential Diagnosis</h2>
-                      <p className="text-purple-100 text-sm">Based on COMPASS assessment and clinical data</p>
+                      <p className="text-teal-100 text-sm">Based on COMPASS assessment and clinical data</p>
                     </div>
                   </div>
                 </div>
@@ -233,8 +233,8 @@ export default function ClinicalHubPage() {
                           ? 'border-red-200 bg-red-50 hover:border-red-400'
                           : dx.category === 'primary'
                           ? 'border-green-200 bg-green-50 hover:border-green-400'
-                          : 'border-gray-200 bg-gray-50 hover:border-purple-300'
-                      } ${selectedDiagnosis === dx.id ? 'ring-2 ring-purple-500' : ''}`}
+                          : 'border-gray-200 bg-gray-50 hover:border-teal-300'
+                      } ${selectedDiagnosis === dx.id ? 'ring-2 ring-teal-500' : ''}`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
@@ -311,7 +311,7 @@ export default function ClinicalHubPage() {
               {/* Recommended Workup */}
               <div className="bg-white rounded-2xl shadow-sm p-6">
                 <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Target className="w-5 h-5 text-purple-600" />
+                  <Target className="w-5 h-5 text-teal-600" />
                   Recommended Diagnostic Workup
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
@@ -338,12 +338,12 @@ export default function ClinicalHubPage() {
                     </div>
                   </Link>
                   <Link href={`/referrals?patientId=${patient.id}`}>
-                    <div className="p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition-colors cursor-pointer">
+                    <div className="p-4 bg-teal-50 rounded-xl hover:bg-teal-100 transition-colors cursor-pointer">
                       <div className="flex items-center gap-3">
-                        <Users className="w-6 h-6 text-purple-600" />
+                        <Users className="w-6 h-6 text-teal-600" />
                         <div>
-                          <p className="font-medium text-purple-800">Specialist Consult</p>
-                          <p className="text-sm text-purple-600">Neurology - Urgent</p>
+                          <p className="font-medium text-teal-800">Specialist Consult</p>
+                          <p className="text-sm text-teal-600">Neurology - Urgent</p>
                         </div>
                       </div>
                     </div>
@@ -373,7 +373,7 @@ export default function ClinicalHubPage() {
                       <ClipboardList className="w-5 h-5" />
                       <h2 className="font-semibold">Order Summary</h2>
                     </div>
-                    <span className="bg-purple-500 px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="bg-teal-500 px-3 py-1 rounded-full text-sm font-medium">
                       {orderCounts.total} Orders
                     </span>
                   </div>
@@ -432,7 +432,7 @@ export default function ClinicalHubPage() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <Users className="w-4 h-4 text-purple-600" />
+                        <Users className="w-4 h-4 text-teal-600" />
                         Referrals
                       </span>
                       <span className="text-sm text-gray-500">{orderCounts.referrals} ordered</span>
@@ -454,7 +454,7 @@ export default function ClinicalHubPage() {
                 </div>
 
                 <div className="p-4 border-t bg-gray-50">
-                  <button className="w-full py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                  <button className="w-full py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
                     Sign All Orders
                   </button>
                 </div>

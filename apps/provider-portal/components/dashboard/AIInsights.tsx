@@ -56,7 +56,7 @@ const AIInsights = () => {
       case 'diagnosis':
         return 'bg-blue-50 border-blue-200 text-blue-800';
       case 'population':
-        return 'bg-purple-50 border-purple-200 text-purple-800';
+        return 'bg-teal-50 border-teal-200 text-teal-800';
       case 'decision':
         return 'bg-yellow-50 border-yellow-200 text-yellow-800';
       case 'quality':
@@ -103,7 +103,7 @@ const AIInsights = () => {
             <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
             <span className="italic">{CLINICAL_DISCLAIMER_SHORT}</span>
           </div>
-          <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+          <button className="text-sm text-teal-600 hover:text-teal-700 font-medium">
             View All Insights
           </button>
         </div>

@@ -179,7 +179,7 @@ export const EhrConnectButton: React.FC<EhrConnectButtonProps> = ({
   return (
     <button
       onClick={handleConnect}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:border-purple-300 hover:text-purple-700 hover:bg-purple-50 transition-colors"
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:border-teal-300 hover:text-teal-700 hover:bg-teal-50 transition-colors"
       title={`Connect to ${meta.name} EHR`}
     >
       <StatusDot status="disconnected" />

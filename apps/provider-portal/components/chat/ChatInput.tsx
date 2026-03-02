@@ -68,7 +68,7 @@ const ChatInput: React.FC = () => {
       <div className="p-4 text-center">
         <button
           onClick={() => activeConversationId && useProviderChatStore.getState().claimConversation(activeConversationId)}
-          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
         >
           Claim this conversation to respond
         </button>
@@ -81,7 +81,7 @@ const ChatInput: React.FC = () => {
       {/* Quick Replies Toggle */}
       <button
         onClick={() => setShowQuickReplies(!showQuickReplies)}
-        className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700 mb-2"
+        className="flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700 mb-2"
       >
         <Zap className="w-4 h-4" />
         Quick Replies
@@ -122,7 +122,7 @@ const ChatInput: React.FC = () => {
             className="
               w-full px-4 py-2.5 pr-12
               border border-gray-200 rounded-xl
-              focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
+              focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
               resize-none
               disabled:bg-gray-50 disabled:cursor-not-allowed
             "
@@ -135,7 +135,7 @@ const ChatInput: React.FC = () => {
           className={`
             p-2.5 rounded-xl transition-all
             ${message.trim() && !isSending
-              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:shadow-lg'
+              ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:shadow-lg'
               : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }
           `}
@@ -158,7 +158,7 @@ function getCategoryColor(category: string): string {
     case 'greeting':
       return 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100';
     case 'followup':
-      return 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100';
+      return 'bg-teal-50 border-teal-200 text-teal-700 hover:bg-teal-100';
     case 'instruction':
       return 'bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100';
     case 'closing':

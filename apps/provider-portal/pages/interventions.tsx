@@ -87,7 +87,7 @@ const moduleConfigs: ModuleConfig[] = [
     shortLabel: 'Recommendations',
     description: 'Evidence-based guidance with guideline citations',
     icon: Brain,
-    gradient: 'from-indigo-600 to-purple-600',
+    gradient: 'from-teal-600 to-teal-800',
     stats: [
       { label: 'Active', value: 5 },
       { label: 'Urgent', value: 2, color: 'text-red-600' },
@@ -113,7 +113,7 @@ const moduleConfigs: ModuleConfig[] = [
     shortLabel: 'Trial Matching',
     description: 'Connect patients to cutting-edge treatments',
     icon: FlaskConical,
-    gradient: 'from-purple-600 to-pink-600',
+    gradient: 'from-teal-600 to-coral',
     stats: [
       { label: 'Matches', value: 3 },
       { label: 'Strong', value: 1, color: 'text-emerald-600' },
@@ -492,7 +492,7 @@ export default function InterventionsPage() {
                 <button className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
                   Print Summary
                 </button>
-                <button className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-indigo-700 hover:to-purple-700 transition-all flex items-center gap-2">
+                <button className="px-6 py-2 bg-gradient-to-r from-teal-600 to-teal-800 text-white rounded-lg text-sm font-medium hover:from-teal-700 hover:to-teal-900 transition-all flex items-center gap-2">
                   <Activity size={16} />
                   Review All Interventions
                 </button>

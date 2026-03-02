@@ -243,7 +243,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
                 <button
                   key={cardId}
                   onClick={() => toggleCardVisibility(cardId)}
-                  className="px-2 py-1 text-xs bg-gray-100 hover:bg-purple-100 text-gray-600 hover:text-purple-700 rounded transition-colors"
+                  className="px-2 py-1 text-xs bg-gray-100 hover:bg-teal-100 text-gray-600 hover:text-teal-700 rounded transition-colors"
                 >
                   + {card.title}
                 </button>

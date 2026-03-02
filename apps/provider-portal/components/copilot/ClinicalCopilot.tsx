@@ -474,7 +474,7 @@ const DifferentialMeter: React.FC<{ differential: DifferentialUpdate }> = ({ dif
             </span>
             {differential.changeDirection === 'up' && <ChevronUp size={14} className="text-red-500" />}
             {differential.changeDirection === 'down' && <ChevronDown size={14} className="text-green-500" />}
-            {differential.changeDirection === 'new' && <Sparkles size={14} className="text-purple-500" />}
+            {differential.changeDirection === 'new' && <Sparkles size={14} className="text-teal-500" />}
           </div>
         </div>
         <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -582,7 +582,7 @@ export const ClinicalCopilot: React.FC<{
     return (
       <button
         onClick={() => setState(prev => ({ ...prev, isMinimized: false }))}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-purple-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-purple-700 transition-colors z-50"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-teal-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-teal-700 transition-colors z-50"
       >
         <Brain size={24} />
         {criticalInsights.length > 0 && (
@@ -597,12 +597,12 @@ export const ClinicalCopilot: React.FC<{
   return (
     <div className={`fixed ${position === 'right' ? 'right-4 top-20 bottom-4 w-80' : 'bottom-0 left-0 right-0 h-80'} bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col z-40 overflow-hidden`}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 text-white flex items-center justify-between flex-shrink-0">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3 text-white flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5" />
           <div>
             <h3 className="font-semibold text-sm">AI Clinical Copilot</h3>
-            <p className="text-xs text-purple-200">
+            <p className="text-xs text-teal-200">
               {state.isListening ? 'Listening...' : 'Paused'}
             </p>
           </div>
@@ -669,7 +669,7 @@ export const ClinicalCopilot: React.FC<{
         {state.differentials.length > 0 && (
           <div className="p-3 border-b border-slate-100">
             <div className="flex items-center gap-2 mb-2">
-              <Target className="w-4 h-4 text-purple-600" />
+              <Target className="w-4 h-4 text-teal-600" />
               <span className="text-xs font-semibold text-slate-700">DIFFERENTIAL DIAGNOSIS</span>
             </div>
             <div className="space-y-1">
@@ -721,11 +721,11 @@ export const ClinicalCopilot: React.FC<{
             onChange={(e) => setConversationInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSubmitConversation()}
             placeholder="Enter conversation text..."
-            className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
           <button
             onClick={handleSubmitConversation}
-            className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
           >
             <ChevronRight size={18} />
           </button>

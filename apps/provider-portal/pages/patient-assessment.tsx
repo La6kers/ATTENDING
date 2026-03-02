@@ -157,7 +157,7 @@ export default function PatientAssessment() {
           </div>
 
           {/* AI Status */}
-          <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6">
+          <div className="mt-6 bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Brain className="w-8 h-8 text-indigo-600" />

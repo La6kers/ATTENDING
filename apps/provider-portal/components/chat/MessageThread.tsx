@@ -99,14 +99,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       <div className={`
         max-w-[75%] rounded-2xl px-4 py-2
         ${isProvider 
-          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-md' 
+          ? 'bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded-br-md' 
           : 'bg-gray-100 text-gray-800 rounded-bl-md'
         }
         ${isUrgent && !isProvider ? 'border-2 border-red-300 bg-red-50' : ''}
       `}>
         {/* Sender name for patient messages */}
         {!isProvider && (
-          <p className="text-xs font-medium text-purple-600 mb-1">
+          <p className="text-xs font-medium text-teal-600 mb-1">
             {message.senderName}
           </p>
         )}

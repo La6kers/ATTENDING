@@ -107,7 +107,7 @@ const contextConfig: Record<ContextType, {
 };
 
 const accentBorders: Record<string, string> = {
-  purple: 'border-l-purple-500',
+  purple: 'border-l-teal-500',
   blue: 'border-l-blue-500',
   green: 'border-l-green-500',
   indigo: 'border-l-indigo-500',
@@ -117,10 +117,10 @@ const accentBorders: Record<string, string> = {
 };
 
 const avatarGradients: Record<string, string> = {
-  purple: 'from-purple-500 to-indigo-600',
+  purple: 'from-teal-500 to-teal-600',
   blue: 'from-blue-500 to-indigo-600',
   green: 'from-green-500 to-teal-600',
-  indigo: 'from-indigo-500 to-purple-600',
+  indigo: 'from-indigo-500 to-teal-600',
   amber: 'from-amber-500 to-orange-600',
   red: 'from-red-500 to-rose-600',
   teal: 'from-teal-500 to-cyan-600',
@@ -274,7 +274,7 @@ const ContextBanner: React.FC<ContextBannerProps> = ({
               href={getPatientAssessmentLink()}
               className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
                          text-gray-700 bg-white border-2 border-gray-200 rounded-lg 
-                         hover:border-purple-400 hover:bg-purple-50 
+                         hover:border-teal-400 hover:bg-teal-50 
                          hover:-translate-y-0.5 hover:shadow-md
                          transition-all duration-200"
             >
@@ -287,7 +287,7 @@ const ContextBanner: React.FC<ContextBannerProps> = ({
                 onClick={onToggleAll}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
                            text-gray-700 bg-white border-2 border-gray-200 rounded-lg 
-                           hover:border-purple-400 hover:bg-purple-50 
+                           hover:border-teal-400 hover:bg-teal-50 
                            hover:-translate-y-0.5 hover:shadow-md
                            transition-all duration-200"
               >
@@ -309,7 +309,7 @@ const ContextBanner: React.FC<ContextBannerProps> = ({
             <Link
               href={`/treatment-plans?patientId=${patient.id}`}
               className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
-                         text-white bg-gradient-to-r from-purple-600 to-indigo-600 
+                         text-white bg-gradient-to-r from-teal-600 to-teal-700 
                          rounded-lg hover:-translate-y-0.5 hover:shadow-lg
                          transition-all duration-200"
             >
@@ -360,7 +360,7 @@ const ContextBanner: React.FC<ContextBannerProps> = ({
           <button
             onClick={onSelectPatient}
             className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium
-                       text-white bg-gradient-to-r from-purple-600 to-indigo-600 
+                       text-white bg-gradient-to-r from-teal-600 to-teal-700 
                        rounded-lg hover:-translate-y-0.5 hover:shadow-lg
                        transition-all duration-200"
           >

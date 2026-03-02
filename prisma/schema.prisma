@@ -865,13 +865,13 @@ model WebhookSubscription {
   updatedAt      DateTime  @updatedAt
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  deliveries     WebhookDelivery[]
+  deliveries     WebhookSubscriptionLog[]
 
   @@index([organizationId])
   @@index([isActive])
 }
 
-model WebhookDelivery {
+model WebhookSubscriptionLog {
   id               String    @id @default(cuid())
   subscriptionId   String
   eventType        String
@@ -892,6 +892,7 @@ model WebhookDelivery {
   @@index([status])
   @@index([nextRetryAt])
   @@index([createdAt])
+  @@map("webhook_deliveries_legacy")
 }
 
 // ============== INTEGRATION REGISTRY ==============

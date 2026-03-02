@@ -34,7 +34,7 @@ import {
 // =============================================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #4c51bf 0%, #6b46c1 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // =============================================================================
@@ -337,7 +337,7 @@ const GuidelinesModal: React.FC<GuidelinesModalProps> = ({ diagnosis, onClose })
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">{diagnosis.name}</h2>
-                <p className="text-purple-200 text-sm">Clinical Guidelines • ICD-10: {diagnosis.icdCode}</p>
+                <p className="text-teal-200 text-sm">Clinical Guidelines • ICD-10: {diagnosis.icdCode}</p>
               </div>
             </div>
             <button
@@ -362,7 +362,7 @@ const GuidelinesModal: React.FC<GuidelinesModalProps> = ({ diagnosis, onClose })
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'text-purple-700 border-b-2 border-purple-700 bg-white'
+                  ? 'text-teal-700 border-b-2 border-teal-700 bg-white'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
@@ -375,7 +375,7 @@ const GuidelinesModal: React.FC<GuidelinesModalProps> = ({ diagnosis, onClose })
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           {activeTab === 'overview' && (
             <div className="space-y-6">
-              <div className="p-4 bg-purple-50 rounded-xl">
+              <div className="p-4 bg-teal-50 rounded-xl">
                 <p className="text-gray-700 leading-relaxed">{diagnosis.guidelines.overview}</p>
               </div>
 
@@ -401,7 +401,7 @@ const GuidelinesModal: React.FC<GuidelinesModalProps> = ({ diagnosis, onClose })
                 <ul className="space-y-1">
                   {diagnosis.guidelines.references.map((ref, i) => (
                     <li key={i} className="text-gray-600 text-sm flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-purple-500" />
+                      <FileText className="w-4 h-4 text-teal-500" />
                       {ref}
                     </li>
                   ))}
@@ -416,7 +416,7 @@ const GuidelinesModal: React.FC<GuidelinesModalProps> = ({ diagnosis, onClose })
               <div className="space-y-3">
                 {diagnosis.guidelines.diagnosticCriteria.map((criterion, i) => (
                   <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                    <span className="w-6 h-6 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                    <span className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0">
                       {i + 1}
                     </span>
                     <p className="text-gray-700">{criterion}</p>
@@ -459,7 +459,7 @@ const GuidelinesModal: React.FC<GuidelinesModalProps> = ({ diagnosis, onClose })
         <div className="p-4 border-t bg-gray-50 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
+            className="px-6 py-2 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors"
           >
             Close Guidelines
           </button>
@@ -548,16 +548,16 @@ export default function VisitDiagnosisPage() {
                 <div>
                   <div className="flex items-center gap-3">
                     <h1 className="text-xl font-bold text-white">Diagnosis Selection</h1>
-                    <span className="px-3 py-1 bg-purple-500 text-white text-xs font-bold rounded-full">
+                    <span className="px-3 py-1 bg-teal-500 text-white text-xs font-bold rounded-full">
                       STEP 1 OF 3
                     </span>
                   </div>
-                  <p className="text-purple-200 text-sm">{patient.name} • {patient.age}yo {patient.gender} • {patient.mrn}</p>
+                  <p className="text-teal-200 text-sm">{patient.name} • {patient.age}yo {patient.gender} • {patient.mrn}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="text-right text-purple-200 text-sm">
+                <div className="text-right text-teal-200 text-sm">
                   <p className="font-medium text-white">{selectedDiagnoses.length} diagnosis selected</p>
                   <p>Review and select working diagnoses</p>
                 </div>
@@ -573,7 +573,7 @@ export default function VisitDiagnosisPage() {
               {/* Chief Complaint */}
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-purple-600" />
+                  <FileText className="w-5 h-5 text-teal-600" />
                   Chief Complaint
                 </h3>
                 <p className="text-lg font-medium text-gray-800">{patient.chiefComplaint}</p>
@@ -600,7 +600,7 @@ export default function VisitDiagnosisPage() {
               {/* HPI Summary */}
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-purple-600" />
+                  <Activity className="w-5 h-5 text-teal-600" />
                   HPI Summary
                 </h3>
                 <p className="text-gray-700 text-sm leading-relaxed">{patient.hpiSummary}</p>
@@ -609,7 +609,7 @@ export default function VisitDiagnosisPage() {
               {/* Vitals */}
               <div className="bg-white rounded-2xl p-6 shadow-lg">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-purple-600" />
+                  <Heart className="w-5 h-5 text-teal-600" />
                   Vital Signs
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -648,20 +648,20 @@ export default function VisitDiagnosisPage() {
             {/* Right: Differential Diagnosis Selection */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div className="p-6 border-b bg-gradient-to-r from-purple-50 to-indigo-50">
+                <div className="p-6 border-b bg-gradient-to-r from-teal-50 to-teal-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-100 rounded-xl">
-                        <Brain className="w-6 h-6 text-purple-600" />
+                      <div className="p-2 bg-teal-100 rounded-xl">
+                        <Brain className="w-6 h-6 text-teal-600" />
                       </div>
                       <div>
                         <h2 className="text-lg font-bold text-gray-900">AI Differential Diagnosis</h2>
                         <p className="text-gray-600 text-sm">Select diagnoses to include in treatment plan</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 rounded-full">
-                      <Sparkles className="w-4 h-4 text-purple-600" />
-                      <span className="text-purple-700 text-sm font-medium">AI-Assisted</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-teal-100 rounded-full">
+                      <Sparkles className="w-4 h-4 text-teal-600" />
+                      <span className="text-teal-700 text-sm font-medium">AI-Assisted</span>
                     </div>
                   </div>
                 </div>
@@ -670,7 +670,7 @@ export default function VisitDiagnosisPage() {
                   {diagnoses.map((dx) => (
                     <div
                       key={dx.id}
-                      className={`transition-colors ${dx.selected ? 'bg-purple-50' : 'hover:bg-gray-50'}`}
+                      className={`transition-colors ${dx.selected ? 'bg-teal-50' : 'hover:bg-gray-50'}`}
                     >
                       <div className="p-4">
                         <div className="flex items-start gap-4">
@@ -679,8 +679,8 @@ export default function VisitDiagnosisPage() {
                             onClick={() => toggleDiagnosis(dx.id)}
                             className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-1 transition-colors ${
                               dx.selected
-                                ? 'bg-purple-600 border-purple-600 text-white'
-                                : 'border-gray-300 hover:border-purple-400'
+                                ? 'bg-teal-600 border-teal-600 text-white'
+                                : 'border-gray-300 hover:border-teal-400'
                             }`}
                           >
                             {dx.selected && <CheckCircle className="w-4 h-4" />}
@@ -708,13 +708,13 @@ export default function VisitDiagnosisPage() {
                               <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full ${
-                                    dx.probability >= 0.7 ? 'bg-purple-600' :
+                                    dx.probability >= 0.7 ? 'bg-teal-600' :
                                     dx.probability >= 0.4 ? 'bg-amber-500' : 'bg-gray-400'
                                   }`}
                                   style={{ width: `${dx.probability * 100}%` }}
                                 />
                               </div>
-                              <span className="text-sm font-bold text-purple-700">
+                              <span className="text-sm font-bold text-teal-700">
                                 {Math.round(dx.probability * 100)}%
                               </span>
                             </div>
@@ -722,7 +722,7 @@ export default function VisitDiagnosisPage() {
                             {/* Expand/Collapse */}
                             <button
                               onClick={() => setExpandedDx(expandedDx === dx.id ? null : dx.id)}
-                              className="text-sm text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                              className="text-sm text-teal-600 hover:text-teal-800 flex items-center gap-1"
                             >
                               {expandedDx === dx.id ? (
                                 <>
@@ -772,7 +772,7 @@ export default function VisitDiagnosisPage() {
                           {/* Guidelines Button */}
                           <button
                             onClick={() => setGuidelinesModal(dx)}
-                            className="px-4 py-2 bg-purple-100 text-purple-700 rounded-xl text-sm font-medium hover:bg-purple-200 transition-colors flex items-center gap-2"
+                            className="px-4 py-2 bg-teal-100 text-teal-700 rounded-xl text-sm font-medium hover:bg-teal-200 transition-colors flex items-center gap-2"
                           >
                             <BookOpen className="w-4 h-4" />
                             Guidelines
@@ -791,7 +791,7 @@ export default function VisitDiagnosisPage() {
                   disabled={!canProceed}
                   className={`px-8 py-4 rounded-2xl font-semibold text-lg flex items-center gap-3 transition-all ${
                     canProceed
-                      ? 'bg-white text-purple-700 hover:bg-purple-50 shadow-lg hover:shadow-xl'
+                      ? 'bg-white text-teal-700 hover:bg-teal-50 shadow-lg hover:shadow-xl'
                       : 'bg-white/30 text-white/60 cursor-not-allowed'
                   }`}
                 >

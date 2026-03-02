@@ -85,7 +85,7 @@ function DashboardContent() {
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-teal-600 to-teal-800 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">A</span>
                 </div>
                 <div>
@@ -112,8 +112,8 @@ function DashboardContent() {
 
                 {/* User Menu */}
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                    <span className="text-purple-600 font-medium text-sm">SI</span>
+                  <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                    <span className="text-teal-700 font-medium text-sm">SI</span>
                   </div>
                   <span className="text-sm font-medium text-gray-700">Dr. Isbell</span>
                 </div>
@@ -144,7 +144,7 @@ function DashboardContent() {
               icon="📋"
               label="Pending Review"
               value={5}
-              color="purple"
+              color="teal"
             />
             <StatCard
               icon="✅"
@@ -177,7 +177,7 @@ function DashboardContent() {
                       setSelectedEncounterId(null);
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                 >
                   <option value="">-- Select patient to manage orders --</option>
                   <option value="AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA">
@@ -212,7 +212,7 @@ function DashboardContent() {
                           onClick={() => setActivePanel(panel)}
                           className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                             activePanel === panel
-                              ? 'border-b-2 border-purple-600 text-purple-600 bg-purple-50'
+                              ? 'border-b-2 border-teal-600 text-teal-600 bg-teal-50'
                               : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                           }`}
                         >
@@ -256,7 +256,7 @@ function DashboardContent() {
                         <p className="text-gray-500 mb-4">
                           Component ready - connect to ImagingOrderPanel
                         </p>
-                        <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
                           + Order Imaging Study
                         </button>
                       </div>
@@ -271,7 +271,7 @@ function DashboardContent() {
                         <p className="text-gray-500 mb-4">
                           Component ready - connect to ReferralPanel
                         </p>
-                        <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                        <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
                           + Create Referral
                         </button>
                       </div>
@@ -281,8 +281,8 @@ function DashboardContent() {
               ) : (
                 /* No Patient Selected State */
                 <div className="bg-white rounded-lg shadow p-12 text-center">
-                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
@@ -323,13 +323,13 @@ interface StatCardProps {
   icon: string;
   label: string;
   value: number;
-  color: 'purple' | 'red' | 'orange' | 'green' | 'blue';
+  color: 'teal' | 'red' | 'orange' | 'green' | 'blue';
   onClick?: () => void;
 }
 
 function StatCard({ icon, label, value, color, onClick }: StatCardProps) {
   const colorClasses = {
-    purple: 'bg-purple-50 border-purple-200 hover:bg-purple-100',
+    teal: 'bg-teal-50 border-teal-200 hover:bg-teal-100',
     red: 'bg-red-50 border-red-200 hover:bg-red-100',
     orange: 'bg-orange-50 border-orange-200 hover:bg-orange-100',
     green: 'bg-green-50 border-green-200 hover:bg-green-100',
@@ -337,7 +337,7 @@ function StatCard({ icon, label, value, color, onClick }: StatCardProps) {
   };
 
   const valueColors = {
-    purple: 'text-purple-600',
+    teal: 'text-teal-600',
     red: 'text-red-600',
     orange: 'text-orange-600',
     green: 'text-green-600',

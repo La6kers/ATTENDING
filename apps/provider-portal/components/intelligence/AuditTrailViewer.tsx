@@ -450,8 +450,8 @@ export function AuditTrailViewer({
 
                   {/* Differentials */}
                   {entry.aiReasoning.differentialConsiderations && entry.aiReasoning.differentialConsiderations.length > 0 && (
-                    <div className="p-3 bg-purple-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-purple-700 mb-2 flex items-center gap-2">
+                    <div className="p-3 bg-teal-50 rounded-lg">
+                      <h4 className="text-sm font-medium text-teal-700 mb-2 flex items-center gap-2">
                         <GitBranch className="w-4 h-4" />
                         Differential Considerations
                       </h4>
@@ -459,10 +459,10 @@ export function AuditTrailViewer({
                         {entry.aiReasoning.differentialConsiderations.map((diff, idx) => (
                           <div key={idx} className="text-sm">
                             <div className="flex items-center justify-between">
-                              <span className={diff.ruledOut ? 'text-gray-500 line-through' : 'text-purple-900 font-medium'}>
+                              <span className={diff.ruledOut ? 'text-gray-500 line-through' : 'text-teal-900 font-medium'}>
                                 {diff.diagnosis}
                               </span>
-                              <span className="text-purple-600">{Math.round(diff.probability * 100)}%</span>
+                              <span className="text-teal-600">{Math.round(diff.probability * 100)}%</span>
                             </div>
                             {diff.ruledOut && diff.reasonIfRuledOut && (
                               <p className="text-xs text-gray-500 mt-0.5">Ruled out: {diff.reasonIfRuledOut}</p>

@@ -22,7 +22,7 @@ const QuickAccessCard: React.FC<QuickAccessCardProps> = ({
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600 hover:bg-blue-100',
     green: 'bg-green-50 text-green-600 hover:bg-green-100',
-    purple: 'bg-purple-50 text-purple-600 hover:bg-purple-100',
+    purple: 'bg-teal-50 text-teal-600 hover:bg-teal-100',
     orange: 'bg-orange-50 text-orange-600 hover:bg-orange-100',
   };
 

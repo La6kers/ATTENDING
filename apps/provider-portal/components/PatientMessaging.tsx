@@ -207,7 +207,7 @@ const PatientMessaging = () => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-xl">
+      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-teal-100 rounded-t-xl">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Patient Messages</h2>
@@ -238,8 +238,8 @@ const PatientMessaging = () => {
               <div
                 key={message.id}
                 className={`border rounded-xl p-4 cursor-pointer transition-all hover:shadow-md ${
-                  selectedMessage?.id === message.id ? 'ring-2 ring-purple-500' : ''
-                } ${message.status === 'unread' ? 'border-purple-200 bg-purple-50' : 'border-gray-200'}`}
+                  selectedMessage?.id === message.id ? 'ring-2 ring-teal-500' : ''
+                } ${message.status === 'unread' ? 'border-teal-200 bg-teal-50' : 'border-gray-200'}`}
                 onClick={() => {
                   setSelectedMessage(message);
                   setResponse('');
@@ -293,7 +293,7 @@ const PatientMessaging = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-2xl">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-teal-100 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -383,7 +383,7 @@ const PatientMessaging = () => {
                     <button
                       onClick={handleUseDraft}
                       className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 
-                               bg-gradient-to-r from-purple-600 to-indigo-600 text-white 
+                               bg-gradient-to-r from-teal-600 to-teal-700 text-white 
                                rounded-xl font-medium hover:shadow-lg transition-all"
                     >
                       <Check className="w-4 h-4" />
@@ -392,8 +392,8 @@ const PatientMessaging = () => {
                     <button
                       onClick={handleGenerateAI}
                       disabled={isGenerating}
-                      className="flex items-center gap-2 py-2.5 px-4 border-2 border-purple-200 
-                               text-purple-700 rounded-xl font-medium hover:bg-purple-50 transition-all"
+                      className="flex items-center gap-2 py-2.5 px-4 border-2 border-teal-200 
+                               text-teal-700 rounded-xl font-medium hover:bg-teal-50 transition-all"
                     >
                       <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
                       Regenerate
@@ -407,14 +407,14 @@ const PatientMessaging = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-medium text-gray-900 text-sm uppercase tracking-wide">
                     Your Response
-                    {response && <span className="ml-2 text-purple-600 normal-case">(editing)</span>}
+                    {response && <span className="ml-2 text-teal-600 normal-case">(editing)</span>}
                   </h4>
                   {!showAIDraft && !response && (
                     <button
                       onClick={handleGenerateAI}
                       disabled={isGenerating}
                       className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium
-                               bg-gradient-to-r from-purple-600 to-indigo-600 text-white
+                               bg-gradient-to-r from-teal-600 to-teal-700 text-white
                                rounded-lg hover:shadow-md transition-all"
                     >
                       {isGenerating ? (
@@ -456,7 +456,7 @@ const PatientMessaging = () => {
                   <button
                     onClick={() => sendResponse(selectedMessage.id)}
                     disabled={!response.trim()}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 
+                    className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 
                              text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 
                              disabled:cursor-not-allowed transition-all"
                   >

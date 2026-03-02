@@ -167,7 +167,7 @@ const NavBadge: React.FC<{
     amber: 'bg-amber-500 text-white',
     green: 'bg-green-500 text-white',
     blue: 'bg-blue-500 text-white',
-    purple: 'bg-purple-500 text-white',
+    purple: 'bg-teal-500 text-white',
   };
   
   return (
@@ -193,17 +193,17 @@ const NavItemComponent: React.FC<{
   `;
   
   const activeClasses = isActive
-    ? 'bg-purple-100 text-purple-700 font-medium'
+    ? 'bg-teal-100 text-teal-700 font-medium'
     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900';
   
   const content = (
     <>
-      <Icon size={20} className={isActive ? 'text-purple-600' : 'text-slate-400'} />
+      <Icon size={20} className={isActive ? 'text-teal-600' : 'text-slate-400'} />
       {!collapsed && (
         <>
           <span className="flex-1 truncate">{item.label}</span>
           {item.isAI && (
-            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded">
+            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded">
               AI
             </span>
           )}
@@ -317,11 +317,11 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
       <div className="flex items-center justify-between p-4 border-b border-slate-200">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-teal-600 to-teal-700 rounded-lg flex items-center justify-center">
               <Stethoscope size={18} className="text-white" />
             </div>
             <span className="font-bold text-slate-900">ATTENDING</span>
-            <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded font-medium">AI</span>
+            <span className="text-xs px-1.5 py-0.5 bg-teal-100 text-teal-700 rounded font-medium">AI</span>
           </div>
         )}
         <button
@@ -342,7 +342,7 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-100 border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full pl-9 pr-4 py-2 bg-slate-100 border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
         </div>
@@ -363,7 +363,7 @@ export const NavigationSidebar: React.FC<NavigationSidebarProps> = ({
       {/* User Profile */}
       <div className="p-4 border-t border-slate-200">
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold">
+          <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center text-white font-semibold">
             {user.name.split(' ').map(n => n[0]).join('')}
           </div>
           {!collapsed && (

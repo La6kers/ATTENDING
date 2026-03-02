@@ -5,9 +5,10 @@
    SINGLE SOURCE OF TRUTH for all visual styling across:
    - Provider Portal (ATTENDING)
    - Patient Portal (COMPASS)
+   - COMPASS Admin
    - All clinical modules
    
-   Consolidated from 10+ HTML prototype files (~8,000+ lines → ~500 lines)
+   Brand Colors: Deep Navy / Teal / Coral / Gold
    ============================================================ */
 
 /* ============================================================
@@ -17,64 +18,86 @@
 :root {
   /* ========================================
      BRAND COLORS - ATTENDING AI
+     Teal / Coral / Gold
      ======================================== */
-  --brand-primary: #667eea;
-  --brand-secondary: #764ba2;
-  --brand-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --brand-gradient-hover: linear-gradient(135deg, #5a6fd6 0%, #6a4292 100%);
-  --brand-gradient-extended: linear-gradient(135deg, #4c51bf 0%, #553c9a 25%, #6b46c1 50%, #7c3aed 75%, #8b5cf6 100%);
-  --brand-gradient-subtle: linear-gradient(135deg, hsl(270 50% 98%) 0%, hsl(280 40% 97%) 50%, hsl(270 45% 96%) 100%);
+  --deep-navy: #0C3547;
+  --header-dark: #0C4C5E;
+  --mid-teal: #0F5F76;
+  --primary-teal: #1A8FA8;
+  --light-teal: #25B8A9;
+  --pale-mint: #E6F7F5;
+
+  --gold: #F0A500;
+  --gold-dark: #D48F00;
+  --gold-light: #FEF8E7;
+
+  --coral: #E87461;
+  --coral-light: #FCE8E5;
+
+  /* Legacy aliases (keep for backward compat) */
+  --brand-primary: #1A8FA8;
+  --brand-secondary: #0C4C5E;
+
+  /* Brand gradients */
+  --brand-gradient: linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%);
+  --brand-gradient-header: linear-gradient(180deg, #1A8FA8 0%, #0C4C5E 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #0C4C5E 0%, #25B8A9 100%);
+  --brand-gradient-subtle: linear-gradient(135deg, #E6F7F5 0%, #F0F7F9 100%);
+  --brand-gradient-gold: linear-gradient(135deg, #F0A500 0%, #D48F00 100%);
+  
+  /* Legacy alias */
+  --primary-gradient: linear-gradient(180deg, #1A8FA8 0%, #0C4C5E 100%);
   
   /* Brand alpha variants */
-  --brand-alpha-5: rgba(102, 126, 234, 0.05);
-  --brand-alpha-10: rgba(102, 126, 234, 0.1);
-  --brand-alpha-20: rgba(102, 126, 234, 0.2);
-  --brand-alpha-30: rgba(102, 126, 234, 0.3);
+  --brand-alpha-5: rgba(26, 143, 168, 0.05);
+  --brand-alpha-10: rgba(26, 143, 168, 0.1);
+  --brand-alpha-20: rgba(26, 143, 168, 0.2);
+  --brand-alpha-30: rgba(26, 143, 168, 0.3);
   
   /* ========================================
      CLINICAL STATUS COLORS
      ======================================== */
-  --status-critical: #ef4444;
+  --status-critical: #EF4444;
   --status-critical-dark: #dc2626;
   --status-critical-light: #fef2f2;
   --status-critical-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   
-  --status-warning: #f59e0b;
-  --status-warning-dark: #d97706;
-  --status-warning-light: #fffbeb;
-  --status-warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --status-warning: #F0A500;
+  --status-warning-dark: #D48F00;
+  --status-warning-light: #FEF8E7;
+  --status-warning-gradient: linear-gradient(135deg, #F0A500 0%, #D48F00 100%);
   
   --status-success: #22c55e;
   --status-success-dark: #16a34a;
   --status-success-light: #f0fdf4;
   --status-success-gradient: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   
-  --status-info: #3b82f6;
-  --status-info-dark: #2563eb;
-  --status-info-light: #eff6ff;
-  --status-info-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --status-info: #1A8FA8;
+  --status-info-dark: #0C4C5E;
+  --status-info-light: #E6F7F5;
+  --status-info-gradient: linear-gradient(135deg, #1A8FA8 0%, #0F5F76 100%);
   
   /* Order Priority Colors */
-  --priority-stat: #f97316;
-  --priority-stat-gradient: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  --priority-urgent: #f59e0b;
-  --priority-asap: #eab308;
+  --priority-stat: #EF4444;
+  --priority-stat-gradient: linear-gradient(135deg, #EF4444 0%, #dc2626 100%);
+  --priority-urgent: #F0A500;
+  --priority-asap: #D48F00;
   --priority-routine: #6b7280;
   
   /* ========================================
      NEUTRAL PALETTE
      ======================================== */
   --neutral-0: #ffffff;
-  --neutral-50: #f8fafc;
-  --neutral-100: #f1f5f9;
-  --neutral-200: #e2e8f0;
-  --neutral-300: #cbd5e1;
+  --neutral-50: #F8FAFC;
+  --neutral-100: #F1F5F9;
+  --neutral-200: #E2E8F0;
+  --neutral-300: #CBD5E1;
   --neutral-400: #94a3b8;
-  --neutral-500: #64748b;
+  --neutral-500: #64748B;
   --neutral-600: #475569;
   --neutral-700: #334155;
   --neutral-800: #1e293b;
-  --neutral-900: #0f172a;
+  --neutral-900: #0F172A;
   
   /* ========================================
      TYPOGRAPHY
@@ -110,7 +133,6 @@
   --space-12: 3rem;
   --space-16: 4rem;
   
-  /* Legacy aliases */
   --space-xs: var(--space-1);
   --space-sm: var(--space-2);
   --space-md: var(--space-4);
@@ -138,9 +160,11 @@
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
   
-  --shadow-brand: 0 4px 14px rgba(102, 126, 234, 0.25);
-  --shadow-brand-hover: 0 8px 20px rgba(102, 126, 234, 0.35);
+  --shadow-brand: 0 4px 14px rgba(26, 143, 168, 0.25);
+  --shadow-brand-hover: 0 8px 20px rgba(26, 143, 168, 0.35);
   --shadow-critical: 0 4px 14px rgba(239, 68, 68, 0.25);
+  --shadow-gold: 0 4px 14px rgba(240, 165, 0, 0.25);
+  --shadow-coral: 0 4px 14px rgba(232, 116, 97, 0.25);
   
   /* ========================================
      TRANSITIONS
@@ -167,7 +191,7 @@
      ======================================== */
   --glass-bg: rgba(255, 255, 255, 0.95);
   --glass-bg-light: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(139, 92, 246, 0.1);
+  --glass-border: rgba(26, 143, 168, 0.1);
   --glass-blur: blur(10px);
 }
 
@@ -201,8 +225,8 @@
 }
 
 @keyframes pulseBrand {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(102, 126, 234, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26, 143, 168, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(26, 143, 168, 0); }
 }
 
 @keyframes spin {
@@ -284,7 +308,7 @@
 }
 
 .alert-info {
-  background: linear-gradient(135deg, var(--status-info-light) 0%, #dbeafe 100%);
+  background: linear-gradient(135deg, var(--status-info-light) 0%, #D4EEF6 100%);
   border: 2px solid var(--status-info);
 }
 

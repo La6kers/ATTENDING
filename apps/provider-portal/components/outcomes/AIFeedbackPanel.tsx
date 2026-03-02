@@ -186,12 +186,12 @@ export function AIFeedbackPanel({
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center gap-3">
           <Brain className="w-6 h-6" />
           <div>
             <h3 className="font-semibold">AI Feedback</h3>
-            <p className="text-purple-200 text-sm">Help improve clinical accuracy</p>
+            <p className="text-teal-200 text-sm">Help improve clinical accuracy</p>
           </div>
         </div>
       </div>
@@ -298,7 +298,7 @@ export function AIFeedbackPanel({
                   <select
                     value={selectedDiagnosis}
                     onChange={(e) => setSelectedDiagnosis(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                   >
                     <option value="">Select diagnosis...</option>
                     {COMMON_DIAGNOSES.map((dx) => (
@@ -311,7 +311,7 @@ export function AIFeedbackPanel({
                       value={customDiagnosis}
                       onChange={(e) => setCustomDiagnosis(e.target.value)}
                       placeholder="Enter diagnosis..."
-                      className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      className="mt-2 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                     />
                   )}
                 </div>
@@ -326,7 +326,7 @@ export function AIFeedbackPanel({
                       value={missedDiagnosis}
                       onChange={(e) => setMissedDiagnosis(e.target.value)}
                       placeholder="Enter missed diagnosis or finding..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
                 )}
@@ -357,7 +357,7 @@ export function AIFeedbackPanel({
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Any additional feedback to help improve the AI..."
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
 
                 <div className="flex items-center gap-3">
@@ -401,7 +401,7 @@ export function AIFeedbackPanel({
             disabled={!selectedRating || isSubmitting}
             className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-colors ${
               selectedRating && !isSubmitting
-                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                ? 'bg-teal-600 text-white hover:bg-teal-700'
                 : 'bg-gray-200 text-gray-500 cursor-not-allowed'
             }`}
           >
@@ -424,11 +424,11 @@ export function AIFeedbackPanel({
       </div>
 
       {/* Learning Tip */}
-      <div className="px-6 py-4 bg-indigo-50 border-t border-indigo-100">
+      <div className="px-6 py-4 bg-teal-50 border-t border-teal-100">
         <div className="flex items-start gap-3">
-          <Lightbulb className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-0.5" />
+          <Lightbulb className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm text-indigo-700">
+            <p className="text-sm text-teal-700">
               <strong>Did you know?</strong> Your feedback directly trains the AI model.
               Providers who give feedback see 15% higher accuracy rates within 30 days.
             </p>

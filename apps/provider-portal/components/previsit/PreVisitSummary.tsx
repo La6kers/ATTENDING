@@ -36,7 +36,7 @@ import { ProviderShell } from '@/components/layout/ProviderShell';
 // ============================================================
 
 const theme = {
-  gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
 // ============================================================
@@ -196,14 +196,14 @@ const QuickActionButton: React.FC<{
   variant?: 'default' | 'primary' | 'danger';
 }> = ({ icon, label, href, onClick, variant = 'default' }) => {
   const variants = {
-    default: 'bg-gray-50 hover:bg-purple-50 text-gray-700 border-gray-200 hover:border-purple-300 hover:text-purple-700',
-    primary: 'bg-purple-600 hover:bg-purple-700 text-white border-purple-600',
+    default: 'bg-gray-50 hover:bg-teal-50 text-gray-700 border-gray-200 hover:border-teal-300 hover:text-teal-700',
+    primary: 'bg-teal-600 hover:bg-teal-700 text-white border-teal-600',
     danger: 'bg-red-600 hover:bg-red-700 text-white border-red-600',
   };
 
   const content = (
     <>
-      <div className={`p-2 rounded-lg ${variant === 'default' ? 'bg-purple-100 text-purple-600' : 'bg-white/20'}`}>
+      <div className={`p-2 rounded-lg ${variant === 'default' ? 'bg-teal-100 text-teal-600' : 'bg-white/20'}`}>
         {icon}
       </div>
       <span className="text-xs font-medium whitespace-nowrap">{label}</span>
@@ -280,7 +280,7 @@ const ActionItemRow: React.FC<{
         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
           item.completed 
             ? 'bg-green-500 border-green-500 text-white' 
-            : 'border-gray-300 hover:border-purple-500'
+            : 'border-gray-300 hover:border-teal-500'
         }`}
       >
         {item.completed && <Check className="w-3 h-3" />}
@@ -375,7 +375,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
             {/* Patient Info */}
             <div className="flex items-start gap-4 flex-1">
               {/* Avatar */}
-              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-700 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg">
                 {patient.firstName[0]}{patient.lastName[0]}
               </div>
               
@@ -468,14 +468,14 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setAllExpanded(false)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-teal-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Minus className="w-4 h-4" />
               Collapse All
             </button>
             <button
               onClick={() => setAllExpanded(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-purple-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-teal-200 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <Plus className="w-4 h-4" />
               Expand All
@@ -499,7 +499,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               allReviewed
                 ? 'bg-green-100 text-green-700 cursor-default'
-                : 'bg-white text-purple-700 hover:bg-purple-50 shadow-md'
+                : 'bg-white text-teal-700 hover:bg-teal-50 shadow-md'
             }`}
           >
             <Check className="w-4 h-4" />
@@ -731,7 +731,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
               <div className="flex items-center gap-3">
                 <button
                   onClick={onStartEncounter}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-medium shadow-lg transition-all"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-xl font-medium shadow-lg transition-all"
                 >
                   <Play className="w-5 h-5" />
                   Start Encounter

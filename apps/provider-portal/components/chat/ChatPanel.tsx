@@ -42,7 +42,7 @@ const ChatPanel: React.FC = () => {
       {/* Panel */}
       <div className="fixed right-0 top-0 h-full w-[480px] bg-white shadow-2xl z-50 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-gradient-to-r from-teal-600 to-teal-700 text-white">
           <div className="flex items-center gap-3">
             <MessageCircle className="w-5 h-5" />
             <h2 className="font-semibold">Patient Messages</h2>
@@ -108,7 +108,7 @@ const ChatPanel: React.FC = () => {
                   {activeConversation.status === 'open' && (
                     <button
                       onClick={() => useProviderChatStore.getState().claimConversation(activeConversation.id)}
-                      className="text-sm px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                      className="text-sm px-3 py-1 bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
                     >
                       Claim
                     </button>

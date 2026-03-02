@@ -57,7 +57,7 @@ export const ClinicalMessageCard: React.FC<Props> = ({ message }) => {
               <span className={cn(
                 "text-[10px] px-1.5 py-0.5 rounded font-semibold",
                 message.type === 'lab' && "bg-blue-100 text-blue-800",
-                message.type === 'imaging' && "bg-indigo-100 text-indigo-800",
+                message.type === 'imaging' && "bg-cyan-100 text-cyan-800",
                 message.type === 'phone' && "bg-fuchsia-100 text-fuchsia-800",
                 message.type === 'email' && "bg-green-100 text-green-800",
                 message.type === 'provider' && "bg-amber-100 text-amber-800",
@@ -205,7 +205,7 @@ const ClinicalMessageDetail: React.FC<{ message: ClinicalMessage; onExecute: () 
 
       {/* Decision Support */}
       {message.recommendedActions && (
-        <div className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-md p-3">
+        <div className="bg-gradient-to-br from-teal-600 to-teal-700 text-white rounded-md p-3">
           <div className="text-xs font-bold mb-2 flex items-center gap-1">
             🧭 Clinical Decision Support
           </div>
@@ -222,7 +222,7 @@ const ClinicalMessageDetail: React.FC<{ message: ClinicalMessage; onExecute: () 
                 className={cn(
                   "p-2 rounded text-left transition-all text-[11px]",
                   action.selected
-                    ? "bg-white text-purple-600"
+                    ? "bg-white text-teal-600"
                     : "bg-white/20 hover:bg-white/30"
                 )}
               >

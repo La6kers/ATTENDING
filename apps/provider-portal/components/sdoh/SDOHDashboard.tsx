@@ -357,7 +357,7 @@ const DomainCard: React.FC<{
               <p className="text-sm font-medium text-slate-700 mb-2">Recommended Interventions:</p>
               <div className="flex flex-wrap gap-2">
                 {result.interventions.map((int, idx) => (
-                  <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                  <span key={idx} className="px-2 py-1 bg-teal-100 text-teal-700 text-xs rounded-full">
                     {int}
                   </span>
                 ))}
@@ -368,7 +368,7 @@ const DomainCard: React.FC<{
           {result.positiveScreen && (
             <button
               onClick={() => onIntervene(result.domain)}
-              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+              className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
             >
               <Send size={16} />
               Find Resources & Refer
@@ -384,10 +384,10 @@ const ResourceCard: React.FC<{
   resource: CommunityResource;
   onRefer: (resourceId: string) => void;
 }> = ({ resource, onRefer }) => (
-  <div className="bg-white rounded-xl border border-slate-200 p-4 hover:border-purple-300 transition-colors">
+  <div className="bg-white rounded-xl border border-slate-200 p-4 hover:border-teal-300 transition-colors">
     <div className="flex items-start justify-between mb-3">
       <div className="flex items-center gap-2">
-        <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+        <div className="p-2 bg-teal-100 rounded-lg text-teal-600">
           <DomainIcon domain={resource.domain} />
         </div>
         <div>
@@ -436,7 +436,7 @@ const ResourceCard: React.FC<{
     <div className="flex items-center gap-2">
       <button
         onClick={() => onRefer(resource.id)}
-        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors"
+        className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
       >
         <Send size={14} />
         Refer Patient

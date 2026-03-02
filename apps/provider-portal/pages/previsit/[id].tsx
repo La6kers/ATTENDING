@@ -272,11 +272,11 @@ export default function PreVisitPage() {
   // Loading
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)' }}>
         <div className="text-center text-white">
           <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
           <p className="text-lg font-medium">Loading pre-visit summary…</p>
-          <p className="text-purple-200 text-sm mt-1">Pulling assessment data from database</p>
+          <p className="text-teal-200 text-sm mt-1">Pulling assessment data from database</p>
         </div>
       </div>
     );
@@ -285,14 +285,14 @@ export default function PreVisitPage() {
   // Error
   if (error || !preVisitData) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)' }}>
         <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-3xl">⚠️</span></div>
           <h2 className="text-xl font-bold text-gray-900 mb-2">Assessment Not Found</h2>
           <p className="text-gray-600 mb-6">{error || 'This assessment could not be loaded.'}</p>
           <div className="flex gap-3 justify-center">
             <button onClick={() => router.back()} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">Go Back</button>
-            <button onClick={() => router.push('/assessments')} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors">All Assessments</button>
+            <button onClick={() => router.push('/assessments')} className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors">All Assessments</button>
           </div>
         </div>
       </div>

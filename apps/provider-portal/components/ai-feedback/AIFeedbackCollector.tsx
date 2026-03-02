@@ -122,7 +122,7 @@ const RecommendationFeedbackCard: React.FC<{
   const getTypeIcon = () => {
     switch (recommendation.type) {
       case 'diagnosis':
-        return <Brain size={16} className="text-purple-500" />;
+        return <Brain size={16} className="text-teal-500" />;
       case 'red_flag':
         return <AlertTriangle size={16} className="text-red-500" />;
       default:
@@ -244,7 +244,7 @@ const RecommendationFeedbackCard: React.FC<{
                 value={correctDiagnosis}
                 onChange={(e) => setCorrectDiagnosis(e.target.value)}
                 placeholder="Enter the correct diagnosis..."
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               />
             </div>
           )}
@@ -259,7 +259,7 @@ const RecommendationFeedbackCard: React.FC<{
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Share any additional feedback to help improve the AI..."
               rows={2}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
             />
           </div>
 
@@ -268,7 +268,7 @@ const RecommendationFeedbackCard: React.FC<{
             <button
               onClick={handleSubmit}
               disabled={!selectedRating}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send size={16} />
               Submit Feedback
@@ -326,12 +326,12 @@ export const AIFeedbackCollector: React.FC<AIFeedbackCollectorProps> = ({
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
       <div
-        className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 cursor-pointer"
+        className="flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-teal-50/50 cursor-pointer"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-            <Brain className="w-5 h-5 text-purple-600" />
+          <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
+            <Brain className="w-5 h-5 text-teal-600" />
           </div>
           <div>
             <h3 className="font-semibold text-slate-900">AI Feedback</h3>
@@ -354,7 +354,7 @@ export const AIFeedbackCollector: React.FC<AIFeedbackCollectorProps> = ({
       {/* Progress Bar */}
       <div className="h-1 bg-slate-100">
         <div
-          className="h-full bg-purple-600 transition-all duration-300"
+          className="h-full bg-teal-600 transition-all duration-300"
           style={{ width: `${progressPercent}%` }}
         />
       </div>

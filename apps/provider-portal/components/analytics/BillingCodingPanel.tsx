@@ -232,16 +232,16 @@ export function BillingCodingPanel({
         {/* E/M Code Section */}
         <Section
           title="E/M Code"
-          icon={<Target className="w-5 h-5 text-indigo-500" />}
+          icon={<Target className="w-5 h-5 text-teal-500" />}
           isExpanded={expandedSections.includes('em')}
           onToggle={() => toggleSection('em')}
-          badge={<span className="text-lg font-bold text-indigo-600">{selectedEM}</span>}
+          badge={<span className="text-lg font-bold text-teal-600">{selectedEM}</span>}
         >
           <div className="space-y-4">
             {/* Primary Suggestion */}
             <div className={`p-4 rounded-lg border-2 ${
               selectedEM === suggestion.suggestedEMCode.code
-                ? 'border-indigo-500 bg-indigo-50'
+                ? 'border-teal-500 bg-teal-50'
                 : 'border-gray-200 hover:border-gray-300'
             }`}>
               <label className="flex items-start gap-3 cursor-pointer">
@@ -257,7 +257,7 @@ export function BillingCodingPanel({
                     <div>
                       <span className="font-bold text-lg text-gray-900">{suggestion.suggestedEMCode.code}</span>
                       <span className="ml-2 text-gray-600">Level {suggestion.suggestedEMCode.level}</span>
-                      <span className="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs">
+                      <span className="ml-2 px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs">
                         Recommended
                       </span>
                     </div>
@@ -289,7 +289,7 @@ export function BillingCodingPanel({
                   <div
                     key={alt.code}
                     className={`p-3 rounded-lg border ${
-                      selectedEM === alt.code ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'
+                      selectedEM === alt.code ? 'border-teal-500 bg-teal-50' : 'border-gray-200'
                     }`}
                   >
                     <label className="flex items-center justify-between cursor-pointer">
@@ -347,7 +347,7 @@ export function BillingCodingPanel({
                   </div>
                   <div className="flex items-center gap-2">
                     {dx.hccCategory && (
-                      <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">
+                      <span className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs">
                         {dx.hccCategory}
                       </span>
                     )}
@@ -356,7 +356,7 @@ export function BillingCodingPanel({
                 </div>
                 <div className="mt-1 text-sm text-gray-600">{dx.description}</div>
                 {dx.rafScore && (
-                  <div className="mt-1 text-xs text-purple-600">RAF: +{dx.rafScore.toFixed(3)}</div>
+                  <div className="mt-1 text-xs text-teal-600">RAF: +{dx.rafScore.toFixed(3)}</div>
                 )}
               </div>
             ))}
@@ -367,36 +367,36 @@ export function BillingCodingPanel({
         {suggestion.hccOpportunities.length > 0 && (
           <Section
             title="HCC Capture Opportunities"
-            icon={<TrendingUp className="w-5 h-5 text-purple-500" />}
+            icon={<TrendingUp className="w-5 h-5 text-teal-500" />}
             count={suggestion.hccOpportunities.length}
             isExpanded={expandedSections.includes('hcc')}
             onToggle={() => toggleSection('hcc')}
           >
             <div className="space-y-3">
               {suggestion.hccOpportunities.map((hcc, index) => (
-                <div key={index} className="p-4 rounded-lg border border-purple-200 bg-purple-50">
+                <div key={index} className="p-4 rounded-lg border border-teal-200 bg-teal-50">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="font-medium text-purple-900">{hcc.hccCode}</span>
-                      <span className="ml-2 text-purple-700">{hcc.hccDescription}</span>
+                      <span className="font-medium text-teal-900">{hcc.hccCode}</span>
+                      <span className="ml-2 text-teal-700">{hcc.hccDescription}</span>
                     </div>
-                    <span className="px-3 py-1 bg-purple-200 text-purple-800 rounded-full text-sm font-medium">
+                    <span className="px-3 py-1 bg-teal-200 text-teal-800 rounded-full text-sm font-medium">
                       +{hcc.rafValue.toFixed(3)} RAF
                     </span>
                   </div>
-                  <div className="mt-2 p-2 bg-white rounded border border-purple-200">
+                  <div className="mt-2 p-2 bg-white rounded border border-teal-200">
                     <div className="text-sm">
                       <span className="font-medium text-gray-700">Consider:</span>{' '}
-                      <span className="font-mono text-purple-600">{hcc.suggestedICD10}</span>
+                      <span className="font-mono text-teal-600">{hcc.suggestedICD10}</span>
                       <span className="text-gray-600"> - {hcc.icd10Description}</span>
                     </div>
                   </div>
-                  <div className="mt-2 text-xs text-purple-600">
+                  <div className="mt-2 text-xs text-teal-600">
                     {hcc.clinicalEvidence.join(' • ')}
                   </div>
                   <button
                     onClick={() => onAcceptHCC?.(hcc.hccCode, hcc.suggestedICD10)}
-                    className="mt-2 px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+                    className="mt-2 px-3 py-1 bg-teal-600 text-white rounded text-sm hover:bg-teal-700"
                   >
                     Add to Encounter
                   </button>

@@ -31,7 +31,7 @@ const scheduleStyles: Record<DrugSchedule, { bg: string; text: string; label: st
   none: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'N/A' },
   OTC: { bg: 'bg-green-100', text: 'text-green-800', label: 'OTC' },
   RX: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Rx' },
-  I: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'C-I' },
+  I: { bg: 'bg-teal-100', text: 'text-teal-800', label: 'C-I' },
   II: { bg: 'bg-red-100', text: 'text-red-800', label: 'C-II' },
   III: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'C-III' },
   IV: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'C-IV' },
@@ -55,7 +55,7 @@ export const MedicationCard: React.FC<MedicationCardProps> = ({
   return (
     <div
       className={`bg-white rounded-lg border-2 transition-all ${
-        selected ? 'border-indigo-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
+        selected ? 'border-teal-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
       }`}
     >
       <div className="p-4">
@@ -64,7 +64,7 @@ export const MedicationCard: React.FC<MedicationCardProps> = ({
             type="checkbox"
             checked={selected}
             onChange={() => onToggle(medication.id)}
-            className="mt-1 h-4 w-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            className="mt-1 h-4 w-4 rounded text-teal-600 focus:ring-teal-500 cursor-pointer"
           />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
@@ -81,7 +81,7 @@ export const MedicationCard: React.FC<MedicationCardProps> = ({
                     </span>
                   )}
                   {selectedMed?.aiRecommended && (
-                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full flex items-center gap-1">
                       <Brain className="w-3 h-3" />
                       AI
                     </span>
@@ -165,9 +165,9 @@ export const MedicationCard: React.FC<MedicationCardProps> = ({
 
             {/* AI Rationale */}
             {aiRationale && (
-              <div className="mt-3 flex items-start gap-2 bg-purple-50 p-3 rounded-lg">
-                <Brain className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-purple-900">
+              <div className="mt-3 flex items-start gap-2 bg-teal-50 p-3 rounded-lg">
+                <Brain className="w-4 h-4 text-teal-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-teal-900">
                   <span className="font-semibold">AI Rationale:</span> {aiRationale}
                 </div>
               </div>

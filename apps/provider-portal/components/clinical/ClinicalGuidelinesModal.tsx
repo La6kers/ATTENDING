@@ -283,14 +283,14 @@ export const ClinicalGuidelinesModal: React.FC<Props> = ({
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-4">
+          <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-white">{conditionName || guideline?.condition}</h2>
                 <div className="flex items-center gap-3 mt-1">
                   {guideline && (
                     <>
-                      <span className="text-purple-200 text-sm">
+                      <span className="text-teal-200 text-sm">
                         ICD-10: {guideline.icd10Codes.join(', ')}
                       </span>
                       <span className={`px-2 py-0.5 text-xs font-medium rounded border ${getEvidenceBadgeColor(guideline.evidenceLevel)}`}>
@@ -318,7 +318,7 @@ export const ClinicalGuidelinesModal: React.FC<Props> = ({
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                     activeTab === tab.id
-                      ? 'border-purple-600 text-purple-600'
+                      ? 'border-teal-600 text-teal-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -333,7 +333,7 @@ export const ClinicalGuidelinesModal: React.FC<Props> = ({
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
               </div>
             ) : guideline ? (
               <>
@@ -373,7 +373,7 @@ export const ClinicalGuidelinesModal: React.FC<Props> = ({
                               href={exam.videoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-purple-600 hover:text-purple-700 text-sm"
+                              className="flex items-center gap-1 text-teal-600 hover:text-teal-700 text-sm"
                             >
                               <Video className="w-4 h-4" />
                               Watch
@@ -401,10 +401,10 @@ export const ClinicalGuidelinesModal: React.FC<Props> = ({
                   <div className="space-y-4">
                     {guideline.treatmentAlgorithm.map((step, idx) => (
                       <div key={idx} className="flex gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                          <span className="text-purple-600 font-bold text-sm">{step.step}</span>
+                        <div className="flex-shrink-0 w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                          <span className="text-teal-600 font-bold text-sm">{step.step}</span>
                         </div>
-                        <div className="flex-1 border-l-2 border-purple-200 pl-4 pb-4">
+                        <div className="flex-1 border-l-2 border-teal-200 pl-4 pb-4">
                           <h3 className="font-semibold text-gray-900">{step.action}</h3>
                           <p className="text-sm text-gray-600 mt-1">{step.details}</p>
                           {step.dosing && (
@@ -518,7 +518,7 @@ export const ClinicalGuidelinesModal: React.FC<Props> = ({
                     >
                       {resource.type === 'pdf' && <Download className="w-4 h-4 text-red-500" />}
                       {resource.type === 'video' && <Video className="w-4 h-4 text-blue-500" />}
-                      {resource.type === 'link' && <ExternalLink className="w-4 h-4 text-purple-500" />}
+                      {resource.type === 'link' && <ExternalLink className="w-4 h-4 text-teal-500" />}
                       <span className="text-gray-700">{resource.name}</span>
                     </a>
                   ))}

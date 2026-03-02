@@ -356,7 +356,7 @@ const PathwayStepCard: React.FC<{
           : step.skipped
           ? 'border-slate-200 bg-slate-50 opacity-60'
           : isActive
-          ? 'border-purple-300 bg-purple-50 shadow-md'
+          ? 'border-teal-300 bg-teal-50 shadow-md'
           : 'border-slate-200 bg-white'
       }`}
     >
@@ -374,7 +374,7 @@ const PathwayStepCard: React.FC<{
                 : step.skipped
                 ? 'bg-slate-400 text-white'
                 : isActive
-                ? 'bg-purple-500 text-white'
+                ? 'bg-teal-500 text-white'
                 : 'bg-slate-200 text-slate-500'
             }`}
           >
@@ -442,7 +442,7 @@ const PathwayStepCard: React.FC<{
                         e.stopPropagation();
                         onOrderItem(step.id, item.id);
                       }}
-                      className="px-3 py-1 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition-colors"
+                      className="px-3 py-1 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 transition-colors"
                     >
                       Order
                     </button>
@@ -609,13 +609,13 @@ export const ClinicalPathwayPanel: React.FC<{
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Stethoscope className="w-6 h-6" />
             <div>
               <h2 className="text-lg font-semibold">Clinical Pathways</h2>
-              <p className="text-purple-200 text-sm">Evidence-based care protocols</p>
+              <p className="text-teal-200 text-sm">Evidence-based care protocols</p>
             </div>
           </div>
           {activePathway && (
@@ -650,7 +650,7 @@ export const ClinicalPathwayPanel: React.FC<{
               {availablePathways.map((pathway) => (
                 <div
                   key={pathway.id}
-                  className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-all cursor-pointer"
+                  className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:border-teal-300 hover:bg-teal-50 transition-all cursor-pointer"
                   onClick={() => activatePathway(pathway)}
                 >
                   <div className="flex items-center gap-4">
@@ -714,7 +714,7 @@ export const ClinicalPathwayPanel: React.FC<{
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-2xl font-bold text-teal-600">
                   {completedCount}/{totalCount}
                 </p>
                 <p className="text-sm text-slate-500">Steps completed</p>
@@ -725,7 +725,7 @@ export const ClinicalPathwayPanel: React.FC<{
             <div className="mb-6">
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-purple-600 rounded-full transition-all duration-500"
+                  className="h-full bg-teal-600 rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>

@@ -288,13 +288,13 @@ export const ProviderInbox: React.FC = () => {
                 placeholder="Search patients..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 w-56 rounded-xl text-sm border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all"
+                className="pl-9 pr-4 py-2 w-56 rounded-xl text-sm border border-gray-200 focus:border-teal-400 focus:ring-2 focus:ring-teal-100 outline-none transition-all"
               />
             </div>
 
-            <button className="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors" title="Filter"><Filter className="w-4 h-4" /></button>
-            <button className="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors" title="Sort"><SortAsc className="w-4 h-4" /></button>
-            <button onClick={handleRefresh} className="p-2 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors" title="Refresh"><RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /></button>
+            <button className="p-2 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition-colors" title="Filter"><Filter className="w-4 h-4" /></button>
+            <button className="p-2 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition-colors" title="Sort"><SortAsc className="w-4 h-4" /></button>
+            <button onClick={handleRefresh} className="p-2 rounded-lg text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition-colors" title="Refresh"><RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /></button>
           </div>
         </div>
 
@@ -302,7 +302,7 @@ export const ProviderInbox: React.FC = () => {
         <div className="flex-1 overflow-y-auto bg-gray-50">
           {isLoading ? (
             <div className="p-12 text-center">
-              <RefreshCw className="w-8 h-8 animate-spin mx-auto text-purple-500" />
+              <RefreshCw className="w-8 h-8 animate-spin mx-auto text-teal-500" />
               <p className="mt-3 font-medium text-gray-600">Loading inbox...</p>
             </div>
           ) : filteredItems.length === 0 ? (

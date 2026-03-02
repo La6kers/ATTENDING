@@ -601,7 +601,7 @@ const CalculatorCard: React.FC<{
 }> = ({ calculator, onSelect }) => (
   <button
     onClick={() => onSelect(calculator)}
-    className="p-4 bg-white rounded-xl border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all text-left w-full"
+    className="p-4 bg-white rounded-xl border border-slate-200 hover:border-teal-300 hover:shadow-md transition-all text-left w-full"
   >
     <div className="flex items-start justify-between mb-2">
       <div className="flex items-center gap-2">
@@ -637,7 +637,7 @@ const CalculatorPanel: React.FC<{
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 text-white flex items-center justify-between">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-4 py-3 text-white flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Calculator size={20} />
           <h3 className="font-semibold">{calculator.name}</h3>
@@ -666,7 +666,7 @@ const CalculatorPanel: React.FC<{
                   max={input.max}
                   value={values[input.id] as number || ''}
                   onChange={(e) => setValues({ ...values, [input.id]: parseFloat(e.target.value) || 0 })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder={`${input.min || 0} - ${input.max || 999}`}
                 />
               )}
@@ -674,7 +674,7 @@ const CalculatorPanel: React.FC<{
                 <select
                   value={values[input.id] as string || ''}
                   onChange={(e) => setValues({ ...values, [input.id]: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   <option value="">Select...</option>
                   {input.options?.map(opt => (
@@ -688,7 +688,7 @@ const CalculatorPanel: React.FC<{
                     type="checkbox"
                     checked={values[input.id] as boolean || false}
                     onChange={(e) => setValues({ ...values, [input.id]: e.target.checked })}
-                    className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                    className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
                   />
                   <span className="text-sm text-slate-600">Yes</span>
                 </label>
@@ -699,7 +699,7 @@ const CalculatorPanel: React.FC<{
         
         <button
           onClick={handleCalculate}
-          className="w-full px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+          className="w-full px-4 py-2 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
         >
           Calculate
         </button>
@@ -729,7 +729,7 @@ const CalculatorPanel: React.FC<{
                 <ul className="space-y-1">
                   {result.recommendations.map((rec, idx) => (
                     <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
-                      <span className="text-purple-500 mt-1">•</span>
+                      <span className="text-teal-500 mt-1">•</span>
                       {rec}
                     </li>
                   ))}

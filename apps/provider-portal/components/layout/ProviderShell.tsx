@@ -95,7 +95,7 @@ export const AttendingLogo: React.FC<{ badge?: string }> = ({ badge }) => (
     <span
       className="text-[22px] font-extrabold tracking-tight leading-none"
       style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #1A8FA8 0%, #0C4C5E 100%)',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
         backgroundClip: 'text',
@@ -106,7 +106,7 @@ export const AttendingLogo: React.FC<{ badge?: string }> = ({ badge }) => (
     {badge && (
       <span
         className="px-3 py-0.5 text-[11px] font-semibold text-white rounded-full"
-        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #1A8FA8 0%, #0C4C5E 100%)' }}
       >
         {badge}
       </span>
@@ -206,10 +206,10 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
   return (
     <div
       className="min-h-screen"
-      style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)' }}
     >
       {/* ═══════════════════════════════════════════════
-          HEADER — Frosted white glass (HTML prototype)
+          HEADER — Frosted white glass
           ═══════════════════════════════════════════════ */}
       <header
         className="sticky top-0 z-50"
@@ -225,7 +225,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                className="lg:hidden p-2 text-gray-500 hover:text-teal-DEFAULT hover:bg-teal-pale rounded-lg transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -236,13 +236,13 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                 <div className="hidden md:flex items-center gap-1 ml-3 pl-3 border-l border-gray-200">
                   <button
                     onClick={patientNav.onPrev}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-teal-DEFAULT hover:bg-teal-pale transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={patientNav.onNext}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition-colors"
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-teal-DEFAULT hover:bg-teal-pale transition-colors"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -267,7 +267,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search patients, orders…"
-                    className="pl-9 pr-8 py-2 w-60 rounded-xl border border-gray-200 text-sm focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none"
+                    className="pl-9 pr-8 py-2 w-60 rounded-xl border border-gray-200 text-sm focus:border-teal-DEFAULT focus:ring-2 focus:ring-teal-pale outline-none"
                   />
                   <button
                     type="button"
@@ -280,21 +280,21 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
               ) : (
                 <button
                   onClick={() => setShowSearch(true)}
-                  className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                  className="p-2 text-gray-400 hover:text-teal-DEFAULT hover:bg-teal-pale rounded-lg transition-colors"
                   title="Search (⌘K)"
                 >
                   <Search className="w-[18px] h-[18px]" />
                 </button>
               )}
 
-              <button className="relative p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
+              <button className="relative p-2 text-gray-400 hover:text-teal-DEFAULT hover:bg-teal-pale rounded-lg transition-colors">
                 <Bell className="w-[18px] h-[18px]" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
               </button>
 
               <Link
                 href="/settings"
-                className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-teal-DEFAULT hover:bg-teal-pale rounded-lg transition-colors"
               >
                 <Settings className="w-[18px] h-[18px]" />
               </Link>
@@ -303,15 +303,15 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
               <div className="relative ml-1" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-1.5 hover:bg-purple-50 rounded-xl transition-colors"
+                  className="flex items-center gap-2 p-1.5 hover:bg-teal-pale rounded-xl transition-colors"
                 >
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
                     style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: 'linear-gradient(180deg, #1A8FA8 0%, #0C4C5E 100%)',
                     }}
                   >
-                    TR
+                    SI
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-gray-400 hidden sm:block" />
                 </button>
@@ -323,13 +323,13 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                       <p className="text-xs text-gray-500">Family Medicine</p>
                     </div>
                     <div className="py-1">
-                      <Link href="/profile" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700" onClick={() => setShowUserMenu(false)}>
+                      <Link href="/profile" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-teal-pale hover:text-teal-dark" onClick={() => setShowUserMenu(false)}>
                         <User className="w-4 h-4" /> My Profile
                       </Link>
-                      <Link href="/settings" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700" onClick={() => setShowUserMenu(false)}>
+                      <Link href="/settings" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-teal-pale hover:text-teal-dark" onClick={() => setShowUserMenu(false)}>
                         <Settings className="w-4 h-4" /> Settings
                       </Link>
-                      <Link href="/help" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700" onClick={() => setShowUserMenu(false)}>
+                      <Link href="/help" className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-teal-pale hover:text-teal-dark" onClick={() => setShowUserMenu(false)}>
                         <HelpCircle className="w-4 h-4" /> Help
                       </Link>
                     </div>
@@ -366,8 +366,8 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                         flex items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium border-b-2
                         transition-all whitespace-nowrap
                         ${active
-                          ? 'border-purple-600 text-purple-700'
-                          : 'border-transparent text-gray-500 hover:text-purple-600 hover:border-purple-200'}
+                          ? 'border-teal-DEFAULT text-teal-dark'
+                          : 'border-transparent text-gray-500 hover:text-teal-DEFAULT hover:border-teal-light'
                       `}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -393,8 +393,8 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                     href={item.href}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg font-medium ${
                       active
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'text-gray-600 hover:bg-purple-50 hover:text-purple-600'
+                        ? 'bg-teal-pale text-teal-dark'
+                        : 'text-gray-600 hover:bg-teal-pale hover:text-teal-DEFAULT'
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >

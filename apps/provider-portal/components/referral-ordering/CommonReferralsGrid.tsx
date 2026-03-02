@@ -44,7 +44,7 @@ export function CommonReferralsGrid({
               transition-all duration-200 min-h-[80px]
               ${disabled 
                 ? 'opacity-50 cursor-not-allowed' 
-                : 'hover:border-purple-400 hover:bg-purple-50 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2'
+                : 'hover:border-teal-400 hover:bg-teal-50 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2'
               }
             `}
           >

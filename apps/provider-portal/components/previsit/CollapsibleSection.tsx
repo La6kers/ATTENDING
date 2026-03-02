@@ -43,7 +43,7 @@ const statusConfig = {
 const priorityConfig = {
   urgent: 'border-l-red-500',
   high: 'border-l-amber-500',
-  normal: 'border-l-purple-300',
+  normal: 'border-l-teal-300',
 };
 
 export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
@@ -70,7 +70,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             {title}
             {badge !== undefined && (
-              <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 text-sm font-medium rounded-full">
+              <span className="ml-2 px-2 py-0.5 bg-teal-100 text-teal-700 text-sm font-medium rounded-full">
                 {badge}
               </span>
             )}
@@ -107,7 +107,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
                 e.stopPropagation();
                 onMarkReviewed();
               }}
-              className="text-sm text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1 transition-colors"
+              className="text-sm text-teal-600 hover:text-teal-800 font-medium flex items-center gap-1 transition-colors"
             >
               <Check className="w-4 h-4" />
               Mark as Reviewed

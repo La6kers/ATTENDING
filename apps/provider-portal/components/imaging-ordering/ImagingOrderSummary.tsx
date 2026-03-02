@@ -89,7 +89,7 @@ export const ImagingOrderSummary: React.FC<ImagingOrderSummaryProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 text-white">
+      <div className="bg-gradient-to-r from-teal-600 to-teal-700 p-4 text-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -189,7 +189,7 @@ export const ImagingOrderSummary: React.FC<ImagingOrderSummaryProps> = ({
                           {s.priority}
                         </span>
                         {s.aiRecommended && (
-                          <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">
+                          <span className="text-xs bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded">
                             AI
                           </span>
                         )}
@@ -230,7 +230,7 @@ export const ImagingOrderSummary: React.FC<ImagingOrderSummaryProps> = ({
           value={clinicalIndication}
           onChange={(e) => onIndicationChange(e.target.value)}
           placeholder="Enter clinical history and indication for imaging studies..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-indigo-500 focus:border-indigo-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-teal-500 focus:border-teal-500"
           rows={3}
         />
         <p className="text-xs text-gray-500 mt-1">
@@ -253,7 +253,7 @@ export const ImagingOrderSummary: React.FC<ImagingOrderSummaryProps> = ({
           className={`w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center gap-2 transition-colors ${
             submitting || !clinicalIndication.trim()
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
+              : 'bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800'
           }`}
         >
           {submitting ? (
