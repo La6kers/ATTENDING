@@ -62,6 +62,8 @@ import {
   Calculator,
   Webhook,
   Globe,
+  Send,
+  Mail,
 } from 'lucide-react';
 
 // ============================================================
@@ -140,7 +142,8 @@ export const navigationSections: NavSection[] = [
     items: [
       { id: 'executive', label: 'Executive Dashboard', icon: BarChart3, href: '/executive-analytics' },
       { id: 'provider-performance', label: 'Provider Performance', icon: TrendingUp, href: '/provider-performance' },
-      { id: 'quality', label: 'Quality Measures', icon: ClipboardList, href: '/quality' },
+      { id: 'quality', label: 'Quality Measures', icon: ClipboardList, href: '/quality-measures', isNew: true },
+      { id: 'outreach', label: 'Patient Outreach', icon: Send, href: '/patient-outreach', isNew: true },
     ],
   },
   {
