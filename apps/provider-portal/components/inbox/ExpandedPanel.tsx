@@ -256,7 +256,7 @@ function generateAIDraft(item: InboxItem): {
 // =============================================================================
 
 const InfoChip: React.FC<{ label: string; color?: string; bg?: string }> = ({
-  label, color = '#6d28d9', bg = '#ede9fe',
+  label, color = '#0C4C5E', bg = '#E6F7F5',
 }) => (
   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium" style={{ color, background: bg }}>
     {label}
@@ -348,7 +348,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
       {/* ─── Top Bar: Patient Identity + Actions ─── */}
       <div
         className="px-6 py-3 flex items-center justify-between"
-        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)' }}
       >
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm">
@@ -357,12 +357,12 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-white">{item.patientName}</span>
-              <span className="text-purple-200 text-sm">{item.patientAge}y • {item.mrn}</span>
+              <span className="text-teal-200 text-sm">{item.patientAge}y • {item.mrn}</span>
               {item.priority === 'urgent' && (
                 <span className="px-2 py-0.5 bg-red-500/80 text-white text-xs font-bold rounded animate-pulse">URGENT</span>
               )}
             </div>
-            <div className="flex items-center gap-3 text-purple-200 text-xs mt-0.5">
+            <div className="flex items-center gap-3 text-teal-200 text-xs mt-0.5">
               {chart.allergies[0] !== 'NKDA' && (
                 <span className="flex items-center gap-1 text-red-300">
                   <AlertTriangle className="w-3 h-3" /> Allergies: {chart.allergies.join(', ')}
@@ -378,7 +378,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
           <button
             onClick={() => router.push(`/previsit/${item.patientId || item.id}`)}
             className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 font-semibold transition-all hover:scale-105"
-            style={{ background: 'rgba(255,255,255,0.95)', color: '#6d28d9' }}
+            style={{ background: 'rgba(255,255,255,0.95)', color: '#0C4C5E' }}
           >
             <FileText className="w-3.5 h-3.5" /> Full Chart
           </button>
@@ -410,7 +410,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
       <div className="flex">
 
         {/* ═══ ZONE 1: Patient Message (35%) ═══ */}
-        <div className="w-[35%] p-5 border-r" style={{ borderColor: '#ede9fe' }}>
+        <div className="w-[35%] p-5 border-r" style={{ borderColor: '#E6F7F5' }}>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-2 h-2 rounded-full" style={{ background: categoryAccent.accent }} />
             <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: categoryAccent.accentDark }}>
@@ -422,7 +422,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
           {/* Patient Message Card */}
           <div
             className="rounded-2xl p-5 mb-4"
-            style={{ background: 'linear-gradient(135deg, #faf5ff 0%, #eef2ff 100%)', border: '1px solid #e0e7ff' }}
+            style={{ background: 'linear-gradient(135deg, #F0FAF9 0%, #eef2ff 100%)', border: '1px solid #e0e7ff' }}
           >
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: categoryAccent.accent }}>
@@ -437,8 +437,8 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
               {patientMessage}
             </div>
             {item.symptoms && item.symptoms.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-indigo-100">
-                <div className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1.5">
+              <div className="mt-4 pt-3 border-t border-teal-100">
+                <div className="text-xs font-semibold text-teal-700 mb-2 flex items-center gap-1.5">
                   <Activity className="w-3.5 h-3.5" /> Reported Symptoms
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -488,7 +488,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
                 { label: 'Temp', value: chart.recentVitals.temp },
                 { label: 'Wt', value: chart.recentVitals.weight },
               ].map((v, i) => (
-                <div key={i} className="text-center p-2 rounded-lg" style={{ background: '#faf5ff' }}>
+                <div key={i} className="text-center p-2 rounded-lg" style={{ background: '#F0FAF9' }}>
                   <div className="text-xs text-gray-500">{v.label}</div>
                   <div className="text-sm font-bold text-gray-900">{v.value || '—'}</div>
                 </div>
@@ -516,9 +516,9 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
         </div>
 
         {/* ═══ ZONE 2: AI Intelligence (25%) ═══ */}
-        <div className="w-[25%] p-5 border-r" style={{ borderColor: '#ede9fe', background: '#faf5ff' }}>
+        <div className="w-[25%] p-5 border-r" style={{ borderColor: '#E6F7F5', background: '#F0FAF9' }}>
           <div className="flex items-center gap-2 mb-4">
-            <div className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            <div className="p-1.5 rounded-lg" style={{ background: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)' }}>
               <Brain className="w-4 h-4 text-white" />
             </div>
             <span className="text-sm font-bold text-gray-900">AI Intelligence</span>
@@ -526,7 +526,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
 
           {/* Suggested Responses */}
           <div className="space-y-2 mb-5">
-            <div className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-2">
+            <div className="text-xs font-semibold text-teal-700 uppercase tracking-wider mb-2">
               Suggested Responses
             </div>
             {templates.map((template) => (
@@ -535,9 +535,9 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
                 onClick={() => handleTemplateSelect(template)}
                 className="w-full text-left p-3 rounded-xl transition-all hover:scale-[1.01]"
                 style={{
-                  background: selectedTemplateId === template.id ? '#ede9fe' : 'white',
-                  border: selectedTemplateId === template.id ? '2px solid #8b5cf6' : '1px solid #e5e7eb',
-                  boxShadow: selectedTemplateId === template.id ? '0 0 0 3px rgba(139, 92, 246, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
+                  background: selectedTemplateId === template.id ? '#E6F7F5' : 'white',
+                  border: selectedTemplateId === template.id ? '2px solid #1A8FA8' : '1px solid #e5e7eb',
+                  boxShadow: selectedTemplateId === template.id ? '0 0 0 3px rgba(26, 143, 168, 0.1)' : '0 1px 3px rgba(0,0,0,0.05)',
                 }}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -546,7 +546,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed">{template.reasoning}</p>
                 {selectedTemplateId === template.id && (
-                  <div className="mt-2 flex items-center gap-1 text-xs text-purple-600 font-medium">
+                  <div className="mt-2 flex items-center gap-1 text-xs text-teal-600 font-medium">
                     <Check className="w-3 h-3" /> Applied to response
                   </div>
                 )}
@@ -557,13 +557,13 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
           {/* Suggested Orders */}
           {suggestedOrders.length > 0 && (
             <div className="mb-5">
-              <div className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-2">Suggested Orders</div>
+              <div className="text-xs font-semibold text-teal-700 uppercase tracking-wider mb-2">Suggested Orders</div>
               <div className="space-y-1.5">
                 {suggestedOrders.map((order, i) => (
                   <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-white border border-gray-100">
                     <FlaskConical className="w-3.5 h-3.5 text-emerald-600" />
                     <span className="text-xs font-medium text-gray-800">{order}</span>
-                    <button className="ml-auto text-xs text-purple-600 font-semibold hover:text-purple-800">+ Order</button>
+                    <button className="ml-auto text-xs text-teal-600 font-semibold hover:text-teal-800">+ Order</button>
                   </div>
                 ))}
               </div>
@@ -573,16 +573,16 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
           {/* Clinical Context */}
           {aiInsights.length > 0 && (
             <div>
-              <div className="text-xs font-semibold text-purple-700 uppercase tracking-wider mb-2">Clinical Context</div>
+              <div className="text-xs font-semibold text-teal-700 uppercase tracking-wider mb-2">Clinical Context</div>
               <div className="space-y-2">
                 {(showAllInsights ? aiInsights : aiInsights.slice(0, 3)).map((insight, i) => (
                   <div key={i} className="flex items-start gap-2 text-xs text-gray-600">
-                    <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <Sparkles className="w-3 h-3 text-teal-400 mt-0.5 flex-shrink-0" />
                     <span>{insight}</span>
                   </div>
                 ))}
                 {aiInsights.length > 3 && (
-                  <button onClick={() => setShowAllInsights(!showAllInsights)} className="flex items-center gap-1 text-xs text-purple-600 font-medium hover:text-purple-800">
+                  <button onClick={() => setShowAllInsights(!showAllInsights)} className="flex items-center gap-1 text-xs text-teal-600 font-medium hover:text-teal-800">
                     {showAllInsights ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                     {showAllInsights ? 'Show less' : `+${aiInsights.length - 3} more`}
                   </button>
@@ -596,7 +596,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
         <div className="w-[40%] p-5 flex flex-col" style={{ background: 'white' }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Edit3 className="w-4 h-4 text-purple-600" />
+              <Edit3 className="w-4 h-4 text-teal-600" />
               <span className="text-sm font-bold text-gray-900">
                 {item.category === 'messages' ? 'Reply to Patient' :
                  item.category === 'phone' ? 'Call Notes' :
@@ -606,10 +606,10 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <button onClick={handleReset} className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Reset to AI draft">
+              <button onClick={handleReset} className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Reset to AI draft">
                 <RotateCcw className="w-4 h-4" />
               </button>
-              <button onClick={handleCopy} className="p-1.5 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors" title="Copy to clipboard">
+              <button onClick={handleCopy} className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Copy to clipboard">
                 {isCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
@@ -617,9 +617,9 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
 
           {/* AI Draft Label */}
           {!isEditing && (
-            <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg" style={{ background: '#f5f3ff' }}>
-              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-              <span className="text-xs text-purple-700 font-medium">AI-generated draft — click to edit before sending</span>
+            <div className="flex items-center gap-2 mb-2 px-3 py-1.5 rounded-lg" style={{ background: '#F0FAF9' }}>
+              <Sparkles className="w-3.5 h-3.5 text-teal-500" />
+              <span className="text-xs text-teal-700 font-medium">AI-generated draft — click to edit before sending</span>
             </div>
           )}
 
@@ -631,9 +631,9 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
               onFocus={() => setIsEditing(true)}
               className="w-full h-full min-h-[220px] p-4 rounded-2xl text-sm leading-relaxed resize-none transition-all"
               style={{
-                border: isEditing ? '2px solid #8b5cf6' : '2px solid #e5e7eb',
+                border: isEditing ? '2px solid #1A8FA8' : '2px solid #e5e7eb',
                 background: isEditing ? 'white' : '#fafafa',
-                boxShadow: isEditing ? '0 0 0 3px rgba(139, 92, 246, 0.08)' : 'none',
+                boxShadow: isEditing ? '0 0 0 3px rgba(26, 143, 168, 0.08)' : 'none',
                 outline: 'none',
                 color: '#1f2937',
               }}
@@ -656,7 +656,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
             </button>
             <div className="flex items-center gap-2">
               {item.category === 'messages' && (
-                <button className="px-4 py-2.5 text-sm text-purple-600 border border-purple-200 hover:bg-purple-50 rounded-xl font-medium transition-colors flex items-center gap-2">
+                <button className="px-4 py-2.5 text-sm text-teal-600 border border-teal-200 hover:bg-teal-50 rounded-xl font-medium transition-colors flex items-center gap-2">
                   <Stethoscope className="w-4 h-4" /> Schedule Visit
                 </button>
               )}
@@ -665,7 +665,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
                 disabled={!response.trim()}
                 className="px-6 py-2.5 text-sm text-white rounded-xl font-semibold flex items-center gap-2 transition-all hover:shadow-lg hover:scale-[1.02] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
                 style={{
-                  background: response.trim() ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#d1d5db',
+                  background: response.trim() ? 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)' : '#d1d5db',
                 }}
               >
                 {item.category === 'messages' ? <Send className="w-4 h-4" /> : <Check className="w-4 h-4" />}

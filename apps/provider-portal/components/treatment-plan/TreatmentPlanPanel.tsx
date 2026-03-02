@@ -159,7 +159,7 @@ export function TreatmentPlanPanel({
           icon={ClipboardList}
           label="Total Orders"
           value={totalOrders}
-          color="purple"
+          color="teal"
         />
         <StatCard
           icon={AlertTriangle}
@@ -184,21 +184,21 @@ export function TreatmentPlanPanel({
           icon={Sparkles}
           label="Est. Cost"
           value={`$${costEstimate.total}`}
-          color="indigo"
+          color="cyan"
         />
       </div>
 
       {/* AI Protocol Suggestions */}
       {suggestedProtocols.length > 0 && !selectedProtocol && (
-        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200">
+        <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl p-4 border border-teal-200">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
-              <h3 className="font-medium text-indigo-900">Evidence-Based Protocols Available</h3>
+              <Sparkles className="w-5 h-5 text-teal-600" />
+              <h3 className="font-medium text-teal-900">Evidence-Based Protocols Available</h3>
             </div>
             <button
               onClick={() => setShowProtocolModal(true)}
-              className="text-sm text-indigo-600 hover:underline"
+              className="text-sm text-teal-600 hover:underline"
             >
               View All
             </button>
@@ -208,7 +208,7 @@ export function TreatmentPlanPanel({
               <button
                 key={proto.id}
                 onClick={() => applyProtocol(proto)}
-                className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-indigo-200 text-sm hover:border-indigo-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-teal-200 text-sm hover:border-teal-400 transition-colors"
               >
                 <span className="font-medium text-gray-900">{proto.name}</span>
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${
@@ -251,7 +251,7 @@ export function TreatmentPlanPanel({
               onClick={() => setActiveSection(section.id)}
               className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
                 activeSection === section.id
-                  ? 'border-purple-600 text-purple-600'
+                  ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -344,7 +344,7 @@ export function TreatmentPlanPanel({
           <button
             onClick={handleSubmit}
             disabled={errors.length > 0 || totalOrders === 0}
-            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg font-medium hover:from-teal-700 hover:to-cyan-700 disabled:opacity-50 transition-colors"
           >
             <Send className="w-4 h-4" />
             Finalize Plan
@@ -387,11 +387,11 @@ function StatCard({ icon: Icon, label, value, color, highlight }: {
   highlight?: boolean;
 }) {
   const colorClasses: Record<string, string> = {
-    purple: 'bg-purple-100 text-purple-600',
+    teal: 'bg-teal-100 text-teal-600',
     red: 'bg-red-100 text-red-600',
     blue: 'bg-blue-100 text-blue-600',
     green: 'bg-green-100 text-green-600',
-    indigo: 'bg-indigo-100 text-indigo-600',
+    cyan: 'bg-cyan-100 text-cyan-600',
   };
 
   return (
@@ -424,7 +424,7 @@ function DiagnosesSection({ diagnoses, clinicalSummary, onAddDiagnosis, onRemove
           <h3 className="font-medium text-gray-900">Diagnoses</h3>
           <button
             onClick={onAddDiagnosis}
-            className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700"
+            className="flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700"
           >
             <Plus className="w-4 h-4" />
             Add Diagnosis
@@ -440,7 +440,7 @@ function DiagnosesSection({ diagnoses, clinicalSummary, onAddDiagnosis, onRemove
               <div
                 key={dx.code}
                 className={`flex items-center justify-between p-3 rounded-lg border ${
-                  dx.type === 'primary' ? 'bg-purple-50 border-purple-200' :
+                  dx.type === 'primary' ? 'bg-teal-50 border-teal-200' :
                   dx.type === 'rule-out' ? 'bg-orange-50 border-orange-200' :
                   'bg-gray-50 border-gray-200'
                 }`}
@@ -452,7 +452,7 @@ function DiagnosesSection({ diagnoses, clinicalSummary, onAddDiagnosis, onRemove
                       {dx.icd10 || dx.code}
                     </span>
                     <span className={`text-xs px-2 py-0.5 rounded ${
-                      dx.type === 'primary' ? 'bg-purple-200 text-purple-700' :
+                      dx.type === 'primary' ? 'bg-teal-200 text-teal-700' :
                       dx.type === 'rule-out' ? 'bg-orange-200 text-orange-700' :
                       'bg-gray-200 text-gray-700'
                     }`}>
@@ -473,7 +473,7 @@ function DiagnosesSection({ diagnoses, clinicalSummary, onAddDiagnosis, onRemove
         {diagnoses.length > 0 && (
           <button
             onClick={onLoadProtocols}
-            className="mt-3 text-sm text-purple-600 hover:underline flex items-center gap-1"
+            className="mt-3 text-sm text-teal-600 hover:underline flex items-center gap-1"
           >
             <Sparkles className="w-4 h-4" />
             Find matching protocols
@@ -489,7 +489,7 @@ function DiagnosesSection({ diagnoses, clinicalSummary, onAddDiagnosis, onRemove
           value={clinicalSummary}
           onChange={(e) => onSummaryChange(e.target.value)}
           placeholder="Document the clinical assessment, key findings, and rationale for the treatment plan..."
-          className="w-full p-4 border rounded-xl text-sm min-h-[150px] focus:ring-2 focus:ring-purple-500"
+          className="w-full p-4 border rounded-xl text-sm min-h-[150px] focus:ring-2 focus:ring-teal-500"
         />
         <p className="text-xs text-gray-500 mt-1">
           {clinicalSummary.length} characters (minimum 20 required)
@@ -508,7 +508,7 @@ function OrdersSummarySection({ labOrders, imagingOrders, prescriptions, referra
 }) {
   const orderCategories = [
     { label: 'Labs', orders: labOrders, icon: FlaskConical, color: 'blue' },
-    { label: 'Imaging', orders: imagingOrders, icon: Scan, color: 'purple' },
+    { label: 'Imaging', orders: imagingOrders, icon: Scan, color: 'teal' },
     { label: 'Medications', orders: prescriptions, icon: Pill, color: 'green' },
     { label: 'Referrals', orders: referrals, icon: UserPlus, color: 'orange' },
   ];
@@ -587,7 +587,7 @@ function FollowUpSection({ followUps, onAdd, onRemove }: {
         <h3 className="font-medium text-gray-900">Follow-up Schedule</h3>
         <button
           onClick={onAdd}
-          className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700"
+          className="flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700"
         >
           <Plus className="w-4 h-4" />
           Add Follow-up
@@ -620,7 +620,7 @@ function FollowUpSection({ followUps, onAdd, onRemove }: {
                       Scheduled
                     </span>
                   ) : (
-                    <button className="text-sm text-purple-600 hover:underline">
+                    <button className="text-sm text-teal-600 hover:underline">
                       Schedule
                     </button>
                   )}
@@ -708,7 +708,7 @@ function PrecautionsSection({ precautions, onRemove, additionalInstructions, onI
           value={additionalInstructions}
           onChange={(e) => onInstructionsChange(e.target.value)}
           placeholder="Any additional instructions or notes for the patient..."
-          className="w-full p-4 border rounded-xl text-sm min-h-[100px] focus:ring-2 focus:ring-purple-500"
+          className="w-full p-4 border rounded-xl text-sm min-h-[100px] focus:ring-2 focus:ring-teal-500"
         />
       </div>
     </div>
@@ -773,7 +773,7 @@ function AddDiagnosisModal({ onAdd, onClose }: {
                   onClick={() => setType(t)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium border ${
                     type === t
-                      ? 'bg-purple-600 text-white border-purple-600'
+                      ? 'bg-teal-600 text-white border-teal-600'
                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -789,7 +789,7 @@ function AddDiagnosisModal({ onAdd, onClose }: {
           <button
             onClick={handleSubmit}
             disabled={!description}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50"
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg disabled:opacity-50"
           >
             Add Diagnosis
           </button>
@@ -860,7 +860,7 @@ function AddFollowUpModal({ onAdd, onClose }: {
                   onClick={() => setType(t.value)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
                     type === t.value
-                      ? 'bg-purple-600 text-white border-purple-600'
+                      ? 'bg-teal-600 text-white border-teal-600'
                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -889,7 +889,7 @@ function AddFollowUpModal({ onAdd, onClose }: {
           <button
             onClick={handleSubmit}
             disabled={!description}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50"
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg disabled:opacity-50"
           >
             Add Follow-up
           </button>

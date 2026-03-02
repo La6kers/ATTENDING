@@ -98,7 +98,7 @@ export function UserProfileMenu({
             className="w-10 h-10 rounded-full object-cover"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium">
+          <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-medium">
             {initials}
           </div>
         )}
@@ -113,7 +113,7 @@ export function UserProfileMenu({
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
           {/* User Info Header */}
-          <div className="p-4 bg-gradient-to-r from-indigo-600 to-purple-600">
+          <div className="p-4 bg-gradient-to-r from-teal-600 to-teal-700">
             <div className="flex items-center gap-3">
               {user.avatarUrl ? (
                 <img
@@ -128,9 +128,9 @@ export function UserProfileMenu({
               )}
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-white truncate">{user.displayName}</div>
-                <div className="text-sm text-indigo-200 truncate">{user.email}</div>
+                <div className="text-sm text-teal-200 truncate">{user.email}</div>
                 {user.npi && (
-                  <div className="text-xs text-indigo-300 mt-1">NPI: {user.npi}</div>
+                  <div className="text-xs text-teal-300 mt-1">NPI: {user.npi}</div>
                 )}
               </div>
             </div>
