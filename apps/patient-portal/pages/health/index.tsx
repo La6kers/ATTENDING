@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   Heart,
   Loader2,
+  ExternalLink,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
 import { usePatientData } from '../../hooks/usePatientData';
@@ -504,6 +505,23 @@ export default function HealthPage() {
         }
       >
         <div className="max-w-lg mx-auto px-5 py-5">
+          {/* Referral tracking link */}
+          <Link
+            href="/health/referrals"
+            className="flex items-center justify-between p-4 mb-5 bg-teal-50 border border-teal-200 rounded-xl hover:bg-teal-100 active:bg-teal-100 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-teal-600 flex items-center justify-center">
+                <ExternalLink className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-teal-900">Track My Referrals</p>
+                <p className="text-xs text-teal-600">3 active &bull; 1 needs attention</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-teal-400" />
+          </Link>
+
           {sectionMap[activeSection]}
         </div>
       </AppShell>
