@@ -129,6 +129,7 @@ test-results*.txt
 **/*.trx
 **/coverage-report/
 **/TestResults/
+**/coverage-results/
 
 # -----------------------------------------------------------------------------
 # Build Artifacts
