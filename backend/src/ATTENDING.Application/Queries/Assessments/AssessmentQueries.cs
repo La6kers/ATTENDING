@@ -9,6 +9,14 @@ public record GetAssessmentsByPatientQuery(Guid PatientId) : IRequest<IReadOnlyL
 public record GetPendingReviewAssessmentsQuery() : IRequest<IReadOnlyList<PatientAssessment>>;
 public record GetRedFlagAssessmentsQuery() : IRequest<IReadOnlyList<PatientAssessment>>;
 
+public record GetAssessmentsListQuery(
+    string? Status = null,
+    string? TriageLevel = null,
+    bool? HasRedFlags = null,
+    int Page = 1,
+    int PageSize = 50
+) : IRequest<(IReadOnlyList<PatientAssessment> Items, int TotalCount)>;
+
 public class GetAssessmentByIdHandler : IRequestHandler<GetAssessmentByIdQuery, PatientAssessment?>
 {
     private readonly IAssessmentRepository _repository;
@@ -39,4 +47,17 @@ public class GetRedFlagAssessmentsHandler : IRequestHandler<GetRedFlagAssessment
     public GetRedFlagAssessmentsHandler(IAssessmentRepository repository) => _repository = repository;
     public async Task<IReadOnlyList<PatientAssessment>> Handle(GetRedFlagAssessmentsQuery request, CancellationToken ct)
         => await _repository.GetWithRedFlagsAsync(ct);
+}
+
+public class GetAssessmentsListHandler : IRequestHandler<GetAssessmentsListQuery, (IReadOnlyList<PatientAssessment> Items, int TotalCount)>
+{
+    private readonly IAssessmentRepository _repository;
+    public GetAssessmentsListHandler(IAssessmentRepository repository) => _repository = repository;
+    public async Task<(IReadOnlyList<PatientAssessment> Items, int TotalCount)> Handle(
+        GetAssessmentsListQuery request, CancellationToken ct)
+    {
+        var skip = (request.Page - 1) * request.PageSize;
+        return await _repository.GetFilteredAsync(
+            request.Status, request.TriageLevel, request.HasRedFlags, skip, request.PageSize, ct);
+    }
 }

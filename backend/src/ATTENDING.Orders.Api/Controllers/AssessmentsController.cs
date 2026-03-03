@@ -32,6 +32,103 @@ public class AssessmentsController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// List assessments with optional filters (status, triage, red flags).
+    /// Used by the provider dashboard to show the assessment queue.
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedResult<AssessmentSummaryResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AssessmentSummaryResponse>>> GetAll(
+        [FromQuery] string? status = null,
+        [FromQuery] string? triageLevel = null,
+        [FromQuery] bool? hasRedFlags = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        var (items, total) = await _mediator.Send(
+            new GetAssessmentsListQuery(status, triageLevel, hasRedFlags, page, pageSize));
+
+        return Ok(new PagedResult<AssessmentSummaryResponse>(
+            items.Select(MapToSummary).ToList(),
+            total, page, pageSize));
+    }
+
+    /// <summary>
+    /// One-shot COMPASS assessment submission from the patient portal.
+    /// Creates patient + completed assessment in a single request.
+    /// Fires domain events for SignalR provider notifications.
+    /// </summary>
+    [HttpPost("submit")]
+    [EnableRateLimiting("clinical-ops")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SubmitCompassAssessment(
+        [FromBody] SubmitCompassAssessmentCommand command)
+    {
+        var result = await _mediator.Send(command);
+
+        if (result.IsFailure)
+            return BadRequest(new ProblemDetails
+            {
+                Title = result.Error.Code,
+                Detail = result.Error.Message,
+                Status = 400
+            });
+
+        var val = result.Value;
+
+        // Fire SignalR notifications
+        try
+        {
+            var assessment = await _mediator.Send(new GetAssessmentByIdQuery(val.AssessmentId));
+            if (assessment != null)
+            {
+                await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
+                    AssessmentId: assessment.Id,
+                    AssessmentNumber: assessment.AssessmentNumber,
+                    PatientId: assessment.PatientId,
+                    PatientName: assessment.Patient?.FullName ?? "Unknown",
+                    PatientMrn: assessment.Patient?.MRN ?? "",
+                    PatientAge: assessment.Patient?.Age ?? 0,
+                    ChiefComplaint: assessment.ChiefComplaint,
+                    TriageLevel: assessment.TriageLevel?.ToString(),
+                    HasRedFlags: assessment.HasRedFlags,
+                    StartedAt: assessment.StartedAt));
+
+                if (assessment.IsEmergency)
+                {
+                    await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
+                        AssessmentId: assessment.Id,
+                        AssessmentNumber: assessment.AssessmentNumber,
+                        PatientId: assessment.PatientId,
+                        PatientName: assessment.Patient?.FullName ?? "Unknown",
+                        PatientMrn: assessment.Patient?.MRN ?? "",
+                        ChiefComplaint: assessment.ChiefComplaint,
+                        EmergencyReason: assessment.EmergencyReason ?? "Red flags detected",
+                        RedFlagCategories: new List<string>(),
+                        DetectedAt: DateTime.UtcNow));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send notifications for COMPASS submission {Id}", val.AssessmentId);
+        }
+
+        return Created($"/api/v1/assessments/{val.AssessmentId}", new
+        {
+            success = true,
+            assessmentId = val.AssessmentId,
+            queuePosition = val.QueuePosition,
+            estimatedReviewTime = val.EstimatedReviewTime,
+            urgentAlert = val.UrgentAlert,
+            message = val.UrgentAlert
+                ? "Your assessment has been flagged as urgent and will be reviewed immediately."
+                : "Your assessment has been submitted. A provider will review it shortly."
+        });
+    }
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(AssessmentResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

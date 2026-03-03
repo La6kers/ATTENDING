@@ -133,6 +133,9 @@ public interface IAssessmentRepository : IRepository<PatientAssessment>
     Task<IReadOnlyList<PatientAssessment>> GetPendingReviewAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PatientAssessment>> GetWithRedFlagsAsync(CancellationToken cancellationToken = default);
     Task<PatientAssessment?> GetWithSymptomsAsync(Guid assessmentId, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<PatientAssessment> Items, int TotalCount)> GetFilteredAsync(
+        string? status = null, string? triageLevel = null, bool? hasRedFlags = null,
+        int skip = 0, int take = 50, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

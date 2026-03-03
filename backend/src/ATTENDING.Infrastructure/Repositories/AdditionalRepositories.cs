@@ -174,4 +174,34 @@ public class AssessmentRepository : Repository<PatientAssessment>, IAssessmentRe
             .Include(a => a.Patient)
             .FirstOrDefaultAsync(a => a.Id == assessmentId, cancellationToken);
     }
+
+    public async Task<(IReadOnlyList<PatientAssessment> Items, int TotalCount)> GetFilteredAsync(
+        string? status = null, string? triageLevel = null, bool? hasRedFlags = null,
+        int skip = 0, int take = 50, CancellationToken cancellationToken = default)
+    {
+        var query = DbSet.Include(a => a.Patient).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(status) &&
+            Enum.TryParse<AssessmentPhase>(status, true, out var phase))
+            query = query.Where(a => a.CurrentPhase == phase);
+
+        if (!string.IsNullOrWhiteSpace(triageLevel) &&
+            Enum.TryParse<TriageLevel>(triageLevel, true, out var triage))
+            query = query.Where(a => a.TriageLevel == triage);
+
+        if (hasRedFlags.HasValue)
+            query = query.Where(a => a.HasRedFlags == hasRedFlags.Value);
+
+        var total = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderByDescending(a => a.IsEmergency)
+            .ThenBy(a => a.TriageLevel)
+            .ThenByDescending(a => a.StartedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return (items, total);
+    }
 }
