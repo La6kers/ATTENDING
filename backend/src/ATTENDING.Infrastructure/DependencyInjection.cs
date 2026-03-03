@@ -114,6 +114,10 @@ public static class DependencyInjection
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
         services.AddScoped<IAiFeedbackRepository, AiFeedbackRepository>();
 
+        // Organization / Onboarding repositories (cross-tenant)
+        services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+        services.AddScoped<IEhrConnectorRepository, EhrConnectorRepository>();
+
         // --------------------------------------------------------
         // Domain Services
         // --------------------------------------------------------
@@ -196,6 +200,12 @@ public static class DependencyInjection
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+
+        // --------------------------------------------------------
+        // Plug-and-Play Onboarding Services
+        // --------------------------------------------------------
+        services.AddScoped<IFhirConnectionTester, External.FHIR.FhirConnectionTester>();
+        services.AddScoped<ISyntheticDataSeeder, SyntheticDataSeeder>();
 
         // --------------------------------------------------------
         // Clinical Intelligence Pipeline (Tiered Architecture)

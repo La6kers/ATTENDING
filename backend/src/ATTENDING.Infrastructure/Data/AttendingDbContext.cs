@@ -89,6 +89,10 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     // AI
     public DbSet<AiFeedback> AiFeedback => Set<AiFeedback>();
 
+    // Organization / Onboarding
+    public DbSet<Organization> Organizations => Set<Organization>();
+    public DbSet<EhrConnectorConfig> EhrConnectors => Set<EhrConnectorConfig>();
+
     #endregion
 
     #region Configuration

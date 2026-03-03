@@ -1,4 +1,4 @@
-﻿namespace ATTENDING.Contracts.Requests;
+namespace ATTENDING.Contracts.Requests;
 
 public record DifferentialDiagnosisRequest(
     Guid PatientId,
@@ -24,9 +24,16 @@ public record SubmitAiFeedbackRequest(
 
 /// <summary>
 /// Request for the Tiered Clinical Intelligence pipeline.
-/// PatientId is required. EncounterId and AssessmentId scope the context.
 /// </summary>
 public record ClinicalIntelligenceRequest(
+    Guid PatientId,
+    Guid? EncounterId = null,
+    Guid? AssessmentId = null);
+
+/// <summary>
+/// Request for calibrated diagnostic reasoning.
+/// </summary>
+public record CalibratedDiagnosticRequest(
     Guid PatientId,
     Guid? EncounterId = null,
     Guid? AssessmentId = null);
