@@ -151,6 +151,64 @@ public enum TriageLevel
     NonUrgent = 5       // ESI-5: No resources needed
 }
 
+// ── Care Gap enums ─────────────────────────────────────────────────────
+
+public enum GapStatus
+{
+    Due = 1,         // Coming up (within screening window)
+    Overdue = 2,     // Past due date
+    Acknowledged = 3, // Provider addressed it this visit
+    Closed = 4,      // Screening completed
+    Excluded = 5     // Patient meets exclusion criteria (e.g., hospice)
+}
+
+public enum GapSeverity
+{
+    Upcoming = 0,  // Not yet due
+    Low = 1,       // <90 days overdue
+    Moderate = 2,  // 90–365 days overdue
+    High = 3,      // 1–2 years overdue
+    Critical = 4   // 2+ years overdue
+}
+
+// ── Ambient Scribe enums ─────────────────────────────────────────────────
+
+/// <summary>
+/// State machine for an ambient recording session
+/// </summary>
+public enum RecordingStatus
+{
+    AwaitingConsent = 1,
+    ConsentGiven = 2,
+    ConsentDeclined = 3,
+    Recording = 4,
+    Processing = 5,
+    Completed = 6,
+    Failed = 7
+}
+
+/// <summary>
+/// Speaker role identified by Azure diarization
+/// </summary>
+public enum SpeakerRole
+{
+    Unknown = 0,
+    Provider = 1,
+    Patient = 2,
+    Other = 3
+}
+
+/// <summary>
+/// Status of an AI-generated SOAP note
+/// </summary>
+public enum NoteStatus
+{
+    Draft = 1,     // AI-generated, not yet reviewed
+    Edited = 2,    // Provider has made edits
+    Signed = 3,    // Provider signed — becomes part of medical record
+    Rejected = 4   // Provider discarded the AI note
+}
+
 /// <summary>
 /// Assessment phase in COMPASS flow
 /// </summary>

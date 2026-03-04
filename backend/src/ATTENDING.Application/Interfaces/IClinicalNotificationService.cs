@@ -12,6 +12,16 @@ public interface IClinicalNotificationService
     Task NotifyNewAssessmentAsync(NewAssessmentNotification notification, CancellationToken cancellationToken = default);
     Task NotifyRedFlagDetectedAsync(RedFlagNotification notification, CancellationToken cancellationToken = default);
     Task NotifyDrugInteractionAsync(DrugInteractionNotification notification, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Notifies the provider that their ambient SOAP note is ready for review.
+    /// Pushes to the provider's SignalR group so the dashboard updates live.
+    /// </summary>
+    Task NotifyAmbientNoteReadyAsync(
+        Guid providerId,
+        Guid encounterId,
+        Guid noteId,
+        CancellationToken cancellationToken = default);
 }
 
 #region Notification Models

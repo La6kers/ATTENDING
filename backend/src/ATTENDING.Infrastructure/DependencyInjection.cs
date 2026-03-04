@@ -114,6 +114,9 @@ public static class DependencyInjection
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
         services.AddScoped<IAiFeedbackRepository, AiFeedbackRepository>();
 
+        // Ambient Scribe
+        services.AddScoped<IEncounterRecordingRepository, EncounterRecordingRepository>();
+
         // Organization / Onboarding repositories (cross-tenant)
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IEhrConnectorRepository, EhrConnectorRepository>();
@@ -256,8 +259,27 @@ public static class DependencyInjection
         services.AddHostedService<Services.ClinicalSchedulerService>();
 
         // --------------------------------------------------------
+        // Ambient Scribe AI Service
+        // Default model: claude-3-5-haiku (fast, cost-effective for transcription)
+        // Override via appsettings: AmbientScribe:Model, BaseUrl, ApiKey
+        // --------------------------------------------------------
+        services.Configure<External.AI.AmbientScribeOptions>(opts =>
+            configuration.GetSection("AmbientScribe").Bind(opts));
+        services.AddHttpClient<IAmbientScribeService, External.AI.AnthropicAmbientScribeService>();
+
+        // --------------------------------------------------------
         // AI Services — with resilience (retry + circuit breaker)
         // --------------------------------------------------------
+        // Ambient Scribe AI service
+        services.Configure<External.AI.AmbientScribeOptions>(opts =>
+            configuration.GetSection("AmbientScribe").Bind(opts));
+        services.AddHttpClient<IAmbientScribeService, External.AI.AnthropicAmbientScribeService>(client =>
+        {
+            var opts = configuration.GetSection("AmbientScribe").Get<External.AI.AmbientScribeOptions>();
+            client.Timeout = TimeSpan.FromSeconds(opts?.TimeoutSeconds ?? 60);
+        })
+        .AddClinicalResilienceHandler("AmbientScribe");
+
         services.Configure<External.AI.ClinicalAiOptions>(opts =>
             configuration.GetSection("ClinicalAi").Bind(opts));
         services.AddHttpClient<External.AI.IClinicalAiService, External.AI.BioMistralClinicalAiService>(client =>

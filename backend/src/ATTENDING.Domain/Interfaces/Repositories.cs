@@ -196,6 +196,21 @@ public interface IAiFeedbackRepository
 }
 
 /// <summary>
+/// Repository for ambient scribe recording sessions and generated notes.
+/// </summary>
+public interface IEncounterRecordingRepository : IRepository<EncounterRecording>
+{
+    Task<EncounterRecording?> GetByEncounterIdAsync(Guid encounterId, CancellationToken ct = default);
+    Task<EncounterRecording?> GetWithSegmentsAsync(Guid recordingId, CancellationToken ct = default);
+    Task<EncounterRecording?> GetWithNoteAsync(Guid recordingId, CancellationToken ct = default);
+    Task<AmbientNote?> GetNoteByEncounterIdAsync(Guid encounterId, CancellationToken ct = default);
+    Task<AmbientNote?> GetNoteByIdAsync(Guid noteId, CancellationToken ct = default);
+    Task AddNoteAsync(AmbientNote note, CancellationToken ct = default);
+    Task AddSegmentAsync(TranscriptSegment segment, CancellationToken ct = default);
+    Task<IReadOnlyList<TranscriptSegment>> GetSegmentsAsync(Guid recordingId, CancellationToken ct = default);
+}
+
+/// <summary>
 /// Provides current user context for audit trails and tenant isolation.
 /// Implemented in the API layer using HttpContext.
 /// </summary>

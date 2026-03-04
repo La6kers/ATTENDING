@@ -406,6 +406,106 @@ public class EmergencyRecordAccessedEvent : DomainEvent
 
 #endregion
 
+#region Care Gap Events
+
+public class CareGapSurfacedEvent : DomainEvent
+{
+    public Guid GapId { get; }
+    public Guid PatientId { get; }
+    public Guid EncounterId { get; }
+    public string MeasureCode { get; }
+    public string MeasureName { get; }
+    public Enums.GapSeverity Severity { get; }
+
+    public CareGapSurfacedEvent(
+        Guid gapId, Guid patientId, Guid encounterId,
+        string measureCode, string measureName, Enums.GapSeverity severity)
+    {
+        GapId = gapId;
+        PatientId = patientId;
+        EncounterId = encounterId;
+        MeasureCode = measureCode;
+        MeasureName = measureName;
+        Severity = severity;
+    }
+}
+
+public class CareGapClosedEvent : DomainEvent
+{
+    public Guid GapId { get; }
+    public Guid PatientId { get; }
+    public string MeasureCode { get; }
+
+    public CareGapClosedEvent(Guid gapId, Guid patientId, string measureCode)
+    {
+        GapId = gapId;
+        PatientId = patientId;
+        MeasureCode = measureCode;
+    }
+}
+
+#endregion
+
+#region Ambient Scribe Events
+
+/// <summary>
+/// Raised when an ambient recording session is created (consent not yet given)
+/// </summary>
+public class RecordingSessionCreated : DomainEvent
+{
+    public Guid RecordingId { get; }
+    public Guid EncounterId { get; }
+    public Guid PatientId { get; }
+
+    public RecordingSessionCreated(Guid recordingId, Guid encounterId, Guid patientId)
+    {
+        RecordingId = recordingId;
+        EncounterId = encounterId;
+        PatientId = patientId;
+    }
+}
+
+/// <summary>
+/// Raised when audio capture ends and transcript processing begins.
+/// Triggers the note generation pipeline.
+/// </summary>
+public class RecordingSessionCompleted : DomainEvent
+{
+    public Guid RecordingId { get; }
+    public Guid EncounterId { get; }
+    public Guid PatientId { get; }
+    public int TotalAudioSeconds { get; }
+
+    public RecordingSessionCompleted(
+        Guid recordingId, Guid encounterId, Guid patientId, int totalAudioSeconds)
+    {
+        RecordingId = recordingId;
+        EncounterId = encounterId;
+        PatientId = patientId;
+        TotalAudioSeconds = totalAudioSeconds;
+    }
+}
+
+/// <summary>
+/// Raised when an AI SOAP note has been generated and is ready for provider review.
+/// Triggers a SignalR notification to the provider's dashboard.
+/// </summary>
+public class AmbientNoteGenerated : DomainEvent
+{
+    public Guid RecordingId { get; }
+    public Guid EncounterId { get; }
+    public Guid PatientId { get; }
+
+    public AmbientNoteGenerated(Guid recordingId, Guid encounterId, Guid patientId)
+    {
+        RecordingId = recordingId;
+        EncounterId = encounterId;
+        PatientId = patientId;
+    }
+}
+
+#endregion
+
 #region Audit Events
 
 /// <summary>

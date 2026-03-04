@@ -89,6 +89,11 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     // AI
     public DbSet<AiFeedback> AiFeedback => Set<AiFeedback>();
 
+    // Ambient Scribe
+    public DbSet<EncounterRecording> EncounterRecordings => Set<EncounterRecording>();
+    public DbSet<TranscriptSegment> TranscriptSegments => Set<TranscriptSegment>();
+    public DbSet<AmbientNote> AmbientNotes => Set<AmbientNote>();
+
     // Organization / Onboarding
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<EhrConnectorConfig> EhrConnectors => Set<EhrConnectorConfig>();
@@ -147,6 +152,11 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         // so patients can only see their own access history.
         modelBuilder.Entity<EmergencyAccessProfile>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
         modelBuilder.Entity<EmergencyAccessLog>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+
+        // Ambient Scribe
+        modelBuilder.Entity<EncounterRecording>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<TranscriptSegment>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<AmbientNote>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
 
         // Child entities: matching filters to prevent EF warning 10622
         // (required end of relationship with filtered parent)

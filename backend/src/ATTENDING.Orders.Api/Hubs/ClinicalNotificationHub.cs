@@ -235,4 +235,21 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
                 .SendAsync("PlayAlert", new { Type = "warning", Repeat = 2 }, cancellationToken);
         }
     }
+
+    public async Task NotifyAmbientNoteReadyAsync(
+        Guid providerId,
+        Guid encounterId,
+        Guid noteId,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation(
+            "Ambient note ready: Note {NoteId} for Encounter {EncounterId}",
+            noteId, encounterId);
+
+        // Push directly to the specific provider who owns this encounter
+        await _hubContext.Clients.User(providerId.ToString())
+            .SendAsync("AmbientNoteReady",
+                new { EncounterId = encounterId, NoteId = noteId, ReadyAt = DateTime.UtcNow },
+                cancellationToken);
+    }
 }

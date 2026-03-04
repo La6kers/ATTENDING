@@ -54,6 +54,14 @@ public class StubClinicalNotificationService : IClinicalNotificationService
         return Task.CompletedTask;
     }
 
+    public List<(Guid ProviderId, Guid EncounterId, Guid NoteId)> AmbientNoteReadyEvents { get; } = new();
+
+    public Task NotifyAmbientNoteReadyAsync(Guid providerId, Guid encounterId, Guid noteId, CancellationToken cancellationToken = default)
+    {
+        lock (_lock) AmbientNoteReadyEvents.Add((providerId, encounterId, noteId));
+        return Task.CompletedTask;
+    }
+
     public void Clear()
     {
         lock (_lock)
