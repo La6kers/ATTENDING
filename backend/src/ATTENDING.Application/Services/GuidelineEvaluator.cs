@@ -18,10 +18,14 @@ namespace ATTENDING.Application.Services;
 public class GuidelineEvaluator
 {
     private readonly IEnumerable<IClinicalGuideline> _guidelines;
+    private readonly SymptomGuidelineRouter _router;
 
-    public GuidelineEvaluator(IEnumerable<IClinicalGuideline> guidelines)
+    public GuidelineEvaluator(
+        IEnumerable<IClinicalGuideline> guidelines,
+        SymptomGuidelineRouter router)
     {
         _guidelines = guidelines;
+        _router = router;
     }
 
     /// <summary>
@@ -44,6 +48,26 @@ public class GuidelineEvaluator
                     // Log and skip — other guidelines and clinical workflow continue.
                     return null;
                 }
+            })
+            .Where(r => r != null)
+            .OrderByDescending(r => r!.PreTestProbability)
+            .ToList()!;
+    }
+
+    /// <summary>
+    /// Evaluate guidelines pruned to those relevant for the chief complaint (OLAP routing).
+    /// Faster and more accurate than EvaluateAll when chief complaint is known.
+    /// Falls back to EvaluateAll when complaint is empty or unrecognized.
+    /// </summary>
+    public IReadOnlyList<GuidelineResult> EvaluateForComplaint(GuidelineInput input, string chiefComplaint)
+    {
+        var routed = _router.RouteGuidelines(chiefComplaint, _guidelines);
+        return routed
+            .Where(g => g.IsApplicable(input))
+            .Select(g =>
+            {
+                try { return g.Evaluate(input); }
+                catch { return null; }
             })
             .Where(r => r != null)
             .OrderByDescending(r => r!.PreTestProbability)

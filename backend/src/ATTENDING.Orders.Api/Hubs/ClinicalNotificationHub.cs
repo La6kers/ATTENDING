@@ -137,9 +137,10 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
 
     public async Task NotifyCriticalResultAsync(CriticalResultNotification notification, CancellationToken cancellationToken)
     {
+        // PHI-safe: log only IDs and test metadata — never PatientName, MRN, or result values
         _logger.LogWarning(
-            "CRITICAL RESULT: {TestName} = {Value} for Patient {PatientId}",
-            notification.TestName, notification.Value, notification.PatientId);
+            "CRITICAL RESULT: {TestName} for Patient {PatientId} (order {LabOrderId})",
+            notification.TestName, notification.PatientId, notification.LabOrderId);
 
         // Notify all providers watching this patient
         await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
@@ -156,9 +157,10 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
 
     public async Task NotifyEmergencyAssessmentAsync(EmergencyAssessmentNotification notification, CancellationToken cancellationToken)
     {
+        // PHI-safe: log only IDs and emergency category — never PatientName, MRN, or chief complaint free text
         _logger.LogCritical(
-            "EMERGENCY ASSESSMENT: {PatientName} - {ChiefComplaint}, Reason: {EmergencyReason}",
-            notification.PatientName, notification.ChiefComplaint, notification.EmergencyReason);
+            "EMERGENCY ASSESSMENT: Assessment {AssessmentId} for Patient {PatientId}, Reason: {EmergencyReason}",
+            notification.AssessmentId, notification.PatientId, notification.EmergencyReason);
 
         await _hubContext.Clients.Group("EmergencyAlerts")
             .SendAsync("EmergencyAssessment", notification, cancellationToken);
@@ -173,9 +175,10 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
 
     public async Task NotifyOrderStatusChangeAsync(OrderStatusNotification notification, CancellationToken cancellationToken)
     {
+        // PHI-safe: order metadata only — PatientName intentionally excluded
         _logger.LogInformation(
-            "Order status change: {OrderType} {OrderId} -> {NewStatus}",
-            notification.OrderType, notification.OrderId, notification.NewStatus);
+            "Order status change: {OrderType} {OrderId} for Patient {PatientId} -> {NewStatus}",
+            notification.OrderType, notification.OrderId, notification.PatientId, notification.NewStatus);
 
         await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
             .SendAsync("OrderStatusChange", notification, cancellationToken);
@@ -183,9 +186,10 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
 
     public async Task NotifyNewAssessmentAsync(NewAssessmentNotification notification, CancellationToken cancellationToken)
     {
+        // PHI-safe: log only IDs and clinical risk flags — ChiefComplaint is free text and may contain PHI
         _logger.LogInformation(
-            "New assessment: {AssessmentId} for Patient {PatientId} - {ChiefComplaint}",
-            notification.AssessmentId, notification.PatientId, notification.ChiefComplaint);
+            "New assessment: {AssessmentId} for Patient {PatientId}, HasRedFlags: {HasRedFlags}, Triage: {TriageLevel}",
+            notification.AssessmentId, notification.PatientId, notification.HasRedFlags, notification.TriageLevel);
 
         await _hubContext.Clients.Group("Providers")
             .SendAsync("NewAssessment", notification, cancellationToken);
@@ -212,9 +216,10 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
 
     public async Task NotifyDrugInteractionAsync(DrugInteractionNotification notification, CancellationToken cancellationToken)
     {
+        // PHI-safe: drug names and severity are clinical metadata, not patient PHI
         _logger.LogWarning(
-            "Drug interaction: {Drug1} <-> {Drug2} ({Severity}) for Patient {PatientId}",
-            notification.Drug1, notification.Drug2, notification.Severity, notification.PatientId);
+            "Drug interaction: {Drug1} <-> {Drug2} ({Severity}) for Patient {PatientId} (order {MedicationOrderId})",
+            notification.Drug1, notification.Drug2, notification.Severity, notification.PatientId, notification.MedicationOrderId);
 
         await _hubContext.Clients.Group($"Patient_{notification.PatientId}")
             .SendAsync("DrugInteraction", notification, cancellationToken);

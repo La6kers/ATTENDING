@@ -33,6 +33,10 @@ public static class DependencyInjection
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 
+        // Clinical guideline services
+        services.AddSingleton<ATTENDING.Application.Services.SymptomGuidelineRouter>();
+        services.AddSingleton<ATTENDING.Application.Services.GuidelineEvaluator>();
+
         // Domain event dispatcher (used by AttendingDbContext post-save)
         services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
 

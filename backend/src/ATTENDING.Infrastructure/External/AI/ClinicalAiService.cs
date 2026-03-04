@@ -216,9 +216,9 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private static string BuildDifferentialDiagnosisPrompt(ClinicalContext context)
     {
-        var medHistory = string.Join(", ", context.MedicalHistory);
-        var meds = string.Join(", ", context.CurrentMedications);
-        var allergies = string.Join(", ", context.Allergies);
+        var medHistory = string.Join(", ", TruncateList(context.MedicalHistory, 10));
+        var meds       = string.Join(", ", TruncateList(context.CurrentMedications, 15));
+        var allergies  = string.Join(", ", TruncateList(context.Allergies, 10));
         
         return $"Generate a differential diagnosis list for this patient:\n\n" +
                $"Chief Complaint: {context.ChiefComplaint}\n" +
@@ -237,7 +237,7 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private static string BuildLabRecommendationPrompt(ClinicalContext context)
     {
-        var medHistory = string.Join(", ", context.MedicalHistory);
+        var medHistory = string.Join(", ", TruncateList(context.MedicalHistory, 10));
         
         return $"Recommend laboratory tests for this clinical scenario:\n\n" +
                $"Chief Complaint: {context.ChiefComplaint}\n" +
@@ -268,8 +268,8 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private static string BuildTreatmentRecommendationPrompt(ClinicalContext context, string diagnosisCode)
     {
-        var allergies = string.Join(", ", context.Allergies);
-        var meds = string.Join(", ", context.CurrentMedications);
+        var allergies = string.Join(", ", TruncateList(context.Allergies, 10));
+        var meds      = string.Join(", ", TruncateList(context.CurrentMedications, 15));
         
         return $"Recommend treatment for:\n\n" +
                $"Diagnosis: {diagnosisCode}\n" +
@@ -405,6 +405,21 @@ public class BioMistralClinicalAiService : IClinicalAiService
                 TriageLevel = "Level3_Urgent"
             };
         }
+    }
+
+    /// <summary>
+    /// Cap list length before embedding in AI prompts.
+    /// Prevents unbounded token usage and limits incidental PHI surface in prompt logs.
+    /// </summary>
+    private static IEnumerable<string> TruncateList(IEnumerable<string> items, int maxItems)
+    {
+        var list = items.Take(maxItems + 1).ToList();
+        if (list.Count > maxItems)
+        {
+            list = list.Take(maxItems).ToList();
+            list.Add($"... and {items.Count() - maxItems} more");
+        }
+        return list;
     }
 
     private static string ExtractJson(string response)
