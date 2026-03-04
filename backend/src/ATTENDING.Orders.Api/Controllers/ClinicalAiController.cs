@@ -7,7 +7,6 @@ using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Interfaces;
 using ATTENDING.Application.Interfaces;
 using ATTENDING.Application.Services;
-using LegacyAi = ATTENDING.Infrastructure.External.AI;
 using ATTENDING.Orders.Api.Extensions;
 
 namespace ATTENDING.Orders.Api.Controllers;
@@ -22,7 +21,6 @@ namespace ATTENDING.Orders.Api.Controllers;
 [Produces("application/json")]
 public class ClinicalAiController : ControllerBase
 {
-    private readonly LegacyAi.IClinicalAiService _aiService;
     private readonly ITieredClinicalIntelligence _intelligence;
     private readonly DiagnosticReasoningService _diagnosticReasoning;
     private readonly IPatientRepository _patientRepo;
@@ -31,7 +29,6 @@ public class ClinicalAiController : ControllerBase
     private readonly ILogger<ClinicalAiController> _logger;
 
     public ClinicalAiController(
-        LegacyAi.IClinicalAiService aiService,
         ITieredClinicalIntelligence intelligence,
         DiagnosticReasoningService diagnosticReasoning,
         IPatientRepository patientRepo,
@@ -39,7 +36,6 @@ public class ClinicalAiController : ControllerBase
         IUnitOfWork uow,
         ILogger<ClinicalAiController> logger)
     {
-        _aiService = aiService;
         _intelligence = intelligence;
         _diagnosticReasoning = diagnosticReasoning;
         _patientRepo = patientRepo;
@@ -169,55 +165,82 @@ public class ClinicalAiController : ControllerBase
     }
 
     /// <summary>
-    /// Generate AI differential diagnosis from patient context
+    /// Generate AI differential diagnosis — routes through the full tiered
+    /// intelligence pipeline (Tier 0 guidelines + Tier 2 cloud AI).
+    /// The /calibrated-diagnosis endpoint provides richer Bayesian output;
+    /// this endpoint returns a quick differential suitable for real-time display.
     /// </summary>
     [HttpPost("differential")]
     [ProducesResponseType(typeof(AiDifferentialResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AiDifferentialResponse>> GetDifferentialDiagnosis(
-        [FromBody] DifferentialDiagnosisRequest request)
+        [FromBody] DifferentialDiagnosisRequest request,
+        CancellationToken cancellationToken)
     {
         var patient = await _patientRepo.GetWithFullHistoryAsync(request.PatientId);
         if (patient == null)
             return NotFound(new ProblemDetails { Title = "Patient not found", Status = 404 });
 
-        var context = new LegacyAi.ClinicalContext
-        {
-            ChiefComplaint = request.ChiefComplaint ?? "Not specified",
-            HpiSummary = request.HpiSummary ?? "",
-            PatientAge = patient.Age,
-            PatientSex = patient.Sex.ToString(),
-            MedicalHistory = patient.Conditions?.Select(c => c.Name).ToList() ?? new(),
-            Allergies = patient.Allergies?.Select(a => a.Allergen).ToList() ?? new(),
-        };
+        // Route through Application-layer tiered pipeline.
+        // Tier 0 (guidelines, red flags, drug interactions) always runs.
+        // Tier 2 (cloud AI) runs when available and enhances the differential.
+        var intelligence = await _intelligence.EvaluateAsync(
+            request.PatientId, null, request.AssessmentId, cancellationToken);
 
-        var result = await _aiService.GetDifferentialDiagnosisAsync(context);
+        _logger.LogInformation(
+            "Differential via tiered pipeline for Patient {PatientId}: " +
+            "{GuidelineCount} guidelines, tiers [{Tiers}]",
+            request.PatientId,
+            intelligence.GuidelineResults.Count,
+            string.Join(", ", intelligence.TiersExecuted));
 
-        _logger.LogInformation("Differential diagnosis generated for Patient {PatientId}: {Count} diagnoses",
-            request.PatientId, result.Diagnoses.Count);
+        // Map guideline results to the AiDifferentialResponse contract.
+        var diagnoses = intelligence.GuidelineResults
+            .OrderByDescending(g => g.PreTestProbability)
+            .Select(g => new AiDiagnosisItem(
+                null,
+                g.GuidelineName,
+                g.RiskCategory,
+                g.Recommendation,
+                intelligence.RedFlags,
+                Array.Empty<string>()))
+            .ToList();
 
         return Ok(new AiDifferentialResponse(
-            result.Success,
-            result.ErrorMessage,
-            result.Diagnoses.Select(d => new AiDiagnosisItem(
-                d.Icd10Code, d.Name, d.Probability, d.Reasoning,
-                d.RedFlags.AsReadOnly(), d.RecommendedWorkup.AsReadOnly())).ToList(),
-            result.UrgentConsiderations.AsReadOnly()));
+            Success: true,
+            Error: null,
+            Diagnoses: diagnoses,
+            UrgentConsiderations: intelligence.RedFlags));
     }
 
     /// <summary>
-    /// AI triage assessment from symptoms
+    /// AI triage assessment — derives urgency from Tier 0 red flag evaluation.
+    /// For full tiered intelligence use /intelligence or /calibrated-diagnosis.
     /// </summary>
     [HttpPost("triage")]
     [ProducesResponseType(typeof(AiTriageResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AiTriageResponse>> AssessTriage(
-        [FromBody] TriageAssessmentRequest request)
+        [FromBody] TriageAssessmentRequest request,
+        CancellationToken cancellationToken)
     {
-        var result = await _aiService.AssessTriageLevelAsync(
-            request.ChiefComplaint, request.Symptoms, request.PainLevel);
+        var patientId = request.PatientId ?? Guid.Empty;
+        var intelligence = await _intelligence.EvaluateAsync(
+            patientId, null, request.AssessmentId, cancellationToken);
+
+        var hasEmergency = intelligence.RedFlags.Any();
+        var triageLevel = hasEmergency ? "Level2_Emergent" : "Level3_Urgent";
+        var reasoning = hasEmergency
+            ? $"Red flags detected: {string.Join("; ", intelligence.RedFlags.Take(3))}"
+            : "No immediate red flags detected via Tier 0 evaluation. Clinical judgment required.";
 
         return Ok(new AiTriageResponse(
-            result.Success, result.ErrorMessage, result.TriageLevel,
-            result.Reasoning, result.RedFlags?.AsReadOnly(), result.TimeToProvider));
+            Success: true,
+            Error: null,
+            TriageLevel: triageLevel,
+            Reasoning: reasoning,
+            RedFlags: intelligence.RedFlags,
+            TimeToProvider: hasEmergency ? "immediate" : "30min"));
     }
 
     /// <summary>

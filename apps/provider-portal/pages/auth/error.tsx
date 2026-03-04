@@ -1,130 +1,138 @@
 // ============================================================
-// Auth Error Page - Provider Portal
+// Auth Error Page
 // apps/provider-portal/pages/auth/error.tsx
+//
+// NextAuth redirects here on authentication failures.
+// Provides user-friendly messages for each error code
+// without exposing internal system details.
 // ============================================================
 
 import React from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { AlertCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 
-const ERROR_MESSAGES: Record<string, { title: string; message: string }> = {
+const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
   Configuration: {
-    title: 'Configuration Error',
-    message: 'There is a problem with the server configuration. Please contact your administrator.',
+    title: 'Authentication not configured',
+    body: 'The authentication provider is not set up correctly. Please contact your system administrator.',
   },
   AccessDenied: {
-    title: 'Access Denied',
-    message: 'You do not have permission to sign in to this application.',
+    title: 'Access denied',
+    body: 'You do not have permission to access the ATTENDING AI Provider Portal. Contact your organization administrator to request access.',
   },
   Verification: {
-    title: 'Verification Error',
-    message: 'The verification link may have expired or has already been used.',
+    title: 'Verification link expired',
+    body: 'The sign-in link has expired or has already been used. Please request a new one.',
   },
   OAuthSignin: {
-    title: 'Sign In Error',
-    message: 'There was a problem signing in with your identity provider.',
+    title: 'Sign-in error',
+    body: 'There was a problem connecting to your identity provider. Please try again.',
   },
   OAuthCallback: {
-    title: 'Callback Error',
-    message: 'There was a problem processing the authentication response.',
+    title: 'Authentication callback error',
+    body: 'The authentication response was invalid. Please try signing in again.',
   },
   OAuthCreateAccount: {
-    title: 'Account Creation Error',
-    message: 'There was a problem creating your account.',
-  },
-  EmailCreateAccount: {
-    title: 'Email Error',
-    message: 'There was a problem creating your account with this email.',
-  },
-  Callback: {
-    title: 'Callback Error',
-    message: 'There was a problem with the authentication callback.',
-  },
-  OAuthAccountNotLinked: {
-    title: 'Account Not Linked',
-    message: 'This email is already associated with another account. Please sign in using your original method.',
-  },
-  EmailSignin: {
-    title: 'Email Sign In Error',
-    message: 'The email could not be sent. Please try again.',
-  },
-  CredentialsSignin: {
-    title: 'Invalid Credentials',
-    message: 'The email or password you entered is incorrect.',
+    title: 'Account creation error',
+    body: 'Unable to create your account. Please contact your system administrator.',
   },
   SessionRequired: {
-    title: 'Session Required',
-    message: 'Please sign in to access this page.',
-  },
-  SessionExpired: {
-    title: 'Session Expired',
-    message: 'Your session has expired. Please sign in again.',
+    title: 'Session required',
+    body: 'You must be signed in to access this page.',
   },
   Default: {
-    title: 'Authentication Error',
-    message: 'An unexpected error occurred during authentication.',
+    title: 'Authentication error',
+    body: 'An unexpected error occurred during sign-in. Please try again or contact support.',
   },
 };
 
 export default function AuthErrorPage() {
   const router = useRouter();
-  const { error } = router.query;
-  
-  const errorKey = typeof error === 'string' && error in ERROR_MESSAGES ? error : 'Default';
-  const { title, message } = ERROR_MESSAGES[errorKey];
+  const errorCode = (router.query.error as string) || 'Default';
+  const { title, body } = ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.Default;
 
   return (
     <>
       <Head>
-        <title>Error - ATTENDING Provider Portal</title>
+        <title>Sign-In Error — ATTENDING AI</title>
+        <meta name="robots" content="noindex,nofollow" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-orange-900 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-red-500 to-orange-500 px-8 py-6 text-white">
-            <div className="flex items-center gap-3 mb-2">
-              <AlertCircle className="h-8 w-8" />
-              <h1 className="text-2xl font-bold">{title}</h1>
-            </div>
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.5rem',
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '1.25rem',
+          padding: '2.5rem',
+          width: '100%',
+          maxWidth: '420px',
+          boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⚠️</div>
+
+          <h1 style={{ margin: '0 0 0.75rem', color: '#991B1B', fontSize: '1.25rem', fontWeight: 700 }}>
+            {title}
+          </h1>
+
+          <p style={{ color: '#6B7280', marginBottom: '1.5rem', lineHeight: 1.6, fontSize: '0.9rem' }}>
+            {body}
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <Link
+              href="/auth/signin"
+              style={{
+                display: 'block',
+                padding: '0.75rem 1rem',
+                background: 'linear-gradient(180deg, #1A8FA8 0%, #0C4C5E 100%)',
+                color: 'white',
+                borderRadius: '0.625rem',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.9rem',
+              }}
+            >
+              Try signing in again
+            </Link>
+
+            <a
+              href="mailto:support@attendingai.health"
+              style={{
+                display: 'block',
+                padding: '0.75rem 1rem',
+                background: '#F3F4F6',
+                color: '#374151',
+                borderRadius: '0.625rem',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+              }}
+            >
+              Contact support
+            </a>
           </div>
 
-          {/* Content */}
-          <div className="p-8 space-y-6">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-700">{message}</p>
-            </div>
-
-            {error && (
-              <p className="text-xs text-gray-500">
-                Error code: <code className="bg-gray-100 px-1 rounded">{error}</code>
-              </p>
-            )}
-
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/auth/signin"
-                className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <RefreshCw className="h-5 w-5" />
-                Try Again
-              </Link>
-              
-              <button
-                onClick={() => router.back()}
-                className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-              >
-                <ArrowLeft className="h-5 w-5" />
-                Go Back
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-500 text-center">
-              If this problem persists, please contact your system administrator.
+          {process.env.NODE_ENV === 'development' && errorCode !== 'Default' && (
+            <p style={{
+              marginTop: '1.25rem',
+              background: '#FEF9E7',
+              border: '1px solid #F59E0B',
+              borderRadius: '0.375rem',
+              padding: '0.5rem',
+              fontSize: '0.7rem',
+              color: '#92400E',
+            }}>
+              Dev: error code = <code>{errorCode}</code>
             </p>
-          </div>
+          )}
         </div>
       </div>
     </>

@@ -22,10 +22,10 @@ public class GuidelineEvaluator
 
     public GuidelineEvaluator(
         IEnumerable<IClinicalGuideline> guidelines,
-        SymptomGuidelineRouter router)
+        SymptomGuidelineRouter? router = null)
     {
         _guidelines = guidelines;
-        _router = router;
+        _router = router ?? new SymptomGuidelineRouter();
     }
 
     /// <summary>

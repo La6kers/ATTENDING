@@ -49,25 +49,38 @@ export async function getSession(req: NextApiRequest, res: NextApiResponse) {
 // ============================================================
 
 const isDev = process.env.NODE_ENV === 'development';
+// Set NEXTAUTH_ENFORCE=true (e.g. in playwright E2E) to disable the dev
+// bypass entirely and get proper 401 responses without a running database.
+const enforceInDev = process.env.NEXTAUTH_ENFORCE === 'true';
 
 /**
  * In dev mode without a session, return a mock session using
  * the first PROVIDER user in the database.
+ *
+ * Returns null (gracefully) when:
+ *   - Not in development
+ *   - NEXTAUTH_ENFORCE=true is set
+ *   - Database is unavailable (prevents 500 errors during E2E runs)
  */
 async function getDevSession(): Promise<any> {
-  if (!isDev) return null;
-  const user = await prisma.user.findFirst({
-    where: { role: 'PROVIDER' },
-  });
-  if (!user) return null;
-  return {
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    },
-  };
+  if (!isDev || enforceInDev) return null;
+  try {
+    const user = await prisma.user.findFirst({
+      where: { role: 'PROVIDER' },
+    });
+    if (!user) return null;
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    };
+  } catch {
+    // Database unavailable — degrade gracefully to 401 instead of 500.
+    return null;
+  }
 }
 
 // ============================================================

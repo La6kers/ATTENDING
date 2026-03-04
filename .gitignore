@@ -268,6 +268,26 @@ typings/
 prisma/dev.db
 prisma/dev.db-journal
 
-# Root-level scratch scripts
+# Root-level scratch / temporary scripts — never commit these
 commit-*.ps1
+Verify-*.ps1
+verify-*.ps1
+setup-database.bat
+update-git.bat
+dev-setup.bat
+COMMIT_MSG.md
+test-results.txt
+
+# Debris files — files that should never have been at repo root
+# (named with spaces, unnamed, etc.)
+"e 1 - Production Fundamentals"
+
+# SQLite artifacts (SQL Server is the only supported database)
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-shm
+prisma/*.db-wal
+
+# archive/ directory — use git history instead
+archive/
 

@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  // Remove X-Powered-By: Next.js header (security hardening)
+  poweredByHeader: false,
 
   // Standalone output for Docker deployments (copies only needed node_modules)
   output: 'standalone',

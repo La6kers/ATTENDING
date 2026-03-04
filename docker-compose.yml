@@ -2,8 +2,18 @@
 # ATTENDING AI - Docker Compose
 # docker-compose.yml
 #
-# Local development and testing environment
-# Uses MS SQL Server 2022 (aligned with Azure SQL production)
+# Local development and full-stack container environment.
+# Uses MS SQL Server 2022 (aligned with Azure SQL production).
+#
+# Usage:
+#   Development (DB + Redis only):
+#     npm run db:up
+#
+#   Full stack (all services):
+#     docker compose up
+#
+#   With observability (Seq + Jaeger):
+#     docker compose --profile observability up
 # ============================================================
 
 services:
@@ -31,7 +41,7 @@ services:
 
   # ==========================================================================
   # DATABASE INITIALIZATION
-  # Creates the attending_db database on first run
+  # Creates attending_db on first run (idempotent)
   # ==========================================================================
   sqlserver-init:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -45,7 +55,7 @@ services:
     restart: "no"
 
   # ==========================================================================
-  # REDIS (Session Store & Cache)
+  # REDIS - Cache & SignalR backplane
   # ==========================================================================
   redis:
     image: redis:7-alpine
@@ -62,7 +72,7 @@ services:
       retries: 5
 
   # ==========================================================================
-  # PROVIDER PORTAL
+  # PROVIDER PORTAL (Next.js)
   # ==========================================================================
   provider-portal:
     build:
@@ -77,10 +87,13 @@ services:
       - DATABASE_URL=sqlserver://sqlserver:1433;database=attending_db;user=sa;password=${MSSQL_SA_PASSWORD};trustServerCertificate=true;encrypt=true
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-dev-secret-min-32-characters-long}
-      - NEXT_PUBLIC_WS_URL=http://localhost:3003
-      - ATTENDING_API_URL=http://api:8080
-      - DEV_BYPASS_AUTH=false
+      # NEXTAUTH_SECRET is required — no fallback. Must be set in .env or as an env var.
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required. Set it in .env}
+      - BACKEND_API_URL=http://api:8080
+      - AZURE_AD_B2C_TENANT=${AZURE_AD_B2C_TENANT:-}
+      - AZURE_AD_B2C_CLIENT_ID=${AZURE_AD_B2C_CLIENT_ID:-}
+      - AZURE_AD_B2C_CLIENT_SECRET=${AZURE_AD_B2C_CLIENT_SECRET:-}
+      - AZURE_AD_B2C_USER_FLOW=${AZURE_AD_B2C_USER_FLOW:-}
     depends_on:
       api:
         condition: service_healthy
@@ -95,7 +108,7 @@ services:
       retries: 3
 
   # ==========================================================================
-  # PATIENT PORTAL (COMPASS)
+  # PATIENT PORTAL / COMPASS (Next.js)
   # ==========================================================================
   patient-portal:
     build:
@@ -110,10 +123,10 @@ services:
       - DATABASE_URL=sqlserver://sqlserver:1433;database=attending_db;user=sa;password=${MSSQL_SA_PASSWORD};trustServerCertificate=true;encrypt=true
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=http://localhost:3001
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-dev-secret-min-32-characters-long}
-      - NEXT_PUBLIC_WS_URL=http://localhost:3003
+      # NEXTAUTH_SECRET is required — no fallback.
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required. Set it in .env}
       - NEXT_PUBLIC_API_URL=http://localhost:3000
-      - ATTENDING_API_URL=http://api:8080
+      - BACKEND_API_URL=http://api:8080
     depends_on:
       api:
         condition: service_healthy
@@ -128,7 +141,7 @@ services:
       retries: 3
 
   # ==========================================================================
-  # .NET BACKEND API
+  # .NET BACKEND API (CQRS / Clinical Intelligence)
   # ==========================================================================
   api:
     build:
@@ -146,7 +159,6 @@ services:
       Authentication__DevBypass: "true"
       Cors__AllowedOrigins__0: "http://localhost:3000"
       Cors__AllowedOrigins__1: "http://localhost:3001"
-      Cors__AllowedOrigins__2: "http://localhost:3002"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -160,8 +172,9 @@ services:
       start_period: 15s
 
   # ==========================================================================
-  # SEQ - Structured log viewer (dev only)
+  # SEQ - Structured log viewer
   # http://localhost:5341
+  # Activate with: docker compose --profile observability up
   # ==========================================================================
   seq:
     image: datalust/seq:latest
@@ -177,19 +190,19 @@ services:
       - observability
 
   # ==========================================================================
-  # JAEGER - Distributed tracing UI (dev only)
+  # JAEGER - Distributed tracing
   # UI:   http://localhost:16686
-  # OTLP: grpc://localhost:4317  (set OtlpEndpoint in appsettings.json)
+  # OTLP: grpc://localhost:4317
+  # Activate with: docker compose --profile observability up
   # ==========================================================================
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: attending-jaeger
     restart: unless-stopped
     ports:
-      - "16686:16686"   # Jaeger UI
-      - "4317:4317"     # OTLP gRPC receiver
-      - "4318:4318"     # OTLP HTTP receiver
-      - "14268:14268"   # Jaeger collector HTTP
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
       SPAN_STORAGE_TYPE: "memory"
@@ -197,7 +210,8 @@ services:
       - observability
 
   # ==========================================================================
-  # NGINX REVERSE PROXY (Optional - for production-like setup)
+  # NGINX - Reverse proxy for production-like local setup
+  # Activate with: docker compose --profile production up
   # ==========================================================================
   nginx:
     image: nginx:alpine

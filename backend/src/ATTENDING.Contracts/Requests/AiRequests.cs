@@ -3,12 +3,15 @@ namespace ATTENDING.Contracts.Requests;
 public record DifferentialDiagnosisRequest(
     Guid PatientId,
     Guid? EncounterId = null,
+    Guid? AssessmentId = null,
     string? ChiefComplaint = null,
     string? HpiSummary = null);
 
 public record TriageAssessmentRequest(
     string ChiefComplaint,
     string Symptoms,
+    Guid? PatientId = null,
+    Guid? AssessmentId = null,
     int? PainLevel = null);
 
 public record SubmitAiFeedbackRequest(

@@ -17,7 +17,7 @@ public class AiRequestValidatorTests
     [Fact]
     public void TriageRequest_ShouldRequireFields()
     {
-        var req = new TriageAssessmentRequest("Severe headache", "Worst headache of my life, sudden onset", 9);
+        var req = new TriageAssessmentRequest("Severe headache", "Worst headache of my life, sudden onset", PainLevel: 9);
         req.ChiefComplaint.Should().NotBeEmpty();
         req.Symptoms.Should().NotBeEmpty();
         req.PainLevel.Should().Be(9);
