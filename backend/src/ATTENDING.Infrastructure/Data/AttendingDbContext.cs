@@ -93,6 +93,10 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<EhrConnectorConfig> EhrConnectors => Set<EhrConnectorConfig>();
 
+    // Emergency Access (patient opt-in, HIPAA audit required)
+    public DbSet<EmergencyAccessProfile> EmergencyAccessProfiles => Set<EmergencyAccessProfile>();
+    public DbSet<EmergencyAccessLog> EmergencyAccessLogs => Set<EmergencyAccessLog>();
+
     #endregion
 
     #region Configuration
@@ -103,6 +107,12 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
         // Apply all configurations from the assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendingDbContext).Assembly);
+
+        // DomainEvent is an in-memory eventing primitive — never persisted to the database.
+        // Without this, EF picks up IReadOnlyCollection<DomainEvent> navigation properties
+        // on EmergencyAccessProfile/Log and tries to map DomainEvent as a table, which
+        // fails model validation because DomainEvent has no primary key convention.
+        modelBuilder.Ignore<Domain.Events.DomainEvent>();
 
         // Configure schemas
         modelBuilder.HasDefaultSchema("clinical");
@@ -131,6 +141,12 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<MedicationOrder>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
         modelBuilder.Entity<Referral>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
         modelBuilder.Entity<PatientAssessment>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+
+        // Emergency Access — profile uses standard tenant filter.
+        // AccessLog is immutable audit (never soft-deleted) but still tenant-scoped
+        // so patients can only see their own access history.
+        modelBuilder.Entity<EmergencyAccessProfile>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<EmergencyAccessLog>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
 
         // Child entities: matching filters to prevent EF warning 10622
         // (required end of relationship with filtered parent)
