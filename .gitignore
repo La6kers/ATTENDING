@@ -267,3 +267,7 @@ typings/
 
 prisma/dev.db
 prisma/dev.db-journal
+
+# Root-level scratch scripts
+commit-*.ps1
+
