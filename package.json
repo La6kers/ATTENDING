@@ -23,14 +23,13 @@
   "scripts": {
     "dev:provider": "npm run dev --workspace=apps/provider-portal",
     "dev:patient": "npm run dev --workspace=apps/patient-portal",
-    "dev:ws": "cd services/notification-service && npm install --silent && npm run dev",
     "dev": "turbo run dev --parallel",
     "dev:backend": "dotnet run --project backend/src/ATTENDING.Orders.Api --launch-profile Development --environment Development",
-    "dev:all": "concurrently \"npm run dev:provider\" \"npm run dev:patient\" \"npm run dev:ws\"",
+    "dev:all": "concurrently \"npm run dev:provider\" \"npm run dev:patient\"",
     "db:up": "docker compose up sqlserver redis -d --wait",
     "db:down": "docker compose stop sqlserver redis",
     "db:logs": "docker compose logs sqlserver --tail=50",
-    "dev:full": "npm run db:up && concurrently --names \"backend,provider,patient,ws\" --prefix-colors \"blue,green,yellow,magenta\" \"npm run dev:backend\" \"npm run dev:provider\" \"npm run dev:patient\" \"npm run dev:ws\"",
+    "dev:full": "npm run db:up && concurrently --names \"backend,provider,patient\" --prefix-colors \"blue,green,yellow\" \"npm run dev:backend\" \"npm run dev:provider\" \"npm run dev:patient\"",
     "setup": "node scripts/setup-dev.js",
     "dev:setup": "node scripts/dev-setup.js",
     "build": "turbo run build",
@@ -48,7 +47,6 @@
     "db:reset": "npx prisma migrate reset --force --schema=prisma/schema.prisma",
     "db:migrate:deploy": "npx prisma migrate deploy --schema=prisma/schema.prisma",
     "db:migrate:status": "npx prisma migrate status --schema=prisma/schema.prisma",
-    "db:migrate:safe": "node -e \"require('child_process').execSync('pwsh scripts/migrate-db.ps1', {stdio:'inherit'})\"",
     "test": "vitest",
     "test:run": "vitest run",
     "test:watch": "vitest --watch",
@@ -61,6 +59,9 @@
     "test:load": "k6 run tests/load/clinical-backend.js",
     "test:backend": "cd backend && dotnet test --filter \"Category!=Docker\" --no-restore --verbosity normal",
     "test:backend:coverage": "cd backend && dotnet test --filter \"Category!=Docker\" --collect:\"XPlat Code Coverage\" --results-directory coverage-results && dotnet-reportgenerator-globaltool -reports:\"coverage-results/**/*.xml\" -targetdir:\"coverage-report\" -reporttypes:Html",
+    "test:clinical-safety": "vitest run --config tests/clinical-safety/vitest.config.ts",
+    "test:clinical-safety:watch": "vitest --config tests/clinical-safety/vitest.config.ts",
+    "test:clinical-safety:coverage": "vitest run --config tests/clinical-safety/vitest.config.ts --coverage",
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "typecheck:all": "npm run typecheck --workspaces --if-present",
     "start:provider": "npm run start --workspace=apps/provider-portal",
@@ -90,8 +91,8 @@
     "zod": "^4.3.6"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "overrides": {
     "react": "18.2.0",

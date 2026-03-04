@@ -368,6 +368,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                         ${active
                           ? 'border-teal-DEFAULT text-teal-dark'
                           : 'border-transparent text-gray-500 hover:text-teal-DEFAULT hover:border-teal-light'
+                        }
                       `}
                     >
                       <Icon className="w-3.5 h-3.5" />

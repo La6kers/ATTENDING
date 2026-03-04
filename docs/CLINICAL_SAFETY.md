@@ -156,31 +156,54 @@ The `maskPHI()` utility scans log strings and replaces detected patterns with `[
 
 Before any patient-facing deployment, the following tests must exist and pass:
 
-### Red Flag Tests (tests/clinical-safety/red-flags.test.ts)
-- [ ] Every pattern in the table above has at least one positive test
-- [ ] Every pattern has at least one negative (false-positive prevention) test
-- [ ] Edge cases: mixed symptoms, typos, abbreviations
+### Red Flag Tests (apps/shared/lib/clinical-ai/__tests__/redFlagDetection.test.ts)
+- [x] Every pattern in the table above has at least one positive test
+- [x] Every pattern has at least one negative (false-positive prevention) test
+- [x] Edge cases: mixed symptoms, typos, abbreviations
+- [x] Vital sign integration (hypotension, tachycardia, hypoxia, fever)
+- [x] Performance: <100ms per evaluation
+- [x] Null-safety: missing vitals / history / empty symptoms
 
 ### Drug Interaction Tests (tests/clinical-safety/drug-interactions.test.ts)
-- [ ] Every critical pair in the table above is tested
-- [ ] Safe combinations return no flag
-- [ ] Allergy cross-reactivity is tested
+- [x] Every critical pair in the CLINICAL_SAFETY.md table is tested
+- [x] Safe combinations return no flag (false-positive prevention)
+- [x] Allergy cross-reactivity is tested (penicillin, sulfa, NSAIDs, cephalosporin)
+- [x] Pregnancy Category X drugs verified
+- [x] Renal dose adjustment drugs verified
+- [x] checkDrugInteractions() contract: empty, case-insensitive, order-independent
+- [x] Database integrity: required fields, no duplicate IDs, valid severities
 
 ### Assessment Machine Tests (tests/clinical-safety/assessment-machine.test.ts)
-- [ ] All 18 phases are reachable
-- [ ] Emergency transition works from every phase
-- [ ] Completion generates valid HPI
-- [ ] Abandonment is properly tracked
+- [x] All 18 state nodes exist in machine definition
+- [x] All OLDCARTS phases visited in correct order during full assessment
+- [x] Emergency transition reachable from: welcome, onset, location, severity, quality, associated symptoms, review
+- [x] Emergency sets urgencyLevel=high and urgencyScore=100
+- [x] Emergency dismiss returns to review
+- [x] Completion (review state) contains all 7 core HPI fields
+- [x] Red-flag detection fires mid-assessment (on chief complaint, not only on submit)
+- [x] BACK navigation works from onset→welcome, location→onset
+- [x] SKIP events allow optional phases
+- [x] NO events for medications (empty array) and allergies (NKDA)
+- [x] Session metadata: sessionId generated, startedAt recorded, questionHistory grows
+- [x] Urgency scoring: high severity + red flags → urgencyLevel=high; routine → standard/moderate
+- [ ] Abandonment tracking (completedAt=null + ABANDONED status) — requires API integration test
 
-### API Security Tests (tests/clinical-safety/api-security.test.ts)
-- [ ] Unauthenticated requests → 401
-- [ ] Wrong role → 403
-- [ ] Malformed input → 400 with Zod errors
-- [ ] SQL injection attempts → rejected
-- [ ] CSRF required on POST/PUT/DELETE
+### API Security Tests
+- [x] Unauthenticated requests → 401/403 (apps/provider-portal/e2e/auth-security.spec.ts)
+- [x] SQL injection in query params → rejected (auth-security.spec.ts)
+- [x] SQL injection in POST body → rejected (auth-security.spec.ts)
+- [x] XSS in request body → rejected (auth-security.spec.ts)
+- [x] CSRF: POST without token → rejected (auth-security.spec.ts)
+- [x] PHI not exposed in unauthenticated page source (auth-security.spec.ts)
+- [ ] Wrong role → 403 (requires seeded role-limited user in E2E environment)
+- [ ] Malformed input → 400 with Zod errors (requires authenticated E2E session)
 
 ### .NET Domain Tests (backend/tests/ATTENDING.Domain.Tests/)
-- [ ] DrugInteractionService covers all critical pairs
-- [ ] RedFlagEvaluator covers all patterns
-- [ ] LabOrder STAT auto-upgrade on emergency
-- [ ] Entity factory methods enforce invariants
+- [ ] DrugInteractionService covers all critical pairs  ← OPEN
+- [ ] RedFlagEvaluator covers all patterns  ← OPEN
+- [ ] LabOrder STAT auto-upgrade on emergency  ← OPEN
+- [ ] Entity factory methods enforce invariants  ← OPEN
+
+**Note:** The .NET domain layer has a RedFlagEvaluator and DrugInteractionService in
+`backend/src/ATTENDING.Domain/Services/`. These should mirror the TypeScript safety
+tests above. Create xUnit test classes in ATTENDING.Domain.Tests/ to close these gaps.
