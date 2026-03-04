@@ -129,7 +129,13 @@ test-results*.txt
 **/*.trx
 **/coverage-report/
 **/TestResults/
-**/coverage-results/
+
+# Backend build/test scratch files
+backend/build-results*.txt
+backend/test-results*.txt
+backend/build-and-test-*.ps1
+backend/git-commit-*.ps1
+backend/verify-*.ps1
 
 # -----------------------------------------------------------------------------
 # Build Artifacts
