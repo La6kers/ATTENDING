@@ -323,11 +323,15 @@ describe('Urgency Scoring', () => {
   });
 
   it('ACS complaint pushes urgencyLevel to high', () => {
+    // rf_chest_pain_radiation fires when chief complaint includes 'chest'
+    // AND location field includes 'arm', 'jaw', 'back', or 'radiat'.
+    // That rule carries requiresEmergency:true which forces level='high'
+    // regardless of numeric score.
     const svc = makeService();
     startAssessment(svc);
-    send(svc, { type: 'PROVIDE_CHIEF_COMPLAINT', value: 'sudden chest pain radiating to jaw, sweating' });
+    send(svc, { type: 'PROVIDE_CHIEF_COMPLAINT', value: 'chest pain with sweating' });
     send(svc, { type: 'PROVIDE_ONSET', value: 'minutes ago' });
-    send(svc, { type: 'PROVIDE_LOCATION', value: 'chest' });
+    send(svc, { type: 'PROVIDE_LOCATION', value: 'chest radiating to left arm and jaw' });
     send(svc, { type: 'PROVIDE_SEVERITY', value: 9 });
     expect(ctx(svc).urgencyLevel).toBe('high');
   });
