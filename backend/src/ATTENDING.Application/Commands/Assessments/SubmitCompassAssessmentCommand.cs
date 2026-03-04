@@ -140,11 +140,12 @@ public class SubmitCompassAssessmentHandler
 
         // ── Calculate queue position ────────────────────────────────────
         var pending = await _assessmentRepo.GetPendingReviewAsync(ct);
-        var queuePosition = triageLevel == TriageLevel.Emergency ? 1 : pending.Count + 1;
+        var queuePosition = triageLevel is TriageLevel.Resuscitation or TriageLevel.Emergent ? 1 : pending.Count + 1;
 
         var estimatedTime = triageLevel switch
         {
-            TriageLevel.Emergency => "Immediate",
+            TriageLevel.Resuscitation => "Immediate",
+            TriageLevel.Emergent => "Immediate",
             TriageLevel.Urgent => "15-30 minutes",
             _ when redFlagEval?.HasRedFlags == true => "30 minutes",
             _ => "2-4 hours"
