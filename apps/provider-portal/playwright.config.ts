@@ -76,5 +76,11 @@ export default defineConfig({
     // Add stdout/stderr for debugging
     stdout: 'pipe',
     stderr: 'pipe',
+    // Enable auth enforcement so E2E tests get correct 401/redirect
+    // responses instead of dev-bypass passthrough.
+    env: {
+      ...process.env,
+      NEXTAUTH_ENFORCE: 'true',
+    },
   },
 });

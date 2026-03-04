@@ -4,6 +4,7 @@ import 'react-resizable/css/styles.css';
 import type { AppProps } from 'next/app';
 import { SessionProvider, useSession } from 'next-auth/react';
 import { NotificationProvider } from '../lib/api/NotificationContext';
+import { ToastProvider } from '../components/shared';
 import { useAuthTokenBridge } from '../lib/api/useAuthTokenBridge';
 import { FhirProvider } from '@attending/shared/lib/fhir/FhirProvider';
 
@@ -31,21 +32,23 @@ function AppInner({ Component, pageProps }: { Component: AppProps['Component']; 
   const accessToken = (session as any)?.accessToken;
 
   return (
-    <FhirProvider
-      autoLoadPatient={false}
-      onError={(err) => {
-        // Non-fatal — EHR connection failure should not crash the portal.
-        // The portal functions without EHR data; FHIR enrichment is additive.
-        console.warn('[FhirProvider] EHR connection error (non-fatal):', err.message);
-      }}
-    >
-      <NotificationProvider
-        accessToken={accessToken}
-        autoConnect={!!session?.user}
+    <ToastProvider>
+      <FhirProvider
+        autoLoadPatient={false}
+        onError={(err) => {
+          // Non-fatal — EHR connection failure should not crash the portal.
+          // The portal functions without EHR data; FHIR enrichment is additive.
+          console.warn('[FhirProvider] EHR connection error (non-fatal):', err.message);
+        }}
       >
-        <Component {...pageProps} />
-      </NotificationProvider>
-    </FhirProvider>
+        <NotificationProvider
+          accessToken={accessToken}
+          autoConnect={!!session?.user}
+        >
+          <Component {...pageProps} />
+        </NotificationProvider>
+      </FhirProvider>
+    </ToastProvider>
   );
 }
 

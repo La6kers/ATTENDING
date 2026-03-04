@@ -359,11 +359,18 @@ test.describe('Core Clinical Workflow Smoke Tests', () => {
     // Page body should be visible (not a crashed white screen)
     await expect(page.locator('body')).toBeVisible();
 
-    // Should show some error indication or redirect
-    const is404 = await page.locator('text=404, text=Not Found, text=not found').count() > 0;
-    const isRedirected = !page.url().includes('this-page-does-not-exist');
+    const url = page.url();
 
-    expect(is404 || isRedirected).toBeTruthy();
+    // Accept any of:
+    //  1. Custom 404 page rendered
+    //  2. Auth redirect (when middleware intercepts before 404 renders)
+    //  3. Any redirect away from the original unknown path
+    const is404     = await page.locator(':text("404"), :text("Not Found"), :text("not found")').count() > 0;
+    const isAuthRedirect = url.includes('/auth/') || url.includes('signin') || url.includes('login');
+    // isRedirected: URL changed to something other than the exact unknown path
+    const isRedirected = !url.endsWith('/this-page-does-not-exist-at-all-xyz');
+
+    expect(is404 || isAuthRedirect || isRedirected).toBeTruthy();
   });
 
   test('static assets load correctly', async ({ page }) => {
