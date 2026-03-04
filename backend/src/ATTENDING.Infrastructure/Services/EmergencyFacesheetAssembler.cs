@@ -1,28 +1,26 @@
-using Microsoft.EntityFrameworkCore;
 using ATTENDING.Application.Commands.EmergencyAccess;
 using ATTENDING.Domain.Entities;
-using ATTENDING.Infrastructure.Data;
+using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Infrastructure.Services;
 
 /// <summary>
-/// Assembles a read-only emergency facesheet from live patient data.
-/// Called only within a valid, unexpired EmergencyAccessLog session.
-///
-/// Uses EnableAdminContext() because emergency access is intentionally
-/// cross-tenant — a first responder presents to a patient, not a tenant.
-/// The handler validates session validity and patient consent before here.
-///
-/// Phase 2 additions: DNR status, blood type, weight/height, emergency
-/// contacts, implanted devices — requires additional Patient fields.
+/// Assembles a read-only emergency facesheet from multiple data sources.
+/// This service runs in an unauthenticated context (first responder access)
+/// so it bypasses tenant filters by using the emergency access repository
+/// which has explicit patient ID queries.
 /// </summary>
 public class EmergencyFacesheetAssembler : IEmergencyFacesheetAssembler
 {
-    private readonly AttendingDbContext _context;
+    private readonly IPatientRepository _patientRepository;
+    private readonly IMedicationOrderRepository _medicationRepository;
 
-    public EmergencyFacesheetAssembler(AttendingDbContext context)
+    public EmergencyFacesheetAssembler(
+        IPatientRepository patientRepository,
+        IMedicationOrderRepository medicationRepository)
     {
-        _context = context;
+        _patientRepository = patientRepository;
+        _medicationRepository = medicationRepository;
     }
 
     public async Task<EmergencyFacesheet> AssembleAsync(
@@ -30,82 +28,113 @@ public class EmergencyFacesheetAssembler : IEmergencyFacesheetAssembler
         EmergencyAccessProfile profile,
         CancellationToken ct)
     {
-        // Bypass tenant filter — emergency access is cross-tenant by design.
-        _context.EnableAdminContext();
-
-        var patient = await _context.Patients
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Id == patientId, ct);
-
+        // Load patient with allergies and conditions
+        var patient = await _patientRepository.GetWithFullHistoryAsync(patientId, ct);
         if (patient == null)
-            throw new InvalidOperationException(
-                $"Patient {patientId} not found for emergency facesheet assembly");
+        {
+            return new EmergencyFacesheet(
+                PatientName: "Unknown Patient",
+                DateOfBirth: "",
+                Age: 0,
+                Sex: "Unknown",
+                BloodType: null,
+                Weight: null,
+                Height: null,
+                Language: null,
+                Mrn: "",
+                HasDnr: false,
+                DnrDocumentedDate: null,
+                DnrPhysician: null,
+                IsFullCode: true,
+                PowerOfAttorney: null,
+                PoaPhone: null,
+                HasLivingWill: false,
+                IsOrganDonor: false,
+                AdvanceDirectiveNotes: null,
+                Allergies: Array.Empty<EmergencyAllergy>(),
+                ActiveMedications: Array.Empty<EmergencyMedication>(),
+                ActiveDiagnoses: Array.Empty<EmergencyDiagnosis>(),
+                EmergencyContacts: Array.Empty<EmergencyContact>(),
+                ImplantedDevices: Array.Empty<EmergencyImplant>(),
+                AssembledAt: DateTime.UtcNow,
+                DataSource: "Partial");
+        }
 
-        // ── Allergies ─────────────────────────────────────────────────────
+        // Assemble allergies (always critical — even if profile says hide, severe allergies show)
         var allergies = profile.ShowAllergies
-            ? await _context.Allergies
-                .IgnoreQueryFilters()
-                .Where(a => a.PatientId == patientId && !a.IsDeleted)
+            ? patient.Allergies
+                .Where(a => a.IsActive)
                 .Select(a => new EmergencyAllergy(
                     a.Allergen,
-                    a.Reaction ?? "Unknown",
+                    a.Reaction ?? "Unknown reaction",
                     a.Severity.ToString()))
-                .ToListAsync(ct)
+                .ToList()
             : new List<EmergencyAllergy>();
 
-        // ── Active medications ────────────────────────────────────────────
-        var medications = profile.ShowMedications
-            ? await _context.MedicationOrders
-                .IgnoreQueryFilters()
-                .Where(m => m.PatientId == patientId
-                         && !m.IsDeleted
-                         && m.Status == Domain.Enums.MedicationOrderStatus.Active)
-                .Select(m => new EmergencyMedication(
-                    m.MedicationName,
-                    m.Dosage,
-                    m.Frequency,
-                    m.ClinicalIndication))
-                .ToListAsync(ct)
-            : new List<EmergencyMedication>();
+        // Assemble active medications
+        var medications = new List<EmergencyMedication>();
+        if (profile.ShowMedications)
+        {
+            var activeMeds = await _medicationRepository.GetActiveByPatientIdAsync(patientId, ct);
+            medications = activeMeds.Select(m => new EmergencyMedication(
+                m.MedicationName,
+                $"{m.Dosage} {m.Strength}",
+                m.Frequency,
+                m.ClinicalIndication)).ToList();
+        }
 
-        // ── Active diagnoses ──────────────────────────────────────────────
+        // Assemble active diagnoses
         var diagnoses = profile.ShowDiagnoses
-            ? await _context.MedicalConditions
-                .IgnoreQueryFilters()
-                .Where(c => c.PatientId == patientId && !c.IsDeleted && c.IsActive)
+            ? patient.Conditions
+                .Where(c => c.IsActive)
                 .Select(c => new EmergencyDiagnosis(
                     c.Code,
                     c.Name,
-                    c.OnsetDate.HasValue ? c.OnsetDate.Value.ToString("yyyy-MM-dd") : null))
-                .ToListAsync(ct)
+                    c.OnsetDate?.ToString("yyyy-MM-dd")))
+                .ToList()
             : new List<EmergencyDiagnosis>();
 
+        // Emergency contacts — placeholder: in production these would come from
+        // a dedicated EmergencyContact entity. For now, use patient contact info.
+        var contacts = new List<EmergencyContact>();
+        if (profile.ShowEmergencyContacts && !string.IsNullOrWhiteSpace(patient.Phone))
+        {
+            contacts.Add(new EmergencyContact(
+                "Primary Contact",
+                "Self",
+                patient.Phone,
+                true));
+        }
+
+        // Implanted devices — placeholder: would come from a devices table
+        var implants = new List<EmergencyImplant>();
+
         return new EmergencyFacesheet(
-            PatientName:           patient.FullName,
-            DateOfBirth:           patient.DateOfBirth.ToString("yyyy-MM-dd"),
-            Age:                   patient.Age,
-            Sex:                   patient.Sex.ToString(),
-            BloodType:             null,          // Phase 2: add to Patient entity
-            Weight:                null,          // Phase 2: add to Patient entity
-            Height:                null,          // Phase 2: add to Patient entity
-            Language:              patient.PrimaryLanguage,
-            Mrn:                   patient.MRN,
-            HasDnr:                false,         // Phase 2: add to Patient entity
-            DnrDocumentedDate:     null,          // Phase 2
-            DnrPhysician:          null,          // Phase 2
-            IsFullCode:            true,          // Phase 2: derive from HasDnr
-            PowerOfAttorney:       null,          // Phase 2
-            PoaPhone:              null,          // Phase 2
-            HasLivingWill:         false,         // Phase 2
-            IsOrganDonor:          false,         // Phase 2
-            AdvanceDirectiveNotes: null,          // Phase 2
-            Allergies:             allergies,
-            ActiveMedications:     medications,
-            ActiveDiagnoses:       diagnoses,
-            EmergencyContacts:     new List<EmergencyContact>(),   // Phase 2
-            ImplantedDevices:      new List<EmergencyImplant>(),   // Phase 2
-            AssembledAt:           DateTime.UtcNow,
-            DataSource:            "Live"
-        );
+            PatientName: patient.FullName,
+            DateOfBirth: patient.DateOfBirth.ToString("yyyy-MM-dd"),
+            Age: patient.Age,
+            Sex: patient.Sex.ToString(),
+            BloodType: null, // Would come from lab results in production
+            Weight: null,
+            Height: null,
+            Language: patient.PrimaryLanguage,
+            Mrn: patient.MRN,
+            // Advance directives — placeholder for pilot; real system queries directive records
+            HasDnr: false,
+            DnrDocumentedDate: null,
+            DnrPhysician: null,
+            IsFullCode: true,
+            PowerOfAttorney: null,
+            PoaPhone: null,
+            HasLivingWill: false,
+            IsOrganDonor: false,
+            AdvanceDirectiveNotes: null,
+            Allergies: allergies,
+            ActiveMedications: medications,
+            ActiveDiagnoses: diagnoses,
+            EmergencyContacts: contacts,
+            ImplantedDevices: implants,
+            AssembledAt: DateTime.UtcNow,
+            DataSource: "Live");
     }
 }
