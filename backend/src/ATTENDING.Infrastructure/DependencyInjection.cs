@@ -118,6 +118,11 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IEhrConnectorRepository, EhrConnectorRepository>();
 
+        // Emergency Access repository + facesheet assembler
+        services.AddScoped<IEmergencyAccessRepository, EmergencyAccessRepository>();
+        services.AddScoped<Application.Commands.EmergencyAccess.IEmergencyFacesheetAssembler,
+            Services.EmergencyFacesheetAssembler>();
+
         // --------------------------------------------------------
         // Domain Services
         // --------------------------------------------------------
