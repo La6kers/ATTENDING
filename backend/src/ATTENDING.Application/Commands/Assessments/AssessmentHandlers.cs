@@ -130,7 +130,7 @@ public class AdvanceAssessmentPhaseHandler
         if (assessment.CurrentPhase == Domain.Enums.AssessmentPhase.Completed)
             return Result.Failure<Unit>(DomainErrors.Assessment.AlreadyCompleted);
 
-        assessment.AdvanceToPhase(request.NewPhase);
+        assessment.AdvancePhase(request.NewPhase);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success(Unit.Value);
     }

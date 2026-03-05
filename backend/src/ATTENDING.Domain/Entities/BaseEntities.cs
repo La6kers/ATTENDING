@@ -187,11 +187,13 @@ public class User : BaseEntity, IAggregateRoot
         string lastName,
         UserRole role,
         string? npi = null,
-        string? specialty = null)
+        string? specialty = null,
+        Guid organizationId = default)
     {
         return new User
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction; StampAuditFields backstop for Guid.Empty
             Email = email,
             FirstName = firstName,
             LastName = lastName,
@@ -232,11 +234,13 @@ public class Encounter : BaseEntity, IAggregateRoot
         Guid patientId,
         Guid providerId,
         string type,
-        DateTime? scheduledAt = null)
+        DateTime? scheduledAt = null,
+        Guid organizationId = default)
     {
         return new Encounter
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction; StampAuditFields backstop for Guid.Empty
             PatientId = patientId,
             ProviderId = providerId,
             EncounterNumber = GenerateEncounterNumber(),
@@ -294,11 +298,13 @@ public class Allergy : BaseEntity
         Guid patientId,
         string allergen,
         AllergySeverity severity,
-        string? reaction = null)
+        string? reaction = null,
+        Guid organizationId = default)
     {
         return new Allergy
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction; StampAuditFields backstop for Guid.Empty
             PatientId = patientId,
             Allergen = allergen,
             Severity = severity,
@@ -327,11 +333,13 @@ public class MedicalCondition : BaseEntity
         Guid patientId,
         string code,
         string name,
-        DateTime? onsetDate = null)
+        DateTime? onsetDate = null,
+        Guid organizationId = default)
     {
         return new MedicalCondition
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction; StampAuditFields backstop for Guid.Empty
             PatientId = patientId,
             Code = code,
             Name = name,

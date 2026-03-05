@@ -296,9 +296,13 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     private async Task<int> DispatchDomainEventsAndSaveAsync(
         Func<Task<int>> saveFunc, CancellationToken cancellationToken)
     {
-        // Stamp audit fields before saving -- required for InMemory provider in tests
-        // where AuditSaveChangesInterceptor is not registered.
-        StampAuditFields();
+        // Stamp audit fields only when running under the InMemory provider (tests).
+        // In production (SQL Server), AuditSaveChangesInterceptor handles stamping
+        // inside the EF pipeline. Running both on SQL Server is harmless (idempotent)
+        // but creates unnecessary CPU work on every save. Guarding here eliminates
+        // that redundancy while keeping the test backstop intact.
+        if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+            StampAuditFields();
 
         var domainEntities = ChangeTracker.Entries<IHasDomainEvents>()
             .Select(e => e.Entity)

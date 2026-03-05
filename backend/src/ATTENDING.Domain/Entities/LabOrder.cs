@@ -79,7 +79,8 @@ public class LabOrder : BaseEntity, IAggregateRoot, IHasDomainEvents
         RedFlagEvaluation? redFlagEvaluation = null,
         string? cptDescription = null,
         decimal? cptBasePrice = null,
-        string? diagnosisDescription = null)
+        string? diagnosisDescription = null,
+        Guid organizationId = default)
     {
         if (string.IsNullOrWhiteSpace(testCode))
             throw new ArgumentException("Test code is required", nameof(testCode));
@@ -89,6 +90,7 @@ public class LabOrder : BaseEntity, IAggregateRoot, IHasDomainEvents
         var order = new LabOrder
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction; interceptor backstop for Guid.Empty
             OrderNumber = GenerateOrderNumber(),
             PatientId = patientId,
             EncounterId = encounterId,

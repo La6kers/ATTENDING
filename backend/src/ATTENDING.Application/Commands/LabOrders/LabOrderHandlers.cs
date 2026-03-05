@@ -58,7 +58,8 @@ public class CreateLabOrderHandler : IRequestHandler<CreateLabOrderCommand, Resu
             redFlagEvaluation: redFlagEvaluation,
             cptDescription: request.CptDescription,
             cptBasePrice: request.CptBasePrice,
-            diagnosisDescription: request.DiagnosisDescription);
+            diagnosisDescription: request.DiagnosisDescription,
+            organizationId: patient.OrganizationId);
 
         await _labOrderRepository.AddAsync(labOrder, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

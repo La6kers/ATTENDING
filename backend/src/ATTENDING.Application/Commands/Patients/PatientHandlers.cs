@@ -7,6 +7,8 @@ using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Application.Commands.Patients;
 
+#pragma warning disable CS0618 // GetAllAsync is intentionally obsolete; callers that need it use concrete methods
+
 public class CreatePatientHandler : IRequestHandler<CreatePatientCommand, Result<PatientCreated>>
 {
     private readonly IPatientRepository _repo;
@@ -67,7 +69,8 @@ public class AddAllergyHandler : IRequestHandler<AddAllergyCommand, Result<Aller
         if (patient == null)
             return Result.Failure<AllergyAdded>(DomainErrors.Patient.NotFound(cmd.PatientId));
 
-        var allergy = Allergy.Create(cmd.PatientId, cmd.Allergen, cmd.Severity, cmd.Reaction);
+        var allergy = Allergy.Create(cmd.PatientId, cmd.Allergen, cmd.Severity, cmd.Reaction,
+            organizationId: patient.OrganizationId);
         await _repo.AddAllergyAsync(allergy, ct);
         await _uow.SaveChangesAsync(ct);
 
@@ -92,7 +95,8 @@ public class AddConditionHandler : IRequestHandler<AddConditionCommand, Result<C
         if (patient == null)
             return Result.Failure<ConditionAdded>(DomainErrors.Patient.NotFound(cmd.PatientId));
 
-        var condition = MedicalCondition.Create(cmd.PatientId, cmd.Code, cmd.Name, cmd.OnsetDate);
+        var condition = MedicalCondition.Create(cmd.PatientId, cmd.Code, cmd.Name, cmd.OnsetDate,
+            organizationId: patient.OrganizationId);
         patient.Conditions.Add(condition);
         await _uow.SaveChangesAsync(ct);
 

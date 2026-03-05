@@ -20,7 +20,19 @@ public interface IUnitOfWork : IDisposable
 public interface IRepository<T> where T : class, IAggregateRoot
 {
     Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns ALL rows for the tenant. Use with extreme caution — this materializes
+    /// an unbounded result set. In a clinic with thousands of patients a single call
+    /// can OOM the process.
+    ///
+    /// Prefer concrete repository methods with explicit filters (e.g.
+    /// GetByPatientIdAsync, GetPendingReviewAsync) or GetFilteredAsync with pagination.
+    /// This method is retained only for small, bounded sets (e.g. active providers).
+    /// </summary>
+    [Obsolete("Unbounded query — use a filtered or paged method from the concrete repository instead.")]
     Task<IReadOnlyList<T>> GetAllAsync(CancellationToken cancellationToken = default);
+
     Task AddAsync(T entity, CancellationToken cancellationToken = default);
     void Update(T entity);
     void Remove(T entity);

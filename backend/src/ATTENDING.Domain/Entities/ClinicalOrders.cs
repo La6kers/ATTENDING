@@ -65,11 +65,13 @@ public class ImagingOrder : BaseEntity, IAggregateRoot, IHasDomainEvents
         string diagnosisCode,
         string? laterality = null,
         bool withContrast = false,
-        decimal? estimatedRadiationDose = null)
+        decimal? estimatedRadiationDose = null,
+        Guid organizationId = default)
     {
         var order = new ImagingOrder
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction; interceptor backstop for Guid.Empty
             OrderNumber = $"IMG-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
             PatientId = patientId,
             EncounterId = encounterId,
@@ -243,11 +245,13 @@ public class MedicationOrder : BaseEntity, IAggregateRoot, IHasDomainEvents
         bool hasBlackBoxWarning = false,
         string? pharmacyId = null,
         string? pharmacyName = null,
-        bool hasInteractions = false)
+        bool hasInteractions = false,
+        Guid organizationId = default)
     {
         var order = new MedicationOrder
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction; interceptor backstop for Guid.Empty
             OrderNumber = $"RX-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
             PatientId = patientId,
             EncounterId = encounterId,
@@ -367,11 +371,13 @@ public class Referral : BaseEntity, IAggregateRoot, IHasDomainEvents
         string? reasonForReferral = null,
         string? referredToProviderId = null,
         string? referredToProviderName = null,
-        string? referredToFacility = null)
+        string? referredToFacility = null,
+        Guid organizationId = default)
     {
         var referral = new Referral
         {
             Id = Guid.NewGuid(),
+            OrganizationId = organizationId,   // set at construction; interceptor backstop for Guid.Empty
             ReferralNumber = $"REF-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString()[..8].ToUpper()}",
             PatientId = patientId,
             EncounterId = encounterId,

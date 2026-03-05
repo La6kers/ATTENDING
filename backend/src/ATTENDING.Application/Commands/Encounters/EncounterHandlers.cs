@@ -11,15 +11,17 @@ public class CreateEncounterHandler : IRequestHandler<CreateEncounterCommand, Re
     private readonly IEncounterRepository _repo;
     private readonly IPatientRepository _patientRepo;
     private readonly IUnitOfWork _uow;
+    private readonly ICurrentUserService _currentUser;
     private readonly ILogger<CreateEncounterHandler> _logger;
 
     public CreateEncounterHandler(
         IEncounterRepository repo, IPatientRepository patientRepo,
-        IUnitOfWork uow, ILogger<CreateEncounterHandler> logger)
+        IUnitOfWork uow, ICurrentUserService currentUser, ILogger<CreateEncounterHandler> logger)
     {
         _repo = repo;
         _patientRepo = patientRepo;
         _uow = uow;
+        _currentUser = currentUser;
         _logger = logger;
     }
 
@@ -29,7 +31,8 @@ public class CreateEncounterHandler : IRequestHandler<CreateEncounterCommand, Re
         if (patient == null)
             return Result.Failure<EncounterCreated>(DomainErrors.Patient.NotFound(cmd.PatientId));
 
-        var encounter = Encounter.Create(cmd.PatientId, cmd.ProviderId, cmd.Type, cmd.ScheduledAt);
+        var orgId = _currentUser.TenantId ?? patient.OrganizationId;
+        var encounter = Encounter.Create(cmd.PatientId, cmd.ProviderId, cmd.Type, cmd.ScheduledAt, orgId);
         if (cmd.ChiefComplaint != null)
             encounter.Start(cmd.ChiefComplaint);
 

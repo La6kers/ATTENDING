@@ -264,9 +264,6 @@ public class AuditMiddleware
 
     public async Task InvokeAsync(HttpContext context, IAuditService auditService)
     {
-        var path = context.Request.Path.Value?.ToLower() ?? "";
-        
-        // Check if this request should be audited
         if (!ShouldAudit(context.Request))
         {
             await _next(context);
@@ -274,28 +271,16 @@ public class AuditMiddleware
         }
 
         var stopwatch = Stopwatch.StartNew();
-        var originalBodyStream = context.Response.Body;
 
-        try
-        {
-            using var memoryStream = new MemoryStream();
-            context.Response.Body = memoryStream;
+        // NOTE: We do NOT buffer the response body here.
+        // The previous implementation swapped context.Response.Body with a MemoryStream
+        // but LogRequestAsync never read it — it only logged status code + elapsed time.
+        // Buffering every auditable response (often 50+ records as JSON) doubled
+        // per-request memory cost for zero benefit.
+        await _next(context);
 
-            await _next(context);
-
-            stopwatch.Stop();
-
-            // Log the request
-            await LogRequestAsync(context, auditService, stopwatch.ElapsedMilliseconds);
-
-            // Copy the response back
-            memoryStream.Seek(0, SeekOrigin.Begin);
-            await memoryStream.CopyToAsync(originalBodyStream);
-        }
-        finally
-        {
-            context.Response.Body = originalBodyStream;
-        }
+        stopwatch.Stop();
+        await LogRequestAsync(context, auditService, stopwatch.ElapsedMilliseconds);
     }
 
     private static bool ShouldAudit(HttpRequest request)
@@ -322,6 +307,7 @@ public class AuditMiddleware
         var userId = GetUserId(context);
         var patientId = ExtractPatientId(context);
 
+        var claimedForwardedIp = GetClaimedForwardedIp(context);
         var entry = new AuditEntry
         {
             UserId = userId ?? "anonymous",
@@ -329,12 +315,15 @@ public class AuditMiddleware
             EntityType = ExtractEntityType(context.Request.Path.Value ?? ""),
             EntityId = ExtractEntityId(context.Request.Path.Value ?? ""),
             PatientId = patientId,
-            IpAddress = GetClientIp(context),
+            IpAddress = GetClientIp(context),   // verified TCP peer — authoritative
             UserAgent = context.Request.Headers["User-Agent"].ToString(),
             Details = new Dictionary<string, object>
             {
                 ["statusCode"] = context.Response.StatusCode,
-                ["elapsedMs"] = elapsedMs
+                ["elapsedMs"] = elapsedMs,
+                // Record claimed XFF separately so breach investigations have both
+                // values without trusting a client-controlled header as the source IP.
+                ["claimedXff"] = claimedForwardedIp ?? "(none)"
             }
         };
 
@@ -394,14 +383,32 @@ public class AuditMiddleware
 
     private static string GetClientIp(HttpContext context)
     {
-        // Check X-Forwarded-For header first (for load balancers/proxies)
-        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(forwardedFor))
-        {
-            return forwardedFor.Split(',')[0].Trim();
-        }
-
+        // SECURITY: X-Forwarded-For MUST NOT be trusted unconditionally.
+        // Any caller can spoof this header, making audit log IPs meaningless
+        // for breach investigations if the forwarded value is used as-is.
+        //
+        // Strategy:
+        //   - context.Connection.RemoteIpAddress is the verified TCP peer address
+        //     (set by Kestrel from the socket; cannot be spoofed by the client).
+        //     This is always recorded as the authoritative IP.
+        //   - X-Forwarded-For is recorded separately as a claimed value so auditors
+        //     can correlate with upstream load-balancer logs when legitimate.
+        //
+        // For production: configure UseForwardedHeaders() in Program.cs with
+        // KnownProxies limited to Azure Front Door / App Gateway egress CIDRs.
+        // Until that is done, use the direct connection IP as the source of truth.
         return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+
+    /// <summary>
+    /// Returns the X-Forwarded-For header value as a secondary claimed IP.
+    /// This is recorded in audit details alongside the verified connection IP
+    /// so auditors have both values without trusting XFF as authoritative.
+    /// </summary>
+    private static string? GetClaimedForwardedIp(HttpContext context)
+    {
+        var xff = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        return string.IsNullOrEmpty(xff) ? null : xff.Split(',')[0].Trim();
     }
 }
 

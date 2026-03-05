@@ -1,4 +1,4 @@
-﻿using HealthChecks.UI.Client;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -7,6 +7,7 @@ using ATTENDING.Infrastructure;
 using ATTENDING.Orders.Api.Hubs;
 using ATTENDING.Orders.Api.Extensions;
 using ATTENDING.Orders.Api.Middleware;
+using ATTENDING.Orders.Api.Services;
 using ATTENDING.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,23 +64,24 @@ if (!string.IsNullOrWhiteSpace(signalRRedis))
 {
     signalRBuilder.AddStackExchangeRedis(signalRRedis, options =>
     {
-        options.Configuration.ChannelPrefix = new StackExchange.Redis.RedisChannel("attending:signalr:", StackExchange.Redis.RedisChannel.PatternMode.Auto);
+        options.Configuration.ChannelPrefix = new StackExchange.Redis.RedisChannel(
+            "attending:signalr:", StackExchange.Redis.RedisChannel.PatternMode.Auto);
     });
     Log.Information("SignalR Redis backplane enabled");
 }
 
 // Register SignalR notification service (implements Application.Interfaces.IClinicalNotificationService)
 builder.Services.AddScoped<ATTENDING.Application.Interfaces.IClinicalNotificationService,
-    ATTENDING.Orders.Api.Hubs.SignalRClinicalNotificationService>();
+    SignalRClinicalNotificationService>();
 
 // Current user context for audit trails
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ATTENDING.Domain.Interfaces.ICurrentUserService, ATTENDING.Orders.Api.Services.CurrentUserService>();
+builder.Services.AddScoped<ATTENDING.Domain.Interfaces.ICurrentUserService, CurrentUserService>();
 
-// Request body size limit (5MB max — prevents abuse, sufficient for clinical payloads)
+// Request body size limit (5 MB max — prevents abuse, sufficient for clinical payloads)
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5 MB
+    options.Limits.MaxRequestBodySize = 5 * 1024 * 1024;
     options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
     options.AddServerHeader = false; // Don't expose server version
 });
@@ -89,20 +91,21 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.DefaultIgnoreCondition =
+            System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
 // ============================================================
 // Authentication
-// Development: bypass JWT validation entirely
+// Development: bypass JWT validation entirely (DevAuthHandler in Services/DevAuthHandler.cs)
 // Production: Azure AD B2C JWT bearer
 // ============================================================
 var devBypass = builder.Configuration.GetValue<bool>("Authentication:DevBypass");
 
 if (devBypass && !builder.Environment.IsProduction() && builder.Environment.IsDevelopment())
 {
-    Log.Warning("âš ï¸  Authentication bypass enabled â€” all requests treated as authenticated (dev only)");
-    
+    Log.Warning("Authentication bypass enabled — all requests treated as authenticated (dev only)");
+
     builder.Services.AddAuthentication("DevBypass")
         .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, DevAuthHandler>(
             "DevBypass", options => { });
@@ -124,9 +127,8 @@ else
                     var path = context.HttpContext.Request.Path;
 
                     if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
-                    {
                         context.Token = accessToken;
-                    }
+
                     return Task.CompletedTask;
                 }
             };
@@ -140,9 +142,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
             ?? new[] { "http://localhost:3000", "http://localhost:3001", "http://localhost:3002" };
-        
+
         policy.WithOrigins(origins)
             .AllowAnyMethod()
             .AllowAnyHeader()
@@ -216,9 +218,7 @@ builder.Services.AddSwaggerGen(c =>
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
-    {
         c.IncludeXmlComments(xmlPath);
-    }
 });
 
 var app = builder.Build();
@@ -258,30 +258,29 @@ app.UseMiddleware<ExceptionMiddleware>();
 // Request logging (PHI-safe: path only, no query string, no PHI fields)
 app.UseSerilogRequestLogging(options =>
 {
-    // Exclude query string from logged path to prevent PHI leakage
     options.GetLevel = (httpContext, elapsed, ex) =>
-        ex != null ? Serilog.Events.LogEventLevel.Error :
-        httpContext.Response.StatusCode >= 500 ? Serilog.Events.LogEventLevel.Error :
-        httpContext.Response.StatusCode >= 400 ? Serilog.Events.LogEventLevel.Warning :
-        Serilog.Events.LogEventLevel.Information;
+        ex != null                              ? Serilog.Events.LogEventLevel.Error :
+        httpContext.Response.StatusCode >= 500  ? Serilog.Events.LogEventLevel.Error :
+        httpContext.Response.StatusCode >= 400  ? Serilog.Events.LogEventLevel.Warning :
+                                                  Serilog.Events.LogEventLevel.Information;
 
     options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
     {
         // Explicitly use only Path (no QueryString) — PHI may appear in query params
-        diagnosticContext.Set("RequestPath", httpContext.Request.Path.Value);
-        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-        diagnosticContext.Set("UserAgent",   httpContext.Request.Headers["User-Agent"].ToString());
-        diagnosticContext.Set("ClientIP",    httpContext.Connection.RemoteIpAddress?.ToString());
+        diagnosticContext.Set("RequestPath",  httpContext.Request.Path.Value);
+        diagnosticContext.Set("RequestHost",  httpContext.Request.Host.Value);
+        diagnosticContext.Set("UserAgent",    httpContext.Request.Headers["User-Agent"].ToString());
+        diagnosticContext.Set("ClientIP",     httpContext.Connection.RemoteIpAddress?.ToString());
         diagnosticContext.Set("ResponseSize", httpContext.Response.ContentLength);
 
         if (httpContext.User.Identity?.IsAuthenticated == true)
         {
             // Log tenant/user IDs (not PHI — these are provider identifiers, not patient data)
-            var tenantId = httpContext.User.FindFirst("oid")?.Value ?? httpContext.User.FindFirst("sub")?.Value;
+            var tenantId = httpContext.User.FindFirst("oid")?.Value
+                        ?? httpContext.User.FindFirst("sub")?.Value;
             diagnosticContext.Set("TenantId", tenantId);
         }
 
-        // Propagate correlation ID for distributed trace linking
         if (httpContext.Items.TryGetValue("CorrelationId", out var correlationId))
             diagnosticContext.Set("CorrelationId", correlationId?.ToString());
     };
@@ -348,42 +347,5 @@ finally
     Log.CloseAndFlush();
 }
 
-// ============================================================
-// Dev authentication handler â€” auto-authenticates all requests
-// ============================================================
-public class DevAuthHandler : Microsoft.AspNetCore.Authentication.AuthenticationHandler<
-    Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions>
-{
-    public DevAuthHandler(
-        Microsoft.Extensions.Options.IOptionsMonitor<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions> options,
-        ILoggerFactory logger,
-        System.Text.Encodings.Web.UrlEncoder encoder)
-        : base(options, logger, encoder) { }
-
-    protected override Task<Microsoft.AspNetCore.Authentication.AuthenticateResult> HandleAuthenticateAsync()
-    {
-        // Create a dev identity with provider claims
-        var claims = new[]
-        {
-            new System.Security.Claims.Claim("sub", "00000000-0000-0000-0000-000000000001"),
-            new System.Security.Claims.Claim("oid", "00000000-0000-0000-0000-000000000001"),
-            new System.Security.Claims.Claim("tenant_id", "00000000-0000-0000-0000-000000000001"),
-            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, "dev.provider@attending.local"),
-            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, "Dev Provider"),
-            new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, "Provider"),
-        };
-
-        var identity = new System.Security.Claims.ClaimsIdentity(claims, "DevBypass");
-        var principal = new System.Security.Claims.ClaimsPrincipal(identity);
-        var ticket = new Microsoft.AspNetCore.Authentication.AuthenticationTicket(principal, "DevBypass");
-
-        return Task.FromResult(Microsoft.AspNetCore.Authentication.AuthenticateResult.Success(ticket));
-    }
-}
-
 // Expose Program for WebApplicationFactory in integration tests
 public partial class Program { }
-
-
-
-

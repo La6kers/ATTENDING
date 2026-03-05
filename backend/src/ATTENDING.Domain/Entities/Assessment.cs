@@ -112,11 +112,6 @@ public class PatientAssessment : BaseEntity, IAggregateRoot, IHasDomainEvents
         SetModified();
     }
     
-    /// <summary>
-    /// Alias for AdvancePhase — used by controller
-    /// </summary>
-    public void AdvanceToPhase(AssessmentPhase newPhase) => AdvancePhase(newPhase);
-    
     public void SetHpiData(
         string? onset = null,
         string? location = null,
