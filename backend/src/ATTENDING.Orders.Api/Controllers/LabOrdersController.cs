@@ -209,7 +209,12 @@ public class LabOrdersController : ControllerBase
     private Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        if (!Guid.TryParse(userIdClaim, out var userId) || userId == Guid.Empty)
+        {
+            throw new InvalidOperationException(
+                $"User ID claim is missing or invalid. sub='{User.FindFirst("sub")?.Value}', oid='{User.FindFirst("oid")?.Value}'");
+        }
+        return userId;
     }
 
     private static LabOrderResponse MapToResponse(LabOrderDto dto)

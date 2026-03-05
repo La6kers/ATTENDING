@@ -108,9 +108,13 @@ public class DrugInteractionService : IDrugInteractionService
         var interactions = new List<FoundInteraction>();
         var newMedLower = newMedication.ToLowerInvariant();
         
+        // Track seen pairs (normalized: alphabetically sorted + lowercased) to prevent duplicates
+        var seenPairs = new HashSet<(string, string)>();
+        
         foreach (var currentMed in currentMedications)
         {
             var currentMedLower = currentMed.ToLowerInvariant();
+            var normalizedPair = NormalizeDrugPair(newMedLower, currentMedLower);
             
             // Check direct interactions
             var directInteraction = KnownInteractions.FirstOrDefault(i =>
@@ -119,7 +123,7 @@ public class DrugInteractionService : IDrugInteractionService
                 (i.Drug1.Equals(currentMedLower, StringComparison.OrdinalIgnoreCase) &&
                  i.Drug2.Equals(newMedLower, StringComparison.OrdinalIgnoreCase)));
             
-            if (directInteraction != null)
+            if (directInteraction != null && seenPairs.Add(normalizedPair))
             {
                 interactions.Add(new FoundInteraction(
                     newMedication,
@@ -135,7 +139,7 @@ public class DrugInteractionService : IDrugInteractionService
                 if (ContainsMedicationOrClass(newMedLower, interaction.Drug1) &&
                     ContainsMedicationOrClass(currentMedLower, interaction.Drug2))
                 {
-                    if (!interactions.Any(i => i.Drug1 == newMedication && i.Drug2 == currentMed))
+                    if (seenPairs.Add(normalizedPair))
                     {
                         interactions.Add(new FoundInteraction(
                             newMedication,
@@ -203,6 +207,17 @@ public class DrugInteractionService : IDrugInteractionService
             interactions.Any(i => i.Severity == InteractionSeverity.Major));
     }
     
+    /// <summary>
+    /// Normalizes a drug pair by sorting alphabetically so ("aspirin","warfarin")
+    /// and ("warfarin","aspirin") produce the same key for deduplication.
+    /// </summary>
+    private static (string, string) NormalizeDrugPair(string drug1, string drug2)
+    {
+        return string.Compare(drug1, drug2, StringComparison.OrdinalIgnoreCase) <= 0
+            ? (drug1, drug2)
+            : (drug2, drug1);
+    }
+
     private static bool ContainsMedicationOrClass(string medication, string target)
     {
         if (medication.Contains(target, StringComparison.OrdinalIgnoreCase))

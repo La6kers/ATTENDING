@@ -179,6 +179,17 @@ async function handleGet(id: string, res: NextApiResponse) {
 // PATCH — update assessment (assign provider, change status)
 // =============================================================================
 
+// Valid assessment statuses and allowed transitions
+const VALID_STATUSES = ['CREATED', 'IN_PROGRESS', 'COMPLETED', 'REVIEWED'] as const;
+type AssessmentStatus = typeof VALID_STATUSES[number];
+
+const ALLOWED_TRANSITIONS: Record<AssessmentStatus, AssessmentStatus[]> = {
+  CREATED:     ['IN_PROGRESS'],
+  IN_PROGRESS: ['COMPLETED'],
+  COMPLETED:   ['REVIEWED'],
+  REVIEWED:    [],               // terminal state
+};
+
 async function handlePatch(id: string, req: NextApiRequest, res: NextApiResponse) {
   const existing = await prisma.patientAssessment.findUnique({ where: { id } });
   if (!existing) {
@@ -189,7 +200,25 @@ async function handlePatch(id: string, req: NextApiRequest, res: NextApiResponse
   const updateData: any = {};
 
   if (status) {
-    updateData.status = status.toUpperCase();
+    const normalized = status.toUpperCase() as string;
+
+    // Validate status is a known value
+    if (!VALID_STATUSES.includes(normalized as AssessmentStatus)) {
+      return res.status(400).json({
+        error: `Invalid status '${status}'. Must be one of: ${VALID_STATUSES.join(', ')}`,
+      });
+    }
+
+    // Validate the transition is allowed from the current status
+    const currentStatus = existing.status as AssessmentStatus;
+    const allowed = ALLOWED_TRANSITIONS[currentStatus] ?? [];
+    if (!allowed.includes(normalized as AssessmentStatus)) {
+      return res.status(409).json({
+        error: `Cannot transition from '${currentStatus}' to '${normalized}'. Allowed transitions: ${allowed.length > 0 ? allowed.join(', ') : 'none (terminal state)'}`,
+      });
+    }
+
+    updateData.status = normalized;
   }
 
   if (assignedProviderId) {
