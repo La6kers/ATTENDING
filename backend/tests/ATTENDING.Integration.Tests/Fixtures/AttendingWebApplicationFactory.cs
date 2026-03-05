@@ -50,17 +50,14 @@ public class AttendingWebApplicationFactory : WebApplicationFactory<Program>
             {
                 options.UseInMemoryDatabase(dbName);
 
-                // NOTE: We intentionally do NOT wire the AuditSaveChangesInterceptor
-                // for InMemory tests. The interceptor modifies entities DURING the
-                // EF Core save pipeline, which causes DbUpdateConcurrencyException
-                // with the InMemory provider ("entity does not exist in store").
+                // NOTE: AuditSaveChangesInterceptor is intentionally NOT registered here.
+                // The interceptor modifies entities inside the EF Core save pipeline, which
+                // causes DbUpdateConcurrencyException with the InMemory provider.
                 //
-                // Instead, AttendingDbContext.UpdateAuditFields() handles all audit
-                // field assignment (CreatedBy, OrganizationId, soft-delete) BEFORE
-                // base.SaveChangesAsync() is called, which InMemory handles correctly.
-                //
-                // The interceptor remains active in production (SQL Server) as a
-                // safety net for code paths that bypass IUnitOfWork.
+                // AttendingDbContext.StampAuditFields() runs BEFORE base.SaveChangesAsync()
+                // inside DispatchDomainEventsAndSaveAsync and handles all audit stamping
+                // (CreatedBy, OrganizationId, soft-delete) for both InMemory and SQL Server.
+                // On SQL Server the interceptor also runs -- both are idempotent.
             });
 
             services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<AttendingDbContext>());

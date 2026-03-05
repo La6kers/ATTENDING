@@ -27,14 +27,14 @@ public class DomainEventDispatchTests
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<EmergencyProtocolHandler>());
         services.AddLogging(b => b.AddDebug());
         services.AddSingleton<IClinicalNotificationService, StubClinicalNotificationService>();
-        // Stub repositories — handlers use null-coalescing fallbacks ("Unknown Patient", "") when
+        // Stub repositories -- handlers use null-coalescing fallbacks ("Unknown Patient", "") when
         // patient/order is not found, so returning null here is safe for unit-level event tests.
         services.AddSingleton<IPatientRepository, NullPatientRepository>();
         services.AddSingleton<ILabOrderRepository, NullLabOrderRepository>();
         return services.BuildServiceProvider();
     }
 
-    // ── Minimal stub repositories ──────────────────────────────────────────────
+    // -- Minimal stub repositories -------------------------------------------------
 
     private sealed class NullPatientRepository : IPatientRepository
     {
@@ -46,6 +46,7 @@ public class DomainEventDispatchTests
         public Task<Patient?> GetWithConditionsAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
         public Task<Patient?> GetWithFullHistoryAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
         public Task AddAllergyAsync(Allergy allergy, CancellationToken ct = default) => Task.CompletedTask;
+        public Task<Patient?> FindByNameAndDobAsync(string firstName, string lastName, DateTime dateOfBirth, Guid organizationId, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
         public Task AddAsync(Patient entity, CancellationToken ct = default) => Task.CompletedTask;
         public void Update(Patient entity) { }
         public void Remove(Patient entity) { }
@@ -79,7 +80,6 @@ public class DomainEventDispatchTests
         await dispatcher.Invoking(d => d.DispatchEventsAsync(new[] { evt }))
             .Should().NotThrowAsync();
 
-        // Verify the notification was sent via the stub
         var stub = sp.GetRequiredService<IClinicalNotificationService>() as StubClinicalNotificationService;
         stub!.EmergencyAssessments.Should().HaveCount(1);
     }

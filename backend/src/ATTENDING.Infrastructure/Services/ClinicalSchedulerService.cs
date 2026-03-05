@@ -31,14 +31,20 @@ public class ClinicalSchedulerService : BackgroundService
     // Job intervals
     private static readonly TimeSpan CriticalLabSweepInterval = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan StaleEncounterSweepInterval = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan DiagnosticLearningInterval = TimeSpan.FromHours(24);  // nightly
+    private static readonly TimeSpan AccuracySnapshotInterval = TimeSpan.FromDays(7);       // weekly
 
     // Lock TTLs — longer than interval so a slow job keeps its lock
     private static readonly TimeSpan CriticalLabLockTtl = TimeSpan.FromMinutes(4);
     private static readonly TimeSpan StaleEncounterLockTtl = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan DiagnosticLearningLockTtl = TimeSpan.FromHours(2);
+    private static readonly TimeSpan AccuracySnapshotLockTtl = TimeSpan.FromHours(4);
 
     // Distributed lock key namespace
     private const string CriticalLabLockKey = "scheduler:critical-lab-sweep";
     private const string StaleEncounterLockKey = "scheduler:stale-encounter-sweep";
+    private const string DiagnosticLearningLockKey = "scheduler:diagnostic-learning-processing";
+    private const string AccuracySnapshotLockKey = "scheduler:accuracy-snapshot-refresh";
 
     public ClinicalSchedulerService(
         IServiceProvider services,
@@ -71,6 +77,22 @@ public class ClinicalSchedulerService : BackgroundService
                 lockTtl: StaleEncounterLockTtl,
                 interval: StaleEncounterSweepInterval,
                 jobAction: RunStaleEncounterSweepAsync,
+                stoppingToken),
+
+            RunJobLoopAsync(
+                jobName: "DiagnosticLearningProcessing",
+                lockKey: DiagnosticLearningLockKey,
+                lockTtl: DiagnosticLearningLockTtl,
+                interval: DiagnosticLearningInterval,
+                jobAction: RunDiagnosticLearningProcessingAsync,
+                stoppingToken),
+
+            RunJobLoopAsync(
+                jobName: "AccuracySnapshotRefresh",
+                lockKey: AccuracySnapshotLockKey,
+                lockTtl: AccuracySnapshotLockTtl,
+                interval: AccuracySnapshotInterval,
+                jobAction: RunAccuracySnapshotRefreshAsync,
                 stoppingToken));
 
         _logger.LogInformation("ClinicalSchedulerService stopped");
@@ -243,5 +265,48 @@ public class ClinicalSchedulerService : BackgroundService
         _logger.LogInformation(
             "StaleEncounterSweep: found {Count} encounter(s) open for more than {Threshold}h",
             stale.Count, staleThreshold.TotalHours);
+    }
+
+    // ================================================================
+    // ML Diagnostic Learning Engine jobs
+    // ================================================================
+
+    /// <summary>
+    /// Nightly: process unprocessed DiagnosticOutcome records into LearningSignals.
+    /// De-identifies clinical episodes so they can be safely aggregated.
+    /// Distributed lock prevents double-processing if multiple nodes are running.
+    /// </summary>
+    private async Task RunDiagnosticLearningProcessingAsync(
+        IServiceScope scope, CancellationToken ct)
+    {
+        var learningService = scope.ServiceProvider
+            .GetRequiredService<ATTENDING.Application.Services.DiagnosticLearningService>();
+
+        var processed = await learningService.ProcessUnprocessedOutcomesAsync(ct);
+
+        if (processed > 0)
+            _logger.LogInformation(
+                "DiagnosticLearningProcessing: converted {Count} outcome(s) to learning signals",
+                processed);
+        else
+            _logger.LogDebug("DiagnosticLearningProcessing: no unprocessed outcomes found");
+    }
+
+    /// <summary>
+    /// Weekly: recompute rolling 90-day accuracy snapshots and calibration factors.
+    /// These snapshots drive the org-specific probability adjustments surfaced on
+    /// the /continuous-learning dashboard and fed back to DiagnosticReasoningService.
+    /// Distributed lock prevents concurrent snapshot writes from two nodes.
+    /// </summary>
+    private async Task RunAccuracySnapshotRefreshAsync(
+        IServiceScope scope, CancellationToken ct)
+    {
+        var learningService = scope.ServiceProvider
+            .GetRequiredService<ATTENDING.Application.Services.DiagnosticLearningService>();
+
+        await learningService.RefreshAccuracySnapshotsAsync(windowDays: 90, ct);
+
+        _logger.LogInformation(
+            "AccuracySnapshotRefresh: 90-day accuracy snapshots refreshed for all guideline types");
     }
 }

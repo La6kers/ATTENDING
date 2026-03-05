@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ATTENDING.Application.Interfaces;
 using ATTENDING.Infrastructure.Data;
 using ATTENDING.Infrastructure.Repositories;
 using ATTENDING.Domain.Entities;
@@ -47,6 +48,19 @@ public class DatabaseFixture : IDisposable
 
         // Stub audit service
         services.AddScoped<IAuditService, StubAuditService>();
+
+        // Stub notification service (replaces SignalR in tests)
+        services.AddScoped<IClinicalNotificationService, StubClinicalNotificationService>();
+
+        // Repositories for Ambient Scribe
+        services.AddScoped<IEncounterRecordingRepository, EncounterRecordingRepository>();
+        services.AddScoped<IAiFeedbackRepository, AiFeedbackRepository>();
+
+        // Repositories for ML Diagnostic Learning Engine
+        services.AddScoped<IDiagnosticLearningRepository, DiagnosticLearningRepository>();
+
+        // Application services
+        services.AddScoped<ATTENDING.Application.Services.DiagnosticLearningService>();
 
         // Logging
         services.AddLogging(b => b.AddDebug());

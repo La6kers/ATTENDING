@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using ATTENDING.Application.Interfaces;
 using ATTENDING.Domain.Common;
 using ATTENDING.Domain.Entities;
+using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Application.Commands.AmbientScribe;
@@ -114,6 +115,18 @@ public class AddTranscriptSegmentHandler : IRequestHandler<AddTranscriptSegmentC
 
     public async Task<Result<Guid>> Handle(AddTranscriptSegmentCommand cmd, CancellationToken ct)
     {
+        // Enforce consent state machine: segments only accepted after consent is given.
+        // HIPAA / state wiretapping law — audio cannot be processed without patient consent.
+        var session = await _repo.GetByIdAsync(cmd.RecordingId, ct);
+        if (session == null)
+            return Result.Failure<Guid>(Error.NotFound);
+
+        if (session.Status is not (RecordingStatus.ConsentGiven or RecordingStatus.Recording))
+            return Result.Failure<Guid>(Error.Custom(
+                "Recording.ConsentRequired",
+                $"Transcript segments cannot be added in state '{session.Status}'. " +
+                "Patient consent must be recorded first."));
+
         var segment = TranscriptSegment.Create(
             cmd.RecordingId,
             cmd.OrganizationId,
