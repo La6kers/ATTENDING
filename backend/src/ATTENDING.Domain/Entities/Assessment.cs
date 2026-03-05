@@ -195,6 +195,20 @@ public class PatientAssessment : BaseEntity, IAggregateRoot, IHasDomainEvents
             Id, PatientId, TriageLevel ?? Enums.TriageLevel.NonUrgent, HasRedFlags));
     }
     
+    // ── Clinical data setters (used by COMPASS one-shot submission) ─────────────
+
+    /// <summary>Sets the serialized medications list. Value must be a valid JSON array string.</summary>
+    public void SetMedicationsJson(string json) { MedicationsJson = json; SetModified(); }
+
+    /// <summary>Sets the serialized allergies list. Value must be a valid JSON array string.</summary>
+    public void SetAllergiesJson(string json) { AllergiesJson = json; SetModified(); }
+
+    /// <summary>Sets the serialized medical/surgical/family/social history blob.</summary>
+    public void SetMedicalHistoryJson(string json) { MedicalHistoryJson = json; SetModified(); }
+
+    /// <summary>Sets the serialized review of systems map.</summary>
+    public void SetReviewOfSystemsJson(string json) { ReviewOfSystemsJson = json; SetModified(); }
+
     public void MarkAsReviewed(Guid providerId, string? notes = null)
     {
         ReviewedByProviderId = providerId;

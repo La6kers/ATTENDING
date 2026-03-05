@@ -78,43 +78,11 @@ public class AssessmentsController : ControllerBase
 
         var val = result.Value;
 
-        // Fire SignalR notifications
-        try
-        {
-            var assessment = await _mediator.Send(new GetAssessmentByIdQuery(val.AssessmentId));
-            if (assessment != null)
-            {
-                await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
-                    AssessmentId: assessment.Id,
-                    AssessmentNumber: assessment.AssessmentNumber,
-                    PatientId: assessment.PatientId,
-                    PatientName: assessment.Patient?.FullName ?? "Unknown",
-                    PatientMrn: assessment.Patient?.MRN ?? "",
-                    PatientAge: assessment.Patient?.Age ?? 0,
-                    ChiefComplaint: assessment.ChiefComplaint,
-                    TriageLevel: assessment.TriageLevel?.ToString(),
-                    HasRedFlags: assessment.HasRedFlags,
-                    StartedAt: assessment.StartedAt));
-
-                if (assessment.IsEmergency)
-                {
-                    await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
-                        AssessmentId: assessment.Id,
-                        AssessmentNumber: assessment.AssessmentNumber,
-                        PatientId: assessment.PatientId,
-                        PatientName: assessment.Patient?.FullName ?? "Unknown",
-                        PatientMrn: assessment.Patient?.MRN ?? "",
-                        ChiefComplaint: assessment.ChiefComplaint,
-                        EmergencyReason: assessment.EmergencyReason ?? "Red flags detected",
-                        RedFlagCategories: new List<string>(),
-                        DetectedAt: DateTime.UtcNow));
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to send notifications for COMPASS submission {Id}", val.AssessmentId);
-        }
+        // Fire SignalR notifications (best-effort -- failure must not block the response)
+        var submittedAssessment = await _mediator.Send(new GetAssessmentByIdQuery(val.AssessmentId));
+        if (submittedAssessment != null)
+            await FireAssessmentNotificationsAsync(
+                submittedAssessment, submittedAssessment.IsEmergency, submittedAssessment.EmergencyReason);
 
         return Created($"/api/v1/assessments/{val.AssessmentId}", new
         {
@@ -177,33 +145,12 @@ public class AssessmentsController : ControllerBase
 
         var val = result.Value;
 
-        try
+        var startedAssessment = await _mediator.Send(new GetAssessmentByIdQuery(val.AssessmentId));
+        if (startedAssessment != null)
         {
-            var assessment = await _mediator.Send(new GetAssessmentByIdQuery(val.AssessmentId));
-            if (assessment != null)
-            {
-                await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
-                    AssessmentId: assessment.Id, AssessmentNumber: assessment.AssessmentNumber,
-                    PatientId: assessment.PatientId, PatientName: assessment.Patient?.FullName ?? "Unknown",
-                    PatientMrn: assessment.Patient?.MRN ?? "", PatientAge: assessment.Patient?.Age ?? 0,
-                    ChiefComplaint: assessment.ChiefComplaint, TriageLevel: assessment.TriageLevel?.ToString(),
-                    HasRedFlags: assessment.HasRedFlags, StartedAt: assessment.StartedAt));
-
-                if (val.IsEmergency)
-                {
-                    await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
-                        AssessmentId: assessment.Id, AssessmentNumber: assessment.AssessmentNumber,
-                        PatientId: assessment.PatientId, PatientName: assessment.Patient?.FullName ?? "Unknown",
-                        PatientMrn: assessment.Patient?.MRN ?? "", ChiefComplaint: assessment.ChiefComplaint,
-                        EmergencyReason: val.EmergencyReason ?? "Red flags detected",
-                        RedFlagCategories: new List<string>(), DetectedAt: DateTime.UtcNow));
-                }
-                return CreatedAtAction(nameof(GetById), new { id = assessment.Id }, MapToResponse(assessment));
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to send notifications for {Num}", val.AssessmentNumber);
+            await FireAssessmentNotificationsAsync(
+                startedAssessment, val.IsEmergency, val.EmergencyReason);
+            return CreatedAtAction(nameof(GetById), new { id = startedAssessment.Id }, MapToResponse(startedAssessment));
         }
         return CreatedAtAction(nameof(GetById), new { id = val.AssessmentId },
             new { id = val.AssessmentId, assessmentNumber = val.AssessmentNumber });
@@ -221,16 +168,9 @@ public class AssessmentsController : ControllerBase
         var val = result.Value;
         if (val.HasNewRedFlags && val.IsEmergency)
         {
-            try
-            {
-                var a = await _mediator.Send(new GetAssessmentByIdQuery(id));
-                if (a != null)
-                    await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
-                        a.Id, a.AssessmentNumber, a.PatientId, a.Patient?.FullName ?? "Unknown",
-                        a.Patient?.MRN ?? "", a.ChiefComplaint, val.EmergencyReason ?? "Red flags detected",
-                        new List<string>(), DateTime.UtcNow));
-            }
-            catch (Exception ex) { _logger.LogWarning(ex, "Notification failed for {Id}", id); }
+            var updatedForNotify = await _mediator.Send(new GetAssessmentByIdQuery(id));
+            if (updatedForNotify != null)
+                await FireAssessmentNotificationsAsync(updatedForNotify, true, val.EmergencyReason);
         }
 
         var updated = await _mediator.Send(new GetAssessmentByIdQuery(id));
@@ -282,6 +222,55 @@ public class AssessmentsController : ControllerBase
     {
         var claim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
         return Guid.TryParse(claim, out var id) ? id : Guid.Empty;
+    }
+
+    /// <summary>
+    /// Fires SignalR notifications for a newly created or updated assessment.
+    /// Extracted from three separate action methods to eliminate the repeated
+    /// 30-line notification block that existed in SubmitCompassAssessment,
+    /// StartAssessment, and SubmitResponse.
+    ///
+    /// Failures are caught and logged as warnings -- notification delivery is
+    /// best-effort and must never prevent the clinical response from being returned.
+    /// </summary>
+    private async Task FireAssessmentNotificationsAsync(
+        Domain.Entities.PatientAssessment assessment,
+        bool isEmergency,
+        string? emergencyReason)
+    {
+        try
+        {
+            await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
+                AssessmentId:    assessment.Id,
+                AssessmentNumber: assessment.AssessmentNumber,
+                PatientId:       assessment.PatientId,
+                PatientName:     assessment.Patient?.FullName ?? "Unknown",
+                PatientMrn:      assessment.Patient?.MRN ?? "",
+                PatientAge:      assessment.Patient?.Age ?? 0,
+                ChiefComplaint:  assessment.ChiefComplaint,
+                TriageLevel:     assessment.TriageLevel?.ToString(),
+                HasRedFlags:     assessment.HasRedFlags,
+                StartedAt:       assessment.StartedAt));
+
+            if (isEmergency)
+            {
+                await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
+                    AssessmentId:      assessment.Id,
+                    AssessmentNumber:  assessment.AssessmentNumber,
+                    PatientId:         assessment.PatientId,
+                    PatientName:       assessment.Patient?.FullName ?? "Unknown",
+                    PatientMrn:        assessment.Patient?.MRN ?? "",
+                    ChiefComplaint:    assessment.ChiefComplaint,
+                    EmergencyReason:   emergencyReason ?? "Red flags detected",
+                    RedFlagCategories: new List<string>(),
+                    DetectedAt:        DateTime.UtcNow));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Failed to send SignalR notifications for assessment {Id}", assessment.Id);
+        }
     }
 
     private static AssessmentResponse MapToResponse(Domain.Entities.PatientAssessment a)

@@ -156,6 +156,20 @@ public class AssessmentRepository : Repository<PatientAssessment>, IAssessmentRe
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Returns the count of unreviewed completed assessments via SELECT COUNT(*).
+    /// Use this for queue-position math instead of GetPendingReviewAsync().Count,
+    /// which materializes all rows just to get a number.
+    /// </summary>
+    public async Task<int> GetPendingReviewCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await DbSet
+            .CountAsync(
+                a => a.CurrentPhase == AssessmentPhase.Completed &&
+                     a.ReviewedByProviderId == null,
+                cancellationToken);
+    }
+
     public async Task<IReadOnlyList<PatientAssessment>> GetWithRedFlagsAsync(CancellationToken cancellationToken = default)
     {
         return await DbSet

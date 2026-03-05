@@ -153,7 +153,9 @@ public class Patient : BaseEntity, IAggregateRoot
     
     private int CalculateAge()
     {
-        var today = DateTime.Today;
+        // Use UTC date — server local time is not guaranteed to match clinical timezone
+        // and can cause off-by-one errors near a birthday (matters for pediatric dosing).
+        var today = DateTime.UtcNow.Date;
         var age = today.Year - DateOfBirth.Year;
         if (DateOfBirth.Date > today.AddYears(-age)) age--;
         return age;

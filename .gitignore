@@ -269,7 +269,7 @@ typings/
 prisma/dev.db
 prisma/dev.db-journal
 
-# Root-level scratch / temporary scripts — never commit these
+# Root-level scratch / temporary scripts -- never commit these
 commit-*.ps1
 Verify-*.ps1
 verify-*.ps1
@@ -278,6 +278,13 @@ update-git.bat
 dev-setup.bat
 COMMIT_MSG.md
 test-results.txt
+
+# Backend scratch/debug files that were accidentally committed
+backend/test-results*.txt
+backend/build-results*.txt
+backend/git-commit-*.ps1
+backend/verify-*.ps1
+backend/build-and-test-*.ps1
 
 # Debris files — files that should never have been at repo root
 # (named with spaces, unnamed, etc.)

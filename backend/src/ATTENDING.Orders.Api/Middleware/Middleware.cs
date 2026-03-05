@@ -463,7 +463,10 @@ public class ApiVersionHeaderMiddleware
     public async Task InvokeAsync(HttpContext context)
     {
         context.Response.Headers["X-Api-Version"] = "1.0";
-        context.Response.Headers["X-Powered-By"] = "ATTENDING-AI";
+        // NOTE: X-Powered-By is intentionally omitted. Advertising the platform name
+        // is an information disclosure that helps attackers fingerprint the system.
+        // Kestrel's AddServerHeader=false already suppresses the Server header;
+        // X-Powered-By would undo that work.
 
         // Add RFC 8594 Sunset/Deprecation headers for deprecated routes
         var path = context.Request.Path.Value ?? "";

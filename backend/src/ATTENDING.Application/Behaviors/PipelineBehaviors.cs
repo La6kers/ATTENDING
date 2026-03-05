@@ -90,12 +90,13 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     where TRequest : notnull
 {
     private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger;
-    private readonly System.Diagnostics.Stopwatch _timer;
 
     public PerformanceBehavior(ILogger<PerformanceBehavior<TRequest, TResponse>> logger)
     {
         _logger = logger;
-        _timer = new System.Diagnostics.Stopwatch();
+        // NOTE: Stopwatch is NOT stored as a field. A field-level Stopwatch shared
+        // across concurrent requests produces garbage timing values. It is created
+        // inside Handle() so each invocation gets its own independent timer.
     }
 
     public async Task<TResponse> Handle(
@@ -103,21 +104,19 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        _timer.Start();
+        var timer = System.Diagnostics.Stopwatch.StartNew();
 
         var response = await next();
 
-        _timer.Stop();
+        timer.Stop();
 
-        var elapsedMilliseconds = _timer.ElapsedMilliseconds;
-
-        if (elapsedMilliseconds > 500) // Log slow requests
+        if (timer.ElapsedMilliseconds > 500) // Log slow requests
         {
             var requestName = typeof(TRequest).Name;
             _logger.LogWarning(
                 "Long running request: {RequestName} ({ElapsedMilliseconds}ms)",
                 requestName,
-                elapsedMilliseconds);
+                timer.ElapsedMilliseconds);
         }
 
         return response;

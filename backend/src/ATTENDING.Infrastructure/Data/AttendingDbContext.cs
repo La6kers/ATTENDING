@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Interfaces;
@@ -33,7 +33,7 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     /// Callers MUST document why they need cross-tenant access in the call site comment.
     ///
     /// Usage:
-    ///   context.EnableAdminContext(); // "audit rotation — must access all tenants"
+    ///   context.EnableAdminContext(); // "audit rotation -- must access all tenants"
     ///
     /// Do NOT call this from request-scoped code. For HTTP requests,
     /// ICurrentUserService must always return a valid TenantId.
@@ -122,7 +122,7 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         // Apply all configurations from the assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendingDbContext).Assembly);
 
-        // DomainEvent is an in-memory eventing primitive — never persisted to the database.
+        // DomainEvent is an in-memory eventing primitive -- never persisted to the database.
         // Without this, EF picks up IReadOnlyCollection<DomainEvent> navigation properties
         // on EmergencyAccessProfile/Log and tries to map DomainEvent as a table, which
         // fails model validation because DomainEvent has no primary key convention.
@@ -138,7 +138,7 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         // TENANT: Every query is scoped to the current user's organization.
         //
         // Tenant filter is bypassed ONLY when _adminContextEnabled is true.
-        // That flag is set explicitly via EnableAdminContext() — never implicitly.
+        // That flag is set explicitly via EnableAdminContext() -- never implicitly.
         // Accidental null TenantId on an HTTP request now returns NO data rather
         // than all tenants' data, which is the safe failure mode for PHI.
         //
@@ -156,7 +156,7 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<Referral>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
         modelBuilder.Entity<PatientAssessment>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
 
-        // Emergency Access — profile uses standard tenant filter.
+        // Emergency Access -- profile uses standard tenant filter.
         // AccessLog is immutable audit (never soft-deleted) but still tenant-scoped
         // so patients can only see their own access history.
         modelBuilder.Entity<EmergencyAccessProfile>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
@@ -234,7 +234,7 @@ public class AttendingDbContext : DbContext, IUnitOfWork
                 .Property(nameof(BaseEntity.DeletedBy))
                 .HasMaxLength(100);
 
-            // OrganizationId index — accelerates tenant-scoped queries
+            // OrganizationId index -- accelerates tenant-scoped queries
             modelBuilder.Entity(entityType.ClrType)
                 .HasIndex(nameof(BaseEntity.OrganizationId))
                 .HasDatabaseName($"IX_{entityType.ClrType.Name}_OrganizationId");
@@ -243,11 +243,18 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        // Configure all string properties to use nvarchar
+        // Global string default: 2000 chars is a safe fallback for most structured fields.
+        // FREE-TEXT and JSON fields (VoiceTranscript, *Json, OldValues/NewValues in AuditLog,
+        // patient-entered text, etc.) MUST be explicitly overridden with
+        //   HasColumnType("nvarchar(max)")
+        // in their individual entity configurations (see AssessmentConfigurations.cs,
+        // AuditLogConfiguration.cs, etc.).
+        // A 500-char limit here would silently truncate clinical records -- a HIPAA
+        // and patient-safety risk.
         configurationBuilder.Properties<string>()
-            .HaveMaxLength(500);
+            .HaveMaxLength(2000);
 
-        // Configure all DateTime properties
+        // Configure all DateTime properties to datetime2 (higher precision than datetime)
         configurationBuilder.Properties<DateTime>()
             .HaveColumnType("datetime2");
     }
@@ -258,8 +265,41 @@ public class AttendingDbContext : DbContext, IUnitOfWork
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Collect domain events from all aggregate roots that implement IHasDomainEvents.
-        // New aggregate roots are picked up automatically — no type-switch maintenance needed.
+        return await DispatchDomainEventsAndSaveAsync(
+            () => base.SaveChangesAsync(cancellationToken), cancellationToken);
+    }
+
+    public override async Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        return await DispatchDomainEventsAndSaveAsync(
+            () => base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Collects domain events from all aggregate roots, persists changes, then dispatches events.
+    ///
+    /// Events are captured BEFORE saving so domain state is snapshotted at decision time.
+    /// Events are dispatched AFTER a successful save so side-effects only run on committed data.
+    ///
+    /// Both SaveChangesAsync overloads route through here to guarantee consistent event
+    /// dispatch regardless of which overload the caller uses.
+    ///
+    /// AUDIT STAMPING: AuditSaveChangesInterceptor is the primary audit stamper in production
+    /// (SQL Server). However the test WebApplicationFactory intentionally omits the interceptor
+    /// because it causes DbUpdateConcurrencyException with the InMemory provider. StampAuditFields()
+    /// runs HERE as a provider-agnostic backstop so InMemory tests pass and OrganizationId is
+    /// always set. On SQL Server the interceptor runs as well -- both are idempotent so double-
+    /// stamping is harmless.
+    /// </summary>
+    private async Task<int> DispatchDomainEventsAndSaveAsync(
+        Func<Task<int>> saveFunc, CancellationToken cancellationToken)
+    {
+        // Stamp audit fields before saving -- required for InMemory provider in tests
+        // where AuditSaveChangesInterceptor is not registered.
+        StampAuditFields();
+
         var domainEntities = ChangeTracker.Entries<IHasDomainEvents>()
             .Select(e => e.Entity)
             .ToList();
@@ -268,21 +308,54 @@ public class AttendingDbContext : DbContext, IUnitOfWork
             .SelectMany(e => e.DomainEvents)
             .ToList();
 
-        var result = await base.SaveChangesAsync(cancellationToken);
+        var result = await saveFunc();
 
-        // Dispatch domain events after successful save
         if (_domainEventDispatcher != null && allDomainEvents.Count > 0)
         {
             await _domainEventDispatcher.DispatchEventsAsync(allDomainEvents, cancellationToken);
         }
 
-        // Clear domain events after successful save
         foreach (var entity in domainEntities)
         {
             entity.ClearDomainEvents();
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Provider-agnostic audit field stamping. Runs before every SaveChangesAsync so that
+    /// OrganizationId, CreatedBy, and soft-delete conversions are applied regardless of
+    /// whether AuditSaveChangesInterceptor is registered (it is omitted for InMemory tests).
+    ///
+    /// On SQL Server, AuditSaveChangesInterceptor also runs -- both are idempotent.
+    /// </summary>
+    private void StampAuditFields()
+    {
+        var userId   = _currentUserService?.UserId ?? "system";
+        var tenantId = _currentUserService?.TenantId;
+
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        {
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    entry.Entity.SetCreatedBy(userId);
+                    if (entry.Entity.OrganizationId == Guid.Empty && tenantId.HasValue)
+                        entry.Entity.SetOrganization(tenantId.Value);
+                    break;
+
+                case EntityState.Modified:
+                    entry.Entity.SetModified(userId);
+                    break;
+
+                case EntityState.Deleted:
+                    // Convert hard deletes to soft deletes (HIPAA requirement)
+                    entry.State = EntityState.Modified;
+                    entry.Entity.SoftDelete(userId);
+                    break;
+            }
+        }
     }
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
@@ -299,8 +372,6 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     {
         try
         {
-            // Callers are responsible for SaveChangesAsync before committing.
-            // CommitTransaction only finalizes the DB transaction.
             if (_currentTransaction != null)
             {
                 await _currentTransaction.CommitAsync(cancellationToken);
@@ -341,60 +412,4 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     }
 
     #endregion
-
-    #region Overrides for Audit
-
-    public override int SaveChanges()
-    {
-        UpdateAuditFields();
-        return base.SaveChanges();
-    }
-
-    public override int SaveChanges(bool acceptAllChangesOnSuccess)
-    {
-        UpdateAuditFields();
-        return base.SaveChanges(acceptAllChangesOnSuccess);
-    }
-
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
-    {
-        UpdateAuditFields();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-    }
-
-    private void UpdateAuditFields()
-    {
-        var userId = _currentUserService?.UserId ?? "system";
-        var tenantId = _currentUserService?.TenantId;
-        var entries = ChangeTracker.Entries<BaseEntity>();
-
-        foreach (var entry in entries)
-        {
-            switch (entry.State)
-            {
-                case EntityState.Added:
-                    entry.Entity.SetCreatedBy(userId);
-                    // Auto-set tenant on new entities — ensures every record
-                    // is bound to the authenticated user's organization.
-                    if (entry.Entity.OrganizationId == Guid.Empty && tenantId.HasValue)
-                    {
-                        entry.Entity.SetOrganization(tenantId.Value);
-                    }
-                    break;
-
-                case EntityState.Modified:
-                    entry.Entity.SetModified(userId);
-                    break;
-
-                case EntityState.Deleted:
-                    // Intercept hard deletes → soft deletes (HIPAA)
-                    entry.State = EntityState.Modified;
-                    entry.Entity.SoftDelete(userId);
-                    break;
-            }
-        }
-    }
-
-    #endregion
 }
-

@@ -117,6 +117,27 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
     {
         await Context.Set<Allergy>().AddAsync(allergy, cancellationToken);
     }
+
+    /// <summary>
+    /// Finds an existing patient in the given organization matching first name, last name,
+    /// and date of birth. Used for COMPASS deduplication. The query bypasses the
+    /// tenant global filter via IgnoreQueryFilters so it can search within a specific
+    /// orgId even when ICurrentUserService has no authenticated tenant (anonymous COMPASS).
+    /// </summary>
+    public async Task<Patient?> FindByNameAndDobAsync(
+        string firstName, string lastName, DateTime dateOfBirth, Guid organizationId,
+        CancellationToken cancellationToken = default)
+    {
+        return await Context.Patients
+            .IgnoreQueryFilters()
+            .Where(p =>
+                !p.IsDeleted &&
+                p.OrganizationId == organizationId &&
+                p.FirstName.ToLower() == firstName.ToLower() &&
+                p.LastName.ToLower() == lastName.ToLower() &&
+                p.DateOfBirth.Date == dateOfBirth.Date)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }
 
 /// <summary>

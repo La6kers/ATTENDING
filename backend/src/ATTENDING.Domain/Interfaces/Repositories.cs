@@ -45,6 +45,16 @@ public interface IPatientRepository : IRepository<Patient>
     /// </summary>
     Task AddAllergyAsync(Allergy allergy, CancellationToken cancellationToken = default);
     Task<Patient?> GetWithFullHistoryAsync(Guid patientId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Looks up an existing patient within the given organization by first name, last name,
+    /// and date of birth. Used by COMPASS anonymous intake to deduplicate patients
+    /// instead of creating a new Patient record on every submission.
+    /// Returns null if no match is found.
+    /// </summary>
+    Task<Patient?> FindByNameAndDobAsync(
+        string firstName, string lastName, DateTime dateOfBirth, Guid organizationId,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -136,6 +146,14 @@ public interface IAssessmentRepository : IRepository<PatientAssessment>
 {
     Task<IReadOnlyList<PatientAssessment>> GetByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PatientAssessment>> GetPendingReviewAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the count of assessments pending provider review.
+    /// Issues SELECT COUNT(*) rather than materializing all records -- use this for
+    /// queue-position calculations instead of GetPendingReviewAsync().Count.
+    /// </summary>
+    Task<int> GetPendingReviewCountAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<PatientAssessment>> GetWithRedFlagsAsync(CancellationToken cancellationToken = default);
     Task<PatientAssessment?> GetWithSymptomsAsync(Guid assessmentId, CancellationToken cancellationToken = default);
     Task<(IReadOnlyList<PatientAssessment> Items, int TotalCount)> GetFilteredAsync(
