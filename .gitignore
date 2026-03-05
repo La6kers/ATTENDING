@@ -128,6 +128,7 @@ playwright/.cache/
 test-results*.txt
 **/*.trx
 **/coverage-report/
+**/coverage-results/
 **/TestResults/
 
 # Backend build/test scratch files
