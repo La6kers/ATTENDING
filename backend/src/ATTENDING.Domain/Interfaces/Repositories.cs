@@ -259,6 +259,22 @@ public interface IEncounterRecordingRepository : IRepository<EncounterRecording>
 /// Provides current user context for audit trails and tenant isolation.
 /// Implemented in the API layer using HttpContext.
 /// </summary>
+/// <summary>
+/// Repository for behavioral health screening sessions and responses.
+/// </summary>
+public interface IBehavioralHealthRepository
+{
+    Task<BehavioralHealthScreening?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<BehavioralHealthScreening?> GetWithResponsesAsync(Guid id, CancellationToken ct = default);
+    Task<IReadOnlyList<BehavioralHealthScreening>> GetByPatientIdAsync(Guid patientId, CancellationToken ct = default);
+    Task<IReadOnlyList<BehavioralHealthScreening>> GetByEncounterIdAsync(Guid encounterId, CancellationToken ct = default);
+    Task<IReadOnlyList<BehavioralHealthScreening>> GetPendingReviewAsync(CancellationToken ct = default);
+    Task<BehavioralHealthScreening?> GetLatestByInstrumentAsync(Guid patientId, ScreeningInstrument instrument, CancellationToken ct = default);
+    Task<IReadOnlyList<BehavioralHealthScreening>> GetActiveSuicideRiskAsync(CancellationToken ct = default);
+    Task AddAsync(BehavioralHealthScreening screening, CancellationToken ct = default);
+    void Update(BehavioralHealthScreening screening);
+}
+
 public interface ICurrentUserService
 {
     string? UserId { get; }

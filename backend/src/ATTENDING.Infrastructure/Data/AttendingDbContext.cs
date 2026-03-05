@@ -99,6 +99,10 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     public DbSet<TranscriptSegment> TranscriptSegments => Set<TranscriptSegment>();
     public DbSet<AmbientNote> AmbientNotes => Set<AmbientNote>();
 
+    // Behavioral Health Screening
+    public DbSet<BehavioralHealthScreening> BehavioralHealthScreenings => Set<BehavioralHealthScreening>();
+    public DbSet<ScreeningResponse> ScreeningResponses => Set<ScreeningResponse>();
+
     // Organization / Onboarding
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<EhrConnectorConfig> EhrConnectors => Set<EhrConnectorConfig>();
@@ -167,6 +171,12 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         modelBuilder.Entity<EncounterRecording>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
         modelBuilder.Entity<TranscriptSegment>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
         modelBuilder.Entity<AmbientNote>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+
+        // Behavioral Health Screening
+        // 42 CFR Part 2: IsPartTwoProtected is a field-level flag, not a query filter.
+        // Part 2 access control is enforced at the handler/controller layer, not here.
+        modelBuilder.Entity<BehavioralHealthScreening>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<ScreeningResponse>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
 
         // Child entities: matching filters to prevent EF warning 10622
         // (required end of relationship with filtered parent)

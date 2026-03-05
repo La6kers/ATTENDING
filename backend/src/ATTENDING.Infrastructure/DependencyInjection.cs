@@ -120,6 +120,10 @@ public static class DependencyInjection
         // Ambient Scribe
         services.AddScoped<IEncounterRecordingRepository, EncounterRecordingRepository>();
 
+        // Behavioral Health
+        services.AddScoped<IBehavioralHealthRepository, BehavioralHealthRepository>();
+        services.AddScoped<Domain.Services.BehavioralHealthScoringService>();
+
         // Organization / Onboarding repositories (cross-tenant)
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IEhrConnectorRepository, EhrConnectorRepository>();
@@ -235,6 +239,18 @@ public static class DependencyInjection
             Domain.ClinicalGuidelines.Guidelines.OttawaAnkleRules>();
         services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
             Domain.ClinicalGuidelines.Guidelines.Curb65Score>();
+
+        // Behavioral health guidelines
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.Phq9DepressionGuideline>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.Gad7AnxietyGuideline>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.CssrsSuicideRiskGuideline>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.AuditCAlcoholGuideline>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.PcPtsd5Guideline>();
 
         // Guideline evaluator — runs applicable guidelines against patient data
         services.AddSingleton<Application.Services.GuidelineEvaluator>();

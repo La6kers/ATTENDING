@@ -1,3 +1,5 @@
+using ATTENDING.Domain.Enums;
+
 namespace ATTENDING.Domain.Common;
 
 /// <summary>
@@ -189,5 +191,17 @@ public static class DomainErrors
     {
         public static Error StaleData(string entity) =>
             new("Concurrency.StaleData", $"The {entity} was modified by another user. Please refresh and try again.");
+    }
+
+    public static class BehavioralHealth
+    {
+        public static Error ScreeningNotFound(Guid id) =>
+            new("BehavioralHealth.NotFound", $"Behavioral health screening with ID '{id}' was not found.");
+        public static Error AlreadyScored(Guid id) =>
+            new("BehavioralHealth.AlreadyScored", $"Screening '{id}' has already been scored.");
+        public static Error CssrsRequiresEnumInputs() =>
+            new("BehavioralHealth.InvalidInput", "C-SSRS scoring requires CssrsIdeationLevel and CssrsBehaviorType.");
+        public static Error UnsupportedInstrument(ScreeningInstrument instrument) =>
+            new("BehavioralHealth.UnsupportedInstrument", $"Scoring for instrument '{instrument}' is not yet implemented.");
     }
 }
