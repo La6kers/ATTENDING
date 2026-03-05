@@ -17,6 +17,8 @@
 # =============================================================
 name: Blue-Green Deploy
 
+# NOTE: Push-to-main deployments are handled by deploy.yml (full-stack blue-green).
+# This workflow is manual-only for targeted backend-only deployments via ACR.
 on:
   workflow_dispatch:
     inputs:
@@ -30,9 +32,6 @@ on:
         description: 'Confirm slot swap to production (set to true)'
         required: true
         default: 'false'
-  push:
-    branches: [main]
-    paths: ['backend/**']
 
 env:
   DOTNET_VERSION: '8.0.x'
@@ -178,10 +177,9 @@ jobs:
     needs: deploy-staging
     if: |
       github.ref == 'refs/heads/main' &&
-      (github.event_name == 'push' ||
-       (github.event_name == 'workflow_dispatch' &&
-        github.event.inputs.confirm_swap == 'true' &&
-        github.event.inputs.environment == 'production'))
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.confirm_swap == 'true' &&
+      github.event.inputs.environment == 'production'
     environment:
       name: production
       url: ${{ secrets.PRODUCTION_URL }}
