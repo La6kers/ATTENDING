@@ -61,20 +61,22 @@ public class PatientHandlerTests
     public async Task AddAllergy_ValidInput_ShouldSucceed()
     {
         var patient = Patient.Create(TestTenantId, "MRN-001", "Test", "Patient", DateTime.Today.AddYears(-30), BiologicalSex.Male);
-        _repoMock.Setup(r => r.GetWithAllergiesAsync(patient.Id, default)).ReturnsAsync(patient);
+        // Handler now uses GetByIdAsync (existence check) + AddAllergyAsync (direct insert)
+        _repoMock.Setup(r => r.GetByIdAsync(patient.Id, default)).ReturnsAsync(patient);
+        _repoMock.Setup(r => r.AddAllergyAsync(It.IsAny<Allergy>(), default)).Returns(Task.CompletedTask);
 
         var handler = new AddAllergyHandler(_repoMock.Object, _uowMock.Object);
         var result = await handler.Handle(new AddAllergyCommand(
             patient.Id, "Penicillin", AllergySeverity.Severe, "Anaphylaxis"), default);
 
         result.IsSuccess.Should().BeTrue();
-        patient.Allergies.Should().HaveCount(1);
+        result.Value.AllergyId.Should().NotBeEmpty();
     }
 
     [Fact]
     public async Task AddAllergy_PatientNotFound_ShouldFail()
     {
-        _repoMock.Setup(r => r.GetWithAllergiesAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Patient?)null);
+        _repoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Patient?)null);
         var handler = new AddAllergyHandler(_repoMock.Object, _uowMock.Object);
 
         var result = await handler.Handle(new AddAllergyCommand(
