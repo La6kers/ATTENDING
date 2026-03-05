@@ -114,6 +114,9 @@ public static class DependencyInjection
         services.AddScoped<IAssessmentRepository, AssessmentRepository>();
         services.AddScoped<IAiFeedbackRepository, AiFeedbackRepository>();
 
+        // ML Diagnostic Learning Engine (d5)
+        services.AddScoped<IDiagnosticLearningRepository, DiagnosticLearningRepository>();
+
         // Ambient Scribe
         services.AddScoped<IEncounterRecordingRepository, EncounterRecordingRepository>();
 

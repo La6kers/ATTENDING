@@ -89,6 +89,11 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     // AI
     public DbSet<AiFeedback> AiFeedback => Set<AiFeedback>();
 
+    // ML Diagnostic Learning Engine (d5)
+    public DbSet<DiagnosticOutcome> DiagnosticOutcomes => Set<DiagnosticOutcome>();
+    public DbSet<LearningSignal> LearningSignals => Set<LearningSignal>();
+    public DbSet<DiagnosticAccuracySnapshot> DiagnosticAccuracySnapshots => Set<DiagnosticAccuracySnapshot>();
+
     // Ambient Scribe
     public DbSet<EncounterRecording> EncounterRecordings => Set<EncounterRecording>();
     public DbSet<TranscriptSegment> TranscriptSegments => Set<TranscriptSegment>();
@@ -152,6 +157,11 @@ public class AttendingDbContext : DbContext, IUnitOfWork
         // so patients can only see their own access history.
         modelBuilder.Entity<EmergencyAccessProfile>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
         modelBuilder.Entity<EmergencyAccessLog>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+
+        // ML Diagnostic Learning Engine
+        modelBuilder.Entity<DiagnosticOutcome>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<LearningSignal>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
+        modelBuilder.Entity<DiagnosticAccuracySnapshot>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));
 
         // Ambient Scribe
         modelBuilder.Entity<EncounterRecording>().HasQueryFilter(e => !e.IsDeleted && (_adminContextEnabled || e.OrganizationId == _tenantId));

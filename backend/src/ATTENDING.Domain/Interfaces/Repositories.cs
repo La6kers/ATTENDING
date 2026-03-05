@@ -196,6 +196,46 @@ public interface IAiFeedbackRepository
 }
 
 /// <summary>
+/// Repository for the ML Diagnostic Learning Engine — outcomes, signals, and snapshots.
+/// </summary>
+public interface IDiagnosticLearningRepository
+{
+    // DiagnosticOutcome
+    Task<DiagnosticOutcome?> GetOutcomeByIdAsync(Guid id, CancellationToken ct = default);
+    Task<DiagnosticOutcome?> GetOutcomeByEncounterAsync(Guid encounterId, string recommendationType, CancellationToken ct = default);
+    Task AddOutcomeAsync(DiagnosticOutcome outcome, CancellationToken ct = default);
+    Task<IReadOnlyList<DiagnosticOutcome>> GetUnprocessedOutcomesAsync(int batchSize = 50, CancellationToken ct = default);
+
+    // LearningSignal
+    Task AddSignalAsync(LearningSignal signal, CancellationToken ct = default);
+    Task<IReadOnlyList<LearningSignal>> GetSignalsAsync(
+        string recommendationType,
+        string? guidelineName,
+        DateTime windowStart,
+        DateTime windowEnd,
+        CancellationToken ct = default);
+    Task<int> GetSignalCountAsync(string recommendationType, string? guidelineName, CancellationToken ct = default);
+
+    // DiagnosticAccuracySnapshot
+    Task AddSnapshotAsync(DiagnosticAccuracySnapshot snapshot, CancellationToken ct = default);
+    Task<DiagnosticAccuracySnapshot?> GetLatestSnapshotAsync(
+        string recommendationType,
+        string? guidelineName,
+        CancellationToken ct = default);
+    Task<IReadOnlyList<DiagnosticAccuracySnapshot>> GetSnapshotHistoryAsync(
+        string recommendationType,
+        string? guidelineName,
+        int limit = 12,
+        CancellationToken ct = default);
+    Task<IReadOnlyList<DiagnosticAccuracySnapshot>> GetAllLatestSnapshotsAsync(CancellationToken ct = default);
+
+    // Calibration
+    Task<decimal?> GetCalibrationAdjustmentAsync(
+        string guidelineName,
+        CancellationToken ct = default);
+}
+
+/// <summary>
 /// Repository for ambient scribe recording sessions and generated notes.
 /// </summary>
 public interface IEncounterRecordingRepository : IRepository<EncounterRecording>

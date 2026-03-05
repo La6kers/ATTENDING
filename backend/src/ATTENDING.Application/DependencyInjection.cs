@@ -37,6 +37,9 @@ public static class DependencyInjection
         services.AddSingleton<ATTENDING.Application.Services.SymptomGuidelineRouter>();
         services.AddSingleton<ATTENDING.Application.Services.GuidelineEvaluator>();
 
+        // ML Diagnostic Learning Engine (d5)
+        services.AddScoped<ATTENDING.Application.Services.DiagnosticLearningService>();
+
         // Domain event dispatcher (used by AttendingDbContext post-save)
         services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
 
