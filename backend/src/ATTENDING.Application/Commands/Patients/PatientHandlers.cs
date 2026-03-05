@@ -59,12 +59,16 @@ public class AddAllergyHandler : IRequestHandler<AddAllergyCommand, Result<Aller
 
     public async Task<Result<AllergyAdded>> Handle(AddAllergyCommand cmd, CancellationToken ct)
     {
-        var patient = await _repo.GetWithAllergiesAsync(cmd.PatientId, ct);
+        // Verify patient exists without loading the Allergies collection.
+        // GetWithAllergiesAsync uses a filtered Include which caused DbUpdateConcurrencyException
+        // in EF InMemory: change tracker incorrectly marks newly-added children as Modified.
+        // Using GetByIdAsync (FindAsync) + AddAllergyAsync (direct DbSet insert) avoids this.
+        var patient = await _repo.GetByIdAsync(cmd.PatientId, ct);
         if (patient == null)
             return Result.Failure<AllergyAdded>(DomainErrors.Patient.NotFound(cmd.PatientId));
 
         var allergy = Allergy.Create(cmd.PatientId, cmd.Allergen, cmd.Severity, cmd.Reaction);
-        patient.Allergies.Add(allergy);
+        await _repo.AddAllergyAsync(allergy, ct);
         await _uow.SaveChangesAsync(ct);
 
         return new AllergyAdded(allergy.Id);

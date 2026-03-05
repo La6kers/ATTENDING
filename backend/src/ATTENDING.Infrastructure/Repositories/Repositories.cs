@@ -107,6 +107,16 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
             .Include(p => p.Encounters.OrderByDescending(e => e.CreatedAt).Take(10))
             .FirstOrDefaultAsync(p => p.Id == patientId, cancellationToken);
     }
+
+    /// <summary>
+    /// Inserts an allergy directly into the Allergies DbSet.
+    /// Bypasses loading the Patient's Allergies collection to avoid EF InMemory
+    /// instability with filtered-Include change tracking when adding child entities.
+    /// </summary>
+    public async Task AddAllergyAsync(Allergy allergy, CancellationToken cancellationToken = default)
+    {
+        await Context.Set<Allergy>().AddAsync(allergy, cancellationToken);
+    }
 }
 
 /// <summary>

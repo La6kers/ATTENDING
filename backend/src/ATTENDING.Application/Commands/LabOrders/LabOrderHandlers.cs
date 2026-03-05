@@ -105,7 +105,6 @@ public class UpdateLabOrderPriorityHandler : IRequestHandler<UpdateLabOrderPrior
 
         var previousPriority = labOrder.Priority;
         labOrder.UpdatePriority(request.NewPriority, request.ModifiedBy);
-        _repo.Update(labOrder);
         await _uow.SaveChangesAsync(ct);
 
         await _auditService.LogPhiAccessAsync(
@@ -143,7 +142,6 @@ public class CancelLabOrderHandler : IRequestHandler<CancelLabOrderCommand, Resu
             return Result.Failure<Unit>(DomainErrors.LabOrder.CannotCancel(labOrder.Status.ToString()));
 
         labOrder.Cancel(request.CancelledBy, request.Reason);
-        _repo.Update(labOrder);
         await _uow.SaveChangesAsync(ct);
 
         await _auditService.LogPhiAccessAsync(
@@ -176,7 +174,6 @@ public class MarkLabOrderCollectedHandler : IRequestHandler<MarkLabOrderCollecte
             return Result.Failure<Unit>(DomainErrors.LabOrder.CannotCollect(labOrder.Status.ToString()));
 
         labOrder.MarkAsCollected(request.CollectedAt);
-        _repo.Update(labOrder);
         await _uow.SaveChangesAsync(ct);
         return Result.Success(Unit.Value);
     }
@@ -215,7 +212,9 @@ public class AddLabResultHandler : IRequestHandler<AddLabResultCommand, Result<L
             return Result.Failure<LabResultAdded>(DomainErrors.LabOrder.CannotAddResult(labOrder.Status.ToString()));
 
         labOrder.AddResult(result);
-        _repo.Update(labOrder);
+        // No explicit Update(): labOrder is tracked; new LabResult child stays in Added state.
+        // DbSet.Update() would incorrectly mark the new LabResult as Modified, causing
+        // DbUpdateConcurrencyException in InMemory ("entity does not exist in store").
         await _uow.SaveChangesAsync(ct);
 
         _logger.LogInformation("Lab result added to order {LabOrderId}, Critical: {IsCritical}",

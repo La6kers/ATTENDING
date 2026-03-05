@@ -97,7 +97,8 @@ public class SubmitAssessmentResponseHandler
         var redFlagEvaluation = _redFlagEvaluator.Evaluate(combinedText, null, assessment.PainSeverity);
 
         assessment.AddResponse(request.Question, request.Response, redFlagEvaluation);
-        _assessmentRepository.Update(assessment);
+        // No explicit Update(): entity and its new AssessmentResponse child are tracked;
+        // removing Update() prevents DbSet.Update() from marking new children as Modified.
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         if (redFlagEvaluation.HasRedFlags)
@@ -130,7 +131,6 @@ public class AdvanceAssessmentPhaseHandler
             return Result.Failure<Unit>(DomainErrors.Assessment.AlreadyCompleted);
 
         assessment.AdvanceToPhase(request.NewPhase);
-        _assessmentRepository.Update(assessment);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success(Unit.Value);
     }
@@ -158,7 +158,6 @@ public class CompleteAssessmentHandler
             return Result.Failure<Unit>(DomainErrors.Assessment.AlreadyCompleted);
 
         assessment.Complete(request.TriageLevel, request.Summary);
-        _assessmentRepository.Update(assessment);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Assessment completed: {Num}, Triage: {T}",
@@ -186,7 +185,6 @@ public class ReviewAssessmentHandler
             return Result.Failure<Unit>(DomainErrors.Assessment.NotFound(request.AssessmentId));
 
         assessment.MarkAsReviewed(request.ProviderId, request.Notes);
-        _assessmentRepository.Update(assessment);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _auditService.LogPhiAccessAsync(

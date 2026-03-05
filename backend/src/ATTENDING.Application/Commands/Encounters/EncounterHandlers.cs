@@ -60,7 +60,8 @@ public class CheckInEncounterHandler : IRequestHandler<CheckInEncounterCommand, 
             return Result.Failure<Unit>(DomainErrors.Encounter.InvalidTransition(encounter.Status.ToString(), "CheckedIn"));
 
         encounter.CheckIn();
-        _repo.Update(encounter);
+        // No explicit Update() needed: entity loaded via FindAsync is already tracked;
+        // EF change detection marks scalar mutations as Modified automatically.
         await _uow.SaveChangesAsync(ct);
         return Result.Success(Unit.Value);
     }
@@ -85,7 +86,6 @@ public class StartEncounterHandler : IRequestHandler<StartEncounterCommand, Resu
             return Result.Failure<Unit>(DomainErrors.Encounter.InvalidTransition(encounter.Status.ToString(), "InProgress"));
 
         encounter.Start(cmd.ChiefComplaint);
-        _repo.Update(encounter);
         await _uow.SaveChangesAsync(ct);
         return Result.Success(Unit.Value);
     }
@@ -111,7 +111,6 @@ public class CompleteEncounterHandler : IRequestHandler<CompleteEncounterCommand
             return Result.Failure<Unit>(DomainErrors.Encounter.InvalidTransition(encounter.Status.ToString(), "Completed"));
 
         encounter.Complete();
-        _repo.Update(encounter);
         await _uow.SaveChangesAsync(ct);
         return Result.Success(Unit.Value);
     }

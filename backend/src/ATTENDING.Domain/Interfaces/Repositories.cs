@@ -39,6 +39,11 @@ public interface IPatientRepository : IRepository<Patient>
         CancellationToken cancellationToken = default);
     Task<Patient?> GetWithAllergiesAsync(Guid patientId, CancellationToken cancellationToken = default);
     Task<Patient?> GetWithConditionsAsync(Guid patientId, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Adds an allergy directly to the Allergies table without loading the parent Patient
+    /// collection. Avoids EF InMemory instability caused by filtered-Include change tracking.
+    /// </summary>
+    Task AddAllergyAsync(Allergy allergy, CancellationToken cancellationToken = default);
     Task<Patient?> GetWithFullHistoryAsync(Guid patientId, CancellationToken cancellationToken = default);
 }
 
