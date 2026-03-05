@@ -45,6 +45,7 @@ public class DomainEventDispatchTests
         public Task<Patient?> GetWithAllergiesAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
         public Task<Patient?> GetWithConditionsAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
         public Task<Patient?> GetWithFullHistoryAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
+        public Task AddAllergyAsync(Allergy allergy, CancellationToken ct = default) => Task.CompletedTask;
         public Task AddAsync(Patient entity, CancellationToken ct = default) => Task.CompletedTask;
         public void Update(Patient entity) { }
         public void Remove(Patient entity) { }
