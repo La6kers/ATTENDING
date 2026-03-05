@@ -16,26 +16,13 @@ import { ReferralOrderingPanel } from '@/components/referral-ordering';
 import type { PatientContext as StorePatientContext } from '@/store/referralOrderingStore';
 import type { PatientContext as PanelPatientContext } from '@/components/referral-ordering/types';
 import { fetchPatientContext } from '@/lib/fetchPatientContext';
+import { DEMO_PATIENT } from '@/lib/demoPatient';
 
 const theme = {
   gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
-const DEMO_PATIENT: StorePatientContext = {
-  id: 'pat-001',
-  name: 'Maria Santos',
-  age: 42,
-  gender: 'Female',
-  mrn: 'MRN-2024-001',
-  chiefComplaint: 'Severe headache with visual disturbances and neck stiffness',
-  primaryDiagnosis: 'Headache - Rule out secondary cause',
-  allergies: ['Penicillin', 'Sulfa'],
-  currentMedications: ['Lisinopril 10mg daily', 'Metformin 500mg BID'],
-  medicalHistory: ['Hypertension', 'Type 2 Diabetes'],
-  insurancePlan: 'Blue Cross',
-  pcp: 'Dr. Robert Johnson',
-  redFlags: ['Worst headache of life', 'Neck stiffness', 'Visual changes'],
-};
+// DEMO_PATIENT imported from @/lib/demoPatient
 
 export default function ReferralsPage() {
   const router = useRouter();
@@ -183,7 +170,7 @@ export default function ReferralsPage() {
               {activeTab === 'new' && normalizedPatientContext && (
                 <ReferralOrderingPanel
                   patientContext={normalizedPatientContext}
-                  encounterId={encounterId as string || ''}
+                  encounterId={encounterId && typeof encounterId === 'string' ? encounterId : ''}
                   onOrderComplete={handleOrderComplete}
                 />
               )}

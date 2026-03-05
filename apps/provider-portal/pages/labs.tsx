@@ -27,23 +27,13 @@ import {
 import { useLabResults, useFhirConnected } from '@attending/shared/lib/fhir/hooks';
 import { useFhirContext } from '@attending/shared/lib/fhir/FhirProvider';
 import { fetchPatientContext as fetchPatientContextShared } from '../lib/fetchPatientContext';
+import { DEMO_PATIENT } from '../lib/demoPatient';
 
 const theme = {
   gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
-const DEMO_PATIENT = {
-  id: 'patient-001',
-  name: 'Sarah Johnson',
-  age: 34,
-  gender: 'Female',
-  mrn: 'MRN-2024-001',
-  chiefComplaint: 'Severe headache with visual disturbances for 3 days',
-  allergies: [{ allergen: 'Penicillin', reaction: 'Rash', severity: 'moderate' as const }],
-  currentMedications: ['Metformin 500mg', 'Lisinopril 10mg'],
-  medicalHistory: ['Type 2 Diabetes', 'Hypertension', 'Migraines'],
-  redFlags: ['Worst headache of life', 'Visual changes'],
-};
+// DEMO_PATIENT imported from ../lib/demoPatient
 
 type ViewMode = 'order' | 'results';
 type OrderTab = 'ai' | 'panels' | 'catalog';

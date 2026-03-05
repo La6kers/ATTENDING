@@ -150,14 +150,13 @@ public class TieredClinicalIntelligenceService : ITieredClinicalIntelligence
                 var aiPromptContext = context.ToAiPromptContext();
                 var guidelineContext = GuidelineEvaluator.FormatForAiPrompt(guidelineResults);
 
-                // TODO: Call AI service with enriched context + guideline anchors
-                // This will be wired when ClinicalAiService is updated to accept
-                // EnrichedClinicalContext instead of the legacy string-based ClinicalContext.
-                //
-                // aiDifferential = await _aiService.GetDifferentialDiagnosisAsync(
-                //     context, guidelineResults, ct);
-                // aiRecommendations = await _aiService.GetRecommendationsAsync(
-                //     context, guidelineResults, ct);
+                // Call AI service with enriched context + guideline anchors.
+                // The Application.Interfaces.IClinicalAiService accepts string prompts,
+                // so we pass the pre-built prompt context and formatted guidelines.
+                aiDifferential = await _aiService.GetDifferentialDiagnosisAsync(
+                    aiPromptContext, guidelineContext, ct);
+                aiRecommendations = await _aiService.GetRecommendationsAsync(
+                    aiPromptContext, guidelineContext, ct);
 
                 tiersExecuted.Add(IntelligenceTier.Tier2_CloudAi);
             }

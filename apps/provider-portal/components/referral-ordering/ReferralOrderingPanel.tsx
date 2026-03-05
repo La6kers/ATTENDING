@@ -99,7 +99,7 @@ export function ReferralOrderingPanel({
   // Sync patient context into store, then generate AI recommendations
   useEffect(() => {
     if (patientContext) {
-      setStorePatientContext(patientContext as any);
+      setStorePatientContext(patientContext);
       generateAIRecommendations();
     }
   }, [patientContext]);  // eslint-disable-line react-hooks/exhaustive-deps

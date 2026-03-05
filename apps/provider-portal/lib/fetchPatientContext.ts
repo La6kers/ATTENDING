@@ -123,7 +123,7 @@ export async function fetchPatientContext(
     weight: patient.weight ?? undefined,
     creatinine: patient.creatinine ?? undefined,
     gfr: patient.gfr ?? undefined,
-    pregnant: patient.pregnant ?? false,
+    pregnant: patient.pregnant ?? undefined,
     // Referral-specific
     insurancePlan: patient.insurancePlan || patient.insurance?.plan || '',
     pcp: patient.pcp || patient.primaryCareProvider || '',

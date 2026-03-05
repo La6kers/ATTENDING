@@ -25,27 +25,13 @@ import {
   type OrderingContext,
 } from '../store/imagingOrderingStore';
 import { fetchPatientContext } from '../lib/fetchPatientContext';
+import { DEMO_PATIENT } from '../lib/demoPatient';
 
 const theme = {
   gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
 };
 
-const DEMO_PATIENT: OrderingContext = {
-  id: 'patient-001',
-  name: 'Sarah Johnson',
-  age: 34,
-  gender: 'Female',
-  mrn: 'MRN-2024-001',
-  chiefComplaint: 'Severe headache with visual disturbances and confusion for 3 days',
-  allergies: [{ allergen: 'Penicillin', reaction: 'Rash', severity: 'moderate' as const }],
-  currentMedications: ['Oral contraceptive', 'Metformin 500mg'],
-  medicalHistory: ['Type 2 Diabetes', 'Migraines'],
-  redFlags: ['Worst headache of life', 'Confusion', 'Visual changes'],
-  weight: 68,
-  creatinine: 0.9,
-  gfr: 95,
-  pregnant: false,
-};
+// DEMO_PATIENT imported from ../lib/demoPatient
 
 type ViewMode = 'order' | 'results';
 type OrderTab = 'ai' | 'catalog';
@@ -72,6 +58,7 @@ export default function Imaging() {
 
   // Load real patient context when patientId is in URL, otherwise demo
   useEffect(() => {
+    let cancelled = false;
     const pid = patientId as string | undefined;
     const aid = assessmentId as string | undefined;
     if (!pid) {
@@ -80,16 +67,20 @@ export default function Imaging() {
     }
     fetchPatientContext(pid, aid)
       .then((ctx) => {
+        if (cancelled) return;
         // If chiefComplaint came via URL param, prefer it
+        // Note: router.query values are already decoded by Next.js
         if (ccParam && !ctx.chiefComplaint) {
-          ctx.chiefComplaint = decodeURIComponent(ccParam as string);
+          ctx.chiefComplaint = ccParam as string;
         }
         setPatientContext(ctx as OrderingContext);
       })
       .catch((err) => {
+        if (cancelled) return;
         console.error('[Imaging] Failed to load patient context:', err);
         setPatientContext(DEMO_PATIENT);
       });
+    return () => { cancelled = true; };
   }, [patientId, assessmentId, ccParam]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedStudiesArray = getSelectedStudiesArray();
@@ -114,8 +105,9 @@ export default function Imaging() {
     try {
       toast.loading('Submitting imaging orders...');
       // encounterId is optional — pre-visit imaging orders don't require an encounter
-      const encounterId = router.query.encounterId as string | undefined;
-      const orderIds = await submitOrder(encounterId as string);
+      const eid = router.query.encounterId;
+      const encId = eid && typeof eid === 'string' ? eid : undefined;
+      const orderIds = await submitOrder(encId as string);
       toast.success('Imaging orders submitted!', `Order IDs: ${orderIds.join(', ')}`);
     } catch (err) {
       toast.error('Failed to submit', 'Please try again.');

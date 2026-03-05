@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProviderShell } from '@/components/layout/ProviderShell';
 import { fetchPatientContext } from '@/lib/fetchPatientContext';
+import { DEMO_PATIENT_COMPACT } from '@/lib/demoPatient';
 import { 
   ArrowLeft,
   Home,
@@ -94,18 +95,7 @@ interface Pharmacy {
 // Mock Data
 // =============================================================================
 
-const mockPatient: PatientContext = {
-  id: 'patient-001',
-  name: 'Sarah Johnson',
-  age: 32,
-  gender: 'Female',
-  mrn: '78932145',
-  allergies: [
-    { allergen: 'Penicillin', reaction: 'Anaphylaxis', severity: 'severe' },
-    { allergen: 'Sulfa drugs', reaction: 'Rash', severity: 'moderate' },
-  ],
-  currentMedications: ['Ethinyl Estradiol/Norgestimate (oral contraceptive)'],
-};
+const mockPatient: PatientContext = DEMO_PATIENT_COMPACT;
 
 const mockSelectedMedications: Medication[] = [
   {
@@ -413,10 +403,34 @@ export default function MedicationsPage() {
 
   const handleSendPrescriptions = async () => {
     setIsSending(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsSending(false);
-    setSentSuccess(true);
+    try {
+      const res = await fetch('/api/prescriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: patient.id,
+          pharmacyId: selectedPharmacy,
+          medications: medications.map((med) => ({
+            name: med.name,
+            genericName: med.genericName,
+            strength: med.strength,
+            form: med.form,
+            quantity: med.quantity,
+            refills: med.refills,
+            instructions: med.instructions,
+            daysSupply: med.daysSupply,
+          })),
+        }),
+      });
+      if (!res.ok) throw new Error(`Prescription submission failed (${res.status})`);
+      setSentSuccess(true);
+    } catch (err) {
+      console.error('[Medications] Failed to send prescriptions:', err);
+      // TODO: Add toast error notification when useToast is wired into this page
+      alert('Failed to send prescriptions. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const selectedPharmacyData = pharmacies.find(p => p.id === selectedPharmacy);
