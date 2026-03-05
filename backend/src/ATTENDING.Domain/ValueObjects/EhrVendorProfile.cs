@@ -60,6 +60,29 @@ public record EhrVendorProfile
         MaxSearchPageSize = 500,
     };
 
+    public static EhrVendorProfile AthenaHealth() => new()
+    {
+        // Global OAuth endpoints — NOT tenant-specific (key difference from Cerner)
+        AuthorizeEndpoint = "https://api.platform.athenahealth.com/oauth2/v1/authorize",
+        TokenEndpointTemplate = "https://api.platform.athenahealth.com/oauth2/v1/token",
+        Scopes = "patient/Patient.read patient/Observation.read patient/Condition.read " +
+                 "patient/MedicationRequest.read patient/AllergyIntolerance.read " +
+                 "patient/DiagnosticReport.read patient/Appointment.read " +
+                 "launch/patient openid fhirUser offline_access",
+        OAuthFlow = OAuthFlowType.SmartEhrLaunch,
+        // athena FHIR base URL does not include tenant — practice context comes from the token
+        FhirBaseUrlTemplate = "https://api.platform.athenahealth.com/fhir/r4",
+        // athena MRN uses HL7 v2 identifier type table (type.coding.code == "MR"),
+        // not a system URL. Use the type-based lookup in the client mapper.
+        PatientIdentifierSystem = "http://terminology.hl7.org/CodeSystem/v2-0203",
+        ExtensionMappings = new()
+        {
+            ["patientPortal"] = "https://fhir.athena.io/extension/patient-portal-status",
+        },
+        ReturnsOperationOutcome = true,
+        MaxSearchPageSize = 100,
+    };
+
     public static EhrVendorProfile GenericFhirR4() => new()
     {
         AuthorizeEndpoint = "",

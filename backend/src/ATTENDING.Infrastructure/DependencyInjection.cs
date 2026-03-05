@@ -343,6 +343,27 @@ public static class DependencyInjection
         })
         .AddClinicalResilienceHandler("CernerFHIR");
 
+        // athenahealth — named registration
+        // Dominant EHR in independent rural practices (RHTP target market)
+        // Sandbox: https://api.sandbox.platform.athenahealth.com/fhir/r4
+        services.Configure<External.FHIR.FhirClientOptions>("Athena", opts =>
+            configuration.GetSection("FhirAthena").Bind(opts));
+
+        services.AddHttpClient<External.FHIR.AthenaFhirClient>(client =>
+        {
+            var athenaOptions = configuration.GetSection("FhirAthena").Get<External.FHIR.FhirClientOptions>();
+            var baseUrl = athenaOptions?.BaseUrl
+                ?? "https://api.sandbox.platform.athenahealth.com/fhir/r4";
+            client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+            client.DefaultRequestHeaders.Accept.Add(
+                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/fhir+json"));
+        })
+        .AddClinicalResilienceHandler("AthenaFHIR");
+
+        // IFhirClientFactory — per-organization dynamic client resolution
+        // Reads EhrConnectorConfig from DB and returns the correct IConfiguredFhirClient
+        services.AddScoped<IFhirClientFactory, Services.FhirClientFactoryService>();
+
         return services;
     }
 

@@ -34,9 +34,10 @@ public class FhirConnectionTester : IFhirConnectionTester
         {
             var profile = connector.Vendor switch
             {
-                EhrVendor.Epic => EhrVendorProfile.Epic(),
+                EhrVendor.Epic         => EhrVendorProfile.Epic(),
                 EhrVendor.OracleHealth => EhrVendorProfile.OracleHealth(),
-                _ => EhrVendorProfile.GenericFhirR4()
+                EhrVendor.AthenaHealth => EhrVendorProfile.AthenaHealth(),
+                _                      => EhrVendorProfile.GenericFhirR4()
             };
 
             var resolved = profile.ResolveTemplates(connector.EhrTenantId, connector.ClientId);
