@@ -188,7 +188,7 @@ public class BehavioralHealthScreening : BaseEntity, IAggregateRoot, IHasDomainE
         };
         NextScreeningDue = severity == Enums.DepressionSeverity.None
             ? DateTime.UtcNow.AddMonths(12)
-            : DateTime.UtcNow.AddWeeks(4);
+            : DateTime.UtcNow.AddDays(28);
 
         if (item9Positive)
         {
@@ -219,7 +219,7 @@ public class BehavioralHealthScreening : BaseEntity, IAggregateRoot, IHasDomainE
         };
         NextScreeningDue = severity == Enums.AnxietySeverity.None
             ? DateTime.UtcNow.AddMonths(12)
-            : DateTime.UtcNow.AddWeeks(4);
+            : DateTime.UtcNow.AddDays(28);
         Complete();
     }
 

@@ -97,7 +97,7 @@ public class Phq9DepressionGuideline : IClinicalGuideline
             0 => "Low",
             1 => "Low-Moderate",
             2 => "Moderate",
-            >= 3 => "High"
+            _ => "High"
         };
 
         var recommendation = suicidalIdeation
@@ -150,7 +150,7 @@ public class Gad7AnxietyGuideline : IClinicalGuideline
         criteria.Add(new("Symptoms ≥ 2 weeks", duration, 1m, null));
 
         var flagCount = criteria.Count(c => c.Met);
-        var preTest = flagCount switch { 0 => 0.05m, 1 => 0.20m, 2 => 0.40m, >= 3 => 0.60m };
+        var preTest = flagCount switch { 0 => 0.05m, 1 => 0.20m, 2 => 0.40m, _ => 0.60m };
         var risk = flagCount switch { 0 => "Low", 1 => "Low-Moderate", 2 => "Moderate", _ => "High" };
 
         return new GuidelineResult(
@@ -268,8 +268,8 @@ public class AuditCAlcoholGuideline : IClinicalGuideline
         criteria.Add(new("Liver disease — possible alcohol etiology", liver, 2m, null));
 
         var flagCount = criteria.Count(c => c.Met);
-        var risk = flagCount switch { 0 => "Low", 1 => "Moderate", >= 2 => "High" };
-        var preTest = flagCount switch { 0 => 0.10m, 1 => 0.30m, >= 2 => 0.65m };
+        var risk = flagCount switch { 0 => "Low", 1 => "Moderate", _ => "High" };
+        var preTest = flagCount switch { 0 => 0.10m, 1 => 0.30m, _ => 0.65m };
 
         var recommendation = withdrawal
             ? "URGENT: Assess for alcohol withdrawal syndrome (CIWA-Ar). Hospitalization may be required."
@@ -325,8 +325,8 @@ public class PcPtsd5Guideline : IClinicalGuideline
         criteria.Add(new("Emotional numbing or detachment", numbing, 1m, null));
 
         var endorsed = criteria.Count(c => c.Met);
-        var risk = endorsed switch { 0 => "Low", 1 or 2 => "Moderate", >= 3 => "High" };
-        var preTest = endorsed switch { 0 => 0.05m, 1 => 0.15m, 2 => 0.35m, >= 3 => 0.70m };
+        var risk = endorsed switch { 0 => "Low", 1 or 2 => "Moderate", _ => "High" };
+        var preTest = endorsed switch { 0 => 0.05m, 1 => 0.15m, 2 => 0.35m, _ => 0.70m };
 
         return new GuidelineResult(
             GuidelineName, SourceCitation, endorsed, 5m, risk, preTest,

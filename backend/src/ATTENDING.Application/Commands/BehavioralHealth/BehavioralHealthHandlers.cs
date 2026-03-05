@@ -146,7 +146,7 @@ public class ScoreScreeningHandler
         }
         catch (ArgumentException ex)
         {
-            return Result.Failure<ScreeningScored>(new DomainError(ex.Message));
+            return Result.Failure<ScreeningScored>(Error.Custom("BehavioralHealth.InvalidInput", ex.Message));
         }
 
         if (screening.SafetyPlanJson is null
