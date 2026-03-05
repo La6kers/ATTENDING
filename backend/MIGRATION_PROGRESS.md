@@ -304,20 +304,44 @@ kubectl apply -f deploy/kubernetes/ -n attending
 
 ---
 
-## Next Steps (Enterprise Production Roadmap)
+## Phase 24: Behavioral Health Module + A+ Completion (Batch 16)
 
-1. **Secrets Management** - Azure Key Vault integration replacing appsettings secrets
-2. ~~**Rate Limiting** - Per-tenant API throttling (.NET 8 built-in)~~ ✅
-3. ~~**Structured Logging** - Correlation IDs forwarded to Seq / Application Insights~~ ✅
-4. ~~**Database Resiliency** - EF Core retry policies, circuit breaker pattern~~ ✅ (EF retry + external circuit breakers)
-5. ~~**API Versioning Enforcement** - Sunset headers, deprecation notices~~ ✅
-6. ~~**Performance Baselines** - Response time SLAs for clinical workflows~~ ✅
-7. ~~**Load Testing** - k6 scripts for critical clinical paths~~ ✅
-8. ~~**OpenTelemetry** - Distributed tracing across services~~ ✅
-9. **Event Bus** - MassTransit/RabbitMQ for domain events
-10. **Blue-Green Deployment** - Zero-downtime production deployments
-11. **Wire Core Loop** - Connect 4 endpoints for the clinical workflow
+- [x] Behavioral health domain entities (`BehavioralHealthScreening`, `ScreeningResponse`)
+- [x] Behavioral health enums (PHQ-9, GAD-7, C-SSRS, AUDIT-C, PC-PTSD-5 severity/status types)
+- [x] Domain events (ScreeningStarted, ScreeningCompleted, SuicideRiskDetected, PartTwoRecordCreated, ScreeningReviewed)
+- [x] `BehavioralHealthScoringService` — pure domain scoring logic, 5 instruments
+- [x] Clinical guidelines (PHQ-9, GAD-7, C-SSRS, AUDIT-C, PC-PTSD-5 wired into GuidelineEvaluator)
+- [x] CQRS commands + handlers (StartScreening, AddResponse, ScoreScreening, ReviewScreening, RecordPartTwoConsent)
+- [x] `IBehavioralHealthRepository` + `BehavioralHealthRepository` implementation
+- [x] EF Core configuration (`clinical` schema, string enum storage, composite indexes)
+- [x] EF migration (`20260305064752_BehavioralHealth_Screenings_Responses`)
+- [x] `BehavioralHealthController` — 9 REST endpoints
+- [x] 42 CFR Part 2 consent workflow (AUDIT-C high-risk SUD findings)
+- [x] C-SSRS safety pipeline → `SuicideRiskDetectedEvent` → SignalR emergency hub
+- [x] Handler integration tests: 24 new tests (PHQ-9, GAD-7, C-SSRS, AUDIT-C, PC-PTSD-5)
+- [x] Controller HTTP tests: 20 new tests across all 9 endpoints (`BehavioralHealthControllerTests.cs`)
+- [x] Blue-green deployment workflow (`.github/workflows/blue-green.yml`) — staging smoke tests + zero-downtime slot swap + auto-rollback
+- [x] `CURRENT_STATE.md` consolidated to reflect A+ state
+- [x] **Total: 415 tests passing (0 failures)**
 
 ---
 
-*Last Updated: February 24, 2026 — Batch 15 complete: resilience, idempotency, enhanced error handling, CI cleanup*
+## Next Steps (Enterprise Roadmap — Post A+)
+
+1. **Secrets Management** — Azure Key Vault enforcement in production
+2. ~~**Rate Limiting**~~ ✅
+3. ~~**Structured Logging**~~ ✅
+4. ~~**Database Resiliency**~~ ✅ (EF retry + circuit breaker)
+5. ~~**API Versioning Enforcement**~~ ✅ (RFC 8594 Sunset + Deprecation headers)
+6. ~~**Performance Baselines**~~ ✅
+7. ~~**Load Testing**~~ ✅
+8. ~~**OpenTelemetry**~~ ✅
+9. ~~**Blue-Green Deployment**~~ ✅ (Batch 16)
+10. **Event Bus** — MassTransit/RabbitMQ (swap `InProcessEventBus` for multi-pod messaging)
+11. **FHIR Sandbox** — Connect existing Epic FHIR client to Epic sandbox
+12. **SOC 2** — Leverage existing audit trails for compliance evidence collection
+13. **Azure Infrastructure** — Provision actual Azure resources (currently local Docker)
+
+---
+
+*Last Updated: March 5, 2026 — Batch 16 complete: behavioral health module (415 tests), blue-green deployment, A+ grade achieved*

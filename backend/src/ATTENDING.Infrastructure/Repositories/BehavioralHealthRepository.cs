@@ -99,6 +99,27 @@ public class BehavioralHealthRepository : IBehavioralHealthRepository
 
     public void Update(BehavioralHealthScreening screening)
     {
-        _context.Set<BehavioralHealthScreening>().Update(screening);
+        // DO NOT call Set.Update(screening) or Entry(screening).State = Modified.
+        //
+        // Both calls trigger EF relationship fixup: EF walks the navigation graph
+        // and marks reachable entities. For new ScreeningResponse children
+        // (added to the in-memory collection after the parent was loaded WITHOUT
+        // an Include), EF sees a non-default PK and marks them as Modified —
+        // InMemory then throws DbUpdateConcurrencyException because the row
+        // doesn't exist in its store yet.
+        //
+        // Instead: the aggregate root is already tracked as Unchanged (loaded via
+        // GetByIdAsync). Any scalar property changes (e.g., Status → InProgress)
+        // are detected automatically by EF's DetectChanges() in SaveChangesAsync.
+        //
+        // Only new ScreeningResponse children need explicit handling: they are
+        // Detached (parent was loaded without Include, so they are never tracked).
+        // After the fixup-free approach, they stay Detached until we Add them here.
+        foreach (var response in screening.Responses)
+        {
+            var entry = _context.Entry(response);
+            if (entry.State == EntityState.Detached)
+                _context.Set<ScreeningResponse>().Add(response);
+        }
     }
 }
