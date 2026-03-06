@@ -3,21 +3,25 @@ using ATTENDING.Domain.Enums;
 
 namespace ATTENDING.Domain.Services;
 
-// ═══════════════════════════════════════════════════════════════════════════
-// BEHAVIORAL HEALTH SCORING SERVICE
-//
-// Pure domain logic — no I/O, no DI, fully unit-testable.
-// Each method validates inputs, computes the validated score, and calls the
-// appropriate Apply*Score method on the aggregate.
-//
-// Sources:
-//   PHQ-9:     Kroenke K, Spitzer RL, Williams JBW. JGIM 2001;16:606-613.
-//   GAD-7:     Spitzer RL et al. Arch Intern Med 2006;166:1092-1097.
-//   C-SSRS:    Posner K et al. Arch Gen Psychiatry 2011;68(12):1266-1276.
-//   AUDIT-C:   Bush K et al. Arch Intern Med 1998;158(16):1789-1795.
-//   PC-PTSD-5: Prins A et al. J Gen Intern Med 2016;31(10):1206-1211.
-// ═══════════════════════════════════════════════════════════════════════════
-
+/// <summary>
+/// Behavioral Health Scoring Service — pure domain logic for validated
+/// mental health screening instruments.
+///
+/// <para>
+/// Each method validates inputs, computes the validated score, and calls the
+/// appropriate Apply*Score method on the <see cref="BehavioralHealthScreening"/> aggregate.
+/// No I/O, no DI — fully unit-testable.
+/// </para>
+///
+/// <para><b>Instrument sources:</b></para>
+/// <list type="bullet">
+///   <item><description>PHQ-9: Kroenke K, Spitzer RL, Williams JBW. JGIM 2001;16:606-613.</description></item>
+///   <item><description>GAD-7: Spitzer RL et al. Arch Intern Med 2006;166:1092-1097.</description></item>
+///   <item><description>C-SSRS: Posner K et al. Arch Gen Psychiatry 2011;68(12):1266-1276.</description></item>
+///   <item><description>AUDIT-C: Bush K et al. Arch Intern Med 1998;158(16):1789-1795.</description></item>
+///   <item><description>PC-PTSD-5: Prins A et al. J Gen Intern Med 2016;31(10):1206-1211.</description></item>
+/// </list>
+/// </summary>
 public class BehavioralHealthScoringService
 {
     // ── PHQ-9 ─────────────────────────────────────────────────────────────

@@ -30,8 +30,13 @@ export const loggingMiddleware: Middleware = async (req, res, next) => {
 };
 
 export const securityMiddleware: Middleware = async (req, res, next) => {
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Apply the full security header suite from the shared security library.
+  // setApiSecurityHeaders checks for an existing CSP (set by Edge middleware)
+  // and avoids overwriting it; otherwise it applies all OWASP-recommended
+  // headers: X-Frame-Options, X-Content-Type-Options, Referrer-Policy,
+  // Permissions-Policy, HSTS (prod), Cache-Control, and CSP.
+  const { setApiSecurityHeaders } = await import('@attending/shared/lib/security/security');
+  setApiSecurityHeaders(res);
   await next();
 };
 

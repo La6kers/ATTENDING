@@ -3,31 +3,38 @@ using ATTENDING.Domain.Enums;
 
 namespace ATTENDING.Domain.Services;
 
-// ═══════════════════════════════════════════════════════════════════════════
-// PREVENTIVE CARE GAP RULE ENGINE
-//
-// Implements USPSTF Grade A and B recommendations (2024 edition).
-// Each rule is a pure function: (patient demographics + medical history) → gap.
-//
-// Design principles:
-//   • Pure domain logic — no I/O, no DI, fully unit-testable
-//   • Rules are additive — add a new static method to extend coverage
-//   • Exclusions are explicit — always documented with clinical rationale
-//   • Output is deterministic — same inputs always produce the same gap
-//
-// Covered measures (expand as USPSTF updates):
-//   BREAST_CANCER       Mammography          Women 40-74, biennial
-//   CERVICAL_CANCER     Pap smear / hrHPV    Women 21-65
-//   COLORECTAL_CANCER   Colonoscopy / FIT    Adults 45-75
-//   LUNG_CANCER         Low-dose CT          Smokers 50-80, 20+ pack-years
-//   BLOOD_PRESSURE      BP check             Adults 18+, annual
-//   DIABETES            HbA1c                Overweight adults 35-70
-//   STATIN_USE          Statin counseling    CVD risk adults 40-75
-//   DEPRESSION          PHQ-2 screen         Adults 18+
-//   OBESITY             BMI + counseling     Adults 18+
-//   HIV                 HIV screen           Adults 15-65, once
-//   HEPATITIS_C         HCV antibody         Adults 18-79, once
-//   OSTEOPOROSIS        DEXA scan            Women 65+, or <65 high risk
+/// <summary>
+/// Preventive Care Gap Rule Engine — implements USPSTF Grade A and B
+/// recommendations (2024 edition).
+///
+/// <para>
+/// Each rule is a pure function: (patient demographics + medical history) → gap.
+/// </para>
+///
+/// <para><b>Design principles:</b></para>
+/// <list type="bullet">
+///   <item>Pure domain logic — no I/O, no DI, fully unit-testable</item>
+///   <item>Rules are additive — add a new static method to extend coverage</item>
+///   <item>Exclusions are explicit — always documented with clinical rationale</item>
+///   <item>Output is deterministic — same inputs always produce the same gap</item>
+/// </list>
+///
+/// <para><b>Covered measures</b> (expand as USPSTF updates):</para>
+/// <list type="table">
+///   <item><term>BREAST_CANCER</term><description>Mammography — Women 40-74, biennial</description></item>
+///   <item><term>CERVICAL_CANCER</term><description>Pap smear / hrHPV — Women 21-65</description></item>
+///   <item><term>COLORECTAL_CANCER</term><description>Colonoscopy / FIT — Adults 45-75</description></item>
+///   <item><term>LUNG_CANCER</term><description>Low-dose CT — Smokers 50-80, 20+ pack-years</description></item>
+///   <item><term>BLOOD_PRESSURE</term><description>BP check — Adults 18+, annual</description></item>
+///   <item><term>DIABETES</term><description>HbA1c — Overweight adults 35-70</description></item>
+///   <item><term>STATIN_USE</term><description>Statin counseling — CVD risk adults 40-75</description></item>
+///   <item><term>DEPRESSION</term><description>PHQ-2 screen — Adults 18+</description></item>
+///   <item><term>OBESITY</term><description>BMI + counseling — Adults 18+</description></item>
+///   <item><term>HIV</term><description>HIV screen — Adults 15-65, once</description></item>
+///   <item><term>HEPATITIS_C</term><description>HCV antibody — Adults 18-79, once</description></item>
+///   <item><term>OSTEOPOROSIS</term><description>DEXA scan — Women 65+, or &lt;65 high risk</description></item>
+/// </list>
+/// </summary>
 //   ABDOMINAL_AORTA     Abdominal US         Men 65-75 ever smokers, once
 // ═══════════════════════════════════════════════════════════════════════════
 

@@ -48,6 +48,7 @@ export function generateOpenAPISpec() {
     tags: [
       { name: 'Health', description: 'System health and diagnostics' },
       { name: 'Authentication', description: 'Session management' },
+      { name: 'Assessments', description: 'COMPASS patient assessments (BFF routes)' },
       { name: 'Patients', description: 'Patient demographics and records' },
       { name: 'Encounters', description: 'Clinical encounters and visits' },
       { name: 'Clinical AI', description: 'Evidence-based decision support' },
@@ -681,6 +682,87 @@ export function generateOpenAPISpec() {
         },
       },
 
+      // Assessments
+      '/api/assessments': {
+        get: {
+          tags: ['Assessments'],
+          summary: 'List patient assessments',
+          description: 'Returns paginated assessments with optional filters. Proxies to .NET backend (CQRS pipeline with tenant isolation); falls back to Prisma on backend unavailability.',
+          operationId: 'listAssessments',
+          parameters: [
+            { name: 'status', in: 'query', schema: { type: 'string', enum: ['CREATED', 'IN_PROGRESS', 'COMPLETED', 'REVIEWED'] } },
+            { name: 'triageLevel', in: 'query', schema: { type: 'string', enum: ['ROUTINE', 'URGENT', 'EMERGENCY'] } },
+            { name: 'unassigned', in: 'query', schema: { type: 'string', enum: ['true'] }, description: 'Show only unassigned completed assessments' },
+            { name: 'providerId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+            { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
+            { name: 'pageSize', in: 'query', schema: { type: 'integer', default: 50, maximum: 100 } },
+          ],
+          responses: {
+            '200': {
+              description: 'Paginated assessment list',
+              content: { 'application/json': { schema: { $ref: '#/components/schemas/AssessmentListResponse' } } },
+              headers: {
+                'X-Data-Source': { schema: { type: 'string', enum: ['dotnet-backend', 'prisma-fallback'] }, description: 'Which data path served the response' },
+              },
+            },
+            '401': { $ref: '#/components/responses/Unauthorized' },
+          },
+        },
+      },
+      '/api/assessments/submit': {
+        post: {
+          tags: ['Assessments'],
+          summary: 'Submit a clinical assessment',
+          description: 'Creates a completed assessment record. Automatically calculates triage level from red flags if not provided. Generates emergency events for critical findings.',
+          operationId: 'submitAssessment',
+          requestBody: {
+            required: true,
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/AssessmentSubmitRequest' } } },
+          },
+          responses: {
+            '201': { description: 'Assessment created', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiResponse' } } } },
+            '400': { $ref: '#/components/responses/ValidationError' },
+            '404': { description: 'Patient not found' },
+          },
+        },
+      },
+      '/api/assessments/{id}': {
+        get: {
+          tags: ['Assessments'],
+          summary: 'Get assessment detail',
+          description: 'Returns full assessment with patient demographics, clinical data, AI analysis, conversation transcript, and emergency events.',
+          operationId: 'getAssessment',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+          responses: {
+            '200': { description: 'Full assessment detail', content: { 'application/json': { schema: { $ref: '#/components/schemas/ApiResponse' } } } },
+            '404': { description: 'Assessment not found' },
+          },
+        },
+        patch: {
+          tags: ['Assessments'],
+          summary: 'Update assessment (assign provider, change status)',
+          description: 'Supports status transitions (CREATED→IN_PROGRESS→COMPLETED→REVIEWED) and provider assignment. Returns 409 on invalid transitions.',
+          operationId: 'updateAssessment',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+          requestBody: {
+            content: { 'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  status: { type: 'string', enum: ['CREATED', 'IN_PROGRESS', 'COMPLETED', 'REVIEWED'] },
+                  assignedProviderId: { type: 'string', format: 'uuid' },
+                },
+              },
+            } },
+          },
+          responses: {
+            '200': { description: 'Assessment updated' },
+            '404': { description: 'Assessment or provider not found' },
+            '409': { description: 'Invalid status transition' },
+          },
+        },
+      },
+
       // Patients
       '/api/patients': {
         get: {
@@ -841,6 +923,55 @@ export function generateOpenAPISpec() {
             indication: { type: 'string' },
             priority: { type: 'string', enum: ['STAT', 'ASAP', 'ROUTINE'], default: 'ROUTINE' },
             specialInstructions: { type: 'string' },
+          },
+        },
+        // ── Assessment schemas (BFF routes) ──────────────────────────
+        AssessmentListResponse: {
+          type: 'object',
+          properties: {
+            assessments: { type: 'array', items: { $ref: '#/components/schemas/AssessmentListItem' } },
+            total: { type: 'integer' },
+            page: { type: 'integer' },
+            pageSize: { type: 'integer' },
+            hasMore: { type: 'boolean' },
+          },
+        },
+        AssessmentListItem: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            sessionId: { type: 'string' },
+            patientId: { type: 'string', format: 'uuid' },
+            patientName: { type: 'string' },
+            patientMRN: { type: 'string' },
+            chiefComplaint: { type: 'string' },
+            triageLevel: { type: 'string', enum: ['ROUTINE', 'URGENT', 'EMERGENCY'] },
+            redFlags: { type: 'array', items: { type: 'string' } },
+            status: { type: 'string', enum: ['CREATED', 'IN_PROGRESS', 'COMPLETED', 'REVIEWED'] },
+            phase: { type: 'string' },
+            assignedProviderId: { type: 'string', format: 'uuid', nullable: true },
+            assignedProviderName: { type: 'string', nullable: true },
+            completedAt: { type: 'string', format: 'date-time', nullable: true },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        AssessmentSubmitRequest: {
+          type: 'object',
+          required: ['sessionId', 'patientId', 'chiefComplaint'],
+          properties: {
+            sessionId: { type: 'string' },
+            patientId: { type: 'string', format: 'uuid' },
+            chiefComplaint: { type: 'string' },
+            hpiNarrative: { type: 'string' },
+            symptoms: { type: 'array', items: { type: 'string' } },
+            reviewOfSystems: { type: 'object' },
+            medications: { type: 'array', items: { type: 'string' } },
+            allergies: { type: 'array', items: { type: 'string' } },
+            medicalHistory: { type: 'array', items: { type: 'string' } },
+            vitalSigns: { type: 'object' },
+            redFlags: { type: 'array', items: { type: 'string' } },
+            triageLevel: { type: 'string', enum: ['ROUTINE', 'URGENT', 'EMERGENCY'] },
+            conversation: { type: 'array', items: { type: 'object' } },
           },
         },
       },

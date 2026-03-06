@@ -199,6 +199,13 @@ public class Patient : BaseEntity, IAggregateRoot
     }
     
     public string FullName => $"{FirstName} {LastName}";
+    
+    /// <summary>
+    /// Returns a human-readable summary for logging and debugging.
+    /// Format: "Patient [MRN] FirstName LastName (Id)"
+    /// </summary>
+    public override string ToString() =>
+        $"Patient [{MRN}] {FullName} ({Id})";
 }
 
 /// <summary>
@@ -241,6 +248,13 @@ public class User : BaseEntity, IAggregateRoot
     }
     
     public string FullName => $"{FirstName} {LastName}";
+    
+    /// <summary>
+    /// Returns a human-readable summary for logging and debugging.
+    /// Format: "User FirstName LastName [Role] (Id)"
+    /// </summary>
+    public override string ToString() =>
+        $"User {FullName} [{Role}] ({Id})";
 }
 
 /// <summary>
@@ -313,6 +327,13 @@ public class Encounter : BaseEntity, IAggregateRoot
         CompletedAt = DateTime.UtcNow;
         SetModified();
     }
+    
+    /// <summary>
+    /// Returns a human-readable summary for logging and debugging.
+    /// Format: "Encounter ENC-XXXXXXXX [Status] for Patient PatientId (Id)"
+    /// </summary>
+    public override string ToString() =>
+        $"Encounter {EncounterNumber} [{Status}] for Patient {PatientId} ({Id})";
 }
 
 /// <summary>
@@ -357,6 +378,13 @@ public class Allergy : BaseEntity, IHasDomainEvents
         allergy.AddDomainEvent(new Events.AllergyCreatedEvent(allergy.Id, patientId, allergen, severity.ToString()));
         return allergy;
     }
+    
+    /// <summary>
+    /// Returns a human-readable summary for logging and debugging.
+    /// Format: "Allergy Allergen [Severity] for Patient PatientId (Id)"
+    /// </summary>
+    public override string ToString() =>
+        $"Allergy {Allergen} [{Severity}] for Patient {PatientId} ({Id})";
 }
 
 /// <summary>
@@ -401,4 +429,11 @@ public class MedicalCondition : BaseEntity, IHasDomainEvents
         condition.AddDomainEvent(new Events.MedicalConditionCreatedEvent(condition.Id, patientId, code, name));
         return condition;
     }
+    
+    /// <summary>
+    /// Returns a human-readable summary for logging and debugging.
+    /// Format: "Condition Code Name for Patient PatientId (Id)"
+    /// </summary>
+    public override string ToString() =>
+        $"Condition {Code} {Name} for Patient {PatientId} ({Id})";
 }
