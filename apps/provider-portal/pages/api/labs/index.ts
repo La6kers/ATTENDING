@@ -10,15 +10,16 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@attending/shared/lib/prisma';
-import { requireAuth, createAuditLog } from '@/lib/api/auth';
+import { requireAuth, createAuditLog, type AttendingSession } from '@/lib/api/auth';
 import { proxyToBackend } from '@/lib/api/backendProxy';
 
 // =============================================================================
 // Handler
 // =============================================================================
 
-async function handler(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function handler(req: NextApiRequest, res: NextApiResponse, session: AttendingSession) {
   // Attempt to proxy to .NET backend first (architectural target).
   // If the .NET API is running, it handles the request through CQRS/MediatR.
   // If unavailable, fall through to direct Prisma access below.
@@ -52,7 +53,7 @@ async function getLabOrders(req: NextApiRequest, res: NextApiResponse) {
       offset = '0',
     } = req.query;
 
-    const where: any = {};
+    const where: Prisma.LabOrderWhereInput = {};
     if (patientId) where.patientId = String(patientId);
     if (encounterId) where.encounterId = String(encounterId);
     if (status) where.status = String(status).toUpperCase();
@@ -105,7 +106,7 @@ async function getLabOrders(req: NextApiRequest, res: NextApiResponse) {
 // POST - Create Lab Order
 // =============================================================================
 
-async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session: any) {
+async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session: AttendingSession) {
   try {
     const {
       patientId,
@@ -195,7 +196,7 @@ async function createLabOrder(req: NextApiRequest, res: NextApiResponse, session
       {
         orderNumber,
         patientId,
-        tests: tests.map((t: any) => t.name || t.code),
+        tests: tests.map((t: { name?: string; code?: string }) => t.name || t.code),
         priority: priority.toUpperCase(),
       },
       req

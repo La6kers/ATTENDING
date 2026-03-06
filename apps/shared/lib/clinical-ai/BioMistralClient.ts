@@ -42,9 +42,18 @@ export class BioMistralClient {
       // First, evaluate red flags locally (fast, no API call needed)
       const redFlagEvaluation = evaluateRedFlags(patientContext, assessment);
 
-      // If critical red flags, prioritize that response
+      // If critical red flags, prioritize emergency response but still include full analysis
       if (redFlagEvaluation.overallSeverity === 'critical') {
-        return this.buildEmergencyResponse(requestId, redFlagEvaluation, startTime);
+        const response = await this.buildEmergencyResponse(
+          requestId,
+          redFlagEvaluation,
+          patientContext,
+          assessment,
+          options,
+          startTime
+        );
+        this.logAudit(requestId, 'comprehensive', patientContext, response, startTime);
+        return response;
       }
 
       // Generate differential diagnosis
@@ -599,14 +608,25 @@ export class BioMistralClient {
   // Helper Methods
   // ===========================================================================
 
-  private buildEmergencyResponse(
+  private async buildEmergencyResponse(
     requestId: string,
     redFlagEvaluation: RedFlagEvaluation,
+    patientContext: PatientContext,
+    assessment: ClinicalAssessment,
+    options: ClinicalAIOptions | undefined,
     startTime: number
-  ): ClinicalAIResponse {
+  ): Promise<ClinicalAIResponse> {
+    // Even for emergencies, provide differential diagnosis for completeness
+    const differentialDiagnosis = await this.generateDifferentialDiagnosis(
+      patientContext,
+      assessment,
+      options
+    );
+
     return {
       requestId,
       redFlagEvaluation,
+      differentialDiagnosis,
       clinicalSummary: `EMERGENCY: ${redFlagEvaluation.summary}. Immediate intervention required.`,
       disclaimer: this.getDisclaimer(),
       processingTime: Math.max(1, Date.now() - startTime),

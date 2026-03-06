@@ -51,18 +51,43 @@ export interface RequestOptions extends Omit<RequestInit, 'body'> {
 // Token management
 // ============================================================
 
-let accessToken: string | null = null;
+// Token storage using sessionStorage (client-side only) to prevent
+// cross-request token leakage in SSR environments.
+// In SSR context, tokens are passed via httpOnly cookies (credentials: 'include').
+
+const TOKEN_STORAGE_KEY = 'attending_access_token';
+
+// Track in-flight refresh to prevent duplicate requests (client-side only)
 let refreshPromise: Promise<string | null> | null = null;
 
-export function setAccessToken(token: string | null) {
-  accessToken = token;
+function isClientSide(): boolean {
+  return typeof window !== 'undefined' && typeof sessionStorage !== 'undefined';
+}
+
+export function setAccessToken(token: string | null): void {
+  if (!isClientSide()) return; // No-op in SSR
+
+  if (token) {
+    sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } else {
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
 }
 
 export function getAccessToken(): string | null {
-  return accessToken;
+  if (!isClientSide()) return null; // SSR uses httpOnly cookies
+  return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+}
+
+export function clearAccessToken(): void {
+  if (!isClientSide()) return;
+  sessionStorage.removeItem(TOKEN_STORAGE_KEY);
 }
 
 async function refreshToken(): Promise<string | null> {
+  // Only allow refresh on client-side
+  if (!isClientSide()) return null;
+
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
@@ -73,9 +98,10 @@ async function refreshToken(): Promise<string | null> {
       });
       if (res.ok) {
         const data = await res.json();
-        accessToken = data.accessToken;
-        return accessToken;
+        setAccessToken(data.accessToken);
+        return data.accessToken;
       }
+      clearAccessToken();
       return null;
     } catch {
       return null;
@@ -116,8 +142,9 @@ export async function apiFetch<T = unknown>(
     ...(extraHeaders as Record<string, string>),
   };
 
-  if (!noAuth && accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
+  const token = getAccessToken();
+  if (!noAuth && token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   if (idempotencyKey) {

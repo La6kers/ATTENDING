@@ -437,20 +437,79 @@ function evaluateSingleRedFlag(
   const matchedCriteria: string[] = [];
   let totalScore = 0;
 
-  // Skip critical red flags if all symptoms are explicitly mild
-  // This prevents false positives from common cold symptoms
+  // ==========================================================================
+  // FALSE POSITIVE PREVENTION
+  // Skip critical red flags for benign presentations
+  // ==========================================================================
+
   if (redFlag.severity === 'critical') {
+    // Check if ALL symptoms are explicitly MILD (not moderate - moderate could still be serious)
+    const allSymptomsMild = symptoms.length > 0 && symptoms.every(s => {
+      const sev = ((s as any).severity || '').toLowerCase();
+      // Only 'mild' or 'minor' counts as mild. Empty string or 'moderate' don't count.
+      return sev === 'mild' || sev === 'minor';
+    });
+
+    // Check for mild/minor indicators in text
     const hasMildPrefix = searchableText.includes('mild ') || searchableText.includes('minor ');
-    const hasNoSevereIndicators = !searchableText.includes('severe') && 
-      !searchableText.includes('sudden') && !searchableText.includes('crushing') &&
-      !searchableText.includes('radiating') && !searchableText.includes('worst');
-    const commonColdPattern = /\b(runny nose|nasal congestion|sneezing|common cold|cough)\b/i;
-    const isLikelyCommonCold = commonColdPattern.test(searchableText) && hasMildPrefix && hasNoSevereIndicators;
-    
+
+    // Check for severe/acute indicators that would override mild classification
+    const hasSevereIndicators = searchableText.includes('severe') ||
+      searchableText.includes('sudden') || searchableText.includes('crushing') ||
+      searchableText.includes('radiating') || searchableText.includes('worst') ||
+      searchableText.includes('10/10') || searchableText.includes('unbearable') ||
+      searchableText.includes('thunderclap');
+
+    // Common cold pattern check - only skip for clearly benign cold symptoms
+    const commonColdPattern = /\b(runny nose|nasal congestion|sneezing|common cold)\b/i;
+    const isLikelyCommonCold = commonColdPattern.test(searchableText) && hasMildPrefix && !hasSevereIndicators;
+
     if (isLikelyCommonCold) {
       return null; // Don't flag common cold symptoms as critical
     }
+
+    // For stroke detection, require sudden onset or severe symptoms
+    if (redFlag.id === 'rf-stroke') {
+      const hasSuddenOnset = searchableText.includes('sudden') ||
+        symptoms.some(s => ((s as any).onset || '').toLowerCase() === 'sudden');
+      // Only skip if: mild symptoms AND no sudden onset AND no severe indicators
+      if (allSymptomsMild && hasMildPrefix && !hasSuddenOnset && !hasSevereIndicators) {
+        return null; // Non-sudden, explicitly mild headache shouldn't trigger stroke
+      }
+    }
+
+    // Only skip if ALL symptoms are explicitly mild AND text says mild AND no severe indicators
+    // This is very conservative - only skip clearly benign presentations
+    if (allSymptomsMild && hasMildPrefix && !hasSevereIndicators) {
+      return null;
+    }
   }
+
+  // ==========================================================================
+  // CHRONIC CONDITION DETECTION
+  // Reduce confidence for chronic/stable presentations
+  // ==========================================================================
+
+  const chronicPatterns = /\b(for \d+ months?|for \d+ years?|chronic|stable|unchanged|reproducible|positional|palpation|movement)\b/i;
+  const isChronicPresentation = chronicPatterns.test(searchableText);
+
+  // For musculoskeletal patterns, significantly reduce cardiac/stroke concern
+  const musculoskeletalPatterns = /\b(reproducible with palpation|worse with movement|positional|musculoskeletal|costochondritis)\b/i;
+  const isMusculoskeletalPattern = musculoskeletalPatterns.test(searchableText);
+
+  // Check symptom duration explicitly
+  const hasChronicDuration = symptoms.some(s => {
+    const duration = ((s as any).duration || '').toLowerCase();
+    return duration.includes('month') || duration.includes('year') || duration.includes('chronic');
+  });
+
+  // Check aggravating factors for musculoskeletal
+  const hasMskAggravators = symptoms.some(s => {
+    const aggravators = (s as any).aggravatedBy || [];
+    return aggravators.some((a: string) =>
+      /palpation|movement|position|breathing|cough/i.test(a)
+    );
+  });
 
   // Expand searchable text with medical synonyms
   const expandedText = expandWithSynonyms(searchableText);
@@ -545,8 +604,32 @@ function evaluateSingleRedFlag(
   // - rf-pulmonary-embolism: PE is life-threatening, isolated hemoptysis/pleuritic pain warrants workup
   const singleMatchRedFlags = ['rf-pediatric-fever', 'rf-pulmonary-embolism'];
   const minMatches = (redFlag.severity === 'critical' || singleMatchRedFlags.includes(redFlag.id)) ? 1 : 2;
+
   if (matchedCriteria.length >= minMatches) {
-    const confidence = Math.min(0.95, 0.5 + (totalScore * 0.15));
+    // Base confidence
+    let confidence = Math.min(0.95, 0.5 + (totalScore * 0.15));
+
+    // ==========================================================================
+    // CONFIDENCE ADJUSTMENTS FOR BENIGN PATTERNS
+    // ==========================================================================
+
+    // Reduce confidence significantly for chronic/stable presentations
+    if (isChronicPresentation || hasChronicDuration) {
+      confidence *= 0.5; // 50% reduction for chronic conditions
+    }
+
+    // Reduce confidence for musculoskeletal patterns (especially for cardiac red flags)
+    if (isMusculoskeletalPattern || hasMskAggravators) {
+      if (redFlag.id === 'rf-chest-pain-cardiac' || redFlag.category === 'cardiovascular') {
+        confidence *= 0.4; // 60% reduction for MSK chest pain
+      }
+    }
+
+    // Skip entirely if confidence drops below threshold after adjustments
+    if (confidence < 0.3) {
+      return null;
+    }
+
     return {
       redFlag,
       matchedCriteria,

@@ -389,52 +389,105 @@ function determineRiskLevel(
 // Request Validation
 // =============================================================================
 
+// Input limits to prevent DoS and ensure reasonable request sizes
+const VALIDATION_LIMITS = {
+  MAX_MEDICATIONS: 50,        // Maximum number of current medications
+  MAX_ALLERGIES: 30,          // Maximum number of allergies
+  MAX_DRUG_NAME_LENGTH: 200,  // Maximum characters for drug name
+  MAX_LEGACY_MEDS: 100,       // Maximum medications in legacy format
+} as const;
+
+function validateMedicationName(name: unknown, fieldPath: string): string[] {
+  const errors: string[] = [];
+  if (typeof name !== 'string') {
+    errors.push(`${fieldPath} must be a string`);
+  } else if (name.length === 0) {
+    errors.push(`${fieldPath} cannot be empty`);
+  } else if (name.length > VALIDATION_LIMITS.MAX_DRUG_NAME_LENGTH) {
+    errors.push(`${fieldPath} exceeds maximum length of ${VALIDATION_LIMITS.MAX_DRUG_NAME_LENGTH} characters`);
+  }
+  return errors;
+}
+
 function validateRequest(body: unknown): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
-  
+
   if (!body || typeof body !== 'object') {
     errors.push('Request body is required');
     return { valid: false, errors };
   }
-  
+
   const bodyObj = body as Record<string, unknown>;
-  
+
   // New format validation
   if (bodyObj.proposedMedication !== undefined) {
     if (typeof bodyObj.proposedMedication !== 'object' || !bodyObj.proposedMedication) {
       errors.push('proposedMedication must be an object');
     } else {
       const med = bodyObj.proposedMedication as Record<string, unknown>;
-      if (!med.name || typeof med.name !== 'string') {
+      if (!med.name) {
         errors.push('proposedMedication.name is required');
+      } else {
+        errors.push(...validateMedicationName(med.name, 'proposedMedication.name'));
       }
     }
-    
+
     // currentMedications is REQUIRED when using proposedMedication format
     if (bodyObj.currentMedications === undefined) {
       errors.push('currentMedications is required');
     } else if (!Array.isArray(bodyObj.currentMedications)) {
       errors.push('currentMedications must be an array');
+    } else {
+      // Validate array size
+      if (bodyObj.currentMedications.length > VALIDATION_LIMITS.MAX_MEDICATIONS) {
+        errors.push(`currentMedications exceeds maximum of ${VALIDATION_LIMITS.MAX_MEDICATIONS} items`);
+      }
+      // Validate each medication name
+      (bodyObj.currentMedications as Array<Record<string, unknown>>).forEach((med, idx) => {
+        if (med && typeof med === 'object' && med.name) {
+          errors.push(...validateMedicationName(med.name, `currentMedications[${idx}].name`));
+        }
+      });
     }
-    
+
     // allergies is REQUIRED when using proposedMedication format
     if (bodyObj.allergies === undefined) {
       errors.push('allergies is required');
     } else if (!Array.isArray(bodyObj.allergies)) {
       errors.push('allergies must be an array');
+    } else {
+      // Validate array size
+      if (bodyObj.allergies.length > VALIDATION_LIMITS.MAX_ALLERGIES) {
+        errors.push(`allergies exceeds maximum of ${VALIDATION_LIMITS.MAX_ALLERGIES} items`);
+      }
+      // Validate each allergen name
+      (bodyObj.allergies as Array<Record<string, unknown>>).forEach((allergy, idx) => {
+        if (allergy && typeof allergy === 'object' && allergy.allergen) {
+          errors.push(...validateMedicationName(allergy.allergen, `allergies[${idx}].allergen`));
+        }
+      });
     }
   }
-  // Legacy format validation  
+  // Legacy format validation
   else if (bodyObj.medications !== undefined) {
     if (!Array.isArray(bodyObj.medications) || bodyObj.medications.length === 0) {
       errors.push('medications is required and must be a non-empty array');
+    } else {
+      // Validate array size
+      if (bodyObj.medications.length > VALIDATION_LIMITS.MAX_LEGACY_MEDS) {
+        errors.push(`medications exceeds maximum of ${VALIDATION_LIMITS.MAX_LEGACY_MEDS} items`);
+      }
+      // Validate each medication string
+      (bodyObj.medications as unknown[]).forEach((med, idx) => {
+        errors.push(...validateMedicationName(med, `medications[${idx}]`));
+      });
     }
   }
   // Neither format provided
   else {
     errors.push('Either proposedMedication or medications is required');
   }
-  
+
   return { valid: errors.length === 0, errors };
 }
 

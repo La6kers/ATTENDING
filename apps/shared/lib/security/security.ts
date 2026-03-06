@@ -76,20 +76,57 @@ const DANGEROUS_PATTERNS = [
 // Clinical content often contains bare SQL keywords like "SELECT the appropriate
 // dosage" or "Patient wants to UPDATE their medication list". Only flag patterns
 // that combine SQL keywords with structural SQL syntax.
+//
+// Key insight: Real SQL injection uses table/column identifiers (no spaces),
+// while clinical text uses natural English (words with spaces).
 const SQL_INJECTION_PATTERNS = [
-  /\bSELECT\b[\s\S]{0,50}\bFROM\b/gi,           // SELECT ... FROM
-  /\bINSERT\b[\s\S]{0,20}\bINTO\b/gi,             // INSERT INTO
-  /\bUPDATE\b[\s\S]{0,50}\bSET\b/gi,              // UPDATE ... SET
-  /\bDELETE\b[\s\S]{0,20}\bFROM\b/gi,             // DELETE FROM
-  /\bDROP\b\s+(TABLE|DATABASE|INDEX|VIEW)\b/gi,    // DROP TABLE/DATABASE/etc
-  /\bUNION\b[\s\S]{0,20}\bSELECT\b/gi,            // UNION SELECT
-  /\bALTER\b\s+TABLE\b/gi,                         // ALTER TABLE
-  /\bCREATE\b\s+(TABLE|DATABASE|INDEX|VIEW)\b/gi,  // CREATE TABLE/etc
-  /\bTRUNCATE\b\s+TABLE\b/gi,                      // TRUNCATE TABLE
-  /('|")\s*(OR|AND)\s*('|"|\d)\s*=\s*('|"|\d)/gi, // ' OR '1'='1 (tautology)
-  /;\s*(DROP|DELETE|UPDATE|INSERT)\b/gi,            // Statement chaining
-  /--\s*$/gm,                                       // SQL line comments at end
-  /\/\*[\s\S]*?\*\//g,                              // SQL block comments
+  // SELECT * FROM or SELECT column FROM table (identifier patterns)
+  /\bSELECT\b\s+[\w*,\s]+\bFROM\b\s+\w+/gi,
+
+  // INSERT INTO table (with table name immediately after)
+  /\bINSERT\b\s+INTO\b\s+\w+/gi,
+
+  // UPDATE table SET (table name immediately after UPDATE)
+  /\bUPDATE\b\s+\w+\s+SET\b/gi,
+
+  // DELETE FROM table (table name immediately after FROM)
+  /\bDELETE\b\s+FROM\b\s+\w+/gi,
+
+  // DROP TABLE/DATABASE/INDEX/VIEW
+  /\bDROP\b\s+(TABLE|DATABASE|INDEX|VIEW)\b/gi,
+
+  // UNION SELECT (common injection pattern)
+  /\bUNION\b[\s\S]{0,20}\bSELECT\b/gi,
+
+  // ALTER TABLE
+  /\bALTER\b\s+TABLE\b/gi,
+
+  // CREATE TABLE/DATABASE/INDEX/VIEW
+  /\bCREATE\b\s+(TABLE|DATABASE|INDEX|VIEW)\b/gi,
+
+  // TRUNCATE TABLE
+  /\bTRUNCATE\b\s+TABLE\b/gi,
+
+  // Tautology patterns: ' OR '1'='1, " OR "1"="1, ' OR 1=1, etc.
+  /['"]?\s*\bOR\b\s*['"]?\d*['"]?\s*=\s*['"]?\d*['"]?/gi,
+
+  // AND-based tautology: ' AND '1'='1
+  /['"]\s*\bAND\b\s*['"]?\d+['"]?\s*=\s*['"]?\d+['"]?/gi,
+
+  // Statement chaining with semicolons followed by SQL commands
+  /;\s*(DROP|DELETE|UPDATE|INSERT|SELECT|ALTER|TRUNCATE)\b/gi,
+
+  // SQL line comments at end of input (common injection suffix)
+  /--\s*$/gm,
+
+  // SQL block comments (can be used to bypass filters)
+  /\/\*[\s\S]*?\*\//g,
+
+  // WHERE clause with always-true conditions
+  /\bWHERE\b\s+\d+\s*=\s*\d+/gi,
+
+  // Hex-encoded strings (common obfuscation)
+  /0x[0-9a-fA-F]+/g,
 ];
 
 /**
@@ -436,17 +473,24 @@ export function verifyCsrfToken(
   token: string
 ): boolean {
   if (!secret || !token) return false;
-  
+
   const parts = token.split('.');
   if (parts.length !== 2) return false;
-  
+
   const [tokenValue, signature] = parts;
-  
+  if (!tokenValue || !signature) return false;
+
   const expectedSignature = crypto
     .createHmac('sha256', secret)
     .update(tokenValue)
     .digest('hex');
-  
+
+  // Buffers must be same length for timingSafeEqual
+  // If lengths differ, token is invalid
+  if (signature.length !== expectedSignature.length) {
+    return false;
+  }
+
   // Constant-time comparison to prevent timing attacks
   return crypto.timingSafeEqual(
     Buffer.from(signature),
@@ -674,8 +718,9 @@ export function setApiSecurityHeaders(res: NextApiResponse): void {
   // Only set CSP if the middleware hasn't already set it.
   // The Edge middleware sets a nonce-based CSP which is stronger than
   // the generic fallback here. Overwriting it would be a downgrade.
-  const existingCsp = res.getHeader('Content-Security-Policy')
-    || res.getHeader('Content-Security-Policy-Report-Only');
+  const existingCsp = typeof res.getHeader === 'function'
+    ? (res.getHeader('Content-Security-Policy') || res.getHeader('Content-Security-Policy-Report-Only'))
+    : undefined;
 
   if (!existingCsp) {
     setSecurityHeaders(res);

@@ -62,7 +62,7 @@ const enforceInDev = process.env.NEXTAUTH_ENFORCE === 'true';
  *   - NEXTAUTH_ENFORCE=true is set
  *   - Database is unavailable (prevents 500 errors during E2E runs)
  */
-async function getDevSession(): Promise<any> {
+async function getDevSession(): Promise<AttendingSession | null> {
   if (!isDev || enforceInDev) return null;
   try {
     const user = await prisma.user.findFirst({
@@ -72,10 +72,11 @@ async function getDevSession(): Promise<any> {
     return {
       user: {
         id: user.id,
-        email: user.email,
-        name: user.name,
+        email: user.email ?? '',
+        name: user.name ?? '',
         role: user.role,
       },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
   } catch {
     // Database unavailable — degrade gracefully to 401 instead of 500.
@@ -88,7 +89,7 @@ async function getDevSession(): Promise<any> {
 // ============================================================
 
 export function requireAuth(
-  handler: (req: NextApiRequest, res: NextApiResponse, session: any) => Promise<void>
+  handler: (req: NextApiRequest, res: NextApiResponse, session: AttendingSession) => Promise<void>
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
     let session = await getSession(req, res);
@@ -102,7 +103,7 @@ export function requireAuth(
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    return handler(req, res, session);
+    return handler(req, res, session as AttendingSession);
   };
 }
 
@@ -111,7 +112,7 @@ export function requireAuth(
 // ============================================================
 
 export function requireRole(roles: string[]) {
-  return (handler: (req: NextApiRequest, res: NextApiResponse, session: any) => Promise<void>) => {
+  return (handler: (req: NextApiRequest, res: NextApiResponse, session: AttendingSession) => Promise<void>) => {
     return async (req: NextApiRequest, res: NextApiResponse) => {
       let session = await getSession(req, res);
 
@@ -127,7 +128,7 @@ export function requireRole(roles: string[]) {
         return res.status(403).json({ error: 'Forbidden - Insufficient permissions' });
       }
 
-      return handler(req, res, session);
+      return handler(req, res, session as AttendingSession);
     };
   };
 }
@@ -141,7 +142,7 @@ export async function createAuditLog(
   action: string,
   entityType: string,
   entityId?: string,
-  changes?: any,
+  changes?: Record<string, unknown>,
   req?: NextApiRequest
 ) {
   try {

@@ -31,12 +31,12 @@ const createBasePatientContext = (): PatientContext => ({
 
 const createBaseAssessment = (): ClinicalAssessment => ({
   chiefComplaint: {
-    complaint: 'Headache',
+    complaint: 'mild headache',
     duration: '2 days',
-    severity: 'moderate',
+    severity: 'mild',
   },
   symptoms: [
-    { name: 'Headache', duration: '2 days', severity: 'moderate' },
+    { name: 'Headache', duration: '2 days', severity: 'mild' },
   ],
 });
 

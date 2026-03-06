@@ -32,11 +32,12 @@ export interface SyncError {
   id: string;
   error: string;
   timestamp: string;
+  isTransient: boolean;
 }
 
 export type SyncStatus = 'idle' | 'syncing' | 'completed' | 'failed';
 
-export type SyncEventType = 
+export type SyncEventType =
   | 'sync-start'
   | 'sync-progress'
   | 'sync-complete'
@@ -52,6 +53,55 @@ export interface SyncEvent {
 type SyncEventCallback = (event: SyncEvent) => void;
 
 // ============================================================
+// RETRY CONFIGURATION
+// ============================================================
+
+const RETRY_CONFIG = {
+  MAX_RETRIES: 5,
+  BASE_DELAY_MS: 1000,
+  MAX_DELAY_MS: 60000,
+  BACKOFF_MULTIPLIER: 2,
+} as const;
+
+// Transient errors that should be retried with backoff
+const TRANSIENT_ERROR_CODES = [
+  408, // Request Timeout
+  429, // Too Many Requests
+  500, // Internal Server Error
+  502, // Bad Gateway
+  503, // Service Unavailable
+  504, // Gateway Timeout
+];
+
+function isTransientError(error: Error | Response | number): boolean {
+  // Network errors are transient
+  if (error instanceof TypeError && error.message.includes('fetch')) {
+    return true;
+  }
+
+  // Check HTTP status codes
+  let status: number | undefined;
+  if (typeof error === 'number') {
+    status = error;
+  } else if (error instanceof Response) {
+    status = error.status;
+  } else if (error instanceof Error) {
+    // Extract status from error message like "Server returned 503"
+    const match = error.message.match(/(\d{3})/);
+    status = match ? parseInt(match[1], 10) : undefined;
+  }
+
+  return status !== undefined && TRANSIENT_ERROR_CODES.includes(status);
+}
+
+function calculateBackoffDelay(retryCount: number): number {
+  const delay = RETRY_CONFIG.BASE_DELAY_MS * Math.pow(RETRY_CONFIG.BACKOFF_MULTIPLIER, retryCount);
+  // Add jitter (±25%) to prevent thundering herd
+  const jitter = delay * 0.25 * (Math.random() - 0.5);
+  return Math.min(delay + jitter, RETRY_CONFIG.MAX_DELAY_MS);
+}
+
+// ============================================================
 // SYNC MANAGER CLASS
 // ============================================================
 
@@ -60,6 +110,8 @@ class SyncManager {
   private listeners: Set<SyncEventCallback> = new Set();
   private syncInProgress: boolean = false;
   private retryTimeout: ReturnType<typeof setTimeout> | null = null;
+  private consecutiveFailures: number = 0;
+  private itemRetryCount: Map<string, number> = new Map();
 
   constructor() {
     // Listen for online/offline events
@@ -67,6 +119,24 @@ class SyncManager {
       window.addEventListener('online', this.handleOnline.bind(this));
       window.addEventListener('offline', this.handleOffline.bind(this));
     }
+  }
+
+  private getRetryCount(itemId: string): number {
+    return this.itemRetryCount.get(itemId) || 0;
+  }
+
+  private incrementRetryCount(itemId: string): number {
+    const count = this.getRetryCount(itemId) + 1;
+    this.itemRetryCount.set(itemId, count);
+    return count;
+  }
+
+  private clearRetryCount(itemId: string): void {
+    this.itemRetryCount.delete(itemId);
+  }
+
+  private shouldRetryItem(itemId: string): boolean {
+    return this.getRetryCount(itemId) < RETRY_CONFIG.MAX_RETRIES;
   }
 
   // ============================================================
@@ -141,7 +211,12 @@ class SyncManager {
 
       result.success = result.failed === 0;
       this.status = 'completed';
-      
+
+      // Reset backoff on successful sync
+      if (result.success) {
+        this.resetBackoff();
+      }
+
       this.emit({
         type: 'sync-complete',
         data: result,
@@ -151,14 +226,24 @@ class SyncManager {
       console.error('[SyncManager] Sync failed:', error);
       result.success = false;
       this.status = 'failed';
-      
+
+      // Check if this is a transient error
+      const transient = isTransientError(error as Error);
+      this.incrementBackoff();
+
       this.emit({
         type: 'sync-error',
-        data: { error: (error as Error).message },
+        data: {
+          error: (error as Error).message,
+          isTransient: transient,
+          consecutiveFailures: this.consecutiveFailures,
+        },
       });
 
-      // Schedule retry
-      this.scheduleRetry();
+      // Schedule retry with exponential backoff for transient errors
+      if (transient && this.consecutiveFailures < RETRY_CONFIG.MAX_RETRIES) {
+        this.scheduleRetry();
+      }
     } finally {
       this.syncInProgress = false;
     }
@@ -184,12 +269,13 @@ class SyncManager {
         });
 
         const response = await this.submitAssessment(assessment);
-        
+
         if (response.ok) {
           const data = await response.json();
           await markAssessmentSynced(assessment.id, data.id);
+          this.clearRetryCount(assessment.id);
           result.synced++;
-          
+
           this.emit({
             type: 'item-synced',
             data: { type: 'assessment', id: assessment.id, serverId: data.id },
@@ -198,21 +284,41 @@ class SyncManager {
           throw new Error(`Server returned ${response.status}`);
         }
       } catch (error) {
-        console.error(`[SyncManager] Failed to sync assessment ${assessment.id}:`, error);
-        
-        await markAssessmentFailed(assessment.id, (error as Error).message);
-        result.failed++;
-        
-        result.errors.push({
-          type: 'assessment',
-          id: assessment.id,
-          error: (error as Error).message,
-          timestamp: new Date().toISOString(),
-        });
+        const errorObj = error as Error;
+        const transient = isTransientError(errorObj);
+        const retryCount = this.incrementRetryCount(assessment.id);
+        const willRetry = transient && retryCount < RETRY_CONFIG.MAX_RETRIES;
+
+        console.error(
+          `[SyncManager] Failed to sync assessment ${assessment.id} (attempt ${retryCount}/${RETRY_CONFIG.MAX_RETRIES}, transient=${transient}):`,
+          error
+        );
+
+        if (!willRetry) {
+          // Permanent failure or max retries exceeded
+          await markAssessmentFailed(assessment.id, errorObj.message);
+          this.clearRetryCount(assessment.id);
+          result.failed++;
+
+          result.errors.push({
+            type: 'assessment',
+            id: assessment.id,
+            error: errorObj.message,
+            timestamp: new Date().toISOString(),
+            isTransient: transient,
+          });
+        }
 
         this.emit({
           type: 'item-failed',
-          data: { type: 'assessment', id: assessment.id, error: (error as Error).message },
+          data: {
+            type: 'assessment',
+            id: assessment.id,
+            error: errorObj.message,
+            willRetry,
+            retryCount,
+            isTransient: transient,
+          },
         });
       }
     }
@@ -306,16 +412,28 @@ class SyncManager {
     return result;
   }
 
-  private scheduleRetry(delayMs: number = 30000): void {
+  private scheduleRetry(): void {
     if (this.retryTimeout) {
       clearTimeout(this.retryTimeout);
     }
+
+    // Use exponential backoff based on consecutive failures
+    const delayMs = calculateBackoffDelay(this.consecutiveFailures);
+    console.log(`[SyncManager] Scheduling retry in ${Math.round(delayMs / 1000)}s (attempt ${this.consecutiveFailures + 1})`);
 
     this.retryTimeout = setTimeout(() => {
       if (navigator.onLine) {
         this.startSync();
       }
     }, delayMs);
+  }
+
+  private resetBackoff(): void {
+    this.consecutiveFailures = 0;
+  }
+
+  private incrementBackoff(): void {
+    this.consecutiveFailures = Math.min(this.consecutiveFailures + 1, RETRY_CONFIG.MAX_RETRIES);
   }
 
   // ============================================================
