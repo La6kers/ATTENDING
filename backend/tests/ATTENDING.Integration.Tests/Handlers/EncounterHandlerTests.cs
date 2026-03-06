@@ -14,6 +14,7 @@ public class EncounterHandlerTests
     private readonly Mock<IEncounterRepository> _encounterRepo = new();
     private readonly Mock<IPatientRepository> _patientRepo = new();
     private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<ICurrentUserService> _currentUser = new();
     private readonly Mock<ILogger<CreateEncounterHandler>> _logger = new();
 
     [Fact]
@@ -22,7 +23,7 @@ public class EncounterHandlerTests
         var patient = Patient.Create(new Guid("00000000-0000-0000-0000-000000000001"), "MRN-001", "Test", "Patient", DateTime.Today.AddYears(-30), BiologicalSex.Male);
         _patientRepo.Setup(r => r.GetByIdAsync(patient.Id, default)).ReturnsAsync(patient);
 
-        var handler = new CreateEncounterHandler(_encounterRepo.Object, _patientRepo.Object, _uow.Object, _logger.Object);
+        var handler = new CreateEncounterHandler(_encounterRepo.Object, _patientRepo.Object, _uow.Object, _currentUser.Object, _logger.Object);
         var result = await handler.Handle(new CreateEncounterCommand(
             patient.Id, Guid.NewGuid(), "Office Visit", DateTime.UtcNow.AddHours(2), null), default);
 
@@ -34,7 +35,7 @@ public class EncounterHandlerTests
     public async Task CreateEncounter_PatientNotFound_ShouldFail()
     {
         _patientRepo.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Patient?)null);
-        var handler = new CreateEncounterHandler(_encounterRepo.Object, _patientRepo.Object, _uow.Object, _logger.Object);
+        var handler = new CreateEncounterHandler(_encounterRepo.Object, _patientRepo.Object, _uow.Object, _currentUser.Object, _logger.Object);
 
         var result = await handler.Handle(new CreateEncounterCommand(
             Guid.NewGuid(), Guid.NewGuid(), "Office Visit", null, null), default);

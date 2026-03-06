@@ -42,7 +42,7 @@ public class PatientAssessmentTests
     public void AdvancePhase_ShouldUpdateCurrentPhase()
     {
         var assessment = PatientAssessment.Create(Guid.NewGuid(), "Knee pain");
-        assessment.AdvanceToPhase(AssessmentPhase.HpiOnset);
+        assessment.AdvancePhase(AssessmentPhase.HpiOnset);
         assessment.CurrentPhase.Should().Be(AssessmentPhase.HpiOnset);
     }
 
