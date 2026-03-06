@@ -93,7 +93,7 @@ export default async function handler(
     } = req.query;
 
     // Build filter
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (status && typeof status === 'string') {
       where.status = status.toUpperCase();
@@ -168,7 +168,7 @@ export default async function handler(
       allergies: safeJsonParse<string[]>(a.allergies, []),
       medicalHistory: safeJsonParse<string[]>(a.medicalHistory, []),
       triageLevel: a.triageLevel,
-      redFlags: safeJsonParse<any[]>(a.redFlagsDetected, []),
+      redFlags: safeJsonParse<string[]>(a.redFlagsDetected, []),
       status: a.status,
       phase: a.phase,
       assignedProviderId: a.assignedProviderId,

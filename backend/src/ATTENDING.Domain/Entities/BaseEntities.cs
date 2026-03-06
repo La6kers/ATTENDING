@@ -5,6 +5,43 @@ using ATTENDING.Domain.ValueObjects;
 namespace ATTENDING.Domain.Entities;
 
 /// <summary>
+/// Domain-wide max-length constants for free-text fields.
+/// Referenced by FluentValidation validators and EF Core configuration
+/// to ensure consistent constraints at every layer.
+/// </summary>
+public static class DomainFieldLimits
+{
+    // ── Patient demographics ──────────────────────────────────────────────
+    public const int PersonName          = 200;
+    public const int MRN                 = 50;
+    public const int Phone               = 30;
+    public const int Email               = 254;   // RFC 5321
+    public const int AddressLine         = 500;
+    public const int City                = 200;
+    public const int StateCode           = 10;
+    public const int ZipCode             = 20;
+    public const int Language            = 50;
+
+    // ── Clinical text ─────────────────────────────────────────────────────
+    public const int AllergenName        = 500;
+    public const int ReactionDescription = 1_000;
+    public const int ConditionCode       = 20;    // ICD-10 codes
+    public const int ConditionName       = 500;
+    public const int ChiefComplaint      = 2_000;
+    public const int Specialty           = 200;
+    public const int NPI                 = 10;    // NPI is always 10 digits
+    public const int EncounterNumber     = 50;
+    public const int EncounterType       = 100;
+
+    // ── Voice / transcript ────────────────────────────────────────────────
+    public const int VoiceTranscript     = 50_000;
+    public const int Notes               = 10_000;
+
+    // ── Audit ─────────────────────────────────────────────────────────────
+    public const int AuditUserId         = 200;
+}
+
+/// <summary>
 /// Base entity with audit fields, concurrency control, multi-tenant isolation,
 /// and soft delete. All clinical entities inherit these enterprise capabilities.
 /// </summary>
@@ -281,7 +318,7 @@ public class Encounter : BaseEntity, IAggregateRoot
 /// <summary>
 /// Patient allergy
 /// </summary>
-public class Allergy : BaseEntity
+public class Allergy : BaseEntity, IHasDomainEvents
 {
     public Guid Id { get; private set; }
     public Guid PatientId { get; private set; }
@@ -292,6 +329,12 @@ public class Allergy : BaseEntity
     
     public virtual Patient? Patient { get; private set; }
     
+    // Domain events — enables automatic dispatch via SaveChangesAsync
+    private readonly List<Events.DomainEvent> _domainEvents = new();
+    public IReadOnlyCollection<Events.DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    public void ClearDomainEvents() => _domainEvents.Clear();
+    protected void AddDomainEvent(Events.DomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+    
     private Allergy() { }
     
     public static Allergy Create(
@@ -301,7 +344,7 @@ public class Allergy : BaseEntity
         string? reaction = null,
         Guid organizationId = default)
     {
-        return new Allergy
+        var allergy = new Allergy
         {
             Id = Guid.NewGuid(),
             OrganizationId = organizationId,   // set at construction; StampAuditFields backstop for Guid.Empty
@@ -310,13 +353,16 @@ public class Allergy : BaseEntity
             Severity = severity,
             Reaction = reaction
         };
+        // Domain event enables DrugInteractionService re-check on new allergies
+        allergy.AddDomainEvent(new Events.AllergyCreatedEvent(allergy.Id, patientId, allergen, severity.ToString()));
+        return allergy;
     }
 }
 
 /// <summary>
 /// Patient medical condition
 /// </summary>
-public class MedicalCondition : BaseEntity
+public class MedicalCondition : BaseEntity, IHasDomainEvents
 {
     public Guid Id { get; private set; }
     public Guid PatientId { get; private set; }
@@ -327,6 +373,12 @@ public class MedicalCondition : BaseEntity
     
     public virtual Patient? Patient { get; private set; }
     
+    // Domain events — enables automatic dispatch via SaveChangesAsync
+    private readonly List<Events.DomainEvent> _domainEvents = new();
+    public IReadOnlyCollection<Events.DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    public void ClearDomainEvents() => _domainEvents.Clear();
+    protected void AddDomainEvent(Events.DomainEvent domainEvent) => _domainEvents.Add(domainEvent);
+    
     private MedicalCondition() { }
     
     public static MedicalCondition Create(
@@ -336,7 +388,7 @@ public class MedicalCondition : BaseEntity
         DateTime? onsetDate = null,
         Guid organizationId = default)
     {
-        return new MedicalCondition
+        var condition = new MedicalCondition
         {
             Id = Guid.NewGuid(),
             OrganizationId = organizationId,   // set at construction; StampAuditFields backstop for Guid.Empty
@@ -345,5 +397,8 @@ public class MedicalCondition : BaseEntity
             Name = name,
             OnsetDate = onsetDate
         };
+        // Domain event enables CareGapRuleEngine re-evaluation on new conditions
+        condition.AddDomainEvent(new Events.MedicalConditionCreatedEvent(condition.Id, patientId, code, name));
+        return condition;
     }
 }

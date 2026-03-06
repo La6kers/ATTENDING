@@ -43,6 +43,14 @@ public static class RateLimitingExtensions
 
             // ----------------------------------------------------------------
             // tenant-api: General API access — 300 requests per tenant per minute
+            //
+            // Clinical justification: A busy provider dashboard polls ~6 endpoints
+            // every 10 s (assessments, notifications, labs, imaging, encounters,
+            // prescriptions) = ~36 req/min per provider.  With up to 5 concurrent
+            // providers per tenant, peak steady-state is ~180 req/min.  The 300
+            // limit provides ~67% headroom for bursts (page loads, rapid
+            // navigation, batch refreshes after downtime).
+            //
             // Sliding window gives smooth traffic distribution vs hard cutoffs.
             // ----------------------------------------------------------------
             options.AddPolicy("tenant-api", httpContext =>
@@ -61,6 +69,14 @@ public static class RateLimitingExtensions
 
             // ----------------------------------------------------------------
             // clinical-ops: State-changing clinical writes — 60 req/min per tenant
+            //
+            // Clinical justification: A provider places ~2–4 orders per encounter
+            // (labs, imaging, prescriptions, referrals) plus 1 assessment update.
+            // With an average 10-minute encounter, that’s ~0.5 writes/min per
+            // provider.  5 concurrent providers → ~2.5 writes/min steady-state.
+            // The 60 limit allows massive headroom for bulk operations (chart
+            // corrections, batch order entry) while preventing runaway automation.
+            //
             // Token bucket smooths burst writes while maintaining steady-state limit.
             // Applied to: POST/PUT/DELETE on orders, assessments, encounters.
             // ----------------------------------------------------------------
@@ -81,7 +97,12 @@ public static class RateLimitingExtensions
 
             // ----------------------------------------------------------------
             // auth: Authentication endpoints — 10 req/min per IP
-            // Hard fixed window prevents credential stuffing.
+            //
+            // Clinical justification: Normal login is a single request.  Even with
+            // token refresh (every 5–15 min), a legitimate user never exceeds
+            // 2–3 auth calls/min.  The 10 limit allows for retries and multi-tab
+            // usage while stopping credential-stuffing attacks early.  Queue
+            // limit = 0 to reject immediately (don’t queue auth attempts).
             // ----------------------------------------------------------------
             options.AddPolicy("auth", httpContext =>
             {
@@ -115,7 +136,12 @@ public static class RateLimitingExtensions
 
             // ----------------------------------------------------------------
             // health: Health check endpoints — 60 req/min per IP
-            // Allows monitoring tools without consuming tenant quota.
+            //
+            // Clinical justification: Kubernetes liveness/readiness probes
+            // default to 10-second intervals (6 req/min).  Load balancers may
+            // add another 6–12 req/min.  The 60 limit supports up to ~5
+            // monitoring sources per IP with ample headroom.  Queue limit = 0
+            // because health checks should fail-fast, not queue.
             // ----------------------------------------------------------------
             options.AddPolicy("health", httpContext =>
             {

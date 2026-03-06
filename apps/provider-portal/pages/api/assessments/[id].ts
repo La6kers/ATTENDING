@@ -197,7 +197,7 @@ async function handlePatch(id: string, req: NextApiRequest, res: NextApiResponse
   }
 
   const { status, assignedProviderId } = req.body;
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
 
   if (status) {
     const normalized = status.toUpperCase() as string;

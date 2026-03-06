@@ -59,7 +59,9 @@ export default async function handler(
     }
 
     const hasRedFlags = Array.isArray(redFlags) && redFlags.length > 0;
-    const hasCritical = hasRedFlags && redFlags.some((rf: any) => rf.severity === 'critical');
+    const hasCritical = hasRedFlags && redFlags.some((rf: string | { severity?: string }) =>
+      typeof rf === 'object' && rf !== null && rf.severity === 'critical'
+    );
 
     const assessment = await prisma.patientAssessment.create({
       data: {
@@ -90,7 +92,9 @@ export default async function handler(
           assessmentId: assessment.id,
           eventType: 'RED_FLAG',
           severity: hasCritical ? 'CRITICAL' : 'HIGH',
-          description: `Assessment red flags: ${redFlags.map((rf: any) => rf.flag || rf).join(', ')}`,
+          description: `Assessment red flags: ${redFlags.map((rf: string | { flag?: string }) =>
+            typeof rf === 'object' && rf !== null ? rf.flag ?? String(rf) : rf
+          ).join(', ')}`,
           triggeredBy: 'SYSTEM',
         },
       });

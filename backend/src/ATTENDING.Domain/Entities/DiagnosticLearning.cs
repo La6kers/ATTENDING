@@ -334,9 +334,24 @@ public class DiagnosticAccuracySnapshot : BaseEntity
         var isReliable = total >= MinimumSampleSize;
         if (isReliable && avgPredicted > 0)
         {
-            calibrationFactor = Math.Round(actualRate / avgPredicted, 3);
-            // Clamp to sensible range (0.5–2.0) to prevent wild adjustments
-            calibrationFactor = Math.Clamp(calibrationFactor.Value, 0.50m, 2.00m);
+            var rawFactor = Math.Round(actualRate / avgPredicted, 3);
+            calibrationFactor = Math.Clamp(rawFactor, 0.50m, 2.00m);
+
+            // Log when clamping changes the raw value — this indicates the
+            // organization's population deviates significantly from literature
+            // baselines, which may warrant a manual guideline review.
+            if (rawFactor != calibrationFactor.Value)
+            {
+                System.Diagnostics.Trace.TraceWarning(
+                    "[DiagnosticLearning] Calibration factor clamped for " +
+                    "{0}/{1}: raw={2:F3}, clamped={3:F3} (n={4}). " +
+                    "Consider reviewing guideline baselines for this organization.",
+                    recommendationType,
+                    guidelineName ?? "(no guideline)",
+                    rawFactor,
+                    calibrationFactor.Value,
+                    total);
+            }
         }
 
         var snapshot = new DiagnosticAccuracySnapshot

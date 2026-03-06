@@ -169,6 +169,11 @@ export async function proxyToBackend(
     }
     // Server / network errors — caller falls back to Prisma
     console.warn(`[BackendProxy] ${backendPath} unavailable, falling back to Prisma:`, err);
+    // Attach staleness header so clients know data comes from the Prisma
+    // fallback path and may lack CQRS-side enrichments (domain events,
+    // real-time SignalR notifications, etc.).
+    res.setHeader('X-Data-Source', 'prisma-fallback');
+    res.setHeader('X-Backend-Status', 'unavailable');
     return false;
   }
 }

@@ -173,20 +173,21 @@ export function sendError(
 
 /** 400 Bad Request */
 export function sendBadRequest(
-  res: NextApiResponse, message: string = 'Bad request', details?: any, req?: NextApiRequest
+  res: NextApiResponse, message: string = 'Bad request', details?: Record<string, unknown> | unknown[], req?: NextApiRequest
 ): void {
   sendError(res, 400, ErrorCodes.BAD_REQUEST, message, details, req);
 }
 
 /** 400 Validation Error (for Zod/schema validation failures) */
 export function sendValidationError(
-  res: NextApiResponse, errors: any, req?: NextApiRequest
+  res: NextApiResponse, errors: Record<string, unknown> | unknown[] | { issues?: Array<{ path?: string[]; message?: string; code?: string }> }, req?: NextApiRequest
 ): void {
   // Normalize Zod errors into a consistent format
+  const errObj = errors as Record<string, unknown>;
   const details = Array.isArray(errors)
     ? errors
-    : errors?.issues
-      ? errors.issues.map((issue: any) => ({
+    : Array.isArray(errObj?.issues)
+      ? (errObj.issues as Array<{ path?: string[]; message?: string; code?: string }>).map((issue) => ({
           field: issue.path?.join('.'),
           message: issue.message,
           code: issue.code,

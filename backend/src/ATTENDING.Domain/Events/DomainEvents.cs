@@ -506,6 +506,52 @@ public class AmbientNoteGenerated : DomainEvent
 
 #endregion
 
+#region Child Entity Events
+
+/// <summary>
+/// Raised when a patient allergy record is created.
+/// Enables DrugInteractionService to re-check interactions
+/// without the handler needing to know about that service.
+/// </summary>
+public class AllergyCreatedEvent : DomainEvent
+{
+    public Guid AllergyId { get; }
+    public Guid PatientId { get; }
+    public string Allergen { get; }
+    public string Severity { get; }
+
+    public AllergyCreatedEvent(Guid allergyId, Guid patientId, string allergen, string severity)
+    {
+        AllergyId = allergyId;
+        PatientId = patientId;
+        Allergen = allergen;
+        Severity = severity;
+    }
+}
+
+/// <summary>
+/// Raised when a patient medical condition is created.
+/// Enables CareGapRuleEngine to re-evaluate screening gaps
+/// when a new condition is diagnosed.
+/// </summary>
+public class MedicalConditionCreatedEvent : DomainEvent
+{
+    public Guid ConditionId { get; }
+    public Guid PatientId { get; }
+    public string Code { get; }
+    public string Name { get; }
+
+    public MedicalConditionCreatedEvent(Guid conditionId, Guid patientId, string code, string name)
+    {
+        ConditionId = conditionId;
+        PatientId = patientId;
+        Code = code;
+        Name = name;
+    }
+}
+
+#endregion
+
 #region Audit Events
 
 /// <summary>

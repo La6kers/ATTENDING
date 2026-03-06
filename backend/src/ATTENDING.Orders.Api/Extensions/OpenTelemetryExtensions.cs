@@ -167,10 +167,20 @@ public static class OpenTelemetryExtensions
                     });
                 }
 
-                // Console exporter — dev/debug only, never enable in production
-                if (consoleExporter)
+                // Console exporter — dev/debug only.
+                // Guarded by environment check to prevent accidental production
+                // enablement via config (console output is synchronous and adds
+                // measurable latency under load).
+                if (consoleExporter && !environment.IsProduction())
                 {
                     tracing.AddConsoleExporter();
+                }
+                else if (consoleExporter && environment.IsProduction())
+                {
+                    // Warn but don't enable — someone set ConsoleExporter=true in prod config
+                    System.Diagnostics.Trace.TraceWarning(
+                        "[OpenTelemetry] ConsoleExporter=true in production config — ignored. " +
+                        "Console exporting is restricted to non-production environments.");
                 }
             });
 

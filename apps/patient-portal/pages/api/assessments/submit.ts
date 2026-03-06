@@ -107,7 +107,7 @@ export default async function handler(
   // and fires domain events that notify providers via SignalR in real-time.
   // =========================================================================
   const proxied = await proxyToBackend(req, res, '/api/v1/assessments/submit', {
-    transformRequest: (body: any) => ({
+    transformRequest: (body: SubmitPayload) => ({
       sessionId: body.sessionId,
       patientName: body.patientName,
       dateOfBirth: body.dateOfBirth,
@@ -312,7 +312,7 @@ export default async function handler(
 
       // Additionally fire assessment.emergency for critical red flags
       if (triageLevel === 'EMERGENCY' || data.redFlags?.some(rf =>
-        typeof rf === 'string' ? false : (rf as any).severity === 'critical'
+        typeof rf !== 'string' && (rf as { severity?: string }).severity === 'critical'
       )) {
         const emergencyPayload = { ...webhookPayload, event: 'assessment.emergency' as const };
         dispatchWebhooks('assessment.emergency', emergencyPayload, assessment.id, patient.id)
