@@ -2,10 +2,12 @@
 // ATTENDING AI - Emergency Access Log API
 // apps/patient-portal/pages/api/emergency/log-access.ts
 //
-// Logs emergency access events with photo, location, and audit trail
+// Logs emergency access events with photo, location, and audit trail.
+// Returns an accessLogId that must be used to retrieve medical info.
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { createAccessLog } from './medical-info';
 
 // =============================================================================
 // Types
@@ -44,6 +46,7 @@ interface EmergencyAccessLog {
 interface ApiResponse {
   success: boolean;
   logId?: string;
+  accessToken?: string; // Token to retrieve medical info
   message?: string;
   error?: string;
 }
@@ -59,7 +62,9 @@ const accessLogs: EmergencyAccessLog[] = [];
 // =============================================================================
 
 function generateLogId(): string {
-  return `eal_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Use crypto for secure ID generation
+  const crypto = require('crypto');
+  return `eal_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
 }
 
 async function reverseGeocode(lat: number, lng: number): Promise<string | undefined> {
@@ -196,9 +201,13 @@ export default async function handler(
       hasLocation: !!location,
     });
 
+    // Create access token for medical info retrieval
+    const accessToken = createAccessLog(patientId);
+
     return res.status(201).json({
       success: true,
       logId,
+      accessToken, // Use this to call /api/emergency/medical-info
       message: 'Emergency access logged successfully',
     });
 

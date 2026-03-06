@@ -4,12 +4,18 @@
 //
 // Voice-to-text transcription with medical entity extraction
 // Supports Whisper API and Azure Speech Services
+//
+// Security:
+// - Rate limited to prevent abuse
+// - File size limited to 25MB
+// - Only accepts audio MIME types
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IncomingForm } from 'formidable';
 import type { File } from 'formidable';
 import fs from 'fs';
+import { rateLimit, getClientIp } from '@attending/shared/lib/security';
 
 // Disable default body parser for file uploads
 export const config = {
@@ -91,11 +97,28 @@ const ALLERGY_PATTERNS = [
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<TranscriptionResult | { error: string }>
+  res: NextApiResponse<TranscriptionResult | { error: string; retryAfter?: number }>
 ) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: `Method ${req.method} not allowed` });
+  }
+
+  // Rate limit: max 30 transcriptions per minute per IP
+  const clientIp = getClientIp(req);
+  const rateLimitResult = await rateLimit(clientIp, {
+    windowMs: 60_000,
+    maxRequests: 30,
+    keyPrefix: 'transcribe',
+  });
+
+  res.setHeader('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+
+  if (!rateLimitResult.allowed) {
+    return res.status(429).json({
+      error: 'Too many transcription requests. Please wait before trying again.',
+      retryAfter: rateLimitResult.retryAfter,
+    });
   }
 
   try {

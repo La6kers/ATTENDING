@@ -2,10 +2,115 @@
 // ATTENDING AI - Emergency Medical Info API
 // apps/patient-portal/pages/api/emergency/medical-info.ts
 //
-// Returns critical medical information for emergency responders
+// Returns critical medical information for emergency responders.
+//
+// Security measures:
+// - Requires valid access log ID (verified against recent logs)
+// - Rate limited by IP address
+// - All access is audit logged
+// - In demo mode, accepts demo access tokens
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
+
+// =============================================================================
+// Security Configuration
+// =============================================================================
+
+const isDev = process.env.NODE_ENV === 'development';
+const isDemo = process.env.DEMO_MODE === 'true';
+
+// Rate limiting: track requests per IP
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // Max 10 requests per minute per IP
+
+// Valid demo access tokens (for testing emergency access flow)
+const DEMO_ACCESS_TOKENS = new Set([
+  'demo-emergency-access',
+  'test-access-log',
+  'emt-access-token',
+]);
+
+// In-memory store for valid access logs (in production, use database)
+const validAccessLogs = new Map<string, { patientId: string; createdAt: number; expiresAt: number }>();
+
+/**
+ * Validate rate limit for an IP address.
+ * Returns true if request is allowed, false if rate limited.
+ */
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1 };
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - entry.count };
+}
+
+/**
+ * Get client IP address from request.
+ */
+function getClientIp(req: NextApiRequest): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+/**
+ * Validate access log ID.
+ * In production, this would verify against a database of recent emergency access logs.
+ * In demo mode, accepts demo tokens.
+ */
+function validateAccessLogId(accessLogId: string): boolean {
+  // Demo/dev mode: accept demo tokens
+  if ((isDev || isDemo) && DEMO_ACCESS_TOKENS.has(accessLogId)) {
+    return true;
+  }
+
+  // Check in-memory valid access logs
+  const log = validAccessLogs.get(accessLogId);
+  if (log && Date.now() < log.expiresAt) {
+    return true;
+  }
+
+  // In production, this would query the database
+  // For now, require valid format (UUID-like)
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidPattern.test(accessLogId)) {
+    // In production: verify in database
+    // For demo: accept valid UUID format in dev mode
+    return isDev || isDemo;
+  }
+
+  return false;
+}
+
+/**
+ * Generate a new access log ID (called when emergency access is initiated).
+ * This would be called by the log-access endpoint.
+ */
+export function createAccessLog(patientId: string): string {
+  const accessLogId = crypto.randomUUID();
+  const now = Date.now();
+  validAccessLogs.set(accessLogId, {
+    patientId,
+    createdAt: now,
+    expiresAt: now + 30 * 60 * 1000, // 30 minutes
+  });
+  return accessLogId;
+}
 
 // =============================================================================
 // Types
@@ -233,9 +338,28 @@ export default async function handler(
 ) {
   // Only allow GET
   if (req.method !== 'GET') {
-    return res.status(405).json({ 
-      success: false, 
-      error: 'Method not allowed' 
+    return res.status(405).json({
+      success: false,
+      error: 'Method not allowed'
+    });
+  }
+
+  // Get client IP for rate limiting and audit
+  const clientIp = getClientIp(req);
+
+  // Check rate limit
+  const rateLimit = checkRateLimit(clientIp);
+  res.setHeader('X-RateLimit-Remaining', rateLimit.remaining.toString());
+
+  if (!rateLimit.allowed) {
+    console.log('[SECURITY] Rate limit exceeded for emergency medical info:', {
+      ip: clientIp,
+      timestamp: new Date().toISOString(),
+    });
+    return res.status(429).json({
+      success: false,
+      error: 'Too many requests. Please wait before trying again.',
+      retryAfter: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000),
     });
   }
 
@@ -243,21 +367,37 @@ export default async function handler(
     const { patientId, accessLogId } = req.query;
 
     // Validate access log ID (ensures this is a legitimate emergency access)
-    if (!accessLogId) {
+    if (!accessLogId || typeof accessLogId !== 'string') {
+      console.log('[SECURITY] Missing access log ID:', {
+        ip: clientIp,
+        timestamp: new Date().toISOString(),
+      });
       return res.status(401).json({
         success: false,
         error: 'Access log ID required - emergency access must be logged first',
       });
     }
 
-    // In production, verify the access log exists and is recent
-    // This prevents unauthorized access to medical info
+    // Validate the access log ID is legitimate
+    if (!validateAccessLogId(accessLogId)) {
+      console.log('[SECURITY] Invalid access log ID attempted:', {
+        accessLogId: accessLogId.substring(0, 8) + '...',
+        ip: clientIp,
+        timestamp: new Date().toISOString(),
+      });
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid or expired access log ID',
+      });
+    }
 
-    // Log this data retrieval
+    // Audit log this data retrieval
     console.log('[AUDIT] Medical info retrieved:', {
       patientId: patientId || mockMedicalInfo.patient.id,
-      accessLogId,
+      accessLogId: accessLogId.substring(0, 8) + '...',
+      ip: clientIp,
       timestamp: new Date().toISOString(),
+      mode: isDemo ? 'demo' : isDev ? 'development' : 'production',
     });
 
     // Return medical info

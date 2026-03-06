@@ -5,10 +5,15 @@
 // COMPASS AI Chat Endpoint
 // Processes patient messages and returns AI responses with
 // clinical extraction, phase progression, and urgency assessment
+//
+// Security:
+// - Rate limited to prevent abuse
+// - Input validation
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { AssessmentPhase, UrgencyLevel, HistoryOfPresentIllness } from '@attending/shared';
+import { rateLimit, getClientIp, sanitizeInput } from '@attending/shared/lib/security';
 
 // Red flag patterns for emergency detection
 const RED_FLAG_PATTERNS = [
@@ -105,8 +110,28 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Rate limit: max 60 messages per minute per IP (for assessment conversations)
+  const clientIp = getClientIp(req);
+  const rateLimitResult = await rateLimit(clientIp, {
+    windowMs: 60_000,
+    maxRequests: 60,
+    keyPrefix: 'compass-chat',
+  });
+
+  res.setHeader('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+
+  if (!rateLimitResult.allowed) {
+    return res.status(429).json({
+      error: 'Too many messages. Please wait a moment before continuing.',
+      retryAfter: rateLimitResult.retryAfter,
+    });
+  }
+
   try {
-    const { message, currentPhase, clinicalData, messageHistory } = req.body as ChatRequest;
+    const { message: rawMessage, currentPhase, clinicalData, messageHistory } = req.body as ChatRequest;
+
+    // Sanitize user input to prevent XSS
+    const message = sanitizeInput(rawMessage || '');
 
     // Detect red flags in user message
     const detectedRedFlags = detectRedFlags(message);
