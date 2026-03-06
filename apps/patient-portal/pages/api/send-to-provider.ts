@@ -40,17 +40,44 @@ export default async function handler(
     const isUrgent = urgencyLevel === 'high';
     const priorityStr = isUrgent ? 'URGENT' : 'NORMAL';
 
-    // Find active providers to notify
-    const activeProviders = await prisma.user.findMany({
-      where: { role: 'PROVIDER', isActive: true },
-      select: { id: true },
-      take: 50,
-    });
+    // Resolve the target provider:
+    // 1. Use assignedProviderId from the request body (if the caller knows it)
+    // 2. Look up the patient's most recent assessment for an assigned provider
+    // 3. Fall back to the first active provider (demo mode only)
+    const { assignedProviderId } = req.body as { assignedProviderId?: string };
+    let targetProviderIds: string[] = [];
 
-    if (activeProviders.length > 0) {
+    if (assignedProviderId) {
+      // Caller explicitly specified the provider
+      targetProviderIds = [assignedProviderId];
+    } else {
+      // Look up from the patient's most recent assessment
+      const latestAssessment = await prisma.patientAssessment.findFirst({
+        where: { patientId, assignedProviderId: { not: null } },
+        orderBy: { createdAt: 'desc' },
+        select: { assignedProviderId: true },
+      });
+
+      if (latestAssessment?.assignedProviderId) {
+        targetProviderIds = [latestAssessment.assignedProviderId];
+      } else {
+        // Demo fallback: route to first active provider
+        // TODO: Remove this fallback when clinic integration is live
+        const fallbackProvider = await prisma.user.findFirst({
+          where: { role: 'PROVIDER', isActive: true },
+          select: { id: true },
+        });
+        if (fallbackProvider) {
+          targetProviderIds = [fallbackProvider.id];
+        }
+        console.warn(`[SEND-TO-PROVIDER] No assigned provider for patient ${patientId} — using demo fallback`);
+      }
+    }
+
+    if (targetProviderIds.length > 0) {
       await prisma.notification.createMany({
-        data: activeProviders.map((p) => ({
-          userId: p.id,
+        data: targetProviderIds.map((providerId) => ({
+          userId: providerId,
           type: messageType === 'urgent-alert' ? 'URGENT_MESSAGE' : 'PATIENT_MESSAGE',
           priority: priorityStr,
           title: isUrgent
@@ -74,7 +101,7 @@ export default async function handler(
       },
     });
 
-    console.log(`[SEND-TO-PROVIDER] ${messageId} priority=${priorityStr} providers=${activeProviders.length}`);
+    console.log(`[SEND-TO-PROVIDER] ${messageId} priority=${priorityStr} providers=${targetProviderIds.length}`);
 
     return res.status(200).json({
       success: true,

@@ -103,29 +103,25 @@ public class DiagnosticLearningRepository : IDiagnosticLearningRepository
     public async Task<IReadOnlyList<DiagnosticAccuracySnapshot>> GetAllLatestSnapshotsAsync(
         CancellationToken ct = default)
     {
-        // Subquery: max WindowEnd per (RecommendationType, GuidelineName)
-        var latestDates = await _ctx.DiagnosticAccuracySnapshots
+        // Single query: join snapshots against their group's max WindowEnd.
+        // Replaces the previous N+1 pattern (1 query for groups + N queries per group).
+        var latestDates = _ctx.DiagnosticAccuracySnapshots
             .GroupBy(x => new { x.RecommendationType, x.GuidelineName })
             .Select(g => new
             {
                 g.Key.RecommendationType,
                 g.Key.GuidelineName,
                 MaxWindowEnd = g.Max(x => x.WindowEnd)
-            })
+            });
+
+        // Join back to get the full snapshot entities in a single round-trip
+        var results = await _ctx.DiagnosticAccuracySnapshots
+            .Where(s => latestDates.Any(ld =>
+                ld.RecommendationType == s.RecommendationType &&
+                ld.GuidelineName == s.GuidelineName &&
+                ld.MaxWindowEnd == s.WindowEnd))
             .ToListAsync(ct);
 
-        var results = new List<DiagnosticAccuracySnapshot>();
-        foreach (var item in latestDates)
-        {
-            var snapshot = await _ctx.DiagnosticAccuracySnapshots
-                .Where(x =>
-                    x.RecommendationType == item.RecommendationType &&
-                    x.GuidelineName == item.GuidelineName &&
-                    x.WindowEnd == item.MaxWindowEnd)
-                .FirstOrDefaultAsync(ct);
-
-            if (snapshot != null) results.Add(snapshot);
-        }
         return results;
     }
 

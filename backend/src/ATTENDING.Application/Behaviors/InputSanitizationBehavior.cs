@@ -69,9 +69,10 @@ public partial class InputSanitizationBehavior<TRequest, TResponse> : IPipelineB
     /// Reflects over public string properties and sanitizes in-place.
     /// Returns the count of properties that were modified.
     /// </summary>
-    private static int SanitizeObject(object obj)
+    private int SanitizeObject(object obj)
     {
         var count = 0;
+        var skipped = 0;
         var type = obj.GetType();
 
         // For record types, we can't set properties (they're init-only).
@@ -107,8 +108,28 @@ public partial class InputSanitizationBehavior<TRequest, TResponse> : IPipelineB
                         backingField.SetValue(obj, sanitized);
                         count++;
                     }
+                    else
+                    {
+                        // Backing field not found — sanitization skipped for this property.
+                        // This can happen with non-standard record types or custom property
+                        // implementations where the compiler uses a different naming convention.
+                        _logger.LogWarning(
+                            "Could not sanitize init-only property {PropertyName} on {TypeName}: " +
+                            "backing field <{PropertyName}>k__BackingField not found. " +
+                            "The property contains potentially dangerous content that was not sanitized.",
+                            prop.Name, type.Name, prop.Name);
+                        skipped++;
+                    }
                 }
             }
+        }
+
+        if (skipped > 0)
+        {
+            _logger.LogWarning(
+                "Sanitization skipped {SkippedCount} init-only properties on {TypeName} — " +
+                "these properties could not be sanitized via backing field reflection.",
+                skipped, type.Name);
         }
 
         return count;

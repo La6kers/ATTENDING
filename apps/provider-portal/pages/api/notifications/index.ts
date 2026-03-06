@@ -9,7 +9,30 @@
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth';
 import { prisma } from '@attending/shared/lib/prisma';
+
+// Resolve the current provider from session, falling back to first active
+// provider in development mode when no session is available.
+async function resolveProviderId(req: NextApiRequest, res: NextApiResponse): Promise<string | null> {
+  // Try to get the authenticated user from session
+  const session = await getServerSession(req, res, {});
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  // Dev/demo fallback: use first active provider
+  // TODO: Remove this fallback when real auth is enforced
+  if (process.env.NODE_ENV === 'development' || !process.env.NEXTAUTH_ENFORCE) {
+    const provider = await prisma.user.findFirst({
+      where: { role: 'PROVIDER', isActive: true },
+      select: { id: true },
+    });
+    return provider?.id ?? null;
+  }
+
+  return null;
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -35,18 +58,13 @@ export default async function handler(
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   const { unreadOnly, limit = '20' } = req.query;
 
-  // In production, get userId from session
-  // For now, get the first provider
-  const provider = await prisma.user.findFirst({
-    where: { role: 'PROVIDER', isActive: true },
-  });
-
-  if (!provider) {
-    return res.status(200).json({ notifications: [], unreadCount: 0 });
+  const providerId = await resolveProviderId(req, res);
+  if (!providerId) {
+    return res.status(401).json({ error: 'Unauthorized — no provider session found' });
   }
 
   const where: any = {
-    userId: provider.id,
+    userId: providerId,
   };
 
   if (unreadOnly === 'true') {
@@ -63,7 +81,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     }),
     prisma.notification.count({
       where: {
-        userId: provider.id,
+        userId: providerId,
         read: false,
       },
     }),
@@ -104,19 +122,15 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 async function handleMarkRead(req: NextApiRequest, res: NextApiResponse) {
   const { notificationIds, markAll } = req.body;
 
-  // In production, get userId from session
-  const provider = await prisma.user.findFirst({
-    where: { role: 'PROVIDER', isActive: true },
-  });
-
-  if (!provider) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  const providerId = await resolveProviderId(req, res);
+  if (!providerId) {
+    return res.status(401).json({ error: 'Unauthorized — no provider session found' });
   }
 
   if (markAll) {
     await prisma.notification.updateMany({
       where: {
-        userId: provider.id,
+        userId: providerId,
         read: false,
       },
       data: {
@@ -128,7 +142,7 @@ async function handleMarkRead(req: NextApiRequest, res: NextApiResponse) {
     await prisma.notification.updateMany({
       where: {
         id: { in: notificationIds },
-        userId: provider.id,
+        userId: providerId,
       },
       data: {
         read: true,
@@ -139,7 +153,7 @@ async function handleMarkRead(req: NextApiRequest, res: NextApiResponse) {
 
   const unreadCount = await prisma.notification.count({
     where: {
-      userId: provider.id,
+      userId: providerId,
       read: false,
     },
   });

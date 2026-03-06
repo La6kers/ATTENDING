@@ -184,6 +184,7 @@ export default function ProviderDashboard() {
   });
 
   const [patientQueue, setPatientQueue] = useState<QueueItem[]>([]);
+  const [dataErrors, setDataErrors] = useState<string[]>([]);
 
   // Fetch real data from assessments API + notification count
   useEffect(() => {
@@ -194,17 +195,28 @@ export default function ProviderDashboard() {
           fetch('/api/notifications?unreadOnly=true&limit=1'),
         ]);
 
+        const errors: string[] = [];
+
         let assessments: any[] = [];
         if (assessmentRes.status === 'fulfilled' && assessmentRes.value.ok) {
           const data = await assessmentRes.value.json();
           assessments = data.assessments || [];
+        } else {
+          const reason = assessmentRes.status === 'rejected'
+            ? 'Network error'
+            : `HTTP ${assessmentRes.value.status}`;
+          errors.push(`Could not load assessments (${reason}). Is the backend running?`);
         }
 
         let unreadCount = 0;
         if (notifRes.status === 'fulfilled' && notifRes.value.ok) {
           const notifData = await notifRes.value.json();
           unreadCount = notifData.unreadCount || 0;
+        } else {
+          errors.push('Could not load notifications.');
         }
+
+        setDataErrors(errors);
 
         // Calculate stats from real data
         const pending = assessments.filter((a: any) => !a.assignedProvider && !a.assignedProviderName).length;
@@ -383,10 +395,20 @@ export default function ProviderDashboard() {
                 ))}
               </div>
 
-              {patientQueue.length === 0 && (
+              {patientQueue.length === 0 && dataErrors.length === 0 && (
                 <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
                   <Stethoscope className="w-12 h-12 text-teal-200 mx-auto mb-4" />
                   <p className="text-teal-200">No patients in queue</p>
+                </div>
+              )}
+
+              {patientQueue.length === 0 && dataErrors.length > 0 && (
+                <div className="text-center py-12 bg-red-500/10 rounded-2xl border border-red-500/30">
+                  <AlertTriangle className="w-12 h-12 text-red-300 mx-auto mb-4" />
+                  <p className="text-red-200 font-medium mb-2">Unable to load patient data</p>
+                  {dataErrors.map((err, i) => (
+                    <p key={i} className="text-red-300/80 text-sm">{err}</p>
+                  ))}
                 </div>
               )}
             </div>

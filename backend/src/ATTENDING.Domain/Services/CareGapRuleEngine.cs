@@ -465,13 +465,55 @@ public record PatientCareGapInput(
             || ActiveConditionNames.Any(n => n.Contains(fragment, StringComparison.OrdinalIgnoreCase));
     }
 
-    /// <summary>Get the date of the most recent screening of a given type</summary>
+    // Pre-built index of screening type → most recent date.
+    // Built once on first access; avoids O(n*m) repeated scans.
+    private Dictionary<string, DateTime>? _screeningIndex;
+
+    /// <summary>
+    /// Builds a lookup dictionary mapping each screening type (lowercased)
+    /// to its most recent date. Built once per evaluation.
+    /// </summary>
+    private Dictionary<string, DateTime> ScreeningIndex
+    {
+        get
+        {
+            if (_screeningIndex != null) return _screeningIndex;
+            _screeningIndex = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+            foreach (var entry in ScreeningHistory)
+            {
+                var key = entry.ScreeningType;
+                if (!_screeningIndex.TryGetValue(key, out var existing) || entry.PerformedAt > existing)
+                {
+                    _screeningIndex[key] = entry.PerformedAt;
+                }
+            }
+            return _screeningIndex;
+        }
+    }
+
+    /// <summary>Get the date of the most recent screening of a given type.</summary>
+    /// <remarks>
+    /// Uses a pre-built dictionary for exact matches (O(1)), falling back
+    /// to a linear scan only when the screening type is a substring match
+    /// (e.g. "mammogram" matching "screening mammogram bilateral").
+    /// </remarks>
     public DateTime? LastScreening(string screeningType)
     {
-        return ScreeningHistory
-            .Where(s => s.ScreeningType.Contains(screeningType, StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(s => s.PerformedAt)
-            .FirstOrDefault()?.PerformedAt;
+        // Fast path: exact match from the pre-built index
+        if (ScreeningIndex.TryGetValue(screeningType, out var exactDate))
+            return exactDate;
+
+        // Slow path: substring match (needed for partial names like "pap" matching "pap smear")
+        DateTime? best = null;
+        foreach (var entry in ScreeningHistory)
+        {
+            if (entry.ScreeningType.Contains(screeningType, StringComparison.OrdinalIgnoreCase))
+            {
+                if (!best.HasValue || entry.PerformedAt > best.Value)
+                    best = entry.PerformedAt;
+            }
+        }
+        return best;
     }
 }
 
