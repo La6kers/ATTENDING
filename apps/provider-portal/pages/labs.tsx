@@ -64,31 +64,35 @@ export default function Labs() {
     let cancelled = false;
 
     async function loadPatient() {
-      // If a real patientId is in the URL, fetch from API
-      if (patientId && typeof patientId === 'string') {
-        setPatientLoading(true);
-        try {
-          const asmId = typeof assessmentId === 'string' ? assessmentId : undefined;
-          const ctx = await fetchPatientContextShared(patientId, asmId);
-          if (!cancelled) {
-            // Overlay chiefComplaint from URL if provided and assessment didn't supply one
-            if (!ctx.chiefComplaint && chiefComplaint && typeof chiefComplaint === 'string') {
-              ctx.chiefComplaint = chiefComplaint;
-            }
-            setPatientContext(ctx);
-            setPatientLoading(false);
-          }
-        } catch (err) {
-          console.error('[Labs] Failed to load patient context:', err);
-          if (!cancelled) {
-            toast.error('Patient not found', 'Using demo patient data');
-            setPatientContext(DEMO_PATIENT);
-            setPatientLoading(false);
-          }
-        }
-      } else if (!patientContext) {
-        // No patientId in URL — use demo patient
+      // No patientId in URL — always reset to demo patient.
+      // Do NOT check !patientContext here: if the provider previously loaded
+      // a real patient and then navigates back without URL params, the Zustand
+      // store would still hold that patient's data.
+      if (!patientId || typeof patientId !== 'string') {
         setPatientContext(DEMO_PATIENT);
+        return;
+      }
+
+      // Real patientId present — fetch from API
+      setPatientLoading(true);
+      try {
+        const asmId = typeof assessmentId === 'string' ? assessmentId : undefined;
+        const ctx = await fetchPatientContextShared(patientId, asmId);
+        if (!cancelled) {
+          // Overlay chiefComplaint from URL if provided and assessment didn't supply one
+          if (!ctx.chiefComplaint && chiefComplaint && typeof chiefComplaint === 'string') {
+            ctx.chiefComplaint = chiefComplaint;
+          }
+          setPatientContext(ctx);
+          setPatientLoading(false);
+        }
+      } catch (err) {
+        console.error('[Labs] Failed to load patient context:', err);
+        if (!cancelled) {
+          toast.error('Patient not found', 'Using demo patient data');
+          setPatientContext(DEMO_PATIENT);
+          setPatientLoading(false);
+        }
       }
     }
 

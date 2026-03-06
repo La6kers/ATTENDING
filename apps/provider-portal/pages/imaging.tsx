@@ -24,6 +24,7 @@ import {
   type OrderPriority,
   type OrderingContext,
 } from '../store/imagingOrderingStore';
+import { useFhirConnected } from '@attending/shared/lib/fhir/hooks';
 import { fetchPatientContext } from '../lib/fetchPatientContext';
 import { DEMO_PATIENT } from '../lib/demoPatient';
 
@@ -107,7 +108,7 @@ export default function Imaging() {
       // encounterId is optional — pre-visit imaging orders don't require an encounter
       const eid = router.query.encounterId;
       const encId = eid && typeof eid === 'string' ? eid : undefined;
-      const orderIds = await submitOrder(encId as string);
+      const orderIds = await submitOrder(encId);
       toast.success('Imaging orders submitted!', `Order IDs: ${orderIds.join(', ')}`);
     } catch (err) {
       toast.error('Failed to submit', 'Please try again.');
@@ -277,6 +278,64 @@ export default function Imaging() {
 }
 
 function ImagingResultsView() {
+  const [search, setSearch] = React.useState('');
+  const [modalityFilter, setModalityFilter] = React.useState('all');
+  const isConnected = useFhirConnected();
+
+  // Demo records used when EHR is not connected.
+  // Names are fictional placeholders — no real patient data.
+  const demoResults = [
+    {
+      id: 'demo-1',
+      patientName: 'Demo Patient A',
+      mrn: 'MRN-DEMO1',
+      study: 'CT Head w/o Contrast',
+      modality: 'CT',
+      date: 'Today, 2:15 PM',
+      status: 'Final',
+      statusColor: 'green',
+      finding: 'Critical - SAH',
+      findingColor: 'red',
+      rowBg: 'bg-red-50',
+    },
+    {
+      id: 'demo-2',
+      patientName: 'Demo Patient B',
+      mrn: 'MRN-DEMO2',
+      study: 'MRI Brain w/wo Contrast',
+      modality: 'MRI',
+      date: 'Today, 11:30 AM',
+      status: 'Final',
+      statusColor: 'green',
+      finding: 'Normal',
+      findingColor: 'green',
+      rowBg: '',
+    },
+    {
+      id: 'demo-3',
+      patientName: 'Demo Patient C',
+      mrn: 'MRN-DEMO3',
+      study: 'CT Chest PE Protocol',
+      modality: 'CT',
+      date: 'Today, 3:45 PM',
+      status: 'Pending Read',
+      statusColor: 'amber',
+      finding: '—',
+      findingColor: 'gray',
+      rowBg: '',
+    },
+  ];
+
+  const filteredDemo = demoResults.filter(r => {
+    const matchSearch = !search || r.study.toLowerCase().includes(search.toLowerCase());
+    const matchModality = modalityFilter === 'all' || r.modality === modalityFilter;
+    return matchSearch && matchModality;
+  });
+
+  const modalityIcon = (m: string) => m === 'MRI'
+    ? <span className="flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs"><Waves className="w-3 h-3" /> MRI</span>
+    : <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"><Monitor className="w-3 h-3" /> {m}</span>;
+
   return (
     <div className="space-y-6">
       {/* Stats */}
@@ -297,6 +356,14 @@ function ImagingResultsView() {
         ))}
       </div>
 
+      {/* EHR connection badge */}
+      {isConnected && (
+        <div className="flex items-center gap-2 text-sm text-green-300">
+          <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+          Showing imaging results from EHR
+        </div>
+      )}
+
       {/* Results Table */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="p-4 border-b flex items-center gap-4">
@@ -304,88 +371,78 @@ function ImagingResultsView() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search imaging studies..."
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200 focus:border-teal-500"
             />
           </div>
-          <select className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200">
-            <option>All Modalities</option>
-            <option>CT</option>
-            <option>MRI</option>
-            <option>X-Ray</option>
-            <option>Ultrasound</option>
+          <select
+            value={modalityFilter}
+            onChange={(e) => setModalityFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-200"
+          >
+            <option value="all">All Modalities</option>
+            <option value="CT">CT</option>
+            <option value="MRI">MRI</option>
+            <option value="XR">X-Ray</option>
+            <option value="US">Ultrasound</option>
           </select>
         </div>
 
-        <table className="w-full">
-          <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase">
-            <tr>
-              <th className="px-4 py-3">Patient</th>
-              <th className="px-4 py-3">Study</th>
-              <th className="px-4 py-3">Modality</th>
-              <th className="px-4 py-3">Date</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Findings</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            <tr className="bg-red-50">
-              <td className="px-4 py-3">
-                <p className="font-medium">John Doe</p>
-                <p className="text-sm text-gray-500">MRN: 123456</p>
-              </td>
-              <td className="px-4 py-3">CT Head w/o Contrast</td>
-              <td className="px-4 py-3">
-                <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
-                  <Monitor className="w-3 h-3" /> CT
-                </span>
-              </td>
-              <td className="px-4 py-3 text-sm">Today, 2:15 PM</td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Final</span>
-              </td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Critical - SAH</span>
-              </td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3">
-                <p className="font-medium">Sarah Johnson</p>
-                <p className="text-sm text-gray-500">MRN: 789012</p>
-              </td>
-              <td className="px-4 py-3">MRI Brain w/wo Contrast</td>
-              <td className="px-4 py-3">
-                <span className="flex items-center gap-1 px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs">
-                  <Waves className="w-3 h-3" /> MRI
-                </span>
-              </td>
-              <td className="px-4 py-3 text-sm">Today, 11:30 AM</td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Final</span>
-              </td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Normal</span>
-              </td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3">
-                <p className="font-medium">Mike Wilson</p>
-                <p className="text-sm text-gray-500">MRN: 345678</p>
-              </td>
-              <td className="px-4 py-3">CT Chest PE Protocol</td>
-              <td className="px-4 py-3">
-                <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
-                  <Monitor className="w-3 h-3" /> CT
-                </span>
-              </td>
-              <td className="px-4 py-3 text-sm">Today, 3:45 PM</td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs">Pending Read</span>
-              </td>
-              <td className="px-4 py-3 text-gray-400">—</td>
-            </tr>
-          </tbody>
-        </table>
+        {isConnected ? (
+          <div className="p-8 text-center text-gray-500">
+            <p className="font-medium mb-1">EHR connected</p>
+            <p className="text-sm">Imaging result retrieval via FHIR DiagnosticReport is not yet implemented.</p>
+          </div>
+        ) : filteredDemo.length > 0 ? (
+          <table className="w-full">
+            <thead className="bg-gray-50 text-left text-xs text-gray-500 uppercase">
+              <tr>
+                <th className="px-4 py-3">Patient</th>
+                <th className="px-4 py-3">Study</th>
+                <th className="px-4 py-3">Modality</th>
+                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Findings</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {filteredDemo.map((r) => (
+                <tr key={r.id} className={r.rowBg}>
+                  <td className="px-4 py-3">
+                    <p className="font-medium">{r.patientName}</p>
+                    <p className="text-sm text-gray-500">{r.mrn}</p>
+                  </td>
+                  <td className="px-4 py-3">{r.study}</td>
+                  <td className="px-4 py-3">{modalityIcon(r.modality)}</td>
+                  <td className="px-4 py-3 text-sm">{r.date}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 bg-${r.statusColor}-100 text-${r.statusColor}-700 rounded-full text-xs`}>
+                      {r.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 bg-${r.findingColor}-100 text-${r.findingColor}-700 rounded-full text-xs font-medium`}>
+                      {r.finding}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="p-8 text-center text-gray-500">
+            {search || modalityFilter !== 'all'
+              ? 'No results match your filter.'
+              : (
+                <div>
+                  <p className="font-medium mb-1">Connect to Epic to see real imaging results</p>
+                  <p className="text-sm">Use the “Connect Epic” button in the header to link your EHR.</p>
+                </div>
+              )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -38,8 +38,15 @@ export interface FetchedPatientContext {
   pcp?: string;
 }
 
+/** Request timeout in milliseconds (10 seconds). Rural clinic connections may be slow. */
+const FETCH_TIMEOUT_MS = 10_000;
+
 /**
  * Fetch patient + assessment data from provider-portal BFF endpoints.
+ *
+ * Applies a 10-second timeout via AbortController on each fetch. If the
+ * network is slow (common in rural settings), callers should fall back to
+ * DEMO_PATIENT and surface a toast rather than hanging indefinitely.
  *
  * @param patientId   – Required patient ID
  * @param assessmentId – Optional COMPASS assessment ID
@@ -49,13 +56,21 @@ export async function fetchPatientContext(
   patientId: string,
   assessmentId?: string,
 ): Promise<FetchedPatientContext> {
-  // Fetch patient record and (optionally) assessment in parallel
-  const [patientRes, assessmentRes] = await Promise.all([
-    fetch(`/api/patients/${patientId}`),
-    assessmentId ? fetch(`/api/assessments/${assessmentId}`) : Promise.resolve(null),
-  ]);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-  if (!patientRes.ok) throw new Error(`Patient fetch failed (${patientRes.status})`);
+  try {
+    // Fetch patient record and (optionally) assessment in parallel
+    const [patientRes, assessmentRes] = await Promise.all([
+      fetch(`/api/patients/${patientId}`, { signal: controller.signal }),
+      assessmentId
+        ? fetch(`/api/assessments/${assessmentId}`, { signal: controller.signal })
+        : Promise.resolve(null),
+    ]);
+
+    clearTimeout(timeoutId);
+
+    if (!patientRes.ok) throw new Error(`Patient fetch failed (${patientRes.status})`);
   const patientJson = await patientRes.json();
   const patient = patientJson.patient || patientJson;
 
@@ -128,4 +143,12 @@ export async function fetchPatientContext(
     insurancePlan: patient.insurancePlan || patient.insurance?.plan || '',
     pcp: patient.pcp || patient.primaryCareProvider || '',
   };
+  } catch (err) {
+    clearTimeout(timeoutId);
+    // Re-throw with a clearer message for AbortError (timeout)
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`Patient data request timed out after ${FETCH_TIMEOUT_MS / 1000}s. Check network connectivity.`);
+    }
+    throw err;
+  }
 }

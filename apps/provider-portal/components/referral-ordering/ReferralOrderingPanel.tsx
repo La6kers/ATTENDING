@@ -40,7 +40,8 @@ const COMMON_REFERRAL_OPTIONS = [
 
 interface ReferralOrderingPanelProps {
   patientContext: PatientContext;
-  encounterId: string;
+  /** Pass undefined when there is no active encounter (e.g. pre-visit ordering). */
+  encounterId: string | undefined;
   onOrderComplete?: (referralIds: string[]) => void;
   showSidebar?: boolean;
 }
@@ -58,18 +59,19 @@ export function ReferralOrderingPanel({
   const [showNewReferralForm, setShowNewReferralForm] = useState(false);
   const [previewReferral, setPreviewReferral] = useState<string | null>(null);
   
-  // Mock status data (in production, this would come from the store/API)
-  const [statusUpdates] = useState<ReferralStatusUpdate[]>([
+  // Static demo data — not state since these values never change at runtime.
+  // Replace with store/API calls when the backend referral status endpoint is ready.
+  const statusUpdates: ReferralStatusUpdate[] = [
     { id: '1', status: 'SENT', timestamp: new Date(), message: 'Referral submitted to provider', completed: true },
     { id: '2', status: 'PENDING', timestamp: new Date(), message: 'Insurance authorization pending', completed: false },
     { id: '3', status: 'PENDING', timestamp: new Date(), message: 'Appointment scheduled', completed: false },
     { id: '4', status: 'PENDING', timestamp: new Date(), message: 'Patient notified', completed: false },
-  ]);
+  ];
 
-  const [activeReferrals] = useState<ActiveReferral[]>([
+  const activeReferrals: ActiveReferral[] = [
     { id: 'ref-1', specialty: 'CARDS', specialtyName: 'Cardiology', status: 'SCHEDULED', appointmentDate: 'March 15' },
     { id: 'ref-2', specialty: 'ENDO', specialtyName: 'Endocrinology', status: 'PENDING' },
-  ]);
+  ];
 
   // Store state and actions
   const {
@@ -161,10 +163,32 @@ export function ReferralOrderingPanel({
 
   const handleConfirmSubmit = async () => {
     if (!previewReferral) return;
-    
+
     try {
-      // Submit just the previewed referral
-      const ids = await submitReferrals(encounterId);
+      // Submit ONLY the previewed referral — not the entire store batch.
+      const ref = selectedArray.find(r => r.specialty.code === previewReferral);
+      if (!ref) return;
+
+      const res = await fetch('/api/referrals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          encounterId: encounterId || undefined,
+          referrals: [{
+            specialtyCode: ref.specialty.code,
+            specialtyName: ref.specialty.name,
+            urgency: ref.urgency,
+            clinicalQuestion: ref.clinicalQuestion,
+            relevantHistory: ref.relevantHistory,
+            preferredProviderId: ref.preferredProvider?.id,
+          }],
+        }),
+      });
+
+      if (!res.ok) throw new Error(`Referral submission failed (${res.status})`);
+      const data = await res.json();
+      const ids: string[] = data.referralIds || data.ids || [];
+
       setPreviewReferral(null);
       onOrderComplete?.(ids);
     } catch (err) {
@@ -384,8 +408,8 @@ export function ReferralOrderingPanel({
           <ReferralStatusSidebar
             statusUpdates={statusUpdates}
             activeReferrals={activeReferrals}
-            onViewAllReferrals={() => console.log('View all referrals')}
-            onInitiateAppeal={(id) => console.log('Initiate appeal for', id)}
+            onViewAllReferrals={() => { /* TODO: navigate to full referral history page */ }}
+            onInitiateAppeal={(_id) => { /* TODO: open appeal workflow modal */ }}
           />
         )}
       </div>

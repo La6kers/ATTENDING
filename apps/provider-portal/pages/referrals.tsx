@@ -170,7 +170,7 @@ export default function ReferralsPage() {
               {activeTab === 'new' && normalizedPatientContext && (
                 <ReferralOrderingPanel
                   patientContext={normalizedPatientContext}
-                  encounterId={encounterId && typeof encounterId === 'string' ? encounterId : ''}
+                  encounterId={encounterId && typeof encounterId === 'string' ? encounterId : undefined}
                   onOrderComplete={handleOrderComplete}
                 />
               )}

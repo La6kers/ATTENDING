@@ -8,6 +8,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProviderShell } from '@/components/layout/ProviderShell';
+import { useToast } from '@/components/shared';
 import { fetchPatientContext } from '@/lib/fetchPatientContext';
 import { DEMO_PATIENT_COMPACT } from '@/lib/demoPatient';
 import { 
@@ -361,6 +362,7 @@ export default function MedicationsPage() {
   const [filterInStock, setFilterInStock] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
+  const toast = useToast();
 
   // Load real patient context when patientId is in URL
   useEffect(() => {
@@ -426,8 +428,7 @@ export default function MedicationsPage() {
       setSentSuccess(true);
     } catch (err) {
       console.error('[Medications] Failed to send prescriptions:', err);
-      // TODO: Add toast error notification when useToast is wired into this page
-      alert('Failed to send prescriptions. Please try again.');
+      toast.error('Failed to send prescriptions', 'Please try again.');
     } finally {
       setIsSending(false);
     }
