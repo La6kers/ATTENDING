@@ -594,6 +594,165 @@ namespace ATTENDING.Infrastructure.Migrations
                     b.ToTable("AuditLogs", "audit");
                 });
 
+            modelBuilder.Entity("ATTENDING.Domain.Entities.BehavioralHealthScreening", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ActionTaken")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("AdministeredByProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AlcoholRiskLevel")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("AnxietySeverity")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid?>("AssessmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DepressionSeverity")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid?>("EncounterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("HasSuicideRisk")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Instrument")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPartTwoProtected")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("NextScreeningDue")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PartTwoConsentCapturedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool?>("PartTwoConsentGiven")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("PartTwoConsentTimestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProviderActionNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("PtsdScreenResult")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("RecommendedAction")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ReviewedByProviderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SafetyPlanJson")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ScoreInterpretation")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int?>("SuicideBehaviorType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SuicideIdeationLevel")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("TotalScore")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssessmentId")
+                        .HasFilter("[AssessmentId] IS NOT NULL");
+
+                    b.HasIndex("EncounterId")
+                        .HasFilter("[EncounterId] IS NOT NULL");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("IX_BehavioralHealthScreening_OrganizationId");
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("PatientId", "Instrument")
+                        .HasDatabaseName("IX_BHScreenings_PatientInstrument");
+
+                    b.HasIndex("HasSuicideRisk", "Status", "RecommendedAction")
+                        .HasDatabaseName("IX_BHScreenings_SafetyDashboard");
+
+                    b.ToTable("BehavioralHealthScreenings", "clinical");
+                });
+
             modelBuilder.Entity("ATTENDING.Domain.Entities.DiagnosticAccuracySnapshot", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2810,6 +2969,79 @@ namespace ATTENDING.Infrastructure.Migrations
                     b.ToTable("Referrals", "clinical");
                 });
 
+            modelBuilder.Entity("ATTENDING.Domain.Entities.ScreeningResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("AnsweredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("ItemNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("QuestionText")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ResponseText")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("ResponseValue")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("ScreeningId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("IX_ScreeningResponse_OrganizationId");
+
+                    b.HasIndex("ScreeningId");
+
+                    b.ToTable("ScreeningResponses", "clinical");
+                });
+
             modelBuilder.Entity("ATTENDING.Domain.Entities.TranscriptSegment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3033,6 +3265,23 @@ namespace ATTENDING.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Assessment");
+                });
+
+            modelBuilder.Entity("ATTENDING.Domain.Entities.BehavioralHealthScreening", b =>
+                {
+                    b.HasOne("ATTENDING.Domain.Entities.Encounter", "Encounter")
+                        .WithMany()
+                        .HasForeignKey("EncounterId");
+
+                    b.HasOne("ATTENDING.Domain.Entities.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Encounter");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("ATTENDING.Domain.Entities.EhrConnectorConfig", b =>
@@ -3260,6 +3509,17 @@ namespace ATTENDING.Infrastructure.Migrations
                     b.Navigation("ReferringProvider");
                 });
 
+            modelBuilder.Entity("ATTENDING.Domain.Entities.ScreeningResponse", b =>
+                {
+                    b.HasOne("ATTENDING.Domain.Entities.BehavioralHealthScreening", "Screening")
+                        .WithMany("Responses")
+                        .HasForeignKey("ScreeningId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Screening");
+                });
+
             modelBuilder.Entity("ATTENDING.Domain.Entities.TranscriptSegment", b =>
                 {
                     b.HasOne("ATTENDING.Domain.Entities.EncounterRecording", "Recording")
@@ -3269,6 +3529,11 @@ namespace ATTENDING.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Recording");
+                });
+
+            modelBuilder.Entity("ATTENDING.Domain.Entities.BehavioralHealthScreening", b =>
+                {
+                    b.Navigation("Responses");
                 });
 
             modelBuilder.Entity("ATTENDING.Domain.Entities.Encounter", b =>
