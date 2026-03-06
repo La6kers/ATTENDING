@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.Json;
 using FluentValidation;
@@ -460,12 +460,17 @@ public class ApiVersionHeaderMiddleware
     private static readonly Dictionary<string, (string Deprecated, string Sunset)> DeprecatedVersions =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            // Example: { "/api/v0/", ("Tue, 01 Jul 2025 00:00:00 GMT", "Sat, 01 Jan 2026 00:00:00 GMT") }
+            { "/api/v0/", ("Tue, 01 Jul 2025 00:00:00 GMT", "Wed, 01 Jul 2026 00:00:00 GMT") }
         };
 
     private readonly RequestDelegate _next;
+    private readonly ILogger<ApiVersionHeaderMiddleware> _logger;
 
-    public ApiVersionHeaderMiddleware(RequestDelegate next) => _next = next;
+    public ApiVersionHeaderMiddleware(RequestDelegate next, ILogger<ApiVersionHeaderMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -484,6 +489,15 @@ public class ApiVersionHeaderMiddleware
                 context.Response.Headers["Deprecation"] = dates.Deprecated;
                 context.Response.Headers["Sunset"] = dates.Sunset;
                 context.Response.Headers["Link"] = "</api/v1/>; rel=\"successor-version\"";
+
+                // Log deprecated endpoint access for monitoring
+                _logger.LogWarning(
+                    "Deprecated API endpoint accessed: {Path}. Sunset date: {Sunset}",
+                    path, dates.Sunset);
+
+                // TODO: Prometheus metric for deprecation_counter
+                // metrics.DeprecatedEndpointCounter.WithLabelValues(prefix, path).Inc();
+
                 break;
             }
         }

@@ -1,333 +1,257 @@
 # ============================================================
-# ATTENDING AI — Deploy to Azure (Blue-Green)
+# ATTENDING AI - Blue-Green Deployment Pipeline
 # .github/workflows/deploy.yml
 #
-# Flow:
-#   1. build       — Docker images for all 3 services, push to GHCR
-#   2. migrate     — EF Core migrations + Prisma push on staging DB
-#   3. deploy      — Push images to the STAGING slot of each App Service
-#   4. smoke       — k6 smoke test against staging slot URLs
-#   5. swap        — Swap staging → production (zero-downtime)
-#   6. verify      — Health-check production URLs, write job summary
-#
-# Triggered:
-#   - Push to main  → production environment
-#   - Push to develop → staging environment (no production swap)
-#   - Manual dispatch → choose environment
-#
-# Required secrets (set in GitHub → Settings → Environments):
-#   AZURE_CREDENTIALS       — Service principal JSON (az ad sp create-for-rbac)
-#   AZURE_RESOURCE_GROUP    — e.g. rg-attending-staging
-#   SMOKE_API_TOKEN         — Bearer token for a read-only staging service account
+# Deploys to Azure App Service using deployment slots for
+# zero-downtime releases:
+#   1. Deploy to staging slot
+#   2. Run smoke tests against staging
+#   3. Swap staging → production
+#   4. Monitor for rollback triggers
 # ============================================================
 
-name: Deploy to Azure
+name: Deploy (Blue-Green)
 
 on:
-  push:
-    branches: [main, develop]
   workflow_dispatch:
     inputs:
       environment:
         description: 'Target environment'
         required: true
-        default: 'staging'
         type: choice
         options:
           - staging
           - production
+      skip_smoke_tests:
+        description: 'Skip smoke tests (emergency deploy)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
 
 env:
-  REGISTRY:      ghcr.io
-  IMAGE_PREFIX:  ghcr.io/${{ github.repository_owner }}/attending
+  AZURE_WEBAPP_NAME: attending-api
+  AZURE_WEBAPP_SLOT: staging
   DOTNET_VERSION: '8.0.x'
-  DOTNET_NOLOGO: true
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  NODE_VERSION: '20'
 
-# ============================================================
-# 0. Determine target environment
-# ============================================================
 jobs:
-  setup:
+  # ========================================================
+  # PRE-FLIGHT CHECKS
+  # ========================================================
+  preflight:
+    name: Pre-flight Checks
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.env.outputs.environment }}
-      app_prefix:  ${{ steps.env.outputs.app_prefix }}
+      deploy_sha: ${{ github.sha }}
+      deploy_ref: ${{ github.ref_name }}
     steps:
-      - id: env
+      - uses: actions/checkout@v4
+
+      - name: Verify CI passed
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            ENV="${{ inputs.environment }}"
-          elif [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            ENV="production"
-          else
-            ENV="staging"
+          echo "Deploying commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Skip smoke tests: ${{ github.event.inputs.skip_smoke_tests }}"
+
+      - name: Check branch protection
+        if: github.event.inputs.environment == 'production'
+        run: |
+          if [[ "${{ github.ref_name }}" != "main" ]]; then
+            echo "::error::Production deployments must come from the 'main' branch"
+            exit 1
           fi
-          echo "environment=${ENV}" >> $GITHUB_OUTPUT
-          echo "app_prefix=attending-${ENV}" >> $GITHUB_OUTPUT
 
-# ============================================================
-# 1. Build Docker images and push to GHCR
-# ============================================================
+  # ========================================================
+  # BUILD ARTIFACTS
+  # ========================================================
   build:
+    name: Build Deployment Artifacts
     runs-on: ubuntu-latest
-    needs: setup
-    environment: ${{ needs.setup.outputs.environment }}
-    permissions:
-      contents: read
-      packages: write
-
-    strategy:
-      matrix:
-        include:
-          - service: provider-portal
-            dockerfile: apps/provider-portal/Dockerfile
-            context: .
-          - service: patient-portal
-            dockerfile: apps/patient-portal/Dockerfile
-            context: .
-          - service: orders-api
-            dockerfile: backend/Dockerfile
-            context: backend
-
+    needs: preflight
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Build and push ${{ matrix.service }}
-        uses: docker/build-push-action@v5
-        with:
-          context:    ${{ matrix.context }}
-          file:       ${{ matrix.dockerfile }}
-          push:       true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ needs.setup.outputs.environment }}
-          cache-from: type=gha
-          cache-to:   type=gha,mode=max
-
-# ============================================================
-# 2. Database migrations
-#    a) EF Core — .NET backend (always runs; idempotent)
-#    b) Prisma   — Next.js portals (runs on demand or always)
-# ============================================================
-  migrate:
-    runs-on: ubuntu-latest
-    needs: [setup, build]
-    environment: ${{ needs.setup.outputs.environment }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      # ---- EF Core ----
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install EF Core CLI
-        run: dotnet tool install --global dotnet-ef
-
-      - name: Run EF Core migrations
-        working-directory: backend
-        run: |
-          dotnet ef database update \
-            --project src/ATTENDING.Infrastructure \
-            --startup-project src/ATTENDING.Orders.Api \
-            --no-build \
-            --connection "${{ secrets.ATTENDING_DB_CONNECTION }}"
-        env:
-          ASPNETCORE_ENVIRONMENT: ${{ needs.setup.outputs.environment == 'production' && 'Production' || 'Staging' }}
-
-      # ---- Prisma ----
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Build .NET Backend
+        run: |
+          dotnet publish backend/src/ATTENDING.Orders.Api/ATTENDING.Orders.Api.csproj \
+            --configuration Release \
+            --output ./publish/backend
 
-      - name: Run Prisma migrations
-        run: npx prisma migrate deploy --schema=prisma/schema.prisma
+      - name: Build Frontend
+        run: |
+          npm ci
+          npx prisma generate --schema=prisma/schema.prisma
+          npm run build:provider
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_TELEMETRY_DISABLED: 1
 
-# ============================================================
-# 3. Deploy to STAGING SLOT of each App Service
-#    (production traffic is not touched yet)
-# ============================================================
-  deploy-slot:
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-publish
+          path: publish/backend/
+          retention-days: 1
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-publish
+          path: apps/provider-portal/.next/
+          retention-days: 1
+
+  # ========================================================
+  # DEPLOY TO STAGING SLOT
+  # ========================================================
+  deploy-staging:
+    name: Deploy to Staging Slot
     runs-on: ubuntu-latest
-    needs: [setup, build, migrate]
-    environment: ${{ needs.setup.outputs.environment }}
-
-    strategy:
-      matrix:
-        include:
-          - service:  provider-portal
-            app_name: app-${{ needs.setup.outputs.app_prefix }}-provider
-          - service:  patient-portal
-            app_name: app-${{ needs.setup.outputs.app_prefix }}-patient
-          - service:  orders-api
-            app_name: app-${{ needs.setup.outputs.app_prefix }}-api
-
+    needs: build
+    environment:
+      name: staging
+      url: https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net
     steps:
-      - name: Azure Login
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-publish
+          path: ./backend
+
+      - name: Login to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy ${{ matrix.service }} to staging slot
+      - name: Deploy to staging slot
         uses: azure/webapps-deploy@v3
         with:
-          app-name:  ${{ matrix.app_name }}
-          slot-name: staging
-          images:    ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.sha }}
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: ${{ env.AZURE_WEBAPP_SLOT }}
+          package: ./backend
 
-      - name: Wait for staging slot to warm up
-        run: sleep 30
+      - name: Wait for staging to be ready
+        run: |
+          echo "Waiting for staging slot to be ready..."
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/health/live" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Staging slot is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS — waiting 10s..."
+            sleep 10
+          done
+          echo "::error::Staging slot did not become ready in 5 minutes"
+          exit 1
 
-# ============================================================
-# 4. Smoke test against the STAGING SLOT
-#    Any threshold failure aborts the pipeline before swap.
-# ============================================================
-  smoke:
+  # ========================================================
+  # SMOKE TESTS
+  # ========================================================
+  smoke-tests:
+    name: Smoke Tests
     runs-on: ubuntu-latest
-    needs: [setup, deploy-slot]
-    environment: ${{ needs.setup.outputs.environment }}
-
+    needs: deploy-staging
+    if: github.event.inputs.skip_smoke_tests != 'true'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install k6
+      - name: Health check
         run: |
-          sudo gpg -k
-          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
-            --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
-            | sudo tee /etc/apt/sources.list.d/k6.list
-          sudo apt-get update && sudo apt-get install k6 -y
+          curl -f "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/health" \
+            || (echo "::error::Health check failed" && exit 1)
 
-      - name: Run smoke test against staging slot
+      - name: Readiness check
         run: |
-          k6 run \
-            -e BASE_URL=https://app-${{ needs.setup.outputs.app_prefix }}-api-staging.azurewebsites.net \
-            -e API_TOKEN=${{ secrets.SMOKE_API_TOKEN }} \
-            infrastructure/load-testing/smoke.js
+          curl -f "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/health/ready" \
+            || (echo "::error::Readiness check failed" && exit 1)
 
-      - name: Upload smoke results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smoke-results-${{ github.sha }}
-          path: smoke-results.json
-          retention-days: 30
+      - name: API ping
+        run: |
+          RESPONSE=$(curl -s "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/api/v1/system/ping")
+          if [ "$RESPONSE" != '"pong"' ]; then
+            echo "::error::API ping returned unexpected response: $RESPONSE"
+            exit 1
+          fi
 
-# ============================================================
-# 5. Swap staging slot → production (zero-downtime)
-#    Only runs if smoke tests passed.
-# ============================================================
+      - name: Verify API version header
+        run: |
+          VERSION=$(curl -sI "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/api/v1/system/ping" \
+            | grep -i "X-Api-Version" | tr -d '\r')
+          echo "API Version header: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "::warning::X-Api-Version header not present"
+          fi
+
+      - name: Response time check
+        run: |
+          TIME=$(curl -s -o /dev/null -w "%{time_total}" \
+            "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/api/v1/system/ping")
+          echo "Response time: ${TIME}s"
+          # Fail if response takes more than 5 seconds
+          if (( $(echo "$TIME > 5.0" | bc -l) )); then
+            echo "::error::Response time exceeds 5s threshold"
+            exit 1
+          fi
+
+  # ========================================================
+  # SWAP TO PRODUCTION
+  # ========================================================
   swap:
+    name: Swap Staging → Production
     runs-on: ubuntu-latest
-    needs: [setup, smoke]
-    environment: ${{ needs.setup.outputs.environment }}
-
-    strategy:
-      matrix:
-        app_suffix: [provider, patient, api]
-
+    needs: [deploy-staging, smoke-tests]
+    if: always() && needs.deploy-staging.result == 'success' && (needs.smoke-tests.result == 'success' || needs.smoke-tests.result == 'skipped')
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      url: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net
     steps:
-      - name: Azure Login
+      - name: Login to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Swap staging → production for ${{ matrix.app_suffix }}
+      - name: Swap deployment slots
         run: |
+          echo "Swapping staging → production for ${{ env.AZURE_WEBAPP_NAME }}..."
           az webapp deployment slot swap \
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
-            --name app-${{ needs.setup.outputs.app_prefix }}-${{ matrix.app_suffix }} \
-            --slot staging \
+            --resource-group attending-rg \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --slot ${{ env.AZURE_WEBAPP_SLOT }} \
             --target-slot production
 
-# ============================================================
-# 6. Verify production health + write job summary
-# ============================================================
-  verify:
-    runs-on: ubuntu-latest
-    needs: [setup, swap]
-    environment: ${{ needs.setup.outputs.environment }}
-    if: always()
-
-    steps:
-      - name: Health check — Orders API (readiness)
-        id: api_health
+      - name: Verify production health
         run: |
-          URL="https://app-${{ needs.setup.outputs.app_prefix }}-api.azurewebsites.net/health/ready"
-          for i in {1..10}; do
-            STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$URL" || echo "000")
+          sleep 15
+          for i in $(seq 1 12); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net/health" || true)
             if [ "$STATUS" = "200" ]; then
-              echo "status=healthy" >> $GITHUB_OUTPUT
-              echo "✅ Orders API healthy ($URL)"
+              echo "Production is healthy after swap!"
               exit 0
             fi
-            echo "Attempt $i: HTTP $STATUS — retrying in 15s..."
-            sleep 15
+            echo "Post-swap health check attempt $i: HTTP $STATUS"
+            sleep 10
           done
-          echo "status=unhealthy" >> $GITHUB_OUTPUT
-          echo "❌ Orders API health check failed — consider rollback"
+          echo "::error::Production health check failed after swap — consider rollback"
           exit 1
 
-      - name: Health check — Provider Portal
+      - name: Post-deployment notification
+        if: always()
         run: |
-          URL="https://app-${{ needs.setup.outputs.app_prefix }}-provider.azurewebsites.net/api/health"
-          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$URL" || echo "000")
-          [ "$STATUS" = "200" ] && echo "✅ Provider Portal healthy" || echo "⚠️  Provider Portal returned $STATUS"
-
-      - name: Health check — Patient Portal
-        run: |
-          URL="https://app-${{ needs.setup.outputs.app_prefix }}-patient.azurewebsites.net/api/health"
-          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "$URL" || echo "000")
-          [ "$STATUS" = "200" ] && echo "✅ Patient Portal healthy" || echo "⚠️  Patient Portal returned $STATUS"
-
-      - name: Write deployment summary
-        run: |
-          ENV="${{ needs.setup.outputs.environment }}"
-          PREFIX="app-${{ needs.setup.outputs.app_prefix }}"
-          {
-            echo "## 🚀 Deploy Complete — ${ENV}"
-            echo ""
-            echo "| Service | URL |"
-            echo "|---------|-----|"
-            echo "| Provider Portal | https://${PREFIX}-provider.azurewebsites.net |"
-            echo "| Patient Portal  | https://${PREFIX}-patient.azurewebsites.net |"
-            echo "| Orders API      | https://${PREFIX}-api.azurewebsites.net |"
-            echo ""
-            echo "**Commit:** \`${{ github.sha }}\`"
-            echo "**Actor:** ${{ github.actor }}"
-            echo "**Triggered by:** ${{ github.event_name }}"
-          } >> $GITHUB_STEP_SUMMARY
-
-# ============================================================
-# Rollback instructions (manual — not automated)
-# ============================================================
-# If production breaks after swap:
-#
-#   az webapp deployment slot swap \
-#     --resource-group <rg> \
-#     --name app-attending-<env>-api \
-#     --slot staging \
-#     --target-slot production
-#
-# This swaps back instantly because the old code is still
-# sitting in the staging slot.
-# ============================================================
+          echo "::notice::Deployment complete — ${{ github.sha }} is now live in ${{ github.event.inputs.environment }}"

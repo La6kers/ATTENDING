@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +12,7 @@ using ATTENDING.Infrastructure.Messaging;
 using ATTENDING.Infrastructure.Repositories;
 using ATTENDING.Infrastructure.External;
 using ATTENDING.Infrastructure.Services;
+using ATTENDING.Infrastructure.Resilience;
 
 namespace ATTENDING.Infrastructure;
 
@@ -60,6 +61,19 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AttendingDbContext>());
 
         // --------------------------------------------------------
+        // Database Circuit Breaker (Polly)
+        // Wraps database operations with a circuit breaker to prevent
+        // cascading failures when SQL Server is unreachable.
+        // EF Core's EnableRetryOnFailure handles transient retries;
+        // this circuit breaker stops all attempts when the DB is truly down.
+        // --------------------------------------------------------
+        services.AddSingleton<IDbCircuitBreakerPolicy>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<DbCircuitBreakerPolicy>>();
+            return new DbCircuitBreakerPolicy(logger);
+        });
+
+        // --------------------------------------------------------
         // Distributed Cache (Redis or in-memory fallback)
         // --------------------------------------------------------
         var redisConnectionString = configuration.GetConnectionString("Redis");
@@ -76,7 +90,7 @@ public static class DependencyInjection
         else
         {
             // Development fallback: in-memory distributed cache
-            // WARNING: Not suitable for production â€” single instance, no persistence
+            // WARNING: Not suitable for production – single instance, no persistence
             services.AddDistributedMemoryCache();
         }
 
@@ -215,6 +229,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<Soc2EvidenceService>();
 
         // --------------------------------------------------------
         // Plug-and-Play Onboarding Services
@@ -391,9 +406,16 @@ public static class DependencyInjection
                 tags: new[] { "cache", "redis" });
         }
 
+        // Add distributed lock health check
+        // Verifies that the lock service (Redis or in-memory) is operational.
+        // Critical for production deployments using the ClinicalSchedulerService
+        // to ensure distributed locks can be acquired without concurrency issues.
+        healthChecks.AddCheck<DistributedLockHealthCheck>(
+            "distributed-lock",
+            tags: new[] { "distributed", "lock", "scheduler" });
+
         return services;
     }
 }
-
 
 

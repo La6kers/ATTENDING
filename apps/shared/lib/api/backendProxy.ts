@@ -152,9 +152,23 @@ export async function proxyToBackend(
     const qs       = new URLSearchParams(req.query as Record<string, string>).toString();
     const fullPath = qs ? `${backendPath}?${qs}` : backendPath;
 
+    // Build headers, forwarding X-Correlation-ID and X-Request-ID from incoming request
+    const proxyHeaders: Record<string, string> = {};
+    
+    // Forward correlation ID for distributed tracing
+    if (req.headers['x-correlation-id']) {
+      proxyHeaders['X-Correlation-ID'] = req.headers['x-correlation-id'] as string;
+    }
+    
+    // Forward request ID if present
+    if (req.headers['x-request-id']) {
+      proxyHeaders['X-Request-ID'] = req.headers['x-request-id'] as string;
+    }
+
     const data = await backendFetch(fullPath, {
       method: req.method ?? 'GET',
       body,
+      headers: proxyHeaders,
       token: options.token,
     });
 
