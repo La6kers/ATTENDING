@@ -31,6 +31,7 @@ import {
   Square,
   Play,
   Timer,
+  Zap,
 } from 'lucide-react';
 import { ProviderShell } from '@/components/layout/ProviderShell';
 import { CostAwareAIRouter } from '@attending/shared/services/CostAwareAIRouter';
@@ -131,6 +132,11 @@ const COMPASS_WATCH_TERMS = [
   'worst headache', 'sudden onset', 'confusion', 'fever', 'stiff neck',
   'vision changes', 'nausea', 'vomiting', 'photophobia', 'seizure',
 ];
+
+// Red flag terms that trigger auto-upshift to fastest interval
+const RED_FLAG_TERMS = new Set([
+  'worst headache', 'thunderclap', 'seizure', 'loss of consciousness',
+]);
 
 // =============================================================================
 // Mock Data
@@ -324,11 +330,14 @@ const AmbientListeningBar: React.FC<{
   encounterCost: number;
   batchInterval: BatchIntervalOption;
   onBatchIntervalChange: (interval: BatchIntervalOption) => void;
+  autoShiftEnabled: boolean;
+  onAutoShiftToggle: () => void;
+  autoShiftReason: string | null;
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
-}> = ({ state, duration, recentMatches, encounterCost, batchInterval, onBatchIntervalChange, onStart, onPause, onResume, onStop }) => {
+}> = ({ state, duration, recentMatches, encounterCost, batchInterval, onBatchIntervalChange, autoShiftEnabled, onAutoShiftToggle, autoShiftReason, onStart, onPause, onResume, onStop }) => {
   const [showIntervalPicker, setShowIntervalPicker] = useState(false);
 
   const formatDuration = (s: number) => {
@@ -402,6 +411,19 @@ const AmbientListeningBar: React.FC<{
             </button>
             {showIntervalPicker && <IntervalPicker />}
           </div>
+          {/* Auto-shift toggle */}
+          <button
+            onClick={onAutoShiftToggle}
+            className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              autoShiftEnabled
+                ? 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+            }`}
+            title={autoShiftEnabled ? 'Auto-shift enabled: interval adjusts based on diagnosis stability and red flags' : 'Auto-shift disabled: manual interval control only'}
+          >
+            <Zap className="w-4 h-4" />
+            Auto
+          </button>
           <button onClick={onStart}
             className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-lg">
             <Mic className="w-4 h-4" />Start Listening
@@ -435,6 +457,25 @@ const AmbientListeningBar: React.FC<{
             </button>
             {showIntervalPicker && <IntervalPicker />}
           </div>
+          {/* Auto-shift toggle (active state) */}
+          <button
+            onClick={onAutoShiftToggle}
+            className={`text-xs px-2 py-0.5 rounded-full font-medium flex items-center gap-1 transition-colors ${
+              autoShiftEnabled
+                ? 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+            }`}
+            title={autoShiftEnabled ? 'Auto-shift enabled' : 'Auto-shift disabled (manual override)'}
+          >
+            <Zap className="w-3 h-3" />
+            Auto
+          </button>
+          {/* Auto-shift notification */}
+          {autoShiftReason && (
+            <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium animate-pulse">
+              {autoShiftReason}
+            </span>
+          )}
           {encounterCost > 0 ? (
             <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">
               Cost: ${encounterCost.toFixed(4)}
@@ -510,7 +551,14 @@ export default function VisitDiagnosisPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem(BATCH_INTERVAL_STORAGE_KEY, interval.ms.toString());
     }
-  }, []);
+    // Manual override disables auto-shifting for this encounter
+    if (autoShiftEnabled) {
+      setAutoShiftEnabled(false);
+      setAutoShiftReason('Auto-shift disabled (manual override)');
+      if (autoShiftNotificationTimer.current) clearTimeout(autoShiftNotificationTimer.current);
+      autoShiftNotificationTimer.current = setTimeout(() => setAutoShiftReason(null), 5000);
+    }
+  }, [autoShiftEnabled]);
 
   // Ambient listening state
   const [ambientState, setAmbientState] = useState<AmbientState>('off');
@@ -521,6 +569,12 @@ export default function VisitDiagnosisPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const simRef = useRef<NodeJS.Timeout | null>(null);
   const batchRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-shift state
+  const [autoShiftEnabled, setAutoShiftEnabled] = useState(true);
+  const [autoShiftReason, setAutoShiftReason] = useState<string | null>(null);
+  const lastBatchProbabilities = useRef<{ topDxId: string; topProb: number }[]>([]);
+  const autoShiftNotificationTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -579,8 +633,54 @@ export default function VisitDiagnosisPage() {
       setEncounterCost(aiRouter.getEncounterCost());
     }
 
+    // === Auto-shift logic ===
+    if (autoShiftEnabled) {
+      // Check for red flag terms -> auto-upshift to fastest interval
+      const detectedRedFlag = ambientTermBuffer.some(t => RED_FLAG_TERMS.has(t.term.toLowerCase()));
+      if (detectedRedFlag && batchInterval.ms !== BATCH_INTERVALS[0].ms) {
+        setBatchInterval(BATCH_INTERVALS[0]);
+        setAutoShiftReason(`Auto-adjusted to ${BATCH_INTERVALS[0].label} (red flag detected)`);
+        if (autoShiftNotificationTimer.current) clearTimeout(autoShiftNotificationTimer.current);
+        autoShiftNotificationTimer.current = setTimeout(() => setAutoShiftReason(null), 8000);
+      } else {
+        // Check for stability -> auto-downshift to next longer interval
+        const updatedDiagnoses = diagnoses.map(dx => {
+          const update = result.diagnosisUpdates.find(u => u.diagnosisId === dx.id);
+          if (!update) return dx;
+          return { ...dx, probability: Math.max(0.01, Math.min(0.99, dx.probability + update.probabilityDelta)) };
+        });
+        const sortedByProb = [...updatedDiagnoses].sort((a, b) => b.probability - a.probability);
+        const topDx = sortedByProb[0];
+
+        if (topDx) {
+          const snapshot = { topDxId: topDx.id, topProb: topDx.probability };
+          lastBatchProbabilities.current = [...lastBatchProbabilities.current.slice(-2), snapshot];
+
+          // Need at least 2 prior snapshots (so 3 total including current) to assess stability
+          const history = lastBatchProbabilities.current;
+          if (history.length >= 3 && topDx.probability > 0.85) {
+            const recent = history.slice(-3);
+            const sameTopDx = recent.every(h => h.topDxId === topDx.id);
+            const stableProb = recent.every(h => Math.abs(h.topProb - topDx.probability) <= 0.05);
+
+            if (sameTopDx && stableProb) {
+              // Find next longer interval
+              const currentIdx = BATCH_INTERVALS.findIndex(b => b.ms === batchInterval.ms);
+              if (currentIdx >= 0 && currentIdx < BATCH_INTERVALS.length - 1) {
+                const nextInterval = BATCH_INTERVALS[currentIdx + 1];
+                setBatchInterval(nextInterval);
+                setAutoShiftReason(`Auto-adjusted to ${nextInterval.label} (diagnosis stable)`);
+                if (autoShiftNotificationTimer.current) clearTimeout(autoShiftNotificationTimer.current);
+                autoShiftNotificationTimer.current = setTimeout(() => setAutoShiftReason(null), 8000);
+              }
+            }
+          }
+        }
+      }
+    }
+
     setAmbientTermBuffer([]);
-  }, [ambientTermBuffer, diagnoses, aiRouter]);
+  }, [ambientTermBuffer, diagnoses, aiRouter, autoShiftEnabled, batchInterval.ms]);
 
   // Batch flush timer - uses configurable interval
   useEffect(() => {
@@ -620,11 +720,20 @@ export default function VisitDiagnosisPage() {
     return () => { if (simRef.current) clearInterval(simRef.current); };
   }, [ambientState, matchedTerms]);
 
+  const handleAutoShiftToggle = useCallback(() => {
+    setAutoShiftEnabled(prev => !prev);
+    setAutoShiftReason(null);
+    lastBatchProbabilities.current = [];
+  }, []);
+
   const handleStartAmbient = () => {
     setAmbientState('listening');
     setAmbientDuration(0);
     setAmbientMatches([]);
     setMatchedTerms(new Set());
+    // Reset auto-shift tracking for new encounter
+    lastBatchProbabilities.current = [];
+    setAutoShiftReason(null);
   };
 
   const toggleDiagnosis = (dxId: string) => {
@@ -689,6 +798,9 @@ export default function VisitDiagnosisPage() {
               encounterCost={encounterCost}
               batchInterval={batchInterval}
               onBatchIntervalChange={handleBatchIntervalChange}
+              autoShiftEnabled={autoShiftEnabled}
+              onAutoShiftToggle={handleAutoShiftToggle}
+              autoShiftReason={autoShiftReason}
               onStart={handleStartAmbient}
               onPause={() => setAmbientState('paused')}
               onResume={() => setAmbientState('listening')}

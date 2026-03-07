@@ -85,6 +85,199 @@ const DEFAULT_CACHE_CONFIG: CacheConfig = {
 const ESTIMATED_COST_PER_INFERENCE_USD = 0.008;
 
 // ============================================================
+// SEMANTIC DEDUPLICATION - Synonym Normalization
+// ============================================================
+// Maps common clinical synonyms to canonical terms so that
+// semantically identical queries ("bad headache" vs "severe
+// cephalgia") produce the same cache key and share results.
+// ============================================================
+
+const CLINICAL_SYNONYMS: Map<string, string> = new Map([
+  // Severity
+  ['severe', 'severe'],
+  ['bad', 'severe'],
+  ['intense', 'severe'],
+  ['terrible', 'severe'],
+  ['worst', 'severe'],
+
+  // Abdominal
+  ['stomach', 'abdominal'],
+  ['abdominal', 'abdominal'],
+  ['belly', 'abdominal'],
+  ['tummy', 'abdominal'],
+  ['epigastric', 'abdominal'],
+
+  // Headache
+  ['headache', 'headache'],
+  ['head pain', 'headache'],
+  ['cephalgia', 'headache'],
+  ['migraine', 'headache'],
+
+  // Chest pain
+  ['chest pain', 'chest_pain'],
+  ['chest pressure', 'chest_pain'],
+  ['chest tightness', 'chest_pain'],
+  ['substernal', 'chest_pain'],
+
+  // Nausea
+  ['nausea', 'nausea'],
+  ['queasy', 'nausea'],
+  ['sick to stomach', 'nausea'],
+  ['nauseated', 'nausea'],
+
+  // Dizziness
+  ['dizzy', 'dizziness'],
+  ['dizziness', 'dizziness'],
+  ['lightheaded', 'dizziness'],
+  ['vertigo', 'dizziness'],
+  ['room spinning', 'dizziness'],
+
+  // Dyspnea
+  ['short of breath', 'dyspnea'],
+  ['shortness of breath', 'dyspnea'],
+  ['dyspnea', 'dyspnea'],
+  ["can't breathe", 'dyspnea'],
+  ['breathless', 'dyspnea'],
+
+  // Fatigue
+  ['fatigue', 'fatigue'],
+  ['tired', 'fatigue'],
+  ['exhausted', 'fatigue'],
+  ['no energy', 'fatigue'],
+  ['lethargy', 'fatigue'],
+
+  // Back pain
+  ['back pain', 'back_pain'],
+  ['lower back', 'back_pain'],
+  ['lumbar', 'back_pain'],
+  ['lumbago', 'back_pain'],
+
+  // Sore throat
+  ['sore throat', 'sore_throat'],
+  ['throat pain', 'sore_throat'],
+  ['pharyngitis', 'sore_throat'],
+  ['painful swallowing', 'sore_throat'],
+
+  // Cough
+  ['cough', 'cough'],
+  ['coughing', 'cough'],
+  ['productive cough', 'cough'],
+  ['dry cough', 'cough'],
+
+  // Fever
+  ['fever', 'fever'],
+  ['febrile', 'fever'],
+  ['chills', 'fever'],
+  ['temperature', 'fever'],
+  ['hot', 'fever'],
+
+  // Swelling
+  ['swelling', 'swelling'],
+  ['swollen', 'swelling'],
+  ['edema', 'swelling'],
+  ['puffy', 'swelling'],
+
+  // Rash
+  ['rash', 'rash'],
+  ['skin rash', 'rash'],
+  ['hives', 'rash'],
+  ['urticaria', 'rash'],
+  ['skin lesion', 'rash'],
+
+  // Anxiety
+  ['anxiety', 'anxiety'],
+  ['anxious', 'anxiety'],
+  ['nervous', 'anxiety'],
+  ['panic', 'anxiety'],
+  ['worry', 'anxiety'],
+
+  // Depression
+  ['depression', 'depression'],
+  ['depressed', 'depression'],
+  ['sad', 'depression'],
+  ['hopeless', 'depression'],
+  ['low mood', 'depression'],
+]);
+
+/**
+ * Multi-word synonym keys sorted by descending length so that
+ * longer phrases are matched before their substrings
+ * (e.g. "sick to stomach" before "stomach").
+ */
+const MULTI_WORD_SYNONYMS: string[] = Array.from(CLINICAL_SYNONYMS.keys())
+  .filter(k => k.includes(' '))
+  .sort((a, b) => b.length - a.length);
+
+/**
+ * Tracks how often synonym normalization changes the input,
+ * giving visibility into cache dedup effectiveness.
+ */
+export const normalizationStats = {
+  totalTermsProcessed: 0,
+  termsNormalized: 0,
+  get normalizationRate(): number {
+    return this.totalTermsProcessed > 0
+      ? (this.termsNormalized / this.totalTermsProcessed) * 100
+      : 0;
+  },
+};
+
+/**
+ * Normalize an array of clinical terms using the synonym map.
+ *
+ * 1. Lowercases every term.
+ * 2. Attempts multi-word synonym matches first (longest match wins),
+ *    then falls back to single-word lookup for each remaining token.
+ * 3. Returns a sorted, deduplicated array of canonical terms.
+ */
+function normalizeTerms(terms: string[]): string[] {
+  const normalized = new Set<string>();
+
+  for (const raw of terms) {
+    let term = raw.toLowerCase().trim();
+    if (term.length === 0) continue;
+
+    normalizationStats.totalTermsProcessed++;
+    const original = term;
+
+    // --- try multi-word synonym match first ---
+    let matched = false;
+    for (const phrase of MULTI_WORD_SYNONYMS) {
+      if (term.includes(phrase)) {
+        normalized.add(CLINICAL_SYNONYMS.get(phrase)!);
+        // Remove matched phrase and process remainder tokens
+        term = term.replace(phrase, '').trim();
+        matched = true;
+        break;
+      }
+    }
+
+    // --- process remaining (or entire) term word-by-word ---
+    if (term.length > 0) {
+      const words = term.split(/\s+/);
+      for (const word of words) {
+        const canon = CLINICAL_SYNONYMS.get(word);
+        if (canon) {
+          normalized.add(canon);
+          matched = true;
+        } else {
+          // Keep unrecognised tokens as-is
+          normalized.add(word);
+        }
+      }
+    }
+
+    // Track whether normalization changed anything
+    const resultContainsOriginal = normalized.has(original);
+    if (matched && !resultContainsOriginal) {
+      normalizationStats.termsNormalized++;
+    }
+  }
+
+  return Array.from(normalized).sort();
+}
+
+// ============================================================
 // CACHE SERVICE
 // ============================================================
 
@@ -115,21 +308,15 @@ class ClinicalCacheService {
    * IMPORTANT: NO PHI is included in cache keys.
    */
   private buildDifferentialKey(symptoms: string[], chiefComplaint: string): string {
-    // Normalize: lowercase, trim, sort alphabetically
-    const normalizedSymptoms = symptoms
-      .map(s => s.toLowerCase().trim())
-      .filter(s => s.length > 0)
-      .sort()
-      .join('|');
+    // Normalize symptoms through synonym map, then deduplicate & sort
+    const normalizedSymptoms = normalizeTerms(symptoms).join('|');
 
-    const normalizedComplaint = chiefComplaint
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s]/g, '')
-      .replace(/\s+/g, '_');
+    // Normalize the chief complaint through synonym map as well
+    const complaintTerms = normalizeTerms([chiefComplaint]);
+    const normalizedComplaint = complaintTerms.join('_');
 
     const key = `${this.config.namespace}:diff:${normalizedComplaint}:${this.hashString(normalizedSymptoms)}`;
-    
+
     return key.substring(0, this.config.maxKeyLength);
   }
 
@@ -249,7 +436,11 @@ class ClinicalCacheService {
   // ----------------------------------------------------------
 
   private buildLabRecommendationKey(diagnosis: string, symptoms: string[]): string {
-    const normalized = `${diagnosis.toLowerCase().trim()}:${symptoms.sort().join('|')}`;
+    // Normalize diagnosis through synonym map
+    const normalizedDiagnosis = normalizeTerms([diagnosis]).join('_');
+    // Normalize symptoms through synonym map
+    const normalizedSymptoms = normalizeTerms(symptoms).join('|');
+    const normalized = `${normalizedDiagnosis}:${normalizedSymptoms}`;
     return `${this.config.namespace}:labs:${this.hashString(normalized)}`;
   }
 
@@ -464,4 +655,5 @@ if (process.env.NODE_ENV !== 'production') {
   globalForCache.clinicalCache = clinicalCache;
 }
 
+export { normalizeTerms, CLINICAL_SYNONYMS };
 export default clinicalCache;

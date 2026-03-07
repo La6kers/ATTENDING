@@ -107,7 +107,28 @@ export {
 export type { OrderPriority, OrderingContext, PatientContext } from '@attending/shared/catalogs';
 
 // Patient Context Store (rich store + toOrderingContext bridge)
-export { 
+export {
   usePatientContextStore,
   usePatientContext,
 } from './patientContextStore';
+
+// =============================================================================
+// Encounter Lifecycle Store
+// =============================================================================
+
+export {
+  useEncounterStore,
+  useEncounterPatient,
+  useEncounterDiagnoses,
+  useEncounterTreatments,
+  useAmbientListener,
+  useEncounterPhase,
+  type EncounterState,
+  type EncounterPatient,
+  type CompassData,
+  type SuggestedDiagnosis,
+  type SelectedTreatment,
+  type AmbientTranscriptEntry,
+  type EncounterPhase as EncounterPhaseType,
+  type AmbientState,
+} from './useEncounterStore';
