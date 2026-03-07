@@ -20,8 +20,9 @@
 
   body {
     @apply antialiased;
-    background: #E6F7F5;
-    color: #0F172A;
+    background: linear-gradient(135deg, #0C3547 0%, #0F5F76 100%);
+    background-attachment: fixed;
+    color: #E2E8F0;
   }
 }
 

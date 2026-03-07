@@ -6,9 +6,9 @@
     "schema": "../../prisma/schema.prisma"
   },
   "scripts": {
-    "dev": "next dev -p 4503",
+    "dev": "next dev -p 4504",
     "build": "next build",
-    "start": "next start -p 4503",
+    "start": "next start -p 4504",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },

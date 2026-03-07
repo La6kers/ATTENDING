@@ -1,27 +1,36 @@
 // =============================================================================
-// COMPASS Admin - Assessment Queue (Main Dashboard)
+// COMPASS Admin - Home Dashboard
 // apps/compass-admin/pages/index.tsx
 //
-// The primary view for COMPASS standalone practices.
-// Shows all submitted assessments sorted by triage urgency → wait time.
-// Providers can claim assessments, filter by status, and view details.
+// Central hub for the ATTENDING AI admin portal.
+// Shows system stats, recent tickets, system health, clinics, and activity.
 // =============================================================================
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import {
-  AlertTriangle,
+  Building2,
+  Stethoscope,
+  Ticket,
+  Activity,
+  Plus,
+  UserPlus,
+  Eye,
   Clock,
   ChevronRight,
-  Activity,
-  Users,
-  CheckCircle,
-  RefreshCw,
-  Filter,
-  Search,
-  Inbox,
   Zap,
+  Brain,
+  Database,
+  Server,
+  Wifi,
+  Shield,
+  Users,
+  MapPin,
+  TrendingUp,
+  RefreshCw,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import { CompassAdminShell } from '@/components/layout/CompassAdminShell';
 
@@ -29,136 +38,103 @@ import { CompassAdminShell } from '@/components/layout/CompassAdminShell';
 // Types
 // =============================================================================
 
-interface Assessment {
+interface TicketItem {
   id: string;
-  patientName: string;
-  patientDOB?: string;
-  chiefComplaint: string;
-  triageLevel: string;
-  redFlags: string[];
-  completedAt: string;
-  assignedProviderName?: string;
-  status: string;
+  title: string;
+  clinic: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
+  status: 'open' | 'in-progress' | 'resolved';
+  timeAgo: string;
 }
 
-type QueueFilter = 'all' | 'unassigned' | 'mine' | 'reviewed';
-type TriageLevel = 'EMERGENCY' | 'URGENT' | 'MODERATE' | 'ROUTINE';
+interface SystemService {
+  name: string;
+  detail?: string;
+  status: 'operational' | 'degraded' | 'down';
+  icon: React.ReactNode;
+}
+
+interface Clinic {
+  name: string;
+  address: string;
+  providerCount: number;
+  patientsToday: number;
+}
+
+interface ActivityEvent {
+  id: string;
+  message: string;
+  timeAgo: string;
+}
+
+// =============================================================================
+// Mock Data
+// =============================================================================
+
+const mockTickets: TicketItem[] = [
+  { id: 'TK-1042', title: 'Login timeout on tablet kiosk', clinic: 'Coastal Urgent Care', severity: 'high', status: 'open', timeAgo: '12 min ago' },
+  { id: 'TK-1041', title: 'AI differential not loading for new patients', clinic: 'Reed Family Medicine', severity: 'critical', status: 'in-progress', timeAgo: '34 min ago' },
+  { id: 'TK-1040', title: 'COMPASS assessment stuck on ROS', clinic: 'Harbor Pediatrics', severity: 'high', status: 'open', timeAgo: '1 hr ago' },
+  { id: 'TK-1039', title: 'Billing meter showing incorrect counts', clinic: 'Coastal Urgent Care', severity: 'medium', status: 'in-progress', timeAgo: '2 hr ago' },
+  { id: 'TK-1038', title: 'Need to add Dr. Martinez to Clinic B', clinic: 'Reed Family Medicine', severity: 'low', status: 'open', timeAgo: '3 hr ago' },
+];
+
+const mockServices: SystemService[] = [
+  { name: 'Provider Portal', detail: 'port 4502', status: 'operational', icon: <Server className="w-4 h-4" /> },
+  { name: 'Patient Portal', detail: 'port 4501', status: 'operational', icon: <Server className="w-4 h-4" /> },
+  { name: 'Database', status: 'operational', icon: <Database className="w-4 h-4" /> },
+  { name: 'Redis Cache', status: 'degraded', icon: <Zap className="w-4 h-4" /> },
+  { name: 'AI Engine', status: 'operational', icon: <Brain className="w-4 h-4" /> },
+  { name: 'FHIR Gateway', status: 'operational', icon: <Shield className="w-4 h-4" /> },
+];
+
+const mockClinics: Clinic[] = [
+  { name: 'Reed Family Medicine', address: '1200 Harbor Blvd, Suite 100', providerCount: 3, patientsToday: 12 },
+  { name: 'Coastal Urgent Care', address: '450 Oceanview Dr', providerCount: 5, patientsToday: 28 },
+  { name: 'Harbor Pediatrics', address: '789 Bayshore Ln, Bldg C', providerCount: 2, patientsToday: 8 },
+];
+
+const mockActivity: ActivityEvent[] = [
+  { id: 'a1', message: 'Dr. Reed completed encounter #1247', timeAgo: '5 min ago' },
+  { id: 'a2', message: 'New COMPASS assessment from Sarah Chen', timeAgo: '12 min ago' },
+  { id: 'a3', message: 'AI cache refreshed (differential patterns)', timeAgo: '25 min ago' },
+  { id: 'a4', message: 'Dr. Martinez added to Coastal Urgent Care', timeAgo: '1 hr ago' },
+  { id: 'a5', message: 'System backup completed successfully', timeAgo: '2 hr ago' },
+];
 
 // =============================================================================
 // Helpers
 // =============================================================================
 
-const triageOrder: Record<string, number> = {
-  EMERGENCY: 0, URGENT: 1, MODERATE: 2, ROUTINE: 3,
+const severityDotColor: Record<TicketItem['severity'], string> = {
+  critical: 'bg-red-500',
+  high: 'bg-orange-500',
+  medium: 'bg-yellow-500',
+  low: 'bg-green-500',
 };
 
-const triageConfig: Record<string, { color: string; bg: string; border: string; dot: string; label: string }> = {
-  EMERGENCY: { color: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500', label: 'EMERGENCY' },
-  URGENT:    { color: 'text-orange-700', bg: 'bg-orange-50', border: 'border-orange-200', dot: 'bg-orange-500', label: 'URGENT' },
-  MODERATE:  { color: 'text-yellow-700', bg: 'bg-yellow-50', border: 'border-yellow-200', dot: 'bg-yellow-500', label: 'MODERATE' },
-  ROUTINE:   { color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200', dot: 'bg-green-500', label: 'ROUTINE' },
+const statusBadge: Record<TicketItem['status'], { label: string; classes: string }> = {
+  open: { label: 'Open', classes: 'bg-red-50 text-red-700 border-red-200' },
+  'in-progress': { label: 'In Progress', classes: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  resolved: { label: 'Resolved', classes: 'bg-green-50 text-green-700 border-green-200' },
 };
 
-function getWaitTime(completedAt: string): string {
-  const ms = Date.now() - new Date(completedAt).getTime();
-  const min = Math.max(1, Math.floor(ms / 60000));
-  if (min < 60) return `${min}m`;
-  const hr = Math.floor(min / 60);
-  const remainder = min % 60;
-  return `${hr}h ${remainder}m`;
+const serviceStatusConfig: Record<SystemService['status'], { dot: string; label: string; textColor: string }> = {
+  operational: { dot: 'bg-green-500', label: 'Operational', textColor: 'text-green-700' },
+  degraded: { dot: 'bg-yellow-500', label: 'Not Connected', textColor: 'text-yellow-700' },
+  down: { dot: 'bg-red-500', label: 'Down', textColor: 'text-red-700' },
+};
+
+function getHealthColor(pct: number): string {
+  if (pct > 95) return 'bg-green-100';
+  if (pct > 85) return 'bg-yellow-100';
+  return 'bg-red-100';
 }
 
-function getAge(dob?: string): number | null {
-  if (!dob) return null;
-  try {
-    return Math.floor((Date.now() - new Date(dob).getTime()) / 31557600000);
-  } catch { return null; }
-}
-
-// =============================================================================
-// Queue Card Component
-// =============================================================================
-
-function QueueCard({ assessment }: { assessment: Assessment }) {
-  const triage = triageConfig[assessment.triageLevel] || triageConfig.ROUTINE;
-  const age = getAge(assessment.patientDOB);
-  const waitTime = getWaitTime(assessment.completedAt);
-  const isEmergency = assessment.triageLevel === 'EMERGENCY';
-
-  return (
-    <Link
-      href={`/assessment/${assessment.id}`}
-      className={`block bg-white rounded-xl border hover:shadow-md transition-all group ${
-        isEmergency ? 'border-red-300 animate-pulse-urgent ring-1 ring-red-200' : 'border-gray-200 hover:border-compass-300'
-      }`}
-    >
-      <div className="p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-4">
-          {/* Left: Patient info */}
-          <div className="flex items-start gap-3 min-w-0 flex-1">
-            {/* Triage dot */}
-            <div className={`w-2 h-10 rounded-full ${triage.dot} flex-shrink-0 mt-0.5`} />
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="font-semibold text-gray-900 truncate">
-                  {assessment.patientName}
-                </h3>
-                {age !== null && (
-                  <span className="text-gray-500 text-sm">{age}y</span>
-                )}
-                {assessment.redFlags.length > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                    <AlertTriangle className="w-3 h-3" />
-                    {assessment.redFlags.length} red flag{assessment.redFlags.length !== 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
-              <p className="text-gray-600 text-sm mt-0.5 line-clamp-1">
-                {assessment.chiefComplaint}
-              </p>
-              {assessment.redFlags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {assessment.redFlags.slice(0, 3).map((rf, i) => (
-                    <span key={i} className="text-xs text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
-                      {rf}
-                    </span>
-                  ))}
-                  {assessment.redFlags.length > 3 && (
-                    <span className="text-xs text-gray-500">
-                      +{assessment.redFlags.length - 3} more
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right: Triage badge + wait time */}
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
-            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${triage.bg} ${triage.color} ${triage.border}`}>
-              {triage.label}
-            </span>
-            <span className="text-gray-500 text-xs flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {waitTime}
-            </span>
-            {assessment.assignedProviderName && (
-              <span className="text-xs text-compass-600 bg-compass-50 px-2 py-0.5 rounded-full">
-                {assessment.assignedProviderName}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Hover arrow */}
-      <div className="border-t border-gray-100 px-5 py-2.5 flex items-center justify-between text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-        <span className="text-compass-600 font-medium">Review Assessment</span>
-        <ChevronRight className="w-4 h-4 text-compass-400 group-hover:translate-x-1 transition-transform" />
-      </div>
-    </Link>
-  );
+function getHealthIconColor(pct: number): string {
+  if (pct > 95) return 'text-green-600';
+  if (pct > 85) return 'text-yellow-600';
+  return 'text-red-600';
 }
 
 // =============================================================================
@@ -166,15 +142,18 @@ function QueueCard({ assessment }: { assessment: Assessment }) {
 // =============================================================================
 
 function StatCard({ icon, label, value, color }: {
-  icon: React.ReactNode; label: string; value: number; color: string;
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  color: string;
 }) {
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 p-4 sm:p-5`}>
+    <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-sm p-4 sm:p-5">
       <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${color}`}>{icon}</div>
+        <div className={`p-2.5 rounded-lg ${color}`}>{icon}</div>
         <div>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          <p className="text-sm text-gray-500">{label}</p>
+          <p className="text-2xl font-bold text-white">{value}</p>
+          <p className="text-sm text-teal-200/70">{label}</p>
         </div>
       </div>
     </div>
@@ -182,214 +161,261 @@ function StatCard({ icon, label, value, color }: {
 }
 
 // =============================================================================
-// Main Page
+// Main Dashboard
 // =============================================================================
 
-export default function QueueDashboard() {
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<QueueFilter>('unassigned');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-
-  // Fetch assessments
-  const loadQueue = useCallback(async () => {
-    try {
-      const res = await fetch('/api/assessments?pageSize=100');
-      if (res.ok) {
-        const data = await res.json();
-        setAssessments(data.assessments || []);
-      }
-    } catch (err) {
-      console.error('[Queue] Failed to load:', err);
-    } finally {
-      setLoading(false);
-      setLastRefresh(new Date());
-    }
-  }, []);
-
-  useEffect(() => {
-    loadQueue();
-    const interval = setInterval(loadQueue, 15_000); // Poll every 15s
-    return () => clearInterval(interval);
-  }, [loadQueue]);
-
-  // Filter + sort
-  const filtered = assessments
-    .filter((a) => {
-      if (filter === 'unassigned') return !a.assignedProviderName && a.status !== 'REVIEWED';
-      if (filter === 'reviewed') return a.status === 'REVIEWED';
-      // 'mine' would filter by current provider — for now shows assigned
-      if (filter === 'mine') return !!a.assignedProviderName && a.status !== 'REVIEWED';
-      return true; // 'all'
-    })
-    .filter((a) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        a.patientName.toLowerCase().includes(q) ||
-        a.chiefComplaint.toLowerCase().includes(q)
-      );
-    })
-    .sort((a, b) => {
-      // Primary: triage level
-      const triageDiff = (triageOrder[a.triageLevel] ?? 3) - (triageOrder[b.triageLevel] ?? 3);
-      if (triageDiff !== 0) return triageDiff;
-      // Secondary: longest wait first
-      return new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime();
-    });
-
-  // Stats
-  const stats = {
-    total: assessments.length,
-    pending: assessments.filter((a) => !a.assignedProviderName && a.status !== 'REVIEWED').length,
-    inProgress: assessments.filter((a) => a.assignedProviderName && a.status !== 'REVIEWED').length,
-    reviewed: assessments.filter((a) => a.status === 'REVIEWED').length,
-    emergencies: assessments.filter((a) => a.triageLevel === 'EMERGENCY' && a.status !== 'REVIEWED').length,
-  };
+export default function AdminDashboard() {
+  // Mock stats
+  const activeClinics = 3;
+  const activeProviders = 10;
+  const openTickets = mockTickets.filter((t) => t.status !== 'resolved').length;
+  const systemHealth = 96.4;
 
   return (
     <>
       <Head>
-        <title>Assessment Queue | COMPASS Admin</title>
+        <title>Admin Dashboard | ATTENDING AI</title>
       </Head>
 
-      <CompassAdminShell title="Assessment Queue">
+      <CompassAdminShell title="Dashboard">
         <div className="max-w-[1400px] mx-auto px-4 lg:px-6 py-6">
-          {/* Emergency Banner */}
-          {stats.emergencies > 0 && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 animate-pulse-urgent">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Zap className="w-5 h-5 text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-red-800">
-                  {stats.emergencies} emergency assessment{stats.emergencies !== 1 ? 's' : ''} requiring immediate attention
-                </p>
-              </div>
-              <button
-                onClick={() => setFilter('all')}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-              >
-                View Now
-              </button>
-            </div>
-          )}
 
-          {/* Stats Row */}
+          {/* ================================================================ */}
+          {/* Welcome Banner                                                   */}
+          {/* ================================================================ */}
+          <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-sm p-6 mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-white">ATTENDING AI Admin</h1>
+                <p className="text-teal-200/70 mt-1">System Administration &amp; Clinic Management</p>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <Link
+                  href="/clinics/new"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-compass-600 text-white rounded-lg text-sm font-medium hover:bg-compass-700 transition-colors"
+                >
+                  <Building2 className="w-4 h-4" />
+                  Add Clinic
+                </Link>
+                <Link
+                  href="/settings/providers/new"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 text-teal-100 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add Provider
+                </Link>
+                <Link
+                  href="/tickets"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 text-teal-100 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                  View Tickets
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* ================================================================ */}
+          {/* Stats Row                                                        */}
+          {/* ================================================================ */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <StatCard
-              icon={<Inbox className="w-5 h-5 text-compass-600" />}
-              label="Pending Review"
-              value={stats.pending}
+              icon={<Building2 className="w-5 h-5 text-compass-600" />}
+              label="Active Clinics"
+              value={activeClinics}
               color="bg-compass-100"
             />
             <StatCard
-              icon={<Activity className="w-5 h-5 text-blue-600" />}
-              label="In Progress"
-              value={stats.inProgress}
+              icon={<Stethoscope className="w-5 h-5 text-blue-600" />}
+              label="Active Providers"
+              value={activeProviders}
               color="bg-blue-100"
             />
             <StatCard
-              icon={<CheckCircle className="w-5 h-5 text-green-600" />}
-              label="Reviewed"
-              value={stats.reviewed}
-              color="bg-green-100"
+              icon={<Ticket className="w-5 h-5 text-orange-600" />}
+              label="Open Tickets"
+              value={openTickets}
+              color="bg-orange-100"
             />
             <StatCard
-              icon={<Users className="w-5 h-5 text-purple-600" />}
-              label="Total Today"
-              value={stats.total}
-              color="bg-purple-100"
+              icon={<Activity className={`w-5 h-5 ${getHealthIconColor(systemHealth)}`} />}
+              label="System Health"
+              value={`${systemHealth}%`}
+              color={getHealthColor(systemHealth)}
             />
           </div>
 
-          {/* Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1">
-              {([
-                { key: 'unassigned', label: 'Pending', count: stats.pending },
-                { key: 'mine', label: 'In Progress', count: stats.inProgress },
-                { key: 'reviewed', label: 'Reviewed', count: stats.reviewed },
-                { key: 'all', label: 'All', count: stats.total },
-              ] as const).map(({ key, label, count }) => (
-                <button
-                  key={key}
-                  onClick={() => setFilter(key)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    filter === key
-                      ? 'bg-compass-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {label}
-                  {count > 0 && (
-                    <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
-                      filter === key ? 'bg-white/20' : 'bg-gray-200'
-                    }`}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              ))}
+          {/* ================================================================ */}
+          {/* Two-Column Layout                                                */}
+          {/* ================================================================ */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            {/* ------------------------------------------------------------- */}
+            {/* LEFT COLUMN (3/5 = ~60%)                                      */}
+            {/* ------------------------------------------------------------- */}
+            <div className="lg:col-span-3 space-y-6">
+
+              {/* Recent Tickets */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-sm">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+                  <h2 className="text-lg font-semibold text-white">Recent Tickets</h2>
+                  <span className="text-xs text-teal-300/50 bg-white/10 px-2 py-1 rounded-full">
+                    {openTickets} open
+                  </span>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {mockTickets.map((ticket) => {
+                    const badge = statusBadge[ticket.status];
+                    return (
+                      <div key={ticket.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-white/5 transition-colors">
+                        {/* Severity dot */}
+                        <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${severityDotColor[ticket.severity]}`} />
+
+                        {/* Info */}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-white truncate">{ticket.title}</p>
+                          <p className="text-xs text-teal-200/70 mt-0.5">
+                            {ticket.clinic} &middot; {ticket.timeAgo}
+                          </p>
+                        </div>
+
+                        {/* Status badge */}
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium border flex-shrink-0 ${badge.classes}`}>
+                          {badge.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="px-5 py-3 border-t border-white/5">
+                  <Link href="/tickets" className="text-sm text-compass-600 font-medium hover:text-compass-700 inline-flex items-center gap-1">
+                    View All Tickets
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* System Health */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-sm">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+                  <h2 className="text-lg font-semibold text-white">System Health</h2>
+                  <div className="flex items-center gap-1.5 text-xs text-teal-300/50">
+                    <Wifi className="w-3.5 h-3.5" />
+                    Real-time status
+                  </div>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {mockServices.map((service) => {
+                    const cfg = serviceStatusConfig[service.status];
+                    return (
+                      <div key={service.name} className="px-5 py-3.5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="text-teal-300/50">{service.icon}</div>
+                          <div>
+                            <p className="text-sm font-medium text-white">{service.name}</p>
+                            {service.detail && (
+                              <p className="text-xs text-teal-300/50">{service.detail}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+                          <span className={`text-xs font-medium ${cfg.textColor}`}>{cfg.label}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search patients..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-compass-300 focus:border-compass-400 w-64"
-                />
+            {/* ------------------------------------------------------------- */}
+            {/* RIGHT COLUMN (2/5 = ~40%)                                     */}
+            {/* ------------------------------------------------------------- */}
+            <div className="lg:col-span-2 space-y-6">
+
+              {/* Clinics */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-sm">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+                  <h2 className="text-lg font-semibold text-white">Clinics</h2>
+                  <span className="text-xs text-teal-300/50 bg-white/10 px-2 py-1 rounded-full">
+                    {mockClinics.length} connected
+                  </span>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {mockClinics.map((clinic) => (
+                    <div key={clinic.name} className="px-5 py-3.5">
+                      <p className="text-sm font-medium text-white">{clinic.name}</p>
+                      <p className="text-xs text-teal-300/50 mt-0.5 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {clinic.address}
+                      </p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <span className="text-xs text-teal-200/70 flex items-center gap-1">
+                          <Users className="w-3 h-3" />
+                          {clinic.providerCount} providers
+                        </span>
+                        <span className="text-xs text-teal-200/70 flex items-center gap-1">
+                          <Activity className="w-3 h-3" />
+                          {clinic.patientsToday} patients today
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-5 py-3 border-t border-white/5">
+                  <Link href="/clinics" className="text-sm text-compass-600 font-medium hover:text-compass-700 inline-flex items-center gap-1">
+                    Manage Clinics
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
 
-              {/* Refresh */}
-              <button
-                onClick={loadQueue}
-                className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                title={`Last updated: ${lastRefresh.toLocaleTimeString()}`}
-              >
-                <RefreshCw className={`w-4 h-4 text-gray-500 ${loading ? 'animate-spin' : ''}`} />
-              </button>
+              {/* Quick Stats */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-sm">
+                <div className="px-5 py-4 border-b border-white/5">
+                  <h2 className="text-lg font-semibold text-white">Quick Stats</h2>
+                </div>
+                <div className="px-5 py-3 space-y-3">
+                  {[
+                    { label: 'AI Diagnoses Today', value: '47', icon: <Brain className="w-4 h-4 text-compass-500" /> },
+                    { label: 'Cache Hit Rate', value: '68%', icon: <Zap className="w-4 h-4 text-yellow-500" /> },
+                    { label: 'Avg Encounter Cost', value: '$0.03', icon: <TrendingUp className="w-4 h-4 text-green-500" /> },
+                    { label: 'COMPASS Assessments', value: '15', icon: <CheckCircle className="w-4 h-4 text-blue-500" /> },
+                    { label: 'Active Encounters', value: '3', icon: <AlertCircle className="w-4 h-4 text-orange-500" /> },
+                  ].map((stat) => (
+                    <div key={stat.label} className="flex items-center justify-between py-1">
+                      <div className="flex items-center gap-2.5">
+                        {stat.icon}
+                        <span className="text-sm text-teal-200">{stat.label}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-white">{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.07] backdrop-blur-sm">
+                <div className="px-5 py-4 border-b border-white/5">
+                  <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {mockActivity.map((event) => (
+                    <div key={event.id} className="px-5 py-3 flex items-start gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-compass-400 mt-2 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-teal-100">{event.message}</p>
+                        <p className="text-xs text-teal-300/50 mt-0.5 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {event.timeAgo}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* Queue List */}
-          <div className="space-y-3">
-            {loading && assessments.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-compass-600 mx-auto mb-4" />
-                <p className="text-gray-500">Loading queue...</p>
-              </div>
-            ) : filtered.length > 0 ? (
-              filtered.map((a) => <QueueCard key={a.id} assessment={a} />)
-            ) : (
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
-                <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-1">
-                  {filter === 'unassigned' ? 'No pending assessments' :
-                   filter === 'mine' ? 'No assessments in progress' :
-                   filter === 'reviewed' ? 'No reviewed assessments' :
-                   'No assessments found'}
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  {searchQuery
-                    ? 'Try a different search term.'
-                    : 'New patient check-ins will appear here.'}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Auto-refresh indicator */}
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-400">
-              Auto-refreshing every 15 seconds · Last updated {lastRefresh.toLocaleTimeString()}
-            </p>
           </div>
         </div>
       </CompassAdminShell>

@@ -20,9 +20,11 @@ import {
   Menu,
   X,
   ChevronDown,
-  Webhook,
-  QrCode,
   Users,
+  LayoutDashboard,
+  Building2,
+  Ticket,
+  Activity,
 } from 'lucide-react';
 
 interface CompassAdminShellProps {
@@ -31,10 +33,12 @@ interface CompassAdminShellProps {
 }
 
 const navItems = [
-  { id: 'queue', label: 'Assessment Queue', href: '/', icon: Inbox },
-  { id: 'webhooks', label: 'Webhooks', href: '/settings/webhooks', icon: Webhook },
-  { id: 'checkin', label: 'Check-in Setup', href: '/settings/checkin', icon: QrCode },
+  { id: 'dashboard', label: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { id: 'clinics', label: 'Clinics', href: '/clinics', icon: Building2 },
   { id: 'providers', label: 'Providers', href: '/settings/providers', icon: Users },
+  { id: 'tickets', label: 'Tickets', href: '/tickets', icon: Ticket },
+  { id: 'queue', label: 'Queue', href: '/queue', icon: Inbox },
+  { id: 'system', label: 'System Health', href: '/system', icon: Activity },
 ];
 
 export function CompassAdminShell({ children, title }: CompassAdminShellProps) {
@@ -48,7 +52,7 @@ export function CompassAdminShell({ children, title }: CompassAdminShellProps) {
   });
 
   return (
-    <div className="min-h-screen" style={{ background: '#E6F7F5' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #0C3547 0%, #0F5F76 100%)' }}>
       {/* Top Header */}
       <header className="bg-compass-gradient text-white shadow-lg sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto px-4 lg:px-6">
@@ -67,8 +71,8 @@ export function CompassAdminShell({ children, title }: CompassAdminShellProps) {
                   C
                 </div>
                 <div>
-                  <span className="text-lg font-bold tracking-tight">COMPASS</span>
-                  <span className="text-xs text-teal-200 ml-2 hidden sm:inline">Admin</span>
+                  <span className="text-lg font-bold tracking-tight">ATTENDING</span>
+                  <span className="text-xs text-teal-200 ml-2 hidden sm:inline">Admin Portal</span>
                 </div>
               </Link>
 
