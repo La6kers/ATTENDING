@@ -42,8 +42,8 @@ export default function EmergencyContactsPage() {
   } = useEmergencySettings();
 
   const [contacts, setContacts] = useState<EmergencyContact[]>([
-    { id: '1', name: 'Kelli Isbell', relationship: 'Spouse', phone: '(555) 123-4567', isPrimary: true },
-    { id: '2', name: 'Ken Isbell', relationship: 'Father', phone: '(555) 987-6543', isPrimary: false },
+    { id: '1', name: 'Jamie Morgan', relationship: 'Spouse', phone: '(555) 123-4567', isPrimary: true },
+    { id: '2', name: 'Robert Morgan', relationship: 'Father', phone: '(555) 987-6543', isPrimary: false },
   ]);
 
   // Sync from hook when loaded

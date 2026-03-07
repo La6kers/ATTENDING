@@ -94,8 +94,8 @@ const EMERGENCY_CONFIGS: Record<string, {
   Neurological: {
     title: 'Possible Stroke or Neurological Emergency',
     icon: <AlertCircle className="w-8 h-8" />,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-50',
+    color: 'text-teal-600',
+    bgColor: 'bg-teal-50',
     instructions: [
       'Note the TIME symptoms started - this is critical for treatment',
       'Lie down with your head slightly elevated',
@@ -417,7 +417,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
             {onNotifyProvider && (
               <button
                 onClick={onNotifyProvider}
-                className="py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
+                className="py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
               >
                 <Activity className="w-5 h-5" />
                 Alert Provider

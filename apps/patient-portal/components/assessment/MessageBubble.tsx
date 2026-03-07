@@ -36,7 +36,7 @@ export interface MessageBubbleProps {
 const Avatar: React.FC<{ role: MessageRole; isEmergency?: boolean }> = ({ role, isEmergency }) => {
   if (role === 'user') {
     return (
-      <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center shadow-md">
+      <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center shadow-md">
         <User className="w-5 h-5 text-white" />
       </div>
     );
@@ -54,7 +54,7 @@ const Avatar: React.FC<{ role: MessageRole; isEmergency?: boolean }> = ({ role, 
   return (
     <div
       className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md ${
-        isEmergency ? 'bg-red-600 animate-pulse' : 'bg-gradient-to-br from-purple-600 to-indigo-600'
+        isEmergency ? 'bg-red-600 animate-pulse' : 'bg-gradient-to-br from-teal-600 to-teal-800'
       }`}
     >
       {isEmergency ? <AlertTriangle className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
@@ -202,7 +202,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           relative px-4 py-3 rounded-2xl shadow-sm
           ${
             isUser
-              ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-tr-sm'
+              ? 'bg-gradient-to-br from-teal-600 to-teal-800 text-white rounded-tr-sm'
               : hasRedFlag
                 ? 'bg-red-50 text-gray-800 border-2 border-red-300 rounded-tl-sm'
                 : 'bg-white text-gray-800 border border-gray-200 rounded-tl-sm'

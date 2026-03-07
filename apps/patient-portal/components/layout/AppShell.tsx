@@ -63,7 +63,7 @@ const TABS: TabItem[] = [
   },
   {
     href: '/emergency',
-    label: 'Emergency',
+    label: 'Services',
     icon: Shield,
     matchPaths: ['/emergency'],
     isEmergency: true,

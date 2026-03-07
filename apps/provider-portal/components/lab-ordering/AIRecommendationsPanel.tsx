@@ -146,7 +146,7 @@ export const AIRecommendationsPanel: React.FC<AIRecommendationsPanelProps> = ({
                             )}
                           </div>
                           <p className="text-sm text-gray-600 mt-1">{rec.rationale}</p>
-                          {rec.clinicalEvidence.length > 0 && (
+                          {rec.clinicalEvidence?.length > 0 && (
                             <div className="mt-2 text-xs text-gray-500">
                               <span className="font-medium">Evidence:</span>{' '}
                               {rec.clinicalEvidence.join('; ')}

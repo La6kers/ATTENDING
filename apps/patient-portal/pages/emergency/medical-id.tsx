@@ -116,8 +116,8 @@ export default function EditMedicalID() {
   const [loading, setLoading] = useState(true);
 
   const [medicalID, setMedicalID] = useState<MedicalID>({
-    fullName: 'Scott Isbell',
-    dateOfBirth: '1986-05-15',
+    fullName: 'Alex Morgan',
+    dateOfBirth: '1984-07-22',
     sex: 'Male',
     bloodType: 'O+',
     height: '5\'11"',

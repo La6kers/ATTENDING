@@ -854,7 +854,7 @@ export default function ITAdminPortal() {
         {/* Footer */}
         {!sidebarCollapsed && (
           <div style={{ padding: 16, borderTop: '1px solid #1f2937', fontSize: 11, color: '#6b7280' }}>
-            <div style={{ fontWeight: 600 }}>Scott Isbell, MD</div>
+            <div style={{ fontWeight: 600 }}>Alex Morgan, MD</div>
             <div>Tier 3 · Engineering</div>
           </div>
         )}

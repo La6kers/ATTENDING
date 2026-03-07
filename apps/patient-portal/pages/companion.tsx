@@ -14,7 +14,7 @@ export default function CompanionPage() {
   const { profile } = usePatientData();
 
   const patientId = profile?.id ?? 'patient-123';
-  const patientName = profile?.fullName ?? `${profile?.firstName ?? 'Scott'} ${profile?.lastName ?? 'Isbell'}`;
+  const patientName = profile?.fullName ?? `${profile?.firstName ?? 'Alex'} ${profile?.lastName ?? 'Morgan'}`;
 
   return (
     <>

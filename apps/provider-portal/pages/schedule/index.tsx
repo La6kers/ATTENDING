@@ -7,14 +7,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
-  ArrowLeft,
-  Home,
   Calendar,
   Clock,
-  User,
   ChevronRight,
   ChevronLeft,
   AlertTriangle,
@@ -22,21 +18,14 @@ import {
   PlayCircle,
   PauseCircle,
   XCircle,
-  Filter,
-  Search,
-  Plus,
   MapPin,
-  Phone,
-  FileText,
 } from 'lucide-react';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 
 // =============================================================================
 // Theme
 // =============================================================================
 
-const theme = {
-  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
-};
 
 // =============================================================================
 // Types
@@ -457,12 +446,14 @@ export default function SchedulePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: theme.gradient }}>
-        <div className="text-center text-white">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading schedule...</p>
+      <ProviderShell currentPage="schedule" contextBadge="Schedule">
+        <div className="flex items-center justify-center py-24">
+          <div className="text-center text-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p>Loading schedule...</p>
+          </div>
         </div>
-      </div>
+      </ProviderShell>
     );
   }
 
@@ -472,35 +463,21 @@ export default function SchedulePage() {
         <title>Schedule - {dateStr} | ATTENDING AI</title>
       </Head>
 
-      <div className="min-h-screen" style={{ background: theme.gradient }}>
-        {/* Header */}
-        <header className="bg-white/10 backdrop-blur-sm border-b border-white/20 sticky top-0 z-40">
+      <ProviderShell currentPage="schedule" contextBadge="Schedule">
+        {/* Schedule Sub-Header: Date Nav + Stats + Filters */}
+        <div className="border-b border-white/10" style={{ background: 'rgba(12, 53, 71, 0.4)' }}>
           <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => router.back()}
-                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-                <Link
-                  href="/"
-                  className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
-                >
-                  <Home className="w-5 h-5" />
-                </Link>
-                <div>
-                  <h1 className="text-xl font-bold text-white">Today's Schedule</h1>
-                  <p className="text-teal-200 text-sm">{dateStr}</p>
-                </div>
+            {/* Date Navigation */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-white">Today's Schedule</h2>
+                <p className="text-teal-200 text-sm">{dateStr}</p>
               </div>
-
               <div className="flex items-center gap-3">
                 <button className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <button className="px-4 py-2 bg-white/20 text-white rounded-lg font-medium">
+                <button className="px-4 py-2 bg-white/20 text-white rounded-lg font-medium text-sm">
                   Today
                 </button>
                 <button className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
@@ -508,56 +485,56 @@ export default function SchedulePage() {
                 </button>
               </div>
             </div>
-          </div>
-        </header>
 
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/15">
+                <p className="text-teal-200 text-xs">Total</p>
+                <p className="text-xl font-bold text-white">{stats.total}</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/15">
+                <p className="text-teal-200 text-xs">Completed</p>
+                <p className="text-xl font-bold text-green-400">{stats.completed}</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/15">
+                <p className="text-teal-200 text-xs">In Progress</p>
+                <p className="text-xl font-bold text-blue-400">{stats.inProgress}</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/15">
+                <p className="text-teal-200 text-xs">Remaining</p>
+                <p className="text-xl font-bold text-amber-400">{stats.remaining}</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/15">
+                <p className="text-teal-200 text-xs">Urgent</p>
+                <p className="text-xl font-bold text-red-400">{stats.urgent}</p>
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div className="flex gap-2">
+              {[
+                { value: 'all', label: 'All' },
+                { value: 'upcoming', label: 'Upcoming' },
+                { value: 'completed', label: 'Completed' },
+              ].map((f) => (
+                <button
+                  key={f.value}
+                  onClick={() => setFilter(f.value as typeof filter)}
+                  className={`px-4 py-1.5 rounded-xl font-medium text-sm transition-colors ${
+                    filter === f.value
+                      ? 'bg-white text-teal-700'
+                      : 'bg-white/10 text-white hover:bg-white/20'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Schedule List */}
         <main className="max-w-7xl mx-auto px-6 py-6">
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-teal-200 text-sm">Total</p>
-              <p className="text-2xl font-bold text-white">{stats.total}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-teal-200 text-sm">Completed</p>
-              <p className="text-2xl font-bold text-green-400">{stats.completed}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-teal-200 text-sm">In Progress</p>
-              <p className="text-2xl font-bold text-blue-400">{stats.inProgress}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-teal-200 text-sm">Remaining</p>
-              <p className="text-2xl font-bold text-amber-400">{stats.remaining}</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-              <p className="text-teal-200 text-sm">Urgent</p>
-              <p className="text-2xl font-bold text-red-400">{stats.urgent}</p>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="flex gap-2 mb-6">
-            {[
-              { value: 'all', label: 'All' },
-              { value: 'upcoming', label: 'Upcoming' },
-              { value: 'completed', label: 'Completed' },
-            ].map((f) => (
-              <button
-                key={f.value}
-                onClick={() => setFilter(f.value as typeof filter)}
-                className={`px-4 py-2 rounded-xl font-medium text-sm transition-colors ${
-                  filter === f.value
-                    ? 'bg-white text-teal-700'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Schedule List */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <div className="space-y-3">
               {filteredAppointments.map((apt) => (
@@ -573,7 +550,7 @@ export default function SchedulePage() {
             )}
           </div>
         </main>
-      </div>
+      </ProviderShell>
     </>
   );
 }

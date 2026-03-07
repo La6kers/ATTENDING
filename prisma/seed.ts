@@ -41,14 +41,12 @@ async function main() {
     data: {
       patientId: patient.id,
       providerId: provider.id,
-      visitType: 'OFFICE_VISIT',
-      reasonForVisit: 'Annual wellness visit',
+      encounterType: 'OFFICE_VISIT',
       status: 'COMPLETED',
-      scheduledAt: new Date(),
-      startedAt: new Date(),
-      completedAt: new Date(),
-      assessment: 'Patient in good health',
-      plan: 'Continue current medications, follow up in 6 months',
+      chiefComplaint: 'Annual wellness visit',
+      startTime: new Date(),
+      endTime: new Date(),
+      notes: 'Patient in good health. Continue current medications, follow up in 6 months.',
     },
   });
   console.log('Created encounter');

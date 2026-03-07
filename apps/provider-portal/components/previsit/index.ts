@@ -15,4 +15,5 @@ export type {
   Allergy,
   ActionItem,
   RiskFactor,
+  SuggestedDiagnosis,
 } from './PreVisitSummary';

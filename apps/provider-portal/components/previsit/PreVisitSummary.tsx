@@ -27,6 +27,11 @@ import {
   Minus,
   Plus,
   Shield,
+  Brain,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Stethoscope,
 } from 'lucide-react';
 import CollapsibleSection from './CollapsibleSection';
 import { ProviderShell } from '@/components/layout/ProviderShell';
@@ -78,6 +83,19 @@ export interface RiskFactor {
   description: string;
 }
 
+export interface SuggestedDiagnosis {
+  id: string;
+  name: string;
+  icdCode: string;
+  confidence: number; // 0-1
+  category: 'primary' | 'secondary' | 'rule-out';
+  supportingEvidence: string[];
+  concerns: string[];
+  diagnosticCriteria?: string[];
+  physicalExamInstructions?: string[];
+  rationale?: string;
+}
+
 export interface PreVisitData {
   patient: {
     id: string;
@@ -109,6 +127,7 @@ export interface PreVisitData {
     factors: RiskFactor[];
   };
   actionItems: ActionItem[];
+  suggestedDiagnoses?: SuggestedDiagnosis[];
   criticalAlert?: {
     message: string;
     type: 'sah' | 'mi' | 'stroke' | 'sepsis' | 'other';
@@ -296,6 +315,126 @@ const ActionItemRow: React.FC<{
 };
 
 // ============================================================
+// Diagnosis Card for Pre-Visit AI Suggestions
+// ============================================================
+
+const DiagnosisCard: React.FC<{
+  dx: SuggestedDiagnosis;
+  isExpanded: boolean;
+  onToggle: () => void;
+}> = ({ dx, isExpanded, onToggle }) => {
+  const categoryStyles = {
+    primary: { badge: 'bg-green-100 text-green-700', label: 'PRIMARY' },
+    secondary: { badge: 'bg-gray-100 text-gray-700', label: 'SECONDARY' },
+    'rule-out': { badge: 'bg-red-100 text-red-700', label: 'RULE OUT' },
+  };
+  const cat = categoryStyles[dx.category];
+  const pct = Math.round(dx.confidence * 100);
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      {/* Header row */}
+      <button onClick={onToggle} className="w-full p-4 flex items-start gap-4 hover:bg-gray-50 transition-colors text-left">
+        {/* Confidence ring */}
+        <div className="relative w-14 h-14 flex-shrink-0">
+          <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
+            <circle cx="18" cy="18" r="15.5" fill="none" stroke="#e5e7eb" strokeWidth="3" />
+            <circle cx="18" cy="18" r="15.5" fill="none"
+              stroke={pct >= 70 ? '#0d9488' : pct >= 40 ? '#f59e0b' : '#9ca3af'}
+              strokeWidth="3" strokeDasharray={`${pct * 0.975} 100`} strokeLinecap="round"
+            />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-gray-900">
+            {pct}%
+          </span>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h4 className="font-semibold text-gray-900">{dx.name}</h4>
+            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-mono">{dx.icdCode}</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${cat.badge}`}>{cat.label}</span>
+          </div>
+          {dx.rationale && (
+            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{dx.rationale}</p>
+          )}
+        </div>
+
+        {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400 mt-1" /> : <ChevronDown className="w-5 h-5 text-gray-400 mt-1" />}
+      </button>
+
+      {/* Expanded details */}
+      {isExpanded && (
+        <div className="border-t border-gray-100 p-4 space-y-4 bg-gray-50">
+          {/* Supporting Evidence */}
+          <div>
+            <h5 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+              <Check className="w-4 h-4 text-green-500" /> Supporting Evidence
+            </h5>
+            <ul className="space-y-1">
+              {dx.supportingEvidence.map((e, i) => (
+                <li key={i} className="text-sm text-gray-600 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full flex-shrink-0" />{e}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Concerns */}
+          {dx.concerns.length > 0 && (
+            <div>
+              <h5 className="text-sm font-semibold text-amber-700 mb-2 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4" /> Clinical Concerns
+              </h5>
+              <ul className="space-y-1">
+                {dx.concerns.map((c, i) => (
+                  <li key={i} className="text-sm text-amber-700 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-amber-400 rounded-full flex-shrink-0" />{c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Diagnostic Criteria */}
+          {dx.diagnosticCriteria && dx.diagnosticCriteria.length > 0 && (
+            <div>
+              <h5 className="text-sm font-semibold text-teal-700 mb-2 flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4" /> Diagnostic Criteria
+              </h5>
+              <ol className="space-y-1">
+                {dx.diagnosticCriteria.map((c, i) => (
+                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                    <span className="w-5 h-5 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-0.5">{i + 1}</span>
+                    {c}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* Physical Exam Instructions */}
+          {dx.physicalExamInstructions && dx.physicalExamInstructions.length > 0 && (
+            <div>
+              <h5 className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-1.5">
+                <Stethoscope className="w-4 h-4" /> Physical Exam Guide
+              </h5>
+              <ul className="space-y-1">
+                {dx.physicalExamInstructions.map((p, i) => (
+                  <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0 mt-1.5" />{p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================
 // Main Component
 // ============================================================
 
@@ -325,6 +464,7 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
   });
   const [actionItems, setActionItems] = useState(data.actionItems);
   const [acknowledgedAlerts, setAcknowledgedAlerts] = useState<Set<string>>(new Set());
+  const [expandedDxId, setExpandedDxId] = useState<string | null>(null);
 
   const acknowledgeAlert = useCallback((alertId: string) => {
     setAcknowledgedAlerts(prev => new Set([...prev, alertId]));
@@ -536,6 +676,38 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
               </div>
             </div>
           </CollapsibleSection>
+
+          {/* AI Suggested Diagnoses */}
+          {data.suggestedDiagnoses && data.suggestedDiagnoses.length > 0 && (
+            <CollapsibleSection
+              title="AI Suggested Diagnoses"
+              badge={data.suggestedDiagnoses.length}
+              defaultOpen={allExpanded}
+              status={sectionStatus.chiefComplaint === 'reviewed' ? 'reviewed' : 'pending'}
+              priority={data.suggestedDiagnoses.some(d => d.category === 'rule-out' && d.confidence >= 0.25) ? 'high' : 'normal'}
+            >
+              <div className="pt-4">
+                <div className="flex items-center gap-2 mb-4 p-3 bg-teal-50 border border-teal-100 rounded-lg">
+                  <Sparkles className="w-4 h-4 text-teal-600" />
+                  <p className="text-sm text-teal-800">
+                    Based on COMPASS assessment, patient history, and clinical data. Tap a diagnosis to see criteria, rationale, and PE instructions.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {data.suggestedDiagnoses
+                    .sort((a, b) => b.confidence - a.confidence)
+                    .map((dx) => (
+                      <DiagnosisCard
+                        key={dx.id}
+                        dx={dx}
+                        isExpanded={expandedDxId === dx.id}
+                        onToggle={() => setExpandedDxId(expandedDxId === dx.id ? null : dx.id)}
+                      />
+                    ))}
+                </div>
+              </div>
+            </CollapsibleSection>
+          )}
 
           {/* Current Medications */}
           <CollapsibleSection

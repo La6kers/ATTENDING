@@ -113,9 +113,9 @@ function DashboardContent() {
                 {/* User Menu */}
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                    <span className="text-teal-700 font-medium text-sm">SI</span>
+                    <span className="text-teal-700 font-medium text-sm">AM</span>
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Dr. Isbell</span>
+                  <span className="text-sm font-medium text-gray-700">Dr. Morgan</span>
                 </div>
               </div>
             </div>

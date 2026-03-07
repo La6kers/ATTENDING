@@ -21,8 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Demo data
     return res.status(200).json([
-      { id: '1', name: 'Kelli Isbell', relationship: 'Spouse', phone: '(555) 123-4567', isPrimary: true },
-      { id: '2', name: 'Ken Isbell', relationship: 'Father', phone: '(555) 987-6543', isPrimary: false },
+      { id: '1', name: 'Jamie Morgan', relationship: 'Spouse', phone: '(555) 123-4567', isPrimary: true },
+      { id: '2', name: 'Robert Morgan', relationship: 'Father', phone: '(555) 987-6543', isPrimary: false },
     ]);
   }
 

@@ -7,6 +7,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* react-grid-layout */
+@import 'react-grid-layout/css/styles.css';
+@import 'react-resizable/css/styles.css';
+
 /* ========================================
    ATTENDING AI — Teal Brand Design Tokens
    ======================================== */
@@ -131,6 +135,44 @@
   .card-attending-interactive:active {
     transform: translateY(0);
     box-shadow: var(--shadow-sm);
+  }
+
+  /* Dashboard grid overrides */
+  .react-grid-item {
+    transition: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .react-grid-item > div {
+    flex: 1;
+    min-height: 0;
+  }
+  .react-grid-item.cssTransforms {
+    transition: transform 150ms ease;
+  }
+  .react-grid-item > .react-resizable-handle {
+    background: none;
+    width: 20px;
+    height: 20px;
+    z-index: 10;
+  }
+  .react-grid-item > .react-resizable-handle::after {
+    border-color: var(--attending-primary-teal) !important;
+    width: 8px !important;
+    height: 8px !important;
+    right: 6px !important;
+    bottom: 6px !important;
+  }
+  .react-grid-item.react-grid-placeholder {
+    background: rgba(26, 143, 168, 0.25) !important;
+    border: 2px dashed var(--attending-primary-teal) !important;
+    border-radius: 12px;
+    opacity: 0.6;
+  }
+  /* iOS safe viewport height */
+  .dashboard-bg {
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   /* Button styles */

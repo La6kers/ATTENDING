@@ -16,7 +16,7 @@ const InboxPage: NextPage = () => {
       contextBadge="Provider Inbox"
       fullWidth
     >
-      <div className="flex-1" style={{ height: 'calc(100vh - 112px)' }}>
+      <div className="px-4 pt-3 pb-3" style={{ height: 'calc(100vh - 100px)' }}>
         <ProviderInbox />
       </div>
     </ProviderShell>

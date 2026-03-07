@@ -32,6 +32,9 @@ export type MeterEvent =
   | 'ai.scribe'
   | 'ai.drugCheck'
   | 'ai.riskPrediction'
+  | 'ai.ambientBatch'
+  | 'ai.ambientLocal'
+  | 'ai.entityExtraction'
   | 'fhir.request'
   | 'hl7v2.message'
   | 'webhook.delivery'
@@ -83,6 +86,9 @@ const PRICING = {
   'ai.scribe': parseFloat(process.env.PRICE_AI_SCRIBE || '0.05'),       // $0.05/note
   'ai.drugCheck': parseFloat(process.env.PRICE_AI_DRUG || '0.002'),     // $0.002/check
   'ai.riskPrediction': parseFloat(process.env.PRICE_AI_RISK || '0.01'), // $0.01/prediction
+  'ai.ambientBatch': parseFloat(process.env.PRICE_AI_AMBIENT || '0.005'), // $0.005/batch (30s window)
+  'ai.ambientLocal': 0,                                                    // $0 - local pattern matching
+  'ai.entityExtraction': parseFloat(process.env.PRICE_AI_ENTITY || '0.001'), // $0.001/extraction
   'fhir.request': parseFloat(process.env.PRICE_FHIR || '0.0002'),      // $0.0002/request
   'hl7v2.message': parseFloat(process.env.PRICE_HL7 || '0.001'),       // $0.001/message
   'webhook.delivery': parseFloat(process.env.PRICE_WEBHOOK || '0.0001'),
@@ -92,7 +98,7 @@ const PRICING = {
   'user.active': 0, // Not billed per-unit
 } as const;
 
-const AI_EVENTS: MeterEvent[] = ['ai.triage', 'ai.differential', 'ai.scribe', 'ai.drugCheck', 'ai.riskPrediction'];
+const AI_EVENTS: MeterEvent[] = ['ai.triage', 'ai.differential', 'ai.scribe', 'ai.drugCheck', 'ai.riskPrediction', 'ai.ambientBatch', 'ai.ambientLocal', 'ai.entityExtraction'];
 
 // ============================================================
 // IN-MEMORY BUFFER (flushed to DB periodically)

@@ -9,7 +9,7 @@
 // =============================================================================
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Send, Mic, MicOff, ChevronLeft, MoreVertical } from 'lucide-react';
+import { Send, Mic, MicOff, ChevronLeft, MoreVertical, Volume2, VolumeX } from 'lucide-react';
 import { MessageBubble } from './MessageBubble';
 import { QuickReplies } from './QuickReplies';
 
@@ -56,11 +56,11 @@ const ProgressBar: React.FC<{ progress: number; phase?: DetailedAssessmentPhase 
     <div className="px-4 py-2 bg-white/80 backdrop-blur border-b border-gray-100">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-gray-500">Assessment Progress</span>
-        <span className="text-xs font-medium text-purple-600">{Math.round(progress)}%</span>
+        <span className="text-xs font-medium text-teal-600">{Math.round(progress)}%</span>
       </div>
       <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-purple-600 to-indigo-600 transition-all duration-500 ease-out"
+          className="h-full bg-gradient-to-r from-teal-600 to-teal-800 transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -77,7 +77,7 @@ const ChatHeader: React.FC<{
   patientName?: string;
   onBack?: () => void;
 }> = ({ patientName, onBack }) => (
-  <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+  <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-800 text-white">
     <div className="flex items-center gap-3">
       {onBack && (
         <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
@@ -195,7 +195,7 @@ const InputArea: React.FC<{
             rows={1}
             className={`
               w-full px-4 py-2.5 pr-12 rounded-2xl border border-gray-200
-              resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
+              resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
               disabled:bg-gray-100 disabled:cursor-not-allowed
               text-gray-800 placeholder-gray-400
             `}
@@ -211,7 +211,7 @@ const InputArea: React.FC<{
             p-2.5 rounded-full transition-all
             ${
               value.trim()
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md hover:shadow-lg transform hover:scale-105'
+                ? 'bg-gradient-to-r from-teal-600 to-teal-800 text-white shadow-md hover:shadow-lg transform hover:scale-105'
                 : 'bg-gray-100 text-gray-400'
             }
             disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
@@ -264,15 +264,85 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     [onQuickReply, onSend]
   );
 
+  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Text-to-Speech: read assistant messages aloud when enabled
+  useEffect(() => {
+    if (!ttsEnabled || messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role === 'assistant' && lastMsg.content) {
+      const utterance = new SpeechSynthesisUtterance(lastMsg.content);
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [messages, ttsEnabled]);
+
+  // Speech-to-Text: Web Speech API
   const toggleVoice = useCallback(() => {
-    setIsListening(!isListening);
-    // Voice recognition implementation would go here
-  }, [isListening]);
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser. Try Chrome or Edge.');
+      return;
+    }
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: any) => {
+      let transcript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      onInputChange(transcript);
+    };
+
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  }, [isListening, onInputChange]);
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
-      <ChatHeader patientName={patientName} onBack={onBack} />
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-800 text-white">
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div>
+            <h1 className="font-semibold">COMPASS Assessment</h1>
+            {patientName && <p className="text-xs text-white/80">{patientName}</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setTtsEnabled(!ttsEnabled); if (ttsEnabled) window.speechSynthesis.cancel(); }}
+            className={`p-2 rounded-full transition-colors ${ttsEnabled ? 'bg-white/30' : 'hover:bg-white/20'}`}
+            title={ttsEnabled ? 'Turn off read-aloud' : 'Read questions aloud'}
+          >
+            {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </button>
+          <button className="p-2 hover:bg-white/20 rounded-full transition-colors">
+            <MoreVertical className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
 
       {/* Progress Bar */}
       {progress > 0 && <ProgressBar progress={progress} phase={currentPhase} />}
@@ -280,19 +350,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       {/* Messages */}
       <MessageList messages={messages} isTyping={isTyping} />
 
-      {/* Quick Replies */}
-      {quickReplies.length > 0 && !isTyping && (
-        <div className="px-4 pb-2">
-          <QuickReplies
-            replies={quickReplies}
-            onSelect={handleQuickReply}
-            disabled={disabled}
-            columns={quickReplies.length <= 2 ? 2 : quickReplies.length <= 4 ? 2 : 3}
-          />
-        </div>
-      )}
-
-      {/* Input */}
+      {/* Input — positioned ABOVE quick replies so user sees type/speak option first */}
       <InputArea
         value={inputValue}
         onChange={onInputChange}
@@ -302,6 +360,19 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         isListening={isListening}
         onVoiceToggle={toggleVoice}
       />
+
+      {/* Quick Reply Buttons — below the input area */}
+      {quickReplies.length > 0 && !isTyping && (
+        <div className="px-4 py-2 bg-white border-t border-gray-100">
+          <p className="text-[10px] text-gray-400 mb-1.5 text-center">or tap a quick reply</p>
+          <QuickReplies
+            replies={quickReplies}
+            onSelect={handleQuickReply}
+            disabled={disabled}
+            columns={quickReplies.length <= 2 ? 2 : quickReplies.length <= 4 ? 2 : 3}
+          />
+        </div>
+      )}
     </div>
   );
 };

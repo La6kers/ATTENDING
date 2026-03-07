@@ -19,6 +19,7 @@ import {
   LabOrderSummary,
   LabPanelsSelector,
 } from '../components/lab-ordering';
+import { LabResultsReview } from '../components/labs';
 import {
   useLabOrderingStore,
   LAB_CATALOG,
@@ -40,7 +41,7 @@ type OrderTab = 'ai' | 'panels' | 'catalog';
 
 export default function Labs() {
   const router = useRouter();
-  const [viewMode, setViewMode] = useState<ViewMode>('order');
+  const [viewMode, setViewMode] = useState<ViewMode>('results');
   const [activeTab, setActiveTab] = useState<OrderTab>('ai');
   const [showCosts, setShowCosts] = useState(true);
   const [alertDismissed, setAlertDismissed] = useState(false);
@@ -150,21 +151,20 @@ export default function Labs() {
         <title>Lab Orders | ATTENDING AI</title>
       </Head>
 
-      <ProviderShell contextBadge="Lab Orders" currentPage="labs"
-        headerRight={
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-              <input type="checkbox" checked={showCosts} onChange={(e) => setShowCosts(e.target.checked)} className="rounded text-teal-600" />
-              Show Costs
-            </label>
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <button onClick={() => setViewMode('order')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'order' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>Order Labs</button>
-              <button onClick={() => setViewMode('results')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'results' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>View Results</button>
-            </div>
+      <ProviderShell contextBadge="Labs" currentPage="labs">
+        {/* Results mode: full-bleed panel */}
+        {viewMode === 'results' && (
+          <div className="px-4 pt-3 pb-3" style={{ height: 'calc(100vh - 100px)' }}>
+            <LabResultsReview onNewOrder={() => setViewMode('order')} />
           </div>
-        }
-      >
+        )}
+
+        {viewMode === 'order' && (
         <main className="max-w-7xl mx-auto px-6 py-6">
+          <button onClick={() => setViewMode('results')}
+            className="mb-4 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white/70 hover:text-white bg-white/10 hover:bg-white/15 rounded-lg transition-colors">
+            &larr; Back to Results
+          </button>
           {/* Critical Alert - Click to dismiss */}
           {patientContext?.redFlags && patientContext.redFlags.length > 0 && !alertDismissed && (
             <SimpleCriticalAlert
@@ -177,7 +177,6 @@ export default function Labs() {
             />
           )}
 
-          {viewMode === 'order' ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Lab Selection */}
               <div className="lg:col-span-2 space-y-6">
@@ -289,10 +288,8 @@ export default function Labs() {
                 />
               </div>
             </div>
-          ) : (
-            <LabResultsView />
-          )}
         </main>
+        )}
       </ProviderShell>
     </>
   );

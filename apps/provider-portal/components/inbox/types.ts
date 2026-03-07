@@ -3,14 +3,15 @@
 // apps/provider-portal/components/inbox/types.ts
 // =============================================================================
 
-export type CategoryType = 
-  | 'encounters' 
-  | 'phone' 
-  | 'charts' 
-  | 'messages' 
-  | 'refills' 
-  | 'labs' 
+export type CategoryType =
+  | 'encounters'
+  | 'phone'
+  | 'charts'
+  | 'messages'
+  | 'refills'
+  | 'labs'
   | 'imaging'
+  | 'referrals'
   | 'incomplete';
 
 export type PriorityLevel = 'urgent' | 'high' | 'normal' | 'low';

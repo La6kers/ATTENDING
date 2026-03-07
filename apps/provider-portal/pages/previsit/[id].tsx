@@ -10,8 +10,9 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import type { PreVisitData, PatientVitals } from '@/components/previsit';
+import type { PreVisitData, PatientVitals, SuggestedDiagnosis } from '@/components/previsit';
 import { PreVisitSummary } from '@/components/previsit';
+import { CostAwareAIRouter } from '@attending/shared/services/CostAwareAIRouter';
 import { usePatientFhirEnrichment } from '@/hooks/usePatientFhirEnrichment';
 
 // ============================================================
@@ -117,6 +118,226 @@ function mapApiToPreVisitData(api: any): PreVisitData {
 }
 
 // ============================================================
+// Knowledge Base Lookups (static, cacheable, zero LLM cost)
+// ============================================================
+
+function getDiagnosticCriteria(diagnosisName: string): string[] {
+  const criteria: Record<string, string[]> = {
+    'Migraine with Aura': [
+      'At least 2 attacks fulfilling criteria',
+      'Fully reversible aura symptoms (visual, sensory, speech)',
+      'At least 3 of: gradual spread >=5 min, 2+ symptoms in succession, each lasts 5-60 min, unilateral, followed by headache within 60 min',
+      'Not better accounted for by another ICHD-3 diagnosis',
+    ],
+    'Subarachnoid Hemorrhage': [
+      'Sudden severe headache ("thunderclap")',
+      '"Worst headache of life"',
+      'CT head 90-95% sensitive in first 6 hours',
+      'LP showing xanthochromia if CT negative',
+      'May have neck stiffness, altered consciousness, focal deficits',
+    ],
+    'Tension-Type Headache': [
+      'Bilateral, non-pulsating pain',
+      'Mild to moderate intensity',
+      'Not aggravated by routine physical activity',
+      'No nausea/vomiting, at most one of photophobia or phonophobia',
+    ],
+    'Meningitis': [
+      'Classic triad: fever, neck stiffness, altered mental status (present in <50%)',
+      'Headache (most common symptom)',
+      'Positive Kernig and Brudzinski signs',
+      'CSF pleocytosis on lumbar puncture',
+    ],
+    'Acute Coronary Syndrome': [
+      'Ischemic chest pain >20 minutes',
+      'ECG changes (ST elevation/depression, T wave inversion)',
+      'Elevated cardiac biomarkers (troponin)',
+      'Risk stratification: HEART score or TIMI score',
+    ],
+    'GERD': [
+      'Burning substernal chest pain',
+      'Worsened by meals, lying down',
+      'Relief with antacids',
+      'Absence of alarm symptoms (dysphagia, weight loss, GI bleeding)',
+    ],
+    'Acute Gastritis': [
+      'Epigastric pain or discomfort',
+      'Nausea, early satiety',
+      'Temporal relationship with NSAIDs, alcohol, or dietary triggers',
+      'May have associated vomiting',
+    ],
+  };
+  return criteria[diagnosisName] || [];
+}
+
+function getPEInstructions(diagnosisName: string): string[] {
+  const instructions: Record<string, string[]> = {
+    'Migraine with Aura': [
+      'Complete neurological exam including CN II-XII',
+      'Fundoscopic exam to rule out papilledema',
+      'Assess for neck stiffness (meningeal signs)',
+      'Check visual fields and pupil responses',
+      'Palpate temporal arteries if age >50',
+    ],
+    'Subarachnoid Hemorrhage': [
+      'Assess level of consciousness (GCS)',
+      'Check for neck stiffness/rigidity',
+      'Kernig and Brudzinski signs',
+      'Complete neurological exam for focal deficits',
+      'Fundoscopic exam for subhyaloid hemorrhage',
+      'Third nerve palsy check (pupil asymmetry)',
+    ],
+    'Tension-Type Headache': [
+      'Palpate pericranial muscles for tenderness',
+      'Assess cervical range of motion',
+      'Check for trigger points',
+      'Brief neurological screen',
+    ],
+    'Meningitis': [
+      'Assess for meningeal signs (neck stiffness)',
+      'Kernig sign: resistance/pain with knee extension',
+      'Brudzinski sign: neck flexion causes hip/knee flexion',
+      'Check for petechial rash (meningococcemia)',
+      'Fundoscopic exam before LP',
+    ],
+    'Acute Coronary Syndrome': [
+      'Auscultate heart for murmurs, S3/S4, rubs',
+      'Check bilateral arm blood pressures',
+      'Assess for signs of heart failure (JVD, edema, crackles)',
+      'Palpate chest wall to rule out MSK cause',
+      'Check peripheral pulses',
+    ],
+    'GERD': [
+      'Abdominal exam for epigastric tenderness',
+      'Assess for signs of GI bleeding',
+      'Cardiac exam to rule out cardiac cause',
+    ],
+    'Acute Gastritis': [
+      'Systematic abdominal exam: inspection, auscultation, percussion, palpation',
+      'Check for rebound tenderness and guarding',
+      'Murphy sign if RUQ pain',
+      'McBurney point if RLQ pain',
+    ],
+  };
+  return instructions[diagnosisName] || [];
+}
+
+// ============================================================
+// AI Diagnosis Generator (cost-optimized)
+// ============================================================
+
+function generateAIDiagnoses(api: any): SuggestedDiagnosis[] {
+  const cc = (api.chiefComplaint || '').toLowerCase();
+  const symptoms: string[] = (api.symptoms || []).map((s: string) => s.toLowerCase());
+  const redFlags: string[] = api.redFlags || [];
+  const allTerms = [cc, ...symptoms].join(' ');
+
+  // Cost optimization: Try the router's local pattern matching first (zero cost)
+  const router = new CostAwareAIRouter('org-default');
+  const localResults = router.matchLocalPatterns(api.chiefComplaint || '', api.symptoms || []);
+  if (localResults.length > 0) {
+    console.log(`[COST] Differential resolved locally (0 LLM calls). Saved ~$0.01`);
+    return localResults.map((r, i) => ({
+      id: `dx-local-${i}`,
+      name: r.name,
+      icdCode: r.icdCode,
+      confidence: r.probability,
+      category: r.category,
+      supportingEvidence: r.supportingEvidence,
+      concerns: redFlags.length > 0 && r.category === 'rule-out'
+        ? [`Red flags present: ${redFlags.slice(0, 2).join(', ')}`]
+        : [],
+      rationale: r.rationale,
+      // These would come from a knowledge base lookup (also cacheable)
+      diagnosticCriteria: getDiagnosticCriteria(r.name),
+      physicalExamInstructions: getPEInstructions(r.name),
+    }));
+  }
+
+  // Fallback: hardcoded pattern matching for demo
+  console.log(`[COST] No local match, would call LLM (~$0.01). Using fallback patterns.`);
+
+  const diagnoses: SuggestedDiagnosis[] = [];
+
+  // Headache-related
+  if (allTerms.includes('headache') || allTerms.includes('head pain')) {
+    diagnoses.push({
+      id: 'dx-migraine', name: 'Migraine with Aura', icdCode: 'G43.109', confidence: 0.75,
+      category: 'primary',
+      rationale: 'Presentation consistent with migraine: unilateral headache, visual symptoms, photophobia, and nausea reported in COMPASS assessment.',
+      supportingEvidence: ['Headache reported as chief complaint', 'Associated visual changes', 'Nausea/photophobia pattern', 'Throbbing quality described'],
+      concerns: redFlags.length > 0 ? [`Red flags present: ${redFlags.slice(0, 2).join(', ')}`] : [],
+      diagnosticCriteria: ['At least 2 attacks fulfilling criteria', 'Fully reversible aura symptoms (visual, sensory, speech)', 'Aura spreads gradually over >=5 min', 'Each symptom lasts 5-60 min', 'Aura accompanied/followed by headache within 60 min'],
+      physicalExamInstructions: ['Complete neurological exam including CN II-XII', 'Fundoscopic exam to rule out papilledema', 'Assess for neck stiffness (meningeal signs)', 'Check visual fields and pupil responses', 'Palpate temporal arteries if age >50'],
+    });
+    if (redFlags.some(f => f.toLowerCase().includes('worst') || f.toLowerCase().includes('sudden') || f.toLowerCase().includes('confusion'))) {
+      diagnoses.push({
+        id: 'dx-sah', name: 'Subarachnoid Hemorrhage', icdCode: 'I60.9', confidence: 0.30,
+        category: 'rule-out',
+        rationale: 'Must be ruled out given red flag presentation. "Worst headache" and acute onset with confusion warrant urgent imaging.',
+        supportingEvidence: ['"Worst headache" pattern', 'Acute onset', 'Confusion reported', 'Elevated blood pressure'],
+        concerns: ['Mortality high if missed', 'Requires urgent CT head', 'LP if CT negative but suspicion remains'],
+        diagnosticCriteria: ['Sudden severe headache (thunderclap)', '"Worst headache of life"', 'May have neck stiffness, photophobia', 'CT head 90-95% sensitive in first 6 hours', 'LP showing xanthochromia if CT negative'],
+        physicalExamInstructions: ['Assess level of consciousness (GCS)', 'Check for neck stiffness/rigidity', 'Kernig and Brudzinski signs', 'Complete neurological exam for focal deficits', 'Fundoscopic exam for subhyaloid hemorrhage', 'Third nerve palsy check (pupil asymmetry)'],
+      });
+    }
+    diagnoses.push({
+      id: 'dx-tth', name: 'Tension-Type Headache', icdCode: 'G44.209', confidence: 0.20,
+      category: 'secondary',
+      rationale: 'Common differential for headache presentations. Less likely given unilateral and throbbing features.',
+      supportingEvidence: ['Prolonged headache duration', 'Stress may be contributing'],
+      concerns: ['Aura not typical for TTH', 'Throbbing quality less consistent'],
+      diagnosticCriteria: ['Bilateral, non-pulsating pain', 'Mild to moderate intensity', 'Not aggravated by routine physical activity', 'No nausea/vomiting'],
+      physicalExamInstructions: ['Palpate pericranial muscles for tenderness', 'Assess cervical range of motion', 'Check for trigger points'],
+    });
+  }
+
+  // Chest pain related
+  if (allTerms.includes('chest') || allTerms.includes('chest pain')) {
+    diagnoses.push(
+      { id: 'dx-acs', name: 'Acute Coronary Syndrome', icdCode: 'I21.9', confidence: 0.60, category: 'primary',
+        rationale: 'Chest pain requires cardiac evaluation. Risk factors and symptom pattern suggest ACS workup.',
+        supportingEvidence: ['Chest pain as chief complaint', 'Risk factors may include age, HTN, DM', 'Associated symptoms suggest cardiac origin'],
+        concerns: ['Time-sensitive diagnosis', 'ECG and troponin needed urgently'],
+        diagnosticCriteria: ['Ischemic chest pain >20 minutes', 'ECG changes (ST elevation/depression, T wave inversion)', 'Elevated cardiac biomarkers (troponin)'],
+        physicalExamInstructions: ['Auscultate heart for murmurs, S3/S4', 'Check bilateral arm blood pressures', 'Assess for signs of heart failure (JVD, edema, crackles)', 'Palpate chest wall to rule out MSK cause'] },
+      { id: 'dx-gerd', name: 'Gastroesophageal Reflux', icdCode: 'K21.0', confidence: 0.25, category: 'secondary',
+        rationale: 'Common cause of chest pain. Must be considered after cardiac causes excluded.',
+        supportingEvidence: ['Chest pain/discomfort', 'Possible postprandial pattern'],
+        concerns: ['Must rule out cardiac causes first'],
+        diagnosticCriteria: ['Burning substernal chest pain', 'Worsened by meals, lying down', 'Relief with antacids'],
+        physicalExamInstructions: ['Abdominal exam for epigastric tenderness', 'Assess for signs of GI bleeding'] },
+    );
+  }
+
+  // Abdominal pain
+  if (allTerms.includes('abdominal') || allTerms.includes('stomach') || allTerms.includes('belly')) {
+    diagnoses.push(
+      { id: 'dx-gastritis', name: 'Acute Gastritis', icdCode: 'K29.70', confidence: 0.50, category: 'primary',
+        rationale: 'Abdominal pain with associated GI symptoms suggests gastritis as primary differential.',
+        supportingEvidence: ['Abdominal pain reported', 'GI symptoms present'],
+        concerns: ['Rule out appendicitis if RLQ', 'Consider biliary if RUQ'],
+        diagnosticCriteria: ['Epigastric pain/discomfort', 'Nausea, early satiety', 'May have associated vomiting'],
+        physicalExamInstructions: ['Systematic abdominal exam: inspection, auscultation, percussion, palpation', 'Check for rebound tenderness', 'Murphy sign if RUQ', 'McBurney point if RLQ', 'Assess for guarding and rigidity'] },
+    );
+  }
+
+  // Fallback if no specific patterns matched
+  if (diagnoses.length === 0) {
+    diagnoses.push({
+      id: 'dx-eval', name: 'General Evaluation', icdCode: 'Z00.00', confidence: 0.50, category: 'primary',
+      rationale: 'Further assessment needed to determine differential diagnoses. COMPASS data will be reviewed with clinical findings.',
+      supportingEvidence: ['Chief complaint documented', 'Patient history available'],
+      concerns: ['Requires clinical correlation'],
+      diagnosticCriteria: ['Clinical evaluation in progress'],
+      physicalExamInstructions: ['Complete review of systems', 'Focused physical exam based on chief complaint'],
+    });
+  }
+
+  return diagnoses;
+}
+
+// ============================================================
 // EHR Source Badge
 // ============================================================
 
@@ -170,7 +391,9 @@ export default function PreVisitPage() {
     fetchAssessment(id)
       .then((data) => {
         setRawAssessment(data);
-        setBaseData(mapApiToPreVisitData(data));
+        const mapped = mapApiToPreVisitData(data);
+        mapped.suggestedDiagnoses = generateAIDiagnoses(data);
+        setBaseData(mapped);
         setLoading(false);
       })
       .catch((err) => {
@@ -196,7 +419,7 @@ export default function PreVisitPage() {
             name: m.name,
             dosage: m.dosage,
             frequency: m.frequency,
-            status: m.status,
+            status: (['active', 'self-medicating', 'discontinued', 'prn'].includes(m.status) ? m.status : 'active') as 'active' | 'self-medicating' | 'discontinued' | 'prn',
           }))
         : baseData.medications,
 

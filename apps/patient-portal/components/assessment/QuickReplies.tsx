@@ -174,7 +174,7 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
   const getVariantClasses = (variant?: string) => {
     switch (variant) {
       case 'primary':
-        return 'bg-purple-100 border-purple-300 text-purple-700 hover:bg-purple-200 hover:border-purple-400';
+        return 'bg-teal-100 border-teal-300 text-teal-700 hover:bg-teal-200 hover:border-teal-400';
       case 'success':
         return 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200 hover:border-green-400';
       case 'warning':
@@ -182,7 +182,7 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
       case 'danger':
         return 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200 hover:border-red-400';
       default:
-        return 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-purple-300';
+        return 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-teal-300';
     }
   };
 

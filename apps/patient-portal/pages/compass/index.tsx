@@ -74,7 +74,7 @@ export default function CompassLanding() {
     if (token && typeof token === 'string') {
       setAppointmentInfo({
         appointmentDate: 'Tomorrow at 9:30 AM',
-        providerName: 'Dr. Sarah Chen',
+        providerName: 'Dr. Thomas Reed',
         clinicName: 'Parker Family Medicine',
       });
     }

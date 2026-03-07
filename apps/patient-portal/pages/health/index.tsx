@@ -27,7 +27,6 @@ import {
   CheckCircle2,
   Heart,
   Loader2,
-  ExternalLink,
 } from 'lucide-react';
 import AppShell from '../../components/layout/AppShell';
 import { usePatientData } from '../../hooks/usePatientData';
@@ -101,7 +100,7 @@ function SegmentControl({
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
               isActive
                 ? 'bg-white text-attending-primary shadow-sm'
-                : 'text-attending-200 hover:text-attending-deep-navy'
+                : 'text-attending-600 hover:text-attending-deep-navy'
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
@@ -193,11 +192,11 @@ function SummarySection({ data }: { data: ReturnType<typeof usePatientData> }) {
                     vital.status === 'warning' ? 'text-attending-gold' : 'text-green-500'
                   }`}
                 />
-                <span className="text-[10px] text-attending-200 font-medium">{vital.label}</span>
+                <span className="text-[10px] text-attending-600 font-medium">{vital.label}</span>
               </div>
               <p className="text-lg font-bold text-attending-deep-navy">
                 {vital.value}
-                <span className="text-xs font-normal text-attending-200 ml-1">{vital.unit}</span>
+                <span className="text-xs font-normal text-attending-600 ml-1">{vital.unit}</span>
               </p>
             </div>
           ))}
@@ -212,7 +211,7 @@ function SummarySection({ data }: { data: ReturnType<typeof usePatientData> }) {
             <div key={c.name} className="flex items-center justify-between px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-attending-deep-navy">{c.name}</p>
-                <p className="text-xs text-attending-200">Since {c.since}</p>
+                <p className="text-xs text-attending-600">Since {c.since}</p>
               </div>
               <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${statusColors[c.status]}`}>
                 {c.status}
@@ -233,7 +232,7 @@ function SummarySection({ data }: { data: ReturnType<typeof usePatientData> }) {
             <div key={a.name} className="flex items-center justify-between px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-attending-deep-navy">{a.name}</p>
-                <p className="text-xs text-attending-200">{a.reaction}</p>
+                <p className="text-xs text-attending-600">{a.reaction}</p>
               </div>
               <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${severityColors[a.severity]}`}>
                 {a.severity}
@@ -283,13 +282,13 @@ function LabsSection({ data }: { data: ReturnType<typeof usePatientData> }) {
   const TrendIcon = ({ trend }: { trend?: string }) => {
     if (trend === 'up') return <TrendingUp className="w-3.5 h-3.5 text-red-500" />;
     if (trend === 'down') return <TrendingDown className="w-3.5 h-3.5 text-green-500" />;
-    return <Minus className="w-3.5 h-3.5 text-attending-200" />;
+    return <Minus className="w-3.5 h-3.5 text-attending-600" />;
   };
 
   return (
     <div className="space-y-4 animate-fade-in-up">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-attending-200">Most recent results</p>
+        <p className="text-xs text-attending-600">Most recent results</p>
         <Link href="/health/labs/history" className="text-xs text-attending-primary font-medium">
           Full History
         </Link>
@@ -302,7 +301,7 @@ function LabsSection({ data }: { data: ReturnType<typeof usePatientData> }) {
             <div key={lab.id} className="px-4 py-3 flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-attending-deep-navy truncate">{lab.name}</p>
-                <p className="text-xs text-attending-200 mt-0.5">
+                <p className="text-xs text-attending-600 mt-0.5">
                   Ref: {lab.referenceRange} · {lab.date}
                 </p>
               </div>
@@ -310,7 +309,7 @@ function LabsSection({ data }: { data: ReturnType<typeof usePatientData> }) {
                 {lab.trend && <TrendIcon trend={lab.trend} />}
                 <span className="text-sm font-bold text-attending-deep-navy">
                   {lab.value}
-                  <span className="text-xs font-normal text-attending-200 ml-0.5">{lab.unit}</span>
+                  <span className="text-xs font-normal text-attending-600 ml-0.5">{lab.unit}</span>
                 </span>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>
                   {style.label}
@@ -348,7 +347,7 @@ function MedicationsSection({ data }: { data: ReturnType<typeof usePatientData> 
 
   return (
     <div className="space-y-4 animate-fade-in-up">
-      <p className="text-xs text-attending-200">{meds.length} active medications</p>
+      <p className="text-xs text-attending-600">{meds.length} active medications</p>
 
       <div className="space-y-3">
         {meds.map((med) => {
@@ -362,10 +361,10 @@ function MedicationsSection({ data }: { data: ReturnType<typeof usePatientData> 
                     {med.dosage} · {med.frequency}
                   </p>
                 </div>
-                <Pill className={`w-5 h-5 flex-shrink-0 ${lowSupply ? 'text-attending-coral' : 'text-attending-200'}`} />
+                <Pill className={`w-5 h-5 flex-shrink-0 ${lowSupply ? 'text-attending-coral' : 'text-attending-600'}`} />
               </div>
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-attending-50">
-                <span className="text-xs text-attending-200">
+                <span className="text-xs text-attending-600">
                   Prescribed by {med.prescriber}
                 </span>
                 <div className="flex items-center gap-2">
@@ -374,7 +373,7 @@ function MedicationsSection({ data }: { data: ReturnType<typeof usePatientData> 
                       Low Supply
                     </span>
                   )}
-                  <span className="text-xs text-attending-200">{med.pillsRemaining} pills left</span>
+                  <span className="text-xs text-attending-600">{med.pillsRemaining} pills left</span>
                 </div>
               </div>
             </div>
@@ -440,7 +439,7 @@ function AppointmentsSection({ data }: { data: ReturnType<typeof usePatientData>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-attending-deep-navy truncate">{appt.provider}</p>
-                <p className="text-xs text-attending-200 mt-0.5">{appt.specialty}</p>
+                <p className="text-xs text-attending-600 mt-0.5">{appt.specialty}</p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <Clock className="w-3 h-3 text-attending-primary" />
                   <span className="text-xs text-attending-primary font-medium">{appt.time}</span>
@@ -460,11 +459,11 @@ function AppointmentsSection({ data }: { data: ReturnType<typeof usePatientData>
             <div key={visit.id} className="px-4 py-3">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm font-medium text-attending-deep-navy">{visit.provider}</p>
-                <span className="text-xs text-attending-200">
+                <span className="text-xs text-attending-600">
                   {new Date(visit.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
               </div>
-              <p className="text-xs text-attending-200 line-clamp-2">{visit.summary}</p>
+              <p className="text-xs text-attending-600 line-clamp-2">{visit.summary}</p>
             </div>
           ))}
         </div>
@@ -504,25 +503,13 @@ export default function HealthPage() {
           </header>
         }
       >
-        <div className="max-w-lg mx-auto px-5 py-5">
-          {/* Referral tracking link */}
-          <Link
-            href="/health/referrals"
-            className="flex items-center justify-between p-4 mb-5 bg-teal-50 border border-teal-200 rounded-xl hover:bg-teal-100 active:bg-teal-100 transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-teal-600 flex items-center justify-center">
-                <ExternalLink className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-teal-900">Track My Referrals</p>
-                <p className="text-xs text-teal-600">3 active &bull; 1 needs attention</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-teal-400" />
-          </Link>
-
-          {sectionMap[activeSection]}
+        <div className="bg-attending-800 dashboard-bg pb-8">
+        <div className="max-w-lg mx-auto px-4 sm:px-5 py-5 space-y-4">
+          {/* Section content in a light container */}
+          <div className="bg-attending-50 rounded-xl border border-attending-100 p-4">
+            {sectionMap[activeSection]}
+          </div>
+        </div>
         </div>
       </AppShell>
     </>

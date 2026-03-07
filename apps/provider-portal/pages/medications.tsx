@@ -8,6 +8,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ProviderShell } from '@/components/layout/ProviderShell';
+import { MedicationsReview } from '@/components/medications';
 import { useToast } from '@/components/shared';
 import { fetchPatientContext } from '@/lib/fetchPatientContext';
 import { DEMO_PATIENT_COMPACT } from '@/lib/demoPatient';
@@ -360,6 +361,7 @@ export default function MedicationsPage() {
   const [selectedPharmacy, setSelectedPharmacy] = useState<string>('pharm-001');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterInStock, setFilterInStock] = useState(false);
+  const [viewMode, setViewMode] = useState<'order' | 'review'>('review');
   const [isSending, setIsSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
   const toast = useToast();
@@ -442,8 +444,17 @@ export default function MedicationsPage() {
         <title>Medication Orders | ATTENDING AI</title>
       </Head>
 
-      <ProviderShell contextBadge="Medication Orders" currentPage="medications">
+      <ProviderShell contextBadge="Medications" currentPage="medications">
+        {viewMode === 'review' ? (
+          <div className="px-4 pt-3 pb-3 flex flex-col" style={{ height: 'calc(100vh - 100px)' }}>
+            <MedicationsReview onNewOrder={() => setViewMode('order')} />
+          </div>
+        ) : (
         <main className="max-w-7xl mx-auto px-6 py-6">
+          <button onClick={() => setViewMode('review')}
+            className="mb-4 flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white/70 hover:text-white bg-white/10 hover:bg-white/15 rounded-lg transition-colors">
+            &larr; Back to Review
+          </button>
           {/* Success Message */}
           {sentSuccess && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3">
@@ -635,6 +646,7 @@ export default function MedicationsPage() {
             </div>
           </div>
         </main>
+        )}
       </ProviderShell>
     </>
   );

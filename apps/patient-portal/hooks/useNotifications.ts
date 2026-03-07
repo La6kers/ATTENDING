@@ -101,7 +101,11 @@ export function useNotifications(options?: {
       ]);
 
       if (mountedRef.current) {
-        if (notifRes.ok) setNotifications(notifRes.data ?? []);
+        if (notifRes.ok) {
+          const raw = notifRes.data as any;
+          const list = Array.isArray(raw) ? raw : Array.isArray(raw?.notifications) ? raw.notifications : [];
+          setNotifications(list);
+        }
         if (countRes.ok) setUnreadCount(countRes.data?.count ?? 0);
         setError(null);
         setLoading(false);

@@ -294,21 +294,21 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
         className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4 animate-slide-up`}
       >
         {!isUser && (
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-2">
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center mr-2">
             <Bot className="w-5 h-5 text-white" />
           </div>
         )}
         <div
           className={`max-w-[80%] rounded-2xl px-4 py-3 ${
             isUser
-              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-md'
+              ? 'bg-gradient-to-r from-teal-600 to-teal-800 text-white rounded-br-md'
               : isSystem
               ? 'bg-amber-50 border border-amber-200 text-amber-800'
               : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md shadow-sm'
           }`}
         >
           <p className="whitespace-pre-wrap">{message.content}</p>
-          <span className={`text-xs mt-1 block ${isUser ? 'text-purple-200' : 'text-gray-400'}`}>
+          <span className={`text-xs mt-1 block ${isUser ? 'text-teal-200' : 'text-gray-400'}`}>
             {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
@@ -325,7 +325,7 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
   const currentPhaseConfig = PHASE_QUESTIONS[currentPhase];
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-purple-50 to-indigo-50">
+    <div className="flex flex-col h-full bg-gradient-to-br from-teal-50 to-cyan-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -363,7 +363,7 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
       {/* Progress Bar */}
       <div className="h-1 bg-gray-200">
         <div 
-          className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-500"
+          className="h-full bg-gradient-to-r from-teal-500 to-teal-700 transition-all duration-500"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -375,7 +375,7 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
         {/* Typing Indicator */}
         {isTyping && (
           <div className="flex items-center gap-2 text-gray-500">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
               <Bot className="w-5 h-5 text-white" />
             </div>
             <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-200">
@@ -409,7 +409,7 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
             {currentPhaseConfig.inputType === 'multiselect' && selectedMulti.length > 0 && (
               <button
                 onClick={handleMultiSubmit}
-                className="mt-3 w-full py-2 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors"
+                className="mt-3 w-full py-2 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors"
               >
                 Continue with {selectedMulti.length} selected
               </button>
@@ -431,13 +431,13 @@ export const AssessmentChat: React.FC<AssessmentChatProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type your response..."
-            className="flex-1 px-4 py-3 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all"
+            className="flex-1 px-4 py-3 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
           />
           <button
             type="submit"
             disabled={!inputValue.trim()}
-            className="px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl 
-                       hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed
+            className="px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-800 text-white rounded-xl 
+                       hover:from-teal-700 hover:to-teal-900 disabled:opacity-50 disabled:cursor-not-allowed
                        transition-all shadow-md hover:shadow-lg"
           >
             <Send className="w-5 h-5" />

@@ -11,6 +11,7 @@ import {
   UserPlus, ArrowLeft, Home, CheckCircle, AlertTriangle, Clock, Filter
 } from 'lucide-react';
 import { ProviderShell } from '@/components/layout/ProviderShell';
+import { ReferralsReview } from '@/components/referrals';
 import { SimpleCriticalAlert, useToast } from '@/components/shared';
 import { ReferralOrderingPanel } from '@/components/referral-ordering';
 import type { PatientContext as StorePatientContext } from '@/store/referralOrderingStore';
@@ -29,6 +30,7 @@ export default function ReferralsPage() {
   const { patientId, assessmentId, encounterId } = router.query;
   
   const [patientContext, setPatientContext] = useState<StorePatientContext | null>(null);
+  const [viewMode, setViewMode] = useState<'review' | 'order'>('review');
   const [activeTab, setActiveTab] = useState<'new' | 'pending' | 'history'>('new');
   const [pendingReferrals, setPendingReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,7 +99,21 @@ export default function ReferralsPage() {
         <title>Referral Orders | ATTENDING AI</title>
       </Head>
 
-      <ProviderShell contextBadge="Referral Orders" currentPage="referrals">
+      <ProviderShell contextBadge="Referrals" currentPage="referrals"
+        headerRight={
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button onClick={() => setViewMode('review')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'review' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>Review</button>
+            <button onClick={() => setViewMode('order')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'order' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>New Referral</button>
+          </div>
+        }
+      >
+        {viewMode === 'review' ? (
+          <main className="max-w-full px-6 py-6">
+            <div style={{ height: 'calc(100vh - 180px)' }}>
+              <ReferralsReview />
+            </div>
+          </main>
+        ) : (
         <main className="max-w-7xl mx-auto px-6 py-6">
           {/* Patient Banner */}
           <div className="bg-white rounded-2xl p-5 shadow-lg mb-6">
@@ -214,6 +230,7 @@ export default function ReferralsPage() {
             </div>
           </div>
         </main>
+        )}
       </ProviderShell>
     </>
   );

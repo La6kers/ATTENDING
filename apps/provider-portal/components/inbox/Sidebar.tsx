@@ -14,6 +14,7 @@ import {
   FileClock,
   Inbox,
   ScanLine,
+  ArrowRightLeft,
 } from 'lucide-react';
 import type { CategoryType, CategoryCount } from './types';
 import { categoryConfig, theme } from './theme';
@@ -26,6 +27,7 @@ const iconMap: Record<CategoryType, React.ComponentType<{ className?: string }>>
   refills: Pill,
   labs: FlaskConical,
   imaging: ScanLine,
+  referrals: ArrowRightLeft,
   incomplete: FileClock,
 };
 
@@ -56,6 +58,7 @@ const defaultCounts: Record<CategoryType, CategoryCount> = {
   refills: { total: 7, unread: 3, urgent: 0 },
   labs: { total: 10, unread: 5, urgent: 1 },
   imaging: { total: 4, unread: 2, urgent: 0 },
+  referrals: { total: 5, unread: 2, urgent: 0 },
   incomplete: { total: 3, unread: 1, urgent: 0 },
 };
 

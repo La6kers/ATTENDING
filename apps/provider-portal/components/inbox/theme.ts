@@ -12,7 +12,8 @@ export const theme = {
     sidebar: 'linear-gradient(180deg, #0C3547 0%, #1A8FA8 50%, #0C3547 100%)',
     header: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
   },
-  purple: {
+  // Brand teal scale (legacy key "purple" aliased below for backward compat)
+  teal: {
     50: '#E6F7F5',
     100: '#C3ECE7',
     200: '#8ED9CE',
@@ -25,6 +26,7 @@ export const theme = {
     900: '#082630',
     950: '#041318',
   },
+  get purple() { return this.teal; }, // backward compatibility
   semantic: {
     success: '#10b981',
     warning: '#f59e0b',
@@ -125,6 +127,14 @@ export const categoryConfig: Record<CategoryType, CategoryAccent> = {
     accentDark: '#0e7490',
     icon: 'scan',
   },
+  referrals: {
+    id: 'referrals',
+    label: 'Referrals',
+    accent: '#e07a5f',
+    accentLight: '#fce8e2',
+    accentDark: '#b85a42',
+    icon: 'arrow-right-left',
+  },
   incomplete: {
     id: 'incomplete',
     label: 'Incomplete Charts',
@@ -148,8 +158,8 @@ export const statusColors = {
   pending: { bg: '#fef3c7', dot: '#f59e0b' },
   in_progress: { bg: '#dbeafe', dot: '#3b82f6' },
   completed: { bg: '#d1fae5', dot: '#10b981' },
-  forwarded: { bg: '#e0e7ff', dot: '#6366f1' },
-  reassigned: { bg: '#fce7f3', dot: '#ec4899' },
+  forwarded: { bg: '#E6F7F5', dot: '#0F5F76' },
+  reassigned: { bg: '#fce8e2', dot: '#e07a5f' },
 } as const;
 
 export function getCategoryAccent(category: CategoryType): CategoryAccent {

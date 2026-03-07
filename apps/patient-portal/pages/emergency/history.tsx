@@ -249,7 +249,7 @@ export default function AccessHistoryPage() {
       {
         id: '3',
         timestamp: '2026-01-15T10:00:00Z',
-        accessor: 'Scott Isbell (You) — Test',
+        accessor: 'Alex Morgan (You) — Test',
         accessorType: 'test',
         accessType: 'full-facesheet',
         location: 'Home — Parker, CO',

@@ -173,7 +173,7 @@ export default function SignInPage({ useAzureB2C, isDev, callbackUrl }: Props) {
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                   {[
-                    { label: 'Dr. Scott Isbell (Provider)', email: 'scott.isbell@attending.ai' },
+                    { label: 'Dr. Alex Morgan (Provider)', email: 'alex.morgan@attending.ai' },
                     { label: 'Nurse (Nurse)', email: 'nurse@attending.ai' },
                     { label: 'Admin', email: 'admin@attending.ai' },
                   ].map(u => (

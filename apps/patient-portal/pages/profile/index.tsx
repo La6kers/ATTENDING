@@ -30,8 +30,8 @@ import { usePatientData } from '../../hooks/usePatientData';
 // ============================================================
 
 function ProfileHeader({ profile }: { profile: any }) {
-  const name = profile?.fullName ?? `${profile?.firstName ?? 'Scott'} ${profile?.lastName ?? 'Isbell'}`;
-  const email = profile?.email ?? 'scott.isbell@email.com';
+  const name = profile?.fullName ?? `${profile?.firstName ?? 'Alex'} ${profile?.lastName ?? 'Morgan'}`;
+  const email = profile?.email ?? 'alex.morgan@email.com';
   const patientId = profile?.mrn ?? 'ATT-2024-0892';
   const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
@@ -42,8 +42,8 @@ function ProfileHeader({ profile }: { profile: any }) {
       </div>
       <div className="flex-1">
         <h2 className="text-lg font-bold text-attending-deep-navy">{name}</h2>
-        <p className="text-sm text-attending-200">{email}</p>
-        <p className="text-xs text-attending-200 mt-0.5">Patient ID: {patientId}</p>
+        <p className="text-sm text-attending-600">{email}</p>
+        <p className="text-xs text-attending-600 mt-0.5">Patient ID: {patientId}</p>
       </div>
       <Link
         href="/profile/edit"
@@ -72,7 +72,7 @@ function SettingsGroup({ title, items }: { title: string; items: SettingItem[] }
   return (
     <section>
       {title && (
-        <h3 className="text-xs font-semibold text-attending-200 uppercase tracking-wider mb-2 px-1">
+        <h3 className="text-xs font-semibold text-attending-300 uppercase tracking-wider mb-2 px-1">
           {title}
         </h3>
       )}
@@ -81,7 +81,7 @@ function SettingsGroup({ title, items }: { title: string; items: SettingItem[] }
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-3 px-4 py-3.5 hover:bg-surface-hover transition-colors"
+            className="flex items-center gap-3 px-4 py-3.5 hover:bg-attending-50 transition-colors"
           >
             <div
               className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -94,14 +94,14 @@ function SettingsGroup({ title, items }: { title: string; items: SettingItem[] }
               <p className={`text-sm font-medium ${item.danger ? 'text-red-600' : 'text-attending-deep-navy'}`}>
                 {item.label}
               </p>
-              {item.sublabel && <p className="text-xs text-attending-200">{item.sublabel}</p>}
+              {item.sublabel && <p className="text-xs text-attending-600">{item.sublabel}</p>}
             </div>
             {item.badge && (
               <span className="text-[10px] font-semibold bg-attending-coral text-white px-2 py-0.5 rounded-full">
                 {item.badge}
               </span>
             )}
-            <ChevronRight className="w-4 h-4 text-attending-200 flex-shrink-0" />
+            <ChevronRight className="w-4 h-4 text-attending-600 flex-shrink-0" />
           </Link>
         ))}
       </div>
@@ -131,7 +131,8 @@ export default function ProfilePage() {
           </header>
         }
       >
-        <div className="max-w-lg mx-auto px-5 py-5 space-y-6">
+        <div className="bg-attending-800 dashboard-bg pb-8">
+        <div className="max-w-lg mx-auto px-4 sm:px-5 py-5 space-y-6">
           <SettingsGroup
             title="Health"
             items={[
@@ -174,9 +175,10 @@ export default function ProfilePage() {
             items={[{ href: '/auth/signout', icon: LogOut, label: 'Sign Out', danger: true }]}
           />
 
-          <p className="text-center text-[10px] text-attending-200 pt-2 pb-4">
+          <p className="text-center text-[10px] text-attending-300 pt-2 pb-4">
             ATTENDING AI · v1.0.0 · Patient App
           </p>
+        </div>
         </div>
       </AppShell>
     </>

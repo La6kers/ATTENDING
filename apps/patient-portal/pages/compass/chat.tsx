@@ -276,7 +276,7 @@ export default function CompassChatPage() {
               currentPhase={currentPhase}
               patientName={assessmentData.patientName || undefined}
               disabled={currentPhase === 'complete' || isSubmitting}
-              showVoiceInput={false}
+              showVoiceInput={true}
             />
           ) : (
             <div className="h-full flex items-center justify-center">

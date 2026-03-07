@@ -7,7 +7,7 @@ const nextConfig = {
   output: 'standalone',
   
   // Transpile the shared workspace package
-  transpilePackages: ['@attending/shared'],
+  transpilePackages: ['@attending/shared', 'react-leaflet', '@react-leaflet/core'],
   
   // Configure webpack for workspace resolution
   webpack: (config, { isServer }) => {

@@ -23,8 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!backendRes.ok) {
         // Return demo data for development
         return res.status(200).json({
-          fullName: 'Scott Isbell',
-          dateOfBirth: '1986-05-15',
+          fullName: 'Alex Morgan',
+          dateOfBirth: '1984-07-22',
           sex: 'Male',
           bloodType: 'O+',
           height: '5\'11"',
