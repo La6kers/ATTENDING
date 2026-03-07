@@ -52,6 +52,15 @@ import {
   ExternalLink,
   SlidersHorizontal,
   Check,
+  Search,
+  FolderOpen,
+  TrendingUp,
+  Zap,
+  AlertOctagon,
+  Info,
+  Maximize2,
+  Shield,
+  TestTube,
 } from 'lucide-react';
 
 // ============================================================
@@ -355,6 +364,87 @@ const SOCIAL_HISTORY = {
   sleep: '6-7 hours/night, irregular schedule',
 };
 
+// ============================================================
+// AI-Mined Prior Visit Insights (related to current complaint)
+// ============================================================
+const AI_PRIOR_VISIT_INSIGHTS = [
+  {
+    type: 'prior_visit' as const,
+    title: 'Migraine Follow-up — 11/02/2025',
+    detail: 'Frequency was 2x/month, stable on sumatriptan. Patient reported stress as primary trigger. No aura at that visit.',
+    relevance: 'high' as const,
+    aiNote: 'Current presentation differs: "worst headache of life" + thunderclap onset suggests this is NOT typical migraine pattern.',
+  },
+  {
+    type: 'prior_visit' as const,
+    title: 'Annual Physical — 01/15/2026',
+    detail: 'BP was 132/84 (borderline). LDL 142 (elevated). No headache complaints at that visit.',
+    relevance: 'medium' as const,
+    aiNote: 'BP trending upward: 124/78 → 128/82 → 132/84 → 142/88 today. Consider secondary hypertension workup.',
+  },
+  {
+    type: 'medication' as const,
+    title: 'Ibuprofen Use Pattern',
+    detail: 'PRN since 2023. Patient mentioned using "a few times a week" at 11/02/2025 visit.',
+    relevance: 'medium' as const,
+    aiNote: 'Frequent NSAID use + OCP combination increases cardiovascular risk. If >15 days/month, consider medication overuse headache.',
+  },
+  {
+    type: 'family' as const,
+    title: 'Family History: Stroke Risk',
+    detail: 'Maternal grandmother had stroke at age 72. Mother has migraine + HTN + DM2. Father has CAD.',
+    relevance: 'high' as const,
+    aiNote: 'Strong family history of cerebrovascular disease. Combined with OCP use, elevated BP, and thunderclap headache — lowers threshold for SAH workup.',
+  },
+];
+
+const AI_DRUG_INTERACTIONS = [
+  {
+    severity: 'warning' as const,
+    drugs: ['Ibuprofen', 'Oral Contraceptive'],
+    detail: 'NSAIDs may reduce efficacy of hormonal contraceptives. Additionally, both increase cardiovascular risk.',
+  },
+  {
+    severity: 'caution' as const,
+    drugs: ['Sumatriptan', 'OCP'],
+    detail: 'Triptans are generally safe with OCPs, but monitor for vascular events in patients with aura. Current presentation has no aura.',
+  },
+  {
+    severity: 'info' as const,
+    drugs: ['Ibuprofen', 'Sumatriptan'],
+    detail: 'Can be used together. Some evidence supports NSAID + triptan combination for refractory migraine.',
+  },
+];
+
+const AI_VITALS_TREND = [
+  { date: '05/2025', bp: '124/78', label: 'Normal' },
+  { date: '08/2025', bp: '128/82', label: 'Normal' },
+  { date: '11/2025', bp: '132/84', label: 'Elevated' },
+  { date: '01/2026', bp: '132/84', label: 'Elevated' },
+  { date: 'Today', bp: '142/88', label: 'Stage 1 HTN' },
+];
+
+const FULL_MEDICATION_LIST = [
+  { name: 'Sumatriptan 100mg', route: 'PO', frequency: 'PRN', purpose: 'Migraine', prescriber: 'Dr. Reed', since: '03/2019', status: 'Active' },
+  { name: 'Lisinopril 10mg', route: 'PO', frequency: 'Daily', purpose: 'Hypertension', prescriber: 'Dr. Reed', since: '06/2023', status: 'Active' },
+  { name: 'Loratadine 10mg', route: 'PO', frequency: 'Daily', purpose: 'Allergies', prescriber: 'Dr. Reed', since: '04/2015', status: 'Active' },
+  { name: 'Oral Contraceptive', route: 'PO', frequency: 'Daily', purpose: 'Contraception', prescriber: 'Dr. Patel', since: '01/2018', status: 'Active' },
+  { name: 'Ibuprofen 400mg', route: 'PO', frequency: 'PRN', purpose: 'Headache', prescriber: 'OTC', since: '2023', status: 'Active' },
+];
+
+const ALLERGIES = [
+  { substance: 'Sulfa drugs', reaction: 'Rash', severity: 'Moderate' },
+  { substance: 'Codeine', reaction: 'Nausea/vomiting', severity: 'Mild' },
+];
+
+const RECENT_LABS = [
+  { date: '01/15/2026', test: 'CBC', result: 'WNL', flag: '' },
+  { date: '01/15/2026', test: 'BMP', result: 'WNL', flag: '' },
+  { date: '01/15/2026', test: 'Lipid Panel', result: 'LDL 142 mg/dL', flag: 'High' },
+  { date: '01/15/2026', test: 'TSH', result: '2.1 mIU/L', flag: '' },
+  { date: '01/15/2026', test: 'HbA1c', result: '5.4%', flag: '' },
+];
+
 const AMBIENT_TRANSCRIPT_LINES = [
   { time: '0:00', speaker: 'Dr. Reed', text: 'Good morning, Sarah. I see you\'re here for a severe headache. Can you tell me more about when it started?' },
   { time: '0:15', speaker: 'Patient', text: 'It started about three days ago. I was at work and suddenly this terrible headache hit me. It\'s the worst headache I\'ve ever had.' },
@@ -422,6 +512,9 @@ const EncounterPage: React.FC = () => {
   const [soapNote, setSoapNote] = useState(SOAP_NOTE);
   const [billingCodes, setBillingCodes] = useState(BILLING_CODES);
   const [expandedVisit, setExpandedVisit] = useState<number | null>(null);
+  const [chartDrawerOpen, setChartDrawerOpen] = useState(false);
+  const [chartDrawerTab, setChartDrawerTab] = useState<'meds' | 'allergies' | 'labs' | 'history'>('meds');
+  const [priorInsightsExpanded, setPriorInsightsExpanded] = useState<number | null>(0);
   const [transcriptIdx, setTranscriptIdx] = useState(0);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
@@ -632,6 +725,167 @@ const EncounterPage: React.FC = () => {
         </div>
       </div>
 
+      {/* AI Prior Visit Insights — mined from chart history */}
+      <div style={{ ...cardStyle, borderLeft: `4px solid ${COLORS.gold}` }}>
+        <div style={{ ...cardHeaderStyle, background: 'linear-gradient(135deg, #fefce8, #fef9c3)' }}>
+          <Search style={{ width: 16, height: 16, color: COLORS.gold }} />
+          <span style={{ color: COLORS.deepNavy }}>AI Chart Analysis — Related to Current Complaint</span>
+          <span style={{
+            marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 12,
+            background: 'rgba(200, 164, 78, 0.2)', color: COLORS.gold, textTransform: 'uppercase', letterSpacing: 0.5,
+          }}>
+            {AI_PRIOR_VISIT_INSIGHTS.length} Findings
+          </span>
+        </div>
+        <div style={{ padding: 0 }}>
+          {AI_PRIOR_VISIT_INSIGHTS.map((insight, i) => (
+            <div
+              key={i}
+              style={{
+                borderBottom: i < AI_PRIOR_VISIT_INSIGHTS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+              }}
+            >
+              <div
+                onClick={() => setPriorInsightsExpanded(priorInsightsExpanded === i ? null : i)}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 20px', cursor: 'pointer',
+                  background: priorInsightsExpanded === i ? COLORS.gray50 : 'transparent',
+                  transition: 'background 0.15s ease',
+                }}
+              >
+                <div style={{
+                  width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: insight.type === 'prior_visit' ? COLORS.paleMint
+                    : insight.type === 'medication' ? COLORS.blue50
+                    : insight.type === 'family' ? COLORS.red50 : COLORS.gray50,
+                }}>
+                  {insight.type === 'prior_visit' && <Clock style={{ width: 14, height: 14, color: COLORS.primaryTeal }} />}
+                  {insight.type === 'medication' && <Pill style={{ width: 14, height: 14, color: COLORS.blue500 }} />}
+                  {insight.type === 'family' && <User style={{ width: 14, height: 14, color: COLORS.coral }} />}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.deepNavy }}>{insight.title}</span>
+                    {insight.relevance === 'high' && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 6, background: COLORS.red100, color: COLORS.red600 }}>
+                        HIGH RELEVANCE
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 13, color: COLORS.gray600, marginTop: 3, lineHeight: 1.5 }}>{insight.detail}</div>
+                </div>
+                {priorInsightsExpanded === i
+                  ? <ChevronDown style={{ width: 14, height: 14, color: COLORS.gray500, marginTop: 4, flexShrink: 0 }} />
+                  : <ChevronRight style={{ width: 14, height: 14, color: COLORS.gray500, marginTop: 4, flexShrink: 0 }} />}
+              </div>
+              {priorInsightsExpanded === i && (
+                <div style={{
+                  padding: '0 20px 14px 60px',
+                }}>
+                  <div style={{
+                    padding: '10px 14px', borderRadius: 8,
+                    background: 'linear-gradient(135deg, rgba(26,143,168,0.08), rgba(37,184,169,0.08))',
+                    border: `1px solid rgba(26,143,168,0.15)`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <Sparkles style={{ width: 12, height: 12, color: COLORS.gold }} />
+                      <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.primaryTeal, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                        AI Analysis
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 13, color: COLORS.deepNavy, lineHeight: 1.6 }}>{insight.aiNote}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* AI Clinical Context Row — Drug Interactions + Vitals Trend */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }} className="encounter-grid-2col">
+        {/* Drug Interactions */}
+        <div style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <AlertOctagon style={{ width: 16, height: 16, color: COLORS.coral }} />
+            Drug Interaction Check
+            <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 12, background: COLORS.paleMint, color: COLORS.primaryTeal }}>
+              AI
+            </span>
+          </div>
+          <div style={cardBodyStyle}>
+            {AI_DRUG_INTERACTIONS.map((interaction, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0',
+                  borderBottom: i < AI_DRUG_INTERACTIONS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                }}
+              >
+                <div style={{
+                  width: 6, height: 6, borderRadius: '50%', marginTop: 6, flexShrink: 0,
+                  background: interaction.severity === 'warning' ? COLORS.coral
+                    : interaction.severity === 'caution' ? COLORS.amber500
+                    : COLORS.primaryTeal,
+                }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.deepNavy }}>
+                    {interaction.drugs.join(' + ')}
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.gray600, marginTop: 2, lineHeight: 1.5 }}>{interaction.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* BP Trend */}
+        <div style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <TrendingUp style={{ width: 16, height: 16, color: COLORS.coral }} />
+            Blood Pressure Trend
+            <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 12, background: COLORS.red50, color: COLORS.red600 }}>
+              TRENDING UP
+            </span>
+          </div>
+          <div style={cardBodyStyle}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 100, marginBottom: 8 }}>
+              {AI_VITALS_TREND.map((v, i) => {
+                const systolic = parseInt(v.bp.split('/')[0]);
+                const barHeight = ((systolic - 110) / 40) * 100; // normalize 110-150 range
+                const isToday = v.date === 'Today';
+                const isHigh = systolic >= 130;
+                return (
+                  <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: isHigh ? COLORS.red600 : COLORS.green600 }}>{v.bp}</span>
+                    <div style={{
+                      width: '100%', maxWidth: 40, borderRadius: '4px 4px 0 0',
+                      height: `${Math.max(barHeight, 15)}%`,
+                      background: isToday
+                        ? `linear-gradient(180deg, ${COLORS.red500}, ${COLORS.coral})`
+                        : isHigh
+                          ? `linear-gradient(180deg, ${COLORS.coral}, ${COLORS.amber500})`
+                          : `linear-gradient(180deg, ${COLORS.lightTeal}, ${COLORS.primaryTeal})`,
+                      transition: 'height 0.5s ease',
+                    }} />
+                    <span style={{ fontSize: 9, color: isToday ? COLORS.red600 : COLORS.gray500, fontWeight: isToday ? 700 : 500 }}>
+                      {v.date}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{
+              padding: '8px 12px', borderRadius: 8, background: COLORS.red50, border: `1px solid ${COLORS.red100}`,
+              fontSize: 12, color: COLORS.red600, lineHeight: 1.5, display: 'flex', alignItems: 'flex-start', gap: 6,
+            }}>
+              <AlertTriangle style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
+              <span>BP has increased 18/10 mmHg over 10 months. Today's reading (142/88) is Stage 1 HTN. Consider if pain-related or requires workup.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }} className="encounter-grid-2col">
         {/* Vitals Grid */}
         <div style={cardStyle}>
@@ -704,13 +958,45 @@ const EncounterPage: React.FC = () => {
             <div style={cardHeaderStyle}>
               <FileText style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
               Relevant History
+              <button
+                onClick={() => setChartDrawerOpen(true)}
+                style={{
+                  marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4,
+                  padding: '3px 10px', borderRadius: 6, border: `1px solid ${COLORS.primaryTeal}`,
+                  background: 'transparent', color: COLORS.primaryTeal, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                <FolderOpen style={{ width: 12, height: 12 }} /> Open Chart
+              </button>
             </div>
             <div style={cardBodyStyle}>
-              <div style={{ fontSize: 13, color: COLORS.gray600, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 13, color: COLORS.gray600, lineHeight: 1.6, marginBottom: 12 }}>
                 <strong style={{ color: COLORS.deepNavy }}>PMH:</strong> Migraine with aura (2019), HTN Stage 1 (2023), Seasonal allergies (2015)<br />
                 <strong style={{ color: COLORS.deepNavy }}>FHx:</strong> Mother - migraine, HTN, DM2; Father - CAD<br />
-                <strong style={{ color: COLORS.deepNavy }}>Allergies:</strong> Sulfa drugs (rash), Codeine (nausea)<br />
+                <strong style={{ color: COLORS.deepNavy }}>Allergies:</strong>{' '}
+                {ALLERGIES.map((a, i) => (
+                  <span key={i}>
+                    <span style={{ color: COLORS.red600, fontWeight: 600 }}>{a.substance}</span> ({a.reaction})
+                    {i < ALLERGIES.length - 1 ? ', ' : ''}
+                  </span>
+                ))}<br />
                 <strong style={{ color: COLORS.deepNavy }}>Social:</strong> Software engineer, non-smoker, moderate alcohol
+              </div>
+              {/* All active medications */}
+              <div style={{ borderTop: `1px solid ${COLORS.gray100}`, paddingTop: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+                  All Active Medications ({FULL_MEDICATION_LIST.length})
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {FULL_MEDICATION_LIST.map((med, i) => (
+                    <span key={i} style={{
+                      fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 6,
+                      background: COLORS.paleMint, color: COLORS.deepNavy,
+                    }}>
+                      {med.name} <span style={{ color: COLORS.gray500 }}>({med.frequency})</span>
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -1765,6 +2051,246 @@ const EncounterPage: React.FC = () => {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Quick Chart Drawer — accessible from ANY tab */}
+      {chartDrawerOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 200,
+            display: 'flex',
+          }}
+        >
+          {/* Backdrop */}
+          <div
+            onClick={() => setChartDrawerOpen(false)}
+            style={{ flex: 1, background: 'rgba(12, 53, 71, 0.3)', backdropFilter: 'blur(2px)' }}
+          />
+          {/* Drawer */}
+          <div
+            style={{
+              width: 420,
+              background: COLORS.white,
+              boxShadow: '-8px 0 32px rgba(12, 53, 71, 0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Drawer Header */}
+            <div style={{
+              padding: '16px 20px',
+              background: `linear-gradient(135deg, ${COLORS.deepNavy}, ${COLORS.midTeal})`,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <FolderOpen style={{ width: 18, height: 18, color: COLORS.lightTeal }} />
+                <span style={{ fontSize: 15, fontWeight: 700, color: COLORS.white }}>Quick Chart</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{PATIENT.name}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Link
+                  href={`/patient/${patientId}`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6,
+                    background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: 600,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Maximize2 style={{ width: 12, height: 12 }} /> Full Chart
+                </Link>
+                <button
+                  onClick={() => setChartDrawerOpen(false)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 4 }}
+                >
+                  <XCircle style={{ width: 18, height: 18 }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Drawer Tabs */}
+            <div style={{ display: 'flex', borderBottom: `1px solid ${COLORS.gray200}` }}>
+              {([
+                { id: 'meds' as const, label: 'Medications', icon: Pill },
+                { id: 'allergies' as const, label: 'Allergies', icon: Shield },
+                { id: 'labs' as const, label: 'Labs', icon: TestTube },
+                { id: 'history' as const, label: 'Visits', icon: Clock },
+              ]).map(tab => {
+                const Icon = tab.icon;
+                const active = chartDrawerTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setChartDrawerTab(tab.id)}
+                    style={{
+                      flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                      padding: '10px 0', fontSize: 12, fontWeight: active ? 700 : 500,
+                      color: active ? COLORS.primaryTeal : COLORS.gray500,
+                      borderBottom: active ? `2px solid ${COLORS.primaryTeal}` : '2px solid transparent',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                    }}
+                  >
+                    <Icon style={{ width: 13, height: 13 }} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Drawer Content */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+              {chartDrawerTab === 'meds' && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+                    Active Medications ({FULL_MEDICATION_LIST.length})
+                  </div>
+                  {FULL_MEDICATION_LIST.map((med, i) => (
+                    <div key={i} style={{
+                      padding: '12px 14px', marginBottom: 8, borderRadius: 10,
+                      border: `1px solid ${COLORS.gray200}`, background: COLORS.gray50,
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.deepNavy }}>{med.name}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: COLORS.paleMint, color: COLORS.primaryTeal }}>
+                          {med.status}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: COLORS.gray500, marginTop: 4 }}>
+                        {med.route} · {med.frequency} · {med.purpose}
+                      </div>
+                      <div style={{ fontSize: 11, color: COLORS.gray500, marginTop: 2 }}>
+                        Rx by {med.prescriber} · Since {med.since}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {chartDrawerTab === 'allergies' && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+                    Known Allergies ({ALLERGIES.length})
+                  </div>
+                  {ALLERGIES.map((allergy, i) => (
+                    <div key={i} style={{
+                      padding: '14px 16px', marginBottom: 8, borderRadius: 10,
+                      border: `1px solid ${COLORS.red100}`, background: COLORS.red50,
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 15, fontWeight: 700, color: COLORS.red600 }}>{allergy.substance}</span>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 6,
+                          background: allergy.severity === 'Moderate' ? COLORS.red100 : '#fef3c7',
+                          color: allergy.severity === 'Moderate' ? COLORS.red600 : '#92400e',
+                        }}>
+                          {allergy.severity}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 13, color: COLORS.red600, marginTop: 4 }}>
+                        Reaction: {allergy.reaction}
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{
+                    padding: '12px', borderRadius: 8, background: COLORS.amber50,
+                    border: '1px solid #fde68a', marginTop: 12,
+                    fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'flex-start', gap: 6,
+                  }}>
+                    <Info style={{ width: 14, height: 14, flexShrink: 0, marginTop: 1 }} />
+                    Verify allergies with patient at each visit. Last confirmed: 01/15/2026
+                  </div>
+                </div>
+              )}
+
+              {chartDrawerTab === 'labs' && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+                    Recent Lab Results — 01/15/2026
+                  </div>
+                  {RECENT_LABS.map((lab, i) => (
+                    <div key={i} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '10px 14px', marginBottom: 6, borderRadius: 8,
+                      border: `1px solid ${lab.flag ? COLORS.red100 : COLORS.gray200}`,
+                      background: lab.flag ? COLORS.red50 : COLORS.white,
+                    }}>
+                      <div>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: COLORS.deepNavy }}>{lab.test}</span>
+                        <div style={{ fontSize: 12, color: COLORS.gray500, marginTop: 2 }}>{lab.date}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: lab.flag ? COLORS.red600 : COLORS.deepNavy }}>
+                          {lab.result}
+                        </span>
+                        {lab.flag && (
+                          <div style={{ fontSize: 10, fontWeight: 700, color: COLORS.red600, marginTop: 1 }}>
+                            {lab.flag}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {chartDrawerTab === 'history' && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
+                    Recent Visits
+                  </div>
+                  {PAST_VISITS.map((visit, i) => (
+                    <div key={i} style={{
+                      padding: '12px 14px', marginBottom: 8, borderRadius: 10,
+                      border: `1px solid ${COLORS.gray200}`, background: COLORS.gray50,
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.deepNavy }}>{visit.complaint}</span>
+                        <span style={{ fontSize: 11, color: COLORS.gray500 }}>{visit.date}</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: COLORS.gray500, marginTop: 4 }}>
+                        {visit.provider} — {visit.diagnosis}
+                      </div>
+                      <div style={{ fontSize: 12, color: COLORS.gray600, marginTop: 4, lineHeight: 1.5 }}>
+                        {visit.notes}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Chart Button — visible on ALL tabs */}
+      {!chartDrawerOpen && (
+        <button
+          onClick={() => setChartDrawerOpen(true)}
+          style={{
+            position: 'fixed',
+            bottom: visitActive && !ambientMinimized ? 'auto' : 24,
+            top: visitActive && !ambientMinimized ? 80 : 'auto',
+            left: 24,
+            zIndex: 90,
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 18px',
+            borderRadius: 12,
+            border: 'none',
+            background: `linear-gradient(135deg, ${COLORS.deepNavy}, ${COLORS.midTeal})`,
+            color: COLORS.white,
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(12, 53, 71, 0.3)',
+          }}
+        >
+          <FolderOpen style={{ width: 16, height: 16 }} />
+          Chart
+        </button>
+      )}
 
       {/* Ambient Listening Sidebar */}
       {renderAmbientSidebar()}
