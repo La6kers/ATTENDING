@@ -109,7 +109,7 @@ export default function ReferralsPage() {
       >
         {viewMode === 'review' ? (
           <main className="max-w-full px-6 py-6">
-            <div style={{ height: 'calc(100vh - 180px)' }}>
+            <div style={{ height: 'calc(100vh - 180px)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 32px rgba(12, 53, 71, 0.2)', border: '1px solid rgba(255,255,255,0.1)' }}>
               <ReferralsReview />
             </div>
           </main>
