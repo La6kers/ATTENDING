@@ -6,15 +6,20 @@
 // ============================================================
 
 import { useState, useCallback } from 'react';
+import type {
+  RedFlagSeverity,
+  UrgencyLevel,
+} from '@attending/shared/types/chat.types';
+import type { AssessmentStatus } from '@attending/shared/types';
 
 // =============================================================================
-// Types (defined locally to avoid missing package dependency)
+// Types — API-specific shapes, using shared enums where possible
 // =============================================================================
 
 export class ApiError extends Error {
   status: number;
   code?: string;
-  
+
   constructor(message: string, status: number, code?: string) {
     super(message);
     this.name = 'ApiError';
@@ -26,7 +31,7 @@ export class ApiError extends Error {
 export interface Assessment {
   id: string;
   patientId: string;
-  status: 'in_progress' | 'pending' | 'in_review' | 'completed';
+  status: AssessmentStatus;
   chiefComplaint?: string;
   hpiData?: Record<string, any>;
   reviewOfSystems?: Record<string, string[]>;
@@ -35,7 +40,7 @@ export interface Assessment {
   allergies?: string[];
   socialHistory?: Record<string, string>;
   redFlags?: string[];
-  urgencyLevel?: string;
+  urgencyLevel?: UrgencyLevel;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,14 +72,14 @@ export interface RedFlagResult {
   hasRedFlags: boolean;
   redFlags: Array<{
     symptom: string;
-    severity: 'warning' | 'urgent' | 'critical';
+    severity: RedFlagSeverity;
     category: string;
   }>;
   recommendedAction: string;
 }
 
 export interface TriageResult {
-  urgencyLevel: 'standard' | 'moderate' | 'high' | 'emergency';
+  urgencyLevel: UrgencyLevel;
   score: number;
   recommendations: string[];
 }

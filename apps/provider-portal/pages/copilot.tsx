@@ -5,6 +5,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { ClinicalCopilot, PatientContext } from '../components/copilot';
 
 const mockPatientContext: PatientContext = {
@@ -36,7 +37,8 @@ export default function CopilotPage() {
         <title>AI Clinical Copilot | ATTENDING AI</title>
         <meta name="description" content="Real-time AI clinical decision support" />
       </Head>
-      <div className="min-h-screen bg-slate-50 p-6">
+      <ProviderShell contextBadge="AI Copilot" currentPage="copilot">
+      <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-slate-900">AI Clinical Copilot Demo</h1>
@@ -85,6 +87,7 @@ export default function CopilotPage() {
           position="right"
         />
       </div>
+      </ProviderShell>
     </>
   );
 }

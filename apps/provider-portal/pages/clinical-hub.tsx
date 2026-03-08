@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
 import { 
   QuickActionsBar, 
@@ -161,6 +162,7 @@ export default function ClinicalHubPage() {
       <Head>
         <title>Clinical Hub | ATTENDING AI</title>
       </Head>
+      <ProviderShell contextBadge="Clinical Hub" currentPage="clinical-hub">
 
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
@@ -502,6 +504,7 @@ export default function ClinicalHubPage() {
           // In production, this would call the referral ordering store
         }}
       />
+      </ProviderShell>
     </DashboardLayout>
   );
 }

@@ -199,7 +199,7 @@ export function LoginPage({
             <div className="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-500">
               <p>
                 Don't have an account?{' '}
-                <a href="/contact" className="text-teal-600 hover:text-teal-700 font-medium">
+                <a href="mailto:admin@attending.ai" className="text-teal-600 hover:text-teal-700 font-medium">
                   Contact your administrator
                 </a>
               </p>

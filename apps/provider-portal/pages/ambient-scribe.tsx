@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 
 /**
  * Ambient Scribe — AI-Powered Clinical Documentation
@@ -99,6 +100,7 @@ export default function AmbientScribePage() {
         <title>Ambient Scribe | ATTENDING AI</title>
       </Head>
       
+      <ProviderShell contextBadge="Ambient Scribe" currentPage="ambient-scribe">
       <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '4px' }}>Ambient Scribe</h1>
         <p style={{ color: '#6b7280', marginBottom: '24px' }}>
@@ -321,6 +323,7 @@ export default function AmbientScribePage() {
           </div>
         )}
       </div>
+      </ProviderShell>
     </>
   );
 }

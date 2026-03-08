@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import {
   User,
   Mail,
@@ -96,7 +97,7 @@ export default function ProfilePage() {
         <title>My Profile | ATTENDING AI</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-50 pt-16">
+      <ProviderShell contextBadge="Profile" currentPage="profile">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -345,7 +346,7 @@ export default function ProfilePage() {
             </Link>
           </div>
         </div>
-      </div>
+      </ProviderShell>
     </>
   );
 }

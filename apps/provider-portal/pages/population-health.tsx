@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 
 /**
  * Population Health Dashboard
@@ -87,6 +88,7 @@ export default function PopulationHealthPage() {
         <title>Population Health | ATTENDING AI</title>
       </Head>
       
+      <ProviderShell contextBadge="Population Health" currentPage="population-health">
       <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '4px' }}>Population Health Dashboard</h1>
         <p style={{ color: '#6b7280', marginBottom: '24px' }}>
@@ -249,6 +251,7 @@ export default function PopulationHealthPage() {
           </div>
         </div>
       </div>
+      </ProviderShell>
     </>
   );
 }

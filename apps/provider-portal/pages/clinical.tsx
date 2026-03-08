@@ -16,6 +16,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import {
   ClipboardList,
   TestTube,
@@ -483,6 +484,7 @@ export default function ClinicalWorkspace() {
         <title>Clinical Workspace | ATTENDING AI</title>
       </Head>
 
+      <ProviderShell contextBadge="Clinical" currentPage="clinical">
       <ClinicalWorkspaceLayout
         patient={patient}
         activeSection={activeTab}
@@ -519,6 +521,7 @@ export default function ClinicalWorkspace() {
         {/* Tab Content */}
         {renderTabContent()}
       </ClinicalWorkspaceLayout>
+      </ProviderShell>
     </>
   );
 }

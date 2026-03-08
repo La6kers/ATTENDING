@@ -7,6 +7,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { PredictiveRiskDashboard } from '../components/predictive';
 
 export default function PredictiveRiskPage() {
@@ -19,7 +20,9 @@ export default function PredictiveRiskPage() {
           content="AI-powered early warning system for patient deterioration" 
         />
       </Head>
-      <PredictiveRiskDashboard />
+      <ProviderShell contextBadge="Predictive Risk" currentPage="predictive-risk">
+        <PredictiveRiskDashboard />
+      </ProviderShell>
     </>
   );
 }

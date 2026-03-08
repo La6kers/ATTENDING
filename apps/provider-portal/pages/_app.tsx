@@ -1,4 +1,5 @@
 import '../styles/globals.css';
+import '@attending/shared/styles/breakpoints.css';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import type { AppProps } from 'next/app';

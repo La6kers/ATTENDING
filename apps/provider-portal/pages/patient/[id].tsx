@@ -121,6 +121,51 @@ const vitalsHistory = [
   { date: '05/10/2025', bp: '126/80', hr: 76, temp: 98.8, rr: 16, spo2: 97, weight: 138, bmi: 22.9, bpHigh: false, hrHigh: false },
 ];
 
+const labResults = [
+  { test: 'WBC', value: '7.2', unit: 'x10^3/uL', range: '4.5-11.0', status: 'Normal', panel: 'CBC' },
+  { test: 'Hemoglobin', value: '13.8', unit: 'g/dL', range: '12.0-16.0', status: 'Normal', panel: 'CBC' },
+  { test: 'Platelets', value: '245', unit: 'x10^3/uL', range: '150-400', status: 'Normal', panel: 'CBC' },
+  { test: 'Glucose', value: '104', unit: 'mg/dL', range: '70-100', status: 'Abnormal', panel: 'CMP' },
+  { test: 'BUN', value: '14', unit: 'mg/dL', range: '7-20', status: 'Normal', panel: 'CMP' },
+  { test: 'Creatinine', value: '0.9', unit: 'mg/dL', range: '0.6-1.2', status: 'Normal', panel: 'CMP' },
+  { test: 'Total Cholesterol', value: '218', unit: 'mg/dL', range: '<200', status: 'Abnormal', panel: 'Lipid Panel' },
+  { test: 'LDL', value: '142', unit: 'mg/dL', range: '<100', status: 'Abnormal', panel: 'Lipid Panel' },
+  { test: 'HDL', value: '52', unit: 'mg/dL', range: '>40', status: 'Normal', panel: 'Lipid Panel' },
+  { test: 'Triglycerides', value: '168', unit: 'mg/dL', range: '<150', status: 'Abnormal', panel: 'Lipid Panel' },
+  { test: 'HbA1c', value: '5.8', unit: '%', range: '<5.7', status: 'Abnormal', panel: 'Diabetes' },
+  { test: 'TSH', value: '2.4', unit: 'mIU/L', range: '0.4-4.0', status: 'Normal', panel: 'Thyroid' },
+  { test: 'Potassium', value: '5.3', unit: 'mEq/L', range: '3.5-5.0', status: 'Critical', panel: 'CMP' },
+  { test: 'Sodium', value: '140', unit: 'mEq/L', range: '136-145', status: 'Normal', panel: 'CMP' },
+];
+
+const imagingStudies = [
+  { date: '03/07/2026', study: 'CT Head without Contrast', ordered: 'Dr. Reed', status: 'Completed', priority: 'STAT', findings: 'No acute intracranial abnormality. No hemorrhage, mass effect, or midline shift. Mild mucosal thickening in bilateral maxillary sinuses.', critical: false },
+  { date: '01/15/2026', study: 'Chest X-Ray PA/Lateral', ordered: 'Dr. Reed', status: 'Completed', priority: 'Routine', findings: 'Heart size normal. Lungs are clear bilaterally. No pleural effusion or pneumothorax. No acute cardiopulmonary process.', critical: false },
+  { date: '11/02/2025', study: 'MRI Brain with and without Contrast', ordered: 'Dr. Reed', status: 'Completed', priority: 'Urgent', findings: 'CRITICAL: 4mm enhancing lesion in left temporal lobe requires follow-up. No evidence of acute infarction. Scattered T2/FLAIR white matter hyperintensities, nonspecific.', critical: true },
+  { date: '08/20/2025', study: 'MRI Lumbar Spine without Contrast', ordered: 'Dr. Kim', status: 'Completed', priority: 'Routine', findings: 'Mild disc desiccation at L4-L5. Small central disc protrusion at L5-S1 without significant canal stenosis. No nerve root compression.', critical: false },
+  { date: '05/10/2025', study: 'CT Sinuses without Contrast', ordered: 'Dr. Kim', status: 'Completed', priority: 'Routine', findings: 'Mucosal thickening in bilateral maxillary sinuses and anterior ethmoid air cells consistent with sinusitis. No bony erosion. Ostiomeatal complexes partially opacified bilaterally.', critical: false },
+];
+
+const detailedAllergies = [
+  { substance: 'Sulfa drugs (Sulfonamides)', type: 'Medication', reaction: 'Maculopapular rash, urticaria', severity: 'Moderate', reported: '03/2018', verified: true, crossReactivity: 'Thiazide diuretics, sulfonylureas, celecoxib — use with caution' },
+  { substance: 'Codeine', type: 'Medication', reaction: 'Nausea, vomiting, dizziness', severity: 'Mild', reported: '06/2020', verified: true, crossReactivity: 'Other opioids (morphine, hydrocodone) — possible cross-sensitivity' },
+  { substance: 'Latex', type: 'Environmental', reaction: 'Contact dermatitis, skin irritation', severity: 'Mild', reported: '01/2019', verified: true, crossReactivity: 'Bananas, avocados, chestnuts, kiwi — latex-fruit syndrome' },
+  { substance: 'Bee venom', type: 'Environmental', reaction: 'Local swelling, erythema extending >10cm', severity: 'Moderate', reported: '08/2017', verified: false, crossReactivity: 'Wasp, hornet stings — potential cross-reactivity' },
+  { substance: 'Iodinated contrast dye', type: 'Medication', reaction: 'Flushing, mild bronchospasm', severity: 'Severe', reported: '11/2021', verified: true, crossReactivity: 'Premedication required for future contrast studies (prednisone + diphenhydramine protocol)' },
+];
+
+const documents = [
+  { date: '03/07/2026', title: 'Emergency Visit Note', type: 'Visit Summary', provider: 'Dr. Reed', status: 'Draft', pages: 3 },
+  { date: '01/15/2026', title: 'Annual Physical Exam Summary', type: 'Visit Summary', provider: 'Dr. Reed', status: 'Signed', pages: 5 },
+  { date: '01/15/2026', title: 'Lab Order — CBC, CMP, Lipid Panel', type: 'Lab Order', provider: 'Dr. Reed', status: 'Signed', pages: 1 },
+  { date: '12/20/2025', title: 'Referral to Neurology — Dr. Patel', type: 'Referral Letter', provider: 'Dr. Reed', status: 'Signed', pages: 2 },
+  { date: '11/02/2025', title: 'MRI Brain Authorization', type: 'Insurance Auth', provider: 'BCBS', status: 'Approved', pages: 1 },
+  { date: '11/02/2025', title: 'Migraine Follow-up Note', type: 'Visit Summary', provider: 'Dr. Reed', status: 'Signed', pages: 2 },
+  { date: '08/20/2025', title: 'Hypertension Management Plan', type: 'Care Plan', provider: 'NP Wilson', status: 'Signed', pages: 3 },
+  { date: '06/01/2025', title: 'Informed Consent — MRI with Contrast', type: 'Consent Form', provider: 'Dr. Reed', status: 'Signed', pages: 2 },
+  { date: '05/10/2025', title: 'Allergy Consultation Report', type: 'Consult Note', provider: 'Dr. Kim', status: 'Signed', pages: 4 },
+];
+
 // ============================================================
 // Tab definitions
 // ============================================================
@@ -635,47 +680,261 @@ const PatientChartPage: React.FC = () => {
   );
 
   // --------------------------------------------------------
-  // Placeholder tabs
+  // Labs Tab
   // --------------------------------------------------------
-  const renderPlaceholder = (title: string, icon: React.ReactNode) => (
+  const labStatusColor = (status: string) => {
+    if (status === 'Critical') return '#dc2626';
+    if (status === 'Abnormal') return COLORS.coral;
+    return '#16a34a';
+  };
+
+  const labStatusBg = (status: string) => {
+    if (status === 'Critical') return '#fee2e2';
+    if (status === 'Abnormal') return '#fef2e8';
+    return COLORS.paleMint;
+  };
+
+  const renderLabs = () => {
+    const panels = Array.from(new Set(labResults.map((l) => l.panel)));
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Summary banner */}
+        <div style={{ ...cardStyle, background: COLORS.paleMint, border: `1px solid ${COLORS.lightTeal}` }}>
+          <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <TestTube style={{ width: 18, height: 18, color: COLORS.primaryTeal }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.deepNavy }}>Lab Collection: 01/15/2026</span>
+            <span style={{ fontSize: 12, color: '#64748b' }}>Ordered by Dr. Reed &middot; Fasting specimen</span>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#16a34a' }}>{labResults.filter((l) => l.status === 'Normal').length} Normal</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.coral }}>{labResults.filter((l) => l.status === 'Abnormal').length} Abnormal</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#dc2626' }}>{labResults.filter((l) => l.status === 'Critical').length} Critical</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Results table */}
+        <div style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <TestTube style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
+            Lab Results — Complete Panel
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: COLORS.paleMint }}>
+                  {['Test', 'Result', 'Units', 'Reference Range', 'Panel', 'Status'].map((h) => (
+                    <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: COLORS.deepNavy, fontSize: 12, borderBottom: '2px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {labResults.map((l, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', background: l.status === 'Critical' ? '#fef2f2' : 'transparent' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: COLORS.deepNavy }}>{l.test}</td>
+                    <td style={{ padding: '12px 16px', fontWeight: 700, color: labStatusColor(l.status) }}>{l.value}</td>
+                    <td style={{ padding: '12px 16px', color: '#64748b' }}>{l.unit}</td>
+                    <td style={{ padding: '12px 16px', color: '#64748b' }}>{l.range}</td>
+                    <td style={{ padding: '12px 16px', color: COLORS.deepNavy }}>{l.panel}</td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: labStatusBg(l.status), color: labStatusColor(l.status) }}>
+                        {l.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // --------------------------------------------------------
+  // Imaging Tab
+  // --------------------------------------------------------
+  const renderImaging = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {imagingStudies.map((s, i) => (
+        <div key={i} style={{ ...cardStyle, border: s.critical ? '1px solid #fca5a5' : '1px solid #e2e8f0' }}>
+          <div style={{ ...cardHeaderStyle, justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <ImageIcon style={{ width: 16, height: 16, color: s.critical ? '#dc2626' : COLORS.primaryTeal }} />
+              {s.study}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600,
+                background: s.priority === 'STAT' ? '#fee2e2' : s.priority === 'Urgent' ? '#fef3c7' : COLORS.paleMint,
+                color: s.priority === 'STAT' ? '#dc2626' : s.priority === 'Urgent' ? '#92400e' : COLORS.primaryTeal,
+              }}>
+                {s.priority}
+              </span>
+              <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: COLORS.paleMint, color: COLORS.primaryTeal }}>
+                {s.status}
+              </span>
+            </div>
+          </div>
+          <div style={cardBodyStyle}>
+            <div style={{ display: 'flex', gap: 24, marginBottom: 12, fontSize: 12, color: '#64748b' }}>
+              <span><strong style={{ color: COLORS.deepNavy }}>Date:</strong> {s.date}</span>
+              <span><strong style={{ color: COLORS.deepNavy }}>Ordered by:</strong> {s.ordered}</span>
+            </div>
+            <div style={{
+              padding: 14, borderRadius: 8, fontSize: 13, lineHeight: 1.6,
+              background: s.critical ? '#fef2f2' : '#f8fafc',
+              border: s.critical ? '1px solid #fca5a5' : '1px solid #e2e8f0',
+              color: s.critical ? '#991b1b' : '#475569',
+            }}>
+              <strong style={{ color: s.critical ? '#dc2626' : COLORS.deepNavy }}>Findings: </strong>
+              {s.findings}
+            </div>
+            {s.critical && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '8px 14px', borderRadius: 8, background: '#fee2e2', color: '#dc2626', fontSize: 12, fontWeight: 600 }}>
+                <AlertTriangle style={{ width: 14, height: 14 }} />
+                Critical finding — follow-up required. Attending notified on {s.date}.
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // --------------------------------------------------------
+  // Documents Tab
+  // --------------------------------------------------------
+  const docTypeColor = (type: string) => {
+    switch (type) {
+      case 'Visit Summary': return { bg: COLORS.paleMint, color: COLORS.primaryTeal };
+      case 'Lab Order': return { bg: '#eff6ff', color: '#2563eb' };
+      case 'Referral Letter': return { bg: '#fef3c7', color: '#92400e' };
+      case 'Insurance Auth': return { bg: '#f3e8ff', color: '#7c3aed' };
+      case 'Care Plan': return { bg: '#ecfdf5', color: '#059669' };
+      case 'Consent Form': return { bg: '#fff7ed', color: '#c2410c' };
+      case 'Consult Note': return { bg: '#f0f9ff', color: '#0369a1' };
+      default: return { bg: '#f1f5f9', color: '#64748b' };
+    }
+  };
+
+  const docStatusStyle = (status: string) => {
+    if (status === 'Draft') return { bg: '#fef3c7', color: '#92400e' };
+    if (status === 'Approved') return { bg: COLORS.paleMint, color: COLORS.primaryTeal };
+    return { bg: COLORS.paleMint, color: COLORS.primaryTeal };
+  };
+
+  const renderDocuments = () => (
     <div style={cardStyle}>
       <div style={cardHeaderStyle}>
-        {icon}
-        {title}
+        <FolderOpen style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
+        Patient Documents ({documents.length})
       </div>
-      <div style={{ ...cardBodyStyle, textAlign: 'center', padding: '48px 20px' }}>
-        <div style={{ fontSize: 14, color: '#64748b', fontWeight: 500 }}>
-          {title} content will be populated from EHR integration.
-        </div>
-        <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 8 }}>
-          Data syncs automatically when connected to your EHR system.
-        </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: COLORS.paleMint }}>
+              {['Date', 'Document Title', 'Type', 'Provider/Source', 'Pages', 'Status'].map((h) => (
+                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: COLORS.deepNavy, fontSize: 12, borderBottom: '2px solid #e2e8f0', whiteSpace: 'nowrap' }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {documents.map((d, i) => {
+              const tc = docTypeColor(d.type);
+              const sc = docStatusStyle(d.status);
+              return (
+                <tr key={i} style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}>
+                  <td style={{ padding: '12px 16px', color: '#64748b', fontWeight: 500, whiteSpace: 'nowrap' }}>{d.date}</td>
+                  <td style={{ padding: '12px 16px', fontWeight: 600, color: COLORS.deepNavy }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <FileText style={{ width: 14, height: 14, color: COLORS.primaryTeal, flexShrink: 0 }} />
+                      {d.title}
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: tc.bg, color: tc.color, whiteSpace: 'nowrap' }}>
+                      {d.type}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 16px', color: COLORS.deepNavy }}>{d.provider}</td>
+                  <td style={{ padding: '12px 16px', color: '#64748b', textAlign: 'center' }}>{d.pages}</td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: sc.bg, color: sc.color }}>
+                      {d.status}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 
+  // --------------------------------------------------------
+  // Allergies Tab
+  // --------------------------------------------------------
   const renderAllergiesTab = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={cardStyle}>
-        <div style={cardHeaderStyle}>
-          <AlertTriangle style={{ width: 16, height: 16, color: COLORS.coral }} />
-          Known Allergies
-        </div>
-        <div style={cardBodyStyle}>
-          {allergies.map((a, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: i < allergies.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 14, color: COLORS.deepNavy }}>{a.substance}</div>
-                <div style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>Reaction: {a.reaction}</div>
-              </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: severityColor(a.severity), background: a.severity === 'Moderate' ? '#fef2e8' : COLORS.paleMint, padding: '4px 14px', borderRadius: 12 }}>
-                {a.severity}
-              </span>
-            </div>
-          ))}
+      {/* Summary banner */}
+      <div style={{ ...cardStyle, background: '#fef2f2', border: '1px solid #fca5a5' }}>
+        <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <AlertTriangle style={{ width: 18, height: 18, color: '#dc2626' }} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#991b1b' }}>{detailedAllergies.length} documented allergies</span>
+          <span style={{ fontSize: 12, color: '#991b1b' }}>
+            &mdash; {detailedAllergies.filter((a) => a.severity === 'Severe').length} severe, {detailedAllergies.filter((a) => a.severity === 'Moderate').length} moderate, {detailedAllergies.filter((a) => a.severity === 'Mild').length} mild
+          </span>
         </div>
       </div>
-      {renderPlaceholder('Detailed Allergy History', <AlertTriangle style={{ width: 16, height: 16, color: COLORS.coral }} />)}
+
+      {/* Detailed allergy cards */}
+      {detailedAllergies.map((a, i) => {
+        const sevBg = a.severity === 'Severe' ? '#fee2e2' : a.severity === 'Moderate' ? '#fef2e8' : COLORS.paleMint;
+        const sevColor = severityColor(a.severity);
+        return (
+          <div key={i} style={{ ...cardStyle, border: a.severity === 'Severe' ? '1px solid #fca5a5' : '1px solid #e2e8f0' }}>
+            <div style={{ ...cardHeaderStyle, justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <AlertTriangle style={{ width: 16, height: 16, color: sevColor }} />
+                {a.substance}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: '#f1f5f9', color: '#64748b' }}>
+                  {a.type}
+                </span>
+                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: sevBg, color: sevColor }}>
+                  {a.severity}
+                </span>
+                {a.verified && (
+                  <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: COLORS.paleMint, color: COLORS.primaryTeal }}>
+                    Verified
+                  </span>
+                )}
+              </div>
+            </div>
+            <div style={cardBodyStyle}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 4 }}>REACTION</div>
+                  <div style={{ fontSize: 13, color: COLORS.deepNavy, fontWeight: 500 }}>{a.reaction}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 4 }}>DATE REPORTED</div>
+                  <div style={{ fontSize: 13, color: COLORS.deepNavy, fontWeight: 500 }}>{a.reported}</div>
+                </div>
+              </div>
+              <div style={{ padding: 12, borderRadius: 8, background: '#fffbeb', border: '1px solid #fde68a', fontSize: 12, color: '#92400e', lineHeight: 1.5 }}>
+                <strong>Cross-Reactivity Warning:</strong> {a.crossReactivity}
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -688,10 +947,10 @@ const PatientChartPage: React.FC = () => {
       case 'vitals': return renderVitals();
       case 'medications': return renderMedications();
       case 'allergies': return renderAllergiesTab();
-      case 'labs': return renderPlaceholder('Lab Results', <TestTube style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />);
-      case 'imaging': return renderPlaceholder('Imaging', <ImageIcon style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />);
+      case 'labs': return renderLabs();
+      case 'imaging': return renderImaging();
       case 'visits': return renderVisitHistory();
-      case 'documents': return renderPlaceholder('Documents', <FolderOpen style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />);
+      case 'documents': return renderDocuments();
       default: return renderOverview();
     }
   };

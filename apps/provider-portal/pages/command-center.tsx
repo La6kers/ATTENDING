@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 
 // Types
 interface RiskAlert {
@@ -163,7 +164,8 @@ export default function CommandCenter() {
         <title>Command Center | ATTENDING AI</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
+      <ProviderShell contextBadge="Command Center" currentPage="command-center">
+      <div className="bg-gray-50">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 py-4">
@@ -410,6 +412,7 @@ export default function CommandCenter() {
           )}
         </main>
       </div>
+      </ProviderShell>
     </>
   );
 }

@@ -222,9 +222,55 @@ export default function ReferralsPage() {
               )}
 
               {activeTab === 'history' && (
-                <div className="text-center py-12">
-                  <CheckCircle className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-500">Referral history will appear here</p>
+                <div className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Specialty</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Patient</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Date Referred</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Date Completed</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Urgency</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Consult Summary</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { specialty: 'Cardiology', patient: 'Margaret Sullivan', dateReferred: '2026-01-12', dateCompleted: '2026-01-28', urgency: 'URGENT', status: 'Completed', summary: 'Echo showed mild LVH; started on ACE inhibitor. Follow-up in 3 months.' },
+                          { specialty: 'Neurology', patient: 'James Whitfield', dateReferred: '2026-01-20', dateCompleted: '2026-02-10', urgency: 'ROUTINE', status: 'Completed', summary: 'MRI brain unremarkable. Migraine prophylaxis initiated with topiramate 25mg.' },
+                          { specialty: 'Orthopedics', patient: 'Linda Chen', dateReferred: '2026-02-03', dateCompleted: '2026-02-14', urgency: 'URGENT', status: 'Completed', summary: 'Right knee MRI: medial meniscus tear. Arthroscopic repair scheduled 03/05.' },
+                          { specialty: 'Endocrinology', patient: 'Robert Garcia', dateReferred: '2026-02-08', dateCompleted: '', urgency: 'ROUTINE', status: 'Cancelled', summary: 'Patient relocated out of state. Records transferred to new PCP.' },
+                          { specialty: 'Pulmonology', patient: 'Diane Kowalski', dateReferred: '2026-02-15', dateCompleted: '', urgency: 'STAT', status: 'No Show', summary: 'Patient did not attend. Rescheduled for 03/12; contacted via phone.' },
+                        ].map((row, idx) => (
+                          <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className="py-3 px-4 font-medium text-gray-900">{row.specialty}</td>
+                            <td className="py-3 px-4 text-gray-700">{row.patient}</td>
+                            <td className="py-3 px-4 text-gray-600">{row.dateReferred}</td>
+                            <td className="py-3 px-4 text-gray-600">{row.dateCompleted || '—'}</td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                row.urgency === 'STAT' ? 'bg-red-100 text-red-700' :
+                                row.urgency === 'URGENT' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                {row.urgency}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                row.status === 'Completed' ? 'bg-teal-100 text-teal-700' :
+                                row.status === 'Cancelled' ? 'bg-gray-100 text-gray-600' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {row.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-gray-600 max-w-xs truncate" title={row.summary}>{row.summary}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

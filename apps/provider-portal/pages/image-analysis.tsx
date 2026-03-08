@@ -5,6 +5,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { ClinicalImageAnalysis } from '../components/multimodal';
 
 const mockPatient = {
@@ -23,7 +24,8 @@ export default function ImageAnalysisPage() {
         <title>Clinical Image Analysis | ATTENDING AI</title>
         <meta name="description" content="AI-powered clinical image analysis" />
       </Head>
-      <div className="min-h-screen bg-slate-50 p-6">
+      <ProviderShell contextBadge="Image Analysis" currentPage="image-analysis">
+      <div className="p-6">
         <div className="max-w-7xl mx-auto">
           <ClinicalImageAnalysis
             patientId={mockPatient.id}
@@ -32,6 +34,7 @@ export default function ImageAnalysisPage() {
           />
         </div>
       </div>
+      </ProviderShell>
     </>
   );
 }

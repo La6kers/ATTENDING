@@ -5,6 +5,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { ClinicalImageAnalysis } from '../components/multimodal';
 
 const mockPatient = {
@@ -22,12 +23,13 @@ export default function VisualAIPage() {
     <>
       <Head>
         <title>Visual AI Diagnostics | ATTENDING AI</title>
-        <meta 
-          name="description" 
-          content="AI-powered clinical image analysis for dermatology, wounds, and more" 
+        <meta
+          name="description"
+          content="AI-powered clinical image analysis for dermatology, wounds, and more"
         />
       </Head>
-      <div className="min-h-screen bg-slate-50 p-6">
+      <ProviderShell contextBadge="Visual AI" currentPage="visual-ai">
+      <div className="p-6">
         <div className="max-w-6xl mx-auto">
           <ClinicalImageAnalysis
             patientId={mockPatient.id}
@@ -36,6 +38,7 @@ export default function VisualAIPage() {
           />
         </div>
       </div>
+      </ProviderShell>
     </>
   );
 }

@@ -9,12 +9,19 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { devtools, persist } from 'zustand/middleware';
+import type {
+  ChatMessage as SharedChatMessage,
+  RedFlag as SharedRedFlag,
+  MessageRole,
+} from '@attending/shared/types/chat.types';
 
 // ============================================================================
-// Types
+// Types — extend shared canonical types for patient store
 // ============================================================================
 
-export type AssessmentPhase = 
+export type { MessageRole };
+
+export type AssessmentPhase =
   | 'welcome'
   | 'demographics'
   | 'chief-complaint'
@@ -37,13 +44,12 @@ export type AssessmentPhase =
   | 'emergency';
 
 export type UrgencyLevel = 'critical' | 'emergent' | 'urgent' | 'moderate' | 'routine';
-export type MessageRole = 'user' | 'assistant' | 'system';
 
-export interface ChatMessage {
-  id: string;
-  role: MessageRole;
-  content: string;
-  timestamp: string;
+/**
+ * ChatMessage for the patient store. Extends shared ChatMessage with
+ * phase, quickReplies as direct fields and store-specific metadata.
+ */
+export interface ChatMessage extends Omit<SharedChatMessage, 'metadata'> {
   phase?: AssessmentPhase;
   quickReplies?: string[];
   metadata?: {
@@ -53,11 +59,12 @@ export interface ChatMessage {
   };
 }
 
-export interface RedFlag {
-  id: string;
-  symptom: string;
+/**
+ * RedFlag for the patient store. Extends shared RedFlag but uses
+ * the store-specific UrgencyLevel for severity, and requires category.
+ */
+export interface RedFlag extends Omit<SharedRedFlag, 'severity' | 'context'> {
   severity: UrgencyLevel;
-  detectedAt: string;
   category: string;
 }
 

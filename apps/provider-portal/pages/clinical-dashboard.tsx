@@ -6,8 +6,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { 
-  NotificationProvider, 
+import { ProviderShell } from '@/components/layout/ProviderShell';
+import {
+  NotificationProvider,
   useEmergencyMonitor,
   useCriticalAlertPolling,
   useSystemVersion,
@@ -71,7 +72,8 @@ function DashboardContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <ProviderShell contextBadge="Dashboard" currentPage="clinical-dashboard">
+    <div className="bg-gray-100">
       {/* Critical Alerts Banner */}
       <CriticalAlertsBanner
         onViewEmergencies={handleViewEmergencies}
@@ -312,6 +314,7 @@ function DashboardContent() {
         </footer>
       </div>
     </div>
+    </ProviderShell>
   );
 }
 

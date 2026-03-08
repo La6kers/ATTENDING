@@ -7,6 +7,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { ClinicalOutcomesDashboard } from '../components/outcomes';
 
 export default function OutcomesPage() {
@@ -19,7 +20,9 @@ export default function OutcomesPage() {
           content="Track clinical quality metrics, efficiency improvements, and financial impact" 
         />
       </Head>
-      <ClinicalOutcomesDashboard />
+      <ProviderShell contextBadge="Outcomes" currentPage="outcomes">
+        <ClinicalOutcomesDashboard />
+      </ProviderShell>
     </>
   );
 }

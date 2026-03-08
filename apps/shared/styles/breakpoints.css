@@ -1,0 +1,151 @@
+/* ============================================================
+   ATTENDING AI - PC-First Responsive Breakpoints
+   apps/shared/styles/breakpoints.css
+
+   Desktop-first (max-width) breakpoints.
+   Import in _app.tsx: import '@attending/shared/styles/breakpoints.css';
+
+   Breakpoints:
+     Default:      PC (1280px+) - no media query needed
+     --tablet:     <= 1280px    - stack sidebars below
+     --ipad:       <= 1024px    - single column, collapsible panels
+     --mobile:     <= 768px     - simplified views, bottom nav
+   ============================================================ */
+
+/* ============================================================
+   LAYOUT UTILITIES
+   ============================================================ */
+
+/* Two-column layout that stacks on tablet */
+.layout-split {
+  display: flex;
+  gap: 24px;
+}
+
+.layout-split > .layout-main {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.layout-split > .layout-sidebar {
+  flex: 0 0 380px;
+  min-width: 0;
+}
+
+/* Panel that collapses into accordion on smaller screens */
+.panel-collapsible {
+  display: block;
+}
+
+/* ============================================================
+   TABLET (<=1280px) - Stack sidebars below main
+   ============================================================ */
+@media (max-width: 1280px) {
+  .layout-split {
+    flex-direction: column;
+  }
+
+  .layout-split > .layout-sidebar {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   IPAD (<=1024px) - Single column, collapsible panels
+   ============================================================ */
+@media (max-width: 1024px) {
+  /* Ensure touch targets are large enough */
+  button,
+  [role="button"],
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+
+  /* Stack any remaining flex layouts */
+  .differential-flex-container,
+  .treatment-flex-container {
+    flex-direction: column !important;
+  }
+
+  .differential-sidebar,
+  .pharmacy-sidebar {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  /* Reduce padding */
+  .page-container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ============================================================
+   MOBILE (<=768px) - Simplified views
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Hide elements marked as desktop-only */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Full-width cards */
+  .card, .panel {
+    border-radius: 8px;
+  }
+
+  /* Reduce font sizes slightly */
+  .page-title {
+    font-size: 20px;
+  }
+
+  /* Stack horizontal button groups */
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button-group > * {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   VISIBILITY HELPERS
+   ============================================================ */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+}
+
+.tablet-only {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .tablet-only {
+    display: block;
+  }
+}
+
+/* ============================================================
+   PERFORMANCE: Reduce animations on low-power devices
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -5,6 +5,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { SmartScheduling } from '../components/scheduling';
 
 export default function SchedulingPage() {
@@ -14,11 +15,11 @@ export default function SchedulingPage() {
         <title>Smart Clinical Scheduling | ATTENDING AI</title>
         <meta name="description" content="AI-optimized appointment management" />
       </Head>
-      <div className="min-h-screen bg-slate-50 p-6">
-        <div className="max-w-7xl mx-auto">
+      <ProviderShell contextBadge="Scheduling" currentPage="scheduling">
+        <div className="max-w-7xl mx-auto p-6">
           <SmartScheduling />
         </div>
-      </div>
+      </ProviderShell>
     </>
   );
 }

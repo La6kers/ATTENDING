@@ -382,7 +382,7 @@ export const UnifiedDashboard: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="p-4 border-b border-slate-200 flex items-center justify-between">
               <h2 className="font-semibold text-slate-900">Pending Tasks</h2>
-              <Link href="/tasks" className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1">
+              <Link href="/inbox" className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1">
                 View all <ChevronRight size={14} />
               </Link>
             </div>

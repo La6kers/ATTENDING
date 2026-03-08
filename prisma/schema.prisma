@@ -57,20 +57,21 @@ model Organization {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  users            User[]
-  patients         Patient[]
-  encounters       Encounter[]
-  labOrders        LabOrder[]
-  imagingOrders    ImagingOrder[]
-  medicationOrders MedicationOrder[]
-  referrals        Referral[]
-  assessments      PatientAssessment[]
-  apiKeys          ApiKey[]
-  webhooks         WebhookSubscription[]
-  integrations     IntegrationConnection[]
-  auditLogs        AuditLog[]
-  clinicalNotes    ClinicalNote[]
-  treatmentPlans   TreatmentPlan[]
+  users              User[]
+  patients           Patient[]
+  encounters         Encounter[]
+  labOrders          LabOrder[]
+  imagingOrders      ImagingOrder[]
+  medicationOrders   MedicationOrder[]
+  referrals          Referral[]
+  assessments        PatientAssessment[]
+  apiKeys            ApiKey[]
+  webhooks           WebhookSubscription[]
+  integrations       IntegrationConnection[]
+  auditLogs          AuditLog[]
+  clinicalNotes      ClinicalNote[]
+  treatmentPlans     TreatmentPlan[]
+  clinicEnvironments ClinicEnvironment[]
 
   @@index([slug])
   @@index([isActive])
@@ -102,17 +103,19 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  organization        Organization?       @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization        Organization?           @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   accounts            Account[]
   sessions            Session[]
-  encounters          Encounter[]         @relation("ProviderEncounters")
+  encounters          Encounter[]             @relation("ProviderEncounters")
   labOrders           LabOrder[]
   imagingOrders       ImagingOrder[]
   medicationOrders    MedicationOrder[]
   referrals           Referral[]
   notifications       Notification[]
   auditLogs           AuditLog[]
-  assignedAssessments PatientAssessment[] @relation("AssignedProvider")
+  assignedAssessments PatientAssessment[]     @relation("AssignedProvider")
+  environmentSession  UserEnvironmentSession?
+  reviewedImages      ClinicalImage[]
 
   @@index([email])
   @@index([npi])
@@ -229,6 +232,7 @@ model Patient {
   fhirVitalSigns   FhirVitalSign[]
   clinicalNotes    ClinicalNote[]
   populationFlags  PatientPopulationFlag[]
+  clinicalImages   ClinicalImage[]
 
   @@index([mrn])
   @@index([lastName, firstName])
@@ -270,6 +274,7 @@ model Encounter {
   vitalSigns       VitalSign[]
   treatmentPlans   TreatmentPlan[]
   clinicalNotes    ClinicalNote[]
+  clinicalImages   ClinicalImage[]
 
   @@index([patientId])
   @@index([providerId])
@@ -666,6 +671,7 @@ model PatientAssessment {
   patient          Patient          @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   assignedProvider User?            @relation("AssignedProvider", fields: [assignedProviderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   emergencyEvents  EmergencyEvent[]
+  clinicalImages   ClinicalImage[]
 
   @@index([patientId])
   @@index([assignedProviderId])
@@ -1267,4 +1273,112 @@ model ScreeningProtocol {
   @@index([organRequired])
   @@index([ageMinMonths, ageMaxMonths])
   @@index([isActive])
+}
+
+// ============== CLINIC ENVIRONMENTS (Subspecialty) ==============
+// Configures the portal experience per specialty context.
+// When a user selects "Dermatology" vs "Pediatrics", the dashboard,
+// AI prompts, COMPASS questions, and chart layout all change.
+
+model ClinicEnvironment {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String // "Riverdale Dermatology", "Downtown Pediatrics"
+  specialtyCode  String // DERM, CARDS, PEDS, URO, PCP, NEURO, ORTHO, ENDO, GI, PULM, RHEUM, PSYCH, ONC, OBGYN
+  description    String?
+  isDefault      Boolean @default(false) // Default env for the org
+
+  // Configuration (JSON)
+  dashboardConfig   String? @db.NVarChar(Max) // Widgets, layout, priority panels
+  compassOverrides  String? @db.NVarChar(Max) // Extra COMPASS questions, specialty-specific flows
+  aiPromptOverrides String? @db.NVarChar(Max) // Specialty-tuned AI differential prompts
+  chartLayoutConfig String? @db.NVarChar(Max) // Which chart sections to promote/hide/reorder
+  orderingDefaults  String? @db.NVarChar(Max) // Default lab panels, imaging protocols per specialty
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization             @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userSessions UserEnvironmentSession[]
+
+  @@unique([organizationId, specialtyCode])
+  @@index([specialtyCode])
+  @@index([isActive])
+}
+
+// Tracks which environment a user is currently working in.
+model UserEnvironmentSession {
+  id            String   @id @default(cuid())
+  userId        String
+  environmentId String
+  startedAt     DateTime @default(now())
+  lastActiveAt  DateTime @default(now())
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  environment ClinicEnvironment @relation(fields: [environmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([userId]) // One active environment per user
+  @@index([environmentId])
+}
+
+// ============== CLINICAL IMAGES (Visual AI) ==============
+// Patient-submitted or provider-captured clinical images.
+// Supports the body-map + multi-view capture flow in COMPASS.
+
+model ClinicalImage {
+  id           String  @id @default(cuid())
+  patientId    String
+  encounterId  String?
+  assessmentId String?
+
+  // Image metadata
+  imageType     String // SKIN_LESION, WOUND, RASH, ORAL, EYE, EAR, GENERAL
+  bodyRegion    String // HEAD, NECK, CHEST, ABDOMEN, ARM_L, ARM_R, HAND_L, HAND_R, LEG_L, LEG_R, FOOT_L, FOOT_R, BACK, FACE
+  bodySubRegion String? // PALM, DORSUM, DIGITS, FOREARM, UPPER_ARM, etc.
+  viewType      String // CLOSEUP, BODY_PART, WIDE_CONTEXT (3 standardized views)
+  laterality    String? // LEFT, RIGHT, BILATERAL, MIDLINE
+
+  // Storage
+  storagePath   String // Encrypted blob storage path
+  thumbnailPath String? // Compressed thumbnail for list views
+  mimeType      String  @default("image/jpeg")
+  fileSizeBytes Int?
+
+  // Patient-provided context
+  patientNotes  String?  @db.NVarChar(Max) // "It started 3 days ago and is spreading"
+  durationDays  Int? // How long the patient has had this
+  isProgressing Boolean? // Is it getting worse?
+
+  // AI Analysis results (JSON)
+  aiAnalysis     String? @db.NVarChar(Max) // Morphology, color, border, distribution, ABCDE score
+  aiDifferential String? @db.NVarChar(Max) // AI-suggested diagnoses with confidence
+  aiConfidence   Float? // Overall confidence 0-1
+  aiModelVersion String? // Which model version produced the analysis
+
+  // Provider review
+  providerReview String?   @db.NVarChar(Max) // Provider's clinical assessment
+  confirmedDx    String? // Confirmed diagnosis after provider review
+  reviewedAt     DateTime?
+  reviewedById   String?
+
+  // Grouping (multiple images from same complaint form a set)
+  imageSetId String? // Groups CLOSEUP + BODY_PART + WIDE_CONTEXT together
+
+  isActive   Boolean  @default(true)
+  capturedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  patient    Patient            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter  Encounter?         @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assessment PatientAssessment? @relation(fields: [assessmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewedBy User?              @relation(fields: [reviewedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([patientId])
+  @@index([encounterId])
+  @@index([assessmentId])
+  @@index([imageSetId])
+  @@index([imageType, bodyRegion])
+  @@index([capturedAt])
 }

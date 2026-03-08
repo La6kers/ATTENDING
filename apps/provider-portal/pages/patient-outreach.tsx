@@ -8,6 +8,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { PatientOutreachHub } from '../components/patient-outreach/PatientOutreachHub';
 
 export default function PatientOutreachPage() {
@@ -17,7 +18,9 @@ export default function PatientOutreachPage() {
         <title>Patient Outreach | ATTENDING AI</title>
         <meta name="description" content="Close gaps in care with simple, actionable patient outreach campaigns" />
       </Head>
-      <PatientOutreachHub />
+      <ProviderShell contextBadge="Patient Outreach" currentPage="patient-outreach">
+        <PatientOutreachHub />
+      </ProviderShell>
     </>
   );
 }

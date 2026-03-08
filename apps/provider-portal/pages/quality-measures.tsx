@@ -8,6 +8,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { MedicareQualityDashboard } from '../components/quality-measures/MedicareQualityDashboard';
 
 export default function QualityMeasuresPage() {
@@ -17,7 +18,9 @@ export default function QualityMeasuresPage() {
         <title>Medicare Quality Measures | ATTENDING AI</title>
         <meta name="description" content="Track Medicare quality compliance, identify gaps in care, and maximize reimbursement" />
       </Head>
-      <MedicareQualityDashboard />
+      <ProviderShell contextBadge="Quality Measures" currentPage="quality-measures">
+        <MedicareQualityDashboard />
+      </ProviderShell>
     </>
   );
 }

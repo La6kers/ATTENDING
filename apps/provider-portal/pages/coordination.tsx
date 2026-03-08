@@ -5,6 +5,7 @@
 
 import React from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 import { CareCoordinationHub } from '../components/coordination';
 
 export default function CoordinationPage() {
@@ -17,7 +18,9 @@ export default function CoordinationPage() {
           content="Coordinate care with your entire healthcare team" 
         />
       </Head>
-      <CareCoordinationHub />
+      <ProviderShell contextBadge="Care Coordination" currentPage="coordination">
+        <CareCoordinationHub />
+      </ProviderShell>
     </>
   );
 }

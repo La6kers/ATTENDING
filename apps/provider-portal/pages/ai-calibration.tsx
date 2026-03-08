@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { ProviderShell } from '@/components/layout/ProviderShell';
 
 /**
  * AI Calibration Dashboard
@@ -116,6 +117,7 @@ export default function AiCalibrationPage() {
         <title>AI Calibration | ATTENDING AI</title>
       </Head>
       
+      <ProviderShell contextBadge="AI Calibration" currentPage="ai-calibration">
       <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div>
@@ -311,6 +313,7 @@ export default function AiCalibrationPage() {
           </table>
         </div>
       </div>
+      </ProviderShell>
     </>
   );
 }

@@ -9,9 +9,10 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
+import type { RedFlag as SharedRedFlag } from '@attending/shared/types/chat.types';
 
 // ============================================================================
-// Types
+// Types — extend shared canonical types for provider store
 // ============================================================================
 
 export type UrgencyLevel = 'critical' | 'emergent' | 'urgent' | 'routine';
@@ -39,11 +40,12 @@ export interface VitalSigns {
   timestamp: string;
 }
 
-export interface RedFlag {
-  id: string;
-  symptom: string;
+/**
+ * RedFlag for the provider store. Extends shared RedFlag but uses
+ * provider-specific UrgencyLevel for severity and adds `acknowledged` tracking.
+ */
+export interface RedFlag extends Omit<SharedRedFlag, 'severity' | 'context'> {
   severity: UrgencyLevel;
-  detectedAt: string;
   acknowledged: boolean;
 }
 

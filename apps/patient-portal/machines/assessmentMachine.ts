@@ -7,12 +7,23 @@
 // =============================================================================
 
 import { createMachine, assign } from 'xstate';
+import type {
+  ChatMessage as SharedChatMessage,
+  RedFlag as SharedRedFlag,
+  HPIData as SharedHPIData,
+  DetailedAssessmentPhase,
+} from '@attending/shared/types/chat.types';
 
 // ============================================================================
-// Types
+// Types — extend shared canonical types for XState machine context
 // ============================================================================
 
-export type AssessmentPhase =
+/**
+ * Assessment phases used in the XState machine.
+ * Subset of DetailedAssessmentPhase from shared types.
+ */
+export type AssessmentPhase = Extract<
+  DetailedAssessmentPhase,
   | 'welcome'
   | 'demographics'
   | 'chiefComplaint'
@@ -33,7 +44,8 @@ export type AssessmentPhase =
   | 'summary'
   | 'providerHandoff'
   | 'emergency'
-  | 'completed';
+  | 'completed'
+>;
 
 export type UrgencyLevel = 'critical' | 'emergent' | 'urgent' | 'moderate' | 'routine';
 
@@ -46,21 +58,20 @@ export interface VitalSigns {
   painLevel?: number;
 }
 
-export interface RedFlag {
-  id: string;
-  symptom: string;
+/**
+ * RedFlag for the XState machine. Extends shared RedFlag but uses
+ * the machine-specific UrgencyLevel for severity, and requires category.
+ */
+export interface RedFlag extends Omit<SharedRedFlag, 'severity' | 'context'> {
   severity: UrgencyLevel;
   category: string;
-  detectedAt: string;
 }
 
-export interface HPIData {
-  onset?: string;
-  location?: string;
-  duration?: string;
-  character?: string;
-  severity?: number;
-  timing?: string;
+/**
+ * HPIData for the XState machine. Extends shared HPIData with
+ * field name aliases used by the machine (aggravatingFactors, etc.).
+ */
+export interface HPIData extends Omit<SharedHPIData, 'aggravating' | 'relieving' | 'associated'> {
   context?: string;
   aggravatingFactors?: string[];
   relievingFactors?: string[];
@@ -80,11 +91,11 @@ export interface AllergyEntry {
   severity?: 'mild' | 'moderate' | 'severe';
 }
 
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: string;
+/**
+ * ChatMessage for the XState machine. Extends shared ChatMessage with
+ * phase and quickReplies as direct fields (instead of in metadata).
+ */
+export interface ChatMessage extends Omit<SharedChatMessage, 'metadata'> {
   phase?: AssessmentPhase;
   quickReplies?: string[];
 }

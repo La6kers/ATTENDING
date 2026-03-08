@@ -7,10 +7,35 @@
 // ============================================================
 
 import api from './client';
+import type {
+  RedFlag as SharedRedFlag,
+  HPIData as SharedHPIData,
+} from '@attending/shared/types/chat.types';
 
 // ============================================================
-// Types
+// Types — extend shared canonical types for API response shapes
 // ============================================================
+
+/**
+ * API-specific HPI data. Uses `string | null` to match backend DTO,
+ * plus extra fields (context, associatedSymptoms) not in the shared HPIData.
+ */
+export interface HpiData extends Omit<SharedHPIData, 'severity' | 'aggravating' | 'relieving' | 'associated'> {
+  aggravating: string | null;
+  relieving: string | null;
+  severity: string | null;
+  context: string | null;
+  associatedSymptoms: string | null;
+}
+
+/**
+ * API-specific RedFlag. Backend may return arbitrary severity strings,
+ * so we widen the type. The `category` field is required here (optional in shared).
+ */
+export interface RedFlag extends Omit<SharedRedFlag, 'severity' | 'detectedAt' | 'context'> {
+  severity: string;
+  category: string;
+}
 
 export interface Assessment {
   id: string;
@@ -35,26 +60,6 @@ export interface Assessment {
   startedAt: string;
   completedAt: string | null;
   reviewedAt: string | null;
-}
-
-export interface HpiData {
-  onset: string | null;
-  location: string | null;
-  duration: string | null;
-  character: string | null;
-  aggravating: string | null;
-  relieving: string | null;
-  timing: string | null;
-  severity: string | null;
-  context: string | null;
-  associatedSymptoms: string | null;
-}
-
-export interface RedFlag {
-  id: string;
-  symptom: string;
-  severity: string;
-  category: string;
 }
 
 export interface AssessmentSummary {

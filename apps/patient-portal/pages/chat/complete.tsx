@@ -105,7 +105,7 @@ export default function AssessmentCompletePage() {
                 <span>Return Home</span>
               </button>
               <button
-                onClick={() => router.push('/appointments')}
+                onClick={() => router.push('/health/appointments')}
                 className="flex items-center justify-center space-x-2 px-4 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"
               >
                 <Calendar className="h-5 w-5" />
