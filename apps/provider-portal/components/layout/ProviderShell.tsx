@@ -41,6 +41,7 @@ import {
   HelpCircle,
   User,
   Menu,
+  Stethoscope,
 } from 'lucide-react';
 
 // ============================================================
@@ -85,6 +86,7 @@ const DEFAULT_NAV_ITEMS = [
   { id: 'referrals', label: 'Referrals', href: '/referrals', icon: Users },
   { id: 'schedule', label: 'Schedule', href: '/schedule', icon: Calendar },
   { id: 'interventions', label: 'Clinical Intelligence', href: '/interventions', icon: Zap },
+  { id: 'specialty', label: 'Specialty', href: '/specialty', icon: Stethoscope },
 ];
 
 // Treatment Plan is a special nav item — only visible when a patient chart is open

@@ -5,12 +5,119 @@
  * Shows emergency assessments prominently with red flag indicators.
  */
 
-import React, { useState } from 'react';
-import {
-  usePendingReviewAssessments,
-  useRedFlagAssessments,
-  AssessmentSummary,
-} from '../lib/api/backend';
+import React, { useState, useEffect } from 'react';
+
+// ============================================================
+// Types — matches backend AssessmentSummary shape.
+// When connected to a real API, replace mock hooks below with
+// actual fetch calls to /api/assessments?status=pending, etc.
+// ============================================================
+
+interface AssessmentPatient {
+  fullName: string;
+  mrn?: string;
+}
+
+interface AssessmentSummary {
+  id: string;
+  patient: AssessmentPatient;
+  chiefComplaint: string;
+  triageLevel?: string;
+  hasRedFlags: boolean;
+  currentPhase: string;
+  assessmentNumber: string;
+  startedAt: string;
+}
+
+// ============================================================
+// Mock data hooks — swap these for real API calls when ready
+// ============================================================
+
+function usePendingReviewAssessments() {
+  const [data, setData] = useState<AssessmentSummary[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchData = () => {
+    setIsLoading(true);
+    // TODO: Replace with fetch('/api/assessments?status=pending_review')
+    setTimeout(() => {
+      setData(MOCK_PENDING);
+      setIsLoading(false);
+    }, 600);
+  };
+
+  useEffect(() => { fetchData(); }, []);
+  return { data, isLoading, refetch: fetchData };
+}
+
+function useRedFlagAssessments() {
+  const [data, setData] = useState<AssessmentSummary[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchData = () => {
+    setIsLoading(true);
+    // TODO: Replace with fetch('/api/assessments?hasRedFlags=true')
+    setTimeout(() => {
+      setData(MOCK_EMERGENCY);
+      setIsLoading(false);
+    }, 600);
+  };
+
+  useEffect(() => { fetchData(); }, []);
+  return { data, isLoading, refetch: fetchData };
+}
+
+// ============================================================
+// Mock assessment data
+// ============================================================
+
+const MOCK_PENDING: AssessmentSummary[] = [
+  {
+    id: 'assess-001',
+    patient: { fullName: 'Sarah Chen', mrn: 'MRN-2024-0847' },
+    chiefComplaint: 'Severe headache, sudden onset, worst of life',
+    triageLevel: 'Level2_Emergent',
+    hasRedFlags: true,
+    currentPhase: 'Completed',
+    assessmentNumber: 'COMPASS-4821',
+    startedAt: new Date(Date.now() - 25 * 60000).toISOString(),
+  },
+  {
+    id: 'assess-002',
+    patient: { fullName: 'James Rodriguez', mrn: 'MRN-2024-0892' },
+    chiefComplaint: 'Chest pain radiating to left arm, diaphoresis',
+    triageLevel: 'Level1_Resuscitation',
+    hasRedFlags: true,
+    currentPhase: 'Summary',
+    assessmentNumber: 'COMPASS-4822',
+    startedAt: new Date(Date.now() - 12 * 60000).toISOString(),
+  },
+  {
+    id: 'assess-003',
+    patient: { fullName: 'Emily Watson', mrn: 'MRN-2024-1034' },
+    chiefComplaint: 'Persistent cough x 3 weeks, low-grade fever',
+    triageLevel: 'Level4_LessUrgent',
+    hasRedFlags: false,
+    currentPhase: 'Completed',
+    assessmentNumber: 'COMPASS-4823',
+    startedAt: new Date(Date.now() - 45 * 60000).toISOString(),
+  },
+  {
+    id: 'assess-004',
+    patient: { fullName: 'David Park', mrn: 'MRN-2024-0955' },
+    chiefComplaint: 'Follow-up: diabetes management, A1c check',
+    triageLevel: 'Level5_NonUrgent',
+    hasRedFlags: false,
+    currentPhase: 'Completed',
+    assessmentNumber: 'COMPASS-4824',
+    startedAt: new Date(Date.now() - 68 * 60000).toISOString(),
+  },
+];
+
+const MOCK_EMERGENCY: AssessmentSummary[] = [
+  MOCK_PENDING[1], // James Rodriguez — chest pain
+  MOCK_PENDING[0], // Sarah Chen — thunderclap headache
+];
 
 // Triage level colors and labels
 const triageLevels: Record<string, { color: string; label: string; description: string }> = {

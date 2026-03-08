@@ -7,9 +7,10 @@
 
 import React, { useState } from 'react';
 import Head from 'next/head';
+import ProviderShell from '../components/layout/ProviderShell';
 import { AmbientDocumentation } from '../components/ambient';
 
-// In production, this would come from route params or context
+// TODO: Replace with real patient context from route params or encounter store
 const mockPatient = {
   id: 'patient-123',
   name: 'John Smith',
@@ -20,26 +21,21 @@ export default function AmbientPage() {
 
   const handleSaveNote = (note: any) => {
     setSavedNotes(prev => [...prev, { ...note, savedAt: new Date() }]);
-    console.log('Note saved to chart:', note);
-    // In production, save to database/EHR
+    // TODO: POST /api/encounters/{id}/notes when connected to backend
   };
 
   return (
-    <>
+    <ProviderShell contextBadge="Ambient Scribe" currentPage="">
       <Head>
         <title>Ambient Documentation | ATTENDING AI</title>
-        <meta 
-          name="description" 
-          content="AI-powered clinical documentation from patient conversations" 
-        />
       </Head>
-      <div className="min-h-screen bg-slate-50 p-6">
-        <div className="max-w-7xl mx-auto">
+      <div style={{ background: '#f8fafc', minHeight: 'calc(100vh - 110px)' }}>
+        <div className="max-w-7xl mx-auto p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-slate-900">Ambient Clinical Documentation</h1>
             <p className="text-slate-500">Record patient conversations and auto-generate SOAP notes</p>
           </div>
-          
+
           <AmbientDocumentation
             patientId={mockPatient.id}
             patientName={mockPatient.name}
@@ -49,12 +45,12 @@ export default function AmbientPage() {
           {savedNotes.length > 0 && (
             <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
               <p className="text-emerald-700 font-medium">
-                ✓ {savedNotes.length} note(s) saved to patient chart
+                {savedNotes.length} note(s) saved to patient chart
               </p>
             </div>
           )}
         </div>
       </div>
-    </>
+    </ProviderShell>
   );
 }

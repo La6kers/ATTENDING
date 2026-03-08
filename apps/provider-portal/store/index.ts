@@ -68,11 +68,6 @@ export {
   useProviderChatStore,
 } from './providerChatStore';
 
-// Patient Chat (provider view)
-export { 
-  usePatientChatStore,
-} from './patientChatStore';
-
 // =============================================================================
 // Workflow & Queue Management
 // =============================================================================
