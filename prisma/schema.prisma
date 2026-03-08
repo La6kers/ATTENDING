@@ -36,41 +36,41 @@ datasource db {
 // ============== ORGANIZATIONS (Multi-Tenant) ==============
 
 model Organization {
-  id              String    @id @default(cuid())
-  name            String
-  slug            String    @unique
-  type            String    @default("CLINIC")
-  npi             String?
-  taxId           String?
-  address         String?
-  city            String?
-  state           String?
-  zipCode         String?
-  phone           String?
-  faxNumber       String?
-  website         String?
-  ehrVendor       String?
-  fhirEndpoint    String?
-  tier            String    @default("standard")
-  isActive        Boolean   @default(true)
-  settings        String?   @db.NVarChar(Max)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  type         String   @default("CLINIC")
+  npi          String?
+  taxId        String?
+  address      String?
+  city         String?
+  state        String?
+  zipCode      String?
+  phone        String?
+  faxNumber    String?
+  website      String?
+  ehrVendor    String?
+  fhirEndpoint String?
+  tier         String   @default("standard")
+  isActive     Boolean  @default(true)
+  settings     String?  @db.NVarChar(Max)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  users           User[]
-  patients        Patient[]
-  encounters      Encounter[]
-  labOrders       LabOrder[]
-  imagingOrders   ImagingOrder[]
+  users            User[]
+  patients         Patient[]
+  encounters       Encounter[]
+  labOrders        LabOrder[]
+  imagingOrders    ImagingOrder[]
   medicationOrders MedicationOrder[]
-  referrals       Referral[]
-  assessments     PatientAssessment[]
-  apiKeys         ApiKey[]
-  webhooks        WebhookSubscription[]
-  integrations    IntegrationConnection[]
-  auditLogs       AuditLog[]
-  clinicalNotes   ClinicalNote[]
-  treatmentPlans  TreatmentPlan[]
+  referrals        Referral[]
+  assessments      PatientAssessment[]
+  apiKeys          ApiKey[]
+  webhooks         WebhookSubscription[]
+  integrations     IntegrationConnection[]
+  auditLogs        AuditLog[]
+  clinicalNotes    ClinicalNote[]
+  treatmentPlans   TreatmentPlan[]
 
   @@index([slug])
   @@index([isActive])
@@ -80,32 +80,32 @@ model Organization {
 // ============== AUTHENTICATION & USERS ==============
 
 model User {
-  id              String    @id @default(cuid())
-  organizationId  String?
-  email           String    @unique
-  emailVerified   DateTime?
-  name            String?
-  image           String?
-  password        String?
-  role            String    @default("PROVIDER")
-  specialty       String?
-  npi             String?   @unique
-  deaNumber       String?
-  department      String?
-  phone           String?
-  isActive        Boolean   @default(true)
-  mfaEnabled      Boolean   @default(false)
-  mfaSecret       String?
-  lastLoginAt     DateTime?
-  failedLoginAttempts Int   @default(0)
-  lockedUntil     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  organizationId      String?
+  email               String    @unique
+  emailVerified       DateTime?
+  name                String?
+  image               String?
+  password            String?
+  role                String    @default("PROVIDER")
+  specialty           String?
+  npi                 String?   @unique
+  deaNumber           String?
+  department          String?
+  phone               String?
+  isActive            Boolean   @default(true)
+  mfaEnabled          Boolean   @default(false)
+  mfaSecret           String?
+  lastLoginAt         DateTime?
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  organization        Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization        Organization?       @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   accounts            Account[]
   sessions            Session[]
-  encounters          Encounter[]        @relation("ProviderEncounters")
+  encounters          Encounter[]         @relation("ProviderEncounters")
   labOrders           LabOrder[]
   imagingOrders       ImagingOrder[]
   medicationOrders    MedicationOrder[]
@@ -167,52 +167,68 @@ model VerificationToken {
 // ============== PATIENTS ==============
 
 model Patient {
-  id                 String    @id @default(cuid())
-  organizationId     String?
-  mrn                String    @unique
-  firstName          String
-  lastName           String
-  middleName         String?
-  dateOfBirth        DateTime
-  gender             String?
-  sex                String?
-  email              String?
-  phone              String?
-  address            String?
-  city               String?
-  state              String?
-  zipCode            String?
-  emergencyContact   String?
-  emergencyPhone     String?
-  insuranceProvider  String?
-  insurancePolicyNum String?
-  preferredLanguage  String    @default("en")
-  isActive           Boolean   @default(true)
-  deletedAt          DateTime?
-  deletedBy          String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  organizationId      String?
+  mrn                 String    @unique
+  firstName           String
+  lastName            String
+  middleName          String?
+  dateOfBirth         DateTime
+  // Legacy fields (kept for backward compatibility)
+  gender              String?
+  sex                 String?
+  // Inclusive demographics — replaces gender/sex for new records
+  legalName           String? // Full legal name (insurance/billing only)
+  chosenName          String? // Preferred display name — shown INSTEAD of legalName when present
+  sexAssignedAtBirth  String? // MALE, FEMALE, INTERSEX, UNKNOWN
+  genderIdentity      String? // MALE, FEMALE, NON_BINARY, TRANSGENDER_MALE, TRANSGENDER_FEMALE, GENDERQUEER, TWO_SPIRIT, OTHER, PREFER_NOT_TO_SAY
+  pronouns            String? // "he/him", "she/her", "they/them", "ze/zir", etc.
+  sexualOrientation   String? // For preventive care screening relevance
+  // Pregnancy tracking
+  pregnancyStatus     String?   @default("NOT_APPLICABLE") // NOT_PREGNANT, PREGNANT, POSTPARTUM, UNKNOWN, NOT_APPLICABLE
+  gestationalAgeWeeks Int? // Current gestational age in weeks (nullable)
+  estimatedDueDate    DateTime? // EDD for pregnant patients
+  // Contact & demographics
+  email               String?
+  phone               String?
+  address             String?
+  city                String?
+  state               String?
+  zipCode             String?
+  emergencyContact    String?
+  emergencyPhone      String?
+  insuranceProvider   String?
+  insurancePolicyNum  String?
+  preferredLanguage   String    @default("en")
+  // Communication preferences
+  communicationNeeds  String?   @db.NVarChar(Max) // JSON: hearing impaired, interpreter needed, literacy level, etc.
+  isActive            Boolean   @default(true)
+  deletedAt           DateTime?
+  deletedBy           String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  encounters        Encounter[]
-  allergies         Allergy[]
-  conditions        Condition[]
-  medications       Medication[]
-  vitalSigns        VitalSign[]
-  labOrders         LabOrder[]
-  labResults        LabResult[]
-  imagingOrders     ImagingOrder[]
-  imagingResults    ImagingResult[]
-  medicationOrders  MedicationOrder[]
-  referrals         Referral[]
-  assessments       PatientAssessment[]
-  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  emergencyEvents   EmergencyEvent[]
-  treatmentPlans    TreatmentPlan[]
-  fhirLabResults    FhirLabResult[]
-  fhirConditions    FhirCondition[]
-  fhirMedications   FhirMedication[]
-  fhirVitalSigns    FhirVitalSign[]
-  clinicalNotes     ClinicalNote[]
+  encounters       Encounter[]
+  allergies        Allergy[]
+  conditions       Condition[]
+  medications      Medication[]
+  vitalSigns       VitalSign[]
+  labOrders        LabOrder[]
+  labResults       LabResult[]
+  imagingOrders    ImagingOrder[]
+  imagingResults   ImagingResult[]
+  medicationOrders MedicationOrder[]
+  referrals        Referral[]
+  assessments      PatientAssessment[]
+  organization     Organization?           @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  emergencyEvents  EmergencyEvent[]
+  treatmentPlans   TreatmentPlan[]
+  fhirLabResults   FhirLabResult[]
+  fhirConditions   FhirCondition[]
+  fhirMedications  FhirMedication[]
+  fhirVitalSigns   FhirVitalSign[]
+  clinicalNotes    ClinicalNote[]
+  populationFlags  PatientPopulationFlag[]
 
   @@index([mrn])
   @@index([lastName, firstName])
@@ -220,31 +236,33 @@ model Patient {
   @@index([isActive])
   @@index([deletedAt])
   @@index([organizationId])
+  @@index([genderIdentity])
+  @@index([pregnancyStatus])
 }
 
 // ============== CLINICAL ENCOUNTERS ==============
 
 model Encounter {
-  id              String    @id @default(cuid())
-  organizationId  String?
-  patientId       String
-  providerId      String
-  facilityId      String?
-  encounterType   String
-  status          String    @default("IN_PROGRESS")
-  chiefComplaint  String?
-  startTime       DateTime  @default(now())
-  endTime         DateTime?
-  notes           String?   @db.NVarChar(Max)
-  diagnosis       String?   @db.NVarChar(Max)
-  deletedAt       DateTime?
-  deletedBy       String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  organizationId String?
+  patientId      String
+  providerId     String
+  facilityId     String?
+  encounterType  String
+  status         String    @default("IN_PROGRESS")
+  chiefComplaint String?
+  startTime      DateTime  @default(now())
+  endTime        DateTime?
+  notes          String?   @db.NVarChar(Max)
+  diagnosis      String?   @db.NVarChar(Max)
+  deletedAt      DateTime?
+  deletedBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  organization       Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient          Patient            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  provider         User               @relation("ProviderEncounters", fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient          Patient           @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider         User              @relation("ProviderEncounters", fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   labOrders        LabOrder[]
   imagingOrders    ImagingOrder[]
   medicationOrders MedicationOrder[]
@@ -316,25 +334,25 @@ model Condition {
 // ============== MEDICATIONS ==============
 
 model Medication {
-  id            String    @id @default(cuid())
-  patientId     String
-  name          String
-  genericName   String?
-  rxnormCode    String?
-  ndcCode       String?
-  dose          String?
-  frequency     String?
-  route         String?
-  status        String    @default("ACTIVE")
-  startDate     DateTime?
-  endDate       DateTime?
-  prescribedBy  String?
-  pharmacy      String?
-  notes         String?   @db.NVarChar(Max)
-  deletedAt     DateTime?
-  deletedBy     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  patientId    String
+  name         String
+  genericName  String?
+  rxnormCode   String?
+  ndcCode      String?
+  dose         String?
+  frequency    String?
+  route        String?
+  status       String    @default("ACTIVE")
+  startDate    DateTime?
+  endDate      DateTime?
+  prescribedBy String?
+  pharmacy     String?
+  notes        String?   @db.NVarChar(Max)
+  deletedAt    DateTime?
+  deletedBy    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -347,28 +365,28 @@ model Medication {
 // ============== VITAL SIGNS ==============
 
 model VitalSign {
-  id                    String    @id @default(cuid())
-  patientId             String
-  encounterId           String?
-  heartRate             Int?
-  bloodPressureSystolic Int?
+  id                     String    @id @default(cuid())
+  patientId              String
+  encounterId            String?
+  heartRate              Int?
+  bloodPressureSystolic  Int?
   bloodPressureDiastolic Int?
-  respiratoryRate       Int?
-  temperature           Float?
-  temperatureUnit       String    @default("F")
-  oxygenSaturation      Float?
-  weight                Float?
-  weightUnit            String    @default("lbs")
-  height                Float?
-  heightUnit            String    @default("in")
-  painLevel             Int?
-  bloodGlucose          Float?
-  notes                 String?   @db.NVarChar(Max)
-  recordedAt            DateTime  @default(now())
-  recordedBy            String?
-  deletedAt             DateTime?
-  deletedBy             String?
-  createdAt             DateTime  @default(now())
+  respiratoryRate        Int?
+  temperature            Float?
+  temperatureUnit        String    @default("F")
+  oxygenSaturation       Float?
+  weight                 Float?
+  weightUnit             String    @default("lbs")
+  height                 Float?
+  heightUnit             String    @default("in")
+  painLevel              Int?
+  bloodGlucose           Float?
+  notes                  String?   @db.NVarChar(Max)
+  recordedAt             DateTime  @default(now())
+  recordedBy             String?
+  deletedAt              DateTime?
+  deletedBy              String?
+  createdAt              DateTime  @default(now())
 
   patient   Patient    @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -405,10 +423,10 @@ model LabOrder {
   updatedAt           DateTime  @updatedAt
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient   Patient     @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  provider  User        @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  encounter Encounter?  @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  results   LabResult[]
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider     User          @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter    Encounter?    @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  results      LabResult[]
 
   @@index([patientId])
   @@index([providerId])
@@ -478,11 +496,11 @@ model ImagingOrder {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient   Patient         @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  provider  User            @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  encounter Encounter?      @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  results   ImagingResult[]
+  organization Organization?   @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient         @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider     User            @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter    Encounter?      @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  results      ImagingResult[]
 
   @@index([patientId])
   @@index([providerId])
@@ -519,47 +537,47 @@ model ImagingResult {
 // ============== MEDICATION ORDERS ==============
 
 model MedicationOrder {
-  id                   String    @id @default(cuid())
-  organizationId       String?
-  patientId            String
-  providerId           String
-  encounterId          String?
-  orderNumber          String    @unique
-  status               String    @default("ACTIVE")
-  medicationName       String
-  genericName          String?
-  rxnormCode           String?
-  ndcCode              String?
-  dose                 String
-  doseUnit             String?
-  frequency            String
-  route                String
-  duration             String?
-  quantity             Int?
-  refills              Int       @default(0)
-  indication           String    @db.NVarChar(Max)
-  instructions         String?   @db.NVarChar(Max)
-  isControlled         Boolean   @default(false)
-  deaSchedule          String?
-  dispenseAsWritten    Boolean   @default(false)
-  substitutionAllowed  Boolean   @default(true)
-  priorAuthRequired    Boolean   @default(false)
-  priorAuthStatus      String?
-  diagnosis            String?   @db.NVarChar(Max)
-  pharmacy             String?
-  pharmacyNpi          String?
-  orderedAt            DateTime  @default(now())
-  discontinuedAt       DateTime?
-  discontinuedReason   String?
-  deletedAt            DateTime?
-  deletedBy            String?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  organizationId      String?
+  patientId           String
+  providerId          String
+  encounterId         String?
+  orderNumber         String    @unique
+  status              String    @default("ACTIVE")
+  medicationName      String
+  genericName         String?
+  rxnormCode          String?
+  ndcCode             String?
+  dose                String
+  doseUnit            String?
+  frequency           String
+  route               String
+  duration            String?
+  quantity            Int?
+  refills             Int       @default(0)
+  indication          String    @db.NVarChar(Max)
+  instructions        String?   @db.NVarChar(Max)
+  isControlled        Boolean   @default(false)
+  deaSchedule         String?
+  dispenseAsWritten   Boolean   @default(false)
+  substitutionAllowed Boolean   @default(true)
+  priorAuthRequired   Boolean   @default(false)
+  priorAuthStatus     String?
+  diagnosis           String?   @db.NVarChar(Max)
+  pharmacy            String?
+  pharmacyNpi         String?
+  orderedAt           DateTime  @default(now())
+  discontinuedAt      DateTime?
+  discontinuedReason  String?
+  deletedAt           DateTime?
+  deletedBy           String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  provider  User       @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider     User          @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter    Encounter?    @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([providerId])
@@ -585,7 +603,7 @@ model Referral {
   subspecialty      String?
   reason            String    @db.NVarChar(Max)
   clinicalSummary   String?   @db.NVarChar(Max)
-  specificQuestions  String?   @db.NVarChar(Max)
+  specificQuestions String?   @db.NVarChar(Max)
   preferredProvider String?
   preferredFacility String?
   diagnosis         String?   @db.NVarChar(Max)
@@ -601,9 +619,9 @@ model Referral {
   updatedAt         DateTime  @updatedAt
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  provider  User       @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider     User          @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter    Encounter?    @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([providerId])
@@ -717,8 +735,8 @@ model TreatmentPlan {
   updatedAt              DateTime  @updatedAt
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter    Encounter     @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([encounterId])
@@ -752,8 +770,8 @@ model ClinicalNote {
   updatedAt      DateTime  @updatedAt
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  encounter Encounter @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter    Encounter     @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([encounterId])
@@ -766,18 +784,18 @@ model ClinicalNote {
 // ============== NOTIFICATIONS ==============
 
 model Notification {
-  id          String    @id @default(cuid())
-  userId      String
-  type        String
-  priority    String    @default("NORMAL")
-  title       String
-  message     String    @db.NVarChar(Max)
-  data        String?   @db.NVarChar(Max)
-  read        Boolean   @default(false)
-  readAt      DateTime?
-  actionUrl   String?
-  expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  priority  String    @default("NORMAL")
+  title     String
+  message   String    @db.NVarChar(Max)
+  data      String?   @db.NVarChar(Max)
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  actionUrl String?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -805,7 +823,7 @@ model AuditLog {
   createdAt      DateTime @default(now())
 
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user User? @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([action])
   @@index([userId])
@@ -864,29 +882,29 @@ model WebhookSubscription {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  deliveries     WebhookSubscriptionLog[]
+  organization Organization             @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deliveries   WebhookSubscriptionLog[]
 
   @@index([organizationId])
   @@index([isActive])
 }
 
 model WebhookSubscriptionLog {
-  id               String    @id @default(cuid())
-  subscriptionId   String
-  eventType        String
-  payload          String    @db.NVarChar(Max)
-  statusCode       Int?
-  responseBody     String?   @db.NVarChar(Max)
-  durationMs       Int?
-  attempt          Int       @default(1)
-  maxAttempts      Int       @default(5)
-  nextRetryAt      DateTime?
-  status           String    @default("PENDING")
-  errorMessage     String?   @db.NVarChar(Max)
-  createdAt        DateTime  @default(now())
+  id             String    @id @default(cuid())
+  subscriptionId String
+  eventType      String
+  payload        String    @db.NVarChar(Max)
+  statusCode     Int?
+  responseBody   String?   @db.NVarChar(Max)
+  durationMs     Int?
+  attempt        Int       @default(1)
+  maxAttempts    Int       @default(5)
+  nextRetryAt    DateTime?
+  status         String    @default("PENDING")
+  errorMessage   String?   @db.NVarChar(Max)
+  createdAt      DateTime  @default(now())
 
-  subscription     WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subscription WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([subscriptionId])
   @@index([status])
@@ -926,20 +944,20 @@ model IntegrationConnection {
 // ============== FHIR INTEGRATION TABLES ==============
 
 model FhirLabResult {
-  id              String   @id @default(cuid())
-  patientId       String
-  fhirId          String   @unique
-  fhirServerId    String
-  resourceType    String   @default("Observation")
-  rawResource     String   @db.NVarChar(Max)
-  testCode        String?
-  testName        String?
-  value           String?
-  unit            String?
-  interpretation  String?
-  effectiveDate   DateTime?
-  lastSyncedAt    DateTime @default(now())
-  createdAt       DateTime @default(now())
+  id             String    @id @default(cuid())
+  patientId      String
+  fhirId         String    @unique
+  fhirServerId   String
+  resourceType   String    @default("Observation")
+  rawResource    String    @db.NVarChar(Max)
+  testCode       String?
+  testName       String?
+  value          String?
+  unit           String?
+  interpretation String?
+  effectiveDate  DateTime?
+  lastSyncedAt   DateTime  @default(now())
+  createdAt      DateTime  @default(now())
 
   patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -949,18 +967,18 @@ model FhirLabResult {
 }
 
 model FhirCondition {
-  id              String   @id @default(cuid())
-  patientId       String
-  fhirId          String   @unique
-  fhirServerId    String
-  resourceType    String   @default("Condition")
-  rawResource     String   @db.NVarChar(Max)
-  icdCode         String?
-  description     String?
-  status          String?
-  onsetDate       DateTime?
-  lastSyncedAt    DateTime @default(now())
-  createdAt       DateTime @default(now())
+  id           String    @id @default(cuid())
+  patientId    String
+  fhirId       String    @unique
+  fhirServerId String
+  resourceType String    @default("Condition")
+  rawResource  String    @db.NVarChar(Max)
+  icdCode      String?
+  description  String?
+  status       String?
+  onsetDate    DateTime?
+  lastSyncedAt DateTime  @default(now())
+  createdAt    DateTime  @default(now())
 
   patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -969,17 +987,17 @@ model FhirCondition {
 }
 
 model FhirMedication {
-  id              String   @id @default(cuid())
-  patientId       String
-  fhirId          String   @unique
-  fhirServerId    String
-  resourceType    String   @default("MedicationRequest")
-  rawResource     String   @db.NVarChar(Max)
-  medicationName  String?
-  dose            String?
-  status          String?
-  lastSyncedAt    DateTime @default(now())
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  patientId      String
+  fhirId         String   @unique
+  fhirServerId   String
+  resourceType   String   @default("MedicationRequest")
+  rawResource    String   @db.NVarChar(Max)
+  medicationName String?
+  dose           String?
+  status         String?
+  lastSyncedAt   DateTime @default(now())
+  createdAt      DateTime @default(now())
 
   patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -988,18 +1006,18 @@ model FhirMedication {
 }
 
 model FhirVitalSign {
-  id              String   @id @default(cuid())
-  patientId       String
-  fhirId          String   @unique
-  fhirServerId    String
-  resourceType    String   @default("Observation")
-  rawResource     String   @db.NVarChar(Max)
-  vitalType       String?
-  value           String?
-  unit            String?
-  effectiveDate   DateTime?
-  lastSyncedAt    DateTime @default(now())
-  createdAt       DateTime @default(now())
+  id            String    @id @default(cuid())
+  patientId     String
+  fhirId        String    @unique
+  fhirServerId  String
+  resourceType  String    @default("Observation")
+  rawResource   String    @db.NVarChar(Max)
+  vitalType     String?
+  value         String?
+  unit          String?
+  effectiveDate DateTime?
+  lastSyncedAt  DateTime  @default(now())
+  createdAt     DateTime  @default(now())
 
   patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -1057,19 +1075,19 @@ model ClinicalProtocol {
 // ============== RED FLAG RULES ==============
 
 model RedFlagRule {
-  id              String   @id @default(cuid())
-  name            String   @unique
-  description     String   @db.NVarChar(Max)
-  category        String
-  severity        String
-  triggerCriteria String   @db.NVarChar(Max)
-  vitalThresholds String?  @db.NVarChar(Max)
-  icdCodes        String?  @db.NVarChar(Max)
-  recommendedAction String @db.NVarChar(Max)
-  timeframe       String
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String   @unique
+  description       String   @db.NVarChar(Max)
+  category          String
+  severity          String
+  triggerCriteria   String   @db.NVarChar(Max)
+  vitalThresholds   String?  @db.NVarChar(Max)
+  icdCodes          String?  @db.NVarChar(Max)
+  recommendedAction String   @db.NVarChar(Max)
+  timeframe         String
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([category])
   @@index([severity])
@@ -1082,32 +1100,32 @@ model RedFlagRule {
 // Supports COMPASS JSON, FHIR R4 Bundle, and HL7v2 ORU formats.
 
 model WebhookConfig {
-  id                  String    @id @default(cuid())
-  name                String                          // "Epic Integration", "Slack Alerts"
-  url                 String                          // https://ehr.practice.com/api/intake
-  secret              String                          // HMAC-SHA256 signing secret (encrypted at rest)
-  format              String    @default("json")      // json | fhir_r4 | hl7v2
-  events              String    @db.NVarChar(Max)     // JSON array: ["assessment.completed", "assessment.emergency"]
-  isActive            Boolean   @default(true)
-  headers             String?   @db.NVarChar(Max)     // Custom headers as JSON (e.g., auth bearer tokens)
+  id       String  @id @default(cuid())
+  name     String // "Epic Integration", "Slack Alerts"
+  url      String // https://ehr.practice.com/api/intake
+  secret   String // HMAC-SHA256 signing secret (encrypted at rest)
+  format   String  @default("json") // json | fhir_r4 | hl7v2
+  events   String  @db.NVarChar(Max) // JSON array: ["assessment.completed", "assessment.emergency"]
+  isActive Boolean @default(true)
+  headers  String? @db.NVarChar(Max) // Custom headers as JSON (e.g., auth bearer tokens)
 
   // Health tracking — auto-disable after consecutive failures
   consecutiveFailures Int       @default(0)
   lastSuccessAt       DateTime?
   lastFailureAt       DateTime?
-  disabledAt          DateTime?                       // Set when auto-disabled
+  disabledAt          DateTime? // Set when auto-disabled
   disabledReason      String?
 
   // Audit
-  createdAt           DateTime  @default(now())
-  createdBy           String?
-  updatedAt           DateTime  @updatedAt
-  updatedBy           String?
+  createdAt DateTime @default(now())
+  createdBy String?
+  updatedAt DateTime @updatedAt
+  updatedBy String?
 
   // Multi-tenant (optional — null for standalone COMPASS)
-  organizationId      String?
+  organizationId String?
 
-  deliveries          WebhookDelivery[]
+  deliveries WebhookDelivery[]
 
   @@index([isActive])
   @@index([organizationId])
@@ -1115,34 +1133,138 @@ model WebhookConfig {
 }
 
 model WebhookDelivery {
-  id              String    @id @default(cuid())
-  webhookId       String
-  webhook         WebhookConfig @relation(fields: [webhookId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id        String        @id @default(cuid())
+  webhookId String
+  webhook   WebhookConfig @relation(fields: [webhookId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   // What triggered this delivery
-  event           String                              // assessment.completed, assessment.emergency, etc.
-  assessmentId    String?
-  patientId       String?
+  event        String // assessment.completed, assessment.emergency, etc.
+  assessmentId String?
+  patientId    String?
 
   // Delivery details
-  deliveryId      String    @unique                   // Idempotency key sent as X-Compass-Delivery-Id
-  attemptNumber   Int       @default(1)               // 1 = initial, 2-6 = retries
-  status          String                              // pending | success | failed | retrying
-  httpStatus      Int?                                // 200, 404, 500, etc.
-  responseBody    String?   @db.NVarChar(1000)        // Truncated response for debugging
-  latencyMs       Int?                                // Round-trip time in milliseconds
-  errorMessage    String?                             // Connection refused, timeout, etc.
+  deliveryId    String  @unique // Idempotency key sent as X-Compass-Delivery-Id
+  attemptNumber Int     @default(1) // 1 = initial, 2-6 = retries
+  status        String // pending | success | failed | retrying
+  httpStatus    Int? // 200, 404, 500, etc.
+  responseBody  String? @db.NVarChar(1000) // Truncated response for debugging
+  latencyMs     Int? // Round-trip time in milliseconds
+  errorMessage  String? // Connection refused, timeout, etc.
 
   // Retry scheduling
-  scheduledAt     DateTime                            // When this attempt was scheduled
-  attemptedAt     DateTime?                           // When delivery was actually attempted
-  nextRetryAt     DateTime?                           // When to retry (null if success or final failure)
+  scheduledAt DateTime // When this attempt was scheduled
+  attemptedAt DateTime? // When delivery was actually attempted
+  nextRetryAt DateTime? // When to retry (null if success or final failure)
 
-  createdAt       DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@index([webhookId, createdAt])
-  @@index([status, scheduledAt])                      // For retry queue queries
+  @@index([status, scheduledAt]) // For retry queue queries
   @@index([assessmentId])
   @@index([deliveryId])
   @@map("webhook_deliveries")
+}
+
+// ============== POPULATION-AWARE CHART DISPLAY ==============
+// These models drive context-sensitive chart rendering based on
+// patient demographics (age, gender identity, pregnancy, conditions).
+// See: docs/CLINICAL_CHART_DESIGN.md for display logic.
+
+// Auto-detected or manually assigned population flags per patient.
+// Drives which chart sections, screening protocols, vital ranges,
+// and medication warnings are surfaced to the provider.
+model PatientPopulationFlag {
+  id            String    @id @default(cuid())
+  patientId     String
+  flag          String // PEDIATRIC, NEONATAL, ADOLESCENT, GERIATRIC, TRANSGENDER,
+  // PREGNANT, POSTPARTUM, CHRONIC_KIDNEY_DISEASE, DIABETES,
+  // HEART_FAILURE, SUBSTANCE_USE_DISORDER, HOSPICE,
+  // COGNITIVE_IMPAIRMENT, FALL_RISK
+  autoDetected  Boolean   @default(true) // true = system-derived from age/conditions; false = manually set
+  metadata      String?   @db.NVarChar(Max) // JSON: extra context (e.g., { "edc": "2026-09-15" } for pregnancy)
+  activatedAt   DateTime  @default(now())
+  deactivatedAt DateTime? // Null = currently active
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([patientId, flag]) // One flag per type per patient
+  @@index([patientId])
+  @@index([flag])
+  @@index([deactivatedAt])
+}
+
+// Age-stratified normal ranges for vital signs.
+// Used to interpret whether a vital value is normal/elevated/critical
+// based on patient age rather than a single adult range.
+model VitalSignReference {
+  id           String   @id @default(cuid())
+  vitalType    String // HR, SBP, DBP, RR, TEMP, SPO2, WEIGHT_PERCENTILE, HEIGHT_PERCENTILE
+  ageMinMonths Int // Inclusive lower bound (0 = birth)
+  ageMaxMonths Int // Inclusive upper bound (1440 = 120 years)
+  normalMin    Float
+  normalMax    Float
+  criticalMin  Float? // Below this = critical
+  criticalMax  Float? // Above this = critical
+  unit         String // bpm, mmHg, breaths/min, °F, %, etc.
+  source       String? // Evidence source: "AHA 2023", "WHO Growth Standards", "AAP"
+  notes        String? // Clinical context
+  createdAt    DateTime @default(now())
+
+  @@unique([vitalType, ageMinMonths, ageMaxMonths]) // One range per vital per age bracket
+  @@index([vitalType])
+  @@index([ageMinMonths, ageMaxMonths])
+}
+
+// Rules that control which chart sections are shown, hidden, promoted,
+// or modified based on population flags. Evaluated at render time.
+model ChartDisplayRule {
+  id             String   @id @default(cuid())
+  populationFlag String // Which population flag triggers this rule
+  section        String // VITALS, MEDICATIONS, HISTORY, SCREENING, SOCIAL,
+  // GOALS_OF_CARE, GROWTH_CHART, BIRTH_HISTORY,
+  // FUNCTIONAL_STATUS, IMMUNIZATIONS, DEVELOPMENTAL
+  action         String // SHOW, HIDE, PROMOTE, DEMOTE, REPLACE, WARN, BADGE
+  priority       Int      @default(0) // Higher = more prominent placement in the chart
+  config         String?  @db.NVarChar(Max) // JSON config for the action. Examples:
+  // PROMOTE: { "position": "top" }
+  // WARN: { "enableBeers": true, "polypharmacyThreshold": 5 }
+  // REPLACE: { "replaceWith": "BIRTH_HISTORY" }
+  // BADGE: { "label": "Fall Risk", "color": "red" }
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([populationFlag, section, action]) // One rule per flag+section+action combo
+  @@index([populationFlag])
+  @@index([isActive])
+}
+
+// Age- and organ-specific screening protocols.
+// Drives the "Screenings Due" section of the patient chart.
+// Uses organ inventory (not assumed gender) for transgender patients.
+model ScreeningProtocol {
+  id              String   @id @default(cuid())
+  name            String // "Cervical Cancer Screening", "Mammogram", "Colonoscopy", etc.
+  screeningCode   String? // CPT or LOINC code
+  description     String?
+  populationFlags String?  @db.NVarChar(Max) // JSON array of flags that trigger this: ["GERIATRIC", "DIABETES"]
+  organRequired   String? // CERVIX, PROSTATE, BREAST, COLON — screen by organ, not gender
+  ageMinMonths    Int? // Minimum age to begin (null = any age)
+  ageMaxMonths    Int? // Maximum age to offer (null = no upper limit)
+  frequency       String? // "annually", "every 3 years", "once at 18 months", etc.
+  conditions      String?  @db.NVarChar(Max) // JSON: additional conditions that trigger this screening
+  replacedById    String? // Self-reference: PHQ-A replaces PHQ-9 for adolescents
+  evidenceSource  String? // "USPSTF 2023", "ACS", "AAP Bright Futures"
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  replacedBy   ScreeningProtocol?  @relation("ScreeningReplacement", fields: [replacedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replacements ScreeningProtocol[] @relation("ScreeningReplacement")
+
+  @@index([organRequired])
+  @@index([ageMinMonths, ageMaxMonths])
+  @@index([isActive])
 }
