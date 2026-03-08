@@ -687,34 +687,34 @@ const EncounterPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Chief Complaint */}
-      <div style={cardStyle}>
-        <div style={{ ...cardHeaderStyle, background: COLORS.red50 }}>
-          <AlertTriangle style={{ width: 16, height: 16, color: COLORS.red500 }} />
-          <span style={{ color: COLORS.red600 }}>Chief Complaint</span>
+      {/* Patient Presentation */}
+      <div style={{ ...cardStyle, borderLeft: `3px solid ${COLORS.gold}` }}>
+        <div style={{ ...cardHeaderStyle, background: 'linear-gradient(135deg, #fefce8, #fef9c3)' }}>
+          <Sparkles style={{ width: 16, height: 16, color: COLORS.gold }} />
+          <span style={{ color: COLORS.deepNavy }}>Patient Presentation</span>
         </div>
         <div style={cardBodyStyle}>
-          <div style={{ fontSize: 18, fontWeight: 600, color: COLORS.deepNavy, marginBottom: 8 }}>
-            &ldquo;Worst headache of my life&rdquo;
-          </div>
-          <div style={{ fontSize: 14, color: COLORS.gray600, lineHeight: 1.6 }}>
-            Sudden onset 3 days ago while at work. Pulsating, right temporal/frontal,
-            rated 9/10. Associated nausea and photophobia. Ibuprofen 400mg without relief.
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-            {['Thunderclap onset', '"Worst headache"', 'Elevated BP'].map(flag => (
+          <p style={{ margin: 0, fontSize: 15, color: COLORS.gray600, lineHeight: 1.8 }}>
+            38-year-old female presenting with &ldquo;the worst headache of my life,&rdquo; sudden onset 3 days ago while at work.
+            Pain is right temporal/frontal, pulsating, continuous, rated 9/10. Associated with nausea, photophobia, and phonophobia.
+            Ibuprofen 400mg provided no relief. Patient has a history of migraine with aura (diagnosed 2019) and stage 1 hypertension (2023).
+            Family history significant for maternal migraine, HTN, and DM2; paternal CAD; grandmother with stroke at 72.
+            Non-smoker, moderate alcohol use. Currently on Lisinopril 10mg daily and Sumatriptan 50mg PRN.
+          </p>
+          <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
+            {['Thunderclap onset', '"Worst headache"', 'Elevated BP', 'FHx stroke'].map(flag => (
               <span
                 key={flag}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 4,
-                  padding: '4px 10px',
+                  padding: '4px 12px',
                   borderRadius: 8,
                   background: COLORS.red100,
                   color: COLORS.red600,
                   fontSize: 12,
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}
               >
                 <AlertTriangle style={{ width: 12, height: 12 }} />
@@ -1039,29 +1039,151 @@ const EncounterPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Start Visit Button */}
-      {!visitActive && (
-        <div style={{ textAlign: 'center', padding: '12px 0' }}>
+      {/* Start Visit / Ambient Listening */}
+      {!visitActive ? (
+        <div style={{
+          ...cardStyle,
+          textAlign: 'center',
+          padding: '40px 24px',
+          background: `linear-gradient(135deg, ${COLORS.deepNavy}, ${COLORS.midTeal})`,
+          border: 'none',
+        }}>
+          <Mic style={{ width: 40, height: 40, color: 'rgba(255,255,255,0.3)', marginBottom: 16 }} />
+          <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.white, marginBottom: 8 }}>
+            Ready to Begin Encounter
+          </div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginBottom: 24, maxWidth: 480, margin: '0 auto 24px' }}>
+            Start the visit to activate ambient listening. AI will transcribe and extract clinical entities in real time.
+          </div>
           <button
             onClick={startVisit}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 10,
-              padding: '14px 40px',
-              borderRadius: 12,
+              gap: 12,
+              padding: '18px 56px',
+              borderRadius: 14,
               border: 'none',
-              background: `linear-gradient(135deg, ${COLORS.primaryTeal}, ${COLORS.lightTeal})`,
+              background: `linear-gradient(135deg, ${COLORS.lightTeal}, ${COLORS.primaryTeal})`,
               color: COLORS.white,
-              fontSize: 16,
-              fontWeight: 700,
+              fontSize: 18,
+              fontWeight: 800,
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(26, 143, 168, 0.3)',
+              boxShadow: '0 6px 24px rgba(37, 184, 169, 0.4)',
+              letterSpacing: 0.3,
             }}
           >
-            <Play style={{ width: 20, height: 20 }} />
-            Start Visit -- Activate Ambient Listening
+            <Play style={{ width: 24, height: 24 }} />
+            Start Visit
           </button>
+        </div>
+      ) : (
+        <div style={{
+          ...cardStyle,
+          overflow: 'hidden',
+          border: `1px solid ${ambientPaused ? COLORS.gray200 : 'rgba(37, 184, 169, 0.3)'}`,
+        }}>
+          {/* Ambient Listening Header */}
+          <div style={{
+            padding: '14px 20px',
+            background: `linear-gradient(135deg, ${COLORS.deepNavy}, ${COLORS.midTeal})`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ position: 'relative' }}>
+                <Mic style={{ width: 20, height: 20, color: ambientPaused ? COLORS.gray500 : '#4ade80' }} />
+                {!ambientPaused && (
+                  <div style={{
+                    position: 'absolute', top: -3, right: -3, width: 8, height: 8,
+                    borderRadius: '50%', background: '#4ade80', animation: 'pulse-dot 1.5s infinite',
+                  }} />
+                )}
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 700, color: COLORS.white }}>
+                {ambientPaused ? 'Listening Paused' : 'Ambient Listening Active'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setAmbientPaused(!ambientPaused)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'rgba(255,255,255,0.1)', color: COLORS.white,
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                {ambientPaused ? <Play style={{ width: 14, height: 14 }} /> : <Pause style={{ width: 14, height: 14 }} />}
+                {ambientPaused ? 'Resume' : 'Pause'}
+              </button>
+              <button
+                onClick={endVisit}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)',
+                  background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                <Square style={{ width: 12, height: 12 }} />
+                End Visit
+              </button>
+            </div>
+          </div>
+
+          {/* Live Transcript */}
+          <div style={{ padding: '16px 20px', maxHeight: 200, overflowY: 'auto' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+              Live Transcript
+            </div>
+            {transcriptIdx === 0 ? (
+              <div style={{ fontSize: 14, color: COLORS.gray400, fontStyle: 'italic' }}>Waiting for speech...</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {AMBIENT_TRANSCRIPT_LINES.slice(0, transcriptIdx).map((line, i) => (
+                  <div key={i} style={{ fontSize: 13, color: COLORS.gray600, lineHeight: 1.6 }}>
+                    <span style={{ fontWeight: 600, color: COLORS.deepNavy }}>{line.speaker}: </span>
+                    {line.text}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Extracted Entities */}
+          {(() => {
+            const visibleEntities = EXTRACTED_ENTITIES.filter(entity => {
+              const lineTimeIdx = AMBIENT_TRANSCRIPT_LINES.findIndex(l => l.time === entity.time);
+              return lineTimeIdx < transcriptIdx;
+            });
+            if (visibleEntities.length === 0) return null;
+            return (
+              <div style={{ padding: '12px 20px', borderTop: `1px solid ${COLORS.gray100}`, background: COLORS.gray50 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+                  Extracted Entities
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {visibleEntities.map((e, i) => (
+                    <span key={i} style={{
+                      fontSize: 12, fontWeight: 600, padding: '4px 10px', borderRadius: 6,
+                      background: e.type === 'Symptom' ? COLORS.paleMint
+                        : e.type === 'Medication' ? COLORS.blue50
+                        : e.type === 'Location' ? 'rgba(200, 164, 78, 0.15)'
+                        : COLORS.gray100,
+                      color: e.type === 'Symptom' ? COLORS.primaryTeal
+                        : e.type === 'Medication' ? COLORS.blue500
+                        : e.type === 'Location' ? COLORS.gold
+                        : COLORS.gray600,
+                    }}>
+                      {e.text}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
