@@ -1071,7 +1071,9 @@ const EncounterPage: React.FC = () => {
   // TAB 2 -- AI DIFFERENTIAL
   // ============================================================
   const renderDifferential = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ display: 'flex', gap: 20 }}>
+      {/* Main — Diagnosis Cards */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20, minWidth: 0 }}>
       {/* Complaint filter tabs */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -1164,13 +1166,14 @@ const EncounterPage: React.FC = () => {
                   gap: 6,
                   padding: '8px 16px',
                   borderRadius: 8,
-                  border: `1px solid ${COLORS.primaryTeal}`,
-                  background: 'transparent',
-                  color: COLORS.primaryTeal,
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${COLORS.gold}, #d4a843)`,
+                  color: COLORS.white,
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   cursor: 'pointer',
                   flexShrink: 0,
+                  boxShadow: '0 2px 8px rgba(200, 164, 78, 0.3)',
                 }}
               >
                 <BookOpen style={{ width: 14, height: 14 }} />
@@ -1228,6 +1231,124 @@ const EncounterPage: React.FC = () => {
           No diagnoses found for &ldquo;{complaintFilter}&rdquo;. Try a different complaint category.
         </div>
       )}
+      </div>
+
+      {/* Right Sidebar — Clinical Context (sticky) */}
+      <div style={{ width: 300, flexShrink: 0 }} className="differential-sidebar">
+        <div style={{ position: 'sticky', top: 80, display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* COMPASS Summary */}
+          <div style={{ ...cardStyle, borderLeft: `3px solid ${COLORS.gold}` }}>
+            <div style={{ ...cardHeaderStyle, padding: '10px 14px', fontSize: 12 }}>
+              <Sparkles style={{ width: 14, height: 14, color: COLORS.gold }} />
+              <span>COMPASS Summary</span>
+            </div>
+            <div style={{ padding: '10px 14px', fontSize: 12, color: COLORS.gray600, lineHeight: 1.6 }}>
+              <div style={{ fontWeight: 600, color: COLORS.deepNavy, marginBottom: 4 }}>Chief Complaint</div>
+              <div style={{ marginBottom: 10 }}>&ldquo;Worst headache of my life&rdquo; — sudden onset 3 days ago, pulsating, right temporal, 9/10 severity</div>
+              <div style={{ fontWeight: 600, color: COLORS.deepNavy, marginBottom: 4 }}>OLDCARTS</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, fontSize: 11, color: COLORS.gray600 }}>
+                <span><strong style={{ color: COLORS.deepNavy }}>O:</strong> 3 days ago, sudden onset at work</span>
+                <span><strong style={{ color: COLORS.deepNavy }}>L:</strong> Right temporal/frontal</span>
+                <span><strong style={{ color: COLORS.deepNavy }}>D:</strong> Continuous, 3 days</span>
+                <span><strong style={{ color: COLORS.deepNavy }}>C:</strong> Pulsating quality</span>
+                <span><strong style={{ color: COLORS.deepNavy }}>A:</strong> Nausea, photophobia, phonophobia</span>
+                <span><strong style={{ color: COLORS.deepNavy }}>R:</strong> Ibuprofen — no relief</span>
+                <span><strong style={{ color: COLORS.deepNavy }}>T:</strong> Nothing helps</span>
+                <span><strong style={{ color: COLORS.deepNavy }}>S:</strong> 9/10 — worst ever</span>
+              </div>
+              <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {['Thunderclap onset', '"Worst headache"', 'Elevated BP'].map(flag => (
+                  <span key={flag} style={{
+                    fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                    background: COLORS.red100, color: COLORS.red600,
+                  }}>
+                    {flag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Vitals Quick View */}
+          <div style={cardStyle}>
+            <div style={{ ...cardHeaderStyle, padding: '10px 14px', fontSize: 12 }}>
+              <Activity style={{ width: 14, height: 14, color: COLORS.primaryTeal }} />
+              Vitals
+            </div>
+            <div style={{ padding: '8px 14px' }}>
+              {VITALS.map(v => (
+                <div key={v.label} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '5px 0', borderBottom: `1px solid ${COLORS.gray100}`,
+                }}>
+                  <span style={{ fontSize: 12, color: COLORS.gray500 }}>{v.label}</span>
+                  <span style={{
+                    fontSize: 13, fontWeight: 700,
+                    color: v.status === 'normal' ? COLORS.deepNavy : v.status === 'high' ? COLORS.red500 : COLORS.coral,
+                  }}>
+                    {v.value} <span style={{ fontSize: 10, fontWeight: 500, color: COLORS.gray500 }}>{v.unit}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Current Medications */}
+          <div style={cardStyle}>
+            <div style={{ ...cardHeaderStyle, padding: '10px 14px', fontSize: 12 }}>
+              <Pill style={{ width: 14, height: 14, color: COLORS.primaryTeal }} />
+              Active Medications ({FULL_MEDICATION_LIST.length})
+            </div>
+            <div style={{ padding: '6px 14px' }}>
+              {FULL_MEDICATION_LIST.map((med, i) => (
+                <div key={i} style={{
+                  padding: '6px 0',
+                  borderBottom: i < FULL_MEDICATION_LIST.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.deepNavy }}>{med.name}</div>
+                  <div style={{ fontSize: 10, color: COLORS.gray500 }}>
+                    {med.route} · {med.frequency} · {med.purpose}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Allergies */}
+          <div style={{ ...cardStyle, borderLeft: `3px solid ${COLORS.coral}` }}>
+            <div style={{ ...cardHeaderStyle, padding: '10px 14px', fontSize: 12 }}>
+              <AlertTriangle style={{ width: 14, height: 14, color: COLORS.coral }} />
+              Allergies
+            </div>
+            <div style={{ padding: '8px 14px' }}>
+              {ALLERGIES.map((a, i) => (
+                <div key={i} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '5px 0',
+                }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.red600 }}>{a.substance}</span>
+                  <span style={{ fontSize: 10, color: COLORS.gray500 }}>{a.reaction}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Relevant History */}
+          <div style={cardStyle}>
+            <div style={{ ...cardHeaderStyle, padding: '10px 14px', fontSize: 12 }}>
+              <FileText style={{ width: 14, height: 14, color: COLORS.primaryTeal }} />
+              Key History
+            </div>
+            <div style={{ padding: '8px 14px', fontSize: 11, color: COLORS.gray600, lineHeight: 1.6 }}>
+              <strong style={{ color: COLORS.deepNavy }}>PMH:</strong> Migraine w/ aura (2019), HTN Stage 1 (2023)<br />
+              <strong style={{ color: COLORS.deepNavy }}>FHx:</strong> Mother — migraine, HTN, DM2; Father — CAD; Grandmother — stroke @ 72<br />
+              <strong style={{ color: COLORS.deepNavy }}>Social:</strong> Software eng, non-smoker, high stress, 6-7hr sleep
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 
@@ -1941,6 +2062,9 @@ const EncounterPage: React.FC = () => {
             grid-template-columns: 1fr !important;
           }
           .pharmacy-sidebar {
+            display: none !important;
+          }
+          .differential-sidebar {
             display: none !important;
           }
         }
