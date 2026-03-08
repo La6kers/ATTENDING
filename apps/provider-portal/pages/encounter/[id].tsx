@@ -1072,21 +1072,21 @@ const EncounterPage: React.FC = () => {
   // ============================================================
   const renderDifferential = () => (
     <div style={{ display: 'flex', gap: 20 }}>
-      {/* Left Sidebar — Clinical Context (single card, stacked sections) */}
-      <div style={{ width: 320, flexShrink: 0 }} className="differential-sidebar">
-        <div style={{ ...cardStyle, position: 'sticky', top: 80, overflow: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+      {/* Left Panel — Clinical Context (40% width, separate cards) */}
+      <div style={{ flex: '0 0 40%', minWidth: 0 }} className="differential-sidebar">
+        <div style={{ position: 'sticky', top: 80, display: 'flex', flexDirection: 'column', gap: 14, overflow: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
 
           {/* COMPASS Summary */}
-          <div style={{ padding: '14px 18px', borderBottom: `1px solid ${COLORS.gray200}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <Sparkles style={{ width: 15, height: 15, color: COLORS.gold }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.deepNavy }}>COMPASS Summary</span>
+          <div style={{ ...cardStyle, borderLeft: `3px solid ${COLORS.gold}` }}>
+            <div style={{ ...cardHeaderStyle, padding: '12px 18px', fontSize: 13 }}>
+              <Sparkles style={{ width: 16, height: 16, color: COLORS.gold }} />
+              <span>COMPASS Summary</span>
             </div>
-            <div style={{ fontSize: 12, color: COLORS.gray600, lineHeight: 1.6 }}>
+            <div style={{ padding: '14px 18px', fontSize: 13, color: COLORS.gray600, lineHeight: 1.7 }}>
               <div style={{ fontWeight: 600, color: COLORS.deepNavy, marginBottom: 4 }}>Chief Complaint</div>
-              <div style={{ marginBottom: 10 }}>&ldquo;Worst headache of my life&rdquo; — sudden onset 3 days ago, pulsating, right temporal, 9/10 severity</div>
-              <div style={{ fontWeight: 600, color: COLORS.deepNavy, marginBottom: 4 }}>OLDCARTS</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 12, color: COLORS.gray600 }}>
+              <div style={{ marginBottom: 12 }}>&ldquo;Worst headache of my life&rdquo; — sudden onset 3 days ago, pulsating, right temporal, 9/10 severity</div>
+              <div style={{ fontWeight: 600, color: COLORS.deepNavy, marginBottom: 6 }}>OLDCARTS</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13, color: COLORS.gray600 }}>
                 <span><strong style={{ color: COLORS.deepNavy }}>O:</strong> 3 days ago, sudden onset at work</span>
                 <span><strong style={{ color: COLORS.deepNavy }}>L:</strong> Right temporal/frontal</span>
                 <span><strong style={{ color: COLORS.deepNavy }}>D:</strong> Continuous, 3 days</span>
@@ -1096,10 +1096,10 @@ const EncounterPage: React.FC = () => {
                 <span><strong style={{ color: COLORS.deepNavy }}>T:</strong> Nothing helps</span>
                 <span><strong style={{ color: COLORS.deepNavy }}>S:</strong> 9/10 — worst ever</span>
               </div>
-              <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {['Thunderclap onset', '"Worst headache"', 'Elevated BP'].map(flag => (
                   <span key={flag} style={{
-                    fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4,
+                    fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6,
                     background: COLORS.red100, color: COLORS.red600,
                   }}>
                     {flag}
@@ -1110,70 +1110,76 @@ const EncounterPage: React.FC = () => {
           </div>
 
           {/* Vitals */}
-          <div style={{ padding: '14px 18px', borderBottom: `1px solid ${COLORS.gray200}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <Activity style={{ width: 15, height: 15, color: COLORS.primaryTeal }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.deepNavy }}>Vitals</span>
+          <div style={cardStyle}>
+            <div style={{ ...cardHeaderStyle, padding: '12px 18px', fontSize: 13 }}>
+              <Activity style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
+              Vitals
             </div>
-            {VITALS.map((v, i) => (
-              <div key={v.label} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '5px 0', borderBottom: i < VITALS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
-              }}>
-                <span style={{ fontSize: 12, color: COLORS.gray500 }}>{v.label}</span>
-                <span style={{
-                  fontSize: 13, fontWeight: 700,
-                  color: v.status === 'normal' ? COLORS.deepNavy : v.status === 'high' ? COLORS.red500 : COLORS.coral,
+            <div style={{ padding: '10px 18px' }}>
+              {VITALS.map((v, i) => (
+                <div key={v.label} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '6px 0', borderBottom: i < VITALS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
                 }}>
-                  {v.value} <span style={{ fontSize: 10, fontWeight: 500, color: COLORS.gray500 }}>{v.unit}</span>
-                </span>
-              </div>
-            ))}
+                  <span style={{ fontSize: 13, color: COLORS.gray500 }}>{v.label}</span>
+                  <span style={{
+                    fontSize: 14, fontWeight: 700,
+                    color: v.status === 'normal' ? COLORS.deepNavy : v.status === 'high' ? COLORS.red500 : COLORS.coral,
+                  }}>
+                    {v.value} <span style={{ fontSize: 11, fontWeight: 500, color: COLORS.gray500 }}>{v.unit}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Medications */}
-          <div style={{ padding: '14px 18px', borderBottom: `1px solid ${COLORS.gray200}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <Pill style={{ width: 15, height: 15, color: COLORS.primaryTeal }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.deepNavy }}>Active Medications ({FULL_MEDICATION_LIST.length})</span>
+          <div style={cardStyle}>
+            <div style={{ ...cardHeaderStyle, padding: '12px 18px', fontSize: 13 }}>
+              <Pill style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
+              Active Medications ({FULL_MEDICATION_LIST.length})
             </div>
-            {FULL_MEDICATION_LIST.map((med, i) => (
-              <div key={i} style={{
-                padding: '6px 0',
-                borderBottom: i < FULL_MEDICATION_LIST.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
-              }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.deepNavy }}>{med.name}</div>
-                <div style={{ fontSize: 11, color: COLORS.gray500 }}>
-                  {med.route} · {med.frequency} · {med.purpose}
+            <div style={{ padding: '8px 18px' }}>
+              {FULL_MEDICATION_LIST.map((med, i) => (
+                <div key={i} style={{
+                  padding: '7px 0',
+                  borderBottom: i < FULL_MEDICATION_LIST.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.deepNavy }}>{med.name}</div>
+                  <div style={{ fontSize: 12, color: COLORS.gray500 }}>
+                    {med.route} · {med.frequency} · {med.purpose}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
           {/* Allergies */}
-          <div style={{ padding: '14px 18px', borderBottom: `1px solid ${COLORS.gray200}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <AlertTriangle style={{ width: 15, height: 15, color: COLORS.coral }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.coral }}>Allergies</span>
+          <div style={{ ...cardStyle, borderLeft: `3px solid ${COLORS.coral}` }}>
+            <div style={{ ...cardHeaderStyle, padding: '12px 18px', fontSize: 13 }}>
+              <AlertTriangle style={{ width: 16, height: 16, color: COLORS.coral }} />
+              Allergies
             </div>
-            {ALLERGIES.map((a, i) => (
-              <div key={i} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '5px 0',
-              }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.red600 }}>{a.substance}</span>
-                <span style={{ fontSize: 11, color: COLORS.gray500 }}>{a.reaction}</span>
-              </div>
-            ))}
+            <div style={{ padding: '10px 18px' }}>
+              {ALLERGIES.map((a, i) => (
+                <div key={i} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '6px 0',
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: COLORS.red600 }}>{a.substance}</span>
+                  <span style={{ fontSize: 12, color: COLORS.gray500 }}>{a.reaction}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Key History */}
-          <div style={{ padding: '14px 18px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <FileText style={{ width: 15, height: 15, color: COLORS.primaryTeal }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.deepNavy }}>Key History</span>
+          <div style={cardStyle}>
+            <div style={{ ...cardHeaderStyle, padding: '12px 18px', fontSize: 13 }}>
+              <FileText style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
+              Key History
             </div>
-            <div style={{ fontSize: 12, color: COLORS.gray600, lineHeight: 1.7 }}>
+            <div style={{ padding: '12px 18px', fontSize: 13, color: COLORS.gray600, lineHeight: 1.8 }}>
               <strong style={{ color: COLORS.deepNavy }}>PMH:</strong> Migraine w/ aura (2019), HTN Stage 1 (2023)<br />
               <strong style={{ color: COLORS.deepNavy }}>FHx:</strong> Mother — migraine, HTN, DM2; Father — CAD; Grandmother — stroke @ 72<br />
               <strong style={{ color: COLORS.deepNavy }}>Social:</strong> Software eng, non-smoker, high stress, 6-7hr sleep
