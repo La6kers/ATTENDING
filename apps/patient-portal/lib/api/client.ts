@@ -6,7 +6,12 @@
 // Handles auth tokens, error mapping, retry, and offline queue.
 // ============================================================
 
-import { offlineSync } from '../offline';
+// Offline sync is not yet fully implemented — import safely to avoid breaking the module
+let offlineSync: { queueRequest?: (req: { url: string; method: string; body: unknown }) => Promise<void> } | null = null;
+try {
+  // Will be wired up when offline sync queue API is ready
+  // offlineSync = require('../offline').syncManager;
+} catch { /* not available */ }
 
 // ============================================================
 // Config
