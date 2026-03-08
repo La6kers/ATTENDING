@@ -784,9 +784,9 @@ const PatientChartPage: React.FC = () => {
                 gap: 6,
                 padding: '8px 16px',
                 borderRadius: 8,
-                border: `1px solid ${COLORS.primaryTeal}`,
-                background: 'transparent',
-                color: COLORS.primaryTeal,
+                border: '1px solid rgba(255,255,255,0.25)',
+                background: 'rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.9)',
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -803,9 +803,9 @@ const PatientChartPage: React.FC = () => {
                 gap: 6,
                 padding: '8px 16px',
                 borderRadius: 8,
-                border: '1px solid #e2e8f0',
+                border: '1px solid rgba(255,255,255,0.25)',
                 background: 'transparent',
-                color: COLORS.deepNavy,
+                color: 'rgba(255,255,255,0.85)',
                 fontSize: 13,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -843,7 +843,7 @@ const PatientChartPage: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             gap: 0,
-            borderBottom: '2px solid #e2e8f0',
+            borderBottom: '2px solid rgba(255,255,255,0.15)',
             marginBottom: 24,
             overflowX: 'auto',
           }}
@@ -862,7 +862,7 @@ const PatientChartPage: React.FC = () => {
                   padding: '12px 18px',
                   fontSize: 13,
                   fontWeight: active ? 700 : 500,
-                  color: active ? COLORS.deepNavy : '#64748b',
+                  color: active ? '#ffffff' : 'rgba(255,255,255,0.55)',
                   background: 'none',
                   border: 'none',
                   borderBottom: active ? `3px solid ${COLORS.gold}` : '3px solid transparent',
@@ -872,7 +872,7 @@ const PatientChartPage: React.FC = () => {
                   transition: 'all 0.15s ease',
                 }}
               >
-                <Icon style={{ width: 15, height: 15, color: active ? COLORS.gold : '#94a3b8' }} />
+                <Icon style={{ width: 15, height: 15, color: active ? COLORS.gold : 'rgba(255,255,255,0.4)' }} />
                 {tab.label}
               </button>
             );
