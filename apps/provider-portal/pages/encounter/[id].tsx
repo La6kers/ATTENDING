@@ -466,6 +466,416 @@ const EXTRACTED_ENTITIES = [
 ];
 
 // ============================================================
+// Scenario 2: James Rodriguez (Chest Pain)
+// ============================================================
+const PATIENT_2 = {
+  name: 'James Rodriguez',
+  initials: 'JR',
+  age: 62,
+  gender: 'Male',
+  mrn: 'MRN-2024-0892',
+  dob: '09/03/1963',
+  appointmentTime: '2:15 PM',
+  appointmentDate: 'March 7, 2026',
+  insurance: 'Medicare Advantage',
+  primaryCare: 'Dr. Thomas Reed',
+};
+
+const VITALS_2 = [
+  { label: 'BP', value: '158/94', unit: 'mmHg', icon: Heart, status: 'high' as const },
+  { label: 'HR', value: '96', unit: 'bpm', icon: Activity, status: 'elevated' as const },
+  { label: 'Temp', value: '98.4', unit: '\u00B0F', icon: Thermometer, status: 'normal' as const },
+  { label: 'RR', value: '22', unit: '/min', icon: Wind, status: 'elevated' as const },
+  { label: 'SpO2', value: '94', unit: '%', icon: Droplets, status: 'high' as const },
+  { label: 'Pain', value: '7', unit: '/10', icon: AlertTriangle, status: 'high' as const },
+];
+
+const CURRENT_MEDICATIONS_2 = [
+  { name: 'Metformin 1000mg', frequency: 'BID', duration: 'Since 2015' },
+  { name: 'Aspirin 81mg', frequency: 'Daily', duration: 'Since 2012' },
+  { name: 'Metoprolol 50mg', frequency: 'BID', duration: 'Since 2018' },
+  { name: 'Atorvastatin 40mg', frequency: 'Daily', duration: 'Since 2012' },
+  { name: 'Lisinopril 20mg', frequency: 'Daily', duration: 'Since 2010' },
+];
+
+const INITIAL_DIAGNOSES_2: Diagnosis[] = [
+  {
+    name: 'Acute Coronary Syndrome',
+    icdCode: 'I21.9',
+    probability: 0.65,
+    category: 'Chest Pain',
+    evidence: 'Patient presents with substernal chest pressure radiating to left arm, diaphoresis, and exertional worsening. Multiple cardiac risk factors including DM2, hyperlipidemia, HTN, and significant smoking history. Family history of early MI.',
+    findings: [
+      { name: 'Substernal pressure', state: 'present' },
+      { name: 'Radiation to left arm', state: 'present' },
+      { name: 'Diaphoresis', state: 'present' },
+      { name: 'Exertional component', state: 'present' },
+      { name: 'Cardiac risk factors', state: 'present' },
+      { name: 'Troponin elevation', state: 'unknown' },
+    ],
+  },
+  {
+    name: 'Pulmonary Embolism',
+    icdCode: 'I26.99',
+    probability: 0.15,
+    category: 'Chest Pain',
+    evidence: 'Dyspnea, tachycardia, and hypoxia (SpO2 94%) present. Chest pain could be pleuritic. However, radiation pattern and diaphoresis favor cardiac etiology.',
+    findings: [
+      { name: 'Dyspnea', state: 'present' },
+      { name: 'Tachycardia', state: 'present' },
+      { name: 'Hypoxia', state: 'present' },
+      { name: 'Chest pain', state: 'present' },
+      { name: 'Unilateral leg swelling', state: 'unknown' },
+      { name: 'Pleuritic quality', state: 'absent' },
+    ],
+  },
+  {
+    name: 'Unstable Angina',
+    icdCode: 'I20.0',
+    probability: 0.12,
+    category: 'Chest Pain',
+    evidence: 'Exertional chest pain with multiple risk factors and reproducible pattern. May represent crescendo angina if prior episodes occurred. Differentiation from ACS requires troponin and ECG.',
+    findings: [
+      { name: 'Exertional chest pain', state: 'present' },
+      { name: 'Risk factors present', state: 'present' },
+      { name: 'Reproducible pattern', state: 'unknown' },
+      { name: 'Prior angina episodes', state: 'unknown' },
+      { name: 'Relief with rest', state: 'unknown' },
+    ],
+  },
+  {
+    name: 'Aortic Dissection',
+    icdCode: 'I71.01',
+    probability: 0.05,
+    category: 'Chest Pain',
+    evidence: 'Severe chest pain with hypertension present. However, pain described as pressure rather than tearing, and no pulse deficit or mediastinal widening noted.',
+    findings: [
+      { name: 'Severe chest pain', state: 'present' },
+      { name: 'Hypertension', state: 'present' },
+      { name: 'Tearing quality', state: 'absent' },
+      { name: 'Pulse deficit', state: 'unknown' },
+      { name: 'Back pain radiation', state: 'absent' },
+    ],
+  },
+  {
+    name: 'Musculoskeletal',
+    icdCode: 'M79.3',
+    probability: 0.03,
+    category: 'Chest Pain',
+    evidence: 'Chest wall tenderness would support this diagnosis. However, associated symptoms (diaphoresis, dyspnea, radiation) and risk factor profile make this unlikely.',
+    findings: [
+      { name: 'Chest wall tenderness', state: 'unknown' },
+      { name: 'Reproducible with palpation', state: 'unknown' },
+      { name: 'No associated symptoms', state: 'absent' },
+      { name: 'Recent physical exertion', state: 'unknown' },
+    ],
+  },
+];
+
+const TREATMENT_PLANS_2: TreatmentPlan[] = [
+  {
+    diagnosis: 'Acute Coronary Syndrome',
+    medications: [
+      { name: 'Heparin', dose: '60 units/kg bolus then 12 units/kg/hr', route: 'IV', frequency: 'Continuous drip', inStock: true, quantity: 50 },
+      { name: 'Nitroglycerin', dose: '0.4mg', route: 'SL', frequency: 'Q5min x3 PRN chest pain', inStock: true, quantity: 100 },
+      { name: 'Morphine', dose: '2-4mg', route: 'IV', frequency: 'Q5-15min PRN severe pain', inStock: true, quantity: 30 },
+      { name: 'Clopidogrel', dose: '300mg loading then 75mg', route: 'PO', frequency: 'Daily', inStock: true, quantity: 90 },
+      { name: 'Atorvastatin', dose: '80mg', route: 'PO', frequency: 'Daily (high-intensity)', inStock: true, quantity: 90 },
+    ],
+    nonPharm: ['STAT 12-lead ECG', 'Serial troponins Q3H x3', 'Continuous telemetry', 'Cardiology consult', 'NPO for possible cath lab'],
+    ordered: [false, false, false, false, false],
+  },
+  {
+    diagnosis: 'Pulmonary Embolism',
+    medications: [
+      { name: 'Enoxaparin', dose: '1mg/kg', route: 'SQ', frequency: 'BID', inStock: true, quantity: 40 },
+      { name: 'Alteplase', dose: '100mg', route: 'IV', frequency: 'Over 2 hours (if massive PE)', inStock: false, alternative: 'Available via pharmacy order (2h)' },
+    ],
+    nonPharm: ['CT Pulmonary Angiography', 'D-dimer if low clinical suspicion', 'Lower extremity doppler', 'Supplemental O2 to maintain SpO2 >94%'],
+    ordered: [false, false],
+  },
+  {
+    diagnosis: 'Aortic Dissection',
+    medications: [
+      { name: 'Esmolol', dose: '500mcg/kg bolus then 50-200mcg/kg/min', route: 'IV', frequency: 'Continuous', inStock: true, quantity: 10 },
+      { name: 'Nicardipine', dose: '5-15mg/hr', route: 'IV', frequency: 'Continuous (target SBP <120)', inStock: true, quantity: 15 },
+    ],
+    nonPharm: ['STAT CT Angiography chest/abdomen/pelvis', 'Cardiothoracic surgery consult', 'Type and screen 6 units pRBC', 'Bilateral arm BPs'],
+    ordered: [false, false],
+  },
+];
+
+const PHARMACY_INVENTORY_2 = [
+  { name: 'Heparin drip', inStock: true, quantity: 50 },
+  { name: 'Nitroglycerin 0.4mg SL', inStock: true, quantity: 100 },
+  { name: 'Morphine 4mg/mL', inStock: true, quantity: 30 },
+  { name: 'Clopidogrel 75mg', inStock: true, quantity: 90 },
+  { name: 'Atorvastatin 80mg', inStock: true, quantity: 90 },
+  { name: 'Enoxaparin 80mg', inStock: true, quantity: 40 },
+  { name: 'Esmolol drip', inStock: true, quantity: 10 },
+  { name: 'Alteplase 100mg', inStock: false, quantity: 0 },
+];
+
+const SOAP_NOTE_2 = {
+  subjective: `62-year-old male presents with chief complaint of "chest pain and shortness of breath for 2 days." Patient describes substernal chest pressure radiating to the left arm, worse with exertion, associated with dyspnea and diaphoresis. Pain rated 7/10, intermittent but increasing in frequency. No relief with rest. Denies palpitations, syncope, or leg swelling. History of type 2 diabetes (since 2015), hyperlipidemia (2012), hypertension (2010), GERD, peripheral neuropathy, and depression. 30-pack-year smoking history, quit 2 years ago. Father died of MI at age 58.
+
+Current medications: Metformin 1000mg BID, Glipizide 10mg daily, Atorvastatin 40mg daily, Lisinopril 20mg daily, Aspirin 81mg daily, Metoprolol 50mg BID, Omeprazole 20mg daily, Gabapentin 300mg TID, Duloxetine 60mg daily, Amlodipine 5mg daily, Jardiance 10mg daily, Fish Oil 1000mg daily.
+Allergies: Sulfa drugs (rash), Codeine (nausea/vomiting), Latex (contact dermatitis).`,
+
+  objective: `Vitals: BP 158/94 mmHg, HR 96 bpm, Temp 98.4\u00B0F, RR 22/min, SpO2 94% on RA, Pain 7/10
+
+General: Alert, oriented x4, appears anxious, mild diaphoresis noted
+HEENT: Atraumatic, no JVD at 30 degrees
+Neck: No carotid bruits, no lymphadenopathy
+Cardiovascular: Regular rate and rhythm, S1/S2 present, no S3/S4, no murmurs, no rubs; bilateral radial pulses 2+ symmetric
+Respiratory: Tachypneic, clear to auscultation bilaterally, no wheezes/crackles
+Abdomen: Soft, non-tender, no organomegaly
+Extremities: No edema, no calf tenderness, pedal pulses intact bilaterally
+Neuro: Alert, oriented x4, no focal deficits`,
+
+  assessment: `1. Acute chest pain -- differential includes ACS (most likely, 65%), pulmonary embolism (15%), unstable angina (12%), aortic dissection (5% but must rule out)
+2. Hypertension -- acutely elevated, likely pain/stress related but requires urgent management
+3. Hypoxia -- SpO2 94%, concerning in setting of chest pain; needs supplemental O2
+4. Multiple cardiac risk factors -- DM2, HLD, HTN, former smoker, FHx early MI`,
+
+  plan: `1. STAT 12-lead ECG
+2. Serial troponins Q3H x3
+3. Continuous telemetry monitoring
+4. Aspirin 325mg PO x1 (already on 81mg daily)
+5. Nitroglycerin 0.4mg SL PRN chest pain
+6. Heparin drip per ACS protocol if troponin elevated
+7. Supplemental O2 via NC to maintain SpO2 >95%
+8. Cardiology consult for possible cardiac catheterization
+9. Hold Metformin (contrast risk)
+10. BMP, CBC, Coag panel, BNP, lipid panel
+11. CXR portable
+12. Return precautions: worsening pain, dyspnea, syncope, diaphoresis`,
+};
+
+const BILLING_CODES_2 = [
+  { code: '99215', description: 'Office visit, established patient, high complexity', selected: true },
+  { code: 'I21.9', description: 'Acute myocardial infarction, unspecified', selected: true },
+  { code: '93000', description: '12-lead ECG with interpretation', selected: true },
+  { code: 'R07.9', description: 'Chest pain, unspecified', selected: false },
+  { code: 'I10', description: 'Essential hypertension', selected: false },
+];
+
+const PAST_VISITS_2 = [
+  { date: '01/08/2026', complaint: 'Diabetes follow-up', provider: 'Dr. Thomas Reed', diagnosis: 'DM2 controlled, A1c 7.2%', notes: 'Adjusted Glipizide from 5mg to 10mg. Added Jardiance 10mg for cardiovascular benefit. Foot exam normal.' },
+  { date: '10/15/2025', complaint: 'HTN follow-up', provider: 'Dr. Thomas Reed', diagnosis: 'Hypertension - suboptimal control', notes: 'BP 148/90. Added Amlodipine 5mg to regimen. Dietary counseling provided.' },
+  { date: '07/22/2025', complaint: 'Peripheral neuropathy', provider: 'Dr. Thomas Reed', diagnosis: 'Diabetic peripheral neuropathy', notes: 'Started Gabapentin 300mg TID. Nerve conduction study ordered.' },
+  { date: '04/10/2025', complaint: 'Depression screening', provider: 'Dr. Thomas Reed', diagnosis: 'Major depressive disorder, moderate', notes: 'PHQ-9 score 14. Started Duloxetine 60mg daily. Referral to counseling.' },
+  { date: '01/20/2025', complaint: 'Annual physical', provider: 'Dr. Thomas Reed', diagnosis: 'Routine exam - multiple chronic conditions', notes: 'A1c 7.8%, LDL 128, BP 144/88. Smoking cessation counseling, quit date set. Cardiac stress test recommended.' },
+];
+
+const CHRONIC_CONDITIONS_2 = [
+  { name: 'Type 2 Diabetes Mellitus', since: '2015', status: 'Active' },
+  { name: 'Hyperlipidemia', since: '2012', status: 'Active' },
+  { name: 'Essential Hypertension', since: '2010', status: 'Active' },
+  { name: 'GERD', since: '2018', status: 'Active' },
+  { name: 'Diabetic Peripheral Neuropathy', since: '2025', status: 'Active' },
+  { name: 'Major Depressive Disorder', since: '2025', status: 'Active' },
+];
+
+const SURGICAL_HISTORY_2 = [
+  { procedure: 'Right inguinal hernia repair', date: '2008', notes: 'Open repair, uncomplicated' },
+  { procedure: 'Cholecystectomy', date: '2016', notes: 'Laparoscopic, symptomatic gallstones' },
+];
+
+const FAMILY_HISTORY_2 = [
+  { relation: 'Father', conditions: 'MI at age 58 (deceased), Hypertension, Hyperlipidemia' },
+  { relation: 'Mother', conditions: 'Type 2 Diabetes, Hypertension, alive age 84' },
+  { relation: 'Brother', conditions: 'CABG at age 59, Type 2 Diabetes' },
+];
+
+const SOCIAL_HISTORY_2 = {
+  occupation: 'Retired construction worker',
+  tobacco: '30-pack-year history, quit 2 years ago',
+  alcohol: 'Occasional, 1-2 beers/week',
+  exercise: 'Limited — walks 10 min/day',
+  diet: 'High sodium, working on changes',
+  stress: 'Moderate — adjusting to retirement',
+  sleep: '5-6 hours/night, snores (no formal OSA eval)',
+};
+
+const AI_PRIOR_VISIT_INSIGHTS_2 = [
+  {
+    type: 'prior_visit' as const,
+    title: 'Diabetes Follow-up — 01/08/2026',
+    detail: 'A1c 7.2%, Jardiance added for CV benefit. No cardiac complaints at that visit.',
+    relevance: 'high' as const,
+    aiNote: 'Jardiance was added for cardiovascular risk reduction — prescient given today\'s presentation. A1c well-controlled. Metformin should be held if contrast studies needed.',
+  },
+  {
+    type: 'prior_visit' as const,
+    title: 'HTN Follow-up — 10/15/2025',
+    detail: 'BP was 148/90, Amlodipine added. Patient reported occasional exertional dyspnea at that visit.',
+    relevance: 'high' as const,
+    aiNote: 'Exertional dyspnea was documented 5 months ago — may have been early anginal equivalent. BP remains suboptimally controlled today at 158/94.',
+  },
+  {
+    type: 'medication' as const,
+    title: 'Polypharmacy Review — 12 Active Medications',
+    detail: 'Patient is on 12 medications across 6 conditions. Multiple drug interactions possible.',
+    relevance: 'medium' as const,
+    aiNote: 'Key interactions: Metformin hold if contrast planned. Aspirin already on board (good). Metoprolol may mask tachycardia as a sign of deterioration. Duloxetine + cardiac meds need monitoring.',
+  },
+  {
+    type: 'family' as const,
+    title: 'Family History: Premature CAD',
+    detail: 'Father died of MI at 58. Brother had CABG at 59. Mother has DM2 and HTN.',
+    relevance: 'high' as const,
+    aiNote: 'Strong family history of premature coronary artery disease. Combined with patient\'s own risk factors (DM2, HTN, HLD, smoking hx), this patient has extremely high pre-test probability for ACS.',
+  },
+];
+
+const AI_DRUG_INTERACTIONS_2 = [
+  {
+    severity: 'warning' as const,
+    drugs: ['Metformin', 'IV Contrast'],
+    detail: 'Hold Metformin 48 hours before and after contrast administration. Risk of lactic acidosis, especially with renal impairment.',
+  },
+  {
+    severity: 'warning' as const,
+    drugs: ['Heparin', 'Aspirin'],
+    detail: 'Increased bleeding risk. Monitor closely. Necessary in ACS protocol but watch for signs of hemorrhage.',
+  },
+  {
+    severity: 'caution' as const,
+    drugs: ['Metoprolol', 'Amlodipine'],
+    detail: 'Additive hypotensive and bradycardic effects. Monitor HR and BP closely during acute management.',
+  },
+  {
+    severity: 'info' as const,
+    drugs: ['Duloxetine', 'Morphine'],
+    detail: 'Serotonergic and CNS depressant interaction. Use lowest effective morphine dose. Monitor for serotonin syndrome signs.',
+  },
+];
+
+const AI_VITALS_TREND_2 = [
+  { date: '01/2025', bp: '144/88', label: 'Stage 1 HTN' },
+  { date: '04/2025', bp: '140/86', label: 'Stage 1 HTN' },
+  { date: '07/2025', bp: '146/90', label: 'Stage 2 HTN' },
+  { date: '10/2025', bp: '148/90', label: 'Stage 2 HTN' },
+  { date: 'Today', bp: '158/94', label: 'Stage 2 HTN' },
+];
+
+const FULL_MEDICATION_LIST_2 = [
+  { name: 'Metformin 1000mg', route: 'PO', frequency: 'BID', purpose: 'Type 2 Diabetes', prescriber: 'Dr. Reed', since: '03/2015', status: 'Active' },
+  { name: 'Glipizide 10mg', route: 'PO', frequency: 'Daily', purpose: 'Type 2 Diabetes', prescriber: 'Dr. Reed', since: '01/2026', status: 'Active' },
+  { name: 'Atorvastatin 40mg', route: 'PO', frequency: 'Daily', purpose: 'Hyperlipidemia', prescriber: 'Dr. Reed', since: '06/2012', status: 'Active' },
+  { name: 'Lisinopril 20mg', route: 'PO', frequency: 'Daily', purpose: 'Hypertension', prescriber: 'Dr. Reed', since: '09/2010', status: 'Active' },
+  { name: 'Aspirin 81mg', route: 'PO', frequency: 'Daily', purpose: 'Cardiac prophylaxis', prescriber: 'Dr. Reed', since: '06/2012', status: 'Active' },
+  { name: 'Metoprolol 50mg', route: 'PO', frequency: 'BID', purpose: 'Hypertension / Rate control', prescriber: 'Dr. Reed', since: '03/2018', status: 'Active' },
+  { name: 'Omeprazole 20mg', route: 'PO', frequency: 'Daily', purpose: 'GERD', prescriber: 'Dr. Reed', since: '05/2018', status: 'Active' },
+  { name: 'Gabapentin 300mg', route: 'PO', frequency: 'TID', purpose: 'Peripheral neuropathy', prescriber: 'Dr. Reed', since: '07/2025', status: 'Active' },
+  { name: 'Duloxetine 60mg', route: 'PO', frequency: 'Daily', purpose: 'Depression / Neuropathy', prescriber: 'Dr. Reed', since: '04/2025', status: 'Active' },
+  { name: 'Amlodipine 5mg', route: 'PO', frequency: 'Daily', purpose: 'Hypertension', prescriber: 'Dr. Reed', since: '10/2025', status: 'Active' },
+  { name: 'Jardiance 10mg', route: 'PO', frequency: 'Daily', purpose: 'DM2 / CV risk reduction', prescriber: 'Dr. Reed', since: '01/2026', status: 'Active' },
+  { name: 'Fish Oil 1000mg', route: 'PO', frequency: 'Daily', purpose: 'Lipid support', prescriber: 'OTC', since: '2020', status: 'Active' },
+];
+
+const ALLERGIES_2 = [
+  { substance: 'Sulfa drugs', reaction: 'Rash', severity: 'Moderate' },
+  { substance: 'Codeine', reaction: 'Nausea/vomiting', severity: 'Mild' },
+  { substance: 'Latex', reaction: 'Contact dermatitis', severity: 'Moderate' },
+];
+
+const RECENT_LABS_2 = [
+  { date: '01/08/2026', test: 'HbA1c', result: '7.2%', flag: 'High' },
+  { date: '01/08/2026', test: 'BMP', result: 'Creatinine 1.3', flag: 'High' },
+  { date: '01/08/2026', test: 'Lipid Panel', result: 'LDL 98 mg/dL', flag: '' },
+  { date: '01/08/2026', test: 'CBC', result: 'WNL', flag: '' },
+  { date: '01/08/2026', test: 'eGFR', result: '58 mL/min', flag: 'Low' },
+  { date: '01/08/2026', test: 'BNP', result: '89 pg/mL', flag: '' },
+];
+
+const AMBIENT_TRANSCRIPT_LINES_2 = [
+  { time: '0:00', speaker: 'Dr. Reed', text: 'Good afternoon, James. I understand you\'ve been having chest pain. Tell me about it.' },
+  { time: '0:18', speaker: 'Patient', text: 'It started two days ago. This pressure right in the center of my chest. It\'s been coming and going but getting worse.' },
+  { time: '0:35', speaker: 'Dr. Reed', text: 'Does the pain go anywhere else? To your arm, jaw, or back?' },
+  { time: '0:42', speaker: 'Patient', text: 'Yeah, it goes down my left arm. And I\'ve been sweating a lot, even when I\'m not doing anything.' },
+  { time: '0:55', speaker: 'Dr. Reed', text: 'Any shortness of breath, dizziness, or nausea?' },
+  { time: '1:02', speaker: 'Patient', text: 'Shortness of breath for sure. I couldn\'t even walk to the mailbox yesterday without getting winded.' },
+  { time: '1:15', speaker: 'Dr. Reed', text: 'And you have a history of diabetes and high blood pressure, correct? Your father had a heart attack at 58?' },
+  { time: '1:25', speaker: 'Patient', text: 'Yes, he passed from it. My brother had bypass surgery two years ago too.' },
+];
+
+const EXTRACTED_ENTITIES_2 = [
+  { type: 'Symptom', text: 'Substernal chest pressure', time: '0:18' },
+  { type: 'Symptom', text: 'Progressive worsening', time: '0:18' },
+  { type: 'Symptom', text: 'Left arm radiation', time: '0:42' },
+  { type: 'Symptom', text: 'Diaphoresis', time: '0:42' },
+  { type: 'Symptom', text: 'Dyspnea on exertion', time: '1:02' },
+  { type: 'Family', text: 'Father MI at 58', time: '1:25' },
+  { type: 'Family', text: 'Brother CABG', time: '1:25' },
+];
+
+// ============================================================
+// PATIENT_SCENARIOS — wrapper for both demo patients
+// ============================================================
+const PATIENT_SCENARIOS = {
+  sarahChen: {
+    label: 'Sarah Chen — Headache',
+    patient: PATIENT,
+    vitals: VITALS,
+    currentMedications: CURRENT_MEDICATIONS,
+    initialDiagnoses: INITIAL_DIAGNOSES,
+    treatmentPlans: TREATMENT_PLANS,
+    pharmacyInventory: PHARMACY_INVENTORY,
+    soapNote: SOAP_NOTE,
+    billingCodes: BILLING_CODES,
+    pastVisits: PAST_VISITS,
+    chronicConditions: CHRONIC_CONDITIONS,
+    surgicalHistory: SURGICAL_HISTORY,
+    familyHistory: FAMILY_HISTORY,
+    socialHistory: SOCIAL_HISTORY,
+    aiPriorVisitInsights: AI_PRIOR_VISIT_INSIGHTS,
+    aiDrugInteractions: AI_DRUG_INTERACTIONS,
+    aiVitalsTrend: AI_VITALS_TREND,
+    fullMedicationList: FULL_MEDICATION_LIST,
+    allergies: ALLERGIES,
+    recentLabs: RECENT_LABS,
+    ambientTranscriptLines: AMBIENT_TRANSCRIPT_LINES,
+    extractedEntities: EXTRACTED_ENTITIES,
+    presentationNarrative: '38-year-old female presenting with \u201cthe worst headache of my life,\u201d sudden onset 3 days ago while at work. Pain is right temporal/frontal, pulsating, continuous, rated 9/10. Associated with nausea, photophobia, and phonophobia. Ibuprofen 400mg provided no relief. Patient has a history of migraine with aura (diagnosed 2019) and stage 1 hypertension (2023). Family history significant for maternal migraine, HTN, and DM2; paternal CAD; grandmother with stroke at 72. Non-smoker, moderate alcohol use. Currently on Lisinopril 10mg daily and Sumatriptan 50mg PRN.',
+    redFlags: ['Thunderclap onset', '"Worst headache"', 'Elevated BP', 'FHx stroke'],
+    complaintCategories: ['Headache', 'Hypertension'],
+    differentialHistory: '<div style="margin-bottom: 6px"><strong style="color: #0C3547">PMH:</strong> Migraine w/ aura (2019), HTN Stage 1 (2023)</div><div style="margin-bottom: 6px"><strong style="color: #0C3547">FHx:</strong> Mother \u2014 migraine, HTN, DM2; Father \u2014 CAD; Grandmother \u2014 stroke @ 72</div><div><strong style="color: #0C3547">Social:</strong> Software eng, non-smoker, high stress, 6-7hr sleep</div>',
+  },
+  jamesRodriguez: {
+    label: 'James Rodriguez — Chest Pain',
+    patient: PATIENT_2,
+    vitals: VITALS_2,
+    currentMedications: CURRENT_MEDICATIONS_2,
+    initialDiagnoses: INITIAL_DIAGNOSES_2,
+    treatmentPlans: TREATMENT_PLANS_2,
+    pharmacyInventory: PHARMACY_INVENTORY_2,
+    soapNote: SOAP_NOTE_2,
+    billingCodes: BILLING_CODES_2,
+    pastVisits: PAST_VISITS_2,
+    chronicConditions: CHRONIC_CONDITIONS_2,
+    surgicalHistory: SURGICAL_HISTORY_2,
+    familyHistory: FAMILY_HISTORY_2,
+    socialHistory: SOCIAL_HISTORY_2,
+    aiPriorVisitInsights: AI_PRIOR_VISIT_INSIGHTS_2,
+    aiDrugInteractions: AI_DRUG_INTERACTIONS_2,
+    aiVitalsTrend: AI_VITALS_TREND_2,
+    fullMedicationList: FULL_MEDICATION_LIST_2,
+    allergies: ALLERGIES_2,
+    recentLabs: RECENT_LABS_2,
+    ambientTranscriptLines: AMBIENT_TRANSCRIPT_LINES_2,
+    extractedEntities: EXTRACTED_ENTITIES_2,
+    presentationNarrative: '62-year-old male with 2-day history of substernal chest pressure radiating to left arm, worse with exertion, associated with dyspnea and diaphoresis. Pain rated 7/10, intermittent but increasing in frequency and severity. No relief with rest or position change. History of type 2 diabetes (A1c 7.2%), hyperlipidemia on statin therapy, hypertension on triple-agent regimen, and 30-pack-year smoking history (quit 2 years ago). Father died of MI at 58, brother had CABG at 59. Currently on 12 medications including Metformin, Glipizide, Atorvastatin, Lisinopril, Aspirin, Metoprolol, Amlodipine, Jardiance, Omeprazole, Gabapentin, Duloxetine, and Fish Oil. SpO2 94% on room air is concerning for acute cardiopulmonary process.',
+    redFlags: ['Substernal chest pain', 'Radiation to arm', 'Diaphoresis', 'FHx MI <60', 'Smoking history'],
+    complaintCategories: ['Chest Pain'],
+    differentialHistory: '<div style="margin-bottom: 6px"><strong style="color: #0C3547">PMH:</strong> DM2 (2015), HLD (2012), HTN (2010), GERD, Peripheral neuropathy, Depression</div><div style="margin-bottom: 6px"><strong style="color: #0C3547">FHx:</strong> Father \u2014 MI at 58 (deceased); Mother \u2014 DM2, HTN; Brother \u2014 CABG at 59</div><div><strong style="color: #0C3547">Social:</strong> Retired construction, 30-pk-yr smoker (quit 2y), occasional alcohol</div>',
+  },
+};
+
+type ScenarioKey = keyof typeof PATIENT_SCENARIOS;
+
+// ============================================================
 // Shared Styles
 // ============================================================
 const cardStyle: React.CSSProperties = {
@@ -499,6 +909,7 @@ const EncounterPage: React.FC = () => {
   const patientId = (id as string) || 'enc-001';
 
   // --- State ---
+  const [activeScenario, setActiveScenario] = useState<ScenarioKey>('sarahChen');
   const [activeTab, setActiveTab] = useState<TabId>('previsit');
   const [visitActive, setVisitActive] = useState(false);
   const [ambientPaused, setAmbientPaused] = useState(false);
@@ -518,14 +929,53 @@ const EncounterPage: React.FC = () => {
   const [transcriptIdx, setTranscriptIdx] = useState(0);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
+  // --- Derive active scenario data ---
+  const scenario = PATIENT_SCENARIOS[activeScenario];
+  const S_PATIENT = scenario.patient;
+  const S_VITALS = scenario.vitals;
+  const S_CURRENT_MEDICATIONS = scenario.currentMedications;
+  const S_TREATMENT_PLANS = scenario.treatmentPlans;
+  const S_PHARMACY_INVENTORY = scenario.pharmacyInventory;
+  const S_PAST_VISITS = scenario.pastVisits;
+  const S_CHRONIC_CONDITIONS = scenario.chronicConditions;
+  const S_SURGICAL_HISTORY = scenario.surgicalHistory;
+  const S_FAMILY_HISTORY = scenario.familyHistory;
+  const S_SOCIAL_HISTORY = scenario.socialHistory;
+  const S_AI_PRIOR_VISIT_INSIGHTS = scenario.aiPriorVisitInsights;
+  const S_AI_DRUG_INTERACTIONS = scenario.aiDrugInteractions;
+  const S_AI_VITALS_TREND = scenario.aiVitalsTrend;
+  const S_FULL_MEDICATION_LIST = scenario.fullMedicationList;
+  const S_ALLERGIES = scenario.allergies;
+  const S_RECENT_LABS = scenario.recentLabs;
+  const S_AMBIENT_TRANSCRIPT_LINES = scenario.ambientTranscriptLines;
+  const S_EXTRACTED_ENTITIES = scenario.extractedEntities;
+
+  // --- Switch scenario handler ---
+  const switchScenario = (key: ScenarioKey) => {
+    if (key === activeScenario) return;
+    const s = PATIENT_SCENARIOS[key];
+    setActiveScenario(key);
+    setDiagnoses([...s.initialDiagnoses]);
+    setComplaintFilter(s.complaintCategories[0]);
+    setTreatmentOrders(s.treatmentPlans.map(tp => [...tp.ordered]));
+    setSoapNote({ ...s.soapNote });
+    setBillingCodes([...s.billingCodes]);
+    setExpandedVisit(null);
+    setPriorInsightsExpanded(0);
+    setTranscriptIdx(0);
+    setVisitActive(false);
+    setAmbientPaused(false);
+    setChartDrawerOpen(false);
+  };
+
   // Simulate ambient transcript appearing over time
   useEffect(() => {
-    if (!visitActive || ambientPaused || transcriptIdx >= AMBIENT_TRANSCRIPT_LINES.length) return;
+    if (!visitActive || ambientPaused || transcriptIdx >= S_AMBIENT_TRANSCRIPT_LINES.length) return;
     const timer = setTimeout(() => {
       setTranscriptIdx(prev => prev + 1);
     }, 3000);
     return () => clearTimeout(timer);
-  }, [visitActive, ambientPaused, transcriptIdx]);
+  }, [visitActive, ambientPaused, transcriptIdx, S_AMBIENT_TRANSCRIPT_LINES.length]);
 
   // Auto-scroll transcript
   useEffect(() => {
@@ -534,19 +984,38 @@ const EncounterPage: React.FC = () => {
     }
   }, [transcriptIdx]);
 
-  // --- Finding toggle ---
+  // --- Finding toggle (updates probabilities reactively) ---
   const toggleFinding = (diagIdx: number, findIdx: number) => {
     setDiagnoses(prev => {
-      const next = [...prev];
-      const finding = { ...next[diagIdx].findings[findIdx] };
-      const cycle: FindingState[] = ['unknown', 'present', 'absent'];
-      const currentIndex = cycle.indexOf(finding.state);
-      finding.state = cycle[(currentIndex + 1) % 3];
-      next[diagIdx] = {
-        ...next[diagIdx],
-        findings: next[diagIdx].findings.map((f, i) => (i === findIdx ? finding : f)),
-      };
-      return next;
+      const updated = prev.map((diag, dIdx) => {
+        if (dIdx !== diagIdx) return diag;
+        const finding = { ...diag.findings[findIdx] };
+        const cycle: FindingState[] = ['unknown', 'present', 'absent'];
+        const currentIndex = cycle.indexOf(finding.state);
+        const oldState = finding.state;
+        finding.state = cycle[(currentIndex + 1) % 3];
+        const newState = finding.state;
+
+        const newFindings = diag.findings.map((f, i) => (i === findIdx ? finding : f));
+
+        // Compute probability delta based on finding state change
+        // Each key finding: present adds ~7%, absent subtracts ~7%, returning to unknown reverses
+        let delta = 0;
+        if (oldState === 'unknown' && newState === 'present') delta = 0.07;
+        else if (oldState === 'present' && newState === 'absent') delta = -0.14; // undo +7, then -7
+        else if (oldState === 'absent' && newState === 'unknown') delta = 0.07; // undo the -7
+        else if (oldState === 'unknown' && newState === 'absent') delta = -0.07;
+        else if (oldState === 'present' && newState === 'unknown') delta = -0.07;
+        else if (oldState === 'absent' && newState === 'present') delta = 0.14;
+
+        let newProb = diag.probability + delta;
+        // Clamp probability to [0.02, 0.95]
+        newProb = Math.max(0.02, Math.min(0.95, newProb));
+
+        return { ...diag, findings: newFindings, probability: Math.round(newProb * 100) / 100 };
+      });
+
+      return updated;
     });
   };
 
@@ -651,20 +1120,20 @@ const EncounterPage: React.FC = () => {
               flexShrink: 0,
             }}
           >
-            {PATIENT.initials}
+            {S_PATIENT.initials}
           </div>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.deepNavy }}>{PATIENT.name}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.deepNavy }}>{S_PATIENT.name}</div>
             <div style={{ fontSize: 13, color: COLORS.gray500, marginTop: 2 }}>
-              {PATIENT.age}F &middot; DOB: {PATIENT.dob} &middot; {PATIENT.mrn}
+              {S_PATIENT.age}{S_PATIENT.gender === 'Female' ? 'F' : 'M'} &middot; DOB: {S_PATIENT.dob} &middot; {S_PATIENT.mrn}
             </div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           {[
-            ['Appointment', `${PATIENT.appointmentTime}`],
-            ['Insurance', PATIENT.insurance],
-            ['PCP', PATIENT.primaryCare],
+            ['Appointment', `${S_PATIENT.appointmentTime}`],
+            ['Insurance', S_PATIENT.insurance],
+            ['PCP', S_PATIENT.primaryCare],
           ].map(([label, value]) => (
             <span
               key={label}
@@ -695,14 +1164,10 @@ const EncounterPage: React.FC = () => {
         </div>
         <div style={cardBodyStyle}>
           <p style={{ margin: 0, fontSize: 15, color: COLORS.gray600, lineHeight: 1.8 }}>
-            38-year-old female presenting with &ldquo;the worst headache of my life,&rdquo; sudden onset 3 days ago while at work.
-            Pain is right temporal/frontal, pulsating, continuous, rated 9/10. Associated with nausea, photophobia, and phonophobia.
-            Ibuprofen 400mg provided no relief. Patient has a history of migraine with aura (diagnosed 2019) and stage 1 hypertension (2023).
-            Family history significant for maternal migraine, HTN, and DM2; paternal CAD; grandmother with stroke at 72.
-            Non-smoker, moderate alcohol use. Currently on Lisinopril 10mg daily and Sumatriptan 50mg PRN.
+            {scenario.presentationNarrative}
           </p>
           <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-            {['Thunderclap onset', '"Worst headache"', 'Elevated BP', 'FHx stroke'].map(flag => (
+            {scenario.redFlags.map(flag => (
               <span
                 key={flag}
                 style={{
@@ -734,15 +1199,15 @@ const EncounterPage: React.FC = () => {
             marginLeft: 'auto', fontSize: 10, fontWeight: 700, padding: '2px 10px', borderRadius: 12,
             background: 'rgba(200, 164, 78, 0.2)', color: COLORS.gold, textTransform: 'uppercase', letterSpacing: 0.5,
           }}>
-            {AI_PRIOR_VISIT_INSIGHTS.length} Findings
+            {S_AI_PRIOR_VISIT_INSIGHTS.length} Findings
           </span>
         </div>
         <div style={{ padding: 0 }}>
-          {AI_PRIOR_VISIT_INSIGHTS.map((insight, i) => (
+          {S_AI_PRIOR_VISIT_INSIGHTS.map((insight, i) => (
             <div
               key={i}
               style={{
-                borderBottom: i < AI_PRIOR_VISIT_INSIGHTS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                borderBottom: i < S_AI_PRIOR_VISIT_INSIGHTS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
               }}
             >
               <div
@@ -814,12 +1279,12 @@ const EncounterPage: React.FC = () => {
             </span>
           </div>
           <div style={cardBodyStyle}>
-            {AI_DRUG_INTERACTIONS.map((interaction, i) => (
+            {S_AI_DRUG_INTERACTIONS.map((interaction, i) => (
               <div
                 key={i}
                 style={{
                   display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0',
-                  borderBottom: i < AI_DRUG_INTERACTIONS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                  borderBottom: i < S_AI_DRUG_INTERACTIONS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
                 }}
               >
                 <div style={{
@@ -850,7 +1315,7 @@ const EncounterPage: React.FC = () => {
           </div>
           <div style={cardBodyStyle}>
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 100, marginBottom: 8 }}>
-              {AI_VITALS_TREND.map((v, i) => {
+              {S_AI_VITALS_TREND.map((v, i) => {
                 const systolic = parseInt(v.bp.split('/')[0]);
                 const barHeight = ((systolic - 110) / 40) * 100; // normalize 110-150 range
                 const isToday = v.date === 'Today';
@@ -895,7 +1360,7 @@ const EncounterPage: React.FC = () => {
           </div>
           <div style={{ padding: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }} className="vitals-grid">
-              {VITALS.map(v => {
+              {S_VITALS.map(v => {
                 const Icon = v.icon;
                 return (
                   <div
@@ -937,12 +1402,12 @@ const EncounterPage: React.FC = () => {
               Current Medications
             </div>
             <div style={cardBodyStyle}>
-              {CURRENT_MEDICATIONS.map((med, i) => (
+              {S_CURRENT_MEDICATIONS.map((med, i) => (
                 <div
                   key={i}
                   style={{
                     padding: '10px 0',
-                    borderBottom: i < CURRENT_MEDICATIONS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                    borderBottom: i < S_CURRENT_MEDICATIONS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
                   }}
                 >
                   <div style={{ fontWeight: 600, fontSize: 14, color: COLORS.deepNavy }}>{med.name}</div>
@@ -971,24 +1436,24 @@ const EncounterPage: React.FC = () => {
             </div>
             <div style={cardBodyStyle}>
               <div style={{ fontSize: 13, color: COLORS.gray600, lineHeight: 1.6, marginBottom: 12 }}>
-                <strong style={{ color: COLORS.deepNavy }}>PMH:</strong> Migraine with aura (2019), HTN Stage 1 (2023), Seasonal allergies (2015)<br />
-                <strong style={{ color: COLORS.deepNavy }}>FHx:</strong> Mother - migraine, HTN, DM2; Father - CAD<br />
+                <strong style={{ color: COLORS.deepNavy }}>PMH:</strong> {S_CHRONIC_CONDITIONS.map(c => `${c.name} (${c.since})`).join(', ')}<br />
+                <strong style={{ color: COLORS.deepNavy }}>FHx:</strong> {S_FAMILY_HISTORY.map(f => `${f.relation} - ${f.conditions}`).join('; ')}<br />
                 <strong style={{ color: COLORS.deepNavy }}>Allergies:</strong>{' '}
-                {ALLERGIES.map((a, i) => (
+                {S_ALLERGIES.map((a, i) => (
                   <span key={i}>
                     <span style={{ color: COLORS.red600, fontWeight: 600 }}>{a.substance}</span> ({a.reaction})
-                    {i < ALLERGIES.length - 1 ? ', ' : ''}
+                    {i < S_ALLERGIES.length - 1 ? ', ' : ''}
                   </span>
                 ))}<br />
-                <strong style={{ color: COLORS.deepNavy }}>Social:</strong> Software engineer, non-smoker, moderate alcohol
+                <strong style={{ color: COLORS.deepNavy }}>Social:</strong> {S_SOCIAL_HISTORY.occupation}, {S_SOCIAL_HISTORY.tobacco}, {S_SOCIAL_HISTORY.alcohol}
               </div>
               {/* All active medications */}
               <div style={{ borderTop: `1px solid ${COLORS.gray100}`, paddingTop: 10 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
-                  All Active Medications ({FULL_MEDICATION_LIST.length})
+                  All Active Medications ({S_FULL_MEDICATION_LIST.length})
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {FULL_MEDICATION_LIST.map((med, i) => (
+                  {S_FULL_MEDICATION_LIST.map((med, i) => (
                     <span key={i} style={{
                       fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 6,
                       background: COLORS.paleMint, color: COLORS.deepNavy,
@@ -1014,7 +1479,7 @@ const EncounterPage: React.FC = () => {
         </div>
         <div style={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {INITIAL_DIAGNOSES.slice(0, 3).map((d, i) => (
+            {[...diagnoses].sort((a, b) => b.probability - a.probability).slice(0, 3).map((d, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <div style={{ minWidth: 200, fontWeight: 600, fontSize: 14, color: COLORS.deepNavy }}>
                   {d.name}
@@ -1142,7 +1607,7 @@ const EncounterPage: React.FC = () => {
               <div style={{ fontSize: 14, color: COLORS.gray400, fontStyle: 'italic' }}>Waiting for speech...</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {AMBIENT_TRANSCRIPT_LINES.slice(0, transcriptIdx).map((line, i) => (
+                {S_AMBIENT_TRANSCRIPT_LINES.slice(0, transcriptIdx).map((line, i) => (
                   <div key={i} style={{ fontSize: 13, color: COLORS.gray600, lineHeight: 1.6 }}>
                     <span style={{ fontWeight: 600, color: COLORS.deepNavy }}>{line.speaker}: </span>
                     {line.text}
@@ -1154,8 +1619,8 @@ const EncounterPage: React.FC = () => {
 
           {/* Extracted Entities */}
           {(() => {
-            const visibleEntities = EXTRACTED_ENTITIES.filter(entity => {
-              const lineTimeIdx = AMBIENT_TRANSCRIPT_LINES.findIndex(l => l.time === entity.time);
+            const visibleEntities = S_EXTRACTED_ENTITIES.filter(entity => {
+              const lineTimeIdx = S_AMBIENT_TRANSCRIPT_LINES.findIndex(l => l.time === entity.time);
               return lineTimeIdx < transcriptIdx;
             });
             if (visibleEntities.length === 0) return null;
@@ -1193,7 +1658,7 @@ const EncounterPage: React.FC = () => {
   // TAB 2 -- AI DIFFERENTIAL
   // ============================================================
   const renderDifferential = () => (
-    <div style={{ display: 'flex', gap: 20 }}>
+    <div style={{ display: 'flex', gap: 20 }} className="differential-flex-container">
       {/* Left Panel — Clinical Context (40% width, separate cards) */}
       <div style={{ flex: '0 0 40%', minWidth: 0 }} className="differential-sidebar">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1206,13 +1671,10 @@ const EncounterPage: React.FC = () => {
             </div>
             <div style={{ padding: '12px 16px', fontSize: 14, color: COLORS.gray600, lineHeight: 1.7 }}>
               <p style={{ margin: 0 }}>
-                38-year-old male presenting with &ldquo;the worst headache of my life,&rdquo; sudden onset 3 days ago while at work.
-                Pain is right temporal/frontal, pulsating, continuous, rated 9/10. Associated with nausea, photophobia, and phonophobia.
-                Ibuprofen provided no relief. Patient has a history of migraine with aura and stage 1 hypertension.
-                Family history significant for maternal migraine, HTN, and DM2; paternal CAD; grandmother with stroke at 72.
+                {scenario.presentationNarrative}
               </p>
               <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {['Thunderclap onset', '"Worst headache"', 'Elevated BP', 'FHx stroke'].map(flag => (
+                {scenario.redFlags.map(flag => (
                   <span key={flag} style={{
                     fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 6,
                     background: COLORS.red100, color: COLORS.red600,
@@ -1232,10 +1694,10 @@ const EncounterPage: React.FC = () => {
                 Vitals
               </div>
               <div style={{ padding: '6px 16px' }}>
-                {VITALS.map((v, i) => (
+                {S_VITALS.map((v, i) => (
                   <div key={v.label} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '4px 0', borderBottom: i < VITALS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                    padding: '4px 0', borderBottom: i < S_VITALS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
                   }}>
                     <span style={{ fontSize: 13, color: COLORS.gray500 }}>{v.label}</span>
                     <span style={{
@@ -1255,7 +1717,7 @@ const EncounterPage: React.FC = () => {
                 Allergies
               </div>
               <div style={{ padding: '6px 16px' }}>
-                {ALLERGIES.map((a, i) => (
+                {S_ALLERGIES.map((a, i) => (
                   <div key={i} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     padding: '4px 0',
@@ -1273,13 +1735,13 @@ const EncounterPage: React.FC = () => {
             <div style={{ ...cardStyle, flex: 1 }}>
               <div style={{ ...cardHeaderStyle, padding: '10px 16px', fontSize: 14 }}>
                 <Pill style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
-                Medications ({FULL_MEDICATION_LIST.length})
+                Medications ({S_FULL_MEDICATION_LIST.length})
               </div>
               <div style={{ padding: '6px 16px' }}>
-                {FULL_MEDICATION_LIST.map((med, i) => (
+                {S_FULL_MEDICATION_LIST.map((med, i) => (
                   <div key={i} style={{
                     padding: '4px 0',
-                    borderBottom: i < FULL_MEDICATION_LIST.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                    borderBottom: i < S_FULL_MEDICATION_LIST.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
                   }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.deepNavy }}>{med.name}</div>
                     <div style={{ fontSize: 12, color: COLORS.gray500 }}>
@@ -1295,11 +1757,7 @@ const EncounterPage: React.FC = () => {
                 <FileText style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
                 Key History
               </div>
-              <div style={{ padding: '10px 16px', fontSize: 13, color: COLORS.gray600, lineHeight: 1.7 }}>
-                <div style={{ marginBottom: 6 }}><strong style={{ color: COLORS.deepNavy }}>PMH:</strong> Migraine w/ aura (2019), HTN Stage 1 (2023)</div>
-                <div style={{ marginBottom: 6 }}><strong style={{ color: COLORS.deepNavy }}>FHx:</strong> Mother — migraine, HTN, DM2; Father — CAD; Grandmother — stroke @ 72</div>
-                <div><strong style={{ color: COLORS.deepNavy }}>Social:</strong> Software eng, non-smoker, high stress, 6-7hr sleep</div>
-              </div>
+              <div style={{ padding: '10px 16px', fontSize: 13, color: COLORS.gray600, lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: scenario.differentialHistory }} />
             </div>
           </div>
 
@@ -1311,7 +1769,7 @@ const EncounterPage: React.FC = () => {
       {/* Complaint filter tabs */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ display: 'flex', gap: 8 }}>
-          {['Headache', 'Hypertension'].map(complaint => (
+          {scenario.complaintCategories.map(complaint => (
             <button
               key={complaint}
               onClick={() => setComplaintFilter(complaint)}
@@ -1474,10 +1932,10 @@ const EncounterPage: React.FC = () => {
   // TAB 3 -- TREATMENT OPTIONS
   // ============================================================
   const renderTreatment = () => (
-    <div style={{ display: 'flex', gap: 20 }}>
+    <div style={{ display: 'flex', gap: 20 }} className="treatment-flex-container">
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
-        {TREATMENT_PLANS.map((plan, planIdx) => (
+        {S_TREATMENT_PLANS.map((plan, planIdx) => (
           <div key={plan.diagnosis} style={cardStyle}>
             <div style={cardHeaderStyle}>
               <Stethoscope style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
@@ -1578,7 +2036,7 @@ const EncounterPage: React.FC = () => {
             <span style={{ color: COLORS.deepNavy }}>Pharmacy Inventory</span>
           </div>
           <div style={{ padding: 12 }}>
-            {PHARMACY_INVENTORY.map((item, i) => (
+            {S_PHARMACY_INVENTORY.map((item, i) => (
               <div
                 key={i}
                 style={{
@@ -1586,7 +2044,7 @@ const EncounterPage: React.FC = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '8px 8px',
-                  borderBottom: i < PHARMACY_INVENTORY.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
+                  borderBottom: i < S_PHARMACY_INVENTORY.length - 1 ? `1px solid ${COLORS.gray100}` : 'none',
                 }}
               >
                 <div style={{ fontSize: 12, color: COLORS.deepNavy, fontWeight: 500, flex: 1 }}>{item.name}</div>
@@ -1597,14 +2055,16 @@ const EncounterPage: React.FC = () => {
                 )}
               </div>
             ))}
-            <div style={{ marginTop: 12, padding: '10px 8px', background: COLORS.amber50, borderRadius: 8 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>OUT OF STOCK</div>
-              <div style={{ fontSize: 12, color: '#78350f' }}>Nimodipine 60mg</div>
-              <div style={{ fontSize: 11, color: COLORS.gray500, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <RefreshCw style={{ width: 12, height: 12 }} />
-                Available via pharmacy order (24h)
+            {S_PHARMACY_INVENTORY.filter(item => !item.inStock).map((item, i) => (
+              <div key={i} style={{ marginTop: 12, padding: '10px 8px', background: COLORS.amber50, borderRadius: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>OUT OF STOCK</div>
+                <div style={{ fontSize: 12, color: '#78350f' }}>{item.name}</div>
+                <div style={{ fontSize: 11, color: COLORS.gray500, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <RefreshCw style={{ width: 12, height: 12 }} />
+                  Available via pharmacy order
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -1621,7 +2081,7 @@ const EncounterPage: React.FC = () => {
           <FileText style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
           SOAP Note -- Auto-Generated
           <span style={{ marginLeft: 'auto', fontSize: 11, color: COLORS.gray500, fontWeight: 500 }}>
-            Last updated: {PATIENT.appointmentDate} {PATIENT.appointmentTime}
+            Last updated: {S_PATIENT.appointmentDate} {S_PATIENT.appointmentTime}
           </span>
         </div>
         <div style={cardBodyStyle}>
@@ -1755,7 +2215,7 @@ const EncounterPage: React.FC = () => {
           Past Visits
         </div>
         <div>
-          {PAST_VISITS.map((visit, i) => (
+          {S_PAST_VISITS.map((visit, i) => (
             <div key={i} style={{ borderBottom: `1px solid ${COLORS.gray100}` }}>
               <div
                 onClick={() => setExpandedVisit(expandedVisit === i ? null : i)}
@@ -1810,8 +2270,8 @@ const EncounterPage: React.FC = () => {
             Chronic Conditions
           </div>
           <div style={cardBodyStyle}>
-            {CHRONIC_CONDITIONS.map((c, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < CHRONIC_CONDITIONS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none' }}>
+            {S_CHRONIC_CONDITIONS.map((c, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < S_CHRONIC_CONDITIONS.length - 1 ? `1px solid ${COLORS.gray100}` : 'none' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 14, color: COLORS.deepNavy }}>{c.name}</div>
                   <div style={{ fontSize: 12, color: COLORS.gray500, marginTop: 2 }}>Since {c.since}</div>
@@ -1831,8 +2291,8 @@ const EncounterPage: React.FC = () => {
             Surgical History
           </div>
           <div style={cardBodyStyle}>
-            {SURGICAL_HISTORY.map((s, i) => (
-              <div key={i} style={{ padding: '10px 0', borderBottom: i < SURGICAL_HISTORY.length - 1 ? `1px solid ${COLORS.gray100}` : 'none' }}>
+            {S_SURGICAL_HISTORY.map((s, i) => (
+              <div key={i} style={{ padding: '10px 0', borderBottom: i < S_SURGICAL_HISTORY.length - 1 ? `1px solid ${COLORS.gray100}` : 'none' }}>
                 <div style={{ fontWeight: 600, fontSize: 14, color: COLORS.deepNavy }}>{s.procedure}</div>
                 <div style={{ fontSize: 12, color: COLORS.gray500, marginTop: 2 }}>{s.date} &middot; {s.notes}</div>
               </div>
@@ -1847,8 +2307,8 @@ const EncounterPage: React.FC = () => {
             Family History
           </div>
           <div style={cardBodyStyle}>
-            {FAMILY_HISTORY.map((f, i) => (
-              <div key={i} style={{ padding: '10px 0', borderBottom: i < FAMILY_HISTORY.length - 1 ? `1px solid ${COLORS.gray100}` : 'none' }}>
+            {S_FAMILY_HISTORY.map((f, i) => (
+              <div key={i} style={{ padding: '10px 0', borderBottom: i < S_FAMILY_HISTORY.length - 1 ? `1px solid ${COLORS.gray100}` : 'none' }}>
                 <div style={{ fontWeight: 600, fontSize: 13, color: COLORS.deepNavy }}>{f.relation}</div>
                 <div style={{ fontSize: 13, color: COLORS.gray600, marginTop: 2 }}>{f.conditions}</div>
               </div>
@@ -1863,8 +2323,8 @@ const EncounterPage: React.FC = () => {
             Social History
           </div>
           <div style={cardBodyStyle}>
-            {Object.entries(SOCIAL_HISTORY).map(([key, value], i) => (
-              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < Object.entries(SOCIAL_HISTORY).length - 1 ? `1px solid ${COLORS.gray100}` : 'none' }}>
+            {Object.entries(S_SOCIAL_HISTORY).map(([key, value], i) => (
+              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < Object.entries(S_SOCIAL_HISTORY).length - 1 ? `1px solid ${COLORS.gray100}` : 'none' }}>
                 <span style={{ fontSize: 13, color: COLORS.gray500, textTransform: 'capitalize' }}>{key}</span>
                 <span style={{ fontSize: 13, color: COLORS.deepNavy, fontWeight: 500, textAlign: 'right', maxWidth: '60%' }}>{value}</span>
               </div>
@@ -2013,6 +2473,7 @@ const EncounterPage: React.FC = () => {
               color: 'rgba(255,255,255,0.6)',
               padding: 4,
             }}
+            aria-label="Minimize ambient listening"
           >
             <Minimize2 style={{ width: 14, height: 14 }} />
           </button>
@@ -2028,7 +2489,7 @@ const EncounterPage: React.FC = () => {
             maxHeight: 260,
           }}
         >
-          {AMBIENT_TRANSCRIPT_LINES.slice(0, transcriptIdx).map((line, i) => (
+          {S_AMBIENT_TRANSCRIPT_LINES.slice(0, transcriptIdx).map((line, i) => (
             <div key={i} style={{ marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                 <span style={{ fontSize: 10, color: COLORS.gray500 }}>{line.time}</span>
@@ -2059,8 +2520,8 @@ const EncounterPage: React.FC = () => {
               Extracted Entities
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {EXTRACTED_ENTITIES.filter(entity => {
-                const lineTimeIdx = AMBIENT_TRANSCRIPT_LINES.findIndex(l => l.time === entity.time);
+              {S_EXTRACTED_ENTITIES.filter(entity => {
+                const lineTimeIdx = S_AMBIENT_TRANSCRIPT_LINES.findIndex(l => l.time === entity.time);
                 return lineTimeIdx < transcriptIdx;
               }).map((entity, i) => (
                 <span
@@ -2153,7 +2614,7 @@ const EncounterPage: React.FC = () => {
   return (
     <ProviderShell contextBadge="Encounter" showNav={false}>
       <Head>
-        <title>Encounter - {PATIENT.name} | ATTENDING AI</title>
+        <title>Encounter - {S_PATIENT.name} | ATTENDING AI</title>
       </Head>
 
       <style>{`
@@ -2179,11 +2640,23 @@ const EncounterPage: React.FC = () => {
           .encounter-grid-2col {
             grid-template-columns: 1fr !important;
           }
-          .pharmacy-sidebar {
-            display: none !important;
+          .differential-flex-container {
+            flex-direction: column !important;
           }
           .differential-sidebar {
-            display: none !important;
+            width: 100% !important;
+            flex: 1 1 100% !important;
+          }
+          .treatment-flex-container {
+            flex-direction: column !important;
+          }
+          .pharmacy-sidebar {
+            width: 100% !important;
+            flex-shrink: 1 !important;
+          }
+          button, [role="button"] {
+            min-height: 44px;
+            min-width: 44px;
           }
         }
         @media (max-width: 768px) {
@@ -2228,12 +2701,12 @@ const EncounterPage: React.FC = () => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: COLORS.white, fontSize: 16, fontWeight: 800, flexShrink: 0,
             }}>
-              {PATIENT.initials}
+              {S_PATIENT.initials}
             </div>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.white }}>{PATIENT.name}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.white }}>{S_PATIENT.name}</div>
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>
-                {PATIENT.age}F &middot; {PATIENT.mrn} &middot; {PATIENT.insurance}
+                {S_PATIENT.age}{S_PATIENT.gender === 'Female' ? 'F' : 'M'} &middot; {S_PATIENT.mrn} &middot; {S_PATIENT.insurance}
               </div>
             </div>
           </div>
@@ -2250,6 +2723,37 @@ const EncounterPage: React.FC = () => {
             <FolderOpen style={{ width: 16, height: 16 }} />
             Patient Chart
           </button>
+        </div>
+
+        {/* Scenario Toggle */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
+        }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Demo Patient:
+          </span>
+          {(Object.keys(PATIENT_SCENARIOS) as ScenarioKey[]).map(key => (
+            <button
+              key={key}
+              onClick={() => switchScenario(key)}
+              style={{
+                padding: '6px 16px',
+                borderRadius: 20,
+                border: activeScenario === key ? 'none' : '1px solid rgba(255,255,255,0.25)',
+                background: activeScenario === key
+                  ? `linear-gradient(135deg, ${COLORS.gold}, #d4a843)`
+                  : 'rgba(255,255,255,0.08)',
+                color: activeScenario === key ? COLORS.white : 'rgba(255,255,255,0.7)',
+                fontSize: 12,
+                fontWeight: activeScenario === key ? 700 : 500,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: activeScenario === key ? '0 2px 8px rgba(200, 164, 78, 0.3)' : 'none',
+              }}
+            >
+              {PATIENT_SCENARIOS[key].label}
+            </button>
+          ))}
         </div>
 
         {/* Tab Navigation */}
@@ -2367,7 +2871,7 @@ const EncounterPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <FolderOpen style={{ width: 18, height: 18, color: COLORS.lightTeal }} />
                 <span style={{ fontSize: 15, fontWeight: 700, color: COLORS.white }}>Quick Chart</span>
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{PATIENT.name}</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>{S_PATIENT.name}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Link
@@ -2383,6 +2887,7 @@ const EncounterPage: React.FC = () => {
                 <button
                   onClick={() => setChartDrawerOpen(false)}
                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 4 }}
+                  aria-label="Close patient chart drawer"
                 >
                   <XCircle style={{ width: 18, height: 18 }} />
                 </button>
@@ -2423,9 +2928,9 @@ const EncounterPage: React.FC = () => {
               {chartDrawerTab === 'meds' && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
-                    Active Medications ({FULL_MEDICATION_LIST.length})
+                    Active Medications ({S_FULL_MEDICATION_LIST.length})
                   </div>
-                  {FULL_MEDICATION_LIST.map((med, i) => (
+                  {S_FULL_MEDICATION_LIST.map((med, i) => (
                     <div key={i} style={{
                       padding: '12px 14px', marginBottom: 8, borderRadius: 10,
                       border: `1px solid ${COLORS.gray200}`, background: COLORS.gray50,
@@ -2450,9 +2955,9 @@ const EncounterPage: React.FC = () => {
               {chartDrawerTab === 'allergies' && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
-                    Known Allergies ({ALLERGIES.length})
+                    Known Allergies ({S_ALLERGIES.length})
                   </div>
-                  {ALLERGIES.map((allergy, i) => (
+                  {S_ALLERGIES.map((allergy, i) => (
                     <div key={i} style={{
                       padding: '14px 16px', marginBottom: 8, borderRadius: 10,
                       border: `1px solid ${COLORS.red100}`, background: COLORS.red50,
@@ -2488,7 +2993,7 @@ const EncounterPage: React.FC = () => {
                   <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
                     Recent Lab Results — 01/15/2026
                   </div>
-                  {RECENT_LABS.map((lab, i) => (
+                  {S_RECENT_LABS.map((lab, i) => (
                     <div key={i} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       padding: '10px 14px', marginBottom: 6, borderRadius: 8,
@@ -2519,7 +3024,7 @@ const EncounterPage: React.FC = () => {
                   <div style={{ fontSize: 11, fontWeight: 700, color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>
                     Recent Visits
                   </div>
-                  {PAST_VISITS.map((visit, i) => (
+                  {S_PAST_VISITS.map((visit, i) => (
                     <div key={i} style={{
                       padding: '12px 14px', marginBottom: 8, borderRadius: 10,
                       border: `1px solid ${COLORS.gray200}`, background: COLORS.gray50,

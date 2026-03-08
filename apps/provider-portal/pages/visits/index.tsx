@@ -1,14 +1,9 @@
-// =============================================================================
-// ATTENDING AI - Visits Index
-// apps/provider-portal/pages/visits/index.tsx
-//
-// Redirects to completed visits by default
-// =============================================================================
-
+// DEPRECATED: This file is scheduled for deletion.
+// Links should point directly to /visits/completed instead.
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 
-export default function VisitsIndex() {
+export default function DeprecatedVisitsIndex() {
   const router = useRouter();
 
   useEffect(() => {

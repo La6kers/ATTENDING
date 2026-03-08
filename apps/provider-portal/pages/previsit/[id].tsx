@@ -489,7 +489,7 @@ export default function PreVisitPage() {
 
   const handleReviewChart = () => {
     const patientId = rawAssessment?.patient?.id;
-    router.push(patientId ? `/patients/${patientId}` : `/patients`);
+    router.push(patientId ? `/patient/${patientId}` : `/patient`);
   };
 
   // Loading

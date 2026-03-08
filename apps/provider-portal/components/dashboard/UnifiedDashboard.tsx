@@ -114,7 +114,7 @@ const pendingTasks: TaskItem[] = [
 const aiInsights: AIInsight[] = [
   { id: 'i1', type: 'risk', title: '3 patients with elevated A1c', description: 'Consider intensifying diabetes management', action: 'View Patients', href: '/population-health' },
   { id: 'i2', type: 'gap', title: '12 patients due for colonoscopy', description: 'Preventive screening opportunity', action: 'Start Outreach', href: '/population-health' },
-  { id: 'i3', type: 'alert', title: 'Drug interaction detected', description: 'John Smith: Warfarin + new NSAID order', action: 'Review', href: '/patients/john-smith' },
+  { id: 'i3', type: 'alert', title: 'Drug interaction detected', description: 'John Smith: Warfarin + new NSAID order', action: 'Review', href: '/patient/john-smith' },
 ];
 
 const featureCards = [
@@ -197,11 +197,11 @@ const AppointmentCard: React.FC<{ appointment: UpcomingAppointment }> = ({ appoi
         </div>
         <div className="flex gap-1">
           {appointment.type === 'telehealth' ? (
-            <button className="p-1.5 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors">
+            <button className="p-1.5 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors" aria-label="Start telehealth visit">
               <Video size={14} />
             </button>
           ) : (
-            <button className="p-1.5 bg-teal-100 text-teal-600 rounded hover:bg-teal-200 transition-colors">
+            <button className="p-1.5 bg-teal-100 text-teal-600 rounded hover:bg-teal-200 transition-colors" aria-label="Start visit">
               <Play size={14} />
             </button>
           )}

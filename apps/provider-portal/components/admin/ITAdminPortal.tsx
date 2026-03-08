@@ -506,10 +506,10 @@ const UserManagementSection: React.FC<{ subSection: string }> = ({ subSection })
                 <td style={{ padding: '10px 14px', color: u.failedAttempts > 3 ? '#dc2626' : '#6b7280', fontWeight: u.failedAttempts > 3 ? 600 : 400 }}>{u.failedAttempts}</td>
                 <td style={{ padding: '10px 14px' }}>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button title="Reset Password" style={{ padding: 6, background: '#f3f4f6', borderRadius: 6, border: 'none', cursor: 'pointer' }}><Key size={13} /></button>
-                    {u.status === 'LOCKED' && <button title="Unlock" style={{ padding: 6, background: '#dcfce7', borderRadius: 6, border: 'none', cursor: 'pointer' }}><Unlock size={13} /></button>}
-                    {u.status === 'ACTIVE' && <button title="Suspend" style={{ padding: 6, background: '#fef3c7', borderRadius: 6, border: 'none', cursor: 'pointer' }}><UserX size={13} /></button>}
-                    <button title="Force Logout" style={{ padding: 6, background: '#fee2e2', borderRadius: 6, border: 'none', cursor: 'pointer' }}><LogOut size={13} /></button>
+                    <button title="Reset Password" aria-label="Reset Password" style={{ padding: 6, background: '#f3f4f6', borderRadius: 6, border: 'none', cursor: 'pointer' }}><Key size={13} /></button>
+                    {u.status === 'LOCKED' && <button title="Unlock" aria-label="Unlock account" style={{ padding: 6, background: '#dcfce7', borderRadius: 6, border: 'none', cursor: 'pointer' }}><Unlock size={13} /></button>}
+                    {u.status === 'ACTIVE' && <button title="Suspend" aria-label="Suspend account" style={{ padding: 6, background: '#fef3c7', borderRadius: 6, border: 'none', cursor: 'pointer' }}><UserX size={13} /></button>}
+                    <button title="Force Logout" aria-label="Force Logout" style={{ padding: 6, background: '#fee2e2', borderRadius: 6, border: 'none', cursor: 'pointer' }}><LogOut size={13} /></button>
                   </div>
                 </td>
               </tr>
@@ -591,9 +591,9 @@ const BackgroundJobsSection: React.FC = () => {
             <StatusBadge status={j.status} />
             {j.errorCount > 0 && <span style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}>{j.errorCount} errors</span>}
             <div style={{ display: 'flex', gap: 4 }}>
-              {j.status === 'paused' && <button style={{ padding: 6, background: '#dcfce7', borderRadius: 6, border: 'none', cursor: 'pointer' }} title="Resume"><Play size={14} /></button>}
-              {j.status === 'running' && <button style={{ padding: 6, background: '#fef3c7', borderRadius: 6, border: 'none', cursor: 'pointer' }} title="Pause"><Pause size={14} /></button>}
-              {j.status === 'failed' && <button style={{ padding: 6, background: '#dbeafe', borderRadius: 6, border: 'none', cursor: 'pointer' }} title="Retry"><RotateCcw size={14} /></button>}
+              {j.status === 'paused' && <button style={{ padding: 6, background: '#dcfce7', borderRadius: 6, border: 'none', cursor: 'pointer' }} title="Resume" aria-label="Resume job"><Play size={14} /></button>}
+              {j.status === 'running' && <button style={{ padding: 6, background: '#fef3c7', borderRadius: 6, border: 'none', cursor: 'pointer' }} title="Pause" aria-label="Pause job"><Pause size={14} /></button>}
+              {j.status === 'failed' && <button style={{ padding: 6, background: '#dbeafe', borderRadius: 6, border: 'none', cursor: 'pointer' }} title="Retry" aria-label="Retry job"><RotateCcw size={14} /></button>}
             </div>
           </div>
         ))}

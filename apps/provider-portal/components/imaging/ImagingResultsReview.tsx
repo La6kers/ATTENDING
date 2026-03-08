@@ -665,7 +665,7 @@ export function ImagingResultsReview({ onNewOrder }: { onNewOrder?: () => void }
                     />
 
                     <div className="flex items-center justify-end gap-3 pt-2">
-                      <button className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }} title="Print">
+                      <button className="p-1.5 rounded-lg transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }} title="Print" aria-label="Print results">
                         <Printer className="w-4 h-4" />
                       </button>
                       <button className="px-5 py-2 text-sm text-white rounded-xl font-semibold flex items-center gap-2 transition-all hover:shadow-lg hover:scale-[1.02]"

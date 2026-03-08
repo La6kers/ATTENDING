@@ -474,13 +474,13 @@ export default function SchedulePage() {
                 <p className="text-teal-200 text-sm">{dateStr}</p>
               </div>
               <div className="flex items-center gap-3">
-                <button className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                <button className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors" aria-label="Previous day">
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button className="px-4 py-2 bg-white/20 text-white rounded-lg font-medium text-sm">
                   Today
                 </button>
-                <button className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                <button className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors" aria-label="Next day">
                   <ChevronRight className="w-5 h-5" />
                 </button>
               </div>

@@ -450,7 +450,7 @@ export const ExecutiveAnalytics: React.FC = () => {
               <Download size={18} />
               Export
             </button>
-            <button className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+            <button className="p-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors" aria-label="Refresh data">
               <RefreshCw size={18} />
             </button>
           </div>

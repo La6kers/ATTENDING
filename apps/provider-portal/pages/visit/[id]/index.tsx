@@ -241,7 +241,7 @@ const GuidelinesModal: React.FC<GuidelinesModalProps> = ({ diagnosis, onClose })
                 <p className="text-teal-200 text-sm">Clinical Guidelines - ICD-10: {diagnosis.icdCode}</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors">
+            <button onClick={onClose} className="p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors" aria-label="Close">
               <X className="w-5 h-5" />
             </button>
           </div>

@@ -355,7 +355,7 @@ export function CareJourneyPanel({
                     </div>
                     
                     {step.status === 'pending' && (
-                      <button className="p-1 hover:bg-gray-200 rounded">
+                      <button className="p-1 hover:bg-gray-200 rounded" aria-label="More options">
                         <MoreVertical className="w-4 h-4 text-gray-400" />
                       </button>
                     )}

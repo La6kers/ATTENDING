@@ -256,6 +256,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -281,12 +282,14 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                   <button
                     onClick={patientNav.onPrev}
                     className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                    aria-label="Previous patient"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={patientNav.onNext}
                     className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                    aria-label="Next patient"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -318,6 +321,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                     type="button"
                     onClick={() => setShowSearch(false)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                    aria-label="Close search"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -327,12 +331,13 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                   onClick={() => setShowSearch(true)}
                   className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   title="Search (⌘K)"
+                  aria-label="Search"
                 >
                   <Search className="w-[18px] h-[18px]" />
                 </button>
               )}
 
-              <button className="relative p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+              <button className="relative p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors" aria-label="Notifications">
                 <Bell className="w-[18px] h-[18px]" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
               </button>
@@ -340,6 +345,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
               <Link
                 href="/settings"
                 className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                aria-label="Settings"
               >
                 <Settings className="w-[18px] h-[18px]" />
               </Link>
@@ -349,6 +355,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 p-1.5 hover:bg-white/10 rounded-xl transition-colors"
+                  aria-label="User menu"
                 >
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"

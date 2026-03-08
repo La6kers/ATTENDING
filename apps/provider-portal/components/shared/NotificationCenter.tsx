@@ -364,7 +364,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       </p>
                     )}
                   </div>
-                  <button className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
+                  <button className="p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" aria-label="Send message">
                     <MessageSquare className="w-4 h-4" />
                   </button>
                 </div>
