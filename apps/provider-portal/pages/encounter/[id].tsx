@@ -2216,6 +2216,42 @@ const EncounterPage: React.FC = () => {
           Back
         </button>
 
+        {/* Patient Banner */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: 16, flexWrap: 'wrap', gap: 12,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: `linear-gradient(135deg, ${COLORS.lightTeal}, ${COLORS.primaryTeal})`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: COLORS.white, fontSize: 16, fontWeight: 800, flexShrink: 0,
+            }}>
+              {PATIENT.initials}
+            </div>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.white }}>{PATIENT.name}</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 1 }}>
+                {PATIENT.age}F &middot; {PATIENT.mrn} &middot; {PATIENT.insurance}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setChartDrawerOpen(true)}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              padding: '10px 20px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.25)',
+              background: 'rgba(255,255,255,0.1)', color: COLORS.white,
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <FolderOpen style={{ width: 16, height: 16 }} />
+            Patient Chart
+          </button>
+        </div>
+
         {/* Tab Navigation */}
         <div
           style={{
@@ -2507,32 +2543,6 @@ const EncounterPage: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Chart Button — visible on ALL tabs */}
-      {!chartDrawerOpen && (
-        <button
-          onClick={() => setChartDrawerOpen(true)}
-          style={{
-            position: 'fixed',
-            bottom: visitActive && !ambientMinimized ? 'auto' : 24,
-            top: visitActive && !ambientMinimized ? 80 : 'auto',
-            left: 24,
-            zIndex: 90,
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '10px 18px',
-            borderRadius: 12,
-            border: 'none',
-            background: `linear-gradient(135deg, ${COLORS.deepNavy}, ${COLORS.midTeal})`,
-            color: COLORS.white,
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-            boxShadow: '0 4px 20px rgba(12, 53, 71, 0.3)',
-          }}
-        >
-          <FolderOpen style={{ width: 16, height: 16 }} />
-          Chart
-        </button>
-      )}
 
       {/* Ambient Listening Sidebar */}
       {renderAmbientSidebar()}
