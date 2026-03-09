@@ -6,6 +6,7 @@
 // ============================================================
 
 import React, { useState } from 'react';
+import type { GetServerSideProps } from 'next';
 import Head from 'next/head';
 
 // Import from shared components
@@ -92,10 +93,6 @@ export default function ComponentDemoPage() {
     { name: 'Fever', status: 'absent', isRedFlag: true },
   ]);
 
-  // Gate demo page from production — only accessible in development
-  if (process.env.NODE_ENV === 'production') {
-    return null;
-  }
 
   const quickActions: QuickAction[] = [
     { id: 'labs', label: 'Order Labs', icon: <BeakerIcon />, onClick: () => setActiveAction('labs'), active: activeAction === 'labs' },
@@ -395,3 +392,11 @@ export default function ComponentDemoPage() {
     </>
   );
 }
+
+// Block this page entirely in production at the server level
+export const getServerSideProps: GetServerSideProps = async () => {
+  if (process.env.NODE_ENV === 'production') {
+    return { notFound: true };
+  }
+  return { props: {} };
+};

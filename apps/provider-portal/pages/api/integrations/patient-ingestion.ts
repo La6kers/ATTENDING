@@ -77,9 +77,12 @@ const PatientSchema = z.object({
   allergies: z.array(AllergySchema).optional(),
 });
 
-const IngestionSchema = z.object({
+// Two-phase validation: the ingestion envelope accepts raw patient objects,
+// then CUSTOM patients are validated against PatientSchema directly while
+// FHIR_R4 patients are transformed first, then validated.
+const IngestionEnvelopeSchema = z.object({
   format: z.enum(['CUSTOM', 'FHIR_R4']).default('CUSTOM'),
-  patients: z.array(PatientSchema).min(1).max(500),
+  patients: z.array(z.record(z.unknown())).min(1).max(500),
 });
 
 // ── FHIR R4 Transformer ────────────────────────────────────
@@ -117,7 +120,7 @@ function transformFhirPatient(fhir: FhirPatient): z.infer<typeof PatientSchema> 
     mrn,
     firstName: name?.given?.[0] || 'Unknown',
     lastName: name?.family || 'Unknown',
-    dateOfBirth: fhir.birthDate || '',
+    dateOfBirth: fhir.birthDate || 'UNKNOWN',
     gender: fhir.gender,
     email,
     phone,
@@ -132,7 +135,7 @@ function transformFhirPatient(fhir: FhirPatient): z.infer<typeof PatientSchema> 
 
 export default apiKeyHandler({
   methods: ['POST'],
-  body: IngestionSchema,
+  body: IngestionEnvelopeSchema,
   audit: AuditActions.SYSTEM_CONFIG_CHANGED,
   auditResource: 'Patient' as any,
   phi: true,
@@ -192,16 +195,28 @@ export default apiKeyHandler({
       },
     });
 
-    // Process patients
-    const body = ctx.body as z.infer<typeof IngestionSchema>;
-    let patients = body.patients;
+    // Process patients: transform FHIR first, then validate all against PatientSchema
+    const body = ctx.body as z.infer<typeof IngestionEnvelopeSchema>;
+    let rawPatients = body.patients;
 
-    // Transform FHIR patients if needed
+    // Transform FHIR resources to flat patient objects before validation
     if (body.format === 'FHIR_R4') {
-      patients = patients.map((p) =>
+      rawPatients = rawPatients.map((p) =>
         transformFhirPatient(p as unknown as FhirPatient)
-      );
+      ) as Record<string, unknown>[];
     }
+
+    // Validate all patients against the patient schema
+    const validationResult = z.array(PatientSchema).safeParse(rawPatients);
+    if (!validationResult.success) {
+      ctx.error(
+        400,
+        'VALIDATION_ERROR' as any,
+        `Patient data validation failed: ${validationResult.error.issues.map(i => `[${i.path.join('.')}] ${i.message}`).join('; ')}`
+      );
+      return;
+    }
+    const patients = validationResult.data;
 
     const results = {
       received: patients.length,
@@ -225,11 +240,12 @@ export default apiKeyHandler({
             },
           });
 
+          const parsedDob = patient.dateOfBirth ? new Date(patient.dateOfBirth) : null;
           const patientData = {
             firstName: patient.firstName,
             lastName: patient.lastName,
-            dateOfBirth: patient.dateOfBirth
-              ? new Date(patient.dateOfBirth)
+            dateOfBirth: parsedDob && !isNaN(parsedDob.getTime())
+              ? parsedDob
               : undefined,
             gender: patient.gender,
             sexAssignedAtBirth: patient.sexAssignedAtBirth,

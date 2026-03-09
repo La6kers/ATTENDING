@@ -141,9 +141,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   switch (req.method) {
     case 'GET':
-      return handleGet(id, res);
+      return handleGet(id, patientId, res);
     case 'PUT':
-      return handlePut(id, req, res);
+      return handlePut(id, patientId, req, res);
     default:
       res.setHeader('Allow', ['GET', 'PUT']);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
@@ -151,18 +151,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // GET /api/patient/assessments/[id] - Get assessment details
-async function handleGet(id: string, res: NextApiResponse) {
+async function handleGet(id: string, patientId: string, res: NextApiResponse) {
   const assessment = mockAssessmentDetails[id];
 
   if (!assessment) {
     return res.status(404).json({ error: 'Assessment not found' });
   }
 
+  // TODO: When migrating to Prisma, query with { id, patientId } to enforce ownership.
+  // Mock data is hardcoded to "John Doe" — in production, verify assessment.patientId === patientId.
+
   return res.status(200).json({ assessment });
 }
 
 // PUT /api/patient/assessments/[id] - Update assessment (limited for patients)
-async function handlePut(id: string, req: NextApiRequest, res: NextApiResponse) {
+async function handlePut(id: string, patientId: string, req: NextApiRequest, res: NextApiResponse) {
   const assessment = mockAssessmentDetails[id];
 
   if (!assessment) {

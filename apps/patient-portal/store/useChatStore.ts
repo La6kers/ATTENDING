@@ -31,7 +31,7 @@ import {
   calculateUrgencyScore,
   determineUrgencyLevel,
   getPhaseProgress,
-} from '../../shared/types/chat.types';
+} from '@attending/shared/types/chat.types';
 
 // Re-export types for components
 export type { DetailedAssessmentPhase as AssessmentPhase, UrgencyLevel, QuickReply, ChatMessage, RedFlag, HPIData, AssessmentData };
