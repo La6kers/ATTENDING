@@ -150,10 +150,10 @@ public class DiagnosticLearningController : ControllerBase
 
     private Guid GetCurrentTenantId()
     {
-        var tid = User.FindFirst("tid")?.Value
-                  ?? User.FindFirst("tenantId")?.Value
-                  ?? Guid.Empty.ToString();
-        return Guid.TryParse(tid, out var id) ? id : Guid.Empty;
+        var claim = User.FindFirst("tid")?.Value ?? User.FindFirst("tenantId")?.Value;
+        if (string.IsNullOrEmpty(claim) || !Guid.TryParse(claim, out var id) || id == Guid.Empty)
+            throw new UnauthorizedAccessException("Valid tenant identity is required.");
+        return id;
     }
 }
 

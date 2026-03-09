@@ -59,6 +59,7 @@ public class LabOrdersController : ControllerBase
         [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
         take = Math.Clamp(take, 1, 100);
+        skip = Math.Clamp(skip, 0, 10000);
         var result = await _mediator.Send(new GetLabOrdersByPatientQuery(patientId, status, skip, take));
         return Ok(result.Select(o => new LabOrderSummaryResponse(
             o.Id, o.OrderNumber, o.TestName, o.Priority.ToString(),
@@ -229,7 +230,7 @@ public class LabOrdersController : ControllerBase
         var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
         if (!Guid.TryParse(userIdClaim, out var userId) || userId == Guid.Empty)
         {
-            throw new InvalidOperationException("User ID claim is missing or invalid.");
+            throw new UnauthorizedAccessException("Valid user identity is required.");
         }
         return userId;
     }

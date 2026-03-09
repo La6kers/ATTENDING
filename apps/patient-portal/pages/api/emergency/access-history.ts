@@ -6,6 +6,8 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 
 // =============================================================================
 // Types
@@ -99,10 +101,24 @@ export default async function handler(
     });
   }
 
-  try {
-    const { patientId: _patientId, limit = '10', offset = '0' } = req.query;
+  // Authenticate — patient ID comes from the session, not query params
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return res.status(401).json({ success: false, error: 'Authentication required' });
+  }
 
-    // In production, verify authentication and authorization
+  const authenticatedPatientId = (session.user as { id?: string }).id;
+  if (!authenticatedPatientId) {
+    return res.status(401).json({ success: false, error: 'Patient identity could not be determined' });
+  }
+
+  try {
+    const { patientId, limit = '10', offset = '0' } = req.query;
+
+    // Validate that the requested patientId matches the authenticated user
+    if (patientId && patientId !== authenticatedPatientId) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
     
     const limitNum = parseInt(limit as string, 10);
     const offsetNum = parseInt(offset as string, 10);

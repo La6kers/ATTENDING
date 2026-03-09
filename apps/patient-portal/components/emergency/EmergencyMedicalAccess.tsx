@@ -116,23 +116,46 @@ const PINEntry: React.FC<{
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [attempts, setAttempts] = useState(0);
-  const CORRECT_PIN = '911911'; // Universal first responder PIN
+  const [isValidating, setIsValidating] = useState(false);
+
+  // SECURITY: PIN validation must be performed server-side in production.
+  // Never hardcode PINs or secrets in client-side code.
+  const validatePin = async (enteredPin: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/emergency/validate-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: enteredPin }),
+      });
+      if (!response.ok) return false;
+      const data = await response.json();
+      return data.valid === true;
+    } catch {
+      // If API is unavailable, deny access for safety
+      console.error('PIN validation endpoint unavailable');
+      return false;
+    }
+  };
 
   const handlePinInput = (digit: string) => {
-    if (pin.length < 6) {
+    if (pin.length < 6 && !isValidating) {
       const newPin = pin + digit;
       setPin(newPin);
       setError(false);
-      
+
       if (newPin.length === 6) {
-        if (newPin === CORRECT_PIN) {
-          onCaptureFace();
-          onSuccess();
-        } else {
-          setError(true);
-          setAttempts(prev => prev + 1);
-          setTimeout(() => setPin(''), 500);
-        }
+        setIsValidating(true);
+        validatePin(newPin).then((isValid) => {
+          if (isValid) {
+            onCaptureFace();
+            onSuccess();
+          } else {
+            setError(true);
+            setAttempts(prev => prev + 1);
+            setTimeout(() => setPin(''), 500);
+          }
+          setIsValidating(false);
+        });
       }
     }
   };

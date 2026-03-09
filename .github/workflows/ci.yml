@@ -114,7 +114,6 @@ jobs:
           docker exec $(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest") \
             /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${{ secrets.CI_MSSQL_SA_PASSWORD || 'Attending_CI_2026!' }}" -C \
             -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'attending_test') CREATE DATABASE attending_test;"
-        continue-on-error: true
 
       - name: Push schema to test database
         run: npx prisma db push --schema=prisma/schema.prisma --skip-generate

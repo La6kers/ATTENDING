@@ -49,9 +49,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!url || typeof url !== 'string') {
         return res.status(400).json({ error: 'URL is required' });
       }
-      if (!url.startsWith('https://')) {
-        return res.status(400).json({ error: 'Webhook URL must use HTTPS' });
-      }
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'https:') return res.status(400).json({ error: 'HTTPS required' });
+        const hostname = parsed.hostname;
+        // Reject private/internal IPs
+        const privatePatterns = [/^localhost$/i, /^127\./, /^10\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^0\./, /^::1$/, /^fc00:/i, /^fe80:/i];
+        if (privatePatterns.some(p => p.test(hostname))) {
+          return res.status(400).json({ error: 'Internal URLs not allowed' });
+        }
+      } catch { return res.status(400).json({ error: 'Invalid URL' }); }
 
       const validFormats = ['json', 'fhir_r4', 'hl7v2'];
       const fmt = format || 'json';

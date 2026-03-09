@@ -90,6 +90,7 @@ public class ReferralsController : ControllerBase
         Guid patientId, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
         take = Math.Clamp(take, 1, 100);
+        skip = Math.Clamp(skip, 0, 10000);
         var referrals = await _repository.GetByPatientIdAsync(patientId);
         return Ok(referrals.Skip(skip).Take(take).Select(MapToResponse));
     }

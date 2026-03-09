@@ -17,6 +17,8 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '@attending/shared/lib/prisma';
 import { proxyToBackend } from '../../../lib/backendProxy';
 
@@ -92,6 +94,11 @@ function mapTriageLevel(urgency: string | undefined, redFlagCount: number): stri
 // =============================================================================
 
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   // Try .NET backend first
   const proxied = await proxyToBackend(req, res, '/api/v1/assessments');
   if (proxied) return;

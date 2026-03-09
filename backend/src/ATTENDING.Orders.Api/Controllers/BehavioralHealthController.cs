@@ -64,7 +64,7 @@ public class BehavioralHealthController : ControllerBase
     {
         var result = await _mediator.Send(new StartScreeningCommand(
             request.PatientId,
-            request.ProviderId,
+            GetCurrentUserId(),
             request.Instrument,
             request.EncounterId,
             request.AssessmentId), ct);
@@ -142,7 +142,7 @@ public class BehavioralHealthController : ControllerBase
     {
         var result = await _mediator.Send(new ReviewScreeningCommand(
             id,
-            request.ProviderId,
+            GetCurrentUserId(),
             request.ActionTaken,
             request.Notes,
             request.SafetyPlanJson), ct);
@@ -246,6 +246,14 @@ public class BehavioralHealthController : ControllerBase
     }
 
     // ── Mapping ───────────────────────────────────────────────────────────
+
+    private Guid GetCurrentUserId()
+    {
+        var claim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
+        if (string.IsNullOrEmpty(claim) || !Guid.TryParse(claim, out var id) || id == Guid.Empty)
+            throw new UnauthorizedAccessException("Valid user identity is required.");
+        return id;
+    }
 
     private static ScreeningDetailResponse MapToDetail(Domain.Entities.BehavioralHealthScreening s) =>
         new(

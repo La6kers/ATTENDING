@@ -191,6 +191,18 @@ export default async function handler(
     return res.status(400).json({ error: 'Conversation ID is required' });
   }
 
+  // Verify the authenticated user is a participant in this conversation
+  const conversation = mockMessages[conversationId];
+  if (conversation) {
+    const userId = session.user.id;
+    const isParticipant = conversation.some(
+      (msg) => msg.senderId === userId || msg.senderType === 'system'
+    );
+    if (!isParticipant) {
+      return res.status(403).json({ error: 'You are not a participant in this conversation' });
+    }
+  }
+
   try {
     switch (req.method) {
       case 'GET':

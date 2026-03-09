@@ -8,6 +8,10 @@
 // Keep this consistent so demos look polished across all pages.
 // ============================================================
 
+if (process.env.NODE_ENV === 'production') {
+  console.warn('[MOCK DATA] This module should not be imported in production builds');
+}
+
 import type { OrderingContext } from '@attending/shared/catalogs';
 
 /**

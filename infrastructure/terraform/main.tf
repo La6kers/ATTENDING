@@ -339,6 +339,7 @@ resource "azurerm_redis_cache" "main" {
   sku_name            = var.environment == "production" ? "Premium" : "Basic"
   minimum_tls_version = "1.2"
   non_ssl_port_enabled = false
+  public_network_access_enabled = false
 
   redis_configuration {
     maxmemory_policy = "allkeys-lru"
@@ -463,6 +464,12 @@ resource "azurerm_storage_account" "audit_logs" {
     }
   }
 
+  network_rules {
+    default_action             = "Deny"
+    virtual_network_subnet_ids = [azurerm_subnet.data.id]
+    bypass                     = ["AzureServices", "Logging"]
+  }
+
   tags = merge(local.common_tags, {
     DataClassification = "PHI"
     RetentionPolicy    = "6-years"
@@ -557,6 +564,53 @@ resource "azurerm_monitor_diagnostic_setting" "key_vault" {
 
   enabled_log {
     category = "AuditEvent"
+  }
+}
+
+# ============================================================
+# Diagnostic Settings — App Service Logging
+# HIPAA 164.312(b) — Audit controls
+# ============================================================
+
+resource "azurerm_monitor_diagnostic_setting" "provider_portal" {
+  name                       = "diag-provider-${local.resource_prefix}"
+  target_resource_id         = azurerm_linux_web_app.provider_portal.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  enabled_log {
+    category = "AppServiceHTTPLogs"
+  }
+
+  enabled_log {
+    category = "AppServiceConsoleLogs"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "patient_portal" {
+  name                       = "diag-patient-${local.resource_prefix}"
+  target_resource_id         = azurerm_linux_web_app.patient_portal.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  enabled_log {
+    category = "AppServiceHTTPLogs"
+  }
+
+  enabled_log {
+    category = "AppServiceConsoleLogs"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "orders_api" {
+  name                       = "diag-orders-${local.resource_prefix}"
+  target_resource_id         = azurerm_linux_web_app.orders_api.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  enabled_log {
+    category = "AppServiceHTTPLogs"
+  }
+
+  enabled_log {
+    category = "AppServiceConsoleLogs"
   }
 }
 

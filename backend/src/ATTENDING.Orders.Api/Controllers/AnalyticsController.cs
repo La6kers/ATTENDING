@@ -34,6 +34,9 @@ public class AnalyticsController : ControllerBase
         if (!validPeriods.Contains(period))
             return BadRequest(new ProblemDetails { Title = "Invalid period", Detail = "Must be day, week, month, quarter, or year" });
 
+        if (providerId.HasValue && providerId.Value != GetCurrentUserId() && !User.IsInRole("Admin"))
+            return Forbid();
+
         return Ok(await _analyticsService.GetOutcomesAsync(period, providerId));
     }
 

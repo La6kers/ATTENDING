@@ -36,26 +36,28 @@ public class ClinicalNotificationHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var userId = Context.UserIdentifier ?? Context.ConnectionId;
+        var userId = Context.UserIdentifier
+            ?? throw new HubException("User identity is required for clinical notifications.");
         var connectionId = Context.ConnectionId;
-        
+
         _providerConnections.AddOrUpdate(
             userId,
             _ => new HashSet<string> { connectionId },
             (_, connections) => { lock (_providerConnectionsLock) { connections.Add(connectionId); } return connections; });
-        
+
         await Groups.AddToGroupAsync(connectionId, "Providers");
-        
+
         _logger.LogInformation("Provider {UserId} connected with connection {ConnectionId}", userId, connectionId);
-        
+
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var userId = Context.UserIdentifier ?? Context.ConnectionId;
+        var userId = Context.UserIdentifier
+            ?? throw new HubException("User identity is required for clinical notifications.");
         var connectionId = Context.ConnectionId;
-        
+
         if (_providerConnections.TryGetValue(userId, out var connections))
         {
             lock (_providerConnectionsLock)
@@ -151,7 +153,8 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task JoinEmergencyAlerts()
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, "EmergencyAlerts");
+        var tenantId = _currentUser.TenantId;
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"EmergencyAlerts|{tenantId}");
     }
 
     /// <summary>
@@ -159,7 +162,8 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task LeaveEmergencyAlerts()
     {
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, "EmergencyAlerts");
+        var tenantId = _currentUser.TenantId;
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"EmergencyAlerts|{tenantId}");
     }
 }
 
@@ -210,7 +214,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             "EMERGENCY ASSESSMENT: Assessment {AssessmentId} for Patient {PatientId}, Reason: {EmergencyReason}",
             notification.AssessmentId, notification.PatientId, notification.EmergencyReason);
 
-        await _hubContext.Clients.Group("EmergencyAlerts")
+        await _hubContext.Clients.Group($"EmergencyAlerts|{notification.TenantId}")
             .SendAsync("EmergencyAssessment", notification, cancellationToken);
         
         await _hubContext.Clients.Group("Providers")

@@ -82,10 +82,12 @@ export default async function handler(
       }
     });
   } catch (error) {
-    console.error('[Ambient Transcribe API] Error:', error);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[Ambient Transcribe API] Error:', error);
+    }
     return res.status(500).json({ 
       success: false, 
-      error: error instanceof Error ? error.message : 'Internal server error' 
+      error: 'Internal server error'
     });
   }
 }

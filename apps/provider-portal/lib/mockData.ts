@@ -1,3 +1,7 @@
+if (process.env.NODE_ENV === 'production') {
+  console.warn('[MOCK DATA] This module should not be imported in production builds');
+}
+
 import type { Message, MessagePriority, MessageType, PatientDetails } from '../store/useInbox';
 
 const patientNames = [
