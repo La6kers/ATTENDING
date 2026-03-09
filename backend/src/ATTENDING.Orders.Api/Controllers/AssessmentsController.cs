@@ -241,6 +241,7 @@ public class AssessmentsController : ControllerBase
         try
         {
             await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
+                TenantId:        assessment.OrganizationId,
                 AssessmentId:    assessment.Id,
                 AssessmentNumber: assessment.AssessmentNumber,
                 PatientId:       assessment.PatientId,
@@ -255,6 +256,7 @@ public class AssessmentsController : ControllerBase
             if (isEmergency)
             {
                 await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
+                    TenantId:          assessment.OrganizationId,
                     AssessmentId:      assessment.Id,
                     AssessmentNumber:  assessment.AssessmentNumber,
                     PatientId:         assessment.PatientId,

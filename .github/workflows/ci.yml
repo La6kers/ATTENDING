@@ -124,7 +124,33 @@ jobs:
 
       - name: Run test coverage
         run: npm run test:coverage
-        continue-on-error: true
+
+      - name: Enforce coverage thresholds
+        run: |
+          # Extract coverage summary and enforce minimums
+          if [ -f coverage/coverage-summary.json ]; then
+            LINES=$(node -e "const c=require('./coverage/coverage-summary.json');console.log(c.total.lines.pct)")
+            BRANCHES=$(node -e "const c=require('./coverage/coverage-summary.json');console.log(c.total.branches.pct)")
+            FUNCTIONS=$(node -e "const c=require('./coverage/coverage-summary.json');console.log(c.total.functions.pct)")
+            echo "Coverage: lines=${LINES}% branches=${BRANCHES}% functions=${FUNCTIONS}%"
+            FAIL=0
+            if (( $(echo "$LINES < 60" | bc -l) )); then
+              echo "::error::Line coverage ${LINES}% is below 60% threshold"
+              FAIL=1
+            fi
+            if (( $(echo "$BRANCHES < 50" | bc -l) )); then
+              echo "::error::Branch coverage ${BRANCHES}% is below 50% threshold"
+              FAIL=1
+            fi
+            if (( $(echo "$FUNCTIONS < 60" | bc -l) )); then
+              echo "::error::Function coverage ${FUNCTIONS}% is below 60% threshold"
+              FAIL=1
+            fi
+            if [ "$FAIL" = "1" ]; then exit 1; fi
+            echo "Coverage thresholds met"
+          else
+            echo "::warning::Coverage summary not found — skipping threshold check"
+          fi
 
       - name: Upload coverage
         if: always()
@@ -231,7 +257,6 @@ jobs:
         run: npm run build:patient
         env:
           NEXT_TELEMETRY_DISABLED: 1
-        continue-on-error: true
 
       - name: Check build output size
         run: |

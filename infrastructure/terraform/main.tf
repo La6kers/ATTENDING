@@ -66,6 +66,12 @@ variable "sql_admin_password" {
   sensitive   = true
 }
 
+variable "alert_email" {
+  description = "Email address for critical alerts"
+  type        = string
+  default     = "ops@attendingai.com"
+}
+
 locals {
   resource_prefix = "${var.project_name}-${var.environment}"
   common_tags = {
@@ -209,6 +215,7 @@ resource "azurerm_linux_web_app" "provider_portal" {
     "NEXTAUTH_SECRET"              = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.nextauth_secret.id})"
     "NEXTAUTH_URL"                 = "https://app-${local.resource_prefix}-provider.azurewebsites.net"
     "REDIS_URL"                    = "rediss://:${azurerm_redis_cache.main.primary_access_key}@${azurerm_redis_cache.main.hostname}:${azurerm_redis_cache.main.ssl_port}"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
   }
 
   identity {
@@ -247,6 +254,7 @@ resource "azurerm_linux_web_app" "patient_portal" {
     "NEXTAUTH_SECRET"              = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.nextauth_secret.id})"
     "NEXTAUTH_URL"                 = "https://app-${local.resource_prefix}-patient.azurewebsites.net"
     "REDIS_URL"                    = "rediss://:${azurerm_redis_cache.main.primary_access_key}@${azurerm_redis_cache.main.hostname}:${azurerm_redis_cache.main.ssl_port}"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
   }
 
   identity {
@@ -282,6 +290,7 @@ resource "azurerm_linux_web_app" "orders_api" {
     "ASPNETCORE_ENVIRONMENT"     = var.environment == "production" ? "Production" : "Staging"
     "ConnectionStrings__Default" = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.db_connection_string_dotnet.id})"
     "Redis__ConnectionString"    = "${azurerm_redis_cache.main.hostname}:${azurerm_redis_cache.main.ssl_port},password=${azurerm_redis_cache.main.primary_access_key},ssl=True,abortConnect=False"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.main.connection_string
   }
 
   identity {
@@ -422,6 +431,7 @@ resource "azurerm_storage_container" "audit_logs" {
   name                  = "phi-audit-logs"
   storage_account_name  = azurerm_storage_account.audit_logs.name
   container_access_type = "private"
+  # Immutability policy managed separately — see azurerm_storage_container_immutability_policy.audit_logs
 }
 
 resource "azurerm_storage_management_policy" "audit_archival" {
@@ -448,6 +458,566 @@ resource "azurerm_storage_management_policy" "audit_archival" {
       }
     }
   }
+}
+
+# ============================================================
+# Storage Container Immutability — HIPAA 6-year retention
+# ============================================================
+
+resource "azurerm_storage_container_immutability_policy" "audit_logs" {
+  storage_container_resource_manager_id = azurerm_storage_container.audit_logs.resource_manager_id
+  immutability_period_in_days           = 2190 # 6 years HIPAA retention
+}
+
+# ============================================================
+# Log Analytics Workspace + Application Insights (OpenTelemetry)
+# ============================================================
+
+resource "azurerm_log_analytics_workspace" "main" {
+  name                = "log-${local.resource_prefix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 90
+
+  tags = local.common_tags
+}
+
+resource "azurerm_application_insights" "main" {
+  name                = "appi-${local.resource_prefix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  workspace_id        = azurerm_log_analytics_workspace.main.id
+  application_type    = "web"
+
+  tags = local.common_tags
+}
+
+# ============================================================
+# Virtual Network + Subnets — Network Isolation
+# ============================================================
+
+resource "azurerm_virtual_network" "main" {
+  name                = "vnet-${local.resource_prefix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  address_space       = ["10.0.0.0/16"]
+
+  tags = local.common_tags
+}
+
+resource "azurerm_subnet" "frontend" {
+  name                 = "snet-frontend"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = ["10.0.1.0/24"]
+
+  delegation {
+    name = "webapp-delegation"
+
+    service_delegation {
+      name    = "Microsoft.Web/serverFarms"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
+}
+
+resource "azurerm_subnet" "backend" {
+  name                 = "snet-backend"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = ["10.0.2.0/24"]
+
+  delegation {
+    name = "webapp-delegation"
+
+    service_delegation {
+      name    = "Microsoft.Web/serverFarms"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
+}
+
+resource "azurerm_subnet" "data" {
+  name                              = "snet-data"
+  resource_group_name               = azurerm_resource_group.main.name
+  virtual_network_name              = azurerm_virtual_network.main.name
+  address_prefixes                  = ["10.0.3.0/24"]
+  private_endpoint_network_policies = "Enabled"
+}
+
+resource "azurerm_subnet" "frontdoor" {
+  name                 = "snet-frontdoor"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main.name
+  address_prefixes     = ["10.0.4.0/24"]
+}
+
+# ============================================================
+# VNet Integration — App Services
+# ============================================================
+
+resource "azurerm_app_service_virtual_network_swift_connection" "provider_portal" {
+  app_service_id = azurerm_linux_web_app.provider_portal.id
+  subnet_id      = azurerm_subnet.frontend.id
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "patient_portal" {
+  app_service_id = azurerm_linux_web_app.patient_portal.id
+  subnet_id      = azurerm_subnet.frontend.id
+}
+
+resource "azurerm_app_service_virtual_network_swift_connection" "orders_api" {
+  app_service_id = azurerm_linux_web_app.orders_api.id
+  subnet_id      = azurerm_subnet.backend.id
+}
+
+# ============================================================
+# Private Endpoints — SQL Server + Redis
+# HIPAA 164.312(e)(1) — Transmission security via private network
+# ============================================================
+
+resource "azurerm_private_endpoint" "sql" {
+  name                = "pe-sql-${local.resource_prefix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  subnet_id           = azurerm_subnet.data.id
+
+  private_service_connection {
+    name                           = "psc-sql-${local.resource_prefix}"
+    private_connection_resource_id = azurerm_mssql_server.main.id
+    subresource_names              = ["sqlServer"]
+    is_manual_connection           = false
+  }
+
+  tags = local.common_tags
+}
+
+resource "azurerm_private_endpoint" "redis" {
+  name                = "pe-redis-${local.resource_prefix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  subnet_id           = azurerm_subnet.data.id
+
+  private_service_connection {
+    name                           = "psc-redis-${local.resource_prefix}"
+    private_connection_resource_id = azurerm_redis_cache.main.id
+    subresource_names              = ["redisCache"]
+    is_manual_connection           = false
+  }
+
+  tags = local.common_tags
+}
+
+# Private DNS Zones
+resource "azurerm_private_dns_zone" "sql" {
+  name                = "privatelink.database.windows.net"
+  resource_group_name = azurerm_resource_group.main.name
+
+  tags = local.common_tags
+}
+
+resource "azurerm_private_dns_zone" "redis" {
+  name                = "privatelink.redis.cache.windows.net"
+  resource_group_name = azurerm_resource_group.main.name
+
+  tags = local.common_tags
+}
+
+# DNS Zone Links to VNet
+resource "azurerm_private_dns_zone_virtual_network_link" "sql" {
+  name                  = "dnslink-sql-${local.resource_prefix}"
+  resource_group_name   = azurerm_resource_group.main.name
+  private_dns_zone_name = azurerm_private_dns_zone.sql.name
+  virtual_network_id    = azurerm_virtual_network.main.id
+  registration_enabled  = false
+
+  tags = local.common_tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "redis" {
+  name                  = "dnslink-redis-${local.resource_prefix}"
+  resource_group_name   = azurerm_resource_group.main.name
+  private_dns_zone_name = azurerm_private_dns_zone.redis.name
+  virtual_network_id    = azurerm_virtual_network.main.id
+  registration_enabled  = false
+
+  tags = local.common_tags
+}
+
+# Private DNS A Records
+resource "azurerm_private_dns_a_record" "sql" {
+  name                = azurerm_mssql_server.main.name
+  zone_name           = azurerm_private_dns_zone.sql.name
+  resource_group_name = azurerm_resource_group.main.name
+  ttl                 = 300
+  records             = [azurerm_private_endpoint.sql.private_service_connection[0].private_ip_address]
+}
+
+resource "azurerm_private_dns_a_record" "redis" {
+  name                = azurerm_redis_cache.main.name
+  zone_name           = azurerm_private_dns_zone.redis.name
+  resource_group_name = azurerm_resource_group.main.name
+  ttl                 = 300
+  records             = [azurerm_private_endpoint.redis.private_service_connection[0].private_ip_address]
+}
+
+# ============================================================
+# Azure Front Door + WAF
+# Premium SKU in production for WAF support
+# ============================================================
+
+resource "azurerm_cdn_frontdoor_profile" "main" {
+  name                = "afd-${local.resource_prefix}"
+  resource_group_name = azurerm_resource_group.main.name
+  sku_name            = var.environment == "production" ? "Premium_AzureFrontDoor" : "Standard_AzureFrontDoor"
+
+  tags = local.common_tags
+}
+
+# --- Endpoints ---
+
+resource "azurerm_cdn_frontdoor_endpoint" "provider_portal" {
+  name                     = "fde-provider-${local.resource_prefix}"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.main.id
+
+  tags = local.common_tags
+}
+
+resource "azurerm_cdn_frontdoor_endpoint" "patient_portal" {
+  name                     = "fde-patient-${local.resource_prefix}"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.main.id
+
+  tags = local.common_tags
+}
+
+resource "azurerm_cdn_frontdoor_endpoint" "orders_api" {
+  name                     = "fde-api-${local.resource_prefix}"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.main.id
+
+  tags = local.common_tags
+}
+
+# --- Origin Groups ---
+
+resource "azurerm_cdn_frontdoor_origin_group" "provider_portal" {
+  name                     = "og-provider-${local.resource_prefix}"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.main.id
+  session_affinity_enabled = false
+
+  health_probe {
+    path                = "/api/health"
+    protocol            = "Https"
+    interval_in_seconds = 30
+  }
+
+  load_balancing {
+    sample_size                 = 4
+    successful_samples_required = 3
+  }
+}
+
+resource "azurerm_cdn_frontdoor_origin_group" "patient_portal" {
+  name                     = "og-patient-${local.resource_prefix}"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.main.id
+  session_affinity_enabled = false
+
+  health_probe {
+    path                = "/api/health"
+    protocol            = "Https"
+    interval_in_seconds = 30
+  }
+
+  load_balancing {
+    sample_size                 = 4
+    successful_samples_required = 3
+  }
+}
+
+resource "azurerm_cdn_frontdoor_origin_group" "orders_api" {
+  name                     = "og-api-${local.resource_prefix}"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.main.id
+  session_affinity_enabled = false
+
+  health_probe {
+    path                = "/health/live"
+    protocol            = "Https"
+    interval_in_seconds = 30
+  }
+
+  load_balancing {
+    sample_size                 = 4
+    successful_samples_required = 3
+  }
+}
+
+# --- Origins ---
+
+resource "azurerm_cdn_frontdoor_origin" "provider_portal" {
+  name                          = "origin-provider-${local.resource_prefix}"
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.provider_portal.id
+  enabled                       = true
+
+  host_name          = azurerm_linux_web_app.provider_portal.default_hostname
+  http_port          = 80
+  https_port         = 443
+  origin_host_header = azurerm_linux_web_app.provider_portal.default_hostname
+  certificate_name_check_enabled = true
+}
+
+resource "azurerm_cdn_frontdoor_origin" "patient_portal" {
+  name                          = "origin-patient-${local.resource_prefix}"
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.patient_portal.id
+  enabled                       = true
+
+  host_name          = azurerm_linux_web_app.patient_portal.default_hostname
+  http_port          = 80
+  https_port         = 443
+  origin_host_header = azurerm_linux_web_app.patient_portal.default_hostname
+  certificate_name_check_enabled = true
+}
+
+resource "azurerm_cdn_frontdoor_origin" "orders_api" {
+  name                          = "origin-api-${local.resource_prefix}"
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.orders_api.id
+  enabled                       = true
+
+  host_name          = azurerm_linux_web_app.orders_api.default_hostname
+  http_port          = 80
+  https_port         = 443
+  origin_host_header = azurerm_linux_web_app.orders_api.default_hostname
+  certificate_name_check_enabled = true
+}
+
+# --- Routes ---
+
+resource "azurerm_cdn_frontdoor_route" "provider_portal" {
+  name                          = "route-provider-${local.resource_prefix}"
+  cdn_frontdoor_endpoint_id     = azurerm_cdn_frontdoor_endpoint.provider_portal.id
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.provider_portal.id
+  cdn_frontdoor_origin_ids      = [azurerm_cdn_frontdoor_origin.provider_portal.id]
+
+  supported_protocols    = ["Https"]
+  patterns_to_match      = ["/*"]
+  forwarding_protocol    = "HttpsOnly"
+  https_redirect_enabled = true
+  link_to_default_domain = true
+}
+
+resource "azurerm_cdn_frontdoor_route" "patient_portal" {
+  name                          = "route-patient-${local.resource_prefix}"
+  cdn_frontdoor_endpoint_id     = azurerm_cdn_frontdoor_endpoint.patient_portal.id
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.patient_portal.id
+  cdn_frontdoor_origin_ids      = [azurerm_cdn_frontdoor_origin.patient_portal.id]
+
+  supported_protocols    = ["Https"]
+  patterns_to_match      = ["/*"]
+  forwarding_protocol    = "HttpsOnly"
+  https_redirect_enabled = true
+  link_to_default_domain = true
+}
+
+resource "azurerm_cdn_frontdoor_route" "orders_api" {
+  name                          = "route-api-${local.resource_prefix}"
+  cdn_frontdoor_endpoint_id     = azurerm_cdn_frontdoor_endpoint.orders_api.id
+  cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.orders_api.id
+  cdn_frontdoor_origin_ids      = [azurerm_cdn_frontdoor_origin.orders_api.id]
+
+  supported_protocols    = ["Https"]
+  patterns_to_match      = ["/*"]
+  forwarding_protocol    = "HttpsOnly"
+  https_redirect_enabled = true
+  link_to_default_domain = true
+}
+
+# --- WAF Policy (Production only — requires Premium SKU) ---
+
+resource "azurerm_cdn_frontdoor_firewall_policy" "main" {
+  name                              = "wafpol${var.project_name}${var.environment}"
+  resource_group_name               = azurerm_resource_group.main.name
+  sku_name                          = azurerm_cdn_frontdoor_profile.main.sku_name
+  enabled                           = true
+  mode                              = "Prevention"
+
+  # Rate limiting: 100 requests per 5 minutes per IP
+  custom_rule {
+    name     = "RateLimitPerIP"
+    enabled  = true
+    priority = 100
+    type     = "RateLimitRule"
+    action   = "Block"
+
+    rate_limit_duration_in_minutes = 5
+    rate_limit_threshold           = 100
+
+    match_condition {
+      match_variable     = "RemoteAddr"
+      operator           = "IPMatch"
+      negation_condition = false
+      match_values       = ["0.0.0.0/0"]
+    }
+  }
+
+  # Managed rule: Default Rule Set
+  managed_rule {
+    type    = "Microsoft_DefaultRuleSet"
+    version = "2.1"
+    action  = "Block"
+  }
+
+  # Managed rule: Bot Manager Rule Set
+  managed_rule {
+    type    = "Microsoft_BotManagerRuleSet"
+    version = "1.0"
+    action  = "Block"
+  }
+
+  tags = local.common_tags
+}
+
+# Security policy linking WAF to all Front Door endpoints
+resource "azurerm_cdn_frontdoor_security_policy" "main" {
+  name                     = "secpol-${local.resource_prefix}"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.main.id
+
+  security_policies {
+    firewall {
+      cdn_frontdoor_firewall_policy_id = azurerm_cdn_frontdoor_firewall_policy.main.id
+
+      association {
+        patterns_to_match = ["/*"]
+
+        domain {
+          cdn_frontdoor_domain_id = azurerm_cdn_frontdoor_endpoint.provider_portal.id
+        }
+
+        domain {
+          cdn_frontdoor_domain_id = azurerm_cdn_frontdoor_endpoint.patient_portal.id
+        }
+
+        domain {
+          cdn_frontdoor_domain_id = azurerm_cdn_frontdoor_endpoint.orders_api.id
+        }
+      }
+    }
+  }
+}
+
+# ============================================================
+# Azure Monitor Alerts
+# ============================================================
+
+resource "azurerm_monitor_action_group" "critical" {
+  name                = "ag-critical-${local.resource_prefix}"
+  resource_group_name = azurerm_resource_group.main.name
+  short_name          = "Critical"
+
+  email_receiver {
+    name          = "ops-email"
+    email_address = var.alert_email
+  }
+
+  tags = local.common_tags
+}
+
+# Alert: API response time > 2 seconds
+resource "azurerm_monitor_metric_alert" "api_response_time" {
+  name                = "alert-api-response-time-${local.resource_prefix}"
+  resource_group_name = azurerm_resource_group.main.name
+  scopes              = [azurerm_linux_web_app.orders_api.id]
+  description         = "Orders API average response time exceeds 2 seconds"
+  severity            = 2
+  frequency           = "PT1M"
+  window_size         = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.Web/sites"
+    metric_name      = "HttpResponseTime"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 2
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.critical.id
+  }
+
+  tags = local.common_tags
+}
+
+# Alert: HTTP 5xx errors > 5 in 5 minutes
+resource "azurerm_monitor_metric_alert" "api_5xx_errors" {
+  name                = "alert-api-5xx-${local.resource_prefix}"
+  resource_group_name = azurerm_resource_group.main.name
+  scopes              = [azurerm_linux_web_app.orders_api.id]
+  description         = "Orders API HTTP 5xx errors exceed threshold"
+  severity            = 1
+  frequency           = "PT1M"
+  window_size         = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.Web/sites"
+    metric_name      = "Http5xx"
+    aggregation      = "Total"
+    operator         = "GreaterThan"
+    threshold        = 5
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.critical.id
+  }
+
+  tags = local.common_tags
+}
+
+# Alert: SQL DTU consumption > 90%
+resource "azurerm_monitor_metric_alert" "sql_dtu" {
+  name                = "alert-sql-dtu-${local.resource_prefix}"
+  resource_group_name = azurerm_resource_group.main.name
+  scopes              = [azurerm_mssql_database.main.id]
+  description         = "SQL Database DTU consumption exceeds 90%"
+  severity            = 2
+  frequency           = "PT1M"
+  window_size         = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.Sql/servers/databases"
+    metric_name      = "dtu_consumption_percent"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 90
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.critical.id
+  }
+
+  tags = local.common_tags
+}
+
+# Alert: Redis memory usage > 80%
+resource "azurerm_monitor_metric_alert" "redis_memory" {
+  name                = "alert-redis-memory-${local.resource_prefix}"
+  resource_group_name = azurerm_resource_group.main.name
+  scopes              = [azurerm_redis_cache.main.id]
+  description         = "Redis cache memory usage exceeds 80%"
+  severity            = 2
+  frequency           = "PT1M"
+  window_size         = "PT5M"
+
+  criteria {
+    metric_namespace = "Microsoft.Cache/redis"
+    metric_name      = "usedmemorypercentage"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 80
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.critical.id
+  }
+
+  tags = local.common_tags
 }
 
 # ============================================================
@@ -601,4 +1171,21 @@ output "patient_portal_staging_url" {
 
 output "orders_api_staging_url" {
   value = "https://${azurerm_linux_web_app_slot.orders_api_staging.default_hostname}"
+}
+
+output "front_door_endpoint" {
+  value = {
+    provider_portal = azurerm_cdn_frontdoor_endpoint.provider_portal.host_name
+    patient_portal  = azurerm_cdn_frontdoor_endpoint.patient_portal.host_name
+    orders_api      = azurerm_cdn_frontdoor_endpoint.orders_api.host_name
+  }
+}
+
+output "vnet_id" {
+  value = azurerm_virtual_network.main.id
+}
+
+output "application_insights_connection_string" {
+  value     = azurerm_application_insights.main.connection_string
+  sensitive = true
 }

@@ -33,7 +33,9 @@ public static class DependencyInjection
         // --------------------------------------------------------
         // Database
         // --------------------------------------------------------
-        services.AddDbContext<AttendingDbContext>((sp, options) =>
+        // Use DbContext pooling for production (reduces allocation overhead).
+        // Pool size defaults to 1024; CommandTimeout and retry handle transients.
+        services.AddDbContextPool<AttendingDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
 
@@ -47,15 +49,17 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(30),
                     errorNumbersToAdd: null);
                 sqlOptions.CommandTimeout(30);
+                // ADO.NET connection pooling: explicit min/max to handle burst traffic
+                sqlOptions.MinBatchSize(1);
             });
-            
+
             // Enable detailed errors in development
             if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
             {
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
             }
-        });  // end AddDbContext
+        }, poolSize: 256);  // 256 pooled DbContext instances
 
         // Unit of Work
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AttendingDbContext>());
@@ -80,10 +84,15 @@ public static class DependencyInjection
 
         if (!string.IsNullOrWhiteSpace(redisConnectionString))
         {
-            // Production/staging: use Redis
+            // Production/staging: use Redis with connection resilience
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = redisConnectionString;
+                options.ConfigurationOptions = StackExchange.Redis.ConfigurationOptions.Parse(redisConnectionString);
+                options.ConfigurationOptions.AbortOnConnectFail = false;
+                options.ConfigurationOptions.ConnectRetry = 3;
+                options.ConfigurationOptions.ReconnectRetryPolicy = new StackExchange.Redis.ExponentialRetry(5000);
+                options.ConfigurationOptions.ConnectTimeout = 10000;
+                options.ConfigurationOptions.SyncTimeout = 5000;
                 options.InstanceName = "attending:";
             });
         }
@@ -103,7 +112,13 @@ public static class DependencyInjection
         {
             // Production: Redis-backed distributed locks (cross-node safe)
             services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
-                StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString));
+            {
+                var opts = StackExchange.Redis.ConfigurationOptions.Parse(redisConnectionString);
+                opts.AbortOnConnectFail = false;
+                opts.ConnectRetry = 3;
+                opts.ReconnectRetryPolicy = new StackExchange.Redis.ExponentialRetry(5000);
+                return StackExchange.Redis.ConnectionMultiplexer.Connect(opts);
+            });
             services.AddSingleton<ATTENDING.Domain.Interfaces.IDistributedLockService,
                 Services.RedisDistributedLockService>();
 

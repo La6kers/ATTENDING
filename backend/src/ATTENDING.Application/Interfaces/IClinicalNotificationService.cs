@@ -27,6 +27,7 @@ public interface IClinicalNotificationService
 #region Notification Models
 
 public record CriticalResultNotification(
+    Guid TenantId,
     Guid PatientId,
     string PatientName,
     string PatientMrn,
@@ -40,6 +41,7 @@ public record CriticalResultNotification(
     string? OrderingProviderName);
 
 public record EmergencyAssessmentNotification(
+    Guid TenantId,
     Guid AssessmentId,
     string AssessmentNumber,
     Guid PatientId,
@@ -51,6 +53,7 @@ public record EmergencyAssessmentNotification(
     DateTime DetectedAt);
 
 public record OrderStatusNotification(
+    Guid TenantId,
     Guid OrderId,
     string OrderNumber,
     string OrderType,
@@ -61,6 +64,7 @@ public record OrderStatusNotification(
     DateTime ChangedAt);
 
 public record NewAssessmentNotification(
+    Guid TenantId,
     Guid AssessmentId,
     string AssessmentNumber,
     Guid PatientId,
@@ -73,6 +77,7 @@ public record NewAssessmentNotification(
     DateTime StartedAt);
 
 public record RedFlagNotification(
+    Guid TenantId,
     Guid AssessmentId,
     Guid PatientId,
     string PatientName,
@@ -83,6 +88,7 @@ public record RedFlagNotification(
     DateTime DetectedAt);
 
 public record DrugInteractionNotification(
+    Guid TenantId,
     Guid MedicationOrderId,
     Guid PatientId,
     string PatientName,

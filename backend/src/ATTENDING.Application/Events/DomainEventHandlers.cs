@@ -37,6 +37,7 @@ public class EmergencyProtocolHandler : INotificationHandler<DomainEventNotifica
         {
             var patient = await _patientRepository.GetByIdAsync(evt.PatientId, cancellationToken);
             await _notifications.NotifyEmergencyAssessmentAsync(new EmergencyAssessmentNotification(
+                TenantId: patient?.OrganizationId ?? Guid.Empty,
                 AssessmentId: evt.AssessmentId,
                 AssessmentNumber: $"ASM-{evt.AssessmentId.ToString()[..8].ToUpperInvariant()}",
                 PatientId: evt.PatientId,
@@ -86,6 +87,7 @@ public class RedFlagDetectedHandler : INotificationHandler<DomainEventNotificati
         {
             var patient = await _patientRepository.GetByIdAsync(evt.PatientId, cancellationToken);
             await _notifications.NotifyRedFlagDetectedAsync(new RedFlagNotification(
+                TenantId: patient?.OrganizationId ?? Guid.Empty,
                 AssessmentId: evt.AssessmentId,
                 PatientId: evt.PatientId,
                 PatientName: patient?.FullName ?? "Unknown Patient",
@@ -137,6 +139,7 @@ public class CriticalLabResultHandler : INotificationHandler<DomainEventNotifica
         {
             var order = await _labOrderRepository.GetWithResultAsync(evt.LabOrderId, cancellationToken);
             await _notifications.NotifyCriticalResultAsync(new CriticalResultNotification(
+                TenantId: order?.OrganizationId ?? Guid.Empty,
                 PatientId: order?.PatientId ?? Guid.Empty,
                 PatientName: order?.Patient?.FullName ?? "Unknown Patient",
                 PatientMrn: order?.Patient?.MRN ?? "",
@@ -187,6 +190,7 @@ public class DrugInteractionHandler : INotificationHandler<DomainEventNotificati
         {
             var patient = await _patientRepository.GetByIdAsync(evt.PatientId, cancellationToken);
             await _notifications.NotifyDrugInteractionAsync(new DrugInteractionNotification(
+                TenantId: patient?.OrganizationId ?? Guid.Empty,
                 MedicationOrderId: evt.MedicationOrderId,
                 PatientId: evt.PatientId,
                 PatientName: patient?.FullName ?? "Unknown Patient",
@@ -234,6 +238,7 @@ public class AssessmentCompletedHandler : INotificationHandler<DomainEventNotifi
         {
             var patient = await _patientRepository.GetByIdAsync(evt.PatientId, cancellationToken);
             await _notifications.NotifyNewAssessmentAsync(new NewAssessmentNotification(
+                TenantId: patient?.OrganizationId ?? Guid.Empty,
                 AssessmentId: evt.AssessmentId,
                 AssessmentNumber: $"ASM-{evt.AssessmentId.ToString()[..8].ToUpperInvariant()}",
                 PatientId: evt.PatientId,

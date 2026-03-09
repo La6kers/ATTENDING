@@ -1,5 +1,7 @@
+using Azure.Monitor.OpenTelemetry.Exporter;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -38,6 +40,10 @@ public static class OpenTelemetryExtensions
     public static readonly System.Diagnostics.ActivitySource ActivitySource =
         new("ATTENDING.Api", "1.0.0");
 
+    /// <summary>Meter for custom ATTENDING business metrics.</summary>
+    public static readonly System.Diagnostics.Metrics.Meter Meter =
+        new("ATTENDING.Api", "1.0.0");
+
     public static IServiceCollection AddAttendingOpenTelemetry(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -49,9 +55,11 @@ public static class OpenTelemetryExtensions
         var otlpEndpoint    = section["OtlpEndpoint"];
         var consoleExporter = section.GetValue<bool>("ConsoleExporter", environment.IsDevelopment());
 
-        // If neither exporter is configured, skip registration entirely.
-        // This avoids startup overhead in environments where tracing isn't needed.
-        if (string.IsNullOrWhiteSpace(otlpEndpoint) && !consoleExporter)
+        // Azure Monitor connection string (Application Insights)
+        var appInsightsConnStr = configuration["ApplicationInsights:ConnectionString"];
+
+        // If no exporter is configured, skip registration entirely.
+        if (string.IsNullOrWhiteSpace(otlpEndpoint) && !consoleExporter && string.IsNullOrWhiteSpace(appInsightsConnStr))
             return services;
 
         // Resource attributes visible in every span
@@ -68,6 +76,48 @@ public static class OpenTelemetryExtensions
             });
 
         services.AddOpenTelemetry()
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .SetResourceBuilder(resourceBuilder)
+
+                    // ASP.NET Core request metrics (request duration, active requests, etc.)
+                    .AddAspNetCoreInstrumentation()
+
+                    // HttpClient outbound call metrics
+                    .AddHttpClientInstrumentation()
+
+                    // .NET runtime metrics (GC, thread pool, JIT)
+                    .AddRuntimeInstrumentation()
+
+                    // .NET process metrics (CPU, memory, handles)
+                    .AddProcessInstrumentation()
+
+                    // Custom ATTENDING business metrics
+                    .AddMeter("ATTENDING.Api")
+                    .AddMeter("ATTENDING.Application")
+                    .AddMeter("ATTENDING.Infrastructure");
+
+                // Prometheus endpoint for scraping (/metrics)
+                metrics.AddPrometheusExporter();
+
+                // OTLP metrics export (same endpoint as tracing)
+                if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+                {
+                    metrics.AddOtlpExporter(opts =>
+                    {
+                        opts.Endpoint = new Uri(otlpEndpoint);
+                        opts.Protocol = OtlpExportProtocol.Grpc;
+                    });
+                }
+
+                // Azure Monitor exporter
+                if (!string.IsNullOrWhiteSpace(appInsightsConnStr))
+                {
+                    metrics.AddAzureMonitorMetricExporter(opts =>
+                        opts.ConnectionString = appInsightsConnStr);
+                }
+            })
             .WithTracing(tracing =>
             {
                 tracing
@@ -165,6 +215,13 @@ public static class OpenTelemetryExtensions
                                 MaxExportBatchSize         = 512,
                             };
                     });
+                }
+
+                // Azure Monitor trace exporter (Application Insights)
+                if (!string.IsNullOrWhiteSpace(appInsightsConnStr))
+                {
+                    tracing.AddAzureMonitorTraceExporter(opts =>
+                        opts.ConnectionString = appInsightsConnStr);
                 }
 
                 // Console exporter — dev/debug only.

@@ -377,6 +377,9 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
     Predicate = _ => false
 });
 
+// Prometheus metrics endpoint — scraped by monitoring infrastructure
+app.MapPrometheusScrapingEndpoint("/metrics");
+
 // Startup logging
 Log.Information("==============================================");
 Log.Information("ATTENDING AI - Orders API");

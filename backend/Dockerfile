@@ -27,15 +27,18 @@ RUN dotnet publish src/ATTENDING.Orders.Api/ATTENDING.Orders.Api.csproj \
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
+# Install wget for health checks (curl not available in aspnet image)
+RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
+
 # Security: run as non-root
 RUN adduser --disabled-password --gecos '' appuser
 USER appuser
 
 COPY --from=build /app/publish .
 
-# Health check
+# Health check (using wget — curl is not included in aspnet base image)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8080/health/live || exit 1
+    CMD wget --spider -q http://localhost:8080/health/live || exit 1
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production

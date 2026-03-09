@@ -81,7 +81,7 @@ COPY --from=builder /app/prisma ./prisma
 USER nextjs
 EXPOSE 3002
 
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD wget --spider -q http://localhost:3002/api/health || exit 1
 
 CMD ["node", "apps/provider-portal/server.js"]
