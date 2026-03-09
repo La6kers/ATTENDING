@@ -13,6 +13,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
 import { proxyToBackend } from '../../../lib/backendProxy';
 import { buildWebhookPayload, dispatchWebhooks } from '../../../lib/webhooks';
+import { verifyCsrfToken } from '@attending/shared/lib/security';
 
 // =============================================================================
 // Types — matches what useChatStore.submitAssessment() sends
@@ -102,6 +103,24 @@ export default async function handler(
   }
 
   // =========================================================================
+  // CSRF validation
+  // =========================================================================
+  const csrfSecret = req.cookies['__Host-csrf-token'];
+  const csrfToken = req.headers['x-csrf-token'] as string;
+  if (!csrfSecret || !csrfToken || !verifyCsrfToken(csrfSecret, csrfToken)) {
+    return res.status(403).json({ error: 'Invalid or missing CSRF token' });
+  }
+
+  // =========================================================================
+  // Organization context — required since Patient.organizationId is non-nullable
+  // =========================================================================
+  const organizationId = process.env.DEFAULT_ORGANIZATION_ID;
+  if (!organizationId) {
+    console.error('[ASSESSMENT SUBMIT] DEFAULT_ORGANIZATION_ID environment variable is not set');
+    return res.status(500).json({ error: 'Server configuration error: organization context unavailable' });
+  }
+
+  // =========================================================================
   // Try .NET backend first (CQRS pipeline with domain events → SignalR)
   // When available, the .NET backend handles validation, persistence,
   // and fires domain events that notify providers via SignalR in real-time.
@@ -159,6 +178,7 @@ export default async function handler(
         lastName: data.patientName?.split(' ').slice(1).join(' ') || 'Patient',
         dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : new Date('1990-01-01'),
         gender: data.gender || null,
+        organizationId,
       },
     });
 

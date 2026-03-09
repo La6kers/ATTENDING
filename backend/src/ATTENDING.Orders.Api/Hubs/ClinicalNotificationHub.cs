@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using ATTENDING.Application.Interfaces;
+using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Orders.Api.Hubs;
 
@@ -12,16 +13,18 @@ namespace ATTENDING.Orders.Api.Hubs;
 public class ClinicalNotificationHub : Hub
 {
     private readonly ILogger<ClinicalNotificationHub> _logger;
-    
+    private readonly IPatientRepository _patientRepository;
+
     // Track connected providers by their user ID
     private static readonly ConcurrentDictionary<string, HashSet<string>> _providerConnections = new();
-    
+
     // Track which providers are watching which patients
     private static readonly ConcurrentDictionary<string, HashSet<string>> _patientWatchers = new();
 
-    public ClinicalNotificationHub(ILogger<ClinicalNotificationHub> logger)
+    public ClinicalNotificationHub(ILogger<ClinicalNotificationHub> logger, IPatientRepository patientRepository)
     {
         _logger = logger;
+        _patientRepository = patientRepository;
     }
 
     public override async Task OnConnectedAsync()
@@ -73,6 +76,13 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task WatchPatient(string patientId)
     {
+        if (!Guid.TryParse(patientId, out var patientGuid))
+            throw new HubException("Patient not found");
+
+        var patient = await _patientRepository.GetByIdAsync(patientGuid);
+        if (patient is null)
+            throw new HubException("Patient not found");
+
         var connectionId = Context.ConnectionId;
         var tenantId = Context.User?.FindFirst("oid")?.Value
                     ?? Context.User?.FindFirst("sub")?.Value

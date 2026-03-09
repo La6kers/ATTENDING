@@ -19,6 +19,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
 import crypto from 'crypto';
+import { rateLimit, getClientIp } from '@attending/shared/lib/security';
 
 interface VerifyRequest {
   code?: string;
@@ -44,6 +45,30 @@ export default async function handler(
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
+  // =========================================================================
+  // Rate limiting: max 5 requests per minute per IP
+  // =========================================================================
+  const clientIp = getClientIp(req);
+  const rateLimitResult = await rateLimit(`ip:${clientIp}`, {
+    windowMs: 60000,
+    maxRequests: 5,
+    keyPrefix: 'compass-verify',
+  });
+
+  if (!rateLimitResult.allowed) {
+    res.setHeader('Retry-After', rateLimitResult.retryAfter || 60);
+    return res.status(429).json({ error: 'Too many verification attempts. Please try again later.' });
+  }
+
+  // =========================================================================
+  // Organization context
+  // =========================================================================
+  const organizationId = process.env.DEFAULT_ORGANIZATION_ID;
+  if (!organizationId) {
+    console.error('[COMPASS VERIFY] DEFAULT_ORGANIZATION_ID environment variable is not set');
+    return res.status(500).json({ error: 'Server configuration error: organization context unavailable' });
+  }
+
   const { code, lastName, dateOfBirth } = req.body as VerifyRequest;
 
   if (!lastName || !dateOfBirth) {
@@ -64,6 +89,7 @@ export default async function handler(
       where: {
         lastName: { equals: lastName, mode: 'insensitive' },
         dateOfBirth: dob,
+        organizationId,
         deletedAt: null,
       },
       select: {

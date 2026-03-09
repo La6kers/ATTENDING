@@ -59,6 +59,12 @@ public interface IPatientRepository : IRepository<Patient>
     Task<Patient?> GetWithFullHistoryAsync(Guid patientId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Returns the count of patients matching the search term via SELECT COUNT(*),
+    /// without materializing any rows.
+    /// </summary>
+    Task<int> SearchCountAsync(string? searchTerm, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Looks up an existing patient within the given organization by first name, last name,
     /// and date of birth. Used by COMPASS anonymous intake to deduplicate patients
     /// instead of creating a new Patient record on every submission.

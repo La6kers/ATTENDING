@@ -151,8 +151,10 @@ public class IdempotencyMiddleware
         {
             await _next(context);
 
-            // Cache successful responses (2xx)
-            if (context.Response.StatusCode >= 200 && context.Response.StatusCode < 300)
+            // Cache successful responses (2xx) and deterministic client errors (409, 422)
+            if ((context.Response.StatusCode >= 200 && context.Response.StatusCode < 300) ||
+                context.Response.StatusCode == 409 ||
+                context.Response.StatusCode == 422)
             {
                 memoryStream.Seek(0, SeekOrigin.Begin);
                 var responseBody = await new StreamReader(memoryStream).ReadToEndAsync(context.RequestAborted);

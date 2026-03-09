@@ -118,6 +118,23 @@ public class PatientRepository : Repository<Patient>, IPatientRepository
         await Context.Set<Allergy>().AddAsync(allergy, cancellationToken);
     }
 
+    public async Task<int> SearchCountAsync(string? searchTerm, CancellationToken cancellationToken = default)
+    {
+        var query = DbSet.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.ToLower();
+            query = query.Where(p =>
+                p.MRN.ToLower().Contains(term) ||
+                p.FirstName.ToLower().Contains(term) ||
+                p.LastName.ToLower().Contains(term) ||
+                (p.Email != null && p.Email.ToLower().Contains(term)));
+        }
+
+        return await query.CountAsync(cancellationToken);
+    }
+
     /// <summary>
     /// Finds an existing patient in the given organization matching first name, last name,
     /// and date of birth. Used for COMPASS deduplication. The query bypasses the

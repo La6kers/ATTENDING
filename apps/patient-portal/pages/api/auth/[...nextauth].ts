@@ -68,6 +68,24 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      // Embed organizationId from environment for patient portal sessions
+      token.organizationId = process.env.DEFAULT_ORGANIZATION_ID || null;
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as any).id = token.id;
+        (session.user as any).organizationId = token.organizationId;
+      }
+      return session;
+    },
+  },
+
   session: {
     strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 24 hours

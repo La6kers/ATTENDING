@@ -4,7 +4,7 @@
 # =============================================================
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
     container_name: attending-sqlserver
     environment:
       ACCEPT_EULA: "Y"
@@ -53,7 +53,7 @@ services:
         condition: service_healthy
 
   seq:
-    image: datalust/seq:latest
+    image: datalust/seq:2024.1
     container_name: attending-seq
     ports:
       - "5341:5341"

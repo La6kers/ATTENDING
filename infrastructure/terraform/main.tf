@@ -54,6 +54,13 @@ variable "project_name" {
   default     = "attending"
 }
 
+variable "nextauth_secret" {
+  description = "NextAuth.js session signing secret (generate with: openssl rand -base64 32). Must be set for production."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "sql_admin_login" {
   description = "Azure SQL admin login"
   type        = string
@@ -170,13 +177,9 @@ resource "azurerm_mssql_database" "main" {
   tags = local.common_tags
 }
 
-# Firewall: allow Azure services
-resource "azurerm_mssql_firewall_rule" "azure_services" {
-  name             = "AllowAzureServices"
-  server_id        = azurerm_mssql_server.main.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "0.0.0.0"
-}
+# Firewall rule for Azure services removed — the SQL server uses
+# public_network_access_enabled = false with private endpoints,
+# making this 0.0.0.0/0.0.0.0 rule redundant and overly permissive.
 
 # ============================================================
 # App Service Plan (Linux) — Shared by Next.js portals
@@ -423,11 +426,11 @@ resource "azurerm_key_vault_secret" "db_connection_string_dotnet" {
 
 resource "azurerm_key_vault_secret" "nextauth_secret" {
   name         = "nextauth-secret"
-  value        = "CHANGE-ME-generate-with-openssl-rand-base64-32"
+  value        = var.nextauth_secret != "" ? var.nextauth_secret : "CHANGE-ME-generate-with-openssl-rand-base64-32"
   key_vault_id = azurerm_key_vault.main.id
 
   lifecycle {
-    ignore_changes = [value] # Don't overwrite after initial set
+    ignore_changes = [value]
   }
 }
 

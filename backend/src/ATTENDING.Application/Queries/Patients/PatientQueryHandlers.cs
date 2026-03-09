@@ -40,8 +40,7 @@ public class SearchPatientsHandler : IRequestHandler<SearchPatientsQuery, (IRead
     {
         var skip = (request.Page - 1) * request.PageSize;
         var patients = await _repo.SearchAsync(request.SearchTerm, skip, request.PageSize, ct);
-        // For MVP, total count via second query. Production: add count method to repo.
-        var all = await _repo.SearchAsync(request.SearchTerm, 0, 10000, ct);
-        return (patients, all.Count);
+        var totalCount = await _repo.SearchCountAsync(request.SearchTerm, ct);
+        return (patients, totalCount);
     }
 }

@@ -58,6 +58,7 @@ public class LabOrdersController : ControllerBase
         Guid patientId, [FromQuery] LabOrderStatus? status = null,
         [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
+        take = Math.Clamp(take, 1, 100);
         var result = await _mediator.Send(new GetLabOrdersByPatientQuery(patientId, status, skip, take));
         return Ok(result.Select(o => new LabOrderSummaryResponse(
             o.Id, o.OrderNumber, o.TestName, o.Priority.ToString(),
@@ -66,10 +67,13 @@ public class LabOrdersController : ControllerBase
 
     [HttpGet("encounter/{encounterId:guid}")]
     [ProducesResponseType(typeof(IEnumerable<LabOrderSummaryResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<LabOrderSummaryResponse>>> GetByEncounter(Guid encounterId)
+    public async Task<ActionResult<IEnumerable<LabOrderSummaryResponse>>> GetByEncounter(
+        Guid encounterId, [FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
+        take = Math.Clamp(take, 1, 100);
+        skip = Math.Max(skip, 0);
         var result = await _mediator.Send(new GetLabOrdersByEncounterQuery(encounterId));
-        return Ok(result.Select(o => new LabOrderSummaryResponse(
+        return Ok(result.Skip(skip).Take(take).Select(o => new LabOrderSummaryResponse(
             o.Id, o.OrderNumber, o.TestName, o.Priority.ToString(),
             o.Status.ToString(), o.OrderedAt, o.HasResult)));
     }
@@ -211,8 +215,7 @@ public class LabOrdersController : ControllerBase
         var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
         if (!Guid.TryParse(userIdClaim, out var userId) || userId == Guid.Empty)
         {
-            throw new InvalidOperationException(
-                $"User ID claim is missing or invalid. sub='{User.FindFirst("sub")?.Value}', oid='{User.FindFirst("oid")?.Value}'");
+            throw new InvalidOperationException("User ID claim is missing or invalid.");
         }
         return userId;
     }

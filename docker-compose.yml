@@ -21,7 +21,7 @@ services:
   # DATABASE - MS SQL Server 2022
   # ==========================================================================
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
     container_name: attending-sqlserver
     restart: unless-stopped
     environment:
@@ -44,7 +44,7 @@ services:
   # Creates attending_db on first run (idempotent)
   # ==========================================================================
   sqlserver-init:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
     container_name: attending-sqlserver-init
     depends_on:
       sqlserver:
@@ -177,7 +177,7 @@ services:
   # Activate with: docker compose --profile observability up
   # ==========================================================================
   seq:
-    image: datalust/seq:latest
+    image: datalust/seq:2024.1
     container_name: attending-seq
     restart: unless-stopped
     ports:
@@ -196,7 +196,7 @@ services:
   # Activate with: docker compose --profile observability up
   # ==========================================================================
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.54
     container_name: attending-jaeger
     restart: unless-stopped
     ports:
