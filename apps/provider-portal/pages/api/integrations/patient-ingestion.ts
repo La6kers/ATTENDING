@@ -54,7 +54,10 @@ const PatientSchema = z.object({
   mrn: z.string().min(1).max(50),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  dateOfBirth: z.string(),
+  dateOfBirth: z.string().refine(
+    (val) => !val || !isNaN(Date.parse(val)),
+    { message: 'dateOfBirth must be a valid date string (e.g., YYYY-MM-DD)' }
+  ),
   gender: z.string().optional(),
   sexAssignedAtBirth: z.string().optional(),
   genderIdentity: z.string().optional(),
@@ -208,10 +211,11 @@ export default apiKeyHandler({
     };
 
     // Process all patients in a single transaction to ensure atomicity
-    // and reduce round-trips (addresses N+1 query concern).
-    await prisma.$transaction(async (tx) => {
-      for (const patient of patients) {
-        try {
+    // and reduce round-trips. If any patient fails, the entire batch
+    // rolls back so results.created/updated stay accurate.
+    try {
+      await prisma.$transaction(async (tx) => {
+        for (const patient of patients) {
           // Upsert patient by MRN within the organization
           const existing = await tx.patient.findFirst({
             where: {
@@ -322,17 +326,16 @@ export default apiKeyHandler({
               }
             }
           }
-        } catch (error) {
-          const message =
-            error instanceof Error ? error.message : 'Unknown error';
-          results.errors.push({ mrn: patient.mrn, error: message });
-          ctx.log.error('Patient ingestion error', {
-            mrn: patient.mrn,
-            error: message,
-          });
         }
-      }
-    }, { timeout: 60_000 }); // 60s timeout for large batches
+      }, { timeout: 60_000 }); // 60s timeout for large batches
+    } catch (error) {
+      // Transaction rolled back — reset counts to zero since nothing was committed
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ctx.log.error('Patient ingestion transaction failed', { error: message });
+      results.created = 0;
+      results.updated = 0;
+      results.errors = patients.map((p) => ({ mrn: p.mrn, error: `Transaction rolled back: ${message}` }));
+    }
 
     ctx.log.info('Patient ingestion completed', {
       organizationId,

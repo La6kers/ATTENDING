@@ -324,7 +324,7 @@ export function useWebSocket(config: WebSocketConfig) {
 
   // Submit completed assessment
   const submitAssessment = useCallback(
-    (assessment: any): Promise<SubmissionResult> => {
+    (assessment: Record<string, unknown>): Promise<SubmissionResult> => {
       return new Promise((resolve, reject) => {
         if (
           !connectionRef.current ||

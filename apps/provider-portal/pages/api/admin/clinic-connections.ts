@@ -319,7 +319,7 @@ export default createHandler({
         // Revoke API keys
         await prisma.apiKey.updateMany({
           where: { organizationId: clinicId, isActive: true },
-          data: { isActive: false, revokedAt: new Date() },
+          data: { isActive: false },
         });
 
         ctx.log.info('Clinic disconnected', { clinicId });

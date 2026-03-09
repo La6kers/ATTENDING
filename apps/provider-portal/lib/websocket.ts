@@ -89,9 +89,9 @@ export function connectWebSocket(providerId: string, providerName: string): HubC
     return connection;
   }
 
-  if (isConnecting) {
+  if (isConnecting && connection) {
     console.log('[SignalR] Connection in progress...');
-    return connection!;
+    return connection;
   }
 
   isConnecting = true;

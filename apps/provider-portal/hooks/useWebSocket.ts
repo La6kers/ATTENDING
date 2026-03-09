@@ -374,17 +374,17 @@ export function useWebSocket(config: WebSocketConfig) {
 
     builder.on('AssessmentUpdated', handleAssessmentUpdate);
 
-    builder.on('PatientConnected', (data: any) => {
+    builder.on('PatientConnected', (data: { name: string; sessionId?: string; id?: string }) => {
       addNotification({
         type: 'new-patient',
         title: 'New Patient Connected',
         message: `${data.name} has started an assessment`,
-        assessmentId: data.sessionId || data.id,
+        assessmentId: data.sessionId || data.id || '',
         urgency: 'routine',
       });
     });
 
-    builder.on('PatientDisconnected', (data: any) => {
+    builder.on('PatientDisconnected', (data: { patientId: string }) => {
       addNotification({
         type: 'system',
         title: 'Patient Disconnected',
@@ -394,7 +394,7 @@ export function useWebSocket(config: WebSocketConfig) {
       });
     });
 
-    builder.on('RedFlagDetected', (data: any) => {
+    builder.on('RedFlagDetected', (data: { assessmentId?: string; symptom: string; severity?: string }) => {
       if (data.assessmentId) {
         addRedFlag(data.assessmentId, {
           id: `rf-${Date.now()}`,
@@ -414,7 +414,7 @@ export function useWebSocket(config: WebSocketConfig) {
       audioManagerRef.current?.play('critical');
     });
 
-    builder.on('CriticalLabResult', (data: any) => {
+    builder.on('CriticalLabResult', (data: { patientName: string; testName: string; value: string; assessmentId?: string }) => {
       addNotification({
         type: 'red-flag',
         title: 'CRITICAL Lab',
@@ -425,7 +425,7 @@ export function useWebSocket(config: WebSocketConfig) {
       audioManagerRef.current?.play('critical');
     });
 
-    builder.on('LabReady', (data: any) => {
+    builder.on('LabReady', (data: { patientName: string; testName: string; assessmentId?: string; isAbnormal?: boolean }) => {
       addNotification({
         type: 'system',
         title: 'Lab Ready',
@@ -438,7 +438,7 @@ export function useWebSocket(config: WebSocketConfig) {
       }
     });
 
-    builder.on('ImagingReady', (data: any) => {
+    builder.on('ImagingReady', (data: { patientName: string; studyType: string; assessmentId?: string; isStat?: boolean }) => {
       addNotification({
         type: 'system',
         title: 'Imaging Ready',
@@ -452,7 +452,7 @@ export function useWebSocket(config: WebSocketConfig) {
       setState(prev => ({ ...prev, activeProviders: data }));
     });
 
-    builder.on('MessageReceived', (data: any) => {
+    builder.on('MessageReceived', (data: { content?: string; fromId?: string }) => {
       addNotification({
         type: 'message',
         title: 'Patient Message',

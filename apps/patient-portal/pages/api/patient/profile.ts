@@ -6,7 +6,7 @@
 // Requires authenticated PATIENT session.
 // =============================================================================
 
-import type { NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '@attending/shared/lib/prisma';
@@ -43,8 +43,6 @@ interface PatientProfile {
   createdAt: string;
   updatedAt: string;
 }
-
-import type { NextApiRequest } from 'next';
 
 function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
   if (!value) return fallback;

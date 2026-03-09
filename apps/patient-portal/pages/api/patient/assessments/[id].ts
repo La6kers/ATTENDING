@@ -6,6 +6,8 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../../auth/[...nextauth]';
 
 // Types
 interface HPIData {
@@ -120,11 +122,16 @@ const mockAssessmentDetails: Record<string, AssessmentDetail> = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // TODO: Add authentication check
-  // const session = await getSession({ req });
-  // if (!session) {
-  //   return res.status(401).json({ error: 'Unauthorized' });
-  // }
+  // Authenticate
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return res.status(401).json({ error: 'Authentication required', code: 'AUTH_REQUIRED' });
+  }
+
+  const patientId = (session.user as { id?: string }).id;
+  if (!patientId) {
+    return res.status(401).json({ error: 'Session missing patient ID', code: 'AUTH_INVALID' });
+  }
 
   const { id } = req.query;
 

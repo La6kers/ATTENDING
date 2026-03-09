@@ -43,7 +43,7 @@ async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId: 
       where: { id: patientId, deletedAt: null },
       include: {
         conditions: { where: { deletedAt: null }, select: { id: true, name: true, icdCode: true } },
-        medications: { where: { deletedAt: null }, select: { id: true, name: true, dosage: true, frequency: true } },
+        medications: { where: { deletedAt: null }, select: { id: true, name: true, dose: true, frequency: true } },
         allergies: { where: { deletedAt: null }, select: { id: true, allergen: true, reaction: true, severity: true } },
       },
     });
@@ -55,7 +55,7 @@ async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId: 
     return res.status(200).json({
       profile: {
         conditions: patient.conditions.map((c) => c.name),
-        medications: patient.medications.map((m) => `${m.name}${m.dosage ? ` ${m.dosage}` : ''}${m.frequency ? ` ${m.frequency}` : ''}`),
+        medications: patient.medications.map((m) => `${m.name}${m.dose ? ` ${m.dose}` : ''}${m.frequency ? ` ${m.frequency}` : ''}`),
         allergies: patient.allergies.map((a) => a.allergen),
         lastUpdated: patient.updatedAt.toISOString(),
       },

@@ -254,8 +254,21 @@ export default async function handler(
           });
         }
       }
-      // For face_scan and biometric, validation happens client-side via device APIs.
-      // The accessMethod is logged for audit purposes.
+      // face_scan and biometric require device attestation that can only be
+      // verified from an authenticated session (WebAuthn / device APIs).
+      // Reject unauthenticated requests using these methods.
+      if (accessMethod === 'face_scan' || accessMethod === 'biometric') {
+        console.log('[SECURITY] Unauthenticated biometric/face_scan attempt:', {
+          patientId,
+          accessMethod,
+          ip: clientIp,
+          timestamp: new Date().toISOString(),
+        });
+        return res.status(403).json({
+          success: false,
+          error: 'Biometric and face scan access methods require an authenticated session',
+        });
+      }
     }
 
     // Generate log ID
