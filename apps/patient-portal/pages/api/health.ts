@@ -20,12 +20,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
   } catch (error) {
+    console.error('Health check failed:', (error as Error).message);
     res.status(503).json({
       status: 'unhealthy',
       service: 'patient-portal',
       timestamp: new Date().toISOString(),
       checks: {
-        database: { status: 'error', message: (error as Error).message },
+        database: { status: 'error', message: 'Service unavailable' },
       },
     });
   }

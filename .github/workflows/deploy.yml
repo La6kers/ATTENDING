@@ -169,7 +169,7 @@ jobs:
             --server "${{ secrets.AZURE_SQL_SERVER || 'sql-attending-production' }}" \
             --name "attending_db" \
             --query "earliestRestoreDate" \
-            --output tsv || echo "::warning::Could not verify backup status — proceed with caution"
+            --output tsv
 
       - name: Apply pending migrations
         run: npx prisma migrate deploy --schema=prisma/schema.prisma

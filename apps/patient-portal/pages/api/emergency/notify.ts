@@ -6,6 +6,8 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 
 // =============================================================================
 // Types
@@ -258,10 +260,20 @@ export default async function handler(
 ) {
   // Only allow POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      success: false, 
-      error: 'Method not allowed' 
+    return res.status(405).json({
+      success: false,
+      error: 'Method not allowed'
     });
+  }
+
+  // Authentication check
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return res.status(401).json({ success: false, error: 'Authentication required' });
+  }
+  const authenticatedUserId = (session.user as { id?: string }).id;
+  if (!authenticatedUserId) {
+    return res.status(401).json({ success: false, error: 'Session missing patient ID' });
   }
 
   try {
@@ -273,6 +285,14 @@ export default async function handler(
       additionalInfo,
       urgency,
     } = req.body as NotificationRequest;
+
+    // Verify patientId matches authenticated user
+    if (patientId !== authenticatedUserId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Patient ID does not match authenticated user',
+      });
+    }
 
     // Validate required fields
     if (!patientId || !notificationType || !recipients?.length) {

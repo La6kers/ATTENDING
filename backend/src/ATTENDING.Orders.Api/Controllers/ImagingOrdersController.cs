@@ -64,10 +64,12 @@ public class ImagingOrdersController : ControllerBase
     /// </summary>
     [HttpGet("patient/{patientId:guid}")]
     [ProducesResponseType(typeof(IEnumerable<ImagingOrderResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<ImagingOrderResponse>>> GetByPatient(Guid patientId)
+    public async Task<ActionResult<IEnumerable<ImagingOrderResponse>>> GetByPatient(
+        Guid patientId, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
+        take = Math.Clamp(take, 1, 100);
         var orders = await _repository.GetByPatientIdAsync(patientId);
-        return Ok(orders.Select(MapToResponse));
+        return Ok(orders.Skip(skip).Take(take).Select(MapToResponse));
     }
 
     /// <summary>
@@ -123,6 +125,9 @@ public class ImagingOrdersController : ControllerBase
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ImagingOrderResponse>> Create([FromBody] CreateImagingOrderRequest request)
     {
+        if (!Enum.TryParse<OrderPriority>(request.Priority, true, out var priority))
+            return BadRequest(new ProblemDetails { Title = "Invalid priority value", Status = 400 });
+
         var userId = GetCurrentUserId();
 
         var order = Domain.Entities.ImagingOrder.Create(
@@ -134,7 +139,7 @@ public class ImagingOrdersController : ControllerBase
             modality: request.Modality,
             bodyPart: request.BodyPart,
             cptCode: request.CptCode,
-            priority: Enum.Parse<OrderPriority>(request.Priority),
+            priority: priority,
             clinicalIndication: request.ClinicalIndication,
             diagnosisCode: request.DiagnosisCode,
             laterality: request.Laterality,
@@ -175,6 +180,15 @@ public class ImagingOrdersController : ControllerBase
             {
                 Title = "Imaging order not found",
                 Status = StatusCodes.Status404NotFound
+            });
+        }
+
+        if (order.Status == ImagingOrderStatus.Scheduled)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Imaging order is already scheduled",
+                Status = StatusCodes.Status409Conflict
             });
         }
 
@@ -225,8 +239,11 @@ public class ImagingOrdersController : ControllerBase
 
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            throw new UnauthorizedAccessException("Valid user identity is required.");
+        return userId;
     }
 
     private static ImagingOrderResponse MapToResponse(Domain.Entities.ImagingOrder order)

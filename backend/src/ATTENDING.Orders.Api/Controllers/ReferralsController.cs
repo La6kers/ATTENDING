@@ -86,10 +86,12 @@ public class ReferralsController : ControllerBase
     /// </summary>
     [HttpGet("patient/{patientId:guid}")]
     [ProducesResponseType(typeof(IEnumerable<ReferralResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<ReferralResponse>>> GetByPatient(Guid patientId)
+    public async Task<ActionResult<IEnumerable<ReferralResponse>>> GetByPatient(
+        Guid patientId, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
+        take = Math.Clamp(take, 1, 100);
         var referrals = await _repository.GetByPatientIdAsync(patientId);
-        return Ok(referrals.Select(MapToResponse));
+        return Ok(referrals.Skip(skip).Take(take).Select(MapToResponse));
     }
 
     /// <summary>
@@ -228,6 +230,15 @@ public class ReferralsController : ControllerBase
             });
         }
 
+        if (referral.Status == ReferralStatus.Scheduled)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Referral is already scheduled",
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+
         referral.Schedule(request.ScheduledAt);
         _repository.Update(referral);
         await _unitOfWork.SaveChangesAsync();
@@ -335,8 +346,11 @@ public class ReferralsController : ControllerBase
 
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            throw new UnauthorizedAccessException("Valid user identity is required.");
+        return userId;
     }
 
     private static ReferralResponse MapToResponse(Domain.Entities.Referral referral)

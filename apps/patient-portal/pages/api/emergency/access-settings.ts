@@ -10,6 +10,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
+import { verifyCsrfToken } from '@attending/shared/lib/security';
 
 const BACKEND_URL = process.env.BACKEND_URL;
 
@@ -66,6 +67,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'PUT') {
+    // CSRF validation
+    const csrfSecret = req.cookies['__Host-csrf-token'];
+    const csrfToken = req.headers['x-csrf-token'] as string;
+    if (!csrfSecret || !csrfToken || !verifyCsrfToken(csrfSecret, csrfToken)) {
+      return res.status(403).json({ error: 'Invalid or missing CSRF token' });
+    }
+
     if (!BACKEND_URL) {
       return res.status(503).json({ error: 'Backend service unavailable' });
     }

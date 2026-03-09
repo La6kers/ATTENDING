@@ -290,6 +290,8 @@ model Encounter {
   @@index([providerId, status])
   @@index([patientId, startTime])
   @@index([providerId, status, startTime])
+  @@index([patientId, createdAt])
+  @@index([organizationId, createdAt])
 }
 
 // ============== ALLERGIES ==============
@@ -448,6 +450,8 @@ model LabOrder {
   @@index([organizationId])
   @@index([providerId, status])
   @@index([patientId, orderedAt])
+  @@index([patientId, createdAt])
+  @@index([organizationId, createdAt])
 }
 
 model LabResult {
@@ -520,6 +524,8 @@ model ImagingOrder {
   @@index([orderedAt])
   @@index([deletedAt])
   @@index([organizationId])
+  @@index([patientId, createdAt])
+  @@index([organizationId, createdAt])
 }
 
 model ImagingResult {
@@ -598,6 +604,8 @@ model MedicationOrder {
   @@index([orderedAt])
   @@index([deletedAt])
   @@index([organizationId])
+  @@index([patientId, createdAt])
+  @@index([organizationId, createdAt])
 }
 
 // ============== REFERRALS ==============
@@ -641,6 +649,8 @@ model Referral {
   @@index([specialty])
   @@index([deletedAt])
   @@index([organizationId])
+  @@index([patientId, createdAt])
+  @@index([organizationId, createdAt])
 }
 
 // ============== PATIENT ASSESSMENTS (COMPASS) ==============

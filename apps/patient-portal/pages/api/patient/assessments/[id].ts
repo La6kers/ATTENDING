@@ -158,8 +158,11 @@ async function handleGet(id: string, patientId: string, res: NextApiResponse) {
     return res.status(404).json({ error: 'Assessment not found' });
   }
 
-  // TODO: When migrating to Prisma, query with { id, patientId } to enforce ownership.
-  // Mock data is hardcoded to "John Doe" — in production, verify assessment.patientId === patientId.
+  // Ownership check: verify this assessment belongs to the authenticated patient.
+  // In production (Prisma), query with { id, patientId } to enforce ownership.
+  if ((assessment as any).patientId && (assessment as any).patientId !== patientId) {
+    return res.status(403).json({ error: 'Access denied', code: 'OWNERSHIP_MISMATCH' });
+  }
 
   return res.status(200).json({ assessment });
 }
@@ -170,6 +173,11 @@ async function handlePut(id: string, patientId: string, req: NextApiRequest, res
 
   if (!assessment) {
     return res.status(404).json({ error: 'Assessment not found' });
+  }
+
+  // Ownership check: verify this assessment belongs to the authenticated patient.
+  if ((assessment as any).patientId && (assessment as any).patientId !== patientId) {
+    return res.status(403).json({ error: 'Access denied', code: 'OWNERSHIP_MISMATCH' });
   }
 
   // Patients can only update in_progress assessments

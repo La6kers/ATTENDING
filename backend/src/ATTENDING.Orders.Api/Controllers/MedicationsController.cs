@@ -70,10 +70,12 @@ public class MedicationsController : ControllerBase
     /// </summary>
     [HttpGet("patient/{patientId:guid}")]
     [ProducesResponseType(typeof(IEnumerable<MedicationOrderResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<MedicationOrderResponse>>> GetByPatient(Guid patientId)
+    public async Task<ActionResult<IEnumerable<MedicationOrderResponse>>> GetByPatient(
+        Guid patientId, [FromQuery] int skip = 0, [FromQuery] int take = 20)
     {
+        take = Math.Clamp(take, 1, 100);
         var orders = await _repository.GetByPatientIdAsync(patientId);
-        return Ok(orders.Select(o => MapToResponse(o, null)));
+        return Ok(orders.Skip(skip).Take(take).Select(o => MapToResponse(o, null)));
     }
 
     /// <summary>
@@ -284,8 +286,11 @@ public class MedicationsController : ControllerBase
 
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                       ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            throw new UnauthorizedAccessException("Valid user identity is required.");
+        return userId;
     }
 
     private static MedicationOrderResponse MapToResponse(

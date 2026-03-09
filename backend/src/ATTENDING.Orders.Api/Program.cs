@@ -140,14 +140,19 @@ else
 builder.Services.AddAuthorization();
 
 // Add CORS
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+if (corsOrigins == null || corsOrigins.Length == 0)
+{
+    if (builder.Environment.IsProduction())
+        throw new InvalidOperationException("CORS origins must be configured in production.");
+    corsOrigins = new[] { "http://localhost:3000", "http://localhost:3001", "http://localhost:3002" };
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-            ?? new[] { "http://localhost:3000", "http://localhost:3001", "http://localhost:3002" };
-
-        policy.WithOrigins(origins)
+        policy.WithOrigins(corsOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials(); // Required for SignalR
@@ -350,6 +355,17 @@ app.UseMiddleware<IdempotencyMiddleware>();
 
 // Audit middleware (after auth)
 app.UseMiddleware<AuditMiddleware>();
+
+// Prevent response caching for API routes to avoid cross-tenant PHI leakage
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        context.Response.Headers["Pragma"] = "no-cache";
+    }
+    await next();
+});
 
 // Response caching
 app.UseResponseCaching();

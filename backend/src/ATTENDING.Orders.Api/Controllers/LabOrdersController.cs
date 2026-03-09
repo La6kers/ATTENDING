@@ -103,6 +103,9 @@ public class LabOrdersController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create([FromBody] CreateLabOrderRequest request)
     {
+        if (!Enum.TryParse<OrderPriority>(request.Priority, true, out var priority))
+            return BadRequest(new ProblemDetails { Title = "Invalid priority value", Status = 400 });
+
         var userId = GetCurrentUserId();
 
         var command = new CreateLabOrderCommand(
@@ -116,7 +119,7 @@ public class LabOrdersController : ControllerBase
             CptBasePrice: request.CptBasePrice,
             LoincCode: request.LoincCode,
             Category: request.Category,
-            Priority: Enum.Parse<OrderPriority>(request.Priority),
+            Priority: priority,
             ClinicalIndication: request.ClinicalIndication,
             DiagnosisCode: request.DiagnosisCode,
             DiagnosisDescription: request.DiagnosisDescription,
@@ -143,7 +146,8 @@ public class LabOrdersController : ControllerBase
     public async Task<IActionResult> UpdatePriority(Guid id, [FromBody] UpdatePriorityRequest request)
     {
         var userId = GetCurrentUserId();
-        var priority = Enum.Parse<OrderPriority>(request.NewPriority);
+        if (!Enum.TryParse<OrderPriority>(request.NewPriority, true, out var priority))
+            return BadRequest(new ProblemDetails { Title = "Invalid priority value", Status = 400 });
 
         var result = await _mediator.Send(new UpdateLabOrderPriorityCommand(id, priority, userId));
 
@@ -172,6 +176,16 @@ public class LabOrdersController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkCollected(Guid id, [FromBody] MarkCollectedRequest request)
     {
+        var existing = await _mediator.Send(new GetLabOrderByIdQuery(id));
+        if (existing != null && existing.Status == LabOrderStatus.Collected)
+        {
+            return Conflict(new ProblemDetails
+            {
+                Title = "Lab order is already collected",
+                Status = StatusCodes.Status409Conflict
+            });
+        }
+
         var result = await _mediator.Send(new MarkLabOrderCollectedCommand(id, request.CollectedAt));
         return result.ToNoContent();
     }

@@ -218,18 +218,20 @@ export async function validateSession(
     return { valid: false, reason: 'inactive' };
   }
   
-  // Validate fingerprint (optional - for high security)
+  // Validate fingerprint
   if (userAgent || ipAddress) {
     const expectedFingerprint = generateFingerprint(session.userId, userAgent, ipAddress);
     if (session.fingerprint !== expectedFingerprint) {
-      console.warn('[Session] Fingerprint mismatch:', {
+      console.warn('[Session] Fingerprint mismatch — rejecting session:', {
         sessionId,
         expected: session.fingerprint.slice(0, 10) + '...',
         received: expectedFingerprint.slice(0, 10) + '...',
       });
+      await invalidateSession(sessionId);
+      return { valid: false, reason: 'invalid_fingerprint' };
     }
   }
-  
+
   return { valid: true, session };
 }
 

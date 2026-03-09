@@ -191,10 +191,12 @@ public class BehavioralHealthController : ControllerBase
     /// </summary>
     [HttpGet("patients/{patientId:guid}/screenings")]
     [ProducesResponseType(typeof(IReadOnlyList<ScreeningDetailResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetPatientScreenings(Guid patientId, CancellationToken ct)
+    public async Task<IActionResult> GetPatientScreenings(
+        Guid patientId, [FromQuery] int skip = 0, [FromQuery] int take = 20, CancellationToken ct = default)
     {
+        take = Math.Clamp(take, 1, 100);
         var screenings = await _repo.GetByPatientIdAsync(patientId, ct);
-        return Ok(screenings.Select(MapToDetail).ToList());
+        return Ok(screenings.Skip(skip).Take(take).Select(MapToDetail).ToList());
     }
 
     /// <summary>
@@ -227,6 +229,7 @@ public class BehavioralHealthController : ControllerBase
     /// (safety overrides restricted disclosure per 42 CFR 2.51).
     /// </summary>
     [HttpGet("screenings/active-suicide-risk")]
+    [Authorize(Roles = "Provider,EmergencyResponder")]
     [ProducesResponseType(typeof(IReadOnlyList<ScreeningDetailResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetActiveSuicideRisk(CancellationToken ct)
     {

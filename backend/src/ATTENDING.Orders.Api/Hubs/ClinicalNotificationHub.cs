@@ -14,17 +14,24 @@ public class ClinicalNotificationHub : Hub
 {
     private readonly ILogger<ClinicalNotificationHub> _logger;
     private readonly IPatientRepository _patientRepository;
+    private readonly ICurrentUserService _currentUser;
 
     // Track connected providers by their user ID
     private static readonly ConcurrentDictionary<string, HashSet<string>> _providerConnections = new();
+    private static readonly object _providerConnectionsLock = new();
 
     // Track which providers are watching which patients
     private static readonly ConcurrentDictionary<string, HashSet<string>> _patientWatchers = new();
+    private static readonly object _patientWatchersLock = new();
 
-    public ClinicalNotificationHub(ILogger<ClinicalNotificationHub> logger, IPatientRepository patientRepository)
+    public ClinicalNotificationHub(
+        ILogger<ClinicalNotificationHub> logger,
+        IPatientRepository patientRepository,
+        ICurrentUserService currentUser)
     {
         _logger = logger;
         _patientRepository = patientRepository;
+        _currentUser = currentUser;
     }
 
     public override async Task OnConnectedAsync()
@@ -35,7 +42,7 @@ public class ClinicalNotificationHub : Hub
         _providerConnections.AddOrUpdate(
             userId,
             _ => new HashSet<string> { connectionId },
-            (_, connections) => { connections.Add(connectionId); return connections; });
+            (_, connections) => { lock (_providerConnectionsLock) { connections.Add(connectionId); } return connections; });
         
         await Groups.AddToGroupAsync(connectionId, "Providers");
         
@@ -51,16 +58,22 @@ public class ClinicalNotificationHub : Hub
         
         if (_providerConnections.TryGetValue(userId, out var connections))
         {
-            connections.Remove(connectionId);
-            if (connections.Count == 0)
+            lock (_providerConnectionsLock)
             {
-                _providerConnections.TryRemove(userId, out _);
+                connections.Remove(connectionId);
+                if (connections.Count == 0)
+                {
+                    _providerConnections.TryRemove(userId, out _);
+                }
             }
         }
-        
+
         foreach (var kvp in _patientWatchers)
         {
-            kvp.Value.Remove(connectionId);
+            lock (_patientWatchersLock)
+            {
+                kvp.Value.Remove(connectionId);
+            }
         }
         
         await Groups.RemoveFromGroupAsync(connectionId, "Providers");
@@ -83,6 +96,12 @@ public class ClinicalNotificationHub : Hub
         if (patient is null)
             throw new HubException("Patient not found");
 
+        if (patient.OrganizationId != _currentUser.TenantId)
+        {
+            await Clients.Caller.SendAsync("Error", "Access denied.");
+            return;
+        }
+
         var connectionId = Context.ConnectionId;
         var tenantId = Context.User?.FindFirst("oid")?.Value
                     ?? Context.User?.FindFirst("sub")?.Value
@@ -93,7 +112,7 @@ public class ClinicalNotificationHub : Hub
         _patientWatchers.AddOrUpdate(
             groupName,
             _ => new HashSet<string> { connectionId },
-            (_, watchers) => { watchers.Add(connectionId); return watchers; });
+            (_, watchers) => { lock (_patientWatchersLock) { watchers.Add(connectionId); } return watchers; });
 
         await Groups.AddToGroupAsync(connectionId, groupName);
 
@@ -115,7 +134,10 @@ public class ClinicalNotificationHub : Hub
 
         if (_patientWatchers.TryGetValue(groupName, out var watchers))
         {
-            watchers.Remove(connectionId);
+            lock (_patientWatchersLock)
+            {
+                watchers.Remove(connectionId);
+            }
         }
 
         await Groups.RemoveFromGroupAsync(connectionId, groupName);

@@ -9,7 +9,6 @@ namespace ATTENDING.Orders.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
-[AllowAnonymous]
 public class SystemController : ControllerBase
 {
     private readonly IConfiguration _configuration;
@@ -30,16 +29,16 @@ public class SystemController : ControllerBase
     /// Get system version information
     /// </summary>
     [HttpGet("version")]
+    [Authorize]
     [ProducesResponseType(typeof(VersionInfo), StatusCodes.Status200OK)]
     public ActionResult<VersionInfo> GetVersion()
     {
         var assembly = typeof(SystemController).Assembly;
         var version = assembly.GetName().Version?.ToString() ?? "1.0.0";
-        
+
         return Ok(new VersionInfo(
             Version: version,
             ApiVersion: "v1",
-            Environment: System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production",
             BuildDate: System.IO.File.GetLastWriteTimeUtc(assembly.Location).ToString("O")
         ));
     }
@@ -47,6 +46,7 @@ public class SystemController : ControllerBase
     /// <summary>
     /// Ping endpoint for basic connectivity check
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("ping")]
     [ProducesResponseType(typeof(PingResponse), StatusCodes.Status200OK)]
     public ActionResult<PingResponse> Ping()
@@ -58,6 +58,7 @@ public class SystemController : ControllerBase
     /// Get cache statistics (hit rate, savings estimates)
     /// </summary>
     [HttpGet("cache/stats")]
+    [Authorize]
     [ProducesResponseType(typeof(CacheStatsResponse), StatusCodes.Status200OK)]
     public ActionResult<CacheStatsResponse> GetCacheStats()
     {
@@ -124,6 +125,7 @@ public class SystemController : ControllerBase
     /// <summary>
     /// Get list of available clinical specialties
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("specialties")]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<string>> GetSpecialties()
@@ -134,6 +136,7 @@ public class SystemController : ControllerBase
     /// <summary>
     /// Get list of lab test categories
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("lab-categories")]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<string>> GetLabCategories()
@@ -144,6 +147,7 @@ public class SystemController : ControllerBase
     /// <summary>
     /// Get list of imaging modalities
     /// </summary>
+    [AllowAnonymous]
     [HttpGet("imaging-modalities")]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<string>> GetImagingModalities()
@@ -158,7 +162,6 @@ public class SystemController : ControllerBase
 public record VersionInfo(
     string Version,
     string ApiVersion,
-    string Environment,
     string BuildDate);
 
 /// <summary>

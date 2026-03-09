@@ -78,7 +78,7 @@ public class EncountersController : ControllerBase
             request.PatientId, providerId, request.Type, request.ScheduledAt, request.ChiefComplaint));
 
         if (result.IsSuccess && result.Value.EncounterId == Guid.Empty)
-            return StatusCode(500, new { error = "Failed to create resource." });
+            return BadRequest(new { error = "Failed to create resource." });
 
         return result.ToCreatedAtAction(nameof(GetById),
             new { id = result.IsSuccess ? result.Value.EncounterId : Guid.Empty });

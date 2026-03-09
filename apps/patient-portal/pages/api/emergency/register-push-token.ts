@@ -6,6 +6,8 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 
 // =============================================================================
 // Types
@@ -30,6 +32,16 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // Authentication check
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return res.status(401).json({ success: false, error: 'Authentication required' });
+  }
+  const authenticatedUserId = (session.user as { id?: string }).id;
+  if (!authenticatedUserId) {
+    return res.status(401).json({ success: false, error: 'Session missing user ID' });
+  }
+
   // Handle different methods
   switch (req.method) {
     case 'POST':
@@ -59,6 +71,12 @@ async function handleRegister(
         success: false,
         error: 'userId, token, and platform are required',
       });
+    }
+
+    // Verify userId matches authenticated session
+    const session = await getServerSession(req, res, authOptions);
+    if (userId !== (session!.user as { id?: string }).id) {
+      return res.status(403).json({ success: false, error: 'userId does not match authenticated user' });
     }
 
     // Validate platform
@@ -109,6 +127,12 @@ async function handleUnregister(
       });
     }
 
+    // Verify userId matches authenticated session
+    const session = await getServerSession(req, res, authOptions);
+    if (userId !== (session!.user as { id?: string }).id) {
+      return res.status(403).json({ success: false, error: 'userId does not match authenticated user' });
+    }
+
     // Remove token
     const existingTokens = registeredTokens.get(userId) || [];
     const filteredTokens = existingTokens.filter(t => t.token !== token);
@@ -142,6 +166,12 @@ async function handleGetTokens(
         success: false,
         error: 'userId is required',
       });
+    }
+
+    // Verify userId matches authenticated session
+    const session = await getServerSession(req, res, authOptions);
+    if (userId !== (session!.user as { id?: string }).id) {
+      return res.status(403).json({ success: false, error: 'userId does not match authenticated user' });
     }
 
     const tokens = registeredTokens.get(userId as string) || [];

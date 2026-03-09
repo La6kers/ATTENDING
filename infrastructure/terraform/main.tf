@@ -995,7 +995,7 @@ resource "azurerm_cdn_frontdoor_origin" "provider_portal" {
   enabled                       = true
 
   host_name          = azurerm_linux_web_app.provider_portal.default_hostname
-  http_port          = 80
+  http_port          = 80  # Required by Azure CDN schema; actual traffic uses HTTPS-only via forwarding_protocol
   https_port         = 443
   origin_host_header = azurerm_linux_web_app.provider_portal.default_hostname
   certificate_name_check_enabled = true
@@ -1007,7 +1007,7 @@ resource "azurerm_cdn_frontdoor_origin" "patient_portal" {
   enabled                       = true
 
   host_name          = azurerm_linux_web_app.patient_portal.default_hostname
-  http_port          = 80
+  http_port          = 80  # Required by Azure CDN schema; actual traffic uses HTTPS-only via forwarding_protocol
   https_port         = 443
   origin_host_header = azurerm_linux_web_app.patient_portal.default_hostname
   certificate_name_check_enabled = true
@@ -1019,7 +1019,7 @@ resource "azurerm_cdn_frontdoor_origin" "orders_api" {
   enabled                       = true
 
   host_name          = azurerm_linux_web_app.orders_api.default_hostname
-  http_port          = 80
+  http_port          = 80  # Required by Azure CDN schema; actual traffic uses HTTPS-only via forwarding_protocol
   https_port         = 443
   origin_host_header = azurerm_linux_web_app.orders_api.default_hostname
   certificate_name_check_enabled = true
