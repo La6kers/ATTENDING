@@ -47,11 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const authUrl = client.getAuthorizationUrl(state, launch as string | undefined);
 
     // Log for debugging (remove in production)
-    console.log('[FHIR Auth] Initiating OAuth flow:', {
-      vendor,
-      authUrl: authUrl.substring(0, 100) + '...',
-      state: state.substring(0, 8) + '...',
-    });
+    console.log('[FHIR Auth] Initiating OAuth flow:', { vendor });
 
     // Redirect to EHR authorization endpoint
     res.redirect(302, authUrl);

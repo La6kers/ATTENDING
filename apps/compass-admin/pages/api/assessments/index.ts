@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const pageSize = parseInt(req.query.pageSize as string, 10) || 100;
+    const pageSize = Math.min(parseInt(req.query.pageSize as string, 10) || 100, 500);
 
     const assessments = await prisma.patientAssessment.findMany({
       include: {

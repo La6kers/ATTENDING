@@ -106,7 +106,7 @@ function BottomTabBar() {
 
           if (tab.isEmergency) {
             return (
-              <Link key={tab.href} href={tab.href} className="flex flex-col items-center -mt-4">
+              <Link key={tab.href} href={tab.href} aria-label={tab.label} role="button" className="flex flex-col items-center -mt-4">
                 <div
                   className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
                     active

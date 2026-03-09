@@ -48,7 +48,8 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1001
-      
+        fsGroup: 1001
+
       containers:
       - name: websocket-service
         image: ghcr.io/la6kers/attending/websocket:v0.0.0-replace-in-ci  # Set by CI/CD pipeline — never use :latest
@@ -116,10 +117,11 @@ spec:
 
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop:
             - ALL
-      
+
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -127,6 +129,14 @@ spec:
               matchLabels:
                 app: websocket-service
             topologyKey: kubernetes.io/hostname
+
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: websocket-service
 
 ---
 apiVersion: v1
@@ -179,6 +189,23 @@ spec:
       target:
         type: Utilization
         averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 4
+        periodSeconds: 15
+      selectPolicy: Max
 
 ---
 apiVersion: policy/v1

@@ -72,10 +72,8 @@ jobs:
         run: |
           docker build \
             --tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }} \
-            --tag ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest \
             .
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
 
   # ── Stage 2: Run backend tests ──────────────────────────────────────────
   test:

@@ -20,19 +20,9 @@ metadata:
     
     # CORS configuration
     appgw.ingress.kubernetes.io/override-frontend-port: "443"
-    
-    # Rate limiting
-    nginx.ingress.kubernetes.io/limit-rps: "100"
-    nginx.ingress.kubernetes.io/limit-connections: "50"
-    
-    # Security headers
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      add_header X-Frame-Options "SAMEORIGIN" always;
-      add_header X-Content-Type-Options "nosniff" always;
-      add_header X-XSS-Protection "1; mode=block" always;
-      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-      add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self';" always;
-      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    # Rate limiting is handled by Azure WAF policy (configured in Terraform)
+    # Security headers are handled at the application level (Next.js config) and WAF level (Terraform)
 spec:
   tls:
   - hosts:

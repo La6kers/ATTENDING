@@ -173,7 +173,19 @@ export function useNotifications(options?: {
     setup();
 
     return () => {
-      // Don't disconnect — shared singleton
+      // Don't disconnect — shared singleton, but unregister event listeners
+      if (connection) {
+        const events = [
+          'NewLabResult',
+          'NewMessage',
+          'AppointmentReminder',
+          'PrescriptionUpdate',
+          'AssessmentComplete',
+        ];
+        events.forEach((event) => {
+          connection.off(event);
+        });
+      }
     };
   }, [enableSignalR, handleIncomingNotification]);
 

@@ -244,22 +244,29 @@ async function transcribeWithWhisper(
   formData.append('language', 'en');
   formData.append('prompt', 'Medical symptoms, medications, allergies, pain descriptions');
 
-  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      ...formData.getHeaders(),
-    },
-    body: formData as any,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+  try {
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        ...formData.getHeaders(),
+      },
+      body: formData as any,
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Whisper API error: ${error}`);
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Whisper API error: ${error}`);
+    }
+
+    const result = await response.json();
+    return result.text || '';
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const result = await response.json();
-  return result.text || '';
 }
 
 /**
