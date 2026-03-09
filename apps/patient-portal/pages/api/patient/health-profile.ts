@@ -10,6 +10,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '@attending/shared/lib/prisma';
+import { verifyCsrfToken } from '@attending/shared/lib/security';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Authenticate
@@ -27,9 +28,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     case 'GET':
       return handleGet(req, res, patientId);
     case 'PUT':
-      return handleUpdate(req, res, patientId);
-    case 'PATCH':
+    case 'PATCH': {
+      const csrfSecret = req.cookies['__Host-csrf-token'];
+      const csrfToken = req.headers['x-csrf-token'] as string;
+      if (!csrfSecret || !csrfToken || !verifyCsrfToken(csrfSecret, csrfToken)) {
+        return res.status(403).json({ error: 'Invalid or missing CSRF token' });
+      }
+      if (req.method === 'PUT') return handleUpdate(req, res, patientId);
       return handlePatch(req, res, patientId);
+    }
     default:
       res.setHeader('Allow', ['GET', 'PUT', 'PATCH']);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });

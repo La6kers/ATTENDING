@@ -77,11 +77,27 @@ public class IdempotencyMiddleware
             return;
         }
 
+        // Scope key per-tenant to prevent cross-tenant collisions.
+        // Idempotency only applies to authenticated requests where we have a reliable
+        // user identity. Anonymous requests using IP are vulnerable to spoofing, so
+        // we skip idempotency checking entirely for unauthenticated callers.
+        var tenantId = context.User.FindFirst("oid")?.Value
+                    ?? context.User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            _logger.LogDebug(
+                "Skipping idempotency for unauthenticated request on {Path}. " +
+                "Idempotency requires a reliable user identity.", path);
+            await _next(context);
+            return;
+        }
+
         // Check for idempotency key
         if (!context.Request.Headers.TryGetValue(IdempotencyKeyHeader, out var keyValue)
             || string.IsNullOrWhiteSpace(keyValue))
         {
-            // No key provided — proceed without idempotency but warn
+            // No key provided — proceed without idempotency but warn (authenticated requests only)
             context.Response.Headers["X-Idempotency-Warning"] =
                 "No Idempotency-Key header provided. Retries may create duplicate resources.";
             await _next(context);
@@ -101,22 +117,6 @@ public class IdempotencyMiddleware
                 status = 400,
                 detail = $"Idempotency-Key must not exceed {MaxKeyLength} characters."
             });
-            return;
-        }
-
-        // Scope key per-tenant to prevent cross-tenant collisions.
-        // Idempotency only applies to authenticated requests where we have a reliable
-        // user identity. Anonymous requests using IP are vulnerable to spoofing, so
-        // we skip idempotency checking entirely for unauthenticated callers.
-        var tenantId = context.User.FindFirst("oid")?.Value
-                    ?? context.User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(tenantId))
-        {
-            _logger.LogDebug(
-                "Skipping idempotency for unauthenticated request on {Path}. " +
-                "Idempotency requires a reliable user identity.", path);
-            await _next(context);
             return;
         }
 

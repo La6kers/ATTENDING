@@ -16,8 +16,8 @@ metadata:
     appgw.ingress.kubernetes.io/connection-draining-timeout: "30"
     appgw.ingress.kubernetes.io/cookie-based-affinity: "true"
     appgw.ingress.kubernetes.io/request-timeout: "60"
-    appgw.ingress.kubernetes.io/waf-policy-for-path: "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies/attending-waf"
-    
+    # WAF is handled by Azure Front Door (configured in Terraform), not Application Gateway
+
     # CORS configuration
     appgw.ingress.kubernetes.io/override-frontend-port: "443"
 

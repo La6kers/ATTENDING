@@ -364,6 +364,10 @@ export default async function handler(
 
         // Email
         if (contact.notificationPreferences.email && contact.email) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(contact.email)) {
+            console.warn(`[NOTIFY] Skipping invalid email for contact ${contact.name}: ${contact.email}`);
+          } else {
           const emailResult = await sendEmail(
             contact.email,
             messages.emailSubject,
@@ -377,6 +381,7 @@ export default async function handler(
             messageId: emailResult.messageId,
             error: emailResult.error,
           });
+          }
         }
 
         // Phone call for critical/high urgency and primary contacts
@@ -404,6 +409,11 @@ export default async function handler(
     // Notify care team
     if (recipients.includes('care_team')) {
       for (const member of mockCareTeam) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(member.email)) {
+          console.warn(`[NOTIFY] Skipping invalid email for care team member ${member.name}: ${member.email}`);
+          continue;
+        }
         const emailResult = await sendEmail(
           member.email,
           `[URGENT] Emergency Alert - Patient ${patientName}`,

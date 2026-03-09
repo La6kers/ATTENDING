@@ -4,11 +4,21 @@
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 
 const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:5000';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const patientId = req.headers['x-patient-id'] ?? 'demo-patient';
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  const patientId = (session.user as { id?: string }).id;
+  if (!patientId) {
+    return res.status(401).json({ error: 'Session missing patient ID' });
+  }
 
   if (req.method === 'GET') {
     try {

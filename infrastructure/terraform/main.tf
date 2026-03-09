@@ -575,6 +575,10 @@ resource "azurerm_application_insights" "main" {
   workspace_id        = azurerm_log_analytics_workspace.main.id
   application_type    = "web"
 
+  # Security: restrict ingestion to private endpoints and enforce managed identity auth
+  internet_ingestion_enabled    = false
+  local_authentication_disabled = true
+
   tags = local.common_tags
 }
 

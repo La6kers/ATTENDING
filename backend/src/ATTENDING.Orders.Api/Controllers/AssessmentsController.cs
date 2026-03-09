@@ -74,10 +74,18 @@ public class AssessmentsController : ControllerBase
         var patientIdClaim = User.FindFirst("patient_id")?.Value ?? User.FindFirst("patientId")?.Value;
         if (!string.IsNullOrEmpty(patientIdClaim)
             && Guid.TryParse(patientIdClaim, out var jwtPatientId)
-            && jwtPatientId != command.PatientId
-            && !User.IsInRole("Admin"))
+            && jwtPatientId != command.PatientId)
         {
-            return Forbid();
+            if (User.IsInRole("Admin"))
+            {
+                _logger.LogWarning(
+                    "Admin {AdminUserId} submitting assessment on behalf of patient {PatientId} (JWT patient: {JwtPatientId})",
+                    currentUserId, command.PatientId, jwtPatientId);
+            }
+            else
+            {
+                return Forbid();
+            }
         }
 
         var result = await _mediator.Send(command);

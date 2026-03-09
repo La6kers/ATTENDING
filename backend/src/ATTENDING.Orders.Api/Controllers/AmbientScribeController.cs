@@ -60,6 +60,11 @@ public class AmbientScribeController : ControllerBase
         var providerId = GetCurrentUserId();
         var orgId = GetCurrentTenantId();
 
+        // Verify the encounter belongs to the current provider
+        var existingSession = await _repo.GetByEncounterIdAsync(request.EncounterId, ct);
+        if (existingSession != null && existingSession.ProviderId != providerId && !User.IsInRole("Admin"))
+            return Forbid();
+
         var result = await _mediator.Send(
             new StartRecordingSessionCommand(
                 request.EncounterId,
@@ -98,6 +103,13 @@ public class AmbientScribeController : ControllerBase
         [FromBody] RecordConsentRequest request,
         CancellationToken ct)
     {
+        // Ownership check: only the provider who owns this session can record consent
+        var session = await _repo.GetByIdAsync(recordingId, ct);
+        if (session == null)
+            return NotFound(new ProblemDetails { Title = "Recording session not found", Status = 404 });
+        if (session.ProviderId != GetCurrentUserId() && !User.IsInRole("Admin"))
+            return Forbid();
+
         var result = await _mediator.Send(
             new RecordConsentCommand(recordingId, request.ConsentGiven, request.CapturedBy), ct);
 
@@ -124,6 +136,13 @@ public class AmbientScribeController : ControllerBase
         [FromBody] AddTranscriptSegmentRequest request,
         CancellationToken ct)
     {
+        // Ownership check: only the provider who owns this session can add segments
+        var session = await _repo.GetByIdAsync(recordingId, ct);
+        if (session == null)
+            return NotFound(new ProblemDetails { Title = "Recording session not found", Status = 404 });
+        if (session.ProviderId != GetCurrentUserId() && !User.IsInRole("Admin"))
+            return Forbid();
+
         var orgId = GetCurrentTenantId();
 
         var speaker = Enum.TryParse<Domain.Enums.SpeakerRole>(request.Speaker, ignoreCase: true, out var parsed)
@@ -192,7 +211,7 @@ public class AmbientScribeController : ControllerBase
             return NotFound(new ProblemDetails { Title = "Recording session not found", Status = 404 });
 
         // Ownership check: only the provider who created this session can view its status
-        if (session.ProviderId != GetCurrentUserId())
+        if (session.ProviderId != GetCurrentUserId() && !User.IsInRole("Admin"))
             return Forbid();
 
         return Ok(new RecordingStatusResponse(
@@ -229,6 +248,11 @@ public class AmbientScribeController : ControllerBase
                 Status = 404
             });
 
+        // Ownership check: verify the encounter's recording belongs to the current provider
+        var session = await _repo.GetByIdAsync(note.RecordingId, ct);
+        if (session != null && session.ProviderId != GetCurrentUserId() && !User.IsInRole("Admin"))
+            return Forbid();
+
         return Ok(MapNoteToResponse(note));
     }
 
@@ -245,6 +269,14 @@ public class AmbientScribeController : ControllerBase
         CancellationToken ct)
     {
         var providerId = GetCurrentUserId();
+
+        // Ownership check: verify the note belongs to the current provider
+        var note = await _repo.GetNoteByIdAsync(noteId, ct);
+        if (note == null)
+            return NotFound(new ProblemDetails { Title = "Note not found", Status = 404 });
+        var session = await _repo.GetByIdAsync(note.RecordingId, ct);
+        if (session != null && session.ProviderId != providerId && !User.IsInRole("Admin"))
+            return Forbid();
 
         var result = await _mediator.Send(
             new EditAmbientNoteCommand(
@@ -283,6 +315,11 @@ public class AmbientScribeController : ControllerBase
         var note = await _repo.GetNoteByIdAsync(noteId, ct);
         if (note == null)
             return NotFound(new ProblemDetails { Title = "Note not found", Status = 404 });
+
+        // Ownership check: verify the note belongs to the current provider
+        var session = await _repo.GetByIdAsync(note.RecordingId, ct);
+        if (session != null && session.ProviderId != providerId && !User.IsInRole("Admin"))
+            return Forbid();
 
         if (string.IsNullOrWhiteSpace(note.Subjective) ||
             string.IsNullOrWhiteSpace(note.Objective) ||

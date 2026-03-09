@@ -105,9 +105,9 @@ public class ClinicalNotificationHub : Hub
         }
 
         var connectionId = Context.ConnectionId;
-        var tenantId = _currentUser.TenantId.ToString();
+        var tenantId = _currentUser.TenantId!.Value.ToString("N");
 
-        var groupName = $"Patient_{tenantId}|{patientId}";
+        var groupName = $"Patient_{tenantId}_{patientGuid:N}";
 
         _patientWatchers.AddOrUpdate(
             groupName,
@@ -125,10 +125,13 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task UnwatchPatient(string patientId)
     {
-        var connectionId = Context.ConnectionId;
-        var tenantId = _currentUser.TenantId.ToString();
+        if (!Guid.TryParse(patientId, out var patientGuid))
+            throw new HubException("Invalid patient ID");
 
-        var groupName = $"Patient_{tenantId}|{patientId}";
+        var connectionId = Context.ConnectionId;
+        var tenantId = _currentUser.TenantId!.Value.ToString("N");
+
+        var groupName = $"Patient_{tenantId}_{patientGuid:N}";
 
         if (_patientWatchers.TryGetValue(groupName, out var watchers))
         {
@@ -149,8 +152,8 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task JoinEmergencyAlerts()
     {
-        var tenantId = _currentUser.TenantId;
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"EmergencyAlerts|{tenantId}");
+        var tenantId = _currentUser.TenantId!.Value.ToString("N");
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"EmergencyAlerts_{tenantId}");
     }
 
     /// <summary>
@@ -158,8 +161,8 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task LeaveEmergencyAlerts()
     {
-        var tenantId = _currentUser.TenantId;
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"EmergencyAlerts|{tenantId}");
+        var tenantId = _currentUser.TenantId!.Value.ToString("N");
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"EmergencyAlerts_{tenantId}");
     }
 }
 
@@ -188,7 +191,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             notification.TestName, notification.PatientId, notification.LabOrderId);
 
         // Tenant-scoped patient group — matches ClinicalNotificationHub.WatchPatient grouping
-        var patientGroup = $"Patient_{notification.TenantId}|{notification.PatientId}";
+        var patientGroup = $"Patient_{notification.TenantId:N}_{notification.PatientId:N}";
 
         // Notify all providers watching this patient
         await _hubContext.Clients.Group(patientGroup)
@@ -210,7 +213,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             "EMERGENCY ASSESSMENT: Assessment {AssessmentId} for Patient {PatientId}, Reason: {EmergencyReason}",
             notification.AssessmentId, notification.PatientId, notification.EmergencyReason);
 
-        await _hubContext.Clients.Group($"EmergencyAlerts|{notification.TenantId}")
+        await _hubContext.Clients.Group($"EmergencyAlerts_{notification.TenantId:N}")
             .SendAsync("EmergencyAssessment", notification, cancellationToken);
         
         await _hubContext.Clients.Group("Providers")
@@ -228,7 +231,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             "Order status change: {OrderType} {OrderId} for Patient {PatientId} -> {NewStatus}",
             notification.OrderType, notification.OrderId, notification.PatientId, notification.NewStatus);
 
-        var patientGroup = $"Patient_{notification.TenantId}|{notification.PatientId}";
+        var patientGroup = $"Patient_{notification.TenantId:N}_{notification.PatientId:N}";
         await _hubContext.Clients.Group(patientGroup)
             .SendAsync("OrderStatusChange", notification, cancellationToken);
     }
@@ -256,7 +259,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             "Red flag detected: {Category} for Assessment {AssessmentId}",
             notification.Category, notification.AssessmentId);
 
-        var patientGroup = $"Patient_{notification.TenantId}|{notification.PatientId}";
+        var patientGroup = $"Patient_{notification.TenantId:N}_{notification.PatientId:N}";
         await _hubContext.Clients.Group(patientGroup)
             .SendAsync("RedFlagDetected", notification, cancellationToken);
 
@@ -271,7 +274,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             "Drug interaction: {Drug1} <-> {Drug2} ({Severity}) for Patient {PatientId} (order {MedicationOrderId})",
             notification.Drug1, notification.Drug2, notification.Severity, notification.PatientId, notification.MedicationOrderId);
 
-        var patientGroup = $"Patient_{notification.TenantId}|{notification.PatientId}";
+        var patientGroup = $"Patient_{notification.TenantId:N}_{notification.PatientId:N}";
         await _hubContext.Clients.Group(patientGroup)
             .SendAsync("DrugInteraction", notification, cancellationToken);
 

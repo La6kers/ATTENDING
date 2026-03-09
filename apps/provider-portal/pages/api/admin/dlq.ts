@@ -18,8 +18,8 @@ export default createHandler({
       case 'GET': {
         const type = req.query.type as string;
         const status = req.query.status as string;
-        const limit = parseInt(req.query.limit as string) || 50;
-        const offset = parseInt(req.query.offset as string) || 0;
+        const limit = Math.max(1, Math.min(parseInt(req.query.limit as string) || 50, 500));
+        const offset = Math.max(0, parseInt(req.query.offset as string) || 0);
 
         const [entries, stats] = await Promise.all([
           dlq.list({ type: type as any, status: status as any, organizationId: ctx.user?.organizationId, limit, offset }),

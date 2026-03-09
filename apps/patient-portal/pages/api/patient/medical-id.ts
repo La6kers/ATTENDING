@@ -95,6 +95,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Save to backend — maps MedicalID shape to backend commands
       const body = req.body;
 
+      // Validate email if provided
+      if (body.email !== undefined) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(body.email)) {
+          return res.status(400).json({ error: 'Invalid email format' });
+        }
+      }
+
       // Update basic patient info
       await fetch(`${BACKEND_URL}/api/v1/patients/${patientId}`, {
         method: 'PUT',

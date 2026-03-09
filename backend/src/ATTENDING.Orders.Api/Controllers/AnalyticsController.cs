@@ -39,10 +39,6 @@ public class AnalyticsController : ControllerBase
             // Non-admins can only see their own data
             providerId = GetCurrentUserId();
         }
-        else if (providerId.HasValue && providerId.Value != GetCurrentUserId() && !User.IsInRole("Admin"))
-        {
-            return Forbid();
-        }
 
         return Ok(await _analyticsService.GetOutcomesAsync(period, providerId));
     }
