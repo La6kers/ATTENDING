@@ -1,16 +1,24 @@
 // ============================================================
-// WebSocket Client - Real-time Communication
+// WebSocket Client - DEPRECATED
 // apps/provider-portal/lib/websocket.ts
 //
-// Connects provider portal to WebSocket server for:
-// - New assessment notifications
-// - Urgent assessment alerts
-// - Real-time status updates
-// - Provider presence
+// This module has been replaced by hooks/useWebSocket.ts which
+// uses SignalR to match the .NET backend hub at /hubs/notifications.
+//
+// This file is retained only to avoid breaking dynamic imports
+// during the transition. All new code should use the hook:
+//
+//   import { useProviderWebSocket } from '@/hooks/useWebSocket';
+//
 // ============================================================
 
-import type { Socket } from 'socket.io-client';
-import { io } from 'socket.io-client';
+import {
+  HubConnectionBuilder,
+  HubConnection,
+  HubConnectionState,
+  LogLevel,
+  HttpTransportType,
+} from '@microsoft/signalr';
 import type { PatientAssessment } from '@/store/assessmentQueueStore';
 import { useAssessmentQueueStore } from '@/store/assessmentQueueStore';
 
@@ -44,14 +52,12 @@ interface StatusUpdate {
   timestamp: string;
 }
 
-// WebSocket configuration
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3003';
+// SignalR configuration
+const HUB_URL = (process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:5260').replace(/\/$/, '') + '/hubs/notifications';
 const RECONNECT_ATTEMPTS = 5;
-const RECONNECT_DELAY = 3000;
 
-// Singleton socket instance
-let socket: Socket | null = null;
-let reconnectAttempts = 0;
+// Singleton connection instance
+let connection: HubConnection | null = null;
 let isConnecting = false;
 
 // Audio for urgent alerts
@@ -74,150 +80,133 @@ function playUrgentSound() {
 }
 
 // ============================================================
-// MAIN SOCKET CONNECTION
+// MAIN SIGNALR CONNECTION
 // ============================================================
 
-export function connectWebSocket(providerId: string, providerName: string): Socket {
-  if (socket?.connected) {
-    console.log('[WS] Already connected');
-    return socket;
+export function connectWebSocket(providerId: string, providerName: string): HubConnection {
+  if (connection && connection.state !== HubConnectionState.Disconnected) {
+    console.log('[SignalR] Already connected');
+    return connection;
   }
-  
+
   if (isConnecting) {
-    console.log('[WS] Connection in progress...');
-    return socket!;
+    console.log('[SignalR] Connection in progress...');
+    return connection!;
   }
-  
+
   isConnecting = true;
-  console.log('[WS] Connecting to:', WS_URL);
-  
-  socket = io(WS_URL, {
-    transports: ['websocket', 'polling'],
-    autoConnect: true,
-    reconnection: true,
-    reconnectionAttempts: RECONNECT_ATTEMPTS,
-    reconnectionDelay: RECONNECT_DELAY,
-    timeout: 10000,
-    query: {
-      role: 'provider',
-      providerId,
-      providerName,
-    },
-  });
+  console.log('[SignalR] Connecting to:', HUB_URL);
+
+  connection = new HubConnectionBuilder()
+    .withUrl(HUB_URL, {
+      transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
+    })
+    .withAutomaticReconnect({
+      nextRetryDelayInMilliseconds: (retryContext) => {
+        if (retryContext.previousRetryCount >= RECONNECT_ATTEMPTS) return null;
+        return Math.min(1000 * Math.pow(2, retryContext.previousRetryCount), 30000);
+      },
+    })
+    .configureLogging(
+      process.env.NODE_ENV === 'development' ? LogLevel.Information : LogLevel.Warning
+    )
+    .build();
 
   // =====================================================
   // CONNECTION EVENTS
   // =====================================================
-  
-  socket.on('connect', () => {
-    console.log('[WS] Connected successfully');
-    isConnecting = false;
-    reconnectAttempts = 0;
-    
-    // Register as provider
-    socket!.emit('provider:join', {
+
+  connection.onreconnecting((error) => {
+    console.log('[SignalR] Reconnecting...', error?.message);
+  });
+
+  connection.onreconnected((connectionId) => {
+    console.log('[SignalR] Reconnected:', connectionId);
+    connection?.invoke('ProviderJoin', {
       providerId,
       providerName,
       timestamp: new Date().toISOString(),
-    });
+    }).catch(err => console.error('[SignalR] Re-registration failed:', err));
   });
 
-  socket.on('disconnect', (reason) => {
-    console.log('[WS] Disconnected:', reason);
+  connection.onclose((error) => {
+    console.log('[SignalR] Connection closed:', error?.message);
     isConnecting = false;
   });
 
-  socket.on('connect_error', (error) => {
-    console.error('[WS] Connection error:', error);
-    isConnecting = false;
-    reconnectAttempts++;
-    
-    if (reconnectAttempts >= RECONNECT_ATTEMPTS) {
-      console.error('[WS] Max reconnection attempts reached');
-    }
-  });
+  // =====================================================
+  // ASSESSMENT EVENTS (PascalCase to match .NET hub)
+  // =====================================================
 
-  // =====================================================
-  // ASSESSMENT EVENTS
-  // =====================================================
-  
-  // New assessment submitted from COMPASS
-  socket.on('assessment:new', (data: AssessmentNotification) => {
-    console.log('[WS] New assessment received:', data.assessment.id);
-    
-    // Add to store
+  connection.on('AssessmentNew', (data: AssessmentNotification) => {
+    console.log('[SignalR] New assessment received:', data.assessment.id);
     useAssessmentQueueStore.getState().addAssessment(data.assessment);
-    
-    // Show browser notification if permitted
     showBrowserNotification(
       `New Assessment: ${data.assessment.patientName}`,
       data.assessment.chiefComplaint
     );
   });
 
-  // Urgent assessment alert
-  socket.on('assessment:urgent', (data: UrgentAlert) => {
-    console.log('[WS] 🚨 URGENT assessment:', data.assessmentId);
-    
-    // Play alert sound
+  connection.on('AssessmentUrgent', (data: UrgentAlert) => {
+    console.log('[SignalR] URGENT assessment:', data.assessmentId);
     playUrgentSound();
-    
-    // Show prominent browser notification
     showBrowserNotification(
-      `🚨 URGENT: ${data.patientName}`,
+      `URGENT: ${data.patientName}`,
       `${data.chiefComplaint}\nRed Flags: ${data.redFlags.join(', ')}`,
       'urgent'
     );
-    
-    // Refresh assessments to ensure we have latest
     useAssessmentQueueStore.getState().refreshAssessments();
   });
 
-  // Assessment status updated by another provider
-  socket.on('assessment:status-updated', (data: StatusUpdate) => {
-    console.log('[WS] Assessment status updated:', data);
-    
-    // Refresh to get updated data
+  connection.on('AssessmentStatusUpdated', (_data: StatusUpdate) => {
     useAssessmentQueueStore.getState().refreshAssessments();
   });
 
-  // Assessment assigned to you
-  socket.on('assessment:assigned', (data: { assessmentId: string; patientName: string }) => {
-    console.log('[WS] Assessment assigned to you:', data.assessmentId);
-    
+  connection.on('AssessmentAssigned', (data: { assessmentId: string; patientName: string }) => {
     showBrowserNotification(
       'Assessment Assigned',
       `${data.patientName} has been assigned to you`
     );
-    
     useAssessmentQueueStore.getState().refreshAssessments();
   });
 
   // =====================================================
   // PRESENCE EVENTS
   // =====================================================
-  
-  socket.on('provider:online', (data: ProviderPresence) => {
-    console.log('[WS] Provider online:', data.providerName);
+
+  connection.on('ProviderOnline', (data: ProviderPresence) => {
+    console.log('[SignalR] Provider online:', data.providerName);
   });
 
-  socket.on('provider:offline', (data: { providerId: string }) => {
-    console.log('[WS] Provider offline:', data.providerId);
+  connection.on('ProviderOffline', (data: { providerId: string }) => {
+    console.log('[SignalR] Provider offline:', data.providerId);
   });
 
   // =====================================================
   // SYSTEM EVENTS
   // =====================================================
-  
-  socket.on('server:shutdown', (data: { message: string }) => {
-    console.warn('[WS] Server shutdown notice:', data.message);
+
+  connection.on('ServerShutdown', (data: { message: string }) => {
+    console.warn('[SignalR] Server shutdown notice:', data.message);
   });
 
-  socket.on('ping', () => {
-    socket!.emit('pong', { timestamp: Date.now() });
-  });
+  // Start connection
+  connection.start()
+    .then(() => {
+      console.log('[SignalR] Connected successfully');
+      isConnecting = false;
+      connection?.invoke('ProviderJoin', {
+        providerId,
+        providerName,
+        timestamp: new Date().toISOString(),
+      }).catch(err => console.error('[SignalR] ProviderJoin failed:', err));
+    })
+    .catch((err) => {
+      console.error('[SignalR] Connection failed:', err);
+      isConnecting = false;
+    });
 
-  return socket;
+  return connection;
 }
 
 // ============================================================
@@ -225,10 +214,10 @@ export function connectWebSocket(providerId: string, providerName: string): Sock
 // ============================================================
 
 export function disconnectWebSocket() {
-  if (socket) {
-    socket.emit('provider:leave');
-    socket.disconnect();
-    socket = null;
+  if (connection) {
+    connection.invoke('ProviderLeave').catch(() => {});
+    connection.stop();
+    connection = null;
     isConnecting = false;
   }
 }
@@ -238,30 +227,30 @@ export function disconnectWebSocket() {
 // ============================================================
 
 export function emitAssessmentViewing(assessmentId: string) {
-  if (socket?.connected) {
-    socket.emit('assessment:viewing', {
+  if (connection?.state === HubConnectionState.Connected) {
+    connection.invoke('AssessmentViewing', {
       assessmentId,
       timestamp: new Date().toISOString(),
-    });
+    }).catch(err => console.error('[SignalR] AssessmentViewing failed:', err));
   }
 }
 
 export function emitAssessmentStatusChange(assessmentId: string, newStatus: string) {
-  if (socket?.connected) {
-    socket.emit('assessment:status-change', {
+  if (connection?.state === HubConnectionState.Connected) {
+    connection.invoke('AssessmentStatusChange', {
       assessmentId,
       newStatus,
       timestamp: new Date().toISOString(),
-    });
+    }).catch(err => console.error('[SignalR] AssessmentStatusChange failed:', err));
   }
 }
 
 export function emitProviderStatus(status: 'online' | 'busy' | 'away') {
-  if (socket?.connected) {
-    socket.emit('provider:status', {
+  if (connection?.state === HubConnectionState.Connected) {
+    connection.invoke('ProviderStatus', {
       status,
       timestamp: new Date().toISOString(),
-    });
+    }).catch(err => console.error('[SignalR] ProviderStatus failed:', err));
   }
 }
 
@@ -270,16 +259,14 @@ export function emitProviderStatus(status: 'online' | 'busy' | 'away') {
 // ============================================================
 
 async function showBrowserNotification(
-  title: string, 
-  body: string, 
+  title: string,
+  body: string,
   type: 'normal' | 'urgent' = 'normal'
 ) {
-  // Check if notifications are supported and permitted
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return;
   }
 
-  // Request permission if needed
   if (Notification.permission === 'default') {
     await Notification.requestPermission();
   }
@@ -291,15 +278,13 @@ async function showBrowserNotification(
       badge: '/badge.png',
       tag: type === 'urgent' ? 'urgent-assessment' : 'assessment',
       requireInteraction: type === 'urgent',
-      silent: type !== 'urgent', // Only make sound for urgent
+      silent: type !== 'urgent',
     });
 
-    // Auto-close normal notifications after 5 seconds
     if (type === 'normal') {
       setTimeout(() => notification.close(), 5000);
     }
 
-    // Focus window on click
     notification.onclick = () => {
       window.focus();
       notification.close();
@@ -333,15 +318,15 @@ export async function requestNotificationPermission(): Promise<boolean> {
 // ============================================================
 
 export function isWebSocketConnected(): boolean {
-  return socket?.connected || false;
+  return connection?.state === HubConnectionState.Connected || false;
 }
 
-export function getSocket(): Socket | null {
-  return socket;
+export function getConnection(): HubConnection | null {
+  return connection;
 }
 
 // ============================================================
-// REACT HOOK FOR WEBSOCKET
+// REACT HOOK FOR WEBSOCKET (prefer hooks/useWebSocket.ts instead)
 // ============================================================
 
 export function useWebSocket() {

@@ -49,6 +49,11 @@ import type { NextRequest } from 'next/server';
 
 // Auth is enforced on all matched routes in ALL environments.
 // Pre-visit routes (/compass, /chat) are excluded via the matcher config below.
+//
+// DEV NOTE: There is no dev bypass — developers must authenticate even locally.
+// The NextAuth secret is ephemeral (regenerated each process restart), so sessions
+// are invalidated on server restart. Use the /auth/signin flow to re-authenticate.
+// This is intentional: auth bypass in dev hides real auth bugs.
 
 export default withAuth(
   function middleware(req: NextRequest) {

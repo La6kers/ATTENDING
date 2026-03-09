@@ -19,6 +19,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const patientId = (session.user as { id?: string }).id;
+  if (!patientId) {
+    return res.status(401).json({ error: 'Session missing patient ID', code: 'AUTH_INVALID' });
+  }
 
   switch (req.method) {
     case 'GET':
@@ -34,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // GET /api/patient/health-profile
-async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId?: string) {
+async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId: string) {
   try {
     const patient = await prisma.patient.findFirst({
       where: { id: patientId, deletedAt: null },
@@ -64,7 +67,7 @@ async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId?:
 }
 
 // PUT /api/patient/health-profile - Full update
-async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId?: string) {
+async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId: string) {
   const updates = req.body;
 
   try {
@@ -78,7 +81,7 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
       // Create new conditions
       for (const name of updates.conditions) {
         await prisma.condition.create({
-          data: { patientId: patientId || '', name },
+          data: { patientId: patientId, name },
         });
       }
     }
@@ -91,7 +94,7 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
       });
       for (const name of updates.medications) {
         await prisma.medication.create({
-          data: { patientId: patientId || '', name },
+          data: { patientId: patientId, name },
         });
       }
     }
@@ -104,7 +107,7 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
       });
       for (const allergen of updates.allergies) {
         await prisma.allergy.create({
-          data: { patientId: patientId || '', allergen },
+          data: { patientId: patientId, allergen },
         });
       }
     }
@@ -120,14 +123,14 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
 }
 
 // PATCH /api/patient/health-profile - Add/remove individual items
-async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId?: string) {
+async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId: string) {
   const updates = req.body;
 
   try {
     // Add/remove conditions
     if (updates.addCondition) {
       await prisma.condition.create({
-        data: { patientId: patientId || '', name: updates.addCondition },
+        data: { patientId: patientId, name: updates.addCondition },
       });
     }
     if (updates.removeCondition) {
@@ -140,7 +143,7 @@ async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId?
     // Add/remove medications
     if (updates.addMedication) {
       await prisma.medication.create({
-        data: { patientId: patientId || '', name: updates.addMedication },
+        data: { patientId: patientId, name: updates.addMedication },
       });
     }
     if (updates.removeMedication) {
@@ -153,7 +156,7 @@ async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId?
     // Add/remove allergies
     if (updates.addAllergy) {
       await prisma.allergy.create({
-        data: { patientId: patientId || '', allergen: updates.addAllergy },
+        data: { patientId: patientId, allergen: updates.addAllergy },
       });
     }
     if (updates.removeAllergy) {

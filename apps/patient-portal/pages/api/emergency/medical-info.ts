@@ -15,11 +15,23 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import crypto from 'crypto';
 import { prisma } from '@attending/shared/lib/prisma';
 
+function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 // =============================================================================
 // Security Configuration
 // =============================================================================
 
-// Rate limiting: track requests per IP
+// Rate limiting: track requests per IP.
+// NOTE: This in-memory rate limiter is per-process only. In a multi-replica
+// deployment (Vercel serverless, Kubernetes), use Redis-backed rate limiting
+// (e.g., @upstash/ratelimit) for cross-instance enforcement.
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 10; // Max 10 requests per minute per IP
@@ -222,9 +234,7 @@ export default async function handler(
         dosage: m.dosage || '',
         frequency: m.frequency || '',
       })),
-      emergencyContacts: patient.emergencyContact
-        ? JSON.parse(patient.emergencyContact as string)
-        : [],
+      emergencyContacts: safeJsonParse(patient.emergencyContact as string, []),
       lastUpdated: patient.updatedAt.toISOString(),
     };
 

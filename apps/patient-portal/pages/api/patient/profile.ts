@@ -46,6 +46,15 @@ interface PatientProfile {
 
 import type { NextApiRequest } from 'next';
 
+function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Authenticate
   const session = await getServerSession(req, res, authOptions);
@@ -54,6 +63,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const patientId = (session.user as { id?: string }).id;
+  if (!patientId) {
+    return res.status(401).json({ error: 'Session missing patient ID', code: 'AUTH_INVALID' });
+  }
 
   switch (req.method) {
     case 'GET':
@@ -69,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // GET /api/patient/profile - Get patient profile
-async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId?: string) {
+async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId: string) {
   try {
     const patient = await prisma.patient.findFirst({
       where: { id: patientId, deletedAt: null },
@@ -101,9 +113,7 @@ async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId?:
       conditions: patient.conditions.map((c: { name: string }) => c.name),
       medications: patient.medications.map((m: { name: string }) => m.name),
       allergies: patient.allergies.map((a: { allergen: string }) => a.allergen),
-      emergencyContact: patient.emergencyContact
-        ? JSON.parse(patient.emergencyContact as string)
-        : { name: '', relationship: '', phone: '' },
+      emergencyContact: safeJsonParse(patient.emergencyContact as string, { name: '', relationship: '', phone: '' }),
       preferences: {
         notifications: true,
         emailUpdates: true,
@@ -121,7 +131,7 @@ async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId?:
 }
 
 // PUT /api/patient/profile - Full profile update
-async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId?: string) {
+async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId: string) {
   const updates = req.body;
 
   if (!updates.firstName || !updates.lastName || !updates.email) {
@@ -158,7 +168,7 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
 }
 
 // PATCH /api/patient/profile - Partial profile update
-async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId?: string) {
+async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId: string) {
   const updates = req.body;
 
   try {

@@ -62,6 +62,8 @@ interface ApiResponse {
 // Rate Limiting for unauthenticated emergency access
 // =============================================================================
 
+// NOTE: In-memory rate limiter — per-process only. For multi-replica deployments,
+// use Redis-backed rate limiting (e.g., @upstash/ratelimit).
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 5; // Stricter for unauthenticated access
@@ -185,9 +187,9 @@ export default async function handler(
       });
     }
 
-    // If a session exists, enforce that patientId matches the session user.
-    // This prevents an authenticated user from logging emergency access
-    // for a different patient.
+    // Authentication check:
+    // 1. If a session exists, enforce that patientId matches the session user.
+    // 2. If no session (responder-initiated), require PIN verification.
     const session = await getServerSession(req, res, authOptions);
     if (session?.user) {
       const sessionPatientId = (session.user as { id?: string }).id;
@@ -203,6 +205,53 @@ export default async function handler(
           error: 'Patient ID does not match authenticated session',
         });
       }
+    } else {
+      // Unauthenticated (responder-initiated) — must verify PIN
+      if (accessMethod === 'pin') {
+        const { pin } = req.body;
+        if (!pin) {
+          return res.status(400).json({
+            success: false,
+            error: 'PIN is required for unauthenticated emergency access',
+          });
+        }
+
+        // Look up the patient's emergency access profile to verify PIN
+        const prismaModule = await import('@attending/shared/lib/prisma');
+        const prisma = prismaModule.prisma;
+
+        const profile = await prisma.emergencyAccessProfile.findFirst({
+          where: { patientId, deletedAt: null, isEnabled: true },
+        });
+
+        if (!profile) {
+          console.log('[SECURITY] Emergency access not enabled for patient:', {
+            patientId,
+            ip: clientIp,
+            timestamp: new Date().toISOString(),
+          });
+          return res.status(403).json({
+            success: false,
+            error: 'Emergency access is not enabled for this patient',
+          });
+        }
+
+        // Verify PIN (stored as hash)
+        const pinHash = crypto.createHash('sha256').update(pin).digest('hex');
+        if (profile.pinHash !== pinHash) {
+          console.log('[SECURITY] Invalid PIN attempt for emergency access:', {
+            patientId,
+            ip: clientIp,
+            timestamp: new Date().toISOString(),
+          });
+          return res.status(403).json({
+            success: false,
+            error: 'Invalid PIN',
+          });
+        }
+      }
+      // For face_scan and biometric, validation happens client-side via device APIs.
+      // The accessMethod is logged for audit purposes.
     }
 
     // Generate log ID

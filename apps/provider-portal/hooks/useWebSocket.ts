@@ -18,6 +18,7 @@ import {
   HubConnection,
   HubConnectionState,
   LogLevel,
+  HttpTransportType,
 } from '@microsoft/signalr';
 import { useProviderStore } from '@/store/useProviderStore';
 import type {
@@ -324,6 +325,7 @@ export function useWebSocket(config: WebSocketConfig) {
 
     const builder = new HubConnectionBuilder()
       .withUrl(hubUrl, {
+        transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
         accessTokenFactory: accessToken ? () => accessToken : undefined,
       })
       .withAutomaticReconnect({

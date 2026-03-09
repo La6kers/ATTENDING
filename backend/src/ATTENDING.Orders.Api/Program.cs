@@ -245,14 +245,35 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testi
 // Forwarded headers — required when behind Azure Front Door / App Gateway / load balancer.
 // Without this, HttpContext.Connection.RemoteIpAddress returns the proxy IP, not the client IP,
 // breaking rate limiting, audit logging, and IP-based security controls.
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
                      | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto,
-    // In production, restrict KnownProxies/KnownNetworks to your Azure Front Door CIDRs.
-    // For now, clear the defaults so forwarded headers are accepted from any proxy.
-    // TODO: Lock down to Azure Front Door IP ranges before production deployment.
-});
+};
+
+if (!app.Environment.IsDevelopment())
+{
+    // In production, only accept forwarded headers from known proxies.
+    // Azure Front Door service tag IPs should be loaded from configuration.
+    // See: https://learn.microsoft.com/en-us/azure/frontdoor/front-door-faq#how-do-i-lock-down-the-access-to-my-backend-to-only-azure-front-door-
+    var trustedProxies = app.Configuration.GetSection("ForwardedHeaders:TrustedProxyCIDRs").Get<string[]>();
+    if (trustedProxies?.Length > 0)
+    {
+        foreach (var cidr in trustedProxies)
+        {
+            if (System.Net.IPAddress.TryParse(cidr, out var ip))
+                forwardedHeadersOptions.KnownProxies.Add(ip);
+        }
+        Log.Information("ForwardedHeaders restricted to {Count} trusted proxies", trustedProxies.Length);
+    }
+    else
+    {
+        Log.Warning("ForwardedHeaders: No TrustedProxyCIDRs configured — accepting from any proxy. " +
+                     "Set ForwardedHeaders:TrustedProxyCIDRs in appsettings.Production.json before go-live.");
+    }
+}
+
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Security headers (first in pipeline after forwarded headers)
 app.UseMiddleware<SecurityHeadersMiddleware>();

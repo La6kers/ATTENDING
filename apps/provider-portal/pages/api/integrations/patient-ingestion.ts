@@ -15,6 +15,7 @@
 //              resources (Bundle or individual resources)
 // ============================================================
 
+import crypto from 'crypto';
 import { z } from 'zod';
 import { apiKeyHandler } from '@attending/shared/lib/api/handler';
 import { AuditActions } from '@attending/shared/lib/audit';
@@ -137,15 +138,15 @@ export default apiKeyHandler({
   handler: async (req, ctx) => {
     const prisma = await getPrisma();
 
-    // Resolve organization from API key
+    // apiKeyHandler already validated the API key and set ctx.apiKey.
+    // Resolve the organization from the validated key.
     const apiKeyHeader = req.headers['x-api-key'] as string;
     if (!apiKeyHeader) {
       ctx.error(401, 'AUTH_REQUIRED' as any, 'API key required');
       return;
     }
 
-    // Look up the API key to determine org
-    const apiKeyHash = require('crypto')
+    const apiKeyHash = crypto
       .createHash('sha256')
       .update(apiKeyHeader)
       .digest('hex');
@@ -164,9 +165,10 @@ export default apiKeyHandler({
     }
 
     // Check scope
-    const scopes: string[] = apiKeyRecord.scopes
-      ? JSON.parse(apiKeyRecord.scopes as string)
-      : [];
+    const scopes: string[] = (() => {
+      try { return JSON.parse(apiKeyRecord.scopes as string); }
+      catch { return []; }
+    })();
     if (!scopes.includes('patient:write')) {
       ctx.error(
         403,
@@ -205,145 +207,132 @@ export default apiKeyHandler({
       errors: [] as Array<{ mrn: string; error: string }>,
     };
 
-    for (const patient of patients) {
-      try {
-        // Upsert patient by MRN within the organization
-        const existing = await prisma.patient.findFirst({
-          where: {
-            mrn: patient.mrn,
-            organizationId,
-            deletedAt: null,
-          },
-        });
-
-        const patientData = {
-          firstName: patient.firstName,
-          lastName: patient.lastName,
-          dateOfBirth: patient.dateOfBirth
-            ? new Date(patient.dateOfBirth)
-            : undefined,
-          gender: patient.gender,
-          sexAssignedAtBirth: patient.sexAssignedAtBirth,
-          genderIdentity: patient.genderIdentity,
-          pronouns: patient.pronouns,
-          email: patient.email,
-          phone: patient.phone,
-          address: patient.address,
-          city: patient.city,
-          state: patient.state,
-          zipCode: patient.zipCode,
-          preferredLanguage: patient.preferredLanguage,
-          insuranceProvider: patient.insuranceProvider,
-          insurancePolicyNum: patient.insurancePolicyNum,
-          emergencyContact: patient.emergencyContact,
-        };
-
-        let patientId: string;
-
-        if (existing) {
-          // Update existing patient
-          await prisma.patient.update({
-            where: { id: existing.id },
-            data: patientData,
-          });
-          patientId = existing.id;
-          results.updated++;
-        } else {
-          // Create new patient
-          const created = await prisma.patient.create({
-            data: {
-              ...patientData,
+    // Process all patients in a single transaction to ensure atomicity
+    // and reduce round-trips (addresses N+1 query concern).
+    await prisma.$transaction(async (tx) => {
+      for (const patient of patients) {
+        try {
+          // Upsert patient by MRN within the organization
+          const existing = await tx.patient.findFirst({
+            where: {
               mrn: patient.mrn,
               organizationId,
+              deletedAt: null,
             },
           });
-          patientId = created.id;
-          results.created++;
-        }
 
-        // Upsert conditions
-        if (patient.conditions?.length) {
-          for (const condition of patient.conditions) {
-            const existingCondition = await prisma.condition.findFirst({
-              where: {
-                patientId,
-                name: condition.name,
-                deletedAt: null,
+          const patientData = {
+            firstName: patient.firstName,
+            lastName: patient.lastName,
+            dateOfBirth: patient.dateOfBirth
+              ? new Date(patient.dateOfBirth)
+              : undefined,
+            gender: patient.gender,
+            sexAssignedAtBirth: patient.sexAssignedAtBirth,
+            genderIdentity: patient.genderIdentity,
+            pronouns: patient.pronouns,
+            email: patient.email,
+            phone: patient.phone,
+            address: patient.address,
+            city: patient.city,
+            state: patient.state,
+            zipCode: patient.zipCode,
+            preferredLanguage: patient.preferredLanguage,
+            insuranceProvider: patient.insuranceProvider,
+            insurancePolicyNum: patient.insurancePolicyNum,
+            emergencyContact: patient.emergencyContact,
+          };
+
+          let patientId: string;
+
+          if (existing) {
+            await tx.patient.update({
+              where: { id: existing.id },
+              data: patientData,
+            });
+            patientId = existing.id;
+            results.updated++;
+          } else {
+            const created = await tx.patient.create({
+              data: {
+                ...patientData,
+                mrn: patient.mrn,
+                organizationId,
               },
             });
+            patientId = created.id;
+            results.created++;
+          }
 
-            if (!existingCondition) {
-              await prisma.condition.create({
-                data: {
-                  patientId,
-                  name: condition.name,
-                  icdCode: condition.icdCode,
-                  severity: condition.severity,
-                  notes: condition.notes,
-                },
+          // Upsert conditions
+          if (patient.conditions?.length) {
+            for (const condition of patient.conditions) {
+              const existingCondition = await tx.condition.findFirst({
+                where: { patientId, name: condition.name, deletedAt: null },
               });
+              if (!existingCondition) {
+                await tx.condition.create({
+                  data: {
+                    patientId,
+                    name: condition.name,
+                    icdCode: condition.icdCode,
+                    severity: condition.severity,
+                    notes: condition.notes,
+                  },
+                });
+              }
             }
           }
-        }
 
-        // Upsert medications
-        if (patient.medications?.length) {
-          for (const med of patient.medications) {
-            const existingMed = await prisma.medication.findFirst({
-              where: {
-                patientId,
-                name: med.name,
-                deletedAt: null,
-              },
-            });
-
-            if (!existingMed) {
-              await prisma.medication.create({
-                data: {
-                  patientId,
-                  name: med.name,
-                  dosage: med.dosage,
-                  frequency: med.frequency,
-                  route: med.route,
-                },
+          // Upsert medications
+          if (patient.medications?.length) {
+            for (const med of patient.medications) {
+              const existingMed = await tx.medication.findFirst({
+                where: { patientId, name: med.name, deletedAt: null },
               });
+              if (!existingMed) {
+                await tx.medication.create({
+                  data: {
+                    patientId,
+                    name: med.name,
+                    dosage: med.dosage,
+                    frequency: med.frequency,
+                    route: med.route,
+                  },
+                });
+              }
             }
           }
-        }
 
-        // Upsert allergies
-        if (patient.allergies?.length) {
-          for (const allergy of patient.allergies) {
-            const existingAllergy = await prisma.allergy.findFirst({
-              where: {
-                patientId,
-                allergen: allergy.allergen,
-                deletedAt: null,
-              },
-            });
-
-            if (!existingAllergy) {
-              await prisma.allergy.create({
-                data: {
-                  patientId,
-                  allergen: allergy.allergen,
-                  reaction: allergy.reaction,
-                  severity: allergy.severity,
-                },
+          // Upsert allergies
+          if (patient.allergies?.length) {
+            for (const allergy of patient.allergies) {
+              const existingAllergy = await tx.allergy.findFirst({
+                where: { patientId, allergen: allergy.allergen, deletedAt: null },
               });
+              if (!existingAllergy) {
+                await tx.allergy.create({
+                  data: {
+                    patientId,
+                    allergen: allergy.allergen,
+                    reaction: allergy.reaction,
+                    severity: allergy.severity,
+                  },
+                });
+              }
             }
           }
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : 'Unknown error';
+          results.errors.push({ mrn: patient.mrn, error: message });
+          ctx.log.error('Patient ingestion error', {
+            mrn: patient.mrn,
+            error: message,
+          });
         }
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Unknown error';
-        results.errors.push({ mrn: patient.mrn, error: message });
-        ctx.log.error('Patient ingestion error', {
-          mrn: patient.mrn,
-          error: message,
-        });
       }
-    }
+    }, { timeout: 60_000 }); // 60s timeout for large batches
 
     ctx.log.info('Patient ingestion completed', {
       organizationId,

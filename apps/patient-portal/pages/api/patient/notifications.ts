@@ -36,6 +36,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const userId = (session.user as { id?: string }).id;
+  if (!userId) {
+    return res.status(401).json({ error: 'Session missing user ID', code: 'AUTH_INVALID' });
+  }
 
   switch (req.method) {
     case 'GET':
@@ -51,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // GET /api/patient/notifications - List notifications
-async function handleGet(req: NextApiRequest, res: NextApiResponse<NotificationsResponse>, userId?: string) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse<NotificationsResponse>, userId: string) {
   try {
     const { unreadOnly } = req.query;
 
@@ -89,7 +92,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse<Notifications
 }
 
 // PUT /api/patient/notifications - Mark notifications as read
-async function handleMarkRead(req: NextApiRequest, res: NextApiResponse, userId?: string) {
+async function handleMarkRead(req: NextApiRequest, res: NextApiResponse, userId: string) {
   const { notificationIds, markAllRead } = req.body;
 
   try {
@@ -118,7 +121,7 @@ async function handleMarkRead(req: NextApiRequest, res: NextApiResponse, userId?
 }
 
 // DELETE /api/patient/notifications - Delete notifications
-async function handleDelete(req: NextApiRequest, res: NextApiResponse, userId?: string) {
+async function handleDelete(req: NextApiRequest, res: NextApiResponse, userId: string) {
   const { notificationIds } = req.body;
 
   if (!notificationIds || !Array.isArray(notificationIds)) {

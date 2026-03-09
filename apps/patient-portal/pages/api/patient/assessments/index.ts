@@ -39,6 +39,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const patientId = (session.user as { id?: string }).id;
+  if (!patientId) {
+    return res.status(401).json({ error: 'Session missing patient ID', code: 'AUTH_INVALID' });
+  }
 
   switch (req.method) {
     case 'GET':
@@ -52,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 // GET /api/patient/assessments - List assessments for the authenticated patient
-async function handleGet(req: NextApiRequest, res: NextApiResponse<AssessmentsResponse>, patientId?: string) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse<AssessmentsResponse>, patientId: string) {
   const { page = '1', pageSize = '20', status } = req.query;
 
   const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
@@ -99,7 +102,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse<AssessmentsRe
 }
 
 // POST /api/patient/assessments - Create new assessment
-async function handlePost(req: NextApiRequest, res: NextApiResponse, patientId?: string) {
+async function handlePost(req: NextApiRequest, res: NextApiResponse, patientId: string) {
   const { chiefComplaint, urgencyLevel } = req.body;
 
   if (!chiefComplaint) {
@@ -109,7 +112,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, patientId?:
   try {
     const assessment = await prisma.patientAssessment.create({
       data: {
-        patientId: patientId || '',
+        patientId,
         sessionId: `session-${Date.now()}`,
         chiefComplaint,
         urgencyLevel: urgencyLevel || 'STANDARD',
