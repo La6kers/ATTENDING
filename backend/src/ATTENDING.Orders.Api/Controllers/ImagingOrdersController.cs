@@ -91,6 +91,7 @@ public class ImagingOrdersController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<ImagingOrderResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ImagingOrderResponse>>> GetByStatus(ImagingOrderStatus status)
     {
+        // Tenant isolation enforced by AttendingDbContext global query filter on OrganizationId
         var orders = await _repository.GetByStatusAsync(status);
         return Ok(orders.Select(MapToResponse));
     }

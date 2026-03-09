@@ -62,8 +62,9 @@ interface ApiResponse {
 // Rate Limiting for unauthenticated emergency access
 // =============================================================================
 
-// NOTE: In-memory rate limiter — per-process only. For multi-replica deployments,
-// use Redis-backed rate limiting (e.g., @upstash/ratelimit).
+// WARNING: In-memory rate limiting is per-process only.
+// In multi-instance deployments (serverless, K8s), use Redis-backed rate limiting.
+// TODO: Replace with @upstash/ratelimit or Redis-backed limiter for production.
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 5; // Stricter for unauthenticated access

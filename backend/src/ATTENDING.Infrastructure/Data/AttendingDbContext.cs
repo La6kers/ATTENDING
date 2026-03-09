@@ -333,6 +333,11 @@ public class AttendingDbContext : DbContext, IUnitOfWork
     /// whether AuditSaveChangesInterceptor is registered (it is omitted for InMemory tests).
     ///
     /// On SQL Server, AuditSaveChangesInterceptor also runs -- both are idempotent.
+    ///
+    /// NOTE: Child entities (LabResult, ImagingResult, AssessmentSymptom, etc.) do not
+    /// explicitly accept OrganizationId in their Create() factory methods. The interceptor
+    /// auto-stamps OrganizationId from the current user's tenant on SaveChangesAsync().
+    /// If creating entities outside of a request context, manually set OrganizationId.
     /// </summary>
     private void StampAuditFields()
     {

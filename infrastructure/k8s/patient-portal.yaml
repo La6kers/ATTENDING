@@ -52,7 +52,7 @@ spec:
       
       containers:
       - name: patient-portal
-        image: ghcr.io/la6kers/attending/patient-portal:latest
+        image: ghcr.io/la6kers/attending/patient-portal:v0.0.0-replace-in-ci  # Set by CI/CD pipeline — never use :latest
         imagePullPolicy: Always
         
         ports:
@@ -103,7 +103,16 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-        
+
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 3001
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -172,6 +181,12 @@ spec:
         type: Utilization
         averageUtilization: 70
   behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
     scaleUp:
       stabilizationWindowSeconds: 0
       policies:

@@ -62,6 +62,7 @@ public class EncountersController : ControllerBase
     public async Task<ActionResult<PagedResult<EncounterResponse>>> GetByStatus(
         EncounterStatus status, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
+        // Tenant isolation enforced by AttendingDbContext global query filter on OrganizationId
         var encounters = await _mediator.Send(new GetEncountersByStatusQuery(status));
         return Ok(encounters.Select(MapToResponse).ToPagedResult(page, pageSize));
     }

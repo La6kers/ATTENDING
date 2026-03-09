@@ -28,10 +28,9 @@ function safeJsonParse<T>(value: string | null | undefined, fallback: T): T {
 // Security Configuration
 // =============================================================================
 
-// Rate limiting: track requests per IP.
-// NOTE: This in-memory rate limiter is per-process only. In a multi-replica
-// deployment (Vercel serverless, Kubernetes), use Redis-backed rate limiting
-// (e.g., @upstash/ratelimit) for cross-instance enforcement.
+// WARNING: In-memory rate limiting is per-process only.
+// In multi-instance deployments (serverless, K8s), use Redis-backed rate limiting.
+// TODO: Replace with @upstash/ratelimit or Redis-backed limiter for production.
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 10; // Max 10 requests per minute per IP

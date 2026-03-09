@@ -138,9 +138,9 @@ export function useWebSocket(config: WebSocketConfig) {
     const connection = new HubConnectionBuilder()
       .withUrl(hubUrl, {
         transport: HttpTransportType.WebSockets | HttpTransportType.LongPolling,
-        accessTokenFactory: () => {
-          // In production, return the patient's JWT from session
-          return '';
+        accessTokenFactory: async () => {
+          const session = await fetch('/api/auth/session').then(r => r.json());
+          return session?.accessToken || '';
         },
       })
       .withAutomaticReconnect({

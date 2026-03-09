@@ -51,7 +51,7 @@ spec:
       
       containers:
       - name: websocket-service
-        image: ghcr.io/la6kers/attending/websocket:latest
+        image: ghcr.io/la6kers/attending/websocket:v0.0.0-replace-in-ci  # Set by CI/CD pipeline — never use :latest
         imagePullPolicy: Always
         
         ports:
@@ -104,7 +104,16 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-        
+
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 3003
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

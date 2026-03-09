@@ -97,5 +97,10 @@ public class AdminController : ControllerBase
         => Ok(await _adminService.GetRateLimitsAsync());
 
     private string GetOrganizationId()
-        => User.FindFirst("org")?.Value ?? "default";
+    {
+        var orgId = User.FindFirst("tid")?.Value ?? User.FindFirst("tenantId")?.Value;
+        if (string.IsNullOrEmpty(orgId))
+            throw new UnauthorizedAccessException("Organization identity is required.");
+        return orgId;
+    }
 }

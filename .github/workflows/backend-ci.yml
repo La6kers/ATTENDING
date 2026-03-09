@@ -54,7 +54,7 @@ jobs:
         if: always()
         with:
           directory: backend
-          fail_ci_if_error: false
+          fail_ci_if_error: true
 
   docker:
     runs-on: ubuntu-latest

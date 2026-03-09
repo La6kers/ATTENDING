@@ -4,9 +4,16 @@
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
 
   return res.status(200).json([
     { id: 'lab-1', testName: 'Hemoglobin A1C', testCode: '4548-4', value: '5.8', unit: '%', referenceRange: '4.0-5.6', status: 'Abnormal', trend: 'down', collectedAt: '2026-02-25T08:00:00Z' },

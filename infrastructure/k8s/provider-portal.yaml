@@ -69,7 +69,7 @@ spec:
       
       containers:
       - name: provider-portal
-        image: ghcr.io/la6kers/attending/provider-portal:latest
+        image: ghcr.io/la6kers/attending/provider-portal:v0.0.0-replace-in-ci  # Set by CI/CD pipeline — never use :latest
         imagePullPolicy: Always
         
         ports:

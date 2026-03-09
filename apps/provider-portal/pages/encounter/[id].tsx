@@ -1014,7 +1014,7 @@ const EncounterPage: React.FC = () => {
                 <FileText style={{ width: 16, height: 16, color: COLORS.primaryTeal }} />
                 Key History
               </div>
-              <div style={{ padding: '10px 16px', fontSize: 13, color: COLORS.gray600, lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: scenario.differentialHistory }} />
+              <div style={{ padding: '10px 16px', fontSize: 13, color: COLORS.gray600, lineHeight: 1.7 }}>{scenario.differentialHistory}</div>
             </div>
           </div>
 

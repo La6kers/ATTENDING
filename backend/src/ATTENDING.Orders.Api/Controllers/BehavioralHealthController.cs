@@ -289,7 +289,6 @@ public class BehavioralHealthController : ControllerBase
 
 public record StartScreeningRequest(
     Guid PatientId,
-    Guid ProviderId,
     ScreeningInstrument Instrument,
     Guid? EncounterId,
     Guid? AssessmentId);
@@ -307,7 +306,6 @@ public record ScoreScreeningRequest(
     bool IsFemaleOrPregnant = false);
 
 public record ReviewScreeningRequest(
-    Guid ProviderId,
     BehavioralHealthAction ActionTaken,
     string? Notes,
     string? SafetyPlanJson);

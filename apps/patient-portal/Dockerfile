@@ -15,7 +15,7 @@ COPY package.json package-lock.json turbo.json ./
 COPY apps/shared/package.json apps/shared/
 COPY apps/patient-portal/package.json apps/patient-portal/
 
-RUN npm ci --workspace=apps/patient-portal --workspace=apps/shared --include-workspace-root
+RUN npm ci --ignore-scripts --workspace=apps/patient-portal --workspace=apps/shared --include-workspace-root
 
 # --- Stage 2: Builder ---
 FROM node:20-alpine AS builder

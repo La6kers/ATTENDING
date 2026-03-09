@@ -21,6 +21,7 @@
     }
   },
   "scripts": {
+    "prepare": "husky",
     "dev:provider": "npm run dev --workspace=apps/provider-portal",
     "dev:patient": "npm run dev --workspace=apps/patient-portal",
     "dev": "turbo run dev --parallel",

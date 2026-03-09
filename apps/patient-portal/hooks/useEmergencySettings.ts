@@ -57,6 +57,11 @@ const DEFAULT_CRASH_SETTINGS: CrashDetectionSettings = {
 
 // ============================================================
 // Local persistence (offline fallback)
+//
+// SECURITY NOTE: Emergency settings are stored in localStorage without encryption.
+// In production, sensitive fields (contacts, PIN config) should be stored server-side
+// and fetched on demand. localStorage is accessible to any script on this origin.
+// TODO: Move sensitive emergency data to server-side storage with API access.
 // ============================================================
 
 const STORAGE_KEYS = {

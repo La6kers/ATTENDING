@@ -102,6 +102,7 @@ public class ReferralsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<ReferralResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ReferralResponse>>> GetPending()
     {
+        // Tenant isolation enforced by AttendingDbContext global query filter on OrganizationId
         var referrals = await _repository.GetByStatusAsync(ReferralStatus.Pending);
         return Ok(referrals.Select(MapToResponse));
     }
@@ -113,6 +114,7 @@ public class ReferralsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<ReferralResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ReferralResponse>>> GetByStatus(ReferralStatus status)
     {
+        // Tenant isolation enforced by AttendingDbContext global query filter on OrganizationId
         var referrals = await _repository.GetByStatusAsync(status);
         return Ok(referrals.Select(MapToResponse));
     }
@@ -134,6 +136,7 @@ public class ReferralsController : ControllerBase
             });
         }
 
+        // Tenant isolation enforced by AttendingDbContext global query filter on OrganizationId
         var referrals = await _repository.GetPendingBySpecialtyAsync(specialty);
         return Ok(referrals.Select(MapToResponse));
     }

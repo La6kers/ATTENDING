@@ -224,7 +224,9 @@ public class ClinicalAiController : ControllerBase
         [FromBody] TriageAssessmentRequest request,
         CancellationToken cancellationToken)
     {
-        var patientId = request.PatientId ?? Guid.Empty;
+        if (request.PatientId == null || request.PatientId == Guid.Empty)
+            return BadRequest(new ProblemDetails { Title = "Patient ID is required for triage", Status = 400 });
+        var patientId = request.PatientId.Value;
         var intelligence = await _intelligence.EvaluateAsync(
             patientId, null, request.AssessmentId, cancellationToken);
 

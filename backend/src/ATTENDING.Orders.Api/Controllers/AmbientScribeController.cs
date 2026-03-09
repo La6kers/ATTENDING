@@ -191,6 +191,10 @@ public class AmbientScribeController : ControllerBase
         if (session == null)
             return NotFound(new ProblemDetails { Title = "Recording session not found", Status = 404 });
 
+        // Ownership check: only the provider who created this session can view its status
+        if (session.ProviderId != GetCurrentUserId())
+            return Forbid();
+
         return Ok(new RecordingStatusResponse(
             session.Id,
             session.EncounterId,
