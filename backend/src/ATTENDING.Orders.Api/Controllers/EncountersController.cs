@@ -51,6 +51,9 @@ public class EncountersController : ControllerBase
     [ProducesResponseType(typeof(ScheduleResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<ScheduleResponse>> GetTodaysSchedule([FromQuery] Guid? providerId = null)
     {
+        if (providerId.HasValue && providerId.Value != GetCurrentUserId() && !User.IsInRole("Admin"))
+            return Forbid();
+
         var id = providerId ?? GetCurrentUserId();
         var encounters = await _mediator.Send(new GetTodaysScheduleQuery(id));
         var responses = encounters.Select(MapToResponse).ToList();

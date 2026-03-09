@@ -133,6 +133,11 @@ export default async function handler(
 
     const file = Array.isArray(audioFile) ? audioFile[0] : audioFile;
 
+    // Explicit file size check (defense-in-depth beyond formidable's maxFileSize)
+    if (file.size > 25 * 1024 * 1024) {
+      return res.status(413).json({ error: 'File too large. Maximum size is 25MB.' });
+    }
+
     // Validate MIME type
     const ACCEPTED_AUDIO_TYPES = [
       'audio/wav', 'audio/x-wav',

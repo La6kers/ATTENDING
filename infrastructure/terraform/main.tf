@@ -16,6 +16,11 @@ terraform {
     }
   }
 
+  # NOTE: The "attendingtfstate" storage account is managed externally.
+  # Ensure the following are configured on it for state protection:
+  #   - Blob versioning enabled (versioning_enabled = true)
+  #   - Blob soft-delete / delete retention policy (e.g. 90 days)
+  #   - Immutability policy on the tfstate container to prevent accidental deletion
   backend "azurerm" {
     resource_group_name  = "attending-terraform-state"
     storage_account_name = "attendingtfstate"

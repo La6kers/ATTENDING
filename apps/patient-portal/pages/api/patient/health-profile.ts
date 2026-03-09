@@ -133,6 +133,15 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
 async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId: string) {
   const updates = req.body;
 
+  // Validate add fields are strings with max length 500
+  for (const field of ['addCondition', 'addMedication', 'addAllergy'] as const) {
+    if (updates[field] !== undefined) {
+      if (typeof updates[field] !== 'string' || updates[field].length > 500) {
+        return res.status(400).json({ error: `${field} must be a string with maximum length 500` });
+      }
+    }
+  }
+
   try {
     // Add/remove conditions
     if (updates.addCondition) {

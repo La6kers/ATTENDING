@@ -243,7 +243,16 @@ export default async function handler(
         // using hashPin() from @attending/shared/lib/auth/pinHash.
         const [salt, storedKey] = (profile.pinHash || '').split(':');
         const derivedKey = crypto.pbkdf2Sync(pin, salt || '', 100_000, 64, 'sha512').toString('hex');
-        if (!storedKey || derivedKey !== storedKey) {
+        let pinValid = false;
+        if (storedKey) {
+          try {
+            pinValid = crypto.timingSafeEqual(Buffer.from(derivedKey), Buffer.from(storedKey));
+          } catch {
+            // timingSafeEqual throws if buffers differ in length — treat as mismatch
+            pinValid = false;
+          }
+        }
+        if (!pinValid) {
           console.log('[SECURITY] Invalid PIN attempt for emergency access:', {
             patientId,
             ip: clientIp,

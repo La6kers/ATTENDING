@@ -143,6 +143,10 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
     return res.status(400).json({ error: 'First name, last name, and email are required' });
   }
 
+  if (typeof updates.firstName !== 'string' || typeof updates.lastName !== 'string' || typeof updates.email !== 'string') {
+    return res.status(400).json({ error: 'firstName, lastName, and email must be strings' });
+  }
+
   try {
     const patient = await prisma.patient.update({
       where: { id: patientId },

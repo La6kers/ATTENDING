@@ -43,6 +43,20 @@ export default async function handler(
       });
     }
 
+    if (typeof patientId !== 'string' || typeof chatSummary !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'patientId and chatSummary must be strings',
+      });
+    }
+
+    if (chatSummary.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'chatSummary must not be empty',
+      });
+    }
+
     const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const isUrgent = urgencyLevel === 'high';
     const priorityStr = isUrgent ? 'URGENT' : 'NORMAL';

@@ -91,6 +91,9 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task WatchPatient(string patientId)
     {
+        if (!_currentUser.TenantId.HasValue)
+            throw new HubException("Tenant identity is required.");
+
         if (!Guid.TryParse(patientId, out var patientGuid))
             throw new HubException("Patient not found");
 
@@ -100,12 +103,14 @@ public class ClinicalNotificationHub : Hub
 
         if (patient.OrganizationId != _currentUser.TenantId)
         {
-            await Clients.Caller.SendAsync("Error", "Access denied.");
-            return;
+            _logger.LogWarning(
+                "Tenant mismatch: user tenant {UserTenantId} attempted to watch patient {PatientId} belonging to tenant {PatientTenantId}",
+                _currentUser.TenantId.Value, patientId, patient.OrganizationId);
+            throw new HubException("Access denied.");
         }
 
         var connectionId = Context.ConnectionId;
-        var tenantId = _currentUser.TenantId!.Value.ToString("N");
+        var tenantId = _currentUser.TenantId.Value.ToString("N");
 
         var groupName = $"Patient_{tenantId}_{patientGuid:N}";
 
@@ -125,11 +130,14 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task UnwatchPatient(string patientId)
     {
+        if (!_currentUser.TenantId.HasValue)
+            throw new HubException("Tenant identity is required.");
+
         if (!Guid.TryParse(patientId, out var patientGuid))
             throw new HubException("Invalid patient ID");
 
         var connectionId = Context.ConnectionId;
-        var tenantId = _currentUser.TenantId!.Value.ToString("N");
+        var tenantId = _currentUser.TenantId.Value.ToString("N");
 
         var groupName = $"Patient_{tenantId}_{patientGuid:N}";
 
@@ -152,7 +160,10 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task JoinEmergencyAlerts()
     {
-        var tenantId = _currentUser.TenantId!.Value.ToString("N");
+        if (!_currentUser.TenantId.HasValue)
+            throw new HubException("Tenant identity is required.");
+
+        var tenantId = _currentUser.TenantId.Value.ToString("N");
         await Groups.AddToGroupAsync(Context.ConnectionId, $"EmergencyAlerts_{tenantId}");
     }
 
@@ -161,7 +172,10 @@ public class ClinicalNotificationHub : Hub
     /// </summary>
     public async Task LeaveEmergencyAlerts()
     {
-        var tenantId = _currentUser.TenantId!.Value.ToString("N");
+        if (!_currentUser.TenantId.HasValue)
+            throw new HubException("Tenant identity is required.");
+
+        var tenantId = _currentUser.TenantId.Value.ToString("N");
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"EmergencyAlerts_{tenantId}");
     }
 }

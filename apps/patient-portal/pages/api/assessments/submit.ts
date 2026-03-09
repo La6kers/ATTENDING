@@ -284,7 +284,13 @@ export default async function handler(
         action: 'ASSESSMENT_SUBMITTED',
         entityType: 'PatientAssessment',
         entityId: assessment.id,
-        userId: (req as any).userId || null,
+        userId: (() => {
+          const uid = (req as any).userId;
+          if (!uid) {
+            console.warn('[AUDIT] Assessment submission without userId context');
+          }
+          return uid || null;
+        })(),
         ipAddress: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || null,
         userAgent: req.headers['user-agent'] || null,
         changes: JSON.stringify({

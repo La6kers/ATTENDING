@@ -53,7 +53,9 @@ public class NihDrugInteractionClient : IExternalDrugInteractionApi
         _options = options.Value;
         _logger = logger;
 
-        _httpClient.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
+        // Do not set _httpClient.Timeout here — the resilience pipeline
+        // (ResilienceConfiguration) already manages timeouts via OverallTimeout.
+        // Setting HttpClient.Timeout would conflict with retry/circuit-breaker logic.
     }
 
     public async Task<ExternalDrugInteractionResult?> CheckInteractionsAsync(

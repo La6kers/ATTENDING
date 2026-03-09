@@ -195,6 +195,7 @@ function detectRedFlags(message: string): string[] {
   const flags: string[] = [];
   
   for (const { pattern, flag } of RED_FLAG_PATTERNS) {
+    pattern.lastIndex = 0;
     if (pattern.test(message)) {
       flags.push(flag);
     }

@@ -80,6 +80,7 @@ export interface PatientHandoff {
 
 // ── In-memory store ──
 const handoffStore = new Map<string, PatientHandoff>();
+const MAX_HANDOFF_ENTRIES = 1000;
 const rateLimits = new Map<string, number>(); // key -> last timestamp
 
 // ── Rate limit check ──
@@ -102,6 +103,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getServerSession(req, res, authOptions);
   if (!session) {
     return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // Clean up expired handoffs to prevent unbounded Map growth
+  const now = Date.now();
+  for (const [id, handoff] of handoffStore) {
+    if (new Date(handoff.expiresAt).getTime() < now) {
+      handoffStore.delete(id);
+    }
   }
 
   // ── POST: Create or update handoff ──
@@ -191,6 +200,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } : undefined,
       updates: [{ timestamp: now.toISOString(), type: 'status', data: 'Handoff initiated' }],
     };
+
+    // Enforce max entries cap
+    if (handoffStore.size >= MAX_HANDOFF_ENTRIES) {
+      return res.status(503).json({ error: 'Handoff capacity reached. Please try again later.' });
+    }
 
     handoffStore.set(id, handoff);
 

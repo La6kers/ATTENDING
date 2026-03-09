@@ -120,8 +120,8 @@ export default async function handler(
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
     
-    const limitNum = parseInt(limit as string, 10);
-    const offsetNum = parseInt(offset as string, 10);
+    const limitNum = Math.max(1, Math.min(parseInt(limit as string, 10) || 10, 100));
+    const offsetNum = Math.max(0, parseInt(offset as string, 10) || 0);
     
     // Paginate results
     const paginatedHistory = mockAccessHistory.slice(offsetNum, offsetNum + limitNum);

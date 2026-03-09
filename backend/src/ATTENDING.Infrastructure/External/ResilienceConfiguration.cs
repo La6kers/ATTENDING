@@ -108,7 +108,7 @@ internal class ResilienceDelegatingHandler : DelegatingHandler
     private DateTime _circuitOpenedAt = DateTime.MinValue;
     private readonly object _circuitLock = new();
 
-    private static readonly Random Jitter = new();
+    private static Random Jitter => Random.Shared;
 
     public ResilienceDelegatingHandler(
         string serviceName, ResilienceOptions options, ILogger logger)

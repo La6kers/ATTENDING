@@ -42,7 +42,7 @@ public class EpicFhirClient : IFhirClient
         try
         {
             var response = await _httpClient.GetAsync($"Patient/{patientId}", cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Failed to get patient {PatientId}: {StatusCode}", patientId, response.StatusCode);
@@ -50,7 +50,13 @@ public class EpicFhirClient : IFhirClient
             }
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonSerializer.Deserialize<FhirPatient>(content, FhirJsonOptions.Default);
+            var result = JsonSerializer.Deserialize<FhirPatient>(content, FhirJsonOptions.Default);
+            if (result is null)
+            {
+                _logger.LogWarning("Unexpected response format deserializing Patient {PatientId}: result was null", patientId);
+                return null;
+            }
+            return result;
         }
         catch (Exception ex)
         {
@@ -66,7 +72,7 @@ public class EpicFhirClient : IFhirClient
             var response = await _httpClient.GetAsync(
                 $"Observation?patient={patientId}&category=laboratory&_sort=-date&_count=100",
                 cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Failed to get observations for patient {PatientId}", patientId);
@@ -75,7 +81,12 @@ public class EpicFhirClient : IFhirClient
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var bundle = JsonSerializer.Deserialize<FhirBundle<FhirObservation>>(content, FhirJsonOptions.Default);
-            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirObservation>();
+            if (bundle is null)
+            {
+                _logger.LogWarning("Unexpected response format deserializing Observation bundle for patient {PatientId}", patientId);
+                return Array.Empty<FhirObservation>();
+            }
+            return bundle.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirObservation>();
         }
         catch (Exception ex)
         {
@@ -91,7 +102,7 @@ public class EpicFhirClient : IFhirClient
             var response = await _httpClient.GetAsync(
                 $"MedicationRequest?patient={patientId}&status=active",
                 cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 return Array.Empty<FhirMedicationRequest>();
@@ -99,7 +110,12 @@ public class EpicFhirClient : IFhirClient
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var bundle = JsonSerializer.Deserialize<FhirBundle<FhirMedicationRequest>>(content, FhirJsonOptions.Default);
-            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirMedicationRequest>();
+            if (bundle is null)
+            {
+                _logger.LogWarning("Unexpected response format deserializing MedicationRequest bundle for patient {PatientId}", patientId);
+                return Array.Empty<FhirMedicationRequest>();
+            }
+            return bundle.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirMedicationRequest>();
         }
         catch (Exception ex)
         {
@@ -115,7 +131,7 @@ public class EpicFhirClient : IFhirClient
             var response = await _httpClient.GetAsync(
                 $"Condition?patient={patientId}&clinical-status=active",
                 cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 return Array.Empty<FhirCondition>();
@@ -123,7 +139,12 @@ public class EpicFhirClient : IFhirClient
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var bundle = JsonSerializer.Deserialize<FhirBundle<FhirCondition>>(content, FhirJsonOptions.Default);
-            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirCondition>();
+            if (bundle is null)
+            {
+                _logger.LogWarning("Unexpected response format deserializing Condition bundle for patient {PatientId}", patientId);
+                return Array.Empty<FhirCondition>();
+            }
+            return bundle.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirCondition>();
         }
         catch (Exception ex)
         {
@@ -139,7 +160,7 @@ public class EpicFhirClient : IFhirClient
             var response = await _httpClient.GetAsync(
                 $"AllergyIntolerance?patient={patientId}&clinical-status=active",
                 cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 return Array.Empty<FhirAllergyIntolerance>();
@@ -147,7 +168,12 @@ public class EpicFhirClient : IFhirClient
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var bundle = JsonSerializer.Deserialize<FhirBundle<FhirAllergyIntolerance>>(content, FhirJsonOptions.Default);
-            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirAllergyIntolerance>();
+            if (bundle is null)
+            {
+                _logger.LogWarning("Unexpected response format deserializing AllergyIntolerance bundle for patient {PatientId}", patientId);
+                return Array.Empty<FhirAllergyIntolerance>();
+            }
+            return bundle.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirAllergyIntolerance>();
         }
         catch (Exception ex)
         {
@@ -162,12 +188,21 @@ public class EpicFhirClient : IFhirClient
         {
             var json = JsonSerializer.Serialize(labOrder, FhirJsonOptions.Default);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/fhir+json");
-            
+
             var response = await _httpClient.PostAsync("ServiceRequest", content, cancellationToken);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Failed to send lab order: {StatusCode}", response.StatusCode);
+                return false;
+            }
+
+            // Check for OperationOutcome with error/fatal severity in a 2xx response
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (responseBody.Contains("\"OperationOutcome\"") &&
+                (responseBody.Contains("\"error\"") || responseBody.Contains("\"fatal\"")))
+            {
+                _logger.LogWarning("Epic returned OperationOutcome with error/fatal severity in 2xx response: {Body}", responseBody);
                 return false;
             }
 
@@ -228,7 +263,13 @@ public class OracleHealthFhirClient : IFhirClient
             }
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            return JsonSerializer.Deserialize<FhirPatient>(content, FhirJsonOptions.Default);
+            var result = JsonSerializer.Deserialize<FhirPatient>(content, FhirJsonOptions.Default);
+            if (result is null)
+            {
+                _logger.LogWarning("[Cerner] Unexpected response format deserializing Patient {PatientId}: result was null", patientId);
+                return null;
+            }
+            return result;
         }
         catch (Exception ex)
         {
@@ -254,7 +295,12 @@ public class OracleHealthFhirClient : IFhirClient
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var bundle = JsonSerializer.Deserialize<FhirBundle<FhirObservation>>(content, FhirJsonOptions.Default);
-            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirObservation>();
+            if (bundle is null)
+            {
+                _logger.LogWarning("[Cerner] Unexpected response format deserializing Observation bundle for patient {PatientId}", patientId);
+                return Array.Empty<FhirObservation>();
+            }
+            return bundle.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirObservation>();
         }
         catch (Exception ex)
         {
@@ -276,7 +322,12 @@ public class OracleHealthFhirClient : IFhirClient
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var bundle = JsonSerializer.Deserialize<FhirBundle<FhirMedicationRequest>>(content, FhirJsonOptions.Default);
-            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirMedicationRequest>();
+            if (bundle is null)
+            {
+                _logger.LogWarning("[Cerner] Unexpected response format deserializing MedicationRequest bundle for patient {PatientId}", patientId);
+                return Array.Empty<FhirMedicationRequest>();
+            }
+            return bundle.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirMedicationRequest>();
         }
         catch (Exception ex)
         {
@@ -298,7 +349,12 @@ public class OracleHealthFhirClient : IFhirClient
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var bundle = JsonSerializer.Deserialize<FhirBundle<FhirCondition>>(content, FhirJsonOptions.Default);
-            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirCondition>();
+            if (bundle is null)
+            {
+                _logger.LogWarning("[Cerner] Unexpected response format deserializing Condition bundle for patient {PatientId}", patientId);
+                return Array.Empty<FhirCondition>();
+            }
+            return bundle.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirCondition>();
         }
         catch (Exception ex)
         {
@@ -320,7 +376,12 @@ public class OracleHealthFhirClient : IFhirClient
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var bundle = JsonSerializer.Deserialize<FhirBundle<FhirAllergyIntolerance>>(content, FhirJsonOptions.Default);
-            return bundle?.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirAllergyIntolerance>();
+            if (bundle is null)
+            {
+                _logger.LogWarning("[Cerner] Unexpected response format deserializing AllergyIntolerance bundle for patient {PatientId}", patientId);
+                return Array.Empty<FhirAllergyIntolerance>();
+            }
+            return bundle.Entry?.Select(e => e.Resource).ToList() ?? new List<FhirAllergyIntolerance>();
         }
         catch (Exception ex)
         {
@@ -362,6 +423,15 @@ public class OracleHealthFhirClient : IFhirClient
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("[Cerner] Failed to send lab order: {StatusCode}", response.StatusCode);
+                return false;
+            }
+
+            // Check for OperationOutcome with error/fatal severity in a 2xx response
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            if (responseBody.Contains("\"OperationOutcome\"") &&
+                (responseBody.Contains("\"error\"") || responseBody.Contains("\"fatal\"")))
+            {
+                _logger.LogWarning("[Cerner] Oracle Health returned OperationOutcome with error/fatal severity in 2xx response: {Body}", responseBody);
                 return false;
             }
 
