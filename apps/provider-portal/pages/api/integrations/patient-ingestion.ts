@@ -54,8 +54,8 @@ const PatientSchema = z.object({
   mrn: z.string().min(1).max(50),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  dateOfBirth: z.string().refine(
-    (val) => !val || !isNaN(Date.parse(val)),
+  dateOfBirth: z.string().min(1, 'dateOfBirth is required').refine(
+    (val) => !isNaN(Date.parse(val)),
     { message: 'dateOfBirth must be a valid date string (e.g., YYYY-MM-DD)' }
   ),
   gender: z.string().optional(),
