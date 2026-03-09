@@ -5,7 +5,7 @@
 // System-to-system authentication via API keys.
 // Supports:
 //   - Key generation (cryptographically secure)
-//   - Key hashing (bcrypt — never store plaintext)
+//   - Key hashing (scrypt — never store plaintext)
 //   - Scope-based permissions
 //   - Rate limiting per key
 //   - Expiration dates
@@ -27,7 +27,7 @@
 //   DELETE /api/admin/api-keys/:id — Revoke key
 // ============================================================
 
-import { randomBytes, createHash } from 'crypto';
+import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import type { NextApiRequest } from 'next';
 
 // ============================================================
@@ -47,9 +47,19 @@ export function generateApiKey(): { key: string; hash: string; prefix: string } 
   return { key, hash, prefix };
 }
 
-/** Hash an API key for storage (SHA-256 — fast, deterministic for lookup) */
+/** Hash an API key for storage (scrypt — computationally expensive, salted) */
 export function hashApiKey(key: string): string {
-  return createHash('sha256').update(key).digest('hex');
+  const salt = randomBytes(16).toString('hex');
+  const hash = scryptSync(key, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+/** Verify an API key against a stored scrypt hash */
+export function verifyApiKey(key: string, storedHash: string): boolean {
+  const [salt, hash] = storedHash.split(':');
+  const hashBuffer = Buffer.from(hash, 'hex');
+  const derivedHash = scryptSync(key, salt, 64);
+  return timingSafeEqual(hashBuffer, derivedHash);
 }
 
 // ============================================================
@@ -190,14 +200,17 @@ export async function validateApiKey(
   // Validate format
   if (!rawKey.startsWith(KEY_PREFIX)) return null;
 
-  const keyHash = hashApiKey(rawKey);
+  const keyPrefix = rawKey.slice(0, 12);
 
   try {
-    const record = await prisma.apiKey.findUnique({
-      where: { keyHash },
+    // With salted hashing, we can't look up by hash directly.
+    // Find active keys matching the visible prefix, then verify.
+    const candidates = await prisma.apiKey.findMany({
+      where: { keyPrefix, isActive: true },
       select: {
         id: true,
         name: true,
+        keyHash: true,
         organizationId: true,
         scopes: true,
         rateLimit: true,
@@ -206,8 +219,9 @@ export async function validateApiKey(
       },
     });
 
+    const record = candidates.find((r: any) => verifyApiKey(rawKey, r.keyHash));
+
     if (!record) return null;
-    if (!record.isActive) return null;
     if (record.expiresAt && new Date() > record.expiresAt) return null;
 
     // Parse scopes
@@ -322,6 +336,7 @@ export async function listApiKeys(
 export default {
   generateApiKey,
   hashApiKey,
+  verifyApiKey,
   validateApiKey,
   createApiKeyRecord,
   revokeApiKey,

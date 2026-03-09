@@ -346,17 +346,22 @@ describe('API Key Management', () => {
 
     expect(key).toMatch(/^atnd_/);
     expect(key.length).toBeGreaterThan(40);
-    expect(hash).toHaveLength(64); // SHA-256 hex
+    expect(hash).toContain(':'); // salted scrypt hash (salt:hash)
     expect(prefix).toBe(key.slice(0, 12));
   });
 
-  it('produces deterministic hashes', () => {
+  it('produces unique salted hashes and verifies correctly', () => {
     const testKey = 'atnd_test123';
     const hash1 = apiKeys.hashApiKey(testKey);
     const hash2 = apiKeys.hashApiKey(testKey);
 
-    expect(hash1).toBe(hash2);
-    expect(hash1).toHaveLength(64);
+    // Salted hashes should differ each time
+    expect(hash1).not.toBe(hash2);
+    // But both should verify against the original key
+    expect(apiKeys.verifyApiKey(testKey, hash1)).toBe(true);
+    expect(apiKeys.verifyApiKey(testKey, hash2)).toBe(true);
+    // Wrong key should not verify
+    expect(apiKeys.verifyApiKey('atnd_wrong', hash1)).toBe(false);
   });
 
   it('generates unique keys', () => {
