@@ -287,8 +287,8 @@ public class MedicationsController : ControllerBase
 
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                       ?? User.FindFirst("sub")?.Value;
+        var userIdClaim = User.FindFirst("sub")?.Value
+                       ?? User.FindFirst("oid")?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             throw new UnauthorizedAccessException("Valid user identity is required.");
         return userId;

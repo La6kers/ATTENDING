@@ -279,6 +279,19 @@ public class AmbientScribeController : ControllerBase
     {
         var providerId = GetCurrentUserId();
 
+        // Validate all SOAP sections are populated before signing
+        var note = await _repo.GetNoteByIdAsync(noteId, ct);
+        if (note == null)
+            return NotFound(new ProblemDetails { Title = "Note not found", Status = 404 });
+
+        if (string.IsNullOrWhiteSpace(note.Subjective) ||
+            string.IsNullOrWhiteSpace(note.Objective) ||
+            string.IsNullOrWhiteSpace(note.Assessment) ||
+            string.IsNullOrWhiteSpace(note.Plan))
+        {
+            return BadRequest("Cannot sign note: all SOAP sections must be populated");
+        }
+
         var result = await _mediator.Send(
             new SignAmbientNoteCommand(noteId, providerId), ct);
 

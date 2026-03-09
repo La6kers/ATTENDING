@@ -120,7 +120,7 @@ function transformFhirPatient(fhir: FhirPatient): z.infer<typeof PatientSchema> 
     mrn,
     firstName: name?.given?.[0] || 'Unknown',
     lastName: name?.family || 'Unknown',
-    dateOfBirth: fhir.birthDate || 'UNKNOWN',
+    dateOfBirth: fhir.birthDate || null as any,
     gender: fhir.gender,
     email,
     phone,

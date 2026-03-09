@@ -117,7 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     } catch (err) {
       const latencyMs = Date.now() - start;
-      return res.status(200).json({
+      return res.status(502).json({
         success: false,
         result: { latencyMs, error: err instanceof Error ? err.message : 'Unknown error' },
         testPayload,

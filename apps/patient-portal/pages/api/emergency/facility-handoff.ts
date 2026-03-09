@@ -84,9 +84,17 @@ const rateLimits = new Map<string, number>(); // key -> last timestamp
 
 // ── Rate limit check ──
 function checkRateLimit(key: string, windowMs: number): boolean {
+  // Clean up expired entries to prevent unbounded Map growth
+  const now = Date.now();
+  for (const [k, timestamp] of rateLimits) {
+    if (now - timestamp > windowMs) {
+      rateLimits.delete(k);
+    }
+  }
+
   const last = rateLimits.get(key);
-  if (last && Date.now() - last < windowMs) return false;
-  rateLimits.set(key, Date.now());
+  if (last && now - last < windowMs) return false;
+  rateLimits.set(key, now);
   return true;
 }
 

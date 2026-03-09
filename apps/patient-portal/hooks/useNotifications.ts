@@ -205,13 +205,21 @@ export function useNotifications(options?: {
   const markRead = useCallback(async (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     setUnreadCount((c) => Math.max(0, c - 1));
-    await notificationsApi.markRead(id);
+    try {
+      await notificationsApi.markRead(id);
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
   }, []);
 
   const markAllRead = useCallback(async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
-    await notificationsApi.markAllRead();
+    try {
+      await notificationsApi.markAllRead();
+    } catch (err) {
+      console.error('Failed to mark all notifications as read:', err);
+    }
   }, []);
 
   // Type-specific subscription

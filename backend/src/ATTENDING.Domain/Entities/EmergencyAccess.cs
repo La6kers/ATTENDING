@@ -97,6 +97,9 @@ public class EmergencyAccessProfile : BaseEntity, IHasDomainEvents
         bool? showContacts = null,
         bool? showImplants = null)
     {
+        if (!IsEnabled)
+            throw new InvalidOperationException("Cannot modify settings on a disabled emergency access profile");
+
         if (gForceThreshold.HasValue)
         {
             if (gForceThreshold.Value < 2.0m || gForceThreshold.Value > 20.0m)

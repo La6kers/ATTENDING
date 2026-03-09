@@ -172,6 +172,7 @@ export function useMessageThread(conversationId: string | undefined): UseMessage
     if (!conversationId || !hasMore || messages.length === 0) return;
     const oldest = messages[0]?.timestamp;
     const res = await messagesApi.getMessages(conversationId, { before: oldest, limit: 50 });
+    if (!mountedRef.current) return;
     if (res.ok && res.data) {
       setMessages((prev) => [...res.data!, ...prev]);
       setHasMore(res.data.length >= 50);

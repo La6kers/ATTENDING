@@ -102,12 +102,25 @@ interface ChatResponse {
   isComplete: boolean;
 }
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50kb',
+    },
+  },
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Request body size check
+  if (req.body && JSON.stringify(req.body).length > 50000) {
+    return res.status(413).json({ error: 'Request body too large' });
   }
 
   // Rate limit: max 60 messages per minute per IP (for assessment conversations)

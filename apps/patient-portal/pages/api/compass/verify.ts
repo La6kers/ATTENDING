@@ -110,7 +110,7 @@ export default async function handler(
     });
 
     if (!patient) {
-      return res.status(404).json({ error: 'Patient not found. Please check your last name and date of birth.' });
+      return res.status(400).json({ error: 'Verification failed. Please check your information and try again.' });
     }
 
     const encounter = patient.encounters[0];

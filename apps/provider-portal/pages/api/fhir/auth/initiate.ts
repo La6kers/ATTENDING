@@ -168,7 +168,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 600, // 10 minutes
-    path: '/',
+    path: '/api/fhir/',
   }));
 
   // Build Epic/Cerner authorization URL

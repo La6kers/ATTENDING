@@ -79,7 +79,7 @@ public class AddScreeningResponseHandler
         _repo.Update(screening);
         await _uow.SaveChangesAsync(ct);
 
-        return Unit.Value;
+        return Result.Success(Unit.Value);
     }
 }
 
@@ -198,7 +198,7 @@ public class ReviewScreeningHandler
         _repo.Update(screening);
         await _uow.SaveChangesAsync(ct);
 
-        return Unit.Value;
+        return Result.Success(Unit.Value);
     }
 }
 
@@ -227,6 +227,6 @@ public class RecordPartTwoConsentHandler
         _repo.Update(screening);
         await _uow.SaveChangesAsync(ct);
 
-        return Unit.Value;
+        return Result.Success(Unit.Value);
     }
 }

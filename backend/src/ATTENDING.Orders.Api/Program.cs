@@ -307,8 +307,19 @@ if (!app.Environment.IsDevelopment())
     }
     else
     {
-        Log.Warning("ForwardedHeaders: No TrustedProxyCIDRs configured — accepting from any proxy. " +
-                     "Set ForwardedHeaders:TrustedProxyCIDRs in appsettings.Production.json before go-live.");
+        if (app.Environment.IsProduction())
+        {
+            Log.Error("ForwardedHeaders: No TrustedProxyCIDRs configured — accepting from any proxy. " +
+                       "Set ForwardedHeaders:TrustedProxyCIDRs in appsettings.Production.json before go-live.");
+            throw new InvalidOperationException(
+                "ForwardedHeaders:TrustedProxyCIDRs must be configured in production. " +
+                "Without trusted proxies, rate limiting and audit logging use proxy IPs instead of client IPs.");
+        }
+        else
+        {
+            Log.Warning("ForwardedHeaders: No TrustedProxyCIDRs configured — accepting from any proxy. " +
+                         "Set ForwardedHeaders:TrustedProxyCIDRs in appsettings.Production.json before go-live.");
+        }
     }
 }
 

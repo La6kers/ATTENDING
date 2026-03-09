@@ -105,9 +105,7 @@ public class ClinicalNotificationHub : Hub
         }
 
         var connectionId = Context.ConnectionId;
-        var tenantId = Context.User?.FindFirst("oid")?.Value
-                    ?? Context.User?.FindFirst("sub")?.Value
-                    ?? "unknown";
+        var tenantId = _currentUser.TenantId.ToString();
 
         var groupName = $"Patient_{tenantId}|{patientId}";
 
@@ -128,9 +126,7 @@ public class ClinicalNotificationHub : Hub
     public async Task UnwatchPatient(string patientId)
     {
         var connectionId = Context.ConnectionId;
-        var tenantId = Context.User?.FindFirst("oid")?.Value
-                    ?? Context.User?.FindFirst("sub")?.Value
-                    ?? "unknown";
+        var tenantId = _currentUser.TenantId.ToString();
 
         var groupName = $"Patient_{tenantId}|{patientId}";
 

@@ -195,6 +195,7 @@ public class BehavioralHealthController : ControllerBase
         Guid patientId, [FromQuery] int skip = 0, [FromQuery] int take = 20, CancellationToken ct = default)
     {
         take = Math.Clamp(take, 1, 100);
+        skip = Math.Clamp(skip, 0, 10000);
         var screenings = await _repo.GetByPatientIdAsync(patientId, ct);
         return Ok(screenings.Skip(skip).Take(take).Select(MapToDetail).ToList());
     }

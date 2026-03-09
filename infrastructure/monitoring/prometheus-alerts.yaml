@@ -42,14 +42,14 @@ groups:
           description: "Real-time communication service is down."
 
       - alert: DatabaseConnectionFailure
-        expr: pg_up{job="postgresql"} == 0
+        expr: mssql_up{job="mssql"} == 0
         for: 30s
         labels:
           severity: critical
           team: platform
         annotations:
           summary: "Database Connection FAILED"
-          description: "Cannot connect to PostgreSQL database."
+          description: "Cannot connect to SQL Server database."
 
       - alert: RedFlagDetectionFailure
         expr: rate(ai_redflags_errors_total[5m]) > 0.1

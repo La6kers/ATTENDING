@@ -190,9 +190,14 @@ public class StopRecordingHandler : IRequestHandler<StopRecordingCommand, Result
         // the response returns, but note generation must continue to completion.
         _ = Task.Run(async () =>
         {
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
             try
             {
-                await GenerateNoteAsync(session, CancellationToken.None);
+                await GenerateNoteAsync(session, cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("Background SOAP note generation timed out after 5 minutes for recording {RecordingId}", session.Id);
             }
             catch (Exception ex)
             {

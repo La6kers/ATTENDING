@@ -196,6 +196,15 @@ resource "azurerm_mssql_database" "main" {
   tags = local.common_tags
 }
 
+resource "azurerm_mssql_database_extended_auditing_policy" "main" {
+  database_id                             = azurerm_mssql_database.main.id
+  enabled                                 = true
+  storage_endpoint                        = azurerm_storage_account.audit_logs.primary_blob_endpoint
+  storage_account_access_key              = azurerm_storage_account.audit_logs.primary_access_key
+  retention_in_days                       = 90
+  log_monitoring_enabled                  = true
+}
+
 # Firewall rule for Azure services removed — the SQL server uses
 # public_network_access_enabled = false with private endpoints,
 # making this 0.0.0.0/0.0.0.0 rule redundant and overly permissive.

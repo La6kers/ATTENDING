@@ -9,6 +9,16 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 
+// HTML escape helper to prevent XSS in email templates
+function htmlEscape(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -184,11 +194,20 @@ function getEmergencyMessage(
   notificationType: NotificationRequest['notificationType'],
   location?: NotificationRequest['location']
 ): { sms: string; pushTitle: string; pushBody: string; emailSubject: string; emailBody: string } {
-  const locationStr = location?.address || 
-    (location ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'Unknown');
-  
-  const mapsLink = location 
-    ? `https://maps.google.com/?q=${location.latitude},${location.longitude}`
+  const locationStr = htmlEscape(
+    location?.address ||
+    (location ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` : 'Unknown')
+  );
+  const escapedPatientName = htmlEscape(patientName);
+
+  // Validate lat/long before constructing maps URL
+  const validCoords = location &&
+    typeof location.latitude === 'number' && typeof location.longitude === 'number' &&
+    location.latitude >= -90 && location.latitude <= 90 &&
+    location.longitude >= -180 && location.longitude <= 180;
+
+  const mapsLink = validCoords
+    ? `https://maps.google.com/?q=${location!.latitude},${location!.longitude}`
     : '';
 
   const templates = {
@@ -199,7 +218,7 @@ function getEmergencyMessage(
       emailSubject: `[EMERGENCY] Crash Detected - ${patientName}`,
       emailBody: `
         <h2>🚨 Emergency Alert - Crash Detected</h2>
-        <p><strong>${patientName}'s phone detected a severe crash.</strong></p>
+        <p><strong>${escapedPatientName}'s phone detected a severe crash.</strong></p>
         <p>Location: ${locationStr}</p>
         ${mapsLink ? `<p><a href="${mapsLink}">View on Map</a></p>` : ''}
         <p>Their emergency medical information is being shared with first responders.</p>
@@ -213,7 +232,7 @@ function getEmergencyMessage(
       emailSubject: `[ALERT] Emergency Medical Info Accessed - ${patientName}`,
       emailBody: `
         <h2>🏥 Emergency Medical Info Accessed</h2>
-        <p>Someone accessed <strong>${patientName}'s</strong> emergency medical information.</p>
+        <p>Someone accessed <strong>${escapedPatientName}'s</strong> emergency medical information.</p>
         <p>Location: ${locationStr}</p>
         ${mapsLink ? `<p><a href="${mapsLink}">View on Map</a></p>` : ''}
         <p>This typically means a first responder or medical professional needed their medical history.</p>
@@ -226,7 +245,7 @@ function getEmergencyMessage(
       emailSubject: `[SOS] Emergency Alert - ${patientName}`,
       emailBody: `
         <h2>🆘 SOS Alert</h2>
-        <p><strong>${patientName} manually triggered an emergency SOS alert.</strong></p>
+        <p><strong>${escapedPatientName} manually triggered an emergency SOS alert.</strong></p>
         <p>Location: ${locationStr}</p>
         ${mapsLink ? `<p><a href="${mapsLink}">View on Map</a></p>` : ''}
         <p>Please attempt to contact them immediately or go to their location.</p>
@@ -239,7 +258,7 @@ function getEmergencyMessage(
       emailSubject: `[ALERT] Fall Detected - ${patientName}`,
       emailBody: `
         <h2>⚠️ Fall Detected</h2>
-        <p><strong>${patientName}'s phone detected a hard fall and they haven't responded.</strong></p>
+        <p><strong>${escapedPatientName}'s phone detected a hard fall and they haven't responded.</strong></p>
         <p>Location: ${locationStr}</p>
         ${mapsLink ? `<p><a href="${mapsLink}">View on Map</a></p>` : ''}
         <p>Please attempt to contact them or check on them.</p>
@@ -390,7 +409,7 @@ export default async function handler(
           `[URGENT] Emergency Alert - Patient ${patientName}`,
           `
             <h2>Emergency Alert</h2>
-            <p>Patient: ${patientName}</p>
+            <p>Patient: ${htmlEscape(patientName)}</p>
             <p>Alert Type: ${notificationType.replace('_', ' ').toUpperCase()}</p>
             <p>Urgency: ${urgency.toUpperCase()}</p>
             ${location ? `<p>Location: ${location.latitude}, ${location.longitude}</p>` : ''}

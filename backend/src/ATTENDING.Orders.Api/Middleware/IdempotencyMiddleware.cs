@@ -150,7 +150,7 @@ public class IdempotencyMiddleware
         catch (Exception ex)
         {
             // Cache failure should not block the request — log and proceed
-            _logger.LogWarning(ex, "Idempotency cache read failed for key {Key}. Proceeding without replay.", rawKey);
+            _logger.LogError(ex, "Idempotency cache read failed for key {Key}. Proceeding without replay.", rawKey);
         }
 
         // Capture the response so we can cache it
@@ -186,7 +186,7 @@ public class IdempotencyMiddleware
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to cache idempotent response for key {Key}", rawKey);
+                    _logger.LogError(ex, "Failed to cache idempotent response for key {Key}", rawKey);
                 }
             }
 

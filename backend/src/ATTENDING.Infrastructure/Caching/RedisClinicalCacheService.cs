@@ -50,6 +50,7 @@ public class RedisClinicalCacheService : IClinicalCacheService
     // In production with real Redis, use SCAN instead
     private readonly ConcurrentDictionary<string, byte> _keyRegistry = new();
     private const int MaxRegistrySize = 10_000;
+    private readonly object _registryLock = new();
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -103,13 +104,16 @@ public class RedisClinicalCacheService : IClinicalCacheService
             var json = JsonSerializer.Serialize(value, JsonOptions);
             await _cache.SetStringAsync(key, json, options, cancellationToken);
 
-            if (_keyRegistry.Count > MaxRegistrySize)
+            lock (_registryLock)
             {
-                _keyRegistry.Clear(); // Simple reset — prefix invalidation will use Redis SCAN fallback
-                _logger.LogWarning("Cache key registry exceeded {Max} entries, cleared", MaxRegistrySize);
-            }
+                if (_keyRegistry.Count > MaxRegistrySize)
+                {
+                    _keyRegistry.Clear(); // Simple reset — prefix invalidation will use Redis SCAN fallback
+                    _logger.LogWarning("Cache key registry exceeded {Max} entries, cleared", MaxRegistrySize);
+                }
 
-            _keyRegistry.TryAdd(key, 0);
+                _keyRegistry.TryAdd(key, 0);
+            }
         }
         catch (Exception ex)
         {

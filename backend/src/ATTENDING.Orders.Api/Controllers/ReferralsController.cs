@@ -51,7 +51,6 @@ public class ReferralsController : ControllerBase
     /// Get list of available specialties
     /// </summary>
     [HttpGet("specialties")]
-    [AllowAnonymous]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<string>> GetSpecialties()
     {
@@ -350,8 +349,8 @@ public class ReferralsController : ControllerBase
 
     private Guid GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                       ?? User.FindFirst("sub")?.Value;
+        var userIdClaim = User.FindFirst("sub")?.Value
+                       ?? User.FindFirst("oid")?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             throw new UnauthorizedAccessException("Valid user identity is required.");
         return userId;
