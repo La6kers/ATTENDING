@@ -12,9 +12,10 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
+import { requireAuth } from '@/lib/api/auth';
 import { proxyToBackend } from '@/lib/api/backendProxy';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -126,3 +127,5 @@ export default async function handler(
     return res.status(500).json({ error: 'Failed to submit assessment' });
   }
 }
+
+export default requireAuth(handler);

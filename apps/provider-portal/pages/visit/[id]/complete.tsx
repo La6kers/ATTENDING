@@ -538,7 +538,9 @@ export default function CompletePage() {
                       {isEditing ? 'Preview' : 'Edit'}
                     </button>
                     <button
-                      onClick={() => navigator.clipboard.writeText(note)}
+                      onClick={() => navigator.clipboard.writeText(note).catch(() => {
+                        console.warn('Failed to copy to clipboard');
+                      })}
                       className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
                       title="Copy to clipboard"
                     >

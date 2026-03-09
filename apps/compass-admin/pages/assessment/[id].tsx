@@ -189,7 +189,9 @@ export default function AssessmentDetailPage() {
 
   const handleCopyNarrative = () => {
     if (!assessment?.hpiNarrative) return;
-    navigator.clipboard.writeText(assessment.hpiNarrative);
+    navigator.clipboard.writeText(assessment.hpiNarrative).catch(() => {
+      console.warn('Failed to copy to clipboard');
+    });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

@@ -114,7 +114,9 @@ export default function CheckinSetupPage() {
   const kioskUrl = `${checkinUrl}?mode=kiosk`;
 
   const handleCopy = (url: string) => {
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(url).catch(() => {
+      console.warn('Failed to copy to clipboard');
+    });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

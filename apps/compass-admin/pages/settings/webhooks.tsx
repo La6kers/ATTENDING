@@ -156,7 +156,9 @@ function WebhookModal({ onClose, onSave, editing }: {
                 {createdSecret}
               </code>
               <button
-                onClick={() => navigator.clipboard.writeText(createdSecret)}
+                onClick={() => navigator.clipboard.writeText(createdSecret).catch(() => {
+                  console.warn('Failed to copy to clipboard');
+                })}
                 className="p-2 hover:bg-amber-100 rounded transition-colors"
               >
                 <Copy className="w-4 h-4 text-amber-600" />

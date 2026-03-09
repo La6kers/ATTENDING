@@ -10,6 +10,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@attending/shared/lib/prisma';
+import { requireAuth } from '@/lib/api/auth';
 import { proxyToBackend } from '@/lib/api/backendProxy';
 
 // =============================================================================
@@ -33,7 +34,7 @@ function calculateAge(dob: Date): number {
 // Handler
 // =============================================================================
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
   if (!id || typeof id !== 'string') {
     return res.status(400).json({ error: 'Assessment ID is required' });
@@ -259,3 +260,5 @@ async function handlePatch(id: string, req: NextApiRequest, res: NextApiResponse
     },
   });
 }
+
+export default requireAuth(handler);

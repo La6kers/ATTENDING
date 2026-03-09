@@ -630,7 +630,9 @@ const CalculatorPanel: React.FC<{
 
   const handleCopy = () => {
     const text = `${calculator.name}: ${result?.value}\n${result?.interpretation}`;
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch(() => {
+      console.warn('Failed to copy to clipboard');
+    });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

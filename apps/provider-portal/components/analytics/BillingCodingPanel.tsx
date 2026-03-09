@@ -128,7 +128,9 @@ export function BillingCodingPanel({
   };
 
   const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
+    navigator.clipboard.writeText(code).catch(() => {
+      console.warn('Failed to copy to clipboard');
+    });
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
   };
@@ -140,7 +142,9 @@ export function BillingCodingPanel({
       ...suggestion.procedureCodes.map(p => p.code),
     ];
     onCopyAllCodes?.(allCodes);
-    navigator.clipboard.writeText(allCodes.join(', '));
+    navigator.clipboard.writeText(allCodes.join(', ')).catch(() => {
+      console.warn('Failed to copy to clipboard');
+    });
   };
 
   const complianceColors = {

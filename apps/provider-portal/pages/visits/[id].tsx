@@ -246,7 +246,9 @@ export default function VisitDetailPage() {
 
   const handleCopyNote = () => {
     if (visit) {
-      navigator.clipboard.writeText(isEditing ? editedNote : visit.clinicalNote);
+      navigator.clipboard.writeText(isEditing ? editedNote : visit.clinicalNote).catch(() => {
+        console.warn('Failed to copy to clipboard');
+      });
       alert('Note copied to clipboard');
     }
   };

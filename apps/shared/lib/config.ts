@@ -63,6 +63,14 @@ function parseEnvironment(value: string | undefined): AppConfig['environment'] {
   return 'development';
 }
 
+function requireEnvInProd(name: string, fallback: string): string {
+  const value = process.env[name];
+  if (!value && process.env.NODE_ENV === 'production') {
+    console.error(`[CONFIG] ${name} is not set in production — using fallback is unsafe`);
+  }
+  return value || fallback;
+}
+
 // ============================================================
 // CONFIG SINGLETON
 // ============================================================
@@ -86,9 +94,9 @@ export function getConfig(): AppConfig {
     demoMode: parseBoolean(process.env.DEMO_MODE, false),
 
     // Service URLs
-    backendApiUrl: process.env.BACKEND_API_URL || 'http://localhost:5080',
-    patientPortalUrl: process.env.PATIENT_PORTAL_URL || 'http://localhost:3001',
-    providerPortalUrl: process.env.NEXTAUTH_URL || 'http://localhost:3002',
+    backendApiUrl: requireEnvInProd('BACKEND_API_URL', 'http://localhost:5080'),
+    patientPortalUrl: requireEnvInProd('PATIENT_PORTAL_URL', 'http://localhost:3001'),
+    providerPortalUrl: requireEnvInProd('NEXTAUTH_URL', 'http://localhost:3002'),
 
     // Timeouts
     backendTimeoutMs: parseInt(process.env.BACKEND_TIMEOUT_MS, 5000),

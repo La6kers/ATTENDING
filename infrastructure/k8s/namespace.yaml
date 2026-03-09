@@ -11,6 +11,9 @@ metadata:
     app.kubernetes.io/name: attending-ai
     app.kubernetes.io/part-of: attending-platform
     environment: production
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted
 
 ---
 # Resource Quotas for the namespace

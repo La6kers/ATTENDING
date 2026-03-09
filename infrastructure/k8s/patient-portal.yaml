@@ -50,6 +50,8 @@ spec:
         runAsUser: 1001
         fsGroup: 1001
       
+      imagePullSecrets:
+        - name: ghcr-pull-secret
       containers:
       - name: patient-portal
         image: ghcr.io/la6kers/attending/patient-portal:v0.0.0-replace-in-ci  # Set by CI/CD pipeline — never use :latest
