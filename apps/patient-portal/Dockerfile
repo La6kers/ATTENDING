@@ -38,6 +38,7 @@ RUN npm run build --workspace=apps/patient-portal
 
 # --- Stage 3: Runner ---
 FROM node:20-alpine AS runner
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 ENV NODE_ENV=production

@@ -111,10 +111,15 @@ resource "azurerm_mssql_server" "main" {
   administrator_login_password = var.sql_admin_password
   minimum_tls_version          = "1.2"
 
-  azuread_administrator {
-    login_username = "attending-sql-admins"
-    object_id      = var.azure_ad_admin_group_id
+  dynamic "azuread_administrator" {
+    for_each = var.azure_ad_admin_group_id != "" ? [1] : []
+    content {
+      login_username = "attending-sql-admins"
+      object_id      = var.azure_ad_admin_group_id
+    }
   }
+
+  public_network_access_enabled = false
 
   tags = local.common_tags
 }
@@ -309,8 +314,8 @@ resource "azurerm_redis_cache" "main" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   capacity            = var.environment == "production" ? 1 : 0
-  family              = "C"
-  sku_name            = var.environment == "production" ? "Standard" : "Basic"
+  family              = var.environment == "production" ? "P" : "C"
+  sku_name            = var.environment == "production" ? "Premium" : "Basic"
   minimum_tls_version = "1.2"
   non_ssl_port_enabled = false
 
@@ -334,6 +339,17 @@ resource "azurerm_key_vault" "main" {
   sku_name                   = "standard"
   purge_protection_enabled   = true
   soft_delete_retention_days = 90
+
+  network_acls {
+    default_action = "Deny"
+    bypass         = "AzureServices"
+    virtual_network_rules {
+      subnet_id = azurerm_subnet.frontend.id
+    }
+    virtual_network_rules {
+      subnet_id = azurerm_subnet.backend.id
+    }
+  }
 
   tags = local.common_tags
 }
@@ -478,7 +494,7 @@ resource "azurerm_log_analytics_workspace" "main" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   sku                 = "PerGB2018"
-  retention_in_days   = 90
+  retention_in_days   = 365
 
   tags = local.common_tags
 }

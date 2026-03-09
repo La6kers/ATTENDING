@@ -134,15 +134,15 @@ jobs:
             FUNCTIONS=$(node -e "const c=require('./coverage/coverage-summary.json');console.log(c.total.functions.pct)")
             echo "Coverage: lines=${LINES}% branches=${BRANCHES}% functions=${FUNCTIONS}%"
             FAIL=0
-            if (( $(echo "$LINES < 60" | bc -l) )); then
+            if echo "$LINES 60" | awk '{exit ($1 >= $2)}'; then
               echo "::error::Line coverage ${LINES}% is below 60% threshold"
               FAIL=1
             fi
-            if (( $(echo "$BRANCHES < 50" | bc -l) )); then
+            if echo "$BRANCHES 50" | awk '{exit ($1 >= $2)}'; then
               echo "::error::Branch coverage ${BRANCHES}% is below 50% threshold"
               FAIL=1
             fi
-            if (( $(echo "$FUNCTIONS < 60" | bc -l) )); then
+            if echo "$FUNCTIONS 60" | awk '{exit ($1 >= $2)}'; then
               echo "::error::Function coverage ${FUNCTIONS}% is below 60% threshold"
               FAIL=1
             fi

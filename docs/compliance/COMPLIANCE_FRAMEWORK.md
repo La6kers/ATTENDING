@@ -362,8 +362,8 @@ This section maps each HIPAA Security Rule technical safeguard to its implementa
 
 | Implementation | Details | Code Reference |
 |----------------|---------|----------------|
-| **Clinical shift-aligned timeout** | Secure session management enforces 8-hour maximum session duration aligned with clinical shift patterns | `apps/shared/lib/auth/secureSession.ts` (HIPAA 164.312(a)(2)(iii) reference in header) |
-| **Patient portal session** | 24-hour `maxAge` on NextAuth session cookie | `apps/patient-portal/pages/api/auth/[...nextauth].ts` (line 69) |
+| **Provider portal shift-aligned timeout** | Secure session management enforces 8-hour maximum session duration aligned with clinical shift patterns (provider-facing only) | `apps/shared/lib/auth/secureSession.ts` (HIPAA 164.312(a)(2)(iii) reference in header) |
+| **Patient portal session** | 24-hour `maxAge` on NextAuth session cookie; patient-facing sessions use longer duration since patients access from personal devices outside clinical shifts | `apps/patient-portal/pages/api/auth/[...nextauth].ts` (line 69) |
 | **Inactivity detection** | Session activity tracked via `lastActivityAt`; sessions marked invalid after inactivity threshold | `apps/shared/lib/auth/secureSession.ts` (SecureSession interface) |
 | **Session revocation** | `User.isActive` checked on every JWT refresh; disabled accounts cannot maintain sessions | `apps/provider-portal/pages/api/auth/[...nextauth].ts` (post-login check) |
 | **API session timeout** | Backend API sessions via JWT with configurable expiration; SignalR keep-alive at 15-second intervals with 30-second client timeout | `backend/src/ATTENDING.Orders.Api/Program.cs` (lines 57-62) |
