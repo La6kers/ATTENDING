@@ -188,7 +188,17 @@ public class StopRecordingHandler : IRequestHandler<StopRecordingCommand, Result
         // Generate the SOAP note — this is the core clinical value
         // Run with a fresh token: the HTTP request token is cancelled when
         // the response returns, but note generation must continue to completion.
-        _ = Task.Run(() => GenerateNoteAsync(session, CancellationToken.None));
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await GenerateNoteAsync(session, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Background SOAP note generation failed for recording {RecordingId}", session.Id);
+            }
+        });
 
         return Result.Success(Unit.Value);
     }

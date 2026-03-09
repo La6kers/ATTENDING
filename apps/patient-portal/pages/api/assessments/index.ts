@@ -137,6 +137,11 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 // =============================================================================
 
 async function handlePost(req: NextApiRequest, res: NextApiResponse) {
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   // Try .NET backend first (domain events + SignalR notification to providers)
   const proxied = await proxyToBackend(req, res, '/api/v1/assessments');
   if (proxied) return;

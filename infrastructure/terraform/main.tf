@@ -59,6 +59,11 @@ variable "nextauth_secret" {
   type        = string
   sensitive   = true
   default     = ""
+
+  validation {
+    condition     = length(var.nextauth_secret) >= 32
+    error_message = "nextauth_secret must be at least 32 characters. Generate with: openssl rand -base64 32"
+  }
 }
 
 variable "sql_admin_login" {
@@ -430,7 +435,7 @@ resource "azurerm_key_vault_secret" "db_connection_string_dotnet" {
 
 resource "azurerm_key_vault_secret" "nextauth_secret" {
   name         = "nextauth-secret"
-  value        = var.nextauth_secret != "" ? var.nextauth_secret : "CHANGE-ME-generate-with-openssl-rand-base64-32"
+  value        = var.nextauth_secret
   key_vault_id = azurerm_key_vault.main.id
 
   lifecycle {
@@ -451,6 +456,8 @@ resource "azurerm_storage_account" "audit_logs" {
   account_replication_type     = "GRS"
   min_tls_version              = "TLS1_2"
   enable_https_traffic_only    = true
+  shared_access_key_enabled       = false
+  default_to_oauth_authentication = true
 
   blob_properties {
     versioning_enabled = true

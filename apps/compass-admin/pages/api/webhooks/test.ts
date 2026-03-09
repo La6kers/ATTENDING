@@ -4,10 +4,16 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getToken } from 'next-auth/jwt';
 import crypto from 'crypto';
 import { prisma } from '@attending/shared/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const token = await getToken({ req });
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   const { webhookId } = req.body;

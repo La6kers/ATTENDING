@@ -436,5 +436,7 @@ jobs:
 
       - name: Post-deployment notification
         if: always()
+        env:
+          DEPLOY_ENV: ${{ github.event.inputs.environment }}
         run: |
-          echo "::notice::Deployment complete — ${{ github.sha }} is now live in ${{ github.event.inputs.environment }}"
+          echo "::notice::Deployment complete — ${{ github.sha }} is now live in ${DEPLOY_ENV}"

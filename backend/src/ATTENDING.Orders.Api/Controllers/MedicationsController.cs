@@ -152,7 +152,7 @@ public class MedicationsController : ControllerBase
     [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(MedicationOrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<MedicationOrderResponse>> Create([FromBody] CreateMedicationOrderRequest request)
+    public async Task<ActionResult<MedicationOrderResponse>> Create([FromBody] CreateMedicationOrderRequest request, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
 
@@ -218,8 +218,8 @@ public class MedicationsController : ControllerBase
             pharmacyName: request.PharmacyName,
             hasInteractions: hasInteractions);
 
-        await _repository.AddAsync(order);
-        await _unitOfWork.SaveChangesAsync();
+        await _repository.AddAsync(order, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _auditService.LogPhiAccessAsync(
             userId: userId,

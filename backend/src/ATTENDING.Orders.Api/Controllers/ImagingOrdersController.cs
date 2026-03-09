@@ -125,7 +125,7 @@ public class ImagingOrdersController : ControllerBase
     [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(ImagingOrderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ImagingOrderResponse>> Create([FromBody] CreateImagingOrderRequest request)
+    public async Task<ActionResult<ImagingOrderResponse>> Create([FromBody] CreateImagingOrderRequest request, CancellationToken cancellationToken)
     {
         if (!Enum.TryParse<OrderPriority>(request.Priority, true, out var priority))
             return BadRequest(new ProblemDetails { Title = "Invalid priority value", Status = 400 });
@@ -148,8 +148,8 @@ public class ImagingOrdersController : ControllerBase
             withContrast: request.WithContrast,
             estimatedRadiationDose: request.EstimatedRadiationDose);
 
-        await _repository.AddAsync(order);
-        await _unitOfWork.SaveChangesAsync();
+        await _repository.AddAsync(order, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _auditService.LogPhiAccessAsync(
             userId: userId,

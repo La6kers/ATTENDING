@@ -370,12 +370,65 @@ public class BioMistralClinicalAiService : IClinicalAiService
 
     private ImagingRecommendationResult ParseImagingRecommendationResponse(string response)
     {
-        return new ImagingRecommendationResult { Success = true, Recommendations = new List<ImagingRecommendation>() };
+        try
+        {
+            var json = ExtractJson(response);
+            var parsed = JsonSerializer.Deserialize<ImagingRecommendationResponse>(json);
+
+            return new ImagingRecommendationResult
+            {
+                Success = true,
+                Recommendations = parsed?.Recommendations?.Select(r => new ImagingRecommendation
+                {
+                    StudyName = r.StudyName ?? string.Empty,
+                    Modality = r.Modality ?? string.Empty,
+                    BodyPart = r.BodyPart ?? string.Empty,
+                    CptCode = r.CptCode,
+                    Priority = r.Priority ?? "Routine",
+                    WithContrast = r.WithContrast,
+                    ClinicalRationale = r.ClinicalRationale,
+                    RadiationDose = r.RadiationDose
+                }).ToList() ?? new List<ImagingRecommendation>()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse imaging recommendation response");
+            return new ImagingRecommendationResult { Success = false, ErrorMessage = "Failed to parse AI response" };
+        }
     }
 
     private TreatmentRecommendationResult ParseTreatmentRecommendationResponse(string response)
     {
-        return new TreatmentRecommendationResult { Success = true, Recommendations = new List<TreatmentRecommendation>() };
+        try
+        {
+            var json = ExtractJson(response);
+            var parsed = JsonSerializer.Deserialize<TreatmentRecommendationResponse>(json);
+
+            return new TreatmentRecommendationResult
+            {
+                Success = true,
+                Recommendations = parsed?.Recommendations?.Select(r => new TreatmentRecommendation
+                {
+                    MedicationName = r.MedicationName ?? string.Empty,
+                    GenericName = r.GenericName,
+                    Dosage = r.Dosage,
+                    Frequency = r.Frequency,
+                    Duration = r.Duration,
+                    Route = r.Route,
+                    ClinicalRationale = r.ClinicalRationale,
+                    Monitoring = r.Monitoring ?? new List<string>(),
+                    Contraindications = r.Contraindications ?? new List<string>()
+                }).ToList() ?? new List<TreatmentRecommendation>(),
+                NonPharmacologic = parsed?.NonPharmacologic ?? new List<string>(),
+                Referrals = parsed?.Referrals ?? new List<string>()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse treatment recommendation response");
+            return new TreatmentRecommendationResult { Success = false, ErrorMessage = "Failed to parse AI response" };
+        }
     }
 
     private TriageAssessmentResult ParseTriageAssessmentResponse(string response)
@@ -662,6 +715,81 @@ internal class LabRecommendationDto
     
     [JsonPropertyName("category")]
     public string? Category { get; set; }
+}
+
+internal class ImagingRecommendationResponse
+{
+    [JsonPropertyName("recommendations")]
+    public List<ImagingRecommendationDto>? Recommendations { get; set; }
+}
+
+internal class ImagingRecommendationDto
+{
+    [JsonPropertyName("studyName")]
+    public string? StudyName { get; set; }
+
+    [JsonPropertyName("modality")]
+    public string? Modality { get; set; }
+
+    [JsonPropertyName("bodyPart")]
+    public string? BodyPart { get; set; }
+
+    [JsonPropertyName("cptCode")]
+    public string? CptCode { get; set; }
+
+    [JsonPropertyName("priority")]
+    public string? Priority { get; set; }
+
+    [JsonPropertyName("withContrast")]
+    public bool WithContrast { get; set; }
+
+    [JsonPropertyName("clinicalRationale")]
+    public string? ClinicalRationale { get; set; }
+
+    [JsonPropertyName("radiationDose")]
+    public string? RadiationDose { get; set; }
+}
+
+internal class TreatmentRecommendationResponse
+{
+    [JsonPropertyName("recommendations")]
+    public List<TreatmentRecommendationDto>? Recommendations { get; set; }
+
+    [JsonPropertyName("nonPharmacologic")]
+    public List<string>? NonPharmacologic { get; set; }
+
+    [JsonPropertyName("referrals")]
+    public List<string>? Referrals { get; set; }
+}
+
+internal class TreatmentRecommendationDto
+{
+    [JsonPropertyName("medicationName")]
+    public string? MedicationName { get; set; }
+
+    [JsonPropertyName("genericName")]
+    public string? GenericName { get; set; }
+
+    [JsonPropertyName("dosage")]
+    public string? Dosage { get; set; }
+
+    [JsonPropertyName("frequency")]
+    public string? Frequency { get; set; }
+
+    [JsonPropertyName("duration")]
+    public string? Duration { get; set; }
+
+    [JsonPropertyName("route")]
+    public string? Route { get; set; }
+
+    [JsonPropertyName("clinicalRationale")]
+    public string? ClinicalRationale { get; set; }
+
+    [JsonPropertyName("monitoring")]
+    public List<string>? Monitoring { get; set; }
+
+    [JsonPropertyName("contraindications")]
+    public List<string>? Contraindications { get; set; }
 }
 
 internal class TriageAssessmentResponse

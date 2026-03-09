@@ -177,7 +177,7 @@ public class ClinicalAiController : ControllerBase
         [FromBody] DifferentialDiagnosisRequest request,
         CancellationToken cancellationToken)
     {
-        var patient = await _patientRepo.GetWithFullHistoryAsync(request.PatientId);
+        var patient = await _patientRepo.GetWithFullHistoryAsync(request.PatientId, cancellationToken);
         if (patient == null)
             return NotFound(new ProblemDetails { Title = "Patient not found", Status = 404 });
 
@@ -252,7 +252,8 @@ public class ClinicalAiController : ControllerBase
     [ProducesResponseType(typeof(AiFeedbackResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AiFeedbackResponse>> SubmitFeedback(
-        [FromBody] SubmitAiFeedbackRequest request)
+        [FromBody] SubmitAiFeedbackRequest request,
+        CancellationToken cancellationToken)
     {
         var validRatings = new[] { "Helpful", "NotHelpful", "PartiallyHelpful" };
         if (!validRatings.Contains(request.Rating))
@@ -277,8 +278,8 @@ public class ClinicalAiController : ControllerBase
             request.Rating, request.AccuracyScore, request.SelectedDiagnosis,
             request.Comment, request.ModelVersion, request.PatientId, request.EncounterId);
 
-        await _feedbackRepo.AddAsync(feedback);
-        await _uow.SaveChangesAsync();
+        await _feedbackRepo.AddAsync(feedback, cancellationToken);
+        await _uow.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("AI feedback submitted: {Type} {Rating} by Provider {ProviderId}",
             request.RecommendationType, request.Rating, providerId);

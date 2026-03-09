@@ -148,7 +148,7 @@ public class ReferralsController : ControllerBase
     [EnableRateLimiting("clinical-ops")]
     [ProducesResponseType(typeof(ReferralResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ReferralResponse>> Create([FromBody] CreateReferralRequest request)
+    public async Task<ActionResult<ReferralResponse>> Create([FromBody] CreateReferralRequest request, CancellationToken cancellationToken)
     {
         var userId = GetCurrentUserId();
 
@@ -197,8 +197,8 @@ public class ReferralsController : ControllerBase
             referredToProviderName: request.ReferredToProviderName,
             referredToFacility: request.ReferredToFacility);
 
-        await _repository.AddAsync(referral);
-        await _unitOfWork.SaveChangesAsync();
+        await _repository.AddAsync(referral, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await _auditService.LogPhiAccessAsync(
             userId: userId,
