@@ -80,15 +80,6 @@ const symptomReportMessages = [
   `Hi Dr. Reed,\n\nI've been feeling dizzy when I stand up quickly. It started about a week ago. I'm not sure if it's related to my blood pressure medication that was increased last month.\n\nCan you advise? Should I stop taking it?\n\nBest regards`,
 ];
 
-// Refill request messages (kept for future use)
-const _refillRequestMessages = [
-  `Dr. Reed,\n\nI'm running low on my Metformin and need a refill. I have about a week's supply left.\n\nCould you please send a refill to my CVS pharmacy?\n\nThank you!`,
-  
-  `Hi,\n\nI need refills on my medications:\n- Lisinopril 20mg\n- Atorvastatin 40mg\n\nI use Walgreens on Main Street. I'm also almost out of my blood pressure medication.\n\nThanks!`,
-  
-  `Hello Dr. Reed,\n\nMy pharmacy said I'm out of refills on my Sertraline. Could you please authorize more refills? I've been doing well on this medication.\n\nThank you!`,
-];
-
 const phoneMessages = [
   'Called about test results - wants callback',
   'Requesting refill approval - Metformin',
@@ -146,7 +137,9 @@ function generateMessageContent(type: MessageType, index: number): string {
     }
     
     case 'phone': {
-      return `Phone message received at ${new Date().toLocaleTimeString()}\n\nPatient called regarding: ${phoneMessages[index % phoneMessages.length]}\n\nPatient requested a callback at their preferred number ending in -${Math.floor(Math.random() * 9000) + 1000}.\n\nUrgency level: ${index % 3 === 0 ? 'High - patient waiting' : 'Normal'}\n\nAdditional notes: Patient ${index % 2 === 0 ? 'needs response today' : 'can wait until tomorrow'}.`;
+      // Use deterministic suffix based on index instead of Math.random()
+      const phoneSuffix = String(1000 + ((index * 7 + 3) % 9000)).padStart(4, '0');
+      return `Phone message received at ${new Date().toLocaleTimeString()}\n\nPatient called regarding: ${phoneMessages[index % phoneMessages.length]}\n\nPatient requested a callback at their preferred number ending in -${phoneSuffix}.\n\nUrgency level: ${index % 3 === 0 ? 'High - patient waiting' : 'Normal'}\n\nAdditional notes: Patient ${index % 2 === 0 ? 'needs response today' : 'can wait until tomorrow'}.`;
     }
     
     case 'lab': {
@@ -156,7 +149,10 @@ function generateMessageContent(type: MessageType, index: number): string {
     
     case 'refill': {
       const patientInfo = generatePatientDetails(index);
-      return `Prescription Refill Request\n\nPatient: ${patientInfo.name}\nMRN: ${patientInfo.mrn}\nPharmacy: ${index % 2 === 0 ? 'CVS Pharmacy' : 'Walgreens'} #${Math.floor(Math.random() * 900) + 100}\n\nMedications requested:\n${medications[index % medications.length].map(med => `• ${med}`).join('\n')}\n\nLast filled: ${new Date(Date.now() - 86400000 * 25).toLocaleDateString()}\nRefills remaining: ${Math.floor(Math.random() * 2)}\n\nLast office visit: ${patientInfo.lastVisit}\nActive conditions: ${conditions[index % conditions.length].join(', ')}\n\nPharmacy notes: ${index % 2 === 0 ? 'Patient has been on this medication for 2+ years' : 'Standard refill request'}`;
+      // Use deterministic values based on index instead of Math.random()
+      const pharmacyNum = 100 + ((index * 13 + 5) % 900);
+      const refillsRemaining = index % 2;
+      return `Prescription Refill Request\n\nPatient: ${patientInfo.name}\nMRN: ${patientInfo.mrn}\nPharmacy: ${index % 2 === 0 ? 'CVS Pharmacy' : 'Walgreens'} #${pharmacyNum}\n\nMedications requested:\n${medications[index % medications.length].map(med => `• ${med}`).join('\n')}\n\nLast filled: ${new Date(Date.now() - 86400000 * 25).toLocaleDateString()}\nRefills remaining: ${refillsRemaining}\n\nLast office visit: ${patientInfo.lastVisit}\nActive conditions: ${conditions[index % conditions.length].join(', ')}\n\nPharmacy notes: ${index % 2 === 0 ? 'Patient has been on this medication for 2+ years' : 'Standard refill request'}`;
     }
     
     case 'biomistral-assessment': {
@@ -175,7 +171,7 @@ export function generateMockMessages(count: number = 20): Message[] {
 
   for (let i = 0; i < count; i++) {
     const type = types[i % types.length];
-    const priority = i % 5 === 0 ? 'urgent' : priorities[Math.floor(Math.random() * priorities.length)];
+    const priority = i % 5 === 0 ? 'urgent' : priorities[i % priorities.length];
     const isUnread = i < 8; // First 8 messages are unread
     const createdAt = new Date(Date.now() - (i * 3600000 * 4)); // Spread over time
     const patientDetails = generatePatientDetails(i);
@@ -203,7 +199,7 @@ export function generateMockMessages(count: number = 20): Message[] {
         name: `lab-results-${patientDetails.mrn}.pdf`,
         type: 'application/pdf',
         url: '#',
-        size: Math.floor(Math.random() * 500) + 100
+        size: 100 + ((i * 37 + 11) % 500)
       }] : undefined,
       labels: [
         ...(priority === 'urgent' ? ['urgent'] : []),

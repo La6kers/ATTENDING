@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ATTENDING.Infrastructure.Data.Migrations
+namespace ATTENDING.Infrastructure.Migrations
 {
     [DbContext(typeof(AttendingDbContext))]
     [Migration("20260305002103_DiagnosticLearningEngine_Outcomes_Signals_Snapshots")]

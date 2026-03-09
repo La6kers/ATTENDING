@@ -1,6 +1,14 @@
-// Clinical Hub / Diagnosis Page
-// The central clinical decision-making page that ties all ordering modules together
+// =============================================================================
+// ATTENDING AI - Clinical Decision Hub
 // apps/provider-portal/pages/clinical-hub.tsx
+//
+// Route: /clinical-hub — AI differential diagnosis, confidence scores, and
+//        order summary sidebar for a patient encounter.
+//
+// Related clinical routes:
+//   /clinical           — Tab-based clinical workspace (clinical.tsx)
+//   /clinical-dashboard — Real-time alerts & assessment queue (clinical-dashboard.tsx)
+// =============================================================================
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';

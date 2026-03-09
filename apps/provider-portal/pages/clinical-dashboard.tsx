@@ -1,7 +1,13 @@
 /**
  * ATTENDING AI - Clinical Dashboard
- * 
- * Main dashboard page combining all clinical components with real-time updates.
+ * apps/provider-portal/pages/clinical-dashboard.tsx
+ *
+ * Route: /clinical-dashboard — Provider home screen with real-time alerts,
+ *        assessment queue, and clinical order management.
+ *
+ * Related clinical routes:
+ *   /clinical     — Tab-based clinical workspace for a single encounter (clinical.tsx)
+ *   /clinical-hub — AI differential diagnosis & order summary (clinical-hub.tsx)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -18,12 +24,9 @@ import AssessmentQueue from '../components/clinical/AssessmentQueue';
 import LabOrderPanel from '../components/clinical/LabOrderPanel';
 import MedicationOrderPanel from '../components/clinical/MedicationOrderPanel';
 
-// Mock auth token - replace with real auth
-const MOCK_AUTH_TOKEN = 'mock-jwt-token';
-
 export default function ClinicalDashboard() {
   return (
-    <NotificationProvider accessToken={MOCK_AUTH_TOKEN}>
+    <NotificationProvider>
       <DashboardContent />
     </NotificationProvider>
   );

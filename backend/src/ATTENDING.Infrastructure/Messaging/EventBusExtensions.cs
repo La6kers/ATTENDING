@@ -45,7 +45,14 @@ public static class EventBusExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // Feature flag: when EventBus:Enabled is false (or absent), fall through to InProcess.
+        // This prevents startup failures when EventBus:Transport is set to AzureServiceBus
+        // but ConnectionString is not yet provisioned (e.g., fresh production deployment).
+        var enabled = configuration.GetValue<bool?>("EventBus:Enabled") ?? true;
         var transport = configuration.GetValue<string>("EventBus:Transport") ?? "InProcess";
+
+        if (!enabled)
+            transport = "InProcess";
 
         switch (transport.Trim().ToUpperInvariant())
         {

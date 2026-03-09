@@ -889,13 +889,16 @@ model WebhookSubscription {
   updatedAt      DateTime  @updatedAt
 
   organization Organization             @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  deliveries   WebhookSubscriptionLog[]
+  deliveries   WebhookDeliveryLegacy[]
 
   @@index([organizationId])
   @@index([isActive])
 }
 
-model WebhookSubscriptionLog {
+/// Legacy webhook delivery log for WebhookSubscription.
+/// New integrations should use WebhookConfig + WebhookDelivery instead.
+/// Retained for HIPAA audit trail — do not drop the underlying table.
+model WebhookDeliveryLegacy {
   id             String    @id @default(cuid())
   subscriptionId String
   eventType      String

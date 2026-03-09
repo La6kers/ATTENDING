@@ -29,7 +29,7 @@
     "react-dom": "18.2.0",
     "react-grid-layout": "^1.5.3",
     "react-leaflet": "^4.2.1",
-    "socket.io-client": "^4.7.2",
+    "@microsoft/signalr": "^10.0.0",
     "xstate": "^4.38.0",
     "zustand": "^5.0.6"
   },

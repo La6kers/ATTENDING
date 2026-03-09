@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace ATTENDING.Infrastructure.Data.Migrations
+namespace ATTENDING.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class DiagnosticLearningEngine_Outcomes_Signals_Snapshots : Migration

@@ -2,15 +2,14 @@
 // ATTENDING AI - Unified Clinical Workspace
 // apps/provider-portal/pages/clinical.tsx
 //
-// Single page combining:
-// - Previsit Summary (default view)
-// - Labs ordering
-// - Imaging ordering  
-// - Medications / E-Prescribe
-// - Referrals
-// - Treatment Plan
+// Route: /clinical — Tab-based workspace for a single patient encounter.
 //
-// All share the same patient context with tab-based navigation
+// Tabs: Previsit Summary | Labs | Imaging | Medications | Referrals | Treatment
+// All share the same patient context.
+//
+// Related clinical routes:
+//   /clinical-hub       — AI differential diagnosis & order summary (clinical-hub.tsx)
+//   /clinical-dashboard — Real-time alerts, assessment queue, order management (clinical-dashboard.tsx)
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';

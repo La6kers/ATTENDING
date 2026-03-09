@@ -79,6 +79,11 @@ const MicIcon = () => (
 );
 
 export default function ComponentDemoPage() {
+  // Gate demo page from production — only accessible in development
+  if (process.env.NODE_ENV === 'production') {
+    return null;
+  }
+
   // State for demos
   const [activeAction, setActiveAction] = useState('labs');
   const [statusValue, setStatusValue] = useState<StatusValue>('unknown');

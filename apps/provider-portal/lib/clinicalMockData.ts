@@ -272,9 +272,29 @@ export function getTypeIcon(type: string): string {
 }
 
 export function checkVitalAbnormal(key: string, value: string): boolean {
-  if (key === 'bp' && parseInt(value) > 140) return true;
-  if (key === 'hr' && (parseInt(value) < 60 || parseInt(value) > 100)) return true;
-  if (key === 'o2' && parseInt(value) < 95) return true;
-  if (key === 'temp' && parseFloat(value) > 100.4) return true;
+  if (key === 'bp') {
+    // Parse systolic from "systolic/diastolic" format (e.g. "158/92")
+    const systolic = parseInt(value.split('/')[0], 10);
+    if (!isNaN(systolic) && systolic > 140) return true;
+    // Also check diastolic
+    const parts = value.split('/');
+    if (parts.length > 1) {
+      const diastolic = parseInt(parts[1], 10);
+      if (!isNaN(diastolic) && diastolic > 90) return true;
+    }
+    return false;
+  }
+  if (key === 'hr') {
+    const hr = parseInt(value, 10);
+    return !isNaN(hr) && (hr < 60 || hr > 100);
+  }
+  if (key === 'o2') {
+    const o2 = parseInt(value, 10);
+    return !isNaN(o2) && o2 < 95;
+  }
+  if (key === 'temp') {
+    const temp = parseFloat(value);
+    return !isNaN(temp) && temp > 100.4;
+  }
   return false;
 }

@@ -44,8 +44,10 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddInfrastructureHealthChecks(builder.Configuration);
 
-// Background service exceptions should NOT stop the host — clinical system must stay up
-// The scheduler will log the error and the job will be retried on the next interval
+// Background service exceptions should NOT stop the host — clinical system must stay up.
+// ClinicalSchedulerService catches and logs errors per-job internally (see ExecuteAsync),
+// so unhandled exceptions here would indicate a scheduler-level bug. Ignore keeps the host
+// alive; Serilog will capture the exception for investigation.
 builder.Services.Configure<HostOptions>(options =>
 {
     options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
@@ -240,7 +242,19 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testi
     });
 }
 
-// Security headers (first in pipeline)
+// Forwarded headers — required when behind Azure Front Door / App Gateway / load balancer.
+// Without this, HttpContext.Connection.RemoteIpAddress returns the proxy IP, not the client IP,
+// breaking rate limiting, audit logging, and IP-based security controls.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor
+                     | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto,
+    // In production, restrict KnownProxies/KnownNetworks to your Azure Front Door CIDRs.
+    // For now, clear the defaults so forwarded headers are accepted from any proxy.
+    // TODO: Lock down to Azure Front Door IP ranges before production deployment.
+});
+
+// Security headers (first in pipeline after forwarded headers)
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // Correlation ID
