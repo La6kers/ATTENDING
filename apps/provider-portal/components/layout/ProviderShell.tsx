@@ -16,6 +16,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import { EhrConnectButton } from '../fhir/EhrConnectButton';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -113,7 +114,10 @@ function getOrderedNavItems() {
 }
 
 function saveNavOrder(ids: string[]) {
-  try { localStorage.setItem(NAV_ORDER_KEY, JSON.stringify(ids)); } catch {}
+  // Prune stale IDs that no longer exist in DEFAULT_NAV_ITEMS
+  const knownIds = new Set(DEFAULT_NAV_ITEMS.map(item => item.id));
+  const pruned = ids.filter(id => knownIds.has(id));
+  try { localStorage.setItem(NAV_ORDER_KEY, JSON.stringify(pruned)); } catch {}
 }
 
 // ============================================================
@@ -170,6 +174,9 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
   activePatient,
 }) => {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userName = session?.user?.name ?? 'Unknown User';
+  const userInitials = userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -365,7 +372,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                       background: 'linear-gradient(180deg, #25B8A9 0%, #1A8FA8 100%)',
                     }}
                   >
-                    TR
+                    {userInitials}
                   </div>
                   <ChevronDown className="w-3.5 h-3.5 text-white/40 hidden sm:block" />
                 </button>
@@ -373,7 +380,7 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
                     <div className="px-4 py-3 border-b" style={{ background: '#E6F7F5' }}>
-                      <p className="font-semibold text-sm" style={{ color: '#0C3547' }}>Dr. Thomas Reed</p>
+                      <p className="font-semibold text-sm" style={{ color: '#0C3547' }}>{userName}</p>
                       <p className="text-xs" style={{ color: '#1A8FA8' }}>Family Medicine</p>
                     </div>
                     <div className="py-1">

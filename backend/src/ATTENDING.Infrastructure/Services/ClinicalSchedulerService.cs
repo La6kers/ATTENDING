@@ -231,16 +231,12 @@ public class ClinicalSchedulerService : BackgroundService
     {
         var encounterRepo = scope.ServiceProvider.GetRequiredService<IEncounterRepository>();
 
-        // Get all in-progress encounters (checked in or started)
-        var inProgress = await encounterRepo.GetByStatusAsync(
-            Domain.Enums.EncounterStatus.InProgress, ct);
-
-        var checkedIn = await encounterRepo.GetByStatusAsync(
-            Domain.Enums.EncounterStatus.CheckedIn, ct);
+        // Get all active encounters (checked in or in-progress) in a single query
+        var activeEncounters = await encounterRepo.GetByStatusesAsync(
+            new[] { Domain.Enums.EncounterStatus.InProgress, Domain.Enums.EncounterStatus.CheckedIn }, ct);
 
         var staleThreshold = TimeSpan.FromHours(4);
-        var stale = inProgress
-            .Concat(checkedIn)
+        var stale = activeEncounters
             .Where(e => e.CheckedInAt.HasValue &&
                         DateTime.UtcNow - e.CheckedInAt.Value > staleThreshold)
             .ToList();

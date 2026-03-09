@@ -2,6 +2,8 @@
 // ATTENDING AI - Unified Clinical Workspace
 // apps/provider-portal/pages/clinical.tsx
 //
+// WORKFLOW: /clinical-dashboard (entry) → /clinical (ACTIVE VISIT — this page) → /clinical-hub (monitoring)
+//
 // Route: /clinical — Tab-based workspace for a single patient encounter.
 //
 // Tabs: Previsit Summary | Labs | Imaging | Medications | Referrals | Treatment
@@ -137,6 +139,7 @@ const PrevisitSummaryTab: React.FC<{ patient: PatientContextData }> = ({ patient
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* TODO: Wire quick-action buttons to order workflow (labs, imaging, referrals, prescribing) */}
         {[
           { icon: TestTube, label: 'Order Labs', desc: 'CBC, BMP, ESR', color: 'text-blue-600' },
           { icon: FileImage, label: 'Order Imaging', desc: 'CT Head, MRI', color: 'text-teal-600' },
@@ -145,7 +148,9 @@ const PrevisitSummaryTab: React.FC<{ patient: PatientContextData }> = ({ patient
         ].map((action, i) => (
           <button
             key={i}
-            className="bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-teal-300 hover:shadow-md transition-all group"
+            disabled
+            title="Coming soon — not yet connected to order workflow"
+            className="bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-teal-300 hover:shadow-md transition-all group disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:shadow-none"
           >
             <action.icon className={`w-6 h-6 mb-2 ${action.color}`} />
             <p className="font-medium text-gray-900 group-hover:text-teal-700">{action.label}</p>

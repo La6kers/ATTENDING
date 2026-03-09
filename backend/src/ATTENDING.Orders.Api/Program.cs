@@ -8,6 +8,7 @@ using ATTENDING.Orders.Api.Hubs;
 using ATTENDING.Orders.Api.Extensions;
 using ATTENDING.Orders.Api.Middleware;
 using ATTENDING.Orders.Api.Services;
+using System.Security.Claims;
 using ATTENDING.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -104,6 +105,9 @@ builder.Services.AddControllers()
 // ============================================================
 var devBypass = builder.Configuration.GetValue<bool>("Authentication:DevBypass");
 
+if (devBypass && builder.Environment.IsProduction())
+    throw new InvalidOperationException("Authentication:DevBypass must not be enabled in production.");
+
 if (devBypass && !builder.Environment.IsProduction() && builder.Environment.IsDevelopment())
 {
     Log.Warning("Authentication bypass enabled — all requests treated as authenticated (dev only)");
@@ -121,6 +125,8 @@ else
             options.Audience = builder.Configuration["AzureAdB2C:ClientId"];
 
             // For SignalR, allow token from query string
+            // NOTE: The Azure AD B2C tenant's conditional access policy should also
+            // enforce MFA at the identity provider level for provider users.
             options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
             {
                 OnMessageReceived = context =>
@@ -131,6 +137,20 @@ else
                     if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                         context.Token = accessToken;
 
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    // Verify MFA was completed for provider roles
+                    var roles = context.Principal?.FindAll(ClaimTypes.Role)?.Select(c => c.Value);
+                    if (roles?.Contains("Provider") == true)
+                    {
+                        var acr = context.Principal?.FindFirst("acr")?.Value;
+                        if (acr != "b2c_1a_signup_signin_mfa" && acr != "possessionorinherence")
+                        {
+                            context.Fail("MFA is required for provider access.");
+                        }
+                    }
                     return Task.CompletedTask;
                 }
             };

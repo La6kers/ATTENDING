@@ -31,7 +31,7 @@ import {
   DiagnosisCard,
   type StatusValue,
   type FindingStatus,
-} from '../../shared/components/ui';
+} from '@attending/shared/components/ui';
 
 import {
   Header,
@@ -39,7 +39,7 @@ import {
   QuickActionsBar,
   ClinicalAlertBanner,
   type QuickAction,
-} from '../../shared/components/layout';
+} from '@attending/shared/components/layout';
 
 // Icons for demo
 const BeakerIcon = () => (

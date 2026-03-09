@@ -466,7 +466,7 @@ export default function ProviderDashboard() {
                                     style={{ background: 'linear-gradient(135deg, #1A8FA8 0%, #0C3547 100%)' }}>
                                     Open Pre-Visit
                                   </Link>
-                                  <Link href={`/visit/${appt.id}`}
+                                  <Link href="/clinical"
                                     className="px-3 py-1.5 text-[11px] font-semibold text-teal-700 bg-white border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors">
                                     Start Visit
                                   </Link>

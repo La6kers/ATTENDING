@@ -2,6 +2,8 @@
 // ATTENDING AI - Clinical Decision Hub
 // apps/provider-portal/pages/clinical-hub.tsx
 //
+// WORKFLOW: /clinical-dashboard (entry) → /clinical (active visit) → /clinical-hub (MONITORING — this page)
+//
 // Route: /clinical-hub — AI differential diagnosis, confidence scores, and
 //        order summary sidebar for a patient encounter.
 //
@@ -15,8 +17,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import { ProviderShell } from '@/components/layout/ProviderShell';
-import DashboardLayout from '../components/dashboard/DashboardLayout';
-import { 
+import {
   QuickActionsBar, 
   PatientBanner, 
   ClinicalAlertBanner,
@@ -166,7 +167,7 @@ export default function ClinicalHubPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <Head>
         <title>Clinical Hub | ATTENDING AI</title>
       </Head>
@@ -513,6 +514,6 @@ export default function ClinicalHubPage() {
         }}
       />
       </ProviderShell>
-    </DashboardLayout>
+    </>
   );
 }

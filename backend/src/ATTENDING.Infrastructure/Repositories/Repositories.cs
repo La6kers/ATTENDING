@@ -235,6 +235,16 @@ public class EncounterRepository : Repository<Encounter>, IEncounterRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Encounter>> GetByStatusesAsync(IEnumerable<EncounterStatus> statuses, CancellationToken cancellationToken = default)
+    {
+        var statusList = statuses.ToList();
+        return await DbSet
+            .Where(e => statusList.Contains(e.Status))
+            .Include(e => e.Patient)
+            .OrderBy(e => e.ScheduledAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Encounter>> GetTodaysEncountersAsync(Guid providerId, CancellationToken cancellationToken = default)
     {
         var today = DateTime.UtcNow.Date;

@@ -95,6 +95,7 @@ public interface IEncounterRepository : IRepository<Encounter>
     Task<IReadOnlyList<Encounter>> GetByPatientIdAsync(Guid patientId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Encounter>> GetByProviderIdAsync(Guid providerId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Encounter>> GetByStatusAsync(EncounterStatus status, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Encounter>> GetByStatusesAsync(IEnumerable<EncounterStatus> statuses, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Encounter>> GetTodaysEncountersAsync(Guid providerId, CancellationToken cancellationToken = default);
     Task<Encounter?> GetWithOrdersAsync(Guid encounterId, CancellationToken cancellationToken = default);
 }

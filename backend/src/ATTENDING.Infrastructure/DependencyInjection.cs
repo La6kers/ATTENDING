@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ATTENDING.Application.Interfaces;
 using ATTENDING.Domain.Interfaces;
@@ -55,7 +56,8 @@ public static class DependencyInjection
             });
 
             // Enable detailed errors in development
-            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            var env = sp.GetRequiredService<IHostEnvironment>();
+            if (env.IsDevelopment())
             {
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
@@ -89,6 +91,8 @@ public static class DependencyInjection
             services.AddStackExchangeRedisCache(options =>
             {
                 options.ConfigurationOptions = StackExchange.Redis.ConfigurationOptions.Parse(redisConnectionString);
+                options.ConfigurationOptions.Ssl = true;
+                options.ConfigurationOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
                 options.ConfigurationOptions.AbortOnConnectFail = false;
                 options.ConfigurationOptions.ConnectRetry = 3;
                 options.ConfigurationOptions.ReconnectRetryPolicy = new StackExchange.Redis.ExponentialRetry(5000);
@@ -115,6 +119,8 @@ public static class DependencyInjection
             services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(_ =>
             {
                 var opts = StackExchange.Redis.ConfigurationOptions.Parse(redisConnectionString);
+                opts.Ssl = true;
+                opts.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
                 opts.AbortOnConnectFail = false;
                 opts.ConnectRetry = 3;
                 opts.ReconnectRetryPolicy = new StackExchange.Redis.ExponentialRetry(5000);

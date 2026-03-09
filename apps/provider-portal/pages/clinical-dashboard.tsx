@@ -2,8 +2,11 @@
  * ATTENDING AI - Clinical Dashboard
  * apps/provider-portal/pages/clinical-dashboard.tsx
  *
+ * WORKFLOW: clinical-dashboard (PRIMARY ENTRY POINT) → /clinical (active visit) → /clinical-hub (monitoring)
+ *
  * Route: /clinical-dashboard — Provider home screen with real-time alerts,
  *        assessment queue, and clinical order management.
+ *        This is the primary entry point for the clinical workflow.
  *
  * Related clinical routes:
  *   /clinical     — Tab-based clinical workspace for a single encounter (clinical.tsx)
@@ -46,6 +49,11 @@ function DashboardContent() {
 
   // Critical alerts polling (fallback if SignalR fails)
   const { criticalLabs, emergencyAssessments } = useCriticalAlertPolling(30000);
+
+  // TODO: Replace with usePatientStats() API call — hardcoded demo values
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('[DEMO] Dashboard stats are hardcoded — replace before pilot');
+  }
 
   // Update page title with alert count
   useEffect(() => {
@@ -145,12 +153,14 @@ function DashboardContent() {
               color={criticalLabs.length > 0 ? 'orange' : 'green'}
               onClick={handleViewCriticalResults}
             />
+            {/* TODO: Replace hardcoded value with usePatientStats() API call */}
             <StatCard
               icon="📋"
               label="Pending Review"
               value={5}
               color="teal"
             />
+            {/* TODO: Replace hardcoded value with usePatientStats() API call */}
             <StatCard
               icon="✅"
               label="Completed Today"
@@ -176,6 +186,7 @@ function DashboardContent() {
                   value={selectedPatientId || ''}
                   onChange={(e) => {
                     if (e.target.value) {
+                      // TODO: Replace with real encounter lookup via API — substring ID will fail validation
                       handleSelectPatient(e.target.value, 'E' + e.target.value.substring(0, 7));
                     } else {
                       setSelectedPatientId(null);

@@ -346,16 +346,11 @@ public class AuditMiddleware
 
     private static string? ExtractPatientId(HttpContext context)
     {
-        // Try to get patient ID from route
+        // Only extract patient ID from route values — never from query string.
+        // Query string fallback was removed to prevent patient ID injection via URL parameters.
         if (context.Request.RouteValues.TryGetValue("patientId", out var patientId))
         {
             return patientId?.ToString();
-        }
-
-        // Try to get from query string
-        if (context.Request.Query.TryGetValue("patientId", out var queryPatientId))
-        {
-            return queryPatientId.FirstOrDefault();
         }
 
         return null;

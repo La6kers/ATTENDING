@@ -6,6 +6,13 @@
 
 import * as signalR from '@microsoft/signalr';
 
+// Development-only logger — suppresses noisy SignalR diagnostics in production
+const log = {
+  info: (...args: unknown[]) => { if (process.env.NODE_ENV === 'development') console.log(...args); },
+  warn: (...args: unknown[]) => { if (process.env.NODE_ENV === 'development') console.warn(...args); },
+  error: (...args: unknown[]) => console.error(...args), // always log errors
+};
+
 // Configuration
 const HUB_URL = process.env.NEXT_PUBLIC_SIGNALR_URL || 'http://localhost:5000/hubs/notifications';
 
@@ -129,12 +136,12 @@ class NotificationClient {
    */
   async connect(): Promise<void> {
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      console.log('Already connected to notification hub');
+      log.info('Already connected to notification hub');
       return;
     }
 
     if (this.isConnecting) {
-      console.log('Connection already in progress');
+      log.info('Connection already in progress');
       return;
     }
 
@@ -164,7 +171,7 @@ class NotificationClient {
 
       // Start connection
       await this.connection.start();
-      console.log('Connected to notification hub');
+      log.info('Connected to notification hub');
 
       // Re-watch any previously watched patients
       for (const patientId of this.watchedPatients) {
@@ -173,7 +180,7 @@ class NotificationClient {
 
       this.handlers.onConnected?.();
     } catch (error) {
-      console.error('Failed to connect to notification hub:', error);
+      log.error('Failed to connect to notification hub:', error);
       throw error;
     } finally {
       this.isConnecting = false;
@@ -187,7 +194,7 @@ class NotificationClient {
     if (this.connection) {
       await this.connection.stop();
       this.connection = null;
-      console.log('Disconnected from notification hub');
+      log.info('Disconnected from notification hub');
     }
   }
 
@@ -204,9 +211,9 @@ class NotificationClient {
     try {
       await this.connection.invoke('WatchPatient', patientId);
       this.watchedPatients.add(patientId);
-      console.log(`Now watching patient: ${patientId}`);
+      log.info(`Now watching patient: ${patientId}`);
     } catch (error) {
-      console.error(`Failed to watch patient ${patientId}:`, error);
+      log.error(`Failed to watch patient ${patientId}:`, error);
     }
   }
 
@@ -222,9 +229,9 @@ class NotificationClient {
 
     try {
       await this.connection.invoke('UnwatchPatient', patientId);
-      console.log(`Stopped watching patient: ${patientId}`);
+      log.info(`Stopped watching patient: ${patientId}`);
     } catch (error) {
-      console.error(`Failed to unwatch patient ${patientId}:`, error);
+      log.error(`Failed to unwatch patient ${patientId}:`, error);
     }
   }
 
@@ -233,15 +240,15 @@ class NotificationClient {
    */
   async joinEmergencyAlerts(): Promise<void> {
     if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-      console.warn('Cannot join emergency alerts - not connected');
+      log.warn('Cannot join emergency alerts - not connected');
       return;
     }
 
     try {
       await this.connection.invoke('JoinEmergencyAlerts');
-      console.log('Joined emergency alerts group');
+      log.info('Joined emergency alerts group');
     } catch (error) {
-      console.error('Failed to join emergency alerts:', error);
+      log.error('Failed to join emergency alerts:', error);
     }
   }
 
@@ -255,9 +262,9 @@ class NotificationClient {
 
     try {
       await this.connection.invoke('LeaveEmergencyAlerts');
-      console.log('Left emergency alerts group');
+      log.info('Left emergency alerts group');
     } catch (error) {
-      console.error('Failed to leave emergency alerts:', error);
+      log.error('Failed to leave emergency alerts:', error);
     }
   }
 
@@ -284,53 +291,53 @@ class NotificationClient {
 
     // Critical lab result
     this.connection.on('CriticalResult', (notification: CriticalResultNotification) => {
-      console.log('Critical result received:', notification);
+      log.info('Critical result received:', notification);
       this.handlers.onCriticalResult?.(notification);
     });
 
     // Emergency assessment
     this.connection.on('EmergencyAssessment', (notification: EmergencyAssessmentNotification) => {
-      console.log('Emergency assessment received:', notification);
+      log.info('Emergency assessment received:', notification);
       this.handlers.onEmergencyAssessment?.(notification);
     });
 
     // Order status change
     this.connection.on('OrderStatusChange', (notification: OrderStatusNotification) => {
-      console.log('Order status change received:', notification);
+      log.info('Order status change received:', notification);
       this.handlers.onOrderStatusChange?.(notification);
     });
 
     // New assessment
     this.connection.on('NewAssessment', (notification: NewAssessmentNotification) => {
-      console.log('New assessment received:', notification);
+      log.info('New assessment received:', notification);
       this.handlers.onNewAssessment?.(notification);
     });
 
     // Red flag detected
     this.connection.on('RedFlagDetected', (notification: RedFlagNotification) => {
-      console.log('Red flag detected:', notification);
+      log.info('Red flag detected:', notification);
       this.handlers.onRedFlagDetected?.(notification);
     });
 
     // Play alert command
     this.connection.on('PlayAlert', (command: PlayAlertCommand) => {
-      console.log('Play alert command received:', command);
+      log.info('Play alert command received:', command);
       this.handlers.onPlayAlert?.(command);
     });
 
     // Connection lifecycle events
     this.connection.onclose((error) => {
-      console.log('Connection closed', error);
+      log.info('Connection closed', error);
       this.handlers.onDisconnected?.(error);
     });
 
     this.connection.onreconnecting((error) => {
-      console.log('Reconnecting...', error);
+      log.info('Reconnecting...', error);
       this.handlers.onReconnecting?.(error);
     });
 
     this.connection.onreconnected((connectionId) => {
-      console.log('Reconnected', connectionId);
+      log.info('Reconnected', connectionId);
       this.handlers.onReconnected?.(connectionId);
     });
   }
@@ -375,7 +382,7 @@ export async function playAlert(type: PlayAlertCommand['type'], repeat = 1): Pro
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     } catch (error) {
-      console.warn('Could not play alert sound:', error);
+      log.warn('Could not play alert sound:', error);
       break;
     }
   }

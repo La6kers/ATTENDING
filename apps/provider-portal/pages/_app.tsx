@@ -28,6 +28,10 @@ function AppInner({ Component, pageProps }: { Component: AppProps['Component']; 
   const { data: session } = useSession();
 
   // Sync NextAuth token → .NET API client & SignalR
+  // Verified: useAuthTokenBridge calls notificationClient.setAccessToken(token)
+  // and notificationClient.connect() when authenticated. The NotificationProvider
+  // below also receives accessToken for its own configure() call. Both paths
+  // ensure the SignalR client has the current JWT. (See issue #18)
   useAuthTokenBridge();
 
   const accessToken = (session as any)?.accessToken;
