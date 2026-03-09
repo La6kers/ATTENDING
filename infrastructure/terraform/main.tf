@@ -101,12 +101,26 @@ locals {
   resource_prefix = "${var.project_name}-${var.environment}"
   sql_app_login    = var.sql_app_login != "" ? var.sql_app_login : var.sql_admin_login
   sql_app_password = var.sql_app_password != "" ? var.sql_app_password : var.sql_admin_password
+
   common_tags = {
     Project     = "ATTENDING AI"
     Environment = var.environment
     ManagedBy   = "Terraform"
     CostCenter  = "Engineering"
     HIPAA       = "true"
+  }
+}
+
+# Production guard: prevent fallback to admin credentials for app SQL user.
+# In production, a dedicated least-privilege SQL user must be provisioned.
+check "sql_app_credentials_not_admin" {
+  assert {
+    condition     = var.environment != "production" || var.sql_app_login != ""
+    error_message = "sql_app_login must be set in production. The application must not use admin credentials — provision a dedicated SQL user with minimal permissions (db_datareader, db_datawriter)."
+  }
+  assert {
+    condition     = var.environment != "production" || var.sql_app_password != ""
+    error_message = "sql_app_password must be set in production. The application must not use admin credentials."
   }
 }
 
@@ -369,6 +383,12 @@ resource "azurerm_key_vault" "main" {
 
   network_acls {
     default_action = "Deny"
+    # HIPAA consideration: "AzureServices" allows any Azure service (including other tenants'
+    # services) to bypass the firewall. This is required for App Service Key Vault references
+    # to work, but is broader than ideal.
+    # TODO: For production hardening, replace "AzureServices" bypass with managed identity
+    # and private endpoints for all services accessing Key Vault. This requires testing
+    # App Service KV references, diagnostic logging, and deployment pipelines.
     bypass         = "AzureServices"
     virtual_network_rules {
       subnet_id = azurerm_subnet.frontend.id

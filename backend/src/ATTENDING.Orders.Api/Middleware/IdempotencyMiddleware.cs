@@ -104,14 +104,20 @@ public class IdempotencyMiddleware
             return;
         }
 
-        // Scope key per-tenant to prevent cross-tenant collisions
+        // Scope key per-tenant to prevent cross-tenant collisions.
+        // Idempotency only applies to authenticated requests where we have a reliable
+        // user identity. Anonymous requests using IP are vulnerable to spoofing, so
+        // we skip idempotency checking entirely for unauthenticated callers.
         var tenantId = context.User.FindFirst("oid")?.Value
                     ?? context.User.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(tenantId))
         {
-            var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            tenantId = $"anon:{ip}";
+            _logger.LogDebug(
+                "Skipping idempotency for unauthenticated request on {Path}. " +
+                "Idempotency requires a reliable user identity.", path);
+            await _next(context);
+            return;
         }
 
         var cacheKey = $"{CachePrefix}{tenantId}:{HashKey(rawKey)}";

@@ -109,7 +109,7 @@ public class DrugInteractionService : IDrugInteractionService
         var newMedLower = newMedication.ToLowerInvariant();
         
         // Track seen pairs (normalized: alphabetically sorted + lowercased) to prevent duplicates
-        var seenPairs = new HashSet<(string, string)>();
+        var seenPairs = new HashSet<(string, string, string)>();
         
         foreach (var currentMed in currentMedications)
         {
@@ -123,7 +123,7 @@ public class DrugInteractionService : IDrugInteractionService
                 (i.Drug1.Equals(currentMedLower, StringComparison.OrdinalIgnoreCase) &&
                  i.Drug2.Equals(newMedLower, StringComparison.OrdinalIgnoreCase)));
             
-            if (directInteraction != null && seenPairs.Add(normalizedPair))
+            if (directInteraction != null && seenPairs.Add((normalizedPair.Item1, normalizedPair.Item2, "direct")))
             {
                 interactions.Add(new FoundInteraction(
                     newMedication,
@@ -132,14 +132,14 @@ public class DrugInteractionService : IDrugInteractionService
                     directInteraction.Description,
                     "Drug-Drug Interaction"));
             }
-            
+
             // Check class-based interactions (simplified)
             foreach (var interaction in KnownInteractions)
             {
                 if (ContainsMedicationOrClass(newMedLower, interaction.Drug1) &&
                     ContainsMedicationOrClass(currentMedLower, interaction.Drug2))
                 {
-                    if (seenPairs.Add(normalizedPair))
+                    if (seenPairs.Add((normalizedPair.Item1, normalizedPair.Item2, $"class:{interaction.Drug1}-{interaction.Drug2}")))
                     {
                         interactions.Add(new FoundInteraction(
                             newMedication,

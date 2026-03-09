@@ -10,6 +10,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { prisma } from '@attending/shared/lib/prisma';
+import { verifyCsrfToken } from '@attending/shared/lib/security';
 
 // Types
 interface Notification {
@@ -43,10 +44,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   switch (req.method) {
     case 'GET':
       return handleGet(req, res, userId);
-    case 'PUT':
+    case 'PUT': {
+      // CSRF validation for state-changing request
+      const csrfSecret = req.cookies['__Host-csrf-token'];
+      const csrfToken = req.headers['x-csrf-token'] as string;
+      if (!csrfSecret || !csrfToken || !verifyCsrfToken(csrfSecret, csrfToken)) {
+        return res.status(403).json({ error: 'Invalid or missing CSRF token' });
+      }
       return handleMarkRead(req, res, userId);
-    case 'DELETE':
+    }
+    case 'DELETE': {
+      // CSRF validation for state-changing request
+      const csrfSecretDel = req.cookies['__Host-csrf-token'];
+      const csrfTokenDel = req.headers['x-csrf-token'] as string;
+      if (!csrfSecretDel || !csrfTokenDel || !verifyCsrfToken(csrfSecretDel, csrfTokenDel)) {
+        return res.status(403).json({ error: 'Invalid or missing CSRF token' });
+      }
       return handleDelete(req, res, userId);
+    }
     default:
       res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });

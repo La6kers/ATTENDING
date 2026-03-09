@@ -357,6 +357,15 @@ public class BehavioralHealthScreening : BaseEntity, IAggregateRoot, IHasDomainE
 
     private void Complete()
     {
+        if (RecommendedAction is BehavioralHealthAction.SafetyPlanRequired
+                              or BehavioralHealthAction.ImmediateSafetyIntervention
+            && string.IsNullOrWhiteSpace(SafetyPlanJson))
+        {
+            throw new InvalidOperationException(
+                $"A safety plan is required before completing a screening with recommended action '{RecommendedAction}'. " +
+                "Call RecordSafetyPlan() before scoring.");
+        }
+
         Status = ScreeningStatus.Completed;
         CompletedAt = DateTime.UtcNow;
         SetModified();

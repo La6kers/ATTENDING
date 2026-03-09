@@ -177,7 +177,18 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Verify migration
-        run: npx prisma migrate status --schema=prisma/schema.prisma
+        run: |
+          OUTPUT=$(npx prisma migrate status --schema=prisma/schema.prisma 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -qi "pending\|failed\|not yet applied"; then
+            echo "::error::Database migrations were not applied successfully. Pending or failed migrations detected."
+            exit 1
+          fi
+          if echo "$OUTPUT" | grep -qi "database schema is not in sync"; then
+            echo "::error::Database schema is not in sync with migrations."
+            exit 1
+          fi
+          echo "All migrations verified successfully."
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 

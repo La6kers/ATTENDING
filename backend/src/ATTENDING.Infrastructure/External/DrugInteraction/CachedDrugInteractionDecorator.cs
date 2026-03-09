@@ -232,7 +232,7 @@ public class CachedDrugInteractionDecorator : IExternalDrugInteractionApi
             await _cache.SetAsync(key, bytes, options, ct);
 
             // Also set a stale copy with 3x TTL for fallback
-            var staleKey = key.Replace(CacheKeyPrefix, $"{CacheKeyPrefix}stale-");
+            var staleKey = key.Replace($"{CacheKeyPrefix}interactions:", $"{CacheKeyPrefix}interactions-stale:");
             var staleOptions = new DistributedCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = duration * 3

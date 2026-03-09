@@ -139,6 +139,7 @@ spec:
       tier: web
   policyTypes:
   - Ingress
+  - Egress
   ingress:
   - from:
     - namespaceSelector:
@@ -153,3 +154,31 @@ spec:
       port: 3001
     - protocol: TCP
       port: 3003
+  egress:
+  # DNS resolution (kube-dns)
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # Intra-namespace traffic (pod-to-pod communication)
+  - to:
+    - podSelector: {}
+  # Azure SQL Server
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 1433
+  # Redis (TLS)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 6380

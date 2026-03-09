@@ -260,7 +260,7 @@ public class RedisClinicalCacheService : IClinicalCacheService
         {
             Hits = Interlocked.Read(ref _hits),
             Misses = Interlocked.Read(ref _misses),
-            EstimatedSavingsUsd = _estimatedSavings
+            EstimatedSavingsUsd = GetSavings()
         };
     }
 
@@ -268,7 +268,7 @@ public class RedisClinicalCacheService : IClinicalCacheService
     {
         Interlocked.Exchange(ref _hits, 0);
         Interlocked.Exchange(ref _misses, 0);
-        _estimatedSavings = 0;
+        lock (_savingsLock) { _estimatedSavings = 0; }
     }
 
     // ========================================================
@@ -330,9 +330,18 @@ public class RedisClinicalCacheService : IClinicalCacheService
         return Convert.ToHexString(bytes)[..12].ToLowerInvariant();
     }
 
+    private readonly object _savingsLock = new();
+
+    private decimal GetSavings()
+    {
+        lock (_savingsLock) { return _estimatedSavings; }
+    }
+
     private void AddSavings()
     {
-        // Thread-safe approximate addition
-        _estimatedSavings += CostPerInferenceUsd;
+        lock (_savingsLock)
+        {
+            _estimatedSavings += CostPerInferenceUsd;
+        }
     }
 }

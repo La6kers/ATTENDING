@@ -68,6 +68,18 @@ public class AssessmentsController : ControllerBase
     public async Task<IActionResult> SubmitCompassAssessment(
         [FromBody] SubmitCompassAssessmentCommand command)
     {
+        var currentUserId = GetCurrentUserId();
+
+        // Verify the JWT patient ID matches the command's PatientId unless the user is an Admin
+        var patientIdClaim = User.FindFirst("patient_id")?.Value ?? User.FindFirst("patientId")?.Value;
+        if (!string.IsNullOrEmpty(patientIdClaim)
+            && Guid.TryParse(patientIdClaim, out var jwtPatientId)
+            && jwtPatientId != command.PatientId
+            && !User.IsInRole("Admin"))
+        {
+            return Forbid();
+        }
+
         var result = await _mediator.Send(command);
 
         if (result.IsFailure)

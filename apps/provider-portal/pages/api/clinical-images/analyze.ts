@@ -18,6 +18,8 @@
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 interface AnalyzeRequest {
   patientId: string;
@@ -42,6 +44,12 @@ interface AIAnalysisResult {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' });
+  }
+
+  // Authentication check
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) {
+    return res.status(401).json({ success: false, error: 'Authentication required' });
   }
 
   try {

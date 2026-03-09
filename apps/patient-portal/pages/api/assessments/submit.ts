@@ -195,18 +195,33 @@ export default async function handler(
     const hasRedFlags = redFlagCount > 0;
 
     // =========================================================================
-    // Find or create patient
+    // Find or create patient (avoid duplicates by matching name + DOB + org)
     // =========================================================================
-    const patient = await prisma.patient.create({
-      data: {
-        mrn: `COMPASS-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-        firstName: data.patientName?.split(' ')[0] || 'Anonymous',
-        lastName: data.patientName?.split(' ').slice(1).join(' ') || 'Patient',
-        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : new Date('1990-01-01'),
-        gender: data.gender || null,
+    const firstName = data.patientName?.split(' ')[0] || 'Anonymous';
+    const lastName = data.patientName?.split(' ').slice(1).join(' ') || 'Patient';
+    const dateOfBirth = data.dateOfBirth ? new Date(data.dateOfBirth) : new Date('1990-01-01');
+
+    let patient = await prisma.patient.findFirst({
+      where: {
+        firstName,
+        lastName,
+        dateOfBirth,
         organizationId,
       },
     });
+
+    if (!patient) {
+      patient = await prisma.patient.create({
+        data: {
+          mrn: `COMPASS-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          firstName,
+          lastName,
+          dateOfBirth,
+          gender: data.gender || null,
+          organizationId,
+        },
+      });
+    }
 
     // =========================================================================
     // Build HPI narrative from structured data

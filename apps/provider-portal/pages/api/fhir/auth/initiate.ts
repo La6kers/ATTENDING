@@ -119,7 +119,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const vendor = String(req.query.vendor || 'epic').toLowerCase();
-  const returnTo = String(req.query.returnTo || '/');
+  const rawReturnTo = String(req.query.returnTo || '/');
+
+  // Validate returnTo is a safe relative URL (prevent open redirect)
+  const returnTo = (
+    rawReturnTo.startsWith('/') &&
+    !rawReturnTo.startsWith('//') &&
+    !rawReturnTo.includes('://')
+  ) ? rawReturnTo : '/';
 
   const vendorConfig = getVendorConfig(vendor);
   if (!vendorConfig) {
@@ -146,14 +153,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Generate cryptographically random state to prevent CSRF
   const state = crypto.randomUUID();
 
-  // Store everything we need in the callback in an httpOnly cookie (10 min)
+  // Store only non-sensitive data in the cookie. clientId and baseUrl are
+  // server-side secrets that can be re-derived from the vendor name in the
+  // callback handler — no need to expose them in a client-side cookie.
   const statePayload = JSON.stringify({
     state,
     vendor,
     returnTo,
-    baseUrl: vendorConfig.baseUrl,
-    clientId: vendorConfig.clientId,
-    smartConfig,
+    tokenEndpoint: smartConfig.token_endpoint,
   });
 
   res.setHeader('Set-Cookie', serializeCookie('attending_fhir_state', statePayload, {

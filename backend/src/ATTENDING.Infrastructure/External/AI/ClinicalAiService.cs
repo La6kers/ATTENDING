@@ -466,13 +466,13 @@ public class BioMistralClinicalAiService : IClinicalAiService
     /// </summary>
     private static IEnumerable<string> TruncateList(IEnumerable<string> items, int maxItems)
     {
-        var list = items.Take(maxItems + 1).ToList();
-        if (list.Count > maxItems)
-        {
-            list = list.Take(maxItems).ToList();
-            list.Add($"... and {items.Count() - maxItems} more");
-        }
-        return list;
+        var materialized = items.ToList();
+        if (materialized.Count <= maxItems)
+            return materialized;
+
+        var truncated = materialized.Take(maxItems).ToList();
+        truncated.Add($"... and {materialized.Count - maxItems} more");
+        return truncated;
     }
 
     private static string ExtractJson(string response)
@@ -481,12 +481,16 @@ public class BioMistralClinicalAiService : IClinicalAiService
         {
             var start = response.IndexOf("```json") + 7;
             var end = response.IndexOf("```", start);
+            if (end == -1 || end <= start)
+                return response.Trim();
             return response.Substring(start, end - start).Trim();
         }
         if (response.Contains("```"))
         {
             var start = response.IndexOf("```") + 3;
             var end = response.IndexOf("```", start);
+            if (end == -1 || end <= start)
+                return response.Trim();
             return response.Substring(start, end - start).Trim();
         }
         return response.Trim();

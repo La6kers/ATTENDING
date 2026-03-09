@@ -161,6 +161,8 @@ public class PatientAssessment : BaseEntity, IAggregateRoot, IHasDomainEvents
     
     public void TriggerEmergency(string reason)
     {
+        if (IsEmergency) return;
+
         IsEmergency = true;
         EmergencyReason = reason;
         CurrentPhase = AssessmentPhase.Emergency;

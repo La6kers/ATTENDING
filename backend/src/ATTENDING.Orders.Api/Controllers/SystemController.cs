@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Orders.Api.Controllers;
@@ -127,6 +128,7 @@ public class SystemController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpGet("specialties")]
+    [EnableRateLimiting("tenant-api")]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<string>> GetSpecialties()
     {
@@ -138,6 +140,7 @@ public class SystemController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpGet("lab-categories")]
+    [EnableRateLimiting("tenant-api")]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<string>> GetLabCategories()
     {
@@ -149,6 +152,7 @@ public class SystemController : ControllerBase
     /// </summary>
     [AllowAnonymous]
     [HttpGet("imaging-modalities")]
+    [EnableRateLimiting("tenant-api")]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<string>> GetImagingModalities()
     {

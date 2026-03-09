@@ -6,6 +6,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { sanitizeInput, rateLimitMemory } from '@attending/shared/lib/security';
 
 // Types
 interface ChatMessage {
@@ -191,6 +192,18 @@ export default async function handler(
     return res.status(400).json({ error: 'Conversation ID is required' });
   }
 
+  // Rate limit: 30 requests per minute per user
+  const rateLimitResult = rateLimitMemory(
+    `chat-messages:${session.user.id}`,
+    { windowMs: 60_000, maxRequests: 30, keyPrefix: 'chat-msg' }
+  );
+  if (!rateLimitResult.allowed) {
+    return res.status(429).json({
+      error: 'Too many requests. Please try again later.',
+      retryAfter: rateLimitResult.retryAfter,
+    });
+  }
+
   // Verify the authenticated user is a participant in this conversation
   const conversation = mockMessages[conversationId];
   if (conversation) {
@@ -263,15 +276,31 @@ async function handlePost(
     return res.status(400).json({ error: 'Message content is required' });
   }
 
+  // Content size limit: 10,000 characters
+  const MAX_CONTENT_LENGTH = 10_000;
+  if (typeof content !== 'string' || content.length > MAX_CONTENT_LENGTH) {
+    return res.status(413).json({
+      error: `Message content exceeds maximum length of ${MAX_CONTENT_LENGTH} characters`,
+    });
+  }
+
+  // Sanitize content and metadata to prevent XSS
+  const sanitizedContent = sanitizeInput(content);
+  const sanitizedMetadata = metadata
+    ? JSON.parse(JSON.stringify(metadata, (_key, value) =>
+        typeof value === 'string' ? sanitizeInput(value) : value
+      ))
+    : undefined;
+
   const newMessage: ChatMessage = {
     id: `msg-${conversationId}-${Date.now()}`,
     conversationId,
     senderId: session.user.id,
     senderName: session.user.name || 'Provider',
     senderType: 'provider',
-    content,
+    content: sanitizedContent,
     contentType,
-    metadata,
+    metadata: sanitizedMetadata,
     status: 'sent',
     createdAt: new Date().toISOString(),
   };

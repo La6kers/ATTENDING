@@ -72,7 +72,7 @@ public class LabOrdersController : ControllerBase
         Guid encounterId, [FromQuery] int skip = 0, [FromQuery] int take = 50)
     {
         take = Math.Clamp(take, 1, 100);
-        skip = Math.Max(skip, 0);
+        skip = Math.Clamp(skip, 0, 10000);
         var result = await _mediator.Send(new GetLabOrdersByEncounterQuery(encounterId));
         return Ok(result.Skip(skip).Take(take).Select(o => new LabOrderSummaryResponse(
             o.Id, o.OrderNumber, o.TestName, o.Priority.ToString(),

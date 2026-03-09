@@ -21,8 +21,21 @@ interface RegisterTokenRequest {
   deviceName?: string;
 }
 
-// In-memory storage (replace with database in production)
+// =============================================================================
+// WARNING: Push tokens are stored in an in-memory Map. This means:
+//   1. All tokens are lost on server restart or redeployment
+//   2. Tokens are not shared across multiple server instances
+//   3. This WILL cause missed push notifications in production
+//
+// TODO: Replace with database persistence (e.g., a PushToken Prisma model)
+//   once the schema migration is ready. Track this via your issue tracker.
+// =============================================================================
 const registeredTokens: Map<string, RegisterTokenRequest[]> = new Map();
+
+console.warn(
+  '[PUSH TOKEN WARNING] Push tokens are stored in-memory and will be lost on restart. ' +
+  'This must be replaced with database persistence before production use.'
+);
 
 // =============================================================================
 // API Handler
