@@ -106,8 +106,13 @@ public class IdempotencyMiddleware
 
         // Scope key per-tenant to prevent cross-tenant collisions
         var tenantId = context.User.FindFirst("oid")?.Value
-                    ?? context.User.FindFirst("sub")?.Value
-                    ?? "anonymous";
+                    ?? context.User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(tenantId))
+        {
+            var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            tenantId = $"anon:{ip}";
+        }
 
         var cacheKey = $"{CachePrefix}{tenantId}:{HashKey(rawKey)}";
 

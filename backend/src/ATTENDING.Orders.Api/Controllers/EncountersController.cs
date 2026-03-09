@@ -77,6 +77,9 @@ public class EncountersController : ControllerBase
         var result = await _mediator.Send(new CreateEncounterCommand(
             request.PatientId, providerId, request.Type, request.ScheduledAt, request.ChiefComplaint));
 
+        if (result.IsSuccess && result.Value.EncounterId == Guid.Empty)
+            return StatusCode(500, new { error = "Failed to create resource." });
+
         return result.ToCreatedAtAction(nameof(GetById),
             new { id = result.IsSuccess ? result.Value.EncounterId : Guid.Empty });
     }
@@ -116,7 +119,9 @@ public class EncountersController : ControllerBase
     private Guid GetCurrentUserId()
     {
         var claim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
-        return Guid.TryParse(claim, out var id) ? id : Guid.Empty;
+        if (string.IsNullOrEmpty(claim) || !Guid.TryParse(claim, out var id) || id == Guid.Empty)
+            throw new UnauthorizedAccessException("Valid user identity is required.");
+        return id;
     }
 
     private static EncounterResponse MapToResponse(Domain.Entities.Encounter e)

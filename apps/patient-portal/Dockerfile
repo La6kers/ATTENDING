@@ -48,13 +48,13 @@ ENV PORT=3001
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/apps/patient-portal/public ./apps/patient-portal/public
-COPY --from=builder /app/apps/patient-portal/.next/standalone ./
-COPY --from=builder /app/apps/patient-portal/.next/static ./apps/patient-portal/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/patient-portal/public ./apps/patient-portal/public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/patient-portal/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/patient-portal/.next/static ./apps/patient-portal/.next/static
 
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 USER nextjs
 

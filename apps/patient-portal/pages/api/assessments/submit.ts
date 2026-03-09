@@ -103,6 +103,14 @@ export default async function handler(
   }
 
   // =========================================================================
+  // Content-Type validation
+  // =========================================================================
+  const contentType = req.headers['content-type'] || '';
+  if (!contentType.includes('application/json')) {
+    return res.status(415).json({ error: 'Unsupported Media Type. Content-Type must be application/json.' });
+  }
+
+  // =========================================================================
   // CSRF validation
   // =========================================================================
   const csrfSecret = req.cookies['__Host-csrf-token'];
@@ -160,6 +168,24 @@ export default async function handler(
     }
     if (!data.chiefComplaint) {
       return res.status(400).json({ error: 'Chief complaint is required' });
+    }
+
+    // =========================================================================
+    // Size limits for arrays and overall body
+    // =========================================================================
+    const MAX_CONVERSATION_HISTORY = 200;
+    const MAX_RED_FLAGS = 50;
+    const MAX_BODY_SIZE_BYTES = 1_000_000; // 1 MB
+
+    const bodySize = Buffer.byteLength(JSON.stringify(req.body), 'utf8');
+    if (bodySize > MAX_BODY_SIZE_BYTES) {
+      return res.status(413).json({ error: 'Request body too large. Maximum size is 1 MB.' });
+    }
+    if (data.conversationHistory && data.conversationHistory.length > MAX_CONVERSATION_HISTORY) {
+      return res.status(400).json({ error: `conversationHistory exceeds maximum of ${MAX_CONVERSATION_HISTORY} items.` });
+    }
+    if (data.redFlags && data.redFlags.length > MAX_RED_FLAGS) {
+      return res.status(400).json({ error: `redFlags exceeds maximum of ${MAX_RED_FLAGS} items.` });
     }
 
     console.log('[ASSESSMENT SUBMIT] .NET backend unavailable, using Prisma fallback');
@@ -243,6 +269,9 @@ export default async function handler(
         action: 'ASSESSMENT_SUBMITTED',
         entityType: 'PatientAssessment',
         entityId: assessment.id,
+        userId: (req as any).userId || null,
+        ipAddress: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || null,
+        userAgent: req.headers['user-agent'] || null,
         changes: JSON.stringify({
           triageLevel,
           redFlagCount,

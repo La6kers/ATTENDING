@@ -311,7 +311,9 @@ public class AmbientScribeController : ControllerBase
     private Guid GetCurrentUserId()
     {
         var claim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
-        return Guid.TryParse(claim, out var id) ? id : Guid.Empty;
+        if (string.IsNullOrEmpty(claim) || !Guid.TryParse(claim, out var id) || id == Guid.Empty)
+            throw new UnauthorizedAccessException("Valid user identity is required.");
+        return id;
     }
 
     private Guid GetCurrentTenantId()

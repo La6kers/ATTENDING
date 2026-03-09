@@ -142,10 +142,10 @@ public class DiagnosticLearningController : ControllerBase
 
     private Guid GetCurrentUserId()
     {
-        var sub = User.FindFirst("sub")?.Value
-                  ?? User.FindFirst("oid")?.Value
-                  ?? Guid.Empty.ToString();
-        return Guid.TryParse(sub, out var id) ? id : Guid.Empty;
+        var claim = User.FindFirst("sub")?.Value ?? User.FindFirst("oid")?.Value;
+        if (string.IsNullOrEmpty(claim) || !Guid.TryParse(claim, out var id) || id == Guid.Empty)
+            throw new UnauthorizedAccessException("Valid user identity is required.");
+        return id;
     }
 
     private Guid GetCurrentTenantId()

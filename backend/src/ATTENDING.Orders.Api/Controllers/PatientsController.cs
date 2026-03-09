@@ -74,6 +74,9 @@ public class PatientsController : ControllerBase
             request.AddressLine1, request.City, request.State, request.ZipCode,
             request.PrimaryLanguage));
 
+        if (result.IsSuccess && result.Value.PatientId == Guid.Empty)
+            return StatusCode(500, new { error = "Failed to create resource." });
+
         return result.ToCreatedAtAction(nameof(GetById), new { id = result.IsSuccess ? result.Value.PatientId : Guid.Empty });
     }
 

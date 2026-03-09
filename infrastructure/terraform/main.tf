@@ -218,6 +218,7 @@ resource "azurerm_linux_web_app" "provider_portal" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   service_plan_id     = azurerm_service_plan.frontend.id
+  https_only          = true
 
   site_config {
     always_on            = var.environment == "production"
@@ -257,6 +258,7 @@ resource "azurerm_linux_web_app" "patient_portal" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   service_plan_id     = azurerm_service_plan.frontend.id
+  https_only          = true
 
   site_config {
     always_on            = var.environment == "production"
@@ -296,6 +298,7 @@ resource "azurerm_linux_web_app" "orders_api" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   service_plan_id     = azurerm_service_plan.backend.id
+  https_only          = true
 
   site_config {
     always_on            = var.environment == "production"
@@ -444,8 +447,9 @@ resource "azurerm_storage_account" "audit_logs" {
   location                 = azurerm_resource_group.main.location
   resource_group_name      = azurerm_resource_group.main.name
   account_tier             = "Standard"
-  account_replication_type = "GRS"
-  min_tls_version          = "TLS1_2"
+  account_replication_type     = "GRS"
+  min_tls_version              = "TLS1_2"
+  enable_https_traffic_only    = true
 
   blob_properties {
     versioning_enabled = true
@@ -1262,6 +1266,7 @@ resource "azurerm_monitor_metric_alert" "redis_memory" {
 resource "azurerm_linux_web_app_slot" "provider_portal_staging" {
   name           = "staging"
   app_service_id = azurerm_linux_web_app.provider_portal.id
+  https_only     = true
 
   site_config {
     always_on           = false
@@ -1295,6 +1300,7 @@ resource "azurerm_key_vault_access_policy" "provider_portal_slot" {
 resource "azurerm_linux_web_app_slot" "patient_portal_staging" {
   name           = "staging"
   app_service_id = azurerm_linux_web_app.patient_portal.id
+  https_only     = true
 
   site_config {
     always_on           = false
@@ -1328,6 +1334,7 @@ resource "azurerm_key_vault_access_policy" "patient_portal_slot" {
 resource "azurerm_linux_web_app_slot" "orders_api_staging" {
   name           = "staging"
   app_service_id = azurerm_linux_web_app.orders_api.id
+  https_only     = true
 
   site_config {
     always_on           = false

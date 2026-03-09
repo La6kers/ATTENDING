@@ -132,7 +132,22 @@ export default async function handler(
     }
 
     const file = Array.isArray(audioFile) ? audioFile[0] : audioFile;
-    
+
+    // Validate MIME type
+    const ACCEPTED_AUDIO_TYPES = [
+      'audio/wav', 'audio/x-wav',
+      'audio/mpeg', 'audio/mp3',
+      'audio/mp4',
+      'audio/webm',
+      'audio/ogg',
+    ];
+    const fileMime = file.mimetype || '';
+    if (!ACCEPTED_AUDIO_TYPES.includes(fileMime)) {
+      return res.status(415).json({
+        error: `Unsupported audio format. Accepted types: wav, mpeg, mp4, webm, ogg.`,
+      });
+    }
+
     // Read the audio file
     const audioBuffer = fs.readFileSync(file.filepath);
 
@@ -155,9 +170,9 @@ export default async function handler(
     });
 
   } catch (error: any) {
-    console.error('[Transcribe] Error:', error);
+    console.error('[Transcribe] Error:', error?.message || error);
     return res.status(500).json({
-      error: error.message || 'Transcription failed',
+      error: 'Transcription failed. Please try again.',
     });
   }
 }
