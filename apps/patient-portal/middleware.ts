@@ -47,8 +47,8 @@ import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const isDevelopment = process.env.NODE_ENV === 'development';
-const enforceInDev = process.env.NEXTAUTH_ENFORCE === 'true';
+// Auth is enforced on all matched routes in ALL environments.
+// Pre-visit routes (/compass, /chat) are excluded via the matcher config below.
 
 export default withAuth(
   function middleware(req: NextRequest) {
@@ -57,10 +57,6 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token }) => {
-        // Development bypass: allow all unless explicitly enforced.
-        if (isDevelopment && !enforceInDev) {
-          return true;
-        }
         return !!token;
       },
     },

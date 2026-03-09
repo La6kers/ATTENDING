@@ -2,137 +2,173 @@
 // ATTENDING AI - Patient Health Profile API
 // apps/patient-portal/pages/api/patient/health-profile.ts
 //
-// Handles patient health profile (conditions, medications, allergies)
-// Separate from main profile for focused medical data access
+// Handles patient health profile (conditions, medications, allergies).
+// Requires authenticated PATIENT session.
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-
-// Types
-interface HealthProfile {
-  conditions: string[];
-  medications: string[];
-  allergies: string[];
-  surgicalHistory: string[];
-  familyHistory: string[];
-  socialHistory: {
-    smoking?: string;
-    alcohol?: string;
-    drugs?: string;
-    exercise?: string;
-    diet?: string;
-  };
-  immunizations: string[];
-  lastUpdated: string;
-}
-
-// Mock health profile (replace with database in production)
-let mockHealthProfile: HealthProfile = {
-  conditions: ['Hypertension', 'Type 2 Diabetes'],
-  medications: ['Lisinopril 10mg daily', 'Metformin 500mg BID', 'Vitamin D 2000IU daily'],
-  allergies: ['Penicillin', 'Sulfa'],
-  surgicalHistory: ['Appendectomy (2010)', 'Knee arthroscopy (2018)'],
-  familyHistory: ['Father - Heart disease', 'Mother - Type 2 Diabetes', 'Brother - Hypertension'],
-  socialHistory: {
-    smoking: 'Never',
-    alcohol: 'Occasional (social)',
-    drugs: 'None',
-    exercise: '3x per week, walking',
-    diet: 'Low sodium, reduced carbohydrates',
-  },
-  immunizations: ['COVID-19 (2024)', 'Flu (2024)', 'Tdap (2020)', 'Pneumococcal (2022)'],
-  lastUpdated: new Date(Date.now() - 86400000 * 7).toISOString(),
-};
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
+import { prisma } from '@attending/shared/lib/prisma';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // TODO: Add authentication check
+  // Authenticate
+  const session = await getServerSession(req, res, authOptions);
+  if (!session?.user) {
+    return res.status(401).json({ error: 'Authentication required', code: 'AUTH_REQUIRED' });
+  }
+
+  const patientId = (session.user as { id?: string }).id;
 
   switch (req.method) {
     case 'GET':
-      return handleGet(req, res);
+      return handleGet(req, res, patientId);
     case 'PUT':
-      return handleUpdate(req, res);
+      return handleUpdate(req, res, patientId);
     case 'PATCH':
-      return handlePatch(req, res);
+      return handlePatch(req, res, patientId);
     default:
       res.setHeader('Allow', ['GET', 'PUT', 'PATCH']);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
 
-// GET /api/patient/health-profile - Get health profile
-async function handleGet(req: NextApiRequest, res: NextApiResponse) {
-  return res.status(200).json({ profile: mockHealthProfile });
+// GET /api/patient/health-profile
+async function handleGet(_req: NextApiRequest, res: NextApiResponse, patientId?: string) {
+  try {
+    const patient = await prisma.patient.findFirst({
+      where: { id: patientId, deletedAt: null },
+      include: {
+        conditions: { where: { deletedAt: null }, select: { id: true, name: true, icdCode: true } },
+        medications: { where: { deletedAt: null }, select: { id: true, name: true, dosage: true, frequency: true } },
+        allergies: { where: { deletedAt: null }, select: { id: true, allergen: true, reaction: true, severity: true } },
+      },
+    });
+
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    return res.status(200).json({
+      profile: {
+        conditions: patient.conditions.map((c) => c.name),
+        medications: patient.medications.map((m) => `${m.name}${m.dosage ? ` ${m.dosage}` : ''}${m.frequency ? ` ${m.frequency}` : ''}`),
+        allergies: patient.allergies.map((a) => a.allergen),
+        lastUpdated: patient.updatedAt.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error('[Health Profile] Error fetching health profile:', error);
+    return res.status(500).json({ error: 'Failed to retrieve health profile' });
+  }
 }
 
-// PUT /api/patient/health-profile - Full health profile update
-async function handleUpdate(req: NextApiRequest, res: NextApiResponse) {
+// PUT /api/patient/health-profile - Full update
+async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId?: string) {
   const updates = req.body;
 
-  mockHealthProfile = {
-    ...mockHealthProfile,
-    ...updates,
-    lastUpdated: new Date().toISOString(),
-  };
+  try {
+    // Update conditions
+    if (updates.conditions && Array.isArray(updates.conditions)) {
+      // Soft-delete existing conditions
+      await prisma.condition.updateMany({
+        where: { patientId, deletedAt: null },
+        data: { deletedAt: new Date(), deletedBy: patientId },
+      });
+      // Create new conditions
+      for (const name of updates.conditions) {
+        await prisma.condition.create({
+          data: { patientId: patientId || '', name },
+        });
+      }
+    }
 
-  return res.status(200).json({
-    success: true,
-    profile: mockHealthProfile,
-    message: 'Health profile updated successfully',
-  });
+    // Update medications
+    if (updates.medications && Array.isArray(updates.medications)) {
+      await prisma.medication.updateMany({
+        where: { patientId, deletedAt: null },
+        data: { deletedAt: new Date(), deletedBy: patientId },
+      });
+      for (const name of updates.medications) {
+        await prisma.medication.create({
+          data: { patientId: patientId || '', name },
+        });
+      }
+    }
+
+    // Update allergies
+    if (updates.allergies && Array.isArray(updates.allergies)) {
+      await prisma.allergy.updateMany({
+        where: { patientId, deletedAt: null },
+        data: { deletedAt: new Date(), deletedBy: patientId },
+      });
+      for (const allergen of updates.allergies) {
+        await prisma.allergy.create({
+          data: { patientId: patientId || '', allergen },
+        });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Health profile updated successfully',
+    });
+  } catch (error) {
+    console.error('[Health Profile] Error updating health profile:', error);
+    return res.status(500).json({ error: 'Failed to update health profile' });
+  }
 }
 
-// PATCH /api/patient/health-profile - Partial update
-async function handlePatch(req: NextApiRequest, res: NextApiResponse) {
+// PATCH /api/patient/health-profile - Add/remove individual items
+async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId?: string) {
   const updates = req.body;
 
-  // Handle array fields - can add or remove items
-  if (updates.addCondition) {
-    mockHealthProfile.conditions.push(updates.addCondition);
-    delete updates.addCondition;
+  try {
+    // Add/remove conditions
+    if (updates.addCondition) {
+      await prisma.condition.create({
+        data: { patientId: patientId || '', name: updates.addCondition },
+      });
+    }
+    if (updates.removeCondition) {
+      await prisma.condition.updateMany({
+        where: { patientId, name: updates.removeCondition, deletedAt: null },
+        data: { deletedAt: new Date(), deletedBy: patientId },
+      });
+    }
+
+    // Add/remove medications
+    if (updates.addMedication) {
+      await prisma.medication.create({
+        data: { patientId: patientId || '', name: updates.addMedication },
+      });
+    }
+    if (updates.removeMedication) {
+      await prisma.medication.updateMany({
+        where: { patientId, name: updates.removeMedication, deletedAt: null },
+        data: { deletedAt: new Date(), deletedBy: patientId },
+      });
+    }
+
+    // Add/remove allergies
+    if (updates.addAllergy) {
+      await prisma.allergy.create({
+        data: { patientId: patientId || '', allergen: updates.addAllergy },
+      });
+    }
+    if (updates.removeAllergy) {
+      await prisma.allergy.updateMany({
+        where: { patientId, allergen: updates.removeAllergy, deletedAt: null },
+        data: { deletedAt: new Date(), deletedBy: patientId },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Health profile updated successfully',
+    });
+  } catch (error) {
+    console.error('[Health Profile] Error patching health profile:', error);
+    return res.status(500).json({ error: 'Failed to update health profile' });
   }
-
-  if (updates.removeCondition) {
-    mockHealthProfile.conditions = mockHealthProfile.conditions.filter((c) => c !== updates.removeCondition);
-    delete updates.removeCondition;
-  }
-
-  if (updates.addMedication) {
-    mockHealthProfile.medications.push(updates.addMedication);
-    delete updates.addMedication;
-  }
-
-  if (updates.removeMedication) {
-    mockHealthProfile.medications = mockHealthProfile.medications.filter((m) => m !== updates.removeMedication);
-    delete updates.removeMedication;
-  }
-
-  if (updates.addAllergy) {
-    mockHealthProfile.allergies.push(updates.addAllergy);
-    delete updates.addAllergy;
-  }
-
-  if (updates.removeAllergy) {
-    mockHealthProfile.allergies = mockHealthProfile.allergies.filter((a) => a !== updates.removeAllergy);
-    delete updates.removeAllergy;
-  }
-
-  // Handle socialHistory nested updates
-  if (updates.socialHistory) {
-    mockHealthProfile.socialHistory = { ...mockHealthProfile.socialHistory, ...updates.socialHistory };
-    delete updates.socialHistory;
-  }
-
-  // Apply remaining updates
-  mockHealthProfile = {
-    ...mockHealthProfile,
-    ...updates,
-    lastUpdated: new Date().toISOString(),
-  };
-
-  return res.status(200).json({
-    success: true,
-    profile: mockHealthProfile,
-    message: 'Health profile updated successfully',
-  });
 }

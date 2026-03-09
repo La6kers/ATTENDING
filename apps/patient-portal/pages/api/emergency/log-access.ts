@@ -4,9 +4,16 @@
 //
 // Logs emergency access events with photo, location, and audit trail.
 // Returns an accessLogId that must be used to retrieve medical info.
+//
+// Two legitimate flows:
+// 1. Patient-initiated: session exists, patientId must match session
+// 2. Responder-initiated: no session, but requires valid PIN + rate limiting
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 import { createAccessLog } from './medical-info';
 
 // =============================================================================
@@ -18,7 +25,7 @@ interface EmergencyAccessLog {
   patientId: string;
   timestamp: string;
   accessMethod: 'pin' | 'face_scan' | 'biometric';
-  accessorPhoto?: string; // Base64 encoded image
+  accessorPhoto?: string;
   location?: {
     latitude: number;
     longitude: number;
@@ -40,15 +47,48 @@ interface EmergencyAccessLog {
     emergencyServices: boolean;
     careTeam: boolean;
   };
-  sessionDuration?: number; // seconds the info was viewed
+  sessionDuration?: number;
 }
 
 interface ApiResponse {
   success: boolean;
   logId?: string;
-  accessToken?: string; // Token to retrieve medical info
+  accessToken?: string;
   message?: string;
   error?: string;
+}
+
+// =============================================================================
+// Rate Limiting for unauthenticated emergency access
+// =============================================================================
+
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 5; // Stricter for unauthenticated access
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
+function getClientIp(req: NextApiRequest): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket?.remoteAddress || 'unknown';
 }
 
 // =============================================================================
@@ -62,19 +102,14 @@ const accessLogs: EmergencyAccessLog[] = [];
 // =============================================================================
 
 function generateLogId(): string {
-  // Use crypto for secure ID generation
-  const crypto = require('crypto');
   return `eal_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
 }
 
 async function reverseGeocode(lat: number, lng: number): Promise<string | undefined> {
-  // In production, use a geocoding service like Google Maps or OpenStreetMap
-  // For now, return a placeholder
   return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 }
 
 async function notifyEmergencyContacts(patientId: string, log: EmergencyAccessLog): Promise<boolean> {
-  // In production, this would send SMS/push notifications
   console.log(`[EMERGENCY] Notifying contacts for patient ${patientId}`);
   console.log(`[EMERGENCY] Access at: ${log.timestamp}`);
   if (log.location) {
@@ -83,15 +118,12 @@ async function notifyEmergencyContacts(patientId: string, log: EmergencyAccessLo
   return true;
 }
 
-async function notifyCareTeam(patientId: string, log: EmergencyAccessLog): Promise<boolean> {
-  // In production, this would notify the care team via the provider portal
+async function notifyCareTeam(patientId: string, _log: EmergencyAccessLog): Promise<boolean> {
   console.log(`[CARE TEAM] Emergency access logged for patient ${patientId}`);
   return true;
 }
 
 async function storeAccessPhoto(logId: string, photoData: string): Promise<string> {
-  // In production, store in secure cloud storage (S3, Azure Blob, etc.)
-  // Return URL to stored photo
   const photoUrl = `/api/emergency/photos/${logId}`;
   console.log(`[STORAGE] Photo stored for log ${logId}, size: ${(photoData.length / 1024).toFixed(1)}KB`);
   return photoUrl;
@@ -107,9 +139,23 @@ export default async function handler(
 ) {
   // Only allow POST
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      success: false, 
-      error: 'Method not allowed' 
+    return res.status(405).json({
+      success: false,
+      error: 'Method not allowed',
+    });
+  }
+
+  const clientIp = getClientIp(req);
+
+  // Rate limit all requests
+  if (!checkRateLimit(clientIp)) {
+    console.log('[SECURITY] Rate limit exceeded for emergency log-access:', {
+      ip: clientIp,
+      timestamp: new Date().toISOString(),
+    });
+    return res.status(429).json({
+      success: false,
+      error: 'Too many requests. Please wait before trying again.',
     });
   }
 
@@ -126,17 +172,37 @@ export default async function handler(
 
     // Validate required fields
     if (!patientId) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Patient ID is required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Patient ID is required',
       });
     }
 
     if (!accessMethod || !['pin', 'face_scan', 'biometric'].includes(accessMethod)) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Valid access method is required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Valid access method is required',
       });
+    }
+
+    // If a session exists, enforce that patientId matches the session user.
+    // This prevents an authenticated user from logging emergency access
+    // for a different patient.
+    const session = await getServerSession(req, res, authOptions);
+    if (session?.user) {
+      const sessionPatientId = (session.user as { id?: string }).id;
+      if (sessionPatientId && sessionPatientId !== patientId) {
+        console.log('[SECURITY] Patient ID mismatch in emergency log-access:', {
+          sessionPatientId,
+          requestedPatientId: patientId,
+          ip: clientIp,
+          timestamp: new Date().toISOString(),
+        });
+        return res.status(403).json({
+          success: false,
+          error: 'Patient ID does not match authenticated session',
+        });
+      }
     }
 
     // Generate log ID
@@ -161,7 +227,7 @@ export default async function handler(
       patientId,
       timestamp: new Date().toISOString(),
       accessMethod,
-      accessorPhoto: photoUrl, // Store URL instead of base64
+      accessorPhoto: photoUrl,
       location: processedLocation,
       deviceInfo: deviceInfo || { userAgent: req.headers['user-agent'] || 'unknown' },
       triggerType: triggerType || 'manual',
@@ -177,20 +243,16 @@ export default async function handler(
     accessLogs.push(logEntry);
 
     // Send notifications asynchronously
-    const notifyContactsPromise = notifyEmergencyContacts(patientId, logEntry);
-    const notifyCareTeamPromise = notifyCareTeam(patientId, logEntry);
-
-    // Wait for notifications (in production, might want to fire-and-forget)
     const [contactsNotified, careTeamNotified] = await Promise.all([
-      notifyContactsPromise,
-      notifyCareTeamPromise,
+      notifyEmergencyContacts(patientId, logEntry),
+      notifyCareTeam(patientId, logEntry),
     ]);
 
     // Update notification status
     logEntry.notificationsSent.emergencyContacts = contactsNotified;
     logEntry.notificationsSent.careTeam = careTeamNotified;
 
-    // Log for audit trail
+    // Audit log
     console.log('[AUDIT] Emergency access logged:', {
       logId,
       patientId,
@@ -199,20 +261,25 @@ export default async function handler(
       triggerType,
       hasPhoto: !!accessorPhoto,
       hasLocation: !!location,
+      authenticated: !!session?.user,
+      ip: clientIp,
     });
 
-    // Create access token for medical info retrieval
+    // Create access token for medical info retrieval — tied to this patient
     const accessToken = createAccessLog(patientId);
 
     return res.status(201).json({
       success: true,
       logId,
-      accessToken, // Use this to call /api/emergency/medical-info
+      accessToken,
       message: 'Emergency access logged successfully',
     });
-
   } catch (error) {
-    console.error('[ERROR] Failed to log emergency access:', error);
+    console.error('[ERROR] Failed to log emergency access:', {
+      error,
+      ip: clientIp,
+      timestamp: new Date().toISOString(),
+    });
     return res.status(500).json({
       success: false,
       error: 'Failed to log emergency access',

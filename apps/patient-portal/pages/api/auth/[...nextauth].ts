@@ -13,26 +13,31 @@ import crypto from 'crypto';
 const isDev = process.env.NODE_ENV === 'development';
 const isDemo = process.env.DEMO_MODE === 'true';
 
+// Ephemeral secret for dev/demo — regenerated each process start so it
+// cannot be predicted from the file system path.
+let _ephemeralDevSecret: string | undefined;
+
 /**
  * Get the NextAuth secret.
  * - In production: MUST be set via NEXTAUTH_SECRET env var
- * - In dev/demo: generates a session-unique secret (not hardcoded)
+ * - In dev/demo: generates a random per-process secret
  */
 function getNextAuthSecret(): string | undefined {
   if (process.env.NEXTAUTH_SECRET) {
     return process.env.NEXTAUTH_SECRET;
   }
 
-  // In dev/demo mode, generate a deterministic but not hardcoded secret
-  // based on a machine-specific value. This prevents session sharing
-  // across different dev environments while still being stable within a session.
   if (isDev || isDemo) {
-    // Use a combination of env values as seed for dev secret
-    const seed = `${process.env.NODE_ENV}-${process.cwd()}-patient-portal`;
-    return crypto.createHash('sha256').update(seed).digest('hex');
+    if (!_ephemeralDevSecret) {
+      _ephemeralDevSecret = crypto.randomBytes(32).toString('hex');
+      console.warn(
+        '[NextAuth] Using ephemeral dev secret. Set NEXTAUTH_SECRET in .env.local for persistent sessions.'
+      );
+    }
+    return _ephemeralDevSecret;
   }
 
-  // Production without secret - NextAuth will throw an error
+  // Production without secret — NextAuth will throw an error
   return undefined;
 }
 
