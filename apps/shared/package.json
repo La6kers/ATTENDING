@@ -45,7 +45,6 @@
     "next-auth": "^4.24.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "socket.io-client": "^4.7.0",
     "xstate": "^4.38.0",
     "zustand": "^5.0.0"
   },
@@ -60,9 +59,6 @@
       "optional": true
     },
     "@prisma/client": {
-      "optional": true
-    },
-    "socket.io-client": {
       "optional": true
     },
     "next-auth": {

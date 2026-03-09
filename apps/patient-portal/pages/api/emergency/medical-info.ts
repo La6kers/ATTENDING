@@ -231,7 +231,7 @@ export default async function handler(
       })),
       medications: patient.medications.map((m) => ({
         name: m.name,
-        dosage: m.dosage || '',
+        dosage: m.dose || '',
         frequency: m.frequency || '',
       })),
       emergencyContacts: safeJsonParse(patient.emergencyContact as string, []),

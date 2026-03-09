@@ -79,23 +79,23 @@ const MicIcon = () => (
 );
 
 export default function ComponentDemoPage() {
-  // Gate demo page from production — only accessible in development
-  if (process.env.NODE_ENV === 'production') {
-    return null;
-  }
-
-  // State for demos
+  // State for demos — hooks must be called unconditionally (Rules of Hooks)
   const [activeAction, setActiveAction] = useState('labs');
   const [statusValue, setStatusValue] = useState<StatusValue>('unknown');
   const [isRecording, setIsRecording] = useState(false);
   const [showAlert, setShowAlert] = useState(true);
-  
+
   const [findings, setFindings] = useState<Array<{ name: string; status: FindingStatus; isRedFlag?: boolean }>>([
     { name: 'Photophobia', status: 'present', isRedFlag: false },
     { name: 'Nausea/Vomiting', status: 'present', isRedFlag: false },
     { name: 'Neck Stiffness', status: 'unknown', isRedFlag: true },
     { name: 'Fever', status: 'absent', isRedFlag: true },
   ]);
+
+  // Gate demo page from production — only accessible in development
+  if (process.env.NODE_ENV === 'production') {
+    return null;
+  }
 
   const quickActions: QuickAction[] = [
     { id: 'labs', label: 'Order Labs', icon: <BeakerIcon />, onClick: () => setActiveAction('labs'), active: activeAction === 'labs' },

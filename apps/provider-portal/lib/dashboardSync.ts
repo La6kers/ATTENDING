@@ -6,7 +6,8 @@
 // Provides persistence and cross-device consistency
 // ============================================================
 
-import { getSocket, isWebSocketConnected } from './websocket';
+import { getConnection, isWebSocketConnected } from './websocket';
+import { HubConnectionState } from '@microsoft/signalr';
 import { Layouts } from 'react-grid-layout';
 
 // ============================================================
@@ -58,19 +59,19 @@ class DashboardSyncService {
   initialize() {
     if (this.initialized) return;
     
-    const socket = getSocket();
-    if (!socket) {
-      console.warn('[DashboardSync] No socket available');
+    const connection = getConnection();
+    if (!connection) {
+      console.warn('[DashboardSync] No connection available');
       return;
     }
 
-    // Listen for layout sync events from other devices
-    socket.on('dashboard:layout:sync', (payload: LayoutSyncPayload) => {
+    // Listen for layout sync events from other devices (PascalCase for SignalR/.NET)
+    connection.on('DashboardLayoutSync', (payload: LayoutSyncPayload) => {
       // Ignore updates from this device
       if (payload.deviceId === getDeviceId()) return;
-      
+
       console.log('[DashboardSync] Received layout sync from another device');
-      
+
       // Notify all registered listeners
       this.listeners.forEach((callback, key) => {
         if (key === payload.storageKey || key === '*') {
@@ -80,7 +81,7 @@ class DashboardSyncService {
     });
 
     // Listen for layout request (when another device needs current layout)
-    socket.on('dashboard:layout:request', (data: { storageKey: string; requesterId: string }) => {
+    connection.on('DashboardLayoutRequest', (data: { storageKey: string; requesterId: string }) => {
       const localLayout = this.getLocalLayout(data.storageKey);
       if (localLayout) {
         this.broadcastLayout(data.storageKey, localLayout.layouts, localLayout.hidden);
@@ -114,8 +115,8 @@ class DashboardSyncService {
 
     // Debounce to avoid flooding during resize
     const timer = setTimeout(() => {
-      const socket = getSocket();
-      if (!socket || !isWebSocketConnected()) {
+      const connection = getConnection();
+      if (!connection || !isWebSocketConnected()) {
         console.warn('[DashboardSync] Cannot broadcast - not connected');
         return;
       }
@@ -129,7 +130,8 @@ class DashboardSyncService {
         deviceId: getDeviceId(),
       };
 
-      socket.emit('dashboard:layout:update', payload);
+      connection.invoke('DashboardLayoutUpdate', payload)
+        .catch(err => console.error('[DashboardSync] Broadcast failed:', err));
       console.log('[DashboardSync] Broadcast layout update');
     }, debounceMs);
 
@@ -140,13 +142,13 @@ class DashboardSyncService {
    * Request latest layout from other devices
    */
   requestLatestLayout(storageKey: string) {
-    const socket = getSocket();
-    if (!socket || !isWebSocketConnected()) return;
+    const connection = getConnection();
+    if (!connection || !isWebSocketConnected()) return;
 
-    socket.emit('dashboard:layout:request', {
+    connection.invoke('DashboardLayoutRequest', {
       storageKey,
       requesterId: getDeviceId(),
-    });
+    }).catch(err => console.error('[DashboardSync] Layout request failed:', err));
   }
 
   /**

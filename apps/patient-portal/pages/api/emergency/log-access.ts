@@ -236,9 +236,13 @@ export default async function handler(
           });
         }
 
-        // Verify PIN (stored as hash)
-        const pinHash = crypto.createHash('sha256').update(pin).digest('hex');
-        if (profile.pinHash !== pinHash) {
+        // Verify PIN using PBKDF2 with embedded salt.
+        // pinHash format: "salt:derivedKey" (both hex-encoded).
+        // PIN-setting endpoints must store hashes in this same format
+        // using hashPin() from @attending/shared/lib/auth/pinHash.
+        const [salt, storedKey] = (profile.pinHash || '').split(':');
+        const derivedKey = crypto.pbkdf2Sync(pin, salt || '', 100_000, 64, 'sha512').toString('hex');
+        if (!storedKey || derivedKey !== storedKey) {
           console.log('[SECURITY] Invalid PIN attempt for emergency access:', {
             patientId,
             ip: clientIp,

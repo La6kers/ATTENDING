@@ -509,13 +509,8 @@ export const useChatStore = create<ChatState>()(
               state.messages.push(createMessage('assistant', PHASE_CONFIG.complete.question, { phase: 'complete' }));
             });
 
-            // Notify via WebSocket (if available)
-            if (typeof window !== 'undefined' && (window as any).socket) {
-              (window as any).socket.emit('assessment:submit', {
-                assessment: payload,
-                sessionId,
-              });
-            }
+            // Real-time notification is handled server-side after the POST succeeds.
+            // The backend SignalR hub broadcasts AssessmentNew to connected providers.
           } catch (error) {
             set((state) => {
               state.isAIProcessing = false;

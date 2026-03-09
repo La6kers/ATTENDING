@@ -295,7 +295,7 @@ export default apiKeyHandler({
                   data: {
                     patientId,
                     name: med.name,
-                    dosage: med.dosage,
+                    dose: med.dosage,
                     frequency: med.frequency,
                     route: med.route,
                   },

@@ -316,8 +316,10 @@ model Allergy {
 model Condition {
   id            String    @id @default(cuid())
   patientId     String
-  icdCode       String
-  description   String
+  name          String    @default("")
+  icdCode       String    @default("")
+  description   String    @default("")
+  severity      String?
   status        String    @default("ACTIVE")
   onsetDate     DateTime?
   abatementDate DateTime?
@@ -712,6 +714,37 @@ model EmergencyEvent {
   @@index([severity])
   @@index([createdAt])
   @@index([deletedAt])
+}
+
+// ============== EMERGENCY ACCESS (Patient Opt-In) ==============
+
+model EmergencyAccessProfile {
+  id                      String    @id @default(cuid())
+  organizationId          String?
+  patientId               String
+  isEnabled               Boolean   @default(false)
+  pinHash                 String?
+  gForceThreshold         Decimal   @default(4.0)
+  autoGrantTimeoutSeconds Int       @default(30)
+  accessWindowMinutes     Int       @default(10)
+  showDnrStatus           Boolean   @default(true)
+  showMedications         Boolean   @default(true)
+  showAllergies           Boolean   @default(true)
+  showDiagnoses           Boolean   @default(true)
+  showEmergencyContacts   Boolean   @default(true)
+  showImplantedDevices    Boolean   @default(true)
+  lastReviewedAt          DateTime?
+  lastCachedAt            DateTime?
+  isDeleted               Boolean   @default(false)
+  deletedAt               DateTime?
+  deletedBy               String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@index([patientId])
+  @@index([isEnabled])
+  @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== TREATMENT PLANS ==============

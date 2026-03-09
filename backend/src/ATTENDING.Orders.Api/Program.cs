@@ -259,10 +259,24 @@ if (!app.Environment.IsDevelopment())
     var trustedProxies = app.Configuration.GetSection("ForwardedHeaders:TrustedProxyCIDRs").Get<string[]>();
     if (trustedProxies?.Length > 0)
     {
-        foreach (var cidr in trustedProxies)
+        foreach (var entry in trustedProxies)
         {
-            if (System.Net.IPAddress.TryParse(cidr, out var ip))
+            // Support both plain IPs ("10.0.0.1") and CIDR notation ("10.0.0.0/24")
+            if (entry.Contains('/'))
+            {
+                // CIDR — add as a trusted network
+                var parts = entry.Split('/');
+                if (System.Net.IPAddress.TryParse(parts[0], out var networkIp)
+                    && int.TryParse(parts[1], out var prefixLength))
+                {
+                    forwardedHeadersOptions.KnownNetworks.Add(
+                        new Microsoft.AspNetCore.HttpOverrides.IPNetwork(networkIp, prefixLength));
+                }
+            }
+            else if (System.Net.IPAddress.TryParse(entry, out var ip))
+            {
                 forwardedHeadersOptions.KnownProxies.Add(ip);
+            }
         }
         Log.Information("ForwardedHeaders restricted to {Count} trusted proxies", trustedProxies.Length);
     }

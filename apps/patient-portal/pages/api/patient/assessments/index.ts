@@ -16,12 +16,9 @@ interface Assessment {
   id: string;
   chiefComplaint: string;
   status: 'in_progress' | 'pending' | 'in_review' | 'completed';
-  urgencyLevel: 'standard' | 'moderate' | 'high' | 'emergency';
+  triageLevel: string;
   submittedAt: string;
-  reviewedAt?: string;
-  providerName?: string;
-  diagnosis?: string[];
-  followUp?: string;
+  completedAt?: string;
 }
 
 interface AssessmentsResponse {
@@ -84,12 +81,9 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse<AssessmentsRe
         id: a.id,
         chiefComplaint: a.chiefComplaint || '',
         status: (a.status?.toLowerCase() as Assessment['status']) || 'pending',
-        urgencyLevel: (a.urgencyLevel?.toLowerCase() as Assessment['urgencyLevel']) || 'standard',
+        triageLevel: a.triageLevel || 'STANDARD',
         submittedAt: a.createdAt.toISOString(),
-        reviewedAt: a.reviewedAt?.toISOString(),
-        providerName: a.reviewedBy || undefined,
-        diagnosis: a.diagnosis ? JSON.parse(a.diagnosis as string) : undefined,
-        followUp: a.followUp || undefined,
+        completedAt: a.completedAt?.toISOString(),
       })),
       total,
       page: pageNum,
@@ -103,7 +97,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse<AssessmentsRe
 
 // POST /api/patient/assessments - Create new assessment
 async function handlePost(req: NextApiRequest, res: NextApiResponse, patientId: string) {
-  const { chiefComplaint, urgencyLevel } = req.body;
+  const { chiefComplaint, triageLevel } = req.body;
 
   if (!chiefComplaint) {
     return res.status(400).json({ error: 'Chief complaint is required' });
@@ -115,7 +109,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, patientId: 
         patientId,
         sessionId: `session-${Date.now()}`,
         chiefComplaint,
-        urgencyLevel: urgencyLevel || 'STANDARD',
+        triageLevel: triageLevel || 'STANDARD',
         status: 'IN_PROGRESS',
       },
     });
@@ -125,8 +119,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, patientId: 
       assessment: {
         id: assessment.id,
         chiefComplaint: assessment.chiefComplaint,
-        status: 'pending',
-        urgencyLevel: urgencyLevel || 'standard',
+        status: 'in_progress',
+        triageLevel: assessment.triageLevel || 'STANDARD',
         submittedAt: assessment.createdAt.toISOString(),
       },
       message: 'Assessment submitted successfully',
