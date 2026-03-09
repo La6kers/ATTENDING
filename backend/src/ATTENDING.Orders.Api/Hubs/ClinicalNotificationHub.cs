@@ -78,7 +78,7 @@ public class ClinicalNotificationHub : Hub
                     ?? Context.User?.FindFirst("sub")?.Value
                     ?? "unknown";
 
-        var groupName = $"Patient_{tenantId}_{patientId}";
+        var groupName = $"Patient_{tenantId}|{patientId}";
 
         _patientWatchers.AddOrUpdate(
             groupName,
@@ -101,7 +101,7 @@ public class ClinicalNotificationHub : Hub
                     ?? Context.User?.FindFirst("sub")?.Value
                     ?? "unknown";
 
-        var groupName = $"Patient_{tenantId}_{patientId}";
+        var groupName = $"Patient_{tenantId}|{patientId}";
 
         if (_patientWatchers.TryGetValue(groupName, out var watchers))
         {
@@ -156,7 +156,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             notification.TestName, notification.PatientId, notification.LabOrderId);
 
         // Tenant-scoped patient group — matches ClinicalNotificationHub.WatchPatient grouping
-        var patientGroup = $"Patient_{notification.TenantId}_{notification.PatientId}";
+        var patientGroup = $"Patient_{notification.TenantId}|{notification.PatientId}";
 
         // Notify all providers watching this patient
         await _hubContext.Clients.Group(patientGroup)
@@ -196,7 +196,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             "Order status change: {OrderType} {OrderId} for Patient {PatientId} -> {NewStatus}",
             notification.OrderType, notification.OrderId, notification.PatientId, notification.NewStatus);
 
-        var patientGroup = $"Patient_{notification.TenantId}_{notification.PatientId}";
+        var patientGroup = $"Patient_{notification.TenantId}|{notification.PatientId}";
         await _hubContext.Clients.Group(patientGroup)
             .SendAsync("OrderStatusChange", notification, cancellationToken);
     }
@@ -224,7 +224,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             "Red flag detected: {Category} for Assessment {AssessmentId}",
             notification.Category, notification.AssessmentId);
 
-        var patientGroup = $"Patient_{notification.TenantId}_{notification.PatientId}";
+        var patientGroup = $"Patient_{notification.TenantId}|{notification.PatientId}";
         await _hubContext.Clients.Group(patientGroup)
             .SendAsync("RedFlagDetected", notification, cancellationToken);
 
@@ -239,7 +239,7 @@ public class SignalRClinicalNotificationService : IClinicalNotificationService
             "Drug interaction: {Drug1} <-> {Drug2} ({Severity}) for Patient {PatientId} (order {MedicationOrderId})",
             notification.Drug1, notification.Drug2, notification.Severity, notification.PatientId, notification.MedicationOrderId);
 
-        var patientGroup = $"Patient_{notification.TenantId}_{notification.PatientId}";
+        var patientGroup = $"Patient_{notification.TenantId}|{notification.PatientId}";
         await _hubContext.Clients.Group(patientGroup)
             .SendAsync("DrugInteraction", notification, cancellationToken);
 

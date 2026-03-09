@@ -66,6 +66,19 @@ variable "sql_admin_password" {
   sensitive   = true
 }
 
+variable "sql_app_login" {
+  description = "Application-level SQL user login (falls back to admin if empty)"
+  type        = string
+  default     = ""
+}
+
+variable "sql_app_password" {
+  description = "Application-level SQL user password (falls back to admin if empty)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 variable "alert_email" {
   description = "Email address for critical alerts"
   type        = string
@@ -74,6 +87,8 @@ variable "alert_email" {
 
 locals {
   resource_prefix = "${var.project_name}-${var.environment}"
+  sql_app_login    = var.sql_app_login != "" ? var.sql_app_login : var.sql_admin_login
+  sql_app_password = var.sql_app_password != "" ? var.sql_app_password : var.sql_admin_password
   common_tags = {
     Project     = "ATTENDING AI"
     Environment = var.environment
@@ -390,15 +405,19 @@ resource "azurerm_key_vault_access_policy" "deployer" {
 }
 
 # Secrets
+# TODO: Provision a dedicated application SQL user with minimal permissions
+# (db_datareader, db_datawriter) instead of reusing the admin account.
 resource "azurerm_key_vault_secret" "db_connection_string" {
   name         = "database-url"
-  value        = "sqlserver://${azurerm_mssql_server.main.fully_qualified_domain_name}:1433;database=attending_db;user=${var.sql_admin_login};password=${var.sql_admin_password};encrypt=true;trustServerCertificate=false"
+  value        = "sqlserver://${azurerm_mssql_server.main.fully_qualified_domain_name}:1433;database=attending_db;user=${local.sql_app_login};password=${local.sql_app_password};encrypt=true;trustServerCertificate=false"
   key_vault_id = azurerm_key_vault.main.id
 }
 
+# TODO: Provision a dedicated application SQL user with minimal permissions
+# (db_datareader, db_datawriter) instead of reusing the admin account.
 resource "azurerm_key_vault_secret" "db_connection_string_dotnet" {
   name         = "database-url-dotnet"
-  value        = "Server=tcp:${azurerm_mssql_server.main.fully_qualified_domain_name},1433;Initial Catalog=attending_db;User ID=${var.sql_admin_login};Password=${var.sql_admin_password};Encrypt=True;TrustServerCertificate=False;"
+  value        = "Server=tcp:${azurerm_mssql_server.main.fully_qualified_domain_name},1433;Initial Catalog=attending_db;User ID=${local.sql_app_login};Password=${local.sql_app_password};Encrypt=True;TrustServerCertificate=False;"
   key_vault_id = azurerm_key_vault.main.id
 }
 
@@ -510,6 +529,31 @@ resource "azurerm_application_insights" "main" {
 }
 
 # ============================================================
+# Diagnostic Settings — SQL Server and Key Vault Audit Logging
+# HIPAA 164.312(b) — Audit controls
+# ============================================================
+
+resource "azurerm_monitor_diagnostic_setting" "sql_server" {
+  name                       = "diag-sql-${local.resource_prefix}"
+  target_resource_id         = "${azurerm_mssql_server.main.id}/databases/master"
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  enabled_log {
+    category = "SQLSecurityAuditEvents"
+  }
+}
+
+resource "azurerm_monitor_diagnostic_setting" "key_vault" {
+  name                       = "diag-kv-${local.resource_prefix}"
+  target_resource_id         = azurerm_key_vault.main.id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
+
+  enabled_log {
+    category = "AuditEvent"
+  }
+}
+
+# ============================================================
 # Virtual Network + Subnets — Network Isolation
 # ============================================================
 
@@ -567,6 +611,175 @@ resource "azurerm_subnet" "frontdoor" {
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = ["10.0.4.0/24"]
+}
+
+# ============================================================
+# Network Security Groups — Subnet-level traffic filtering
+# ============================================================
+
+# --- Frontend NSG ---
+
+resource "azurerm_network_security_group" "frontend" {
+  name                = "nsg-frontend-${local.resource_prefix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  security_rule {
+    name                       = "AllowHTTPSInbound"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "443"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowOutboundToBackend"
+    priority                   = 100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8080"
+    source_address_prefix      = "*"
+    destination_address_prefix = "10.0.2.0/24"
+  }
+
+  tags = local.common_tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "frontend" {
+  subnet_id                 = azurerm_subnet.frontend.id
+  network_security_group_id = azurerm_network_security_group.frontend.id
+}
+
+# --- Backend NSG ---
+
+resource "azurerm_network_security_group" "backend" {
+  name                = "nsg-backend-${local.resource_prefix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  security_rule {
+    name                       = "AllowInboundFromFrontend"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "8080"
+    source_address_prefix      = "10.0.1.0/24"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowOutboundToDataSQL"
+    priority                   = 100
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1433"
+    source_address_prefix      = "*"
+    destination_address_prefix = "10.0.3.0/24"
+  }
+
+  security_rule {
+    name                       = "AllowOutboundToDataRedis"
+    priority                   = 110
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6380"
+    source_address_prefix      = "*"
+    destination_address_prefix = "10.0.3.0/24"
+  }
+
+  tags = local.common_tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "backend" {
+  subnet_id                 = azurerm_subnet.backend.id
+  network_security_group_id = azurerm_network_security_group.backend.id
+}
+
+# --- Data NSG ---
+
+resource "azurerm_network_security_group" "data" {
+  name                = "nsg-data-${local.resource_prefix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  security_rule {
+    name                       = "AllowInboundSQL"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "1433"
+    source_address_prefix      = "10.0.2.0/24"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "AllowInboundRedis"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6380"
+    source_address_prefix      = "10.0.2.0/24"
+    destination_address_prefix = "*"
+  }
+
+  security_rule {
+    name                       = "DenyAllInbound"
+    priority                   = 4096
+    direction                  = "Inbound"
+    access                     = "Deny"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = local.common_tags
+}
+
+resource "azurerm_subnet_network_security_group_association" "data" {
+  subnet_id                 = azurerm_subnet.data.id
+  network_security_group_id = azurerm_network_security_group.data.id
 }
 
 # ============================================================

@@ -125,35 +125,39 @@ model User {
 }
 
 model Account {
-  id                String  @id @default(cuid())
+  id                String    @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.NVarChar(Max)
-  access_token      String? @db.NVarChar(Max)
+  refresh_token     String?   @db.NVarChar(Max)
+  access_token      String?   @db.NVarChar(Max)
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.NVarChar(Max)
+  id_token          String?   @db.NVarChar(Max)
   session_state     String?
+  deletedAt         DateTime?
+  deletedBy         String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
+  id           String    @id @default(cuid())
+  sessionToken String    @unique
   userId       String
   expires      DateTime
   ipAddress    String?
   userAgent    String?
-  createdAt    DateTime @default(now())
+  deletedAt    DateTime?
+  deletedBy    String?
+  createdAt    DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([userId])
   @@index([expires])
@@ -171,8 +175,8 @@ model VerificationToken {
 
 model Patient {
   id                  String    @id @default(cuid())
-  organizationId      String?
-  mrn                 String    @unique
+  organizationId      String
+  mrn                 String
   firstName           String
   lastName            String
   middleName          String?
@@ -223,7 +227,7 @@ model Patient {
   medicationOrders MedicationOrder[]
   referrals        Referral[]
   assessments      PatientAssessment[]
-  organization     Organization?           @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization     Organization            @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   emergencyEvents  EmergencyEvent[]
   treatmentPlans   TreatmentPlan[]
   fhirLabResults   FhirLabResult[]
@@ -234,6 +238,7 @@ model Patient {
   populationFlags  PatientPopulationFlag[]
   clinicalImages   ClinicalImage[]
 
+  @@unique([organizationId, mrn])
   @@index([mrn])
   @@index([lastName, firstName])
   @@index([dateOfBirth])
@@ -248,7 +253,7 @@ model Patient {
 
 model Encounter {
   id             String    @id @default(cuid())
-  organizationId String?
+  organizationId String
   patientId      String
   providerId     String
   facilityId     String?
@@ -264,7 +269,7 @@ model Encounter {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organization     Organization?     @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patient          Patient           @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   provider         User              @relation("ProviderEncounters", fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   labOrders        LabOrder[]
@@ -408,7 +413,7 @@ model VitalSign {
 
 model LabOrder {
   id                  String    @id @default(cuid())
-  organizationId      String?
+  organizationId      String
   patientId           String
   providerId          String
   encounterId         String?
@@ -429,7 +434,7 @@ model LabOrder {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   provider     User          @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   encounter    Encounter?    @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -478,7 +483,7 @@ model LabResult {
 
 model ImagingOrder {
   id                  String    @id @default(cuid())
-  organizationId      String?
+  organizationId      String
   patientId           String
   providerId          String
   encounterId         String?
@@ -503,7 +508,7 @@ model ImagingOrder {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  organization Organization?   @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patient      Patient         @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   provider     User            @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   encounter    Encounter?      @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -545,7 +550,7 @@ model ImagingResult {
 
 model MedicationOrder {
   id                  String    @id @default(cuid())
-  organizationId      String?
+  organizationId      String
   patientId           String
   providerId          String
   encounterId         String?
@@ -581,7 +586,7 @@ model MedicationOrder {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   provider     User          @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   encounter    Encounter?    @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -599,7 +604,7 @@ model MedicationOrder {
 
 model Referral {
   id                String    @id @default(cuid())
-  organizationId    String?
+  organizationId    String
   patientId         String
   providerId        String
   encounterId       String?
@@ -625,7 +630,7 @@ model Referral {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   provider     User          @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   encounter    Encounter?    @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -642,7 +647,7 @@ model Referral {
 
 model PatientAssessment {
   id                 String    @id @default(cuid())
-  organizationId     String?
+  organizationId     String
   patientId          String
   assignedProviderId String?
   sessionId          String    @unique
@@ -669,7 +674,7 @@ model PatientAssessment {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  organization     Organization?    @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patient          Patient          @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   assignedProvider User?            @relation("AssignedProvider", fields: [assignedProviderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   emergencyEvents  EmergencyEvent[]
@@ -720,7 +725,7 @@ model EmergencyEvent {
 
 model EmergencyAccessProfile {
   id                      String    @id @default(cuid())
-  organizationId          String?
+  organizationId          String
   patientId               String
   isEnabled               Boolean   @default(false)
   pinHash                 String?
@@ -751,7 +756,7 @@ model EmergencyAccessProfile {
 
 model TreatmentPlan {
   id                     String    @id @default(cuid())
-  organizationId         String?
+  organizationId         String
   patientId              String
   encounterId            String
   status                 String    @default("DRAFT")
@@ -773,7 +778,7 @@ model TreatmentPlan {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   encounter    Encounter     @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -788,7 +793,7 @@ model TreatmentPlan {
 
 model ClinicalNote {
   id             String    @id @default(cuid())
-  organizationId String?
+  organizationId String
   patientId      String
   encounterId    String
   noteType       String
@@ -808,7 +813,7 @@ model ClinicalNote {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   encounter    Encounter     @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 

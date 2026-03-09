@@ -34,7 +34,8 @@ public static class DependencyInjection
         // Database
         // --------------------------------------------------------
         // Use DbContext pooling for production (reduces allocation overhead).
-        // Pool size defaults to 1024; CommandTimeout and retry handle transients.
+        // Pool size configurable via Database:PoolSize; defaults to 256.
+        var dbPoolSize = configuration.GetValue<int>("Database:PoolSize", 256);
         services.AddDbContextPool<AttendingDbContext>((sp, options) =>
         {
             options.AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>());
@@ -59,7 +60,7 @@ public static class DependencyInjection
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
             }
-        }, poolSize: 256);  // 256 pooled DbContext instances
+        }, poolSize: dbPoolSize);
 
         // Unit of Work
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AttendingDbContext>());

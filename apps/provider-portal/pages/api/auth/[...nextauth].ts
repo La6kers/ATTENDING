@@ -140,6 +140,10 @@ export const authOptions: NextAuthOptions = {
       }
 
       // For Azure AD B2C tokens, extract claims from the id_token
+      // Safety note: The manual base64 decode below is safe because NextAuth
+      // has already validated the JWT signature via the OIDC provider before
+      // this callback fires. We are only extracting claims from an already-
+      // verified token — not performing authentication based on raw input.
       if (account?.provider?.startsWith('azure-ad-b2c') && account.id_token) {
         try {
           const claims = JSON.parse(

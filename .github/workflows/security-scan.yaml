@@ -23,17 +23,10 @@ jobs:
         with:
           node-version: '20'
           
-      - name: Audit Provider Portal
-        working-directory: apps/provider-portal
+      - name: Audit all workspaces
         run: |
           npm ci
-          npm audit --audit-level=high
-
-      - name: Audit Patient Portal
-        working-directory: apps/patient-portal
-        run: |
-          npm ci
-          npm audit --audit-level=high
+          npm audit --omit=dev --audit-level=high
 
   codeql-analysis:
     name: CodeQL Analysis

@@ -10,6 +10,10 @@ import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import crypto from 'crypto';
 
+if (process.env.NODE_ENV === 'production' && !process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET environment variable is required in production');
+}
+
 const isDev = process.env.NODE_ENV === 'development';
 const isDemo = process.env.DEMO_MODE === 'true';
 

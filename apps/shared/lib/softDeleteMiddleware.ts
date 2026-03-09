@@ -37,8 +37,11 @@ const SOFT_DELETE_MODELS = new Set([
   'Referral',
   'PatientAssessment',
   'EmergencyEvent',
+  'EmergencyAccessProfile',
   'TreatmentPlan',
   'ClinicalNote',
+  'Account',
+  'Session',
 ]);
 
 /**
@@ -93,6 +96,16 @@ export function applySoftDeleteMiddleware(
       if (!params.args) params.args = {};
       if (!params.args.where) params.args.where = {};
       params.args.where.deletedAt = null;
+
+      // NOTE: This middleware only filters soft-deleted records at the top-level query.
+      // Nested relations loaded via `include` or `select` are NOT automatically filtered.
+      // When including soft-deletable relations, consumers must explicitly add
+      // `where: { deletedAt: null }` to nested include/select clauses. Example:
+      //   prisma.patient.findMany({
+      //     include: { encounters: { where: { deletedAt: null } } }
+      //   })
+      // Recursive filtering is intentionally omitted to avoid breaking relations
+      // on models that do not have a deletedAt column.
 
       if (debug) console.log(`[SoftDelete] ${params.model}.${params.action}: auto-filtered deletedAt: null`);
     }
@@ -154,9 +167,12 @@ export async function restoreSoftDeleted(
     throw new Error(`Model "${model}" does not support soft-delete.`);
   }
   const modelKey = model.charAt(0).toLowerCase() + model.slice(1);
+  // Keep deletedBy intact to preserve the audit trail of who originally deleted the record.
+  // TODO: Add restoredAt/restoredBy columns to the schema in a future migration
+  // to explicitly track who restored a record and when.
   await (prisma as any)[modelKey].update({
     where: { id },
-    data: { deletedAt: null, deletedBy: null },
+    data: { deletedAt: null },
   });
 }
 

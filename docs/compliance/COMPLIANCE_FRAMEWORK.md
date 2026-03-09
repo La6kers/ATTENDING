@@ -387,6 +387,24 @@ This section maps each HIPAA Security Rule technical safeguard to its implementa
 - Security headers (HSTS): `backend/src/ATTENDING.Orders.Api/Middleware/Middleware.cs` (SecurityHeadersMiddleware)
 - Kestrel hardening: Server header suppressed (`AddServerHeader = false`), request body limited to 5 MB, header timeout 30 seconds
 
+#### Key Rotation Procedure
+
+| Step | Action | Frequency | Owner |
+|------|--------|-----------|-------|
+| 1 | Generate new encryption key in Azure Key Vault | Quarterly (per NIST SP 800-57) | Security team |
+| 2 | Update application configuration to reference new key version | Same maintenance window | Platform team |
+| 3 | Re-encrypt active PHI records with new key (background job) | Within 7 days of rotation | Platform team |
+| 4 | Verify old key version is disabled (not deleted — retain for audit decryption) | After re-encryption verified | Security team |
+| 5 | Document rotation in change management log | Same day | Security team |
+
+**Emergency Key Rotation (Suspected Compromise):**
+1. Generate new key immediately in Azure Key Vault
+2. Disable compromised key version (do NOT delete — needed for audit trail decryption)
+3. Deploy application update referencing new key within 4 hours
+4. Re-encrypt all PHI records within 24 hours
+5. File incident report per breach notification procedures (see §6)
+6. Notify affected covered entities within 24 hours if PHI was potentially exposed
+
 ### 4.5 Audit Controls -- 164.312(b)
 
 **Standard:** Implement hardware, software, and/or procedural mechanisms that record and examine activity in information systems that contain or use ePHI.

@@ -226,6 +226,26 @@ jobs:
           path: backend/TestResults/
           retention-days: 7
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Pull schema from CI database
+        run: npx prisma db pull --schema=prisma/schema.prisma
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Check for schema drift
+        run: git diff --exit-code prisma/schema.prisma || (echo "::error::Schema drift detected — EF Core migrations produced changes not in Prisma schema. Run 'npx prisma db pull' and commit." && exit 1)
+
   # ========================================================
   # BUILD VERIFICATION
   # ========================================================
@@ -286,7 +306,6 @@ jobs:
 
       - name: npm audit (production deps)
         run: npm audit --omit=dev --audit-level=high
-        continue-on-error: true
 
       - name: Check for secrets in code
         run: |

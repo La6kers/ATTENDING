@@ -398,10 +398,12 @@ export function rateLimitMiddleware(config: RateLimitConfig = {
     const key = getClientIdentifier(req);
     const result = await rateLimit(key, config);
     
-    // Set rate limit headers
-    res.setHeader('X-RateLimit-Limit', config.maxRequests);
-    res.setHeader('X-RateLimit-Remaining', result.remaining);
-    res.setHeader('X-RateLimit-Reset', result.resetTime);
+    // Only expose rate limit headers in non-production environments
+    if (process.env.NODE_ENV !== 'production') {
+      res.setHeader('X-RateLimit-Limit', config.maxRequests);
+      res.setHeader('X-RateLimit-Remaining', result.remaining);
+      res.setHeader('X-RateLimit-Reset', result.resetTime);
+    }
     
     if (!result.allowed) {
       res.setHeader('Retry-After', result.retryAfter || 60);
@@ -554,7 +556,7 @@ export function setCsrfCookie(
   const { secret, token } = generateCsrfPair();
   
   const cookieValue = [
-    `${options.cookieName}=${secret}`,
+    `${options.cookieName}=${encodeURIComponent(secret)}`,
     `Path=${options.cookieOptions?.path || '/'}`,
     `Max-Age=${options.cookieOptions?.maxAge || 86400}`,
     options.cookieOptions?.httpOnly ? 'HttpOnly' : '',

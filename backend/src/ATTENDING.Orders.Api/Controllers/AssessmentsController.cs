@@ -60,7 +60,9 @@ public class AssessmentsController : ControllerBase
     /// </summary>
     [HttpPost("submit")]
     [EnableRateLimiting("clinical-ops")]
-    [AllowAnonymous]
+    // Patient portal assessment submissions require authentication.
+    // The patient portal provides a JWT via Azure AD B2C patient flow.
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SubmitCompassAssessment(

@@ -99,6 +99,8 @@ public record CreateMedicationOrderRequest(
     string DiagnosisCode,
     bool IsControlledSubstance = false,
     string? DeaSchedule = null,
+    string? PrescriberDeaNumber = null,
+    bool? DispenseAsWritten = null,
     string? PharmacyId = null,
     string? PharmacyName = null);
 
