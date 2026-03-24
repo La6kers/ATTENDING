@@ -157,7 +157,7 @@ public class Soc2EvidenceService
             TotalChanges = configChanges.Count,
             AdminActions = adminActions.Count,
             ChangesByUser = configChanges
-                .GroupBy(a => a.UserId)
+                .GroupBy(a => a.UserId.ToString())
                 .ToDictionary(g => g.Key, g => g.Count()),
             Summary = $"During the reporting period, {configChanges.Count} state-changing operations " +
                       $"were recorded with full audit trails. {adminActions.Count} administrative actions " +

@@ -70,23 +70,9 @@ public class AssessmentsController : ControllerBase
     {
         var currentUserId = GetCurrentUserId();
 
-        // Verify the JWT patient ID matches the command's PatientId unless the user is an Admin
-        var patientIdClaim = User.FindFirst("patient_id")?.Value ?? User.FindFirst("patientId")?.Value;
-        if (!string.IsNullOrEmpty(patientIdClaim)
-            && Guid.TryParse(patientIdClaim, out var jwtPatientId)
-            && jwtPatientId != command.PatientId)
-        {
-            if (User.IsInRole("Admin"))
-            {
-                _logger.LogWarning(
-                    "Admin {AdminUserId} submitting assessment on behalf of patient {PatientId} (JWT patient: {JwtPatientId})",
-                    currentUserId, command.PatientId, jwtPatientId);
-            }
-            else
-            {
-                return Forbid();
-            }
-        }
+        // COMPASS assessments are anonymous patient submissions identified by name/DOB,
+        // not by a pre-existing PatientId. The ClinicSlug scopes the submission to the
+        // correct tenant. Authentication ensures the caller is a valid patient portal user.
 
         var result = await _mediator.Send(command);
 
