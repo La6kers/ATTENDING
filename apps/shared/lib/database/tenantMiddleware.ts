@@ -37,6 +37,7 @@ const TENANT_TABLES = new Set([
   'ApiKey',
   'WebhookSubscription',
   'EmergencyAccessProfile',
+  'ClinicEnvironment',
   'UsageRecord',
 ]);
 
@@ -126,8 +127,7 @@ export function getTenantPrisma(
   const orgId = req.session?.user?.organizationId;
 
   if (!orgId) {
-    console.warn('[TENANT] No organizationId in session, queries will be unscoped');
-    return prisma;
+    throw new Error('[TENANT] No organizationId in session — refusing to return unscoped client');
   }
 
   return withTenantContext(prisma, orgId);

@@ -66,6 +66,7 @@ async function handler(
 
     const assessment = await prisma.patientAssessment.create({
       data: {
+        organizationId: patient.organizationId,
         sessionId,
         patientId,
         status: 'COMPLETED',

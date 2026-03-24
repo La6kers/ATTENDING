@@ -100,17 +100,19 @@ export default createHandler({
       try {
         if (importType === 'patients') {
           const data = transformed.data as any;
-          const existing = data.mrn
-            ? await prisma.patient.findUnique({ where: { mrn: data.mrn } })
+          const orgId = ctx.user?.organizationId;
+          const existing = data.mrn && orgId
+            ? await prisma.patient.findFirst({ where: { mrn: data.mrn, organizationId: orgId } })
             : null;
 
           if (existing) {
             await prisma.patient.update({
-              where: { mrn: data.mrn },
+              where: { id: existing.id },
               data: { ...data, mrn: undefined },
             });
             results.updated.push(existing.id);
           } else {
+            if (orgId && !data.organizationId) data.organizationId = orgId;
             const created = await prisma.patient.create({ data });
             results.created.push(created.id);
           }

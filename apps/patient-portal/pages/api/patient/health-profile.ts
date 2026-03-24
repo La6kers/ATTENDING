@@ -80,10 +80,13 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
   try {
     // Look up patient's organizationId for tenant-scoped creates
     const patientRecord = await prisma.patient.findFirst({
-      where: { id: patientId },
+      where: { id: patientId, deletedAt: null },
       select: { organizationId: true },
     });
-    const organizationId = patientRecord?.organizationId || '';
+    if (!patientRecord) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    const organizationId = patientRecord.organizationId;
 
     // Update conditions
     if (updates.conditions && Array.isArray(updates.conditions)) {
@@ -152,10 +155,13 @@ async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId:
   try {
     // Look up patient's organizationId for tenant-scoped creates
     const patientRecord = await prisma.patient.findFirst({
-      where: { id: patientId },
+      where: { id: patientId, deletedAt: null },
       select: { organizationId: true },
     });
-    const organizationId = patientRecord?.organizationId || '';
+    if (!patientRecord) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    const organizationId = patientRecord.organizationId;
 
     // Add/remove conditions
     if (updates.addCondition) {

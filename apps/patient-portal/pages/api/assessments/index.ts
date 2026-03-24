@@ -172,7 +172,10 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     const triageLevel = data.triageLevel ?? mapTriageLevel(data.urgencyLevel, redFlagCount);
     const hasRedFlags = redFlagCount > 0;
 
-    const organizationId = (session.user as any).organizationId || '';
+    const organizationId = (session.user as any).organizationId;
+    if (!organizationId) {
+      return res.status(403).json({ error: 'Organization context required' });
+    }
 
     // Create patient record
     const patient = await prisma.patient.create({

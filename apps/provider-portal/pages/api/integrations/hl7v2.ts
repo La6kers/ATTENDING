@@ -138,14 +138,15 @@ async function handleADT(msg: any, apiKey: any, prisma: any) {
   const patientData = hl7PatientToAttending(hl7Patient);
   const messageType = msg.getMessageType();
 
-  // Upsert patient by MRN
-  const existing = await prisma.patient.findUnique({
-    where: { mrn: patientData.mrn as string },
+  // Upsert patient by MRN (scoped to organization)
+  const mrn = patientData.mrn as string;
+  const existing = await prisma.patient.findFirst({
+    where: { mrn, organizationId: apiKey.organizationId },
   });
 
   if (existing) {
     await prisma.patient.update({
-      where: { mrn: patientData.mrn as string },
+      where: { id: existing.id },
       data: {
         ...patientData,
         mrn: undefined, // Don't update MRN
@@ -159,7 +160,7 @@ async function handleADT(msg: any, apiKey: any, prisma: any) {
     }, { organizationId: apiKey.organizationId });
   } else {
     const created = await prisma.patient.create({
-      data: patientData,
+      data: { ...patientData, organizationId: apiKey.organizationId },
     });
 
     await events.emit('patient.created', {
@@ -186,9 +187,9 @@ async function handleORU(msg: any, apiKey: any, prisma: any) {
     throw new Error('ORU message missing PID or OBX segments');
   }
 
-  // Find patient by MRN
-  const patient = await prisma.patient.findUnique({
-    where: { mrn: hl7Patient.mrn || hl7Patient.id },
+  // Find patient by MRN (scoped to organization)
+  const patient = await prisma.patient.findFirst({
+    where: { mrn: hl7Patient.mrn || hl7Patient.id, organizationId: apiKey.organizationId },
   });
 
   if (!patient) {
