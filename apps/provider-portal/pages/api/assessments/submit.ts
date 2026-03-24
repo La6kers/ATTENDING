@@ -53,8 +53,11 @@ async function handler(
       });
     }
 
-    // Verify patient exists
-    const patient = await prisma.patient.findUnique({ where: { id: patientId } });
+    // Verify patient exists within the provider's organization
+    const providerOrgId = (req as any).session?.user?.organizationId;
+    const patient = await prisma.patient.findFirst({
+      where: { id: patientId, ...(providerOrgId ? { organizationId: providerOrgId } : {}) },
+    });
     if (!patient) {
       return res.status(404).json({ error: 'Patient not found' });
     }
@@ -106,6 +109,7 @@ async function handler(
     // Audit
     await prisma.auditLog.create({
       data: {
+        organizationId: patient.organizationId,
         action: 'ASSESSMENT_SUBMITTED',
         entityType: 'PatientAssessment',
         entityId: assessment.id,

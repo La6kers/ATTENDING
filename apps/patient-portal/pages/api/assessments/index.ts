@@ -103,12 +103,18 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   const proxied = await proxyToBackend(req, res, '/api/v1/assessments');
   if (proxied) return;
 
+  const organizationId = (session.user as any).organizationId;
+  if (!organizationId) {
+    return res.status(403).json({ error: 'Organization context required' });
+  }
+
   const { sessionId, limit = '10' } = req.query;
 
   try {
-    const where = sessionId && typeof sessionId === 'string'
-      ? { sessionId }
-      : {};
+    const where: any = { organizationId };
+    if (sessionId && typeof sessionId === 'string') {
+      where.sessionId = sessionId;
+    }
 
     const assessments = await prisma.patientAssessment.findMany({
       where,
@@ -160,7 +166,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Idempotency: if this sessionId was already synced, return the existing record.
     const existing = await prisma.patientAssessment.findFirst({
-      where: { sessionId: data.sessionId },
+      where: { sessionId: data.sessionId, organizationId },
       select: { id: true },
     });
     if (existing) {
@@ -199,6 +205,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
     const assessment = await prisma.patientAssessment.create({
       data: {
+        organizationId,
         sessionId: data.sessionId,
         patientId: patient.id,
         status: 'COMPLETED',
@@ -232,6 +239,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
 
     await prisma.auditLog.create({
       data: {
+        organizationId,
         action: isOfflineSync ? 'ASSESSMENT_OFFLINE_SYNCED' : 'ASSESSMENT_SUBMITTED',
         entityType: 'PatientAssessment',
         entityId: assessment.id,

@@ -38,12 +38,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
   const proxied = await proxyToBackend(req, res, `/api/v1/laborders/${id}`);
   if (proxied) return;
 
+  // Tenant scope: only access lab orders within the user's organization
+  const organizationId = session.user?.organizationId;
+  if (!organizationId) {
+    return res.status(403).json({ error: 'Organization context required' });
+  }
+
   // Fallback: direct Prisma
 
   switch (req.method) {
-    case 'GET': return getLabOrder(id, res);
-    case 'PATCH': return updateLabOrder(id, req, res, session);
-    case 'DELETE': return cancelLabOrder(id, res, session, req);
+    case 'GET': return getLabOrder(id, organizationId, res);
+    case 'PATCH': return updateLabOrder(id, organizationId, req, res, session);
+    case 'DELETE': return cancelLabOrder(id, organizationId, res, session, req);
     default:
       res.setHeader('Allow', ['GET', 'PATCH', 'DELETE']);
       return res.status(405).json({ error: `Method ${req.method} not allowed` });
@@ -54,10 +60,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse, session: any) 
 // GET
 // =============================================================================
 
-async function getLabOrder(id: string, res: NextApiResponse) {
+async function getLabOrder(id: string, organizationId: string, res: NextApiResponse) {
   try {
-    const labOrder = await prisma.labOrder.findUnique({
-      where: { id },
+    const labOrder = await prisma.labOrder.findFirst({
+      where: { id, organizationId },
       include: {
         patient: {
           select: {
@@ -98,12 +104,13 @@ async function getLabOrder(id: string, res: NextApiResponse) {
 
 async function updateLabOrder(
   id: string,
+  organizationId: string,
   req: NextApiRequest,
   res: NextApiResponse,
   session: any
 ) {
   try {
-    const existing = await prisma.labOrder.findUnique({ where: { id } });
+    const existing = await prisma.labOrder.findFirst({ where: { id, organizationId } });
     if (!existing) {
       return res.status(404).json({ error: 'Lab order not found' });
     }
@@ -186,12 +193,13 @@ async function updateLabOrder(
 
 async function cancelLabOrder(
   id: string,
+  organizationId: string,
   res: NextApiResponse,
   session: any,
   req: NextApiRequest
 ) {
   try {
-    const existing = await prisma.labOrder.findUnique({ where: { id } });
+    const existing = await prisma.labOrder.findFirst({ where: { id, organizationId } });
     if (!existing) {
       return res.status(404).json({ error: 'Lab order not found' });
     }

@@ -153,6 +153,7 @@ async function handler(
     // Audit log for compliance
     await prisma.auditLog.create({
       data: {
+        organizationId,
         userId: session.user.id,
         action: 'ORGANIZATION_CREATED',
         entityType: 'Organization',
@@ -225,6 +226,7 @@ async function handler(
           // Audit each provider creation
           await prisma.auditLog.create({
             data: {
+              organizationId,
               userId: session.user.id,
               action: 'USER_CREATED_VIA_ONBOARDING',
               entityType: 'User',
@@ -277,6 +279,7 @@ async function handler(
       // Audit log for compliance
       await prisma.auditLog.create({
         data: {
+          organizationId,
           userId: session.user.id,
           action: 'EHR_CONFIGURATION_STORED',
           entityType: 'IntegrationConnection',
@@ -307,6 +310,7 @@ async function handler(
       // Audit log for compliance
       await prisma.auditLog.create({
         data: {
+          organizationId,
           userId: session.user.id,
           action: 'FEATURE_FLAGS_CONFIGURED',
           entityType: 'Organization',
@@ -345,6 +349,7 @@ async function handler(
     // ----------------------------------------------------------
     await prisma.auditLog.create({
       data: {
+        organizationId,
         userId: session.user.id,
         action: 'ONBOARDING_COMPLETED',
         entityType: 'Organization',
@@ -380,6 +385,7 @@ async function handler(
     // Log the failure
     await prisma.auditLog.create({
       data: {
+        organizationId,
         userId: session.user.id,
         action: 'ONBOARDING_FAILED',
         entityType: 'Organization',
