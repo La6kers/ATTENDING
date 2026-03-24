@@ -12,12 +12,43 @@ async function main() {
   console.log('🌱 Seeding demo data...\n');
 
   // =========================================================================
+  // 0. Organization
+  // =========================================================================
+  const org = await prisma.organization.upsert({
+    where: { slug: 'demo-attending-ai' },
+    update: {},
+    create: {
+      name: 'ATTENDING AI Demo Clinic',
+      slug: 'demo-attending-ai',
+      type: 'RURAL_HEALTH_CLINIC',
+      npi: '9876543210',
+      address: '200 Demo Drive',
+      city: 'Denver',
+      state: 'CO',
+      zipCode: '80202',
+      phone: '303-555-0100',
+      settings: JSON.stringify({ timezone: 'America/Denver' }),
+      featureFlags: JSON.stringify({
+        FEATURE_AI_DIFFERENTIAL_DIAGNOSIS: true,
+        FEATURE_AI_LAB_ORDERING: true,
+        FEATURE_AI_DRUG_RECOMMENDATIONS: true,
+        FEATURE_AMBIENT_DOCUMENTATION: true,
+        FEATURE_IMAGING_ORDERS: true,
+        FEATURE_MEDICATION_ORDERS: true,
+        FEATURE_REFERRAL_ORDERS: true,
+      }),
+    },
+  });
+  console.log('✓ Organization:', org.name);
+
+  // =========================================================================
   // 1. Provider
   // =========================================================================
   const provider = await prisma.user.upsert({
     where: { email: 'scott.isbell@attending.ai' },
-    update: {},
+    update: { organizationId: org.id },
     create: {
+      organizationId: org.id,
       email: 'scott.isbell@attending.ai',
       name: 'Dr. Scott Isbell',
       role: 'PROVIDER',
@@ -30,86 +61,24 @@ async function main() {
   // =========================================================================
   // 2. Patients
   // =========================================================================
-  const patients = await Promise.all([
-    prisma.patient.upsert({
-      where: { mrn: 'DEMO-001' },
-      update: {},
-      create: {
-        mrn: 'DEMO-001',
-        firstName: 'Margaret',
-        lastName: 'White',
-        dateOfBirth: new Date('1953-06-12'),
-        gender: 'Female',
-        email: 'margaret.white@example.com',
-        phone: '303-555-0101',
-      },
-    }),
-    prisma.patient.upsert({
-      where: { mrn: 'DEMO-002' },
-      update: {},
-      create: {
-        mrn: 'DEMO-002',
-        firstName: 'Robert',
-        lastName: 'Martinez',
-        dateOfBirth: new Date('1959-11-23'),
-        gender: 'Male',
-        email: 'robert.martinez@example.com',
-        phone: '303-555-0102',
-      },
-    }),
-    prisma.patient.upsert({
-      where: { mrn: 'DEMO-003' },
-      update: {},
-      create: {
-        mrn: 'DEMO-003',
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        dateOfBirth: new Date('1993-04-08'),
-        gender: 'Female',
-        email: 'sarah.johnson@example.com',
-        phone: '303-555-0103',
-      },
-    }),
-    prisma.patient.upsert({
-      where: { mrn: 'DEMO-004' },
-      update: {},
-      create: {
-        mrn: 'DEMO-004',
-        firstName: 'James',
-        lastName: 'Wilson',
-        dateOfBirth: new Date('1970-09-30'),
-        gender: 'Male',
-        email: 'james.wilson@example.com',
-        phone: '303-555-0104',
-      },
-    }),
-    prisma.patient.upsert({
-      where: { mrn: 'DEMO-005' },
-      update: {},
-      create: {
-        mrn: 'DEMO-005',
-        firstName: 'Dorothy',
-        lastName: 'Clark',
-        dateOfBirth: new Date('1944-02-17'),
-        gender: 'Female',
-        email: 'dorothy.clark@example.com',
-        phone: '303-555-0105',
-      },
-    }),
-    prisma.patient.upsert({
-      where: { mrn: 'DEMO-006' },
-      update: {},
-      create: {
-        mrn: 'DEMO-006',
-        firstName: 'Kevin',
-        lastName: 'Nguyen',
-        dateOfBirth: new Date('1997-07-14'),
-        gender: 'Male',
-        email: 'kevin.nguyen@example.com',
-        phone: '303-555-0106',
-      },
-    }),
-  ]);
+  const patientDefs = [
+    { mrn: 'DEMO-001', firstName: 'Margaret', lastName: 'White', dateOfBirth: new Date('1953-06-12'), gender: 'Female', email: 'margaret.white@example.com', phone: '303-555-0101' },
+    { mrn: 'DEMO-002', firstName: 'Robert', lastName: 'Martinez', dateOfBirth: new Date('1959-11-23'), gender: 'Male', email: 'robert.martinez@example.com', phone: '303-555-0102' },
+    { mrn: 'DEMO-003', firstName: 'Sarah', lastName: 'Johnson', dateOfBirth: new Date('1993-04-08'), gender: 'Female', email: 'sarah.johnson@example.com', phone: '303-555-0103' },
+    { mrn: 'DEMO-004', firstName: 'James', lastName: 'Wilson', dateOfBirth: new Date('1970-09-30'), gender: 'Male', email: 'james.wilson@example.com', phone: '303-555-0104' },
+    { mrn: 'DEMO-005', firstName: 'Dorothy', lastName: 'Clark', dateOfBirth: new Date('1944-02-17'), gender: 'Female', email: 'dorothy.clark@example.com', phone: '303-555-0105' },
+    { mrn: 'DEMO-006', firstName: 'Kevin', lastName: 'Nguyen', dateOfBirth: new Date('1997-07-14'), gender: 'Male', email: 'kevin.nguyen@example.com', phone: '303-555-0106' },
+  ];
+
+  const patients = await Promise.all(
+    patientDefs.map((p) =>
+      prisma.patient.upsert({
+        where: { organizationId_mrn: { organizationId: org.id, mrn: p.mrn } },
+        update: {},
+        create: { ...p, organizationId: org.id },
+      })
+    )
+  );
 
   console.log(`✓ ${patients.length} patients created`);
 
@@ -252,6 +221,7 @@ async function main() {
 
     const assessment = await prisma.patientAssessment.create({
       data: {
+        organizationId: org.id,
         sessionId: a.sessionId,
         patientId: a.patient.id,
         status: 'COMPLETED',
@@ -279,6 +249,7 @@ async function main() {
     if (a.redFlags.length > 0) {
       await prisma.emergencyEvent.create({
         data: {
+          organizationId: org.id,
           patientId: a.patient.id,
           assessmentId: assessment.id,
           eventType: 'RED_FLAG',

@@ -117,6 +117,9 @@ export default createHandler({
           results.successful++;
         } else if (importType === 'lab-results') {
           const data = transformed.data as any;
+          if (!data.organizationId && ctx.user?.organizationId) {
+            data.organizationId = ctx.user.organizationId;
+          }
           const created = await prisma.labResult.create({ data });
 
           // Emit event for critical values

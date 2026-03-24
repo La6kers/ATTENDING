@@ -36,16 +36,45 @@ async function main() {
   console.log('🌱 Starting production seed...');
 
   // ============================================================
+  // 0. CREATE PILOT CLINIC ORGANIZATION
+  // ============================================================
+  console.log('Creating pilot clinic organization...');
+
+  const org = await prisma.organization.upsert({
+    where: { slug: 'pilot-clinic' },
+    update: {},
+    create: {
+      name: PILOT_CLINIC.name,
+      slug: 'pilot-clinic',
+      type: 'RURAL_HEALTH_CLINIC',
+      npi: PILOT_CLINIC.npi,
+      address: PILOT_CLINIC.address.split(',')[0],
+      city: 'Rural Town',
+      state: 'MT',
+      zipCode: '59001',
+      settings: JSON.stringify({ timezone: 'America/Denver' }),
+      featureFlags: JSON.stringify({
+        FEATURE_AI_DIFFERENTIAL_DIAGNOSIS: true,
+        FEATURE_AI_LAB_ORDERING: true,
+        FEATURE_AI_DRUG_RECOMMENDATIONS: true,
+        FEATURE_AMBIENT_DOCUMENTATION: true,
+      }),
+    },
+  });
+  console.log(`  ✓ Organization created: ${org.name}`);
+
+  // ============================================================
   // 1. CREATE ADMIN USER
   // ============================================================
   console.log('Creating admin user...');
-  
+
   const adminPassword = await hashPassword(process.env.ADMIN_PASSWORD || 'ChangeMe123!');
-  
+
   const admin = await prisma.user.upsert({
     where: { email: 'admin@attending.ai' },
-    update: {},
+    update: { organizationId: org.id },
     create: {
+      organizationId: org.id,
       email: 'admin@attending.ai',
       name: 'System Administrator',
       password: adminPassword,
@@ -53,7 +82,7 @@ async function main() {
       isActive: true,
     },
   });
-  
+
   console.log(`  ✓ Admin user created: ${admin.email}`);
 
   // ============================================================
@@ -105,9 +134,10 @@ async function main() {
   for (const provider of providers) {
     const created = await prisma.user.upsert({
       where: { email: provider.email },
-      update: {},
+      update: { organizationId: org.id },
       create: {
         ...provider,
+        organizationId: org.id,
         password: providerPassword,
         isActive: true,
       },
@@ -252,9 +282,9 @@ async function main() {
     const { allergies, conditions, medications, ...patient } = patientData;
     
     const created = await prisma.patient.upsert({
-      where: { mrn: patient.mrn },
+      where: { organizationId_mrn: { organizationId: org.id, mrn: patient.mrn } },
       update: {},
-      create: patient,
+      create: { ...patient, organizationId: org.id },
     });
 
     // Add allergies
@@ -263,6 +293,7 @@ async function main() {
         data: {
           ...allergy,
           patientId: created.id,
+          organizationId: org.id,
         },
       });
     }
@@ -273,6 +304,7 @@ async function main() {
         data: {
           ...condition,
           patientId: created.id,
+          organizationId: org.id,
           status: 'ACTIVE',
         },
       });
@@ -283,6 +315,7 @@ async function main() {
       await prisma.medication.create({
         data: {
           patientId: created.id,
+          organizationId: org.id,
           name: medication.name,
           dose: medication.dose,
           frequency: medication.frequency,

@@ -172,9 +172,12 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     const triageLevel = data.triageLevel ?? mapTriageLevel(data.urgencyLevel, redFlagCount);
     const hasRedFlags = redFlagCount > 0;
 
+    const organizationId = (session.user as any).organizationId || '';
+
     // Create patient record
     const patient = await prisma.patient.create({
       data: {
+        organizationId,
         mrn: `COMPASS-SYNC-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
         firstName: data.patientName?.split(' ')[0] || 'Anonymous',
         lastName: data.patientName?.split(' ').slice(1).join(' ') || 'Patient',
@@ -213,6 +216,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     if (hasRedFlags) {
       await prisma.emergencyEvent.create({
         data: {
+          organizationId,
           patientId: patient.id,
           assessmentId: assessment.id,
           eventType: 'RED_FLAG',

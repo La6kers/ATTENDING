@@ -266,6 +266,7 @@ export default async function handler(
     if (hasRedFlags) {
       await prisma.emergencyEvent.create({
         data: {
+          organizationId,
           patientId: patient.id,
           assessmentId: assessment.id,
           eventType: 'RED_FLAG',

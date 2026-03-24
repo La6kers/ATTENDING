@@ -90,6 +90,7 @@ async function handler(
       await prisma.emergencyEvent.create({
         data: {
           patientId,
+          organizationId: patient.organizationId,
           assessmentId: assessment.id,
           eventType: 'RED_FLAG',
           severity: hasCritical ? 'CRITICAL' : 'HIGH',

@@ -78,6 +78,13 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
   const updates = req.body;
 
   try {
+    // Look up patient's organizationId for tenant-scoped creates
+    const patientRecord = await prisma.patient.findFirst({
+      where: { id: patientId },
+      select: { organizationId: true },
+    });
+    const organizationId = patientRecord?.organizationId || '';
+
     // Update conditions
     if (updates.conditions && Array.isArray(updates.conditions)) {
       // Soft-delete existing conditions
@@ -88,7 +95,7 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
       // Create new conditions
       for (const name of updates.conditions) {
         await prisma.condition.create({
-          data: { patientId: patientId, name },
+          data: { patientId, organizationId, name },
         });
       }
     }
@@ -101,7 +108,7 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
       });
       for (const name of updates.medications) {
         await prisma.medication.create({
-          data: { patientId: patientId, name },
+          data: { patientId, organizationId, name },
         });
       }
     }
@@ -114,7 +121,7 @@ async function handleUpdate(req: NextApiRequest, res: NextApiResponse, patientId
       });
       for (const allergen of updates.allergies) {
         await prisma.allergy.create({
-          data: { patientId: patientId, allergen },
+          data: { patientId, organizationId, allergen },
         });
       }
     }
@@ -143,10 +150,17 @@ async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId:
   }
 
   try {
+    // Look up patient's organizationId for tenant-scoped creates
+    const patientRecord = await prisma.patient.findFirst({
+      where: { id: patientId },
+      select: { organizationId: true },
+    });
+    const organizationId = patientRecord?.organizationId || '';
+
     // Add/remove conditions
     if (updates.addCondition) {
       await prisma.condition.create({
-        data: { patientId: patientId, name: updates.addCondition },
+        data: { patientId, organizationId, name: updates.addCondition },
       });
     }
     if (updates.removeCondition) {
@@ -159,7 +173,7 @@ async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId:
     // Add/remove medications
     if (updates.addMedication) {
       await prisma.medication.create({
-        data: { patientId: patientId, name: updates.addMedication },
+        data: { patientId, organizationId, name: updates.addMedication },
       });
     }
     if (updates.removeMedication) {
@@ -172,7 +186,7 @@ async function handlePatch(req: NextApiRequest, res: NextApiResponse, patientId:
     // Add/remove allergies
     if (updates.addAllergy) {
       await prisma.allergy.create({
-        data: { patientId: patientId, allergen: updates.addAllergy },
+        data: { patientId, organizationId, allergen: updates.addAllergy },
       });
     }
     if (updates.removeAllergy) {

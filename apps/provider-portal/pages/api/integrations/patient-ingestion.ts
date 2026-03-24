@@ -294,6 +294,7 @@ export default apiKeyHandler({
                 await tx.condition.create({
                   data: {
                     patientId,
+                    organizationId,
                     name: condition.name,
                     icdCode: condition.icdCode,
                     severity: condition.severity,
@@ -314,6 +315,7 @@ export default apiKeyHandler({
                 await tx.medication.create({
                   data: {
                     patientId,
+                    organizationId,
                     name: med.name,
                     dose: med.dosage,
                     frequency: med.frequency,
@@ -334,6 +336,7 @@ export default apiKeyHandler({
                 await tx.allergy.create({
                   data: {
                     patientId,
+                    organizationId,
                     allergen: allergy.allergen,
                     reaction: allergy.reaction,
                     severity: allergy.severity,

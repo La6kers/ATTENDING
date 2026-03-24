@@ -132,6 +132,7 @@ async function updateLabOrder(
         await prisma.labResult.create({
           data: {
             patientId: existing.patientId,
+            organizationId: existing.organizationId,
             labOrderId: id,
             testCode: r.testCode || r.code || '',
             testName: r.testName || r.name || '',

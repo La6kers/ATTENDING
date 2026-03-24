@@ -121,8 +121,36 @@ async function handler(
       errors.push(`Invalid facility NPI: ${facility.npi}. Must be a 10-digit number.`);
     }
 
-    // Store facility config as an audit record (pending Organization model)
-    // In production, this creates a row in the Organization table.
+    // Build feature flags early so we can store them on the Organization
+    const featureFlagMap: Record<string, boolean> = protocols ? {
+      FEATURE_AI_DIFFERENTIAL_DIAGNOSIS: protocols.aiFeatures?.differentialDiagnosis ?? false,
+      FEATURE_AI_LAB_ORDERING: protocols.enabledModules?.includes('labs') ?? true,
+      FEATURE_AI_DRUG_RECOMMENDATIONS: protocols.aiFeatures?.drugInteractionCheck ?? false,
+      FEATURE_AMBIENT_DOCUMENTATION: protocols.aiFeatures?.soapGeneration ?? false,
+      FEATURE_IMAGING_ORDERS: protocols.enabledModules?.includes('imaging') ?? false,
+      FEATURE_MEDICATION_ORDERS: protocols.enabledModules?.includes('medications') ?? false,
+      FEATURE_REFERRAL_ORDERS: protocols.enabledModules?.includes('referrals') ?? false,
+    } : {};
+
+    // Create the Organization record
+    await prisma.organization.create({
+      data: {
+        id: organizationId,
+        name: facility.name,
+        slug: facility.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        type: facility.type.toUpperCase(),
+        npi: facility.npi,
+        address: facility.address,
+        city: facility.city,
+        state: facility.state,
+        zipCode: facility.zip,
+        phone: facility.phone,
+        settings: JSON.stringify({ timezone: facility.timezone }),
+        featureFlags: JSON.stringify(featureFlagMap),
+      },
+    });
+
+    // Audit log for compliance
     await prisma.auditLog.create({
       data: {
         userId: session.user.id,
@@ -181,6 +209,7 @@ async function handler(
 
           await prisma.user.create({
             data: {
+              organizationId,
               email: provider.email,
               name: provider.name,
               npi: provider.npi || null,
@@ -188,8 +217,6 @@ async function handler(
               specialty: provider.specialty || null,
               department: facility.name,
               isActive: true,
-              // password is null — user must complete Azure AD B2C registration
-              // In production, an invite email is sent with a registration link
             },
           });
 
@@ -230,17 +257,33 @@ async function handler(
         ? encryptSensitiveData(ehr.clientSecret)
         : null;
 
+      await prisma.integrationConnection.create({
+        data: {
+          organizationId,
+          name: `${ehr.ehrSystem} FHIR`,
+          type: 'FHIR',
+          direction: 'BIDIRECTIONAL',
+          config: JSON.stringify({
+            ehrSystem: ehr.ehrSystem,
+            fhirBaseUrl: ehr.fhirBaseUrl,
+            clientId: ehr.clientId,
+            clientSecret: encryptedSecret,
+          }),
+          status: ehr.connectionTested ? 'ACTIVE' : 'PENDING',
+          createdBy: session.user.id,
+        },
+      });
+
+      // Audit log for compliance
       await prisma.auditLog.create({
         data: {
           userId: session.user.id,
           action: 'EHR_CONFIGURATION_STORED',
-          entityType: 'EhrConfiguration',
+          entityType: 'IntegrationConnection',
           entityId: organizationId,
           changes: JSON.stringify({
             ehrSystem: ehr.ehrSystem,
             fhirBaseUrl: ehr.fhirBaseUrl,
-            clientId: ehr.clientId,
-            // Secret stored encrypted — only the system type and URL are logged
             connectionTested: ehr.connectionTested,
           }),
           success: true,
@@ -259,23 +302,14 @@ async function handler(
     const modulesEnabled: string[] = [];
 
     if (protocols) {
-      // Map module selections to feature flags
-      const featureFlagMap: Record<string, boolean> = {
-        FEATURE_AI_DIFFERENTIAL_DIAGNOSIS: protocols.aiFeatures?.differentialDiagnosis ?? false,
-        FEATURE_AI_LAB_ORDERING: protocols.enabledModules?.includes('labs') ?? true,
-        FEATURE_AI_DRUG_RECOMMENDATIONS: protocols.aiFeatures?.drugInteractionCheck ?? false,
-        FEATURE_AMBIENT_DOCUMENTATION: protocols.aiFeatures?.soapGeneration ?? false,
-        FEATURE_IMAGING_ORDERS: protocols.enabledModules?.includes('imaging') ?? false,
-        FEATURE_MEDICATION_ORDERS: protocols.enabledModules?.includes('medications') ?? false,
-        FEATURE_REFERRAL_ORDERS: protocols.enabledModules?.includes('referrals') ?? false,
-      };
+      // featureFlagMap already computed and stored on Organization in Step 1
 
-      // Store feature flag configuration for this organization
+      // Audit log for compliance
       await prisma.auditLog.create({
         data: {
           userId: session.user.id,
           action: 'FEATURE_FLAGS_CONFIGURED',
-          entityType: 'FeatureFlags',
+          entityType: 'Organization',
           entityId: organizationId,
           changes: JSON.stringify({
             featureFlags: featureFlagMap,

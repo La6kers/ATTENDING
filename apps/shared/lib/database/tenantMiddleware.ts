@@ -2,33 +2,48 @@
 // ATTENDING AI - Multi-Tenant Prisma Middleware
 // apps/shared/lib/database/tenantMiddleware.ts
 //
-// Ensures all Prisma queries include organization_id context
-// for row-level security enforcement in PostgreSQL.
+// Ensures all Prisma queries include organizationId context
+// for application-level tenant isolation (SQL Server compatible).
 //
 // Usage:
 //   import { withTenantContext } from './tenantMiddleware';
 //   const prisma = withTenantContext(basePrisma, organizationId);
 // ============================================================
 
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
-// Tables that require tenant isolation
-const TENANT_TABLES = [
+// All tables that require tenant isolation via organizationId
+const TENANT_TABLES = new Set([
   'Patient',
   'Encounter',
   'LabOrder',
+  'LabResult',
   'ImagingOrder',
+  'ImagingResult',
   'MedicationOrder',
   'Referral',
   'PatientAssessment',
   'AuditLog',
-] as const;
-
-type TenantTable = typeof TENANT_TABLES[number];
+  'ClinicalNote',
+  'TreatmentPlan',
+  'Allergy',
+  'Condition',
+  'Medication',
+  'VitalSign',
+  'EmergencyEvent',
+  'ClinicalImage',
+  'PatientPopulationFlag',
+  'IntegrationConnection',
+  'ApiKey',
+  'WebhookSubscription',
+  'EmergencyAccessProfile',
+  'UsageRecord',
+]);
 
 /**
- * Creates a Prisma client extension that automatically sets
- * the PostgreSQL session variable for RLS enforcement.
+ * Creates a Prisma client extension that automatically injects
+ * organizationId into where clauses (reads) and data (writes)
+ * for all tenant-scoped models.
  */
 export function withTenantContext(
   prisma: PrismaClient,
@@ -37,32 +52,64 @@ export function withTenantContext(
   return prisma.$extends({
     query: {
       $allOperations: async ({ args, query, operation, model }) => {
-        // Set the org context for RLS before every query
-        await prisma.$executeRawUnsafe(
-          `SET app.current_org_id = '${organizationId.replace(/'/g, "''")}'`
-        );
-        
-        // For write operations on tenant tables, auto-inject organizationId
-        if (model && TENANT_TABLES.includes(model as TenantTable)) {
-          if (operation === 'create' || operation === 'createMany') {
-            const data = (args as any).data;
-            if (Array.isArray(data)) {
-              (args as any).data = data.map((d: any) => ({
+        if (!model || !TENANT_TABLES.has(model)) {
+          return query(args);
+        }
+
+        const a = args as any;
+
+        switch (operation) {
+          case 'findMany':
+          case 'findFirst':
+          case 'findFirstOrThrow':
+          case 'count':
+          case 'aggregate':
+          case 'groupBy':
+            a.where = { ...a.where, organizationId };
+            break;
+
+          case 'findUnique':
+          case 'findUniqueOrThrow':
+            // findUnique uses unique keys; wrap with AND to add tenant scope
+            a.where = { ...a.where, AND: [{ organizationId }] };
+            break;
+
+          case 'create':
+            if (a.data && !a.data.organizationId) {
+              a.data.organizationId = organizationId;
+            }
+            break;
+
+          case 'createMany':
+            if (Array.isArray(a.data)) {
+              a.data = a.data.map((d: any) => ({
                 ...d,
                 organizationId: d.organizationId || organizationId,
               }));
-            } else if (data && !data.organizationId) {
-              data.organizationId = organizationId;
+            } else if (a.data && !a.data.organizationId) {
+              a.data.organizationId = organizationId;
             }
-          }
+            break;
+
+          case 'update':
+          case 'delete':
+            a.where = { ...a.where, AND: [{ organizationId }] };
+            break;
+
+          case 'updateMany':
+          case 'deleteMany':
+            a.where = { ...a.where, organizationId };
+            break;
+
+          case 'upsert':
+            a.where = { ...a.where, AND: [{ organizationId }] };
+            if (a.create && !a.create.organizationId) {
+              a.create.organizationId = organizationId;
+            }
+            break;
         }
-        
-        try {
-          return await query(args);
-        } finally {
-          // Reset org context after query
-          await prisma.$executeRawUnsafe(`RESET app.current_org_id`);
-        }
+
+        return query(a);
       },
     },
   }) as unknown as PrismaClient;
@@ -77,12 +124,12 @@ export function getTenantPrisma(
   req: { session?: { user?: { organizationId?: string } } }
 ): PrismaClient {
   const orgId = req.session?.user?.organizationId;
-  
+
   if (!orgId) {
     console.warn('[TENANT] No organizationId in session, queries will be unscoped');
     return prisma;
   }
-  
+
   return withTenantContext(prisma, orgId);
 }
 
@@ -96,18 +143,18 @@ export function withTenantIsolation(prisma: PrismaClient) {
     next: () => Promise<void>
   ) {
     const orgId = req.session?.user?.organizationId;
-    
+
     if (!orgId) {
       return res.status(403).json({
         error: 'Organization context required',
         code: 'TENANT_CONTEXT_MISSING',
       });
     }
-    
+
     // Attach tenant-scoped prisma to request
     req.tenantPrisma = withTenantContext(prisma, orgId);
     req.organizationId = orgId;
-    
+
     await next();
   };
 }

@@ -199,7 +199,7 @@ async function handleORU(msg: any, apiKey: any, prisma: any) {
   const labResults = hl7ObservationsToLabResults(observations, patient.id);
 
   for (const result of labResults) {
-    await prisma.labResult.create({ data: result });
+    await prisma.labResult.create({ data: { ...result, organizationId: apiKey.organizationId } });
 
     // Check for critical values
     if (result.interpretation === 'CRITICAL_HIGH' || result.interpretation === 'CRITICAL_LOW') {

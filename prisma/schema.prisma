@@ -54,6 +54,7 @@ model Organization {
   tier         String   @default("standard")
   isActive     Boolean  @default(true)
   settings     String?  @db.NVarChar(Max)
+  featureFlags String?  @db.NVarChar(Max)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -72,6 +73,16 @@ model Organization {
   clinicalNotes      ClinicalNote[]
   treatmentPlans     TreatmentPlan[]
   clinicEnvironments ClinicEnvironment[]
+  allergies          Allergy[]
+  conditions         Condition[]
+  medications        Medication[]
+  vitalSigns         VitalSign[]
+  labResults         LabResult[]
+  imagingResults     ImagingResult[]
+  emergencyEvents    EmergencyEvent[]
+  clinicalImages     ClinicalImage[]
+  populationFlags    PatientPopulationFlag[]
+  usageRecords       UsageRecord[]
 
   @@index([slug])
   @@index([isActive])
@@ -297,9 +308,10 @@ model Encounter {
 // ============== ALLERGIES ==============
 
 model Allergy {
-  id         String    @id @default(cuid())
-  patientId  String
-  allergen   String
+  id             String    @id @default(cuid())
+  patientId      String
+  organizationId String
+  allergen       String
   reaction   String?
   severity   String?
   onsetDate  DateTime?
@@ -311,19 +323,22 @@ model Allergy {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([allergen])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== CONDITIONS / DIAGNOSES ==============
 
 model Condition {
-  id            String    @id @default(cuid())
-  patientId     String
-  name          String    @default("")
+  id             String    @id @default(cuid())
+  patientId      String
+  organizationId String
+  name           String    @default("")
   icdCode       String    @default("")
   description   String    @default("")
   severity      String?
@@ -337,20 +352,23 @@ model Condition {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([icdCode])
   @@index([status])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== MEDICATIONS ==============
 
 model Medication {
-  id           String    @id @default(cuid())
-  patientId    String
-  name         String
+  id             String    @id @default(cuid())
+  patientId      String
+  organizationId String
+  name           String
   genericName  String?
   rxnormCode   String?
   ndcCode      String?
@@ -368,12 +386,14 @@ model Medication {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([name])
   @@index([status])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== VITAL SIGNS ==============
@@ -381,6 +401,7 @@ model Medication {
 model VitalSign {
   id                     String    @id @default(cuid())
   patientId              String
+  organizationId         String
   encounterId            String?
   heartRate              Int?
   bloodPressureSystolic  Int?
@@ -402,13 +423,15 @@ model VitalSign {
   deletedBy              String?
   createdAt              DateTime  @default(now())
 
-  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  encounter Encounter? @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter    Encounter?   @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([encounterId])
   @@index([recordedAt])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== LAB ORDERS ==============
@@ -457,6 +480,7 @@ model LabOrder {
 model LabResult {
   id             String    @id @default(cuid())
   patientId      String
+  organizationId String
   labOrderId     String?
   testCode       String
   testName       String
@@ -473,14 +497,16 @@ model LabResult {
   deletedBy      String?
   createdAt      DateTime  @default(now())
 
-  patient  Patient   @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  labOrder LabOrder? @relation(fields: [labOrderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  labOrder     LabOrder?    @relation(fields: [labOrderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([labOrderId])
   @@index([testCode])
   @@index([interpretation])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== IMAGING ORDERS ==============
@@ -531,6 +557,7 @@ model ImagingOrder {
 model ImagingResult {
   id             String    @id @default(cuid())
   patientId      String
+  organizationId String
   imagingOrderId String?
   studyType      String
   studyName      String
@@ -546,10 +573,12 @@ model ImagingResult {
 
   patient      Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   imagingOrder ImagingOrder? @relation(fields: [imagingOrderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([imagingOrderId])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== MEDICATION ORDERS ==============
@@ -703,6 +732,7 @@ model PatientAssessment {
 model EmergencyEvent {
   id                String    @id @default(cuid())
   patientId         String
+  organizationId    String
   assessmentId      String?
   eventType         String
   severity          String
@@ -721,14 +751,16 @@ model EmergencyEvent {
   deletedBy         String?
   createdAt         DateTime  @default(now())
 
-  patient    Patient            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  assessment PatientAssessment? @relation(fields: [assessmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assessment   PatientAssessment? @relation(fields: [assessmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([eventType])
   @@index([severity])
   @@index([createdAt])
   @@index([deletedAt])
+  @@index([organizationId])
 }
 
 // ============== EMERGENCY ACCESS (Patient Opt-In) ==============
@@ -1231,9 +1263,10 @@ model WebhookDelivery {
 // Drives which chart sections, screening protocols, vital ranges,
 // and medication warnings are surfaced to the provider.
 model PatientPopulationFlag {
-  id            String    @id @default(cuid())
-  patientId     String
-  flag          String // PEDIATRIC, NEONATAL, ADOLESCENT, GERIATRIC, TRANSGENDER,
+  id             String    @id @default(cuid())
+  patientId      String
+  organizationId String
+  flag           String // PEDIATRIC, NEONATAL, ADOLESCENT, GERIATRIC, TRANSGENDER,
   // PREGNANT, POSTPARTUM, CHRONIC_KIDNEY_DISEASE, DIABETES,
   // HEART_FAILURE, SUBSTANCE_USE_DISORDER, HOSPICE,
   // COGNITIVE_IMPAIRMENT, FALL_RISK
@@ -1244,12 +1277,14 @@ model PatientPopulationFlag {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([patientId, flag]) // One flag per type per patient
   @@index([patientId])
   @@index([flag])
   @@index([deactivatedAt])
+  @@index([organizationId])
 }
 
 // Age-stratified normal ranges for vital signs.
@@ -1378,9 +1413,10 @@ model UserEnvironmentSession {
 // Supports the body-map + multi-view capture flow in COMPASS.
 
 model ClinicalImage {
-  id           String  @id @default(cuid())
-  patientId    String
-  encounterId  String?
+  id             String  @id @default(cuid())
+  patientId      String
+  organizationId String
+  encounterId    String?
   assessmentId String?
 
   // Image metadata
@@ -1421,10 +1457,11 @@ model ClinicalImage {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  patient    Patient            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  encounter  Encounter?         @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  assessment PatientAssessment? @relation(fields: [assessmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  reviewedBy User?              @relation(fields: [reviewedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient      Patient            @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  encounter    Encounter?         @relation(fields: [encounterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assessment   PatientAssessment? @relation(fields: [assessmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewedBy   User?              @relation(fields: [reviewedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([patientId])
   @@index([encounterId])
@@ -1432,4 +1469,24 @@ model ClinicalImage {
   @@index([imageSetId])
   @@index([imageType, bodyRegion])
   @@index([capturedAt])
+  @@index([organizationId])
+}
+
+// ============== USAGE RECORDS (Billing) ==============
+
+model UsageRecord {
+  id             String   @id @default(cuid())
+  organizationId String
+  event          String
+  day            String
+  count          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([organizationId, event, day])
+  @@index([organizationId])
+  @@index([event])
+  @@index([day])
 }
