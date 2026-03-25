@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="stylesheet" href="/leaflet.css"/>
+<script src="/leaflet.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body, #map { width: 100%; height: 100%; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+var map = null;
+var userMarker = null;
+var facilityMarkers = {};
+var initialized = false;
+
+function createWaitIcon(f, isSelected) {
+  var wt = f.waitMinutes !== null ? f.waitMinutes : '?';
+  var bg =
+    f.status !== 'open' ? '#9CA3AF' :
+    f.waitMinutes === null ? '#9CA3AF' :
+    f.waitMinutes <= 15 ? '#22C55E' :
+    f.waitMinutes <= 30 ? '#F59E0B' :
+    f.waitMinutes <= 60 ? '#F97316' : '#EF4444';
+  var bc = isSelected ? '#1A8FA8' : (f.type === 'er' ? '#DC2626' : '#D97706');
+  var sz = isSelected ? 44 : 36;
+  var bw = isSelected ? 4 : 2;
+  var fs = isSelected ? 14 : 12;
+  return L.divIcon({
+    className: '',
+    iconSize: [sz, sz + 12],
+    iconAnchor: [sz / 2, sz + 12],
+    html:
+      '<div style="width:'+sz+'px;height:'+sz+'px;background:'+bg+
+      ';border:'+bw+'px solid '+bc+
+      ';border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:'+fs+
+      'px;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-family:DM Sans,sans-serif;'+
+      (isSelected ? 'z-index:1000;' : '') + '">' +
+      wt + '<span style="font-size:8px;margin-left:1px">m</span></div>' +
+      '<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:10px solid '+bc+';margin:-1px auto 0"></div>'
+  });
+}
+
+function createUserIcon() {
+  return L.divIcon({
+    className: '',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+    html: '<div style="width:16px;height:16px;background:#1A8FA8;border:3px solid white;border-radius:50%;box-shadow:0 0 0 2px #1A8FA8,0 2px 8px rgba(0,0,0,0.3)"></div>'
+  });
+}
+
+function initMap(data) {
+  if (initialized) return;
+  initialized = true;
+
+  var center = (data && data.center) ? data.center : { lat: 39.5186, lng: -104.7614 };
+
+  map = L.map('map', { zoomControl: false }).setView([center.lat, center.lng], 12);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://carto.com/">CARTO</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
+  }).addTo(map);
+
+  L.control.zoom({ position: 'topright' }).addTo(map);
+
+  userMarker = L.marker([center.lat, center.lng], { icon: createUserIcon() })
+    .bindPopup('Your location')
+    .addTo(map);
+
+  if (data && data.facilities) {
+    updateFacilities(data.facilities, data.selectedId);
+  }
+
+  setTimeout(function() { map.invalidateSize(); }, 200);
+  setTimeout(function() { map.invalidateSize(); }, 500);
+}
+
+function updateFacilities(facilities, selectedId) {
+  if (!map) return;
+
+  Object.keys(facilityMarkers).forEach(function(k) {
+    facilityMarkers[k].remove();
+  });
+  facilityMarkers = {};
+
+  facilities.forEach(function(f) {
+    var isSelected = f.facilityId === selectedId;
+    var marker = L.marker([f.lat, f.lng], { icon: createWaitIcon(f, isSelected) })
+      .bindPopup(
+        '<strong>' + f.name + '</strong><br/>' +
+        (f.waitMinutes !== null ? f.waitMinutes + ' min wait' : 'Wait time unavailable') +
+        '<br/><small>' + f.address + '</small>'
+      )
+      .on('click', function() {
+        try {
+          window.parent.postMessage({ type: 'facility-select', facilityId: f.facilityId }, '*');
+        } catch(e) {}
+      })
+      .addTo(map);
+    facilityMarkers[f.facilityId] = marker;
+  });
+
+  if (selectedId) {
+    var sel = facilities.find(function(f) { return f.facilityId === selectedId; });
+    if (sel) {
+      map.flyTo([sel.lat, sel.lng], 14, { duration: 0.5 });
+    }
+  }
+}
+
+window.addEventListener('message', function(e) {
+  var d = e.data;
+  if (!d || !d.type) return;
+
+  if (d.type === 'init') {
+    if (!initialized) {
+      initMap(d);
+    } else {
+      // Already auto-initialized, just add facilities
+      if (d.center && userMarker) {
+        map.setView([d.center.lat, d.center.lng], map.getZoom());
+        userMarker.setLatLng([d.center.lat, d.center.lng]);
+      }
+      if (d.facilities) updateFacilities(d.facilities, d.selectedId);
+    }
+  } else if (d.type === 'update' || d.type === 'select') {
+    if (!initialized) {
+      initMap(d);
+    } else if (d.facilities) {
+      updateFacilities(d.facilities, d.selectedId);
+    }
+  } else if (d.type === 'resize') {
+    if (map) map.invalidateSize();
+  }
+});
+
+// Auto-init after 1 second if no message from parent
+setTimeout(function() {
+  if (!initialized) initMap(null);
+}, 1000);
+</script>
+</body>
+</html>

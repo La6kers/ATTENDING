@@ -1,0 +1,68 @@
+// =============================================================================
+// ATTENDING AI - FHIR Schema Additions
+// Add these models to prisma/schema.prisma
+// =============================================================================
+
+// Add after the FhirEncounter model at the end of schema.prisma:
+
+// ============== FHIR CONNECTIONS ==============
+
+model FhirConnection {
+  id             String    @id @default(cuid())
+  userId         String
+  vendor         String    // epic, cerner, etc.
+  baseUrl        String
+  accessToken    String
+  refreshToken   String?
+  tokenExpiresAt DateTime
+  patientId      String?   // FHIR patient ID
+  encounterId    String?   // Current encounter ID
+  scope          String?
+  lastSyncAt     DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([userId, vendor])
+  @@index([userId])
+  @@index([vendor])
+}
+
+model FhirSyncLog {
+  id             String   @id @default(cuid())
+  userId         String
+  fhirPatientId  String?
+  vendor         String?
+  syncedAt       DateTime
+  duration       Int      // milliseconds
+  resourceCounts String   // JSON
+  errors         String?  // JSON
+  success        Boolean
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([syncedAt])
+}
+
+// ============== ORDER FHIR TRACKING ==============
+// Add these fields to existing order models:
+
+// For LabOrder, add:
+//   fhirId          String?  @unique
+//   ehrOrderNumber  String?
+//   sentToEhrAt     DateTime?
+
+// For ImagingOrder, add:
+//   fhirId          String?  @unique
+//   ehrOrderNumber  String?
+//   sentToEhrAt     DateTime?
+
+// For MedicationOrder, add:
+//   fhirId          String?  @unique
+//   ehrOrderNumber  String?
+//   sentToEhrAt     DateTime?
+
+// For Referral, add:
+//   fhirId          String?  @unique
+//   ehrOrderNumber  String?
+//   sentToEhrAt     DateTime?

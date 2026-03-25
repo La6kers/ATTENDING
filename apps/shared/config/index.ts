@@ -1,0 +1,7 @@
+// =============================================================================
+// ATTENDING AI - Config Index
+// apps/shared/config/index.ts
+// =============================================================================
+
+export * from './biomistral.config';
+export * from './FeatureFlags';

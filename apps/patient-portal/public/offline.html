@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - COMPASS</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#3B82F6">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #F8FAFC;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 400px;
+    }
+    
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 24px;
+      opacity: 0.9;
+    }
+    
+    .icon svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: #F8FAFC;
+    }
+    
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #94A3B8;
+      margin-bottom: 24px;
+    }
+    
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      margin-bottom: 32px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #EF4444;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .status-text {
+      font-size: 14px;
+      color: #F87171;
+      font-weight: 500;
+    }
+    
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    
+    .btn-primary {
+      background: #3B82F6;
+      color: white;
+      border: none;
+    }
+    
+    .btn-primary:hover {
+      background: #2563EB;
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      color: #94A3B8;
+      border: 1px solid #334155;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(148, 163, 184, 0.1);
+      color: #F8FAFC;
+    }
+    
+    .btn-emergency {
+      background: #DC2626;
+      color: white;
+      border: none;
+    }
+    
+    .btn-emergency:hover {
+      background: #B91C1C;
+    }
+    
+    .emergency-section {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid #334155;
+      width: 100%;
+    }
+    
+    .emergency-section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #F8FAFC;
+    }
+    
+    .emergency-info {
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .emergency-info p {
+      font-size: 14px;
+      color: #FCA5A5;
+      margin-bottom: 0;
+    }
+    
+    .saved-data {
+      margin-top: 32px;
+      padding: 16px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      display: none;
+    }
+    
+    .saved-data.visible {
+      display: block;
+    }
+    
+    .saved-data h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #93C5FD;
+      margin-bottom: 8px;
+    }
+    
+    .saved-data p {
+      font-size: 13px;
+      color: #94A3B8;
+      margin-bottom: 0;
+    }
+    
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 24px;
+      }
+      
+      .icon {
+        width: 80px;
+        height: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="4" y1="4" x2="20" y2="20" stroke="#EF4444" stroke-width="2"/>
+      </svg>
+    </div>
+    
+    <h1>You're Offline</h1>
+    
+    <p>
+      It looks like you've lost your internet connection. 
+      Don't worry - COMPASS can still help you with basic information.
+    </p>
+    
+    <div class="status">
+      <span class="status-dot"></span>
+      <span class="status-text">No Internet Connection</span>
+    </div>
+    
+    <div class="actions">
+      <button class="btn btn-primary" onclick="tryReconnect()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Try Again
+      </button>
+      
+      <a href="/" class="btn btn-secondary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Go Home (Cached)
+      </a>
+    </div>
+    
+    <div class="saved-data" id="savedData">
+      <h3>📋 Pending Assessment Data</h3>
+      <p id="savedDataInfo">You have unsaved assessment data that will be submitted when you're back online.</p>
+    </div>
+    
+    <div class="emergency-section">
+      <h2>🚨 Emergency?</h2>
+      <div class="emergency-info">
+        <p>If you're experiencing a medical emergency, please call emergency services immediately. You don't need internet to make a call.</p>
+      </div>
+      <a href="tel:911" class="btn btn-emergency">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Call 911
+      </a>
+    </div>
+  </div>
+  
+  <script>
+    // Check for pending offline data
+    async function checkPendingData() {
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction('pending-requests', 'readonly');
+        const store = tx.objectStore('pending-requests');
+        const count = await new Promise((resolve, reject) => {
+          const req = store.count();
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+        
+        if (count > 0) {
+          document.getElementById('savedData').classList.add('visible');
+          document.getElementById('savedDataInfo').textContent = 
+            `You have ${count} pending assessment(s) that will be submitted when you're back online.`;
+        }
+      } catch (e) {
+        // IndexedDB not available
+      }
+    }
+    
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('compass-offline', 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains('pending-requests')) {
+            db.createObjectStore('pending-requests', { keyPath: 'timestamp' });
+          }
+        };
+      });
+    }
+    
+    function tryReconnect() {
+      // Show loading state
+      const btn = document.querySelector('.btn-primary');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<span>Checking...</span>';
+      btn.disabled = true;
+      
+      // Try to fetch something to check connectivity
+      fetch('/api/health', { method: 'HEAD', cache: 'no-store' })
+        .then(() => {
+          // We're back online!
+          window.location.href = '/';
+        })
+        .catch(() => {
+          // Still offline
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          
+          // Show brief message
+          const status = document.querySelector('.status-text');
+          status.textContent = 'Still offline - try again later';
+          setTimeout(() => {
+            status.textContent = 'No Internet Connection';
+          }, 3000);
+        });
+    }
+    
+    // Check connectivity periodically
+    setInterval(() => {
+      if (navigator.onLine) {
+        fetch('/api/health', { method: 'HEAD', cache: 'no-store' })
+          .then(() => window.location.href = '/')
+          .catch(() => {});
+      }
+    }, 5000);
+    
+    // Listen for online event
+    window.addEventListener('online', () => {
+      tryReconnect();
+    });
+    
+    // Initial check for pending data
+    checkPendingData();
+  </script>
+</body>
+</html>

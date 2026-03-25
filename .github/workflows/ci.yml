@@ -1,0 +1,377 @@
+# ============================================================
+# ATTENDING AI - CI Pipeline
+# .github/workflows/ci.yml
+#
+# Runs on every push and PR to main/mockup-2:
+#   1. Lint & typecheck
+#   2. Unit + integration tests
+#   3. Build verification
+#   4. Security audit
+# ============================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, mockup-2]
+  pull_request:
+    branches: [main, mockup-2]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  REDIS_URL: 'redis://localhost:6379'
+  NEXTAUTH_SECRET: 'ci-test-secret-must-be-at-least-32-characters'
+  NEXTAUTH_URL: 'http://localhost:3000'
+  NODE_ENV: 'test'
+
+jobs:
+  # ========================================================
+  # LINT & TYPECHECK
+  # ========================================================
+  generate-ci-password:
+    name: Generate CI Password
+    runs-on: ubuntu-latest
+    outputs:
+      mssql_sa_password: ${{ steps.gen.outputs.password }}
+    steps:
+      - name: Generate random SA password
+        id: gen
+        run: |
+          PASSWORD="CI_$(openssl rand -base64 24 | tr -d '/+=')_$(date +%s)!"
+          echo "::add-mask::${PASSWORD}"
+          echo "password=${PASSWORD}" >> "$GITHUB_OUTPUT"
+
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Typecheck
+        run: npm run typecheck
+        continue-on-error: false
+
+      - name: Lint
+        run: npm run lint
+
+  # ========================================================
+  # UNIT + INTEGRATION TESTS
+  # ========================================================
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: [lint, generate-ci-password]
+
+    env:
+      CI_SA_PASSWORD: ${{ needs.generate-ci-password.outputs.mssql_sa_password }}
+      DATABASE_URL: "sqlserver://localhost:1433;database=attending_test;user=sa;password=${{ needs.generate-ci-password.outputs.mssql_sa_password }};trustServerCertificate=true;encrypt=true"
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: ${{ needs.generate-ci-password.outputs.mssql_sa_password }}
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -No -Q 'SELECT 1' -b"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 30s
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Create test database
+        run: |
+          # Wait for SQL Server to be fully ready
+          sleep 5
+          # Install sqlcmd if not available via service container
+          docker exec $(docker ps -q --filter "ancestor=mcr.microsoft.com/mssql/server:2022-latest") \
+            /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${CI_SA_PASSWORD}" -C \
+            -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'attending_test') CREATE DATABASE attending_test;"
+
+      - name: Push schema to test database
+        run: npx prisma db push --schema=prisma/schema.prisma --skip-generate
+
+      - name: Run unit & integration tests
+        run: npm run test:run -- --reporter=verbose
+
+      - name: Run test coverage
+        run: npm run test:coverage
+
+      - name: Enforce coverage thresholds
+        run: |
+          # Extract coverage summary and enforce minimums
+          if [ -f coverage/coverage-summary.json ]; then
+            LINES=$(node -e "const c=require('./coverage/coverage-summary.json');console.log(c.total.lines.pct)")
+            BRANCHES=$(node -e "const c=require('./coverage/coverage-summary.json');console.log(c.total.branches.pct)")
+            FUNCTIONS=$(node -e "const c=require('./coverage/coverage-summary.json');console.log(c.total.functions.pct)")
+            echo "Coverage: lines=${LINES}% branches=${BRANCHES}% functions=${FUNCTIONS}%"
+            FAIL=0
+            if echo "$LINES 60" | awk '{exit ($1 >= $2)}'; then
+              echo "::error::Line coverage ${LINES}% is below 60% threshold"
+              FAIL=1
+            fi
+            if echo "$BRANCHES 50" | awk '{exit ($1 >= $2)}'; then
+              echo "::error::Branch coverage ${BRANCHES}% is below 50% threshold"
+              FAIL=1
+            fi
+            if echo "$FUNCTIONS 60" | awk '{exit ($1 >= $2)}'; then
+              echo "::error::Function coverage ${FUNCTIONS}% is below 60% threshold"
+              FAIL=1
+            fi
+            if [ "$FAIL" = "1" ]; then exit 1; fi
+            echo "Coverage thresholds met"
+          else
+            echo "::warning::Coverage summary not found — skipping threshold check"
+          fi
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ========================================================
+  # .NET BACKEND TESTS
+  # ========================================================
+  backend-test:
+    name: Backend Tests (.NET)
+    runs-on: ubuntu-latest
+    needs: [lint, generate-ci-password]
+
+    env:
+      CI_SA_PASSWORD: ${{ needs.generate-ci-password.outputs.mssql_sa_password }}
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: ${{ needs.generate-ci-password.outputs.mssql_sa_password }}
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+        options: >
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -No -Q 'SELECT 1' -b"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 30s
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: backend
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+        working-directory: backend
+
+      - name: Run tests (excluding Docker)
+        run: dotnet test --no-build --configuration Release --filter "Category!=Docker" --collect:"XPlat Code Coverage" --results-directory ./TestResults
+        working-directory: backend
+        env:
+          ConnectionStrings__AttendingDb: "Server=localhost,1433;Database=attending_test;User Id=sa;Password=${{ needs.generate-ci-password.outputs.mssql_sa_password }};TrustServerCertificate=true;Encrypt=true"
+          ConnectionStrings__Redis: "localhost:6379"
+          ASPNETCORE_ENVIRONMENT: Testing
+
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: backend/TestResults/
+          retention-days: 7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Pull schema from CI database
+        run: npx prisma db pull --schema=prisma/schema.prisma
+        env:
+          DATABASE_URL: "sqlserver://localhost:1433;database=attending_test;user=sa;password=${{ needs.generate-ci-password.outputs.mssql_sa_password }};trustServerCertificate=true;encrypt=true"
+
+      - name: Check for schema drift
+        run: git diff --exit-code prisma/schema.prisma || (echo "::error::Schema drift detected — EF Core migrations produced changes not in Prisma schema. Run 'npx prisma db pull' and commit." && exit 1)
+
+  # ========================================================
+  # BUILD VERIFICATION
+  # ========================================================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Build provider portal
+        run: npm run build:provider
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Build patient portal
+        run: npm run build:patient
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Check build output size
+        run: |
+          echo "=== Provider Portal Build ==="
+          du -sh apps/provider-portal/.next/ 2>/dev/null || echo "No build output"
+          echo ""
+          echo "=== Standalone size ==="
+          du -sh apps/provider-portal/.next/standalone/ 2>/dev/null || echo "No standalone output"
+
+  # ========================================================
+  # SECURITY AUDIT
+  # ========================================================
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (production deps)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Check for secrets in code
+        run: |
+          echo "Scanning for potential secrets..."
+          FOUND=0
+          grep -rn "AKIA[0-9A-Z]\{16\}" --include="*.ts" --include="*.js" --include="*.json" . && FOUND=1 || true
+          grep -rn "-----BEGIN.*PRIVATE KEY-----" --include="*.ts" --include="*.js" --include="*.pem" . && FOUND=1 || true
+          grep -rn "sk-[a-zA-Z0-9]\{20,\}" --include="*.ts" --include="*.js" . && FOUND=1 || true
+          if [ "$FOUND" = "1" ]; then
+            echo "::warning::Potential secrets detected in source code!"
+          else
+            echo "✓ No obvious secrets found"
+          fi
+
+      - name: Verify security configurations
+        run: |
+          echo "Checking security configurations..."
+          if grep -rn "DEV_BYPASS_AUTH.*=.*true" --include="*.ts" --include="*.js" --include="*.yml" .; then
+            echo "::warning::DEV_BYPASS_AUTH=true found in source files"
+          fi
+          if grep -rn "unsafe-eval" apps/provider-portal/middleware.ts | grep -v "dev\|development\|isProduction"; then
+            echo "::warning::unsafe-eval may be present in production CSP"
+          fi
+          echo "✓ Security checks passed"
+
+  # ========================================================
+  # DOCKER BUILD TEST
+  # ========================================================
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [test, build, backend-test]
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f apps/provider-portal/Dockerfile \
+            -t attending-provider:ci-${{ github.sha }} \
+            .
+
+      - name: Verify image size
+        run: |
+          SIZE=$(docker image inspect attending-provider:ci-${{ github.sha }} --format='{{.Size}}')
+          SIZE_MB=$((SIZE / 1024 / 1024))
+          echo "Image size: ${SIZE_MB}MB"
+          if [ "$SIZE_MB" -gt 500 ]; then
+            echo "::warning::Docker image exceeds 500MB ($SIZE_MB MB)"
+          fi

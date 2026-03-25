@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Admin Console Demo — ATTENDING AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 48px;
+            max-width: 520px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        }
+        .icon {
+            width: 64px; height: 64px;
+            background: rgba(51,65,85,0.06);
+            border-radius: 16px;
+            display: grid;
+            place-items: center;
+            margin: 0 auto 24px;
+            color: #475569;
+            font-size: 32px;
+        }
+        h1 { font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        .badge { display: inline-block; padding: 4px 12px; background: #f1f5f9; color: #475569; border-radius: 100px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+        p { color: #64748b; line-height: 1.6; margin-bottom: 24px; }
+        a {
+            display: block; padding: 14px 24px; border-radius: 12px; text-decoration: none;
+            font-size: 15px; font-weight: 600; transition: all 0.2s; margin-bottom: 12px;
+        }
+        .primary { background: #334155; color: white; }
+        .primary:hover { background: #1e293b; transform: translateY(-1px); }
+        .secondary { background: #f1f5f9; color: #475569; }
+        .secondary:hover { background: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">⚙️</div>
+        <div class="badge">System Administration</div>
+        <h1>IT Admin Console</h1>
+        <p>Tiered IT support console with real-time system monitoring, HIPAA audit logs, user management, EHR integration status, and security dashboards.</p>
+        <a href="http://localhost:3002/admin" class="primary">Launch Live Demo (localhost:3002/admin)</a>
+        <a href="../index.html" class="secondary">← Back to Landing Hub</a>
+        <br>
+        <p style="font-size:12px;color:#94a3b8;">
+            To use the full standalone demo, replace this file with<br>
+            your IT admin console HTML prototype.
+        </p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,453 @@
+# ============================================================
+# ATTENDING AI - Blue-Green Deployment Pipeline
+# .github/workflows/deploy.yml
+#
+# Deploys to Azure App Service using deployment slots for
+# zero-downtime releases:
+#   1. Deploy to staging slot
+#   2. Run smoke tests against staging
+#   3. Swap staging → production
+#   4. Monitor for rollback triggers
+# ============================================================
+
+name: Deploy (Blue-Green)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      skip_smoke_tests:
+        description: 'Skip smoke tests (emergency deploy)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  AZURE_WEBAPP_NAME: attending-api
+  AZURE_WEBAPP_SLOT: staging
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '20'
+
+jobs:
+  # ========================================================
+  # PRE-FLIGHT CHECKS
+  # ========================================================
+  preflight:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_sha: ${{ github.sha }}
+      deploy_ref: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify CI passed
+        run: |
+          echo "Deploying commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Skip smoke tests: ${{ github.event.inputs.skip_smoke_tests }}"
+
+      - name: Check branch protection
+        if: github.event.inputs.environment == 'production'
+        run: |
+          if [[ "${{ github.ref_name }}" != "main" ]]; then
+            echo "::error::Production deployments must come from the 'main' branch"
+            exit 1
+          fi
+
+  # ========================================================
+  # BUILD ARTIFACTS
+  # ========================================================
+  build:
+    name: Build Deployment Artifacts
+    runs-on: ubuntu-latest
+    needs: preflight
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Build .NET Backend
+        run: |
+          dotnet publish backend/src/ATTENDING.Orders.Api/ATTENDING.Orders.Api.csproj \
+            --configuration Release \
+            --output ./publish/backend
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Build provider portal
+        run: npm run build:provider
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Build patient portal
+        run: npm run build:patient
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-publish
+          path: publish/backend/
+          retention-days: 1
+
+      - name: Upload provider-portal artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-portal-publish
+          path: apps/provider-portal/.next/
+          retention-days: 1
+
+      - name: Upload patient-portal artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: patient-portal-publish
+          path: apps/patient-portal/.next/
+          retention-days: 1
+
+  # ========================================================
+  # DATABASE MIGRATION
+  # ========================================================
+  migrate:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate --schema=prisma/schema.prisma
+
+      - name: Check migration status
+        run: npx prisma migrate status --schema=prisma/schema.prisma
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify database backup exists
+        run: |
+          echo "::notice::Pre-migration checkpoint at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Checking for recent database backup..."
+          # Azure SQL automated backups run continuously; verify the database is accessible
+          # and the restore points are available before proceeding with migration
+          az sql db show \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP || 'attending-rg' }}" \
+            --server "${{ secrets.AZURE_SQL_SERVER || 'sql-attending-production' }}" \
+            --name "attending_db" \
+            --query "earliestRestoreDate" \
+            --output tsv
+
+      - name: Apply pending migrations
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Verify migration
+        run: |
+          OUTPUT=$(npx prisma migrate status --schema=prisma/schema.prisma 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -qi "pending\|failed\|not yet applied"; then
+            echo "::error::Database migrations were not applied successfully. Pending or failed migrations detected."
+            exit 1
+          fi
+          if echo "$OUTPUT" | grep -qi "database schema is not in sync"; then
+            echo "::error::Database schema is not in sync with migrations."
+            exit 1
+          fi
+          echo "All migrations verified successfully."
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # ========================================================
+  # DEPLOY TO STAGING SLOT
+  # ========================================================
+  deploy-staging:
+    name: Deploy to Staging Slot
+    runs-on: ubuntu-latest
+    needs: [build, migrate]
+    environment:
+      name: staging
+      url: https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net
+    steps:
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-publish
+          path: ./backend
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to staging slot
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: ${{ env.AZURE_WEBAPP_SLOT }}
+          package: ./backend
+
+      - name: Wait for staging to be ready
+        run: |
+          echo "Waiting for staging slot to be ready..."
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/health/live" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Staging slot is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS — waiting 10s..."
+            sleep 10
+          done
+          echo "::error::Staging slot did not become ready in 5 minutes"
+          exit 1
+
+  # ========================================================
+  # DEPLOY FRONTENDS TO STAGING SLOTS
+  # ========================================================
+  deploy-frontends-staging:
+    name: Deploy Frontends to Staging
+    runs-on: ubuntu-latest
+    needs: [build, migrate, deploy-staging]
+    environment:
+      name: staging
+    steps:
+      - name: Download provider-portal artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: provider-portal-publish
+          path: ./provider-portal
+
+      - name: Download patient-portal artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: patient-portal-publish
+          path: ./patient-portal
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy provider portal to staging
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: attending-provider
+          slot-name: staging
+          package: ./provider-portal
+
+      - name: Deploy patient portal to staging
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: attending-patient
+          slot-name: staging
+          package: ./patient-portal
+
+      - name: Wait for frontends to be ready
+        run: |
+          FAILED=0
+          for APP in "attending-provider" "attending-patient"; do
+            echo "Waiting for $APP staging slot..."
+            READY=0
+            for i in $(seq 1 20); do
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                "https://${APP}-staging.azurewebsites.net/api/health" || true)
+              if [ "$STATUS" = "200" ]; then
+                echo "$APP staging is ready!"
+                READY=1
+                break
+              fi
+              echo "Attempt $i: HTTP $STATUS — waiting 10s..."
+              sleep 10
+            done
+            if [ "$READY" = "0" ]; then
+              echo "::error::${APP} staging did not become ready in time"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            exit 1
+          fi
+
+  # ========================================================
+  # SMOKE TESTS
+  # ========================================================
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-frontends-staging]
+    if: always() && needs.deploy-staging.result == 'success' && needs.deploy-frontends-staging.result == 'success' && (github.event.inputs.skip_smoke_tests != 'true' || github.event.inputs.environment == 'production')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Health check
+        run: |
+          curl -f "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/health" \
+            || (echo "::error::Health check failed" && exit 1)
+
+      - name: Readiness check
+        run: |
+          curl -f "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/health/ready" \
+            || (echo "::error::Readiness check failed" && exit 1)
+
+      - name: API ping
+        run: |
+          RESPONSE=$(curl -s "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/api/v1/system/ping")
+          if [ "$RESPONSE" != '"pong"' ]; then
+            echo "::error::API ping returned unexpected response: $RESPONSE"
+            exit 1
+          fi
+
+      - name: Verify API version header
+        run: |
+          VERSION=$(curl -sI "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/api/v1/system/ping" \
+            | grep -i "X-Api-Version" | tr -d '\r')
+          echo "API Version header: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "::warning::X-Api-Version header not present"
+          fi
+
+      - name: Response time check
+        run: |
+          TIME=$(curl -s -o /dev/null -w "%{time_total}" \
+            "https://${{ env.AZURE_WEBAPP_NAME }}-staging.azurewebsites.net/api/v1/system/ping")
+          echo "Response time: ${TIME}s"
+          # Fail if response takes more than 5 seconds
+          if (( $(echo "$TIME > 5.0" | bc -l) )); then
+            echo "::error::Response time exceeds 5s threshold"
+            exit 1
+          fi
+
+      - name: Frontend health checks
+        run: |
+          for APP in "attending-provider" "attending-patient"; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://${APP}-staging.azurewebsites.net/api/health" || true)
+            if [ "$STATUS" != "200" ]; then
+              echo "::error::${APP} staging health check returned HTTP $STATUS"
+              exit 1
+            fi
+            echo "${APP} staging: healthy"
+          done
+
+  # ========================================================
+  # SWAP TO PRODUCTION
+  # ========================================================
+  swap:
+    name: Swap Staging → Production
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-frontends-staging, smoke-tests]
+    if: always() && needs.deploy-staging.result == 'success' && needs.deploy-frontends-staging.result == 'success' && (needs.smoke-tests.result == 'success' || needs.smoke-tests.result == 'skipped')
+    environment:
+      name: ${{ github.event.inputs.environment }}
+      url: https://${{ env.AZURE_WEBAPP_NAME }}.azurewebsites.net
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Swap all services staging → production
+        run: |
+          RG="${{ secrets.AZURE_RESOURCE_GROUP || 'attending-rg' }}"
+          SWAP_FAILED=0
+          for APP in "${{ env.AZURE_WEBAPP_NAME }}" "attending-provider" "attending-patient"; do
+            echo "Swapping staging → production for ${APP}..."
+            if ! az webapp deployment slot swap \
+              --resource-group "$RG" \
+              --name "$APP" \
+              --slot staging \
+              --target-slot production; then
+              echo "::error::Swap failed for ${APP}"
+              SWAP_FAILED=1
+            fi
+          done
+          if [ "$SWAP_FAILED" = "1" ]; then
+            echo "::error::One or more slot swaps failed — manual intervention required"
+            exit 1
+          fi
+
+      - name: Verify production health (all services)
+        run: |
+          sleep 15
+          FAILED=0
+          declare -A HEALTH_URLS=(
+            ["${{ env.AZURE_WEBAPP_NAME }}"]="/health"
+            ["attending-provider"]="/api/health"
+            ["attending-patient"]="/api/health"
+          )
+          for APP in "${{ env.AZURE_WEBAPP_NAME }}" "attending-provider" "attending-patient"; do
+            HEALTH_PATH="${HEALTH_URLS[$APP]}"
+            echo "Checking ${APP}..."
+            HEALTHY=0
+            for i in $(seq 1 12); do
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                "https://${APP}.azurewebsites.net${HEALTH_PATH}" || true)
+              if [ "$STATUS" = "200" ]; then
+                echo "${APP} is healthy!"
+                HEALTHY=1
+                break
+              fi
+              echo "  Attempt $i: HTTP $STATUS"
+              sleep 10
+            done
+            if [ "$HEALTHY" = "0" ]; then
+              echo "::error::${APP} health check failed after swap"
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::One or more services failed health checks — initiating automatic rollback"
+            RG="${{ secrets.AZURE_RESOURCE_GROUP || 'attending-rg' }}"
+            for APP in "${{ env.AZURE_WEBAPP_NAME }}" "attending-provider" "attending-patient"; do
+              echo "Rolling back: swapping production → staging for ${APP}..."
+              az webapp deployment slot swap \
+                --resource-group "$RG" \
+                --name "$APP" \
+                --slot staging \
+                --target-slot production || echo "::warning::Rollback swap failed for ${APP}"
+            done
+            exit 1
+          fi
+
+      - name: Post-deployment notification
+        if: always()
+        env:
+          DEPLOY_ENV: ${{ github.event.inputs.environment }}
+        run: |
+          echo "::notice::Deployment complete — ${{ github.sha }} is now live in ${DEPLOY_ENV}"

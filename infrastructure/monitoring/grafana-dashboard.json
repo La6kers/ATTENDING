@@ -1,0 +1,320 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "panels": [],
+      "title": "ATTENDING AI - Production Overview",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 95 },
+              { "color": "green", "value": 99 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "expr": "100 * (1 - sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m])))",
+          "legendFormat": "Success Rate"
+        }
+      ],
+      "title": "API Success Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 200 },
+              { "color": "red", "value": 500 }
+            ]
+          },
+          "unit": "ms"
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "p95 Latency"
+        }
+      ],
+      "title": "API Latency (p95)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum(increase(assessments_created_total[24h]))",
+          "legendFormat": "Assessments (24h)"
+        }
+      ],
+      "title": "Assessments Today",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum(increase(emergencies_detected_total[24h]))",
+          "legendFormat": "Emergencies (24h)"
+        }
+      ],
+      "title": "Emergencies Detected",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "sum(websocket_connections_active)",
+          "legendFormat": "Active Connections"
+        }
+      ],
+      "title": "WebSocket Connections",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_ready{namespace=\"attending-ai\", condition=\"true\"})",
+          "legendFormat": "Ready Pods"
+        }
+      ],
+      "title": "Healthy Pods",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 10,
+      "title": "Clinical Metrics",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "sum(rate(assessments_created_total[5m])) * 60",
+          "legendFormat": "Assessments/min"
+        },
+        {
+          "expr": "sum(rate(lab_orders_created_total[5m])) * 60",
+          "legendFormat": "Lab Orders/min"
+        }
+      ],
+      "title": "Clinical Activity Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 12,
+      "targets": [
+        {
+          "expr": "sum by (triage_level) (increase(assessments_by_triage_total[1h]))",
+          "legendFormat": "{{ triage_level }}"
+        }
+      ],
+      "title": "Assessments by Triage Level",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
+      "id": 20,
+      "title": "AI Performance",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 80 },
+              { "color": "green", "value": 90 }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 15 },
+      "id": 21,
+      "targets": [
+        {
+          "expr": "100 * sum(ai_feedback_accurate_total) / sum(ai_feedback_total)",
+          "legendFormat": "AI Accuracy"
+        }
+      ],
+      "title": "AI Accuracy Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 15 },
+      "id": 22,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ai_inference_duration_seconds_bucket[5m])) by (le)) * 1000",
+          "legendFormat": "AI Latency"
+        }
+      ],
+      "title": "AI Inference Latency (p95)",
+      "type": "gauge"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 15 },
+      "id": 23,
+      "targets": [
+        {
+          "expr": "sum(rate(ai_differential_requests_total[5m])) * 60",
+          "legendFormat": "Differential Diagnosis"
+        },
+        {
+          "expr": "sum(rate(ai_redflags_requests_total[5m])) * 60",
+          "legendFormat": "Red Flag Detection"
+        }
+      ],
+      "title": "AI Request Rate (per minute)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
+      "id": 30,
+      "title": "Security & Compliance",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 22 },
+      "id": 31,
+      "targets": [
+        {
+          "expr": "sum(increase(auth_failures_total[1h]))",
+          "legendFormat": "Failed Logins"
+        }
+      ],
+      "title": "Failed Logins (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 22 },
+      "id": 32,
+      "targets": [
+        {
+          "expr": "sum(increase(emergency_access_total[24h]))",
+          "legendFormat": "Emergency Access"
+        }
+      ],
+      "title": "Emergency Access (24h)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 22 },
+      "id": 33,
+      "targets": [
+        {
+          "expr": "sum(increase(phi_access_total[1h]))",
+          "legendFormat": "PHI Access"
+        }
+      ],
+      "title": "PHI Access Events (1h)",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 22 },
+      "id": 34,
+      "targets": [
+        {
+          "expr": "sum(rate(audit_log_entries_total[5m])) * 60 by (category)",
+          "legendFormat": "{{ category }}"
+        }
+      ],
+      "title": "Audit Log Rate by Category",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["attending-ai", "healthcare", "production"],
+  "time": { "from": "now-6h", "to": "now" },
+  "title": "ATTENDING AI - Production Dashboard",
+  "uid": "attending-ai-prod",
+  "version": 1
+}

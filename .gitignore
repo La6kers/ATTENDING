@@ -1,25 +1,67 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
+# =============================================================================
+# ATTENDING AI Platform - Git Ignore Configuration
+# =============================================================================
 
-# Build output
-dist/
-build/
+# -----------------------------------------------------------------------------
+# Node.js
+# -----------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+.npm
+.eslintcache
+.node_repl_history
+
+# -----------------------------------------------------------------------------
+# Next.js
+# -----------------------------------------------------------------------------
 .next/
 out/
+.nuxt/
+dist/
+build/
 
-# Environment
+# -----------------------------------------------------------------------------
+# TypeScript
+# -----------------------------------------------------------------------------
+*.tsbuildinfo
+next-env.d.ts
+
+# -----------------------------------------------------------------------------
+# Environment & Secrets
+# -----------------------------------------------------------------------------
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+*.pem
+*.key
+*.crt
+secrets/
+.secrets
 
-# Database
+# -----------------------------------------------------------------------------
+# Database (SQLite seed demo + Prisma dev)
+# -----------------------------------------------------------------------------
 *.db
 *.sqlite
 *.sqlite3
+data/
+prisma/dev.db
+prisma/dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-shm
+prisma/*.db-wal
 
-# Python
+# -----------------------------------------------------------------------------
+# Python / ML
+# -----------------------------------------------------------------------------
 __pycache__/
 *.pyc
 *.pyo
@@ -31,14 +73,14 @@ venv/
 *.pt
 *.onnx
 model_checkpoints/
-
-# ML artifacts
 wandb/
 mlruns/
 *.tfevents*
 
-# IDE
-.vs/
+# -----------------------------------------------------------------------------
+# IDE & Editors
+# -----------------------------------------------------------------------------
+# Visual Studio Code
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
@@ -47,23 +89,224 @@ mlruns/
 *.swo
 *~
 
-# OS
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# JetBrains IDEs
+*.iml
+*.iws
+
+# -----------------------------------------------------------------------------
+# .NET / C#
+# -----------------------------------------------------------------------------
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Ll]og/
+[Ll]ogs/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.ipdb
+*.pgc
+*.pgd
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.nupkg
+*.snupkg
+
+# NuGet
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+playwright/.cache/
+.jest/
+
+# .NET test result artifacts
+**/test-results*.txt
+test-results*.txt
+**/*.trx
+**/coverage-report/
+**/coverage-results/
+**/TestResults/
+
+# Backend build/test scratch files
+backend/build-results*.txt
+backend/test-results*.txt
+backend/build-and-test-*.ps1
+backend/git-commit-*.ps1
+backend/verify-*.ps1
+
+# -----------------------------------------------------------------------------
+# Build Artifacts
+# -----------------------------------------------------------------------------
+*.tgz
+*.tar.gz
+*.zip
+
+# -----------------------------------------------------------------------------
+# OS Generated Files
+# -----------------------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 desktop.ini
 
+# -----------------------------------------------------------------------------
 # Logs
+# -----------------------------------------------------------------------------
 logs/
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# Test coverage
-coverage/
-.nyc_output/
-
-# Misc
+# -----------------------------------------------------------------------------
+# Temporary Files
+# -----------------------------------------------------------------------------
+tmp/
+temp/
+.temp/
+.tmp/
 *.tmp
+*.temp
 *.bak
+*.backup
+*.old
+
+# -----------------------------------------------------------------------------
+# Archived / Backup Directories
+# -----------------------------------------------------------------------------
+**/_archived/
+**/archived/
+**/.backup/
+
+# -----------------------------------------------------------------------------
+# Development Scripts (temporary)
+# -----------------------------------------------------------------------------
+update-git.bat
+cleanup-*.bat
+
+# -----------------------------------------------------------------------------
+# Docker
+# -----------------------------------------------------------------------------
+.docker/
+
+# -----------------------------------------------------------------------------
+# Terraform
+# -----------------------------------------------------------------------------
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# -----------------------------------------------------------------------------
+# Kubernetes
+# -----------------------------------------------------------------------------
+kubeconfig
+*.kubeconfig
+
+# -----------------------------------------------------------------------------
+# Vercel
+# -----------------------------------------------------------------------------
+.vercel
+
+# -----------------------------------------------------------------------------
+# Turbo
+# -----------------------------------------------------------------------------
+.turbo
+
+# -----------------------------------------------------------------------------
+# PWA files
+# -----------------------------------------------------------------------------
+**/public/sw.js
+**/public/workbox-*.js
+
+# -----------------------------------------------------------------------------
+# Storybook
+# -----------------------------------------------------------------------------
+storybook-static/
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+*.pid
+*.seed
+*.pid.lock
 .cache/
+.parcel-cache/
+.grunt
+bower_components/
+libpeerconnection.log
+testem.log
+typings/
+.fusebox/
+.dynamodb/
+.tern-port
+.vuepress/dist
+
+# Backup files
+*.bak2
+*.bak*
+
+# archive/ directory — use git history instead
+archive/
+
+# Root-level scratch / temporary scripts
+commit-*.ps1
+Verify-*.ps1
+verify-*.ps1
+setup-database.bat
+update-git.bat
+dev-setup.bat
+COMMIT_MSG.md
+test-results.txt
+
+# Backend scratch/debug files
+backend/test-results*.txt
+backend/build-results*.txt
+backend/git-commit-*.ps1
+backend/verify-*.ps1
+backend/build-and-test-*.ps1
+
+# Debris files
+"e 1 - Production Fundamentals"

@@ -1,0 +1,29 @@
+# ============================================================
+# ATTENDING AI - Docker Compose Override (Development Only)
+# docker-compose.override.yml
+#
+# This file is automatically loaded by `docker compose up` and
+# overrides settings in docker-compose.yml for local development.
+#
+# NEVER deploy this file to staging or production.
+# Add to .gitignore if you do not want it committed.
+# ============================================================
+
+services:
+  provider-portal:
+    environment:
+      - NODE_ENV=development
+      - DEV_BYPASS_AUTH=true
+      - LOG_LEVEL=debug
+    # Mount source for hot-reload in development
+    # volumes:
+    #   - ./apps/provider-portal:/app/apps/provider-portal
+    #   - /app/apps/provider-portal/node_modules
+
+  patient-portal:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+    # volumes:
+    #   - ./apps/patient-portal:/app/apps/patient-portal
+    #   - /app/apps/patient-portal/node_modules

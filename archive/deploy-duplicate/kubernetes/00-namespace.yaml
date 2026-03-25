@@ -1,0 +1,41 @@
+# ATTENDING AI - Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: attending
+  labels:
+    app.kubernetes.io/name: attending
+    app.kubernetes.io/component: healthcare-platform
+---
+# Resource Quotas for the namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: attending-quota
+  namespace: attending
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    pods: "50"
+    services: "20"
+    secrets: "50"
+    configmaps: "50"
+---
+# Limit Range for default resource limits
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: attending-limits
+  namespace: attending
+spec:
+  limits:
+    - default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      type: Container

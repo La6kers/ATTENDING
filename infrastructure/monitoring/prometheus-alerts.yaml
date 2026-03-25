@@ -1,0 +1,227 @@
+# ============================================================
+# ATTENDING AI - Prometheus Alerting Rules
+# infrastructure/monitoring/prometheus-alerts.yaml
+#
+# Critical alerts for healthcare platform monitoring
+# ============================================================
+
+groups:
+  # ============================================================
+  # CRITICAL - Immediate Response Required
+  # ============================================================
+  - name: attending-ai-critical
+    rules:
+      - alert: ProviderPortalDown
+        expr: up{job="provider-portal"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Provider Portal is DOWN"
+          description: "The provider portal has been unreachable for more than 1 minute."
+
+      - alert: PatientPortalDown
+        expr: up{job="patient-portal"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Patient Portal (COMPASS) is DOWN"
+          description: "COMPASS has been unreachable for more than 1 minute."
+
+      - alert: WebSocketServiceDown
+        expr: up{job="websocket-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "WebSocket Service is DOWN"
+          description: "Real-time communication service is down."
+
+      - alert: DatabaseConnectionFailure
+        expr: mssql_up{job="mssql"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Database Connection FAILED"
+          description: "Cannot connect to SQL Server database."
+
+      - alert: RedFlagDetectionFailure
+        expr: rate(ai_redflags_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          team: clinical
+        annotations:
+          summary: "Red Flag Detection System FAILING"
+          description: "The emergency red flag detection AI is experiencing errors."
+
+      - alert: HighAPIErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "API Error Rate > 5%"
+
+      - alert: AmbientScribeServiceUnavailable
+        expr: rate(ambient_scribe_errors_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: critical
+          team: clinical
+        annotations:
+          summary: "Ambient Scribe Transcription Service FAILING"
+          description: "The Ambient Scribe API is experiencing a high error rate (> 0.5 errors/sec over 5m)."
+
+  # ============================================================
+  # HIGH - Urgent Response Required (< 15 minutes)
+  # ============================================================
+  - name: attending-ai-high
+    rules:
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: high
+          team: platform
+        annotations:
+          summary: "API Latency > 1 second (p95)"
+
+      - alert: AIInferenceLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(ai_inference_duration_seconds_bucket[5m])) by (le)) > 3
+        for: 5m
+        labels:
+          severity: high
+          team: clinical
+        annotations:
+          summary: "AI Inference Latency > 3 seconds"
+
+      - alert: PodCrashLooping
+        expr: increase(kube_pod_container_status_restarts_total{namespace="attending-ai"}[1h]) > 5
+        for: 5m
+        labels:
+          severity: high
+          team: platform
+        annotations:
+          summary: "Pod {{ $labels.pod }} is crash looping"
+
+      - alert: PodMemoryPressure
+        expr: container_memory_working_set_bytes{namespace="attending-ai"} / container_spec_memory_limit_bytes{namespace="attending-ai"} > 0.9
+        for: 5m
+        labels:
+          severity: high
+          team: platform
+        annotations:
+          summary: "Pod {{ $labels.pod }} memory > 90%"
+
+      - alert: HighAuthFailureRate
+        expr: sum(increase(auth_failures_total[10m])) > 50
+        for: 5m
+        labels:
+          severity: high
+          team: security
+        annotations:
+          summary: "High Authentication Failure Rate"
+          description: "Possible brute force attack."
+
+      - alert: EmergencyAccessTriggered
+        expr: increase(emergency_access_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: high
+          team: security
+        annotations:
+          summary: "Emergency (Break-Glass) Access Activated"
+
+  # ============================================================
+  # MEDIUM - Response Required (< 1 hour)
+  # ============================================================
+  - name: attending-ai-medium
+    rules:
+      - alert: HighPodCPU
+        expr: avg(rate(container_cpu_usage_seconds_total{namespace="attending-ai"}[5m])) by (pod) > 0.8
+        for: 15m
+        labels:
+          severity: medium
+          team: platform
+        annotations:
+          summary: "Pod {{ $labels.pod }} CPU > 80%"
+
+      - alert: LowReplicaCount
+        expr: kube_deployment_status_replicas_available{namespace="attending-ai"} < kube_deployment_spec_replicas{namespace="attending-ai"}
+        for: 10m
+        labels:
+          severity: medium
+          team: platform
+        annotations:
+          summary: "Deployment {{ $labels.deployment }} has reduced capacity"
+
+      - alert: AIAccuracyDegraded
+        expr: 100 * sum(ai_feedback_accurate_total) / sum(ai_feedback_total) < 85
+        for: 1h
+        labels:
+          severity: medium
+          team: clinical
+        annotations:
+          summary: "AI Accuracy Below 85%"
+
+      - alert: HighAssessmentQueueDepth
+        expr: sum(patient_assessments_pending) > 20
+        for: 15m
+        labels:
+          severity: medium
+          team: clinical
+        annotations:
+          summary: "Assessment Queue Depth > 20"
+
+      - alert: TLSCertificateExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: medium
+          team: platform
+        annotations:
+          summary: "TLS Certificate expires in < 30 days"
+
+  # ============================================================
+  # CLINICAL SAFETY ALERTS
+  # ============================================================
+  - name: attending-ai-clinical-safety
+    rules:
+      - alert: CriticalPatientNoResponse
+        expr: (time() - patient_assessment_critical_timestamp) > 300
+        for: 0s
+        labels:
+          severity: critical
+          team: clinical
+          type: patient-safety
+        annotations:
+          summary: "CRITICAL Patient Waiting > 5 minutes"
+          description: "A patient flagged as CRITICAL has been waiting over 5 minutes."
+
+      - alert: EmergencyNotDelivered
+        expr: increase(emergency_notification_failures_total[5m]) > 0
+        for: 0s
+        labels:
+          severity: critical
+          team: clinical
+          type: patient-safety
+        annotations:
+          summary: "Emergency Notification FAILED to Deliver"
+
+      - alert: AuditLogGap
+        expr: increase(audit_log_entries_total[5m]) == 0
+        for: 10m
+        labels:
+          severity: high
+          team: security
+          type: compliance
+        annotations:
+          summary: "Audit Logging May Be Impaired"

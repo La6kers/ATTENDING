@@ -1,0 +1,86 @@
+{
+  "name": "@attending/shared",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./catalogs": "./catalogs/index.ts",
+    "./catalogs/*": "./catalogs/*.ts",
+    "./types": "./types/index.ts",
+    "./types/*": "./types/*.ts",
+    "./schemas": "./schemas/index.ts",
+    "./schemas/*": "./schemas/*.ts",
+    "./services": "./services/index.ts",
+    "./services/*": "./services/*.ts",
+    "./machines": "./machines/index.ts",
+    "./machines/*": "./machines/*.ts",
+    "./lib/prisma": "./lib/prisma.ts",
+    "./lib/utils": "./lib/utils.ts",
+    "./lib/*": "./lib/*.ts",
+    "./hooks": "./hooks/index.ts",
+    "./hooks/*": "./hooks/*.ts",
+    "./stores": "./stores/index.ts",
+    "./stores/*": "./stores/*.ts",
+    "./components/ui": "./components/ui/index.ts",
+    "./components/layout": "./components/layout/index.ts",
+    "./components/chat": "./components/chat/index.ts",
+    "./components/errors": "./components/errors/index.ts",
+    "./components/*": "./components/*.tsx",
+    "./auth": "./auth/index.ts",
+    "./auth/*": "./auth/*.ts"
+  },
+  "prisma": {
+    "schema": "../../prisma/schema.prisma"
+  },
+  "peerDependencies": {
+    "@prisma/client": "^5.0.0",
+    "@xstate/react": "^3.2.0",
+    "lucide-react": "^0.263.1",
+    "next-auth": "^4.24.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "xstate": "^4.38.0",
+    "zustand": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    },
+    "react-dom": {
+      "optional": false
+    },
+    "zustand": {
+      "optional": true
+    },
+    "@prisma/client": {
+      "optional": true
+    },
+    "next-auth": {
+      "optional": true
+    },
+    "xstate": {
+      "optional": true
+    },
+    "@xstate/react": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "immer": "^10.1.1",
+    "tailwind-merge": "^2.2.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "lucide-react": "^0.263.1",
+    "typescript": "^5.3.3"
+  }
+}
