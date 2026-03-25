@@ -346,14 +346,14 @@ const ProviderShell: React.FC<ProviderShellProps> = ({
                 </button>
               )}
 
-              <button className="relative p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors" aria-label="Notifications">
+              <Link href="/inbox" className="relative p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors" aria-label="Notifications">
                 <Bell className="w-[18px] h-[18px]" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-              </button>
+              </Link>
 
               <Link
                 href="/settings"
-                className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex items-center"
                 aria-label="Settings"
               >
                 <Settings className="w-[18px] h-[18px]" />

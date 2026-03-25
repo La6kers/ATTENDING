@@ -205,6 +205,7 @@ export default function ProviderDashboard() {
   const router = useRouter();
   const [schedule] = useState<Appointment[]>(TODAYS_SCHEDULE);
   const [expandedAppt, setExpandedAppt] = useState<string | null>(null);
+  const [assessmentIds, setAssessmentIds] = useState<Record<string, string>>({});
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -212,6 +213,24 @@ export default function ProviderDashboard() {
       router.push('/auth/signin');
     }
   }, [status, router]);
+
+  // Fetch real assessment IDs so previsit links work
+  useEffect(() => {
+    fetch('/api/assessments?pageSize=100')
+      .then(r => r.ok ? r.json() : { assessments: [] })
+      .then(data => {
+        const map: Record<string, string> = {};
+        (data.assessments || []).forEach((a: any, i: number) => {
+          // Map mock appointment IDs to real assessment CUIDs
+          map[`apt-${i + 1}`] = a.id;
+          // Also map by patient name for fuzzy matching
+          const name = a.patientName?.toLowerCase() || '';
+          map[name] = a.id;
+        });
+        setAssessmentIds(map);
+      })
+      .catch(() => {});
+  }, []);
 
   if (status === 'loading') {
     return (
@@ -461,13 +480,14 @@ export default function ProviderDashboard() {
                               <p className="text-xs text-gray-700 leading-relaxed">{appt.compassSummary}</p>
                               {appt.status !== 'completed' && appt.status !== 'cancelled' && (
                                 <div className="flex gap-2 mt-2">
-                                  <Link href={`/previsit/${appt.id}`}
-                                    className="px-3 py-1.5 text-[11px] font-semibold text-white rounded-lg transition-colors"
+                                  <Link href={`/previsit/${assessmentIds[appt.id] || assessmentIds[appt.patientName.toLowerCase()] || 'demo'}`}
+                                    className="px-3 py-1 text-[11px] font-semibold text-white rounded-lg transition-colors"
                                     style={{ background: 'linear-gradient(135deg, #1A8FA8 0%, #0C3547 100%)' }}>
                                     Open Pre-Visit
                                   </Link>
-                                  <Link href="/clinical"
-                                    className="px-3 py-1.5 text-[11px] font-semibold text-teal-700 bg-white border border-teal-200 rounded-lg hover:bg-teal-50 transition-colors">
+                                  <Link href={`/encounter/${assessmentIds[appt.id] || assessmentIds[appt.patientName.toLowerCase()] || '1'}`}
+                                    className="px-3 py-1 text-[11px] font-semibold text-white rounded-lg transition-colors"
+                                    style={{ background: '#E87461' }}>
                                     Start Visit
                                   </Link>
                                 </div>
