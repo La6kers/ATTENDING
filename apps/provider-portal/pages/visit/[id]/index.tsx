@@ -546,6 +546,9 @@ export default function VisitDiagnosisPage() {
     return BATCH_INTERVALS[1]; // Default: 5 min
   });
 
+  // Auto-shift state (must be before handleBatchIntervalChange which references it)
+  const [autoShiftEnabled, setAutoShiftEnabled] = useState(true);
+
   const handleBatchIntervalChange = useCallback((interval: BatchIntervalOption) => {
     setBatchInterval(interval);
     if (typeof window !== 'undefined') {
@@ -569,9 +572,6 @@ export default function VisitDiagnosisPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const simRef = useRef<NodeJS.Timeout | null>(null);
   const batchRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Auto-shift state
-  const [autoShiftEnabled, setAutoShiftEnabled] = useState(true);
   const [autoShiftReason, setAutoShiftReason] = useState<string | null>(null);
   const lastBatchProbabilities = useRef<{ topDxId: string; topProb: number }[]>([]);
   const autoShiftNotificationTimer = useRef<NodeJS.Timeout | null>(null);

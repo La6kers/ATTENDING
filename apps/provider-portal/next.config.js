@@ -9,7 +9,7 @@ const nextConfig = {
   output: 'standalone',
   
   // Transpile the shared workspace package
-  transpilePackages: ['@attending/shared'],
+  transpilePackages: ['@attending/shared', '@attending/ui-primitives'],
   
   // Configure webpack for workspace resolution
   webpack: (config, { isServer }) => {

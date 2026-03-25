@@ -136,6 +136,9 @@ artifacts/
 # NuGet
 **/[Pp]ackages/*
 !**/[Pp]ackages/build/
+# Keep workspace packages (monorepo)
+!/packages/
+!/packages/**
 *.nuget.props
 *.nuget.targets
 

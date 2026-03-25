@@ -82,24 +82,24 @@ export default function Encounter() {
     navigate(`/charting/${id}`);
   };
 
-  if (loading) return <div className="p-8 text-gray-500">Loading encounter...</div>;
-  if (!encounter) return <div className="p-8 text-red-500">Encounter not found</div>;
+  if (loading) return <div className="p-8 text-white/60 text-center">Loading encounter...</div>;
+  if (!encounter) return <div className="p-8 text-red-300 text-center">Encounter not found</div>;
 
   const age = getAge(encounter.date_of_birth);
   const vitals = encounter.vitals || {};
   const intake = encounter.intake_data || {};
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="max-w-[1200px] mx-auto px-6 py-6">
       {/* Patient header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-white">
             {encounter.last_name}, {encounter.first_name}
           </h1>
-          <p className="text-gray-500">
+          <p className="text-teal-200 text-sm">
             {age}yo {encounter.gender} &middot; Encounter #{encounter.id} &middot;{' '}
-            <span className={`badge badge-${encounter.status}`}>{encounter.status.replace('_', ' ')}</span>
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-white/20 text-white">{encounter.status.replace('_', ' ')}</span>
           </p>
         </div>
         <button onClick={proceedToCharting} className="btn-primary">

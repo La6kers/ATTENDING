@@ -109,17 +109,17 @@ export default function VisitReview() {
     navigate('/');
   };
 
-  if (loading) return <div className="p-8 text-gray-500">Loading...</div>;
-  if (!encounter) return <div className="p-8 text-red-500">Encounter not found</div>;
+  if (loading) return <div className="p-8 text-white/60 text-center">Loading...</div>;
+  if (!encounter) return <div className="p-8 text-red-300 text-center">Encounter not found</div>;
 
   const age = getAge(encounter.date_of_birth);
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="max-w-[1100px] mx-auto px-6 py-6">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Visit Review</h1>
-          <p className="text-gray-500">
+          <h1 className="text-2xl font-bold text-white">Visit Review</h1>
+          <p className="text-teal-200 text-sm">
             {encounter.last_name}, {encounter.first_name} &middot; {age}yo {encounter.gender}
           </p>
         </div>

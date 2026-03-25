@@ -22,7 +22,7 @@ export default function EMSPatientCard({ encounter, showHandoff = false }) {
   const status = STATUS_STYLES[encounter.transport_status] || STATUS_STYLES.dispatched;
 
   return (
-    <div className="card hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-red-500"
+    <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
          onClick={() => navigate(showHandoff ? `/er/handoff/${encounter.encounter_id}` : `/ems/${encounter.encounter_id}`)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">

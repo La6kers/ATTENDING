@@ -122,18 +122,18 @@ export default function EMSEncounter() {
     setGeneratingHandoff(false);
   };
 
-  if (loading) return <div className="p-8 text-gray-500">Loading EMS encounter...</div>;
-  if (!encounter) return <div className="p-8 text-red-500">Encounter not found.</div>;
+  if (loading) return <div className="p-8 text-white/60 text-center">Loading EMS encounter...</div>;
+  if (!encounter) return <div className="p-8 text-red-300 text-center">Encounter not found.</div>;
 
   const currentIdx = STATUS_ORDER.indexOf(encounter.transport_status);
   const nextStatus = currentIdx < STATUS_ORDER.length - 1 ? STATUS_ORDER[currentIdx + 1] : null;
 
   return (
-    <div className="p-6">
+    <div className="max-w-[1200px] mx-auto px-6 py-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <span>🚑</span>
             EMS — {encounter.first_name} {encounter.last_name}
           </h1>
