@@ -1,29 +1,55 @@
+# ============================================================
+# ATTENDING AI - Docker Compose
+#
+# Development:  docker-compose up
+# Production:   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+#
+# Services:
+#   app      - Express backend + static frontend (single container)
+#   mssql    - SQL Server 2022 for local dev (matches Azure SQL)
+# ============================================================
+
 version: '3.8'
 
 services:
-  backend:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-      target: backend
     ports:
-      - "3001:3001"
+      - "${PORT:-3001}:${PORT:-3001}"
     environment:
-      - PORT=3001
-      - DB_PATH=/data/attending.db
+      - PORT=${PORT:-3001}
+      - NODE_ENV=${NODE_ENV:-development}
+      - DB_PATH=/app/data/attending.db
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATABASE_URL=${DATABASE_URL:-}
     volumes:
-      - db-data:/data
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: frontend
-    ports:
-      - "5173:80"
+      - app-data:/app/data
     depends_on:
-      - backend
+      mssql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # SQL Server for local development (matches Azure SQL in production)
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Attending_Dev_2024!}
+      - MSSQL_PID=Developer
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -C -Q "SELECT 1" -b -o /dev/null
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
 
 volumes:
-  db-data:
+  app-data:
+  mssql-data:
