@@ -1,0 +1,613 @@
+// =============================================================================
+// P16: SNF-to-Hospital Transfer Schema Additions
+// =============================================================================
+//
+// These models extend the ATTENDING platform schema to support structured
+// SNF-to-Hospital transfer documentation per Patent 16.
+//
+// To integrate: merge these models into the main schema.prisma file.
+// All models follow existing conventions:
+//   - cuid() IDs
+//   - organizationId for multi-tenancy
+//   - soft-delete via deletedAt/deletedBy
+//   - onDelete: NoAction on all relations
+//   - JSON stored as String @db.NVarChar(Max)
+//
+// @see docs/patents/P16-SNF-HOSPITAL-TRANSFER-CLAIMS.md
+// @see docs/specifications/P16-INTERACT-FIELD-MAPPING.md
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// TransferRequest — Orchestration record for SNF-to-Hospital transfer
+// ---------------------------------------------------------------------------
+model TransferRequest {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  patientId             String
+  encounterId           String?
+
+  // Facility references
+  sendingFacilityId     String    // Organization.id where type = 'SNF'
+  receivingFacilityId   String    // Organization.id where type = 'HOSPITAL'
+  sendingProviderId     String?
+  receivingProviderId   String?
+
+  // Transfer classification
+  urgencyLevel          String    // EMERGENCY | URGENT | PLANNED
+  transferMode          String    // EMERGENCY | URGENT | PLANNED
+  status                String    @default("INITIATED")
+  // Status values: INITIATED, DATA_COLLECTION, MAR_RECONCILIATION,
+  //   DOCUMENT_GENERATION, PROVIDER_REVIEW, TRANSMITTED,
+  //   ACKNOWLEDGED, IN_TRANSIT, COMPLETED, CANCELLED
+
+  // Clinical reason
+  reasonForTransfer     String    @db.NVarChar(Max)
+  icdCodes              String?   @db.NVarChar(Max)   // JSON: string[]
+  presentingSymptoms    String?   @db.NVarChar(Max)
+
+  // PPR evaluation
+  pprFlagged            Boolean   @default(false)
+  pprDiagnosisCodes     String?   @db.NVarChar(Max)   // JSON: PPRCategory[]
+  pprEvaluatedAt        DateTime?
+
+  // INTERACT document reference
+  interactDocumentId    String?
+  interactComplianceScore Float?
+
+  // Transfer metadata (JSON: early warning signs, interventions, notifications)
+  metadata              String?   @db.NVarChar(Max)
+
+  // Timeline
+  estimatedDeparture    DateTime?
+  estimatedArrival      DateTime?
+  actualDeparture       DateTime?
+  actualArrival         DateTime?
+  transmittedAt         DateTime?
+  hospitalAcknowledgedAt DateTime?
+  hospitalAcknowledgedBy String?
+
+  // Transport
+  transportMode         String?   // AMBULANCE_BLS | AMBULANCE_ALS | PRIVATE | WHEELCHAIR_VAN
+
+  notes                 String?   @db.NVarChar(Max)
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  createdBy             String?
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Relations
+  patient               Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction)
+  organization          Organization  @relation("SendingOrg", fields: [organizationId], references: [id], onDelete: NoAction)
+  receivingOrg          Organization  @relation("ReceivingOrg", fields: [receivingFacilityId], references: [id], onDelete: NoAction)
+  encounter             Encounter?    @relation(fields: [encounterId], references: [id], onDelete: NoAction)
+  marReconciliation     MARReconciliation?
+  woundAssessments      WoundAssessment[]
+  snfMedications        SNFMedication[]
+
+  @@index([patientId])
+  @@index([status])
+  @@index([urgencyLevel])
+  @@index([sendingFacilityId])
+  @@index([receivingFacilityId])
+  @@index([organizationId])
+  @@index([pprFlagged])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// SNFMedication — Medication record from SNF Medication Administration Record
+// ---------------------------------------------------------------------------
+model SNFMedication {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  patientId             String
+  transferRequestId     String?
+
+  // Medication identification
+  medicationName        String    // Brand name
+  genericName           String?
+  rxnormCode            String?   // RxNorm Concept Unique Identifier
+  ndcCode               String?   // National Drug Code
+
+  // Dosing
+  dose                  String
+  doseUnit              String
+  frequency             String    // BID, TID, QID, Q4H, QHS, etc.
+  route                 String    // PO, IV, IM, SQ, SL, PR, TOP, INH, etc.
+  scheduledTimes        String?   @db.NVarChar(Max)   // JSON: string[] e.g. ["0800","1200","1700","2100"]
+
+  // PRN
+  isPRN                 Boolean   @default(false)
+  prnIndication         String?   // "for pain", "for anxiety", etc.
+
+  // Controlled substance
+  isControlled          Boolean   @default(false)
+  deaSchedule           String?   // II, III, IV, V
+
+  // Prescriber
+  prescribedBy          String?
+  prescribedDate        DateTime?
+
+  // Lifecycle
+  startDate             DateTime
+  endDate               DateTime?
+  status                String    @default("ACTIVE")
+  // Status values: ACTIVE, HELD, DISCONTINUED, PENDING
+
+  // Dose hold tracking
+  holdStartDate         DateTime?
+  holdEndDate           DateTime?
+  holdReason            String?
+
+  // Change tracking
+  lastDoseChange        DateTime?
+  previousDose          String?
+  previousFrequency     String?
+  changeReason          String?
+
+  // Source system
+  source                String    @default("MAR")
+  // Source values: MAR, EMAR, PHARMACY, MANUAL
+  externalId            String?   // ID in source system
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Relations
+  patient               Patient          @relation(fields: [patientId], references: [id], onDelete: NoAction)
+  organization          Organization     @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+  transferRequest       TransferRequest? @relation(fields: [transferRequestId], references: [id], onDelete: NoAction)
+  administrations       SNFMedicationAdministration[]
+  discrepancies         MARDiscrepancy[]
+
+  @@index([patientId])
+  @@index([status])
+  @@index([organizationId])
+  @@index([rxnormCode])
+  @@index([transferRequestId])
+  @@index([isPRN])
+  @@index([isControlled])
+}
+
+// ---------------------------------------------------------------------------
+// SNFMedicationAdministration — Individual medication administration records
+// ---------------------------------------------------------------------------
+model SNFMedicationAdministration {
+  id                    String    @id @default(cuid())
+  snfMedicationId       String
+  patientId             String
+  organizationId        String
+
+  // Scheduling
+  scheduledTime         DateTime
+  administeredTime      DateTime?
+
+  // Administration details
+  administeredBy        String?
+  dose                  String
+  doseUnit              String
+  status                String    // GIVEN, HELD, REFUSED, OMITTED, LATE
+
+  // Non-administration reasons
+  holdReason            String?
+  refusalReason         String?
+  omissionReason        String?
+
+  // Notes
+  notes                 String?   @db.NVarChar(Max)
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  snfMedication         SNFMedication @relation(fields: [snfMedicationId], references: [id], onDelete: NoAction)
+  patient               Patient       @relation(fields: [patientId], references: [id], onDelete: NoAction)
+  organization          Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  @@index([snfMedicationId])
+  @@index([patientId])
+  @@index([scheduledTime])
+  @@index([status])
+  @@index([organizationId])
+}
+
+// ---------------------------------------------------------------------------
+// HospitalFormularyEntry — Receiving hospital formulary for reconciliation
+// ---------------------------------------------------------------------------
+model HospitalFormularyEntry {
+  id                    String    @id @default(cuid())
+  organizationId        String    // Hospital organization ID
+
+  // Medication identification
+  medicationName        String
+  genericName           String
+  rxnormCode            String?
+  ndcCode               String?
+
+  // Formulary status
+  isOnFormulary         Boolean   @default(true)
+  formularyTier         String?   // PREFERRED, NON_PREFERRED, SPECIALTY
+
+  // Therapeutic classification
+  therapeuticClass      String?
+  therapeuticSubclass   String?
+
+  // Substitution
+  formularyAlternative       String?   // Preferred substitute medication name
+  formularyAlternativeRxnorm String?   // RxNorm of preferred substitute
+
+  // Restrictions
+  restrictions          String?   @db.NVarChar(Max)   // JSON: { priorAuth, stepTherapy, quantityLimit, etc. }
+
+  // Audit
+  lastUpdated           DateTime  @default(now())
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  @@index([rxnormCode])
+  @@index([genericName])
+  @@index([organizationId])
+  @@index([therapeuticClass])
+  @@unique([organizationId, rxnormCode])
+}
+
+// ---------------------------------------------------------------------------
+// MARReconciliation — Medication reconciliation session
+// ---------------------------------------------------------------------------
+model MARReconciliation {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  transferRequestId     String    @unique
+  patientId             String
+
+  // Status
+  status                String    @default("PENDING")
+  // Status values: PENDING, IN_PROGRESS, PHARMACIST_REVIEW,
+  //   PROVIDER_REVIEW, COMPLETED, OVERRIDDEN
+
+  // Personnel
+  initiatedBy           String?
+  completedBy           String?
+  pharmacistReviewBy    String?
+  providerReviewBy      String?
+
+  // Timestamps
+  initiatedAt           DateTime?
+  completedAt           DateTime?
+  pharmacistReviewAt    DateTime?
+  providerReviewAt      DateTime?
+
+  // Summary
+  totalMedications      Int       @default(0)
+  discrepancyCount      Int       @default(0)
+  criticalDiscrepancyCount Int    @default(0)
+  resolvedCount         Int       @default(0)
+
+  // Notes
+  notes                 String?   @db.NVarChar(Max)
+  pharmacistNotes       String?   @db.NVarChar(Max)
+  providerNotes         String?   @db.NVarChar(Max)
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Relations
+  patient               Patient          @relation(fields: [patientId], references: [id], onDelete: NoAction)
+  organization          Organization     @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+  transferRequest       TransferRequest  @relation(fields: [transferRequestId], references: [id], onDelete: NoAction)
+  discrepancies         MARDiscrepancy[]
+
+  @@index([transferRequestId])
+  @@index([patientId])
+  @@index([status])
+  @@index([organizationId])
+}
+
+// ---------------------------------------------------------------------------
+// MARDiscrepancy — Individual medication discrepancy identified during reconciliation
+// ---------------------------------------------------------------------------
+model MARDiscrepancy {
+  id                    String    @id @default(cuid())
+  reconciliationId      String
+  snfMedicationId       String
+
+  // Discrepancy classification
+  discrepancyType       String
+  // Types: MISSING_FROM_FORMULARY, DOSE_MISMATCH, FREQUENCY_MISMATCH,
+  //   THERAPEUTIC_DUPLICATION, DRUG_INTERACTION, ALLERGY_CONFLICT,
+  //   RECENT_CHANGE, CONTROLLED_SUBSTANCE_VERIFICATION, HIGH_RISK_MEDICATION
+
+  severity              String    // INFO, WARNING, CRITICAL
+  description           String    @db.NVarChar(Max)
+
+  // SNF medication details (denormalized for audit trail)
+  snfMedicationName     String
+  snfDose               String
+  snfFrequency          String
+  snfRoute              String?
+
+  // Hospital alternative (if applicable)
+  hospitalAlternative      String?
+  hospitalAlternativeDose  String?
+  hospitalAlternativeRxnorm String?
+
+  // Interaction details (for DRUG_INTERACTION type)
+  interactingMedication    String?
+  interactionSeverity      String?
+  interactionDescription   String?   @db.NVarChar(Max)
+
+  // Resolution
+  resolution            String    @default("PENDING")
+  // Values: PENDING, ACCEPTED, SUBSTITUTED, DISCONTINUED, DEFERRED_TO_PROVIDER
+  resolvedBy            String?
+  resolvedAt            DateTime?
+  resolutionNotes       String?   @db.NVarChar(Max)
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  reconciliation        MARReconciliation @relation(fields: [reconciliationId], references: [id], onDelete: NoAction)
+  snfMedication         SNFMedication     @relation(fields: [snfMedicationId], references: [id], onDelete: NoAction)
+
+  @@index([reconciliationId])
+  @@index([discrepancyType])
+  @@index([severity])
+  @@index([resolution])
+}
+
+// ---------------------------------------------------------------------------
+// AdvanceDirective — POLST, DNR, and advance directive records
+// ---------------------------------------------------------------------------
+model AdvanceDirective {
+  id                    String    @id @default(cuid())
+  patientId             String
+  organizationId        String
+
+  // Document identification
+  documentType          String    // POLST, MOLST, ADVANCE_DIRECTIVE, DNR_ORDER, LIVING_WILL
+
+  // Code status
+  codeStatus            String    // FULL_CODE, DNR, DNR_DNI, COMFORT_MEASURES_ONLY, LIMITED_INTERVENTIONS
+
+  // Treatment preferences
+  treatmentLimitations  String?   @db.NVarChar(Max)   // JSON: string[]
+  intubationPreference  String?   // YES, NO, TRIAL_PERIOD
+  dialysisPreference    String?   // YES, NO, TRIAL_PERIOD
+  antibioticsPreference String?   // YES, LIMITED, COMFORT_ONLY
+  nutritionDirective    String?   // FULL, COMFORT_FEEDING, NO_ARTIFICIAL, PATIENT_CHOICE
+  hospitalizationPreference String? // FULL_TREATMENT, LIMITED, COMFORT_ONLY
+
+  // Document provenance
+  effectiveDate         DateTime
+  expirationDate        DateTime?
+  signedBy              String?   // Patient or authorized representative
+  witnessedBy           String?
+  notarizedBy           String?
+  physicianSignature    String?   // Physician who signed POLST/MOLST
+
+  // Scanned document
+  documentUrl           String?   // URL to scanned document in storage
+  ocrProcessed          Boolean   @default(false)
+  ocrConfidence         Float?    // 0-1 confidence score
+
+  // Verification
+  verifiedAt            DateTime?
+  verifiedBy            String?
+  verificationMethod    String?   // IN_PERSON, PHONE, CHART_REVIEW
+
+  // Status
+  isActive              Boolean   @default(true)
+  supersededBy          String?   // ID of newer directive
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Relations
+  patient               Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction)
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  @@index([patientId])
+  @@index([organizationId])
+  @@index([documentType])
+  @@index([codeStatus])
+  @@index([isActive])
+}
+
+// ---------------------------------------------------------------------------
+// WoundAssessment — Wound documentation with optional AI-assisted staging
+// ---------------------------------------------------------------------------
+model WoundAssessment {
+  id                    String    @id @default(cuid())
+  patientId             String
+  organizationId        String
+  transferRequestId     String?
+  encounterId           String?
+
+  // Wound identification
+  location              String    // Anatomical site: "sacrum", "left heel", "right trochanter"
+  woundType             String    // PRESSURE_INJURY, SURGICAL, VENOUS, ARTERIAL, DIABETIC, TRAUMA, OTHER
+  etiology              String?   // Underlying cause
+
+  // Staging (for pressure injuries)
+  stage                 String?   // STAGE_1, STAGE_2, STAGE_3, STAGE_4, UNSTAGEABLE, DTI
+
+  // Dimensions (centimeters)
+  length                Float?
+  width                 Float?
+  depth                 Float?
+
+  // Wound characteristics
+  undermining           String?   // Clock position and depth: "3 o'clock to 6 o'clock, 1.5cm"
+  tunneling             String?   // Clock position and depth
+  woundBed              String?   // GRANULATION, SLOUGH, ESCHAR, MIXED, EPITHELIALIZING
+  woundBedPercentages   String?   @db.NVarChar(Max)   // JSON: { granulation: 60, slough: 30, eschar: 10 }
+
+  // Exudate
+  exudate               String?   // SEROUS, SANGUINEOUS, SEROSANGUINEOUS, PURULENT
+  exudateAmount         String?   // NONE, SCANT, MODERATE, COPIOUS
+
+  // Periwound
+  periWoundSkin         String?   // "intact, mild erythema", "macerated", "indurated"
+
+  // Other
+  odor                  Boolean   @default(false)
+  pain                  String?   // Pain level at wound site
+
+  // Treatment
+  currentTreatment      String?   @db.NVarChar(Max)
+  dressingType          String?
+  dressingChangeFrequency String?
+
+  // Braden Scale
+  bradenScore           Int?      // Total 6-23
+  bradenSubscores       String?   @db.NVarChar(Max)   // JSON: BradenSubscores
+
+  // Photography
+  photographIds         String?   @db.NVarChar(Max)   // JSON: string[] of ClinicalImage IDs
+
+  // AI-assisted assessment
+  aiStagingSuggestion   String?   // AI-suggested stage
+  aiStagingConfidence   Float?    // 0-1 confidence
+  aiNarrative           String?   @db.NVarChar(Max)   // CMS-compliant narrative
+  aiProcessedAt         DateTime?
+
+  // Clinician
+  assessedBy            String?
+  assessedAt            DateTime  @default(now())
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Relations
+  patient               Patient          @relation(fields: [patientId], references: [id], onDelete: NoAction)
+  organization          Organization     @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+  transferRequest       TransferRequest? @relation(fields: [transferRequestId], references: [id], onDelete: NoAction)
+
+  @@index([patientId])
+  @@index([organizationId])
+  @@index([transferRequestId])
+  @@index([woundType])
+  @@index([stage])
+}
+
+// ---------------------------------------------------------------------------
+// IsolationPrecaution — Infection control isolation status
+// ---------------------------------------------------------------------------
+model IsolationPrecaution {
+  id                    String    @id @default(cuid())
+  patientId             String
+  organizationId        String
+
+  // Precaution classification
+  precautionType        String    // CONTACT, DROPLET, AIRBORNE, CONTACT_PLUS, ENTERIC, NEUTROPENIC_REVERSE
+
+  // Organism
+  organism              String?   // "MRSA", "VRE", "CRE", "C. difficile", etc.
+  organismCode          String?   // SNOMED CT or ICD-10-CM code
+
+  // Culture information
+  cultureDate           DateTime?
+  cultureSource         String?   // wound, blood, urine, sputum, stool, nares
+  cultureResult         String?   // Positive/Negative
+  susceptibilities      String?   @db.NVarChar(Max)   // JSON: { antibiotic: "S"|"I"|"R" }
+
+  // Requirements
+  ppeRequirements       String?   @db.NVarChar(Max)   // JSON: string[] ["gown","gloves","mask","N95","eye_protection"]
+  roomRequirements      String?   // PRIVATE, NEGATIVE_PRESSURE, ANTEROOM
+  specialInstructions   String?   @db.NVarChar(Max)
+
+  // Clearance
+  clearanceCriteria     String?   @db.NVarChar(Max)   // e.g., "3 negative nares cultures 48h apart"
+  clearanceDate         DateTime?
+  clearedBy             String?
+
+  // Hospital pre-assignment
+  preAssignedRoom       String?   // Room number at receiving hospital
+
+  // Status
+  status                String    @default("ACTIVE")   // ACTIVE, CLEARED, PENDING_CLEARANCE
+  startDate             DateTime
+  endDate               DateTime?
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Relations
+  patient               Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction)
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  @@index([patientId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([organism])
+  @@index([precautionType])
+}
+
+// ---------------------------------------------------------------------------
+// FunctionalStatusAssessment — Standardized functional assessment scores
+// ---------------------------------------------------------------------------
+model FunctionalStatusAssessment {
+  id                    String    @id @default(cuid())
+  patientId             String
+  organizationId        String
+
+  // Instrument
+  instrumentType        String    // BARTHEL, KATZ_ADL, MORSE_FALL, MDS_GG, BRADEN, CUSTOM
+  instrumentVersion     String?
+
+  // Scoring
+  totalScore            Float
+  subscores             String    @db.NVarChar(Max)   // JSON: instrument-specific subscores
+  interpretationLevel   String?   // INDEPENDENT, SLIGHT_DEPENDENCE, MODERATE_DEPENDENCE, SEVERE_DEPENDENCE, TOTAL_DEPENDENCE
+
+  // Functional details
+  mobilityAids          String?   @db.NVarChar(Max)   // JSON: string[] ["wheelchair","walker","cane"]
+  weightBearingStatus   String?   // FULL, PARTIAL, NON_WEIGHT_BEARING, TOUCH_DOWN
+  transferAssistance    String?   // INDEPENDENT, STANDBY, MIN_ASSIST, MOD_ASSIST, MAX_ASSIST, DEPENDENT
+  cognitiveStatus       String?   // INTACT, MILD_IMPAIRMENT, MODERATE, SEVERE
+  communicationStatus   String?   // Verbal ability, hearing, vision notes
+
+  // Assessment context
+  assessedBy            String?
+  assessedAt            DateTime  @default(now())
+  assessmentSetting     String?   // BEDSIDE, THERAPY_GYM, NURSING_STATION
+
+  // Audit
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  deletedAt             DateTime?
+  deletedBy             String?
+
+  // Relations
+  patient               Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction)
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  @@index([patientId])
+  @@index([organizationId])
+  @@index([instrumentType])
+  @@index([assessedAt])
+}
