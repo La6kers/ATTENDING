@@ -302,7 +302,6 @@ export function MedicareQualityDashboard() {
   const metCount = QUALITY_MEASURES.filter(m => m.rate >= m.target).length;
 
   return (
-    <ProviderShell>
       <div className="min-h-screen bg-slate-50">
         {/* Page header */}
         <div className="bg-white border-b border-gray-200 px-6 py-5">
@@ -428,7 +427,6 @@ export function MedicareQualityDashboard() {
           </div>
         </div>
       </div>
-    </ProviderShell>
   );
 }
 
