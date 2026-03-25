@@ -239,14 +239,17 @@
       </a>
 
       <!-- Patient Portal -->
-      <a href="//localhost:4501/" class="portal-card portal-patient">
+      <a href="//localhost:4501/compass" class="portal-card portal-patient">
         <div class="card-icon icon-patient">👤</div>
         <div class="card-title">Patient Portal</div>
         <div class="card-description">
           COMPASS self-intake, crash detection, referral tracker, health records,
           emergency access, medication tracking, appointments, and secure messaging.
+          <span style="display:block;margin-top:0.5rem;color:rgba(255,255,255,0.4);font-size:0.7rem;">
+            Public: /compass &bull; Protected: /home, /health, /emergency (requires patient auth)
+          </span>
         </div>
-        <div class="card-status"><span class="dot dot-live"></span> Live — Emergency, Health, Referrals, Crash Detection</div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — COMPASS public, protected pages require auth</div>
         <span class="card-arrow">→</span>
       </a>
 
