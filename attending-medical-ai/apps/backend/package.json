@@ -1,0 +1,19 @@
+{
+  "name": "@attending/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "setup": "node ../../scripts/setup/init-db.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.0",
+    "sql.js": "^1.11.0",
+    "ws": "^8.20.0"
+  }
+}
