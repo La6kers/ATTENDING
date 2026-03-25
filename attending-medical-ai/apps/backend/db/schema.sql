@@ -21,7 +21,10 @@ CREATE TABLE IF NOT EXISTS encounters (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   patient_id INTEGER NOT NULL,
   status TEXT NOT NULL DEFAULT 'intake',
-  -- status flow: intake → waiting → in_progress → charting → review → completed
+  type TEXT NOT NULL DEFAULT 'clinical',
+  -- type: 'clinical' (standard) or 'ems' (first responder)
+  -- clinical status flow: intake → waiting → in_progress → charting → review → completed
+  -- ems status flow: dispatched → on_scene → treating → transporting → arrived → handoff_complete
   chief_complaint TEXT,
   intake_data TEXT DEFAULT '{}',
   intake_summary TEXT,

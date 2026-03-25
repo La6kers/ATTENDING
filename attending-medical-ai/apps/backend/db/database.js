@@ -42,6 +42,17 @@ export async function initDatabase() {
   const billingSchema = readFileSync(join(__dirname, 'billing-schema.sql'), 'utf-8');
   database.run(billingSchema);
 
+  // Initialize EMS tables
+  const emsSchema = readFileSync(join(__dirname, 'ems-schema.sql'), 'utf-8');
+  database.run(emsSchema);
+
+  // Add type column to encounters if it doesn't exist (migration for existing DBs)
+  try {
+    database.run("ALTER TABLE encounters ADD COLUMN type TEXT NOT NULL DEFAULT 'clinical'");
+  } catch (e) {
+    // Column already exists — ignore
+  }
+
   saveDb();
 }
 
@@ -64,6 +75,25 @@ export async function seedDatabase() {
     }
     saveDb();
     console.log('Database seeded with demo patients');
+  }
+
+  // Seed EMS encounters if ems_encounters table is empty
+  const emsCount = database.exec('SELECT COUNT(*) as count FROM ems_encounters');
+  const emsExists = emsCount[0]?.values[0]?.[0] || 0;
+  if (emsExists === 0) {
+    const emsSeed = readFileSync(join(__dirname, 'ems-seed.sql'), 'utf-8');
+    const emsStmts = emsSeed.split(/;\s*\n/).filter(s => s.trim());
+    for (const stmt of emsStmts) {
+      if (stmt.trim()) {
+        try {
+          database.run(stmt);
+        } catch (e) {
+          console.error('EMS seed error:', e.message, '\nStatement:', stmt.substring(0, 100));
+        }
+      }
+    }
+    saveDb();
+    console.log('Database seeded with EMS demo data');
   }
 
   // Seed billing data if organizations table is empty

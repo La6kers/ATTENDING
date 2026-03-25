@@ -24,10 +24,11 @@ router.get('/', (req, res) => {
     SELECT e.*, p.first_name, p.last_name, p.date_of_birth, p.gender, p.allergies, p.medications, p.medical_history
     FROM encounters e
     JOIN patients p ON e.patient_id = p.id
+    WHERE e.type = 'clinical'
   `;
   const params = [];
   if (status) {
-    query += ' WHERE e.status = ?';
+    query += ' AND e.status = ?';
     params.push(status);
   }
   query += ' ORDER BY e.created_at DESC';

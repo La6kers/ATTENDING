@@ -6,15 +6,18 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [encounters, setEncounters] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [emsCount, setEmsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch('/api/encounters').then(r => r.json()),
       fetch('/api/patients').then(r => r.json()),
-    ]).then(([enc, pat]) => {
+      fetch('/api/ems').then(r => r.json()).catch(() => []),
+    ]).then(([enc, pat, ems]) => {
       setEncounters(enc);
       setPatients(pat);
+      setEmsCount(ems.filter(e => e.transport_status !== 'handoff_complete').length);
       setLoading(false);
     });
   }, []);
@@ -45,11 +48,18 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-5 gap-4 mb-8">
         <StatCard label="Total Patients" value={stats.total} color="attending" />
         <StatCard label="Active Encounters" value={stats.active} color="blue" />
         <StatCard label="Waiting" value={stats.waiting} color="orange" />
         <StatCard label="Completed Today" value={stats.completed} color="green" />
+        <div
+          onClick={() => navigate('/er')}
+          className="rounded-xl border p-5 bg-red-50 text-red-700 border-red-200 cursor-pointer hover:shadow-md transition-shadow"
+        >
+          <p className="text-3xl font-bold">{emsCount}</p>
+          <p className="text-sm mt-1 opacity-80">🚑 Incoming EMS</p>
+        </div>
       </div>
 
       {/* Active encounters */}

@@ -14,6 +14,8 @@ export const AI_FEATURES = {
   ENCOUNTER_ASSIST:  'ai_encounter_assist',
   GENERATE_NOTE:     'ai_generate_note',
   QUALITY_REVIEW:    'ai_quality_review',
+  EMS_TRANSCRIPT:    'ai_ems_transcript',
+  EMS_HANDOFF:       'ai_ems_handoff',
 };
 
 // Map from AI route path to feature flag name
@@ -23,6 +25,8 @@ export const ROUTE_TO_FEATURE = {
   'encounter-assist': AI_FEATURES.ENCOUNTER_ASSIST,
   'generate-note':    AI_FEATURES.GENERATE_NOTE,
   'review':           AI_FEATURES.QUALITY_REVIEW,
+  'ems-transcript':   AI_FEATURES.EMS_TRANSCRIPT,
+  'ems-handoff':      AI_FEATURES.EMS_HANDOFF,
 };
 
 // Map from AI route path to interaction_type stored in usage_records
@@ -32,15 +36,19 @@ export const ROUTE_TO_INTERACTION_TYPE = {
   'encounter-assist': 'encounter_assist',
   'generate-note':    'generate_note',
   'review':           'quality_review',
+  'ems-transcript':   'ems_transcript_summary',
+  'ems-handoff':      'ems_handoff_brief',
 };
 
 // Estimated Claude API cost per endpoint (in cents) for margin tracking
 export const ESTIMATED_COST_CENTS = {
-  intake_followup:  1,   // ~$0.008
-  intake_summary:   2,   // ~$0.016
-  encounter_assist: 2,   // ~$0.023
-  generate_note:    3,   // ~$0.029
-  quality_review:   2,   // ~$0.020
+  intake_followup:       1,   // ~$0.008
+  intake_summary:        2,   // ~$0.016
+  encounter_assist:      2,   // ~$0.023
+  generate_note:         3,   // ~$0.029
+  quality_review:        2,   // ~$0.020
+  ems_transcript_summary: 2,  // ~$0.020
+  ems_handoff_brief:     3,   // ~$0.030
 };
 
 export const PLAN_DEFINITIONS = {
@@ -78,11 +86,14 @@ export const PLAN_DEFINITIONS = {
       [AI_FEATURES.ENCOUNTER_ASSIST]: true,
       [AI_FEATURES.GENERATE_NOTE]:    true,
       [AI_FEATURES.QUALITY_REVIEW]:   true,
+      [AI_FEATURES.EMS_TRANSCRIPT]:   true,
+      [AI_FEATURES.EMS_HANDOFF]:      true,
       basic_charting:      true,
       patient_management:  true,
       encounter_tracking:  true,
       coding_suggestions:  true,
       quality_dashboard:   true,
+      ems_module:          true,
     },
   },
 
@@ -100,11 +111,14 @@ export const PLAN_DEFINITIONS = {
       [AI_FEATURES.ENCOUNTER_ASSIST]: true,
       [AI_FEATURES.GENERATE_NOTE]:    true,
       [AI_FEATURES.QUALITY_REVIEW]:   true,
+      [AI_FEATURES.EMS_TRANSCRIPT]:   true,
+      [AI_FEATURES.EMS_HANDOFF]:      true,
       basic_charting:       true,
       patient_management:   true,
       encounter_tracking:   true,
       coding_suggestions:   true,
       quality_dashboard:    true,
+      ems_module:           true,
       custom_integrations:  true,
       hl7_fhir:            true,
       dedicated_support:    true,

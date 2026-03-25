@@ -156,4 +156,106 @@ Return ONLY valid JSON, no other text.`;
   return { review: JSON.parse(result.content), tokens: result.tokens, model: result.model };
 }
 
+// ─── EMS AI Functions ───────────────────────────────────────────
+
+const EMS_SYSTEM_PROMPT = `You are ATTENDING EMS, an AI assistant for emergency medical services. You process ambient audio transcripts from first responders and extract structured clinical data.
+
+IMPORTANT GUIDELINES:
+- Extract only what is explicitly stated in the transcript — never infer or fabricate data
+- Use standard EMS terminology and abbreviations
+- Be concise and structured
+- Flag any critical or life-threatening findings prominently
+- All outputs require clinician review`;
+
+export async function emsTranscriptSummary(transcriptChunks, patientData, priorSummary) {
+  const chunkText = transcriptChunks.map(c => `[${c.timestamp}] ${c.text}`).join('\n');
+
+  const prompt = `Process these EMS ambient listening transcript chunks and extract structured clinical data.
+
+Patient: ${patientData.first_name} ${patientData.last_name}, ${patientData.gender}
+DOB: ${patientData.date_of_birth}
+Allergies: ${JSON.stringify(patientData.allergies)}
+Medications: ${JSON.stringify(patientData.medications)}
+PMH: ${JSON.stringify(patientData.medical_history)}
+
+Transcript:
+${chunkText}
+
+${priorSummary ? `Prior Summary:\n${priorSummary}` : ''}
+
+Return a JSON response with:
+{
+  "extraction": {
+    "vitals": [{"time": "HH:MM", "type": "BP|HR|RR|SpO2|GCS|pain|temp", "value": "..."}],
+    "interventions": [{"time": "HH:MM", "description": "..."}],
+    "medications": [{"time": "HH:MM", "name": "...", "dose": "...", "route": "..."}],
+    "assessments": [{"time": "HH:MM", "finding": "..."}]
+  },
+  "summary": "2-3 sentence narrative summary for the ER team including current patient status, key interventions, and vitals trend. Include ESI triage level recommendation.",
+  "triage_level": "1-5"
+}
+
+Return ONLY valid JSON, no other text.`;
+
+  const result = await callClaude(prompt, EMS_SYSTEM_PROMPT);
+  const parsed = JSON.parse(result.content);
+  return {
+    extraction: parsed.extraction,
+    summary: parsed.summary,
+    triage_level: parsed.triage_level,
+    tokens: result.tokens,
+    model: result.model,
+  };
+}
+
+export async function emsHandoffBrief(fullTranscript, emsEncounterData, patientData) {
+  const prompt = `Generate a structured EMS-to-ER handoff brief from this field data. This replaces the verbal handoff report.
+
+Patient: ${patientData.first_name} ${patientData.last_name}, ${patientData.gender}
+DOB: ${patientData.date_of_birth}
+Allergies: ${JSON.stringify(patientData.allergies)}
+Home Medications: ${JSON.stringify(patientData.medications)}
+PMH: ${JSON.stringify(patientData.medical_history)}
+
+EMS Data:
+- Chief Complaint: ${emsEncounterData.chief_complaint}
+- Dispatch Code: ${emsEncounterData.dispatch_code}
+- Unit: ${emsEncounterData.unit_id}, Lead: ${emsEncounterData.crew_lead}
+- Triage Level: ${emsEncounterData.triage_level || 'Not yet assigned'}
+- Interventions: ${JSON.stringify(emsEncounterData.interventions)}
+- Medications Given: ${JSON.stringify(emsEncounterData.medications_given)}
+- Vitals Timeline: ${JSON.stringify(emsEncounterData.vitals_timeline)}
+
+Full Transcript:
+${fullTranscript}
+
+Generate a structured handoff brief in this exact markdown format:
+
+## EMS-TO-ER HANDOFF BRIEF
+
+**PATIENT:** [name, age, gender]
+**CHIEF COMPLAINT:** [...]
+**DISPATCH:** [code and context]
+**MECHANISM/HISTORY:** [...]
+
+**VITALS TREND:**
+| Time | BP | HR | RR | SpO2 | GCS |
+[table rows]
+
+**INTERVENTIONS:**
+[numbered list with times]
+
+**MEDICATIONS GIVEN:**
+[list with dose/route/time]
+
+**CURRENT STATUS:** [...]
+**ALLERGIES:** [...]
+**HOME MEDICATIONS:** [...]
+**TRIAGE RECOMMENDATION:** [ESI level with reasoning]
+**TRANSPORT NOTES:** [...]`;
+
+  const result = await callClaude(prompt, EMS_SYSTEM_PROMPT);
+  return { brief: result.content, tokens: result.tokens, model: result.model };
+}
+
 export { callClaude, logInteraction };
