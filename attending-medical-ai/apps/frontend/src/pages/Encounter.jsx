@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AIInsight from '../components/AIInsight';
+import useOverrideTracker from '../hooks/useOverrideTracker';
 
 export default function Encounter() {
   const { id } = useParams();
@@ -10,6 +11,8 @@ export default function Encounter() {
   const [aiAssist, setAiAssist] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [notes, setNotes] = useState('');
+  const { trackSuggestion, flush } = useOverrideTracker(parseInt(id));
+  const aiAssistRaw = useRef(null);
 
   useEffect(() => {
     fetchEncounter();
@@ -43,6 +46,19 @@ export default function Encounter() {
       });
       const data = await res.json();
       setAiAssist(data.assist);
+      aiAssistRaw.current = data.assist;
+
+      // Track each AI suggestion section for override analytics
+      // The encounter-assist returns markdown with sections like
+      // "Differential Diagnoses", "Recommended Questions", etc.
+      const sections = parseAssistSections(data.assist);
+      for (const item of sections) {
+        trackSuggestion({
+          stage: 'encounter_assist',
+          suggestion_type: item.type,
+          ai_suggestion: item.text,
+        });
+      }
     } catch (err) {
       setAiAssist('Error generating AI assist. Please try again.');
     }
@@ -50,6 +66,9 @@ export default function Encounter() {
   };
 
   const proceedToCharting = async () => {
+    // Flush override tracking data before transitioning (fire-and-forget)
+    flush();
+
     await fetch(`/api/encounters/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -188,4 +207,34 @@ function getAge(dob) {
   let age = now.getFullYear() - birth.getFullYear();
   if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age--;
   return age;
+}
+
+/**
+ * Parse AI encounter-assist markdown into trackable suggestion items.
+ * Maps section headers to suggestion_type values.
+ */
+function parseAssistSections(text) {
+  if (!text) return [];
+  const items = [];
+  const sectionMap = {
+    'differential diagnos': 'differential_dx',
+    'recommended question': 'recommended_question',
+    'suggested physical': 'exam_focus',
+    'recommended workup': 'workup_item',
+    'red flag': 'red_flag',
+  };
+  let currentType = 'differential_dx';
+  for (const line of text.split('\n')) {
+    const lower = line.toLowerCase();
+    // Detect section headers
+    for (const [keyword, type] of Object.entries(sectionMap)) {
+      if (lower.includes(keyword)) { currentType = type; break; }
+    }
+    // Capture list items (numbered or bulleted)
+    const listMatch = line.match(/^[\s]*[-*]\s+(.+)/) || line.match(/^[\s]*\d+\.\s+(.+)/);
+    if (listMatch) {
+      items.push({ type: currentType, text: listMatch[1].trim() });
+    }
+  }
+  return items;
 }

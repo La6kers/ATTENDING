@@ -1,8 +1,34 @@
 import { Router } from 'express';
 import db from '../db/database.js';
 import { intakeFollowup, intakeSummary, encounterAssist, generateNote, qualityReview, logInteraction } from '../services/claude.js';
+import { featureGate } from '../middleware/featureGate.js';
+import { recordUsage } from '../services/billing/usage.js';
+import { ROUTE_TO_INTERACTION_TYPE } from '../services/billing/plans.js';
 
 const router = Router();
+
+/**
+ * Helper: record AI usage for billing after a successful call.
+ * Uses the billing context attached by featureGate middleware.
+ */
+function trackUsage(req, interactionType, tokens, encounterId) {
+  if (!req.billing) return;
+  try {
+    recordUsage({
+      organizationId: req.billing.organizationId,
+      subscriptionId: req.billing.subscriptionId,
+      encounterId: encounterId || null,
+      interactionType,
+      tokensInput: Math.round(tokens * 0.6),   // estimate split
+      tokensOutput: Math.round(tokens * 0.4),
+      providerName: 'Dr. Demo',  // from auth in production
+      periodStart: req.billing.periodStart,
+      periodEnd: req.billing.periodEnd,
+    });
+  } catch (err) {
+    console.error('Usage tracking error (non-fatal):', err.message);
+  }
+}
 
 function getAge(dob) {
   const birth = new Date(dob);
@@ -13,7 +39,7 @@ function getAge(dob) {
 }
 
 // POST /api/ai/intake-followup
-router.post('/intake-followup', async (req, res) => {
+router.post('/intake-followup', featureGate('intake-followup'), async (req, res) => {
   try {
     const { patient_id, current_symptoms } = req.body;
     const patient = db.queryOne('SELECT * FROM patients WHERE id = ?', [parseInt(patient_id)]);
@@ -29,6 +55,7 @@ router.post('/intake-followup', async (req, res) => {
 
     const result = await intakeFollowup(patientData, current_symptoms);
     logInteraction(null, 'intake_followup', { patient_id, current_symptoms }, result.questions, result.model, result.tokens);
+    trackUsage(req, 'intake_followup', result.tokens, null);
 
     res.json({ questions: result.questions });
   } catch (err) {
@@ -38,7 +65,7 @@ router.post('/intake-followup', async (req, res) => {
 });
 
 // POST /api/ai/intake-summary
-router.post('/intake-summary', async (req, res) => {
+router.post('/intake-summary', featureGate('intake-summary'), async (req, res) => {
   try {
     const { encounter_id } = req.body;
     const encounter = db.queryOne(`
@@ -57,6 +84,7 @@ router.post('/intake-summary', async (req, res) => {
 
     const result = await intakeSummary(patientData, JSON.parse(encounter.intake_data || '{}'));
     logInteraction(parseInt(encounter_id), 'intake_summary', { encounter_id }, result.summary, result.model, result.tokens);
+    trackUsage(req, 'intake_summary', result.tokens, parseInt(encounter_id));
 
     db.execute('UPDATE encounters SET intake_summary = ? WHERE id = ?', [result.summary, parseInt(encounter_id)]);
 
@@ -68,7 +96,7 @@ router.post('/intake-summary', async (req, res) => {
 });
 
 // POST /api/ai/encounter-assist
-router.post('/encounter-assist', async (req, res) => {
+router.post('/encounter-assist', featureGate('encounter-assist'), async (req, res) => {
   try {
     const { encounter_id, current_notes } = req.body;
     const encounter = db.queryOne(`
@@ -93,6 +121,7 @@ router.post('/encounter-assist', async (req, res) => {
 
     const result = await encounterAssist(patientData, intakeData, current_notes);
     logInteraction(parseInt(encounter_id), 'encounter_assist', { encounter_id, current_notes }, result.assist, result.model, result.tokens);
+    trackUsage(req, 'encounter_assist', result.tokens, parseInt(encounter_id));
 
     res.json({ assist: result.assist });
   } catch (err) {
@@ -102,7 +131,7 @@ router.post('/encounter-assist', async (req, res) => {
 });
 
 // POST /api/ai/generate-note
-router.post('/generate-note', async (req, res) => {
+router.post('/generate-note', featureGate('generate-note'), async (req, res) => {
   try {
     const { encounter_id } = req.body;
     const encounter = db.queryOne(`
@@ -127,6 +156,7 @@ router.post('/generate-note', async (req, res) => {
 
     const result = await generateNote(patientData, encounterData);
     logInteraction(parseInt(encounter_id), 'generate_note', { encounter_id }, result.note, result.model, result.tokens);
+    trackUsage(req, 'generate_note', result.tokens, parseInt(encounter_id));
 
     db.execute('UPDATE encounters SET soap_note = ? WHERE id = ?', [result.note, parseInt(encounter_id)]);
 
@@ -138,7 +168,7 @@ router.post('/generate-note', async (req, res) => {
 });
 
 // POST /api/ai/review
-router.post('/review', async (req, res) => {
+router.post('/review', featureGate('review'), async (req, res) => {
   try {
     const { encounter_id } = req.body;
     const encounter = db.queryOne('SELECT * FROM encounters WHERE id = ?', [parseInt(encounter_id)]);
@@ -152,6 +182,7 @@ router.post('/review', async (req, res) => {
 
     const result = await qualityReview(encounter.soap_note, encounterData);
     logInteraction(parseInt(encounter_id), 'quality_review', { encounter_id }, result.review, result.model, result.tokens);
+    trackUsage(req, 'quality_review', result.tokens, parseInt(encounter_id));
 
     db.execute(
       `UPDATE encounters SET ai_review = ?, icd10_codes = ?, cpt_codes = ? WHERE id = ?`,

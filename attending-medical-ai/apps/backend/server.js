@@ -7,6 +7,8 @@ import { initDatabase, seedDatabase } from './db/database.js';
 import patientsRouter from './routes/patients.js';
 import encountersRouter from './routes/encounters.js';
 import aiRouter from './routes/ai.js';
+import overridesRouter from './routes/overrides.js';
+import billingRouter from './routes/billing.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '..', '..', '.env') });
@@ -21,6 +23,8 @@ app.use(express.json());
 app.use('/api/patients', patientsRouter);
 app.use('/api/encounters', encountersRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/overrides', overridesRouter);
+app.use('/api/billing', billingRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

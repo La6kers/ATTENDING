@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SOAPNote from '../components/SOAPNote';
 import AIInsight from '../components/AIInsight';
+import useOverrideTracker from '../hooks/useOverrideTracker';
 
 export default function VisitReview() {
   const { id } = useParams();
@@ -10,6 +11,8 @@ export default function VisitReview() {
   const [loading, setLoading] = useState(true);
   const [reviewing, setReviewing] = useState(false);
   const [review, setReview] = useState(null);
+  const { trackSuggestions, diffTrack, flush } = useOverrideTracker(parseInt(id));
+  const reviewTracked = useRef(false);
 
   useEffect(() => {
     fetchEncounter();
@@ -33,6 +36,39 @@ export default function VisitReview() {
       });
       const data = await res.json();
       setReview(data.review);
+
+      // Track each structured suggestion from the quality review
+      if (data.review && !data.review.error) {
+        if (data.review.icd10_suggestions?.length) {
+          trackSuggestions({
+            stage: 'quality_review',
+            suggestion_type: 'icd10_code',
+            items: data.review.icd10_suggestions,
+          });
+        }
+        if (data.review.cpt_suggestions?.length) {
+          trackSuggestions({
+            stage: 'quality_review',
+            suggestion_type: 'cpt_code',
+            items: data.review.cpt_suggestions,
+          });
+        }
+        if (data.review.missing?.length) {
+          trackSuggestions({
+            stage: 'quality_review',
+            suggestion_type: 'missing_doc',
+            items: data.review.missing,
+          });
+        }
+        if (data.review.quality_flags?.length) {
+          trackSuggestions({
+            stage: 'quality_review',
+            suggestion_type: 'quality_flag',
+            items: data.review.quality_flags,
+          });
+        }
+        reviewTracked.current = true;
+      }
     } catch {
       setReview({ error: 'Failed to generate review' });
     }
@@ -40,6 +76,31 @@ export default function VisitReview() {
   };
 
   const completeEncounter = async () => {
+    // On finalization, diff AI-suggested codes against what the encounter
+    // actually has.  The encounter's icd10_codes/cpt_codes represent the
+    // final accepted set (the clinician may have edited them).
+    if (review && !review.error && encounter) {
+      const extractCode = str =>
+        typeof str === 'string' ? str.split(' - ')[0].trim().toLowerCase() : '';
+
+      diffTrack({
+        stage: 'quality_review',
+        suggestion_type: 'icd10_code',
+        aiItems: review.icd10_suggestions || [],
+        finalItems: (encounter.icd10_codes || []).map(c => typeof c === 'string' ? c : ''),
+        normalize: extractCode,
+      });
+
+      diffTrack({
+        stage: 'quality_review',
+        suggestion_type: 'cpt_code',
+        aiItems: review.cpt_suggestions || [],
+        finalItems: (encounter.cpt_codes || []).map(c => typeof c === 'string' ? c : ''),
+        normalize: extractCode,
+      });
+    }
+    flush();
+
     await fetch(`/api/encounters/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

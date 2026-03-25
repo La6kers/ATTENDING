@@ -37,6 +37,11 @@ export async function initDatabase() {
   const database = await getDb();
   const schema = readFileSync(join(__dirname, 'schema.sql'), 'utf-8');
   database.run(schema);
+
+  // Initialize billing tables
+  const billingSchema = readFileSync(join(__dirname, 'billing-schema.sql'), 'utf-8');
+  database.run(billingSchema);
+
   saveDb();
 }
 
@@ -59,6 +64,25 @@ export async function seedDatabase() {
     }
     saveDb();
     console.log('Database seeded with demo patients');
+  }
+
+  // Seed billing data if organizations table is empty
+  const orgCount = database.exec('SELECT COUNT(*) as count FROM organizations');
+  const orgExists = orgCount[0]?.values[0]?.[0] || 0;
+  if (orgExists === 0) {
+    const billingSeed = readFileSync(join(__dirname, 'billing-seed.sql'), 'utf-8');
+    const billingStmts = billingSeed.split(/;\s*\n/).filter(s => s.trim());
+    for (const stmt of billingStmts) {
+      if (stmt.trim()) {
+        try {
+          database.run(stmt);
+        } catch (e) {
+          console.error('Billing seed error:', e.message, '\nStatement:', stmt.substring(0, 100));
+        }
+      }
+    }
+    saveDb();
+    console.log('Database seeded with billing demo data');
   }
 }
 

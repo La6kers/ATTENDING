@@ -79,3 +79,87 @@ UPDATE encounters SET
   cpt_codes = '["99214"]',
   completed_at = datetime('now', '-2 hours')
 WHERE patient_id = 8;
+
+-- ============================================================================
+-- Override tracking seed data — demonstrates analytics for completed encounters
+-- ============================================================================
+
+-- Encounter 1 (Maria Santos — chest pain): Clinician accepted most, modified a few
+INSERT INTO ai_suggestion_overrides (encounter_id, stage, suggestion_type, ai_suggestion, clinician_action, clinician_value, provider_name, created_at) VALUES
+(1, 'encounter_assist', 'differential_dx', 'Acute coronary syndrome (ACS) — given substernal pressure, radiation to left arm, and diaphoresis', 'rejected', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'differential_dx', 'Musculoskeletal chest wall pain — reproducible on palpation', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'differential_dx', 'Anxiety/panic disorder — history of anxiety, pressure-like quality', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'differential_dx', 'GERD — substernal location, but no GI symptoms reported', 'rejected', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'recommended_question', 'Any history of blood clots or DVT?', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'recommended_question', 'Family history of premature cardiac disease?', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'exam_focus', 'Cardiac auscultation for murmurs, gallops', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'exam_focus', 'Chest wall palpation for reproducible tenderness', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'workup_item', 'Troponin I, serial x2', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'encounter_assist', 'workup_item', 'D-dimer', 'rejected', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(1, 'soap_generation', 'soap_section', 'AI-generated SOAP note for chest pain encounter', 'modified', 'Clinician revised assessment to emphasize musculoskeletal etiology over ACS', 'Dr. Demo', datetime('now', '-2 hours')),
+(1, 'quality_review', 'icd10_code', 'R07.9 - Chest pain, unspecified', 'accepted', NULL, 'Dr. Demo', datetime('now', '-1 hour')),
+(1, 'quality_review', 'icd10_code', 'I10 - Essential hypertension', 'accepted', NULL, 'Dr. Demo', datetime('now', '-1 hour')),
+(1, 'quality_review', 'icd10_code', 'E11.65 - T2DM with hyperglycemia', 'accepted', NULL, 'Dr. Demo', datetime('now', '-1 hour')),
+(1, 'quality_review', 'cpt_code', '99214 - Office visit, moderate complexity', 'accepted', NULL, 'Dr. Demo', datetime('now', '-1 hour')),
+(1, 'quality_review', 'cpt_code', '93000 - ECG interpretation', 'accepted', NULL, 'Dr. Demo', datetime('now', '-1 hour')),
+(1, 'quality_review', 'missing_doc', 'BMI not documented', 'rejected', NULL, 'Dr. Demo', datetime('now', '-1 hour')),
+(1, 'quality_review', 'quality_flag', 'Consider documenting HEART score for chest pain risk stratification', 'accepted', NULL, 'Dr. Demo', datetime('now', '-1 hour'));
+
+-- Encounter 4 (Robert Kim — diabetes follow-up): High acceptance, clinician added items
+INSERT INTO ai_suggestion_overrides (encounter_id, stage, suggestion_type, ai_suggestion, clinician_action, clinician_value, provider_name, created_at) VALUES
+(4, 'encounter_assist', 'differential_dx', 'Uncontrolled T2DM with progressive neuropathy', 'accepted', NULL, 'Dr. Demo', datetime('now', '-5 hours')),
+(4, 'encounter_assist', 'differential_dx', 'Peripheral vascular disease contributing to neuropathy', 'modified', 'Diabetic peripheral neuropathy — no PVD signs on exam', 'Dr. Demo', datetime('now', '-5 hours')),
+(4, 'encounter_assist', 'recommended_question', 'Last dilated eye exam?', 'accepted', NULL, 'Dr. Demo', datetime('now', '-5 hours')),
+(4, 'encounter_assist', 'recommended_question', 'Any wounds or ulcers on feet?', 'accepted', NULL, 'Dr. Demo', datetime('now', '-5 hours')),
+(4, 'encounter_assist', 'workup_item', 'HbA1c, BMP, lipid panel', 'accepted', NULL, 'Dr. Demo', datetime('now', '-5 hours')),
+(4, 'encounter_assist', 'workup_item', 'Urine microalbumin', 'accepted', NULL, 'Dr. Demo', datetime('now', '-5 hours')),
+(4, 'encounter_assist', 'workup_item', 'Nerve conduction study', 'rejected', NULL, 'Dr. Demo', datetime('now', '-5 hours')),
+(4, 'encounter_assist', 'exam_focus', 'Monofilament testing bilateral feet', 'accepted', NULL, 'Dr. Demo', datetime('now', '-5 hours')),
+(4, 'soap_generation', 'soap_section', 'AI-generated SOAP note for diabetes follow-up', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(4, 'quality_review', 'icd10_code', 'E11.42 - T2DM with diabetic polyneuropathy', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(4, 'quality_review', 'icd10_code', 'E11.65 - T2DM with hyperglycemia', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(4, 'quality_review', 'icd10_code', 'I10 - Essential hypertension', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(4, 'quality_review', 'icd10_code', 'E66.01 - Morbid obesity', 'modified', 'E66.9 - Obesity, unspecified (BMI not documented to support morbid)', 'Dr. Demo', datetime('now', '-3 hours')),
+(4, 'quality_review', 'cpt_code', '99214 - Office visit, moderate complexity', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(4, 'quality_review', 'cpt_code', 'G0108 - Diabetes management', 'rejected', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(4, 'quality_review', 'missing_doc', 'Eye exam status not documented', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(4, 'quality_review', 'quality_flag', 'Document smoking status for quality measures', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(4, 'quality_review', 'quality_flag', 'Consider documenting last retinal exam date', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours'));
+
+-- Encounter 6 (David Okonkwo — low back pain): Mixed acceptance
+INSERT INTO ai_suggestion_overrides (encounter_id, stage, suggestion_type, ai_suggestion, clinician_action, clinician_value, provider_name, created_at) VALUES
+(6, 'encounter_assist', 'differential_dx', 'Lumbar disc herniation with radiculopathy', 'accepted', NULL, 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'encounter_assist', 'differential_dx', 'Lumbar spinal stenosis', 'rejected', NULL, 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'encounter_assist', 'differential_dx', 'Mechanical low back pain', 'accepted', NULL, 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'encounter_assist', 'differential_dx', 'Sacroiliac joint dysfunction', 'rejected', NULL, 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'encounter_assist', 'workup_item', 'Lumbar MRI without contrast', 'modified', 'Defer MRI — try PT first for 6 weeks', 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'encounter_assist', 'workup_item', 'ESR/CRP to rule out inflammatory', 'rejected', NULL, 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'encounter_assist', 'exam_focus', 'Straight leg raise bilateral', 'accepted', NULL, 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'encounter_assist', 'exam_focus', 'Lower extremity neuro exam', 'accepted', NULL, 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'encounter_assist', 'exam_focus', 'Gait assessment', 'accepted', NULL, 'Dr. Demo', datetime('now', '-6 hours')),
+(6, 'soap_generation', 'soap_section', 'AI-generated SOAP note for low back pain', 'modified', 'Clinician added occupational history and work restriction details', 'Dr. Demo', datetime('now', '-5 hours')),
+(6, 'quality_review', 'icd10_code', 'M54.5 - Low back pain', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(6, 'quality_review', 'icd10_code', 'M54.16 - Radiculopathy, lumbar region', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(6, 'quality_review', 'cpt_code', '99213 - Office visit, low complexity', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(6, 'quality_review', 'missing_doc', 'BMI not documented', 'rejected', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(6, 'quality_review', 'missing_doc', 'Work status not addressed', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(6, 'quality_review', 'quality_flag', 'Consider documenting occupational history given mechanism', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours'));
+
+-- Encounter 8 (Marcus Thompson — knee injury): Clinician added an item AI missed
+INSERT INTO ai_suggestion_overrides (encounter_id, stage, suggestion_type, ai_suggestion, clinician_action, clinician_value, provider_name, created_at) VALUES
+(8, 'encounter_assist', 'differential_dx', 'ACL graft re-rupture', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'differential_dx', 'Meniscal tear', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'differential_dx', 'Patellar dislocation', 'rejected', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'differential_dx', 'MCL sprain', 'modified', 'MCL less likely given mechanism — pivot not valgus', 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'workup_item', 'MRI right knee with contrast', 'modified', 'MRI right knee without contrast (sufficient for ligamentous eval)', 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'workup_item', 'AP and lateral knee X-ray', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'exam_focus', 'Lachman test', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'exam_focus', 'Anterior drawer', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'exam_focus', 'McMurray test', 'accepted', NULL, 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'encounter_assist', 'exam_focus', 'Posterior drawer', 'added', 'Clinician also performed posterior drawer (not suggested by AI)', 'Dr. Demo', datetime('now', '-4 hours')),
+(8, 'soap_generation', 'soap_section', 'AI-generated SOAP note for knee injury', 'accepted', NULL, 'Dr. Demo', datetime('now', '-3 hours')),
+(8, 'quality_review', 'icd10_code', 'S83.511A - Sprain of ACL of right knee, initial encounter', 'accepted', NULL, 'Dr. Demo', datetime('now', '-2 hours')),
+(8, 'quality_review', 'icd10_code', 'M23.611 - Other spontaneous disruption of ACL of right knee', 'rejected', NULL, 'Dr. Demo', datetime('now', '-2 hours')),
+(8, 'quality_review', 'cpt_code', '99214 - Office visit, moderate complexity', 'accepted', NULL, 'Dr. Demo', datetime('now', '-2 hours')),
+(8, 'quality_review', 'missing_doc', 'Contralateral knee exam not documented for comparison', 'rejected', NULL, 'Dr. Demo', datetime('now', '-2 hours')),
+(8, 'quality_review', 'quality_flag', 'Document return-to-play expectations discussed with patient', 'accepted', NULL, 'Dr. Demo', datetime('now', '-2 hours'));

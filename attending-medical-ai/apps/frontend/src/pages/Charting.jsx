@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AIInsight from '../components/AIInsight';
+import useOverrideTracker from '../hooks/useOverrideTracker';
 
 export default function Charting() {
   const { id } = useParams();
@@ -9,6 +10,9 @@ export default function Charting() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generatedNote, setGeneratedNote] = useState(null);
+  const { trackSuggestion, recordAction, flush } = useOverrideTracker(parseInt(id));
+  const soapTrackingId = useRef(null);
+  const aiNoteOriginal = useRef(null);
   const [form, setForm] = useState({
     exam_notes: '',
     assessment: '',
@@ -51,6 +55,14 @@ export default function Charting() {
       });
       const data = await res.json();
       setGeneratedNote(data.note);
+      aiNoteOriginal.current = data.note;
+
+      // Track the SOAP note as a single suggestion
+      soapTrackingId.current = trackSuggestion({
+        stage: 'soap_generation',
+        suggestion_type: 'soap_section',
+        ai_suggestion: data.note,
+      });
     } catch {
       setGeneratedNote('Error generating note. Please try again.');
     }
@@ -58,6 +70,20 @@ export default function Charting() {
   };
 
   const proceedToReview = async () => {
+    // Detect if clinician modified the SOAP note by comparing form fields
+    // against what the AI originally generated
+    if (soapTrackingId.current !== null && aiNoteOriginal.current) {
+      const clinicianContent = [form.exam_notes, form.assessment, form.plan].join('\n').trim();
+      // If the clinician has substantive content in the form fields that
+      // differs from what was there before the AI note was generated, that
+      // indicates the note was used as a reference but the clinician wrote
+      // their own content (modified).
+      if (clinicianContent.length > 0) {
+        recordAction(soapTrackingId.current, 'modified', clinicianContent);
+      }
+    }
+    flush();
+
     await saveProgress();
     if (!generatedNote) await generateSOAP();
     await fetch(`/api/encounters/${id}/status`, {

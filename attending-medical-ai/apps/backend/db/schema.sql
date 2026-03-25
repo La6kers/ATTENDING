@@ -53,3 +53,41 @@ CREATE TABLE IF NOT EXISTS ai_interactions (
   created_at TEXT DEFAULT (datetime('now')),
   FOREIGN KEY (encounter_id) REFERENCES encounters(id)
 );
+
+-- Override tracking: captures clinician responses to every AI suggestion
+CREATE TABLE IF NOT EXISTS ai_suggestion_overrides (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  encounter_id INTEGER NOT NULL,
+  ai_interaction_id INTEGER,
+  -- Where in the workflow the suggestion appeared
+  stage TEXT NOT NULL,
+  -- stages: intake_followup, encounter_assist, soap_generation, quality_review
+  -- What kind of suggestion item this was
+  suggestion_type TEXT NOT NULL,
+  -- types: followup_question, differential_dx, recommended_question, exam_focus,
+  --        workup_item, red_flag, soap_section, icd10_code, cpt_code,
+  --        missing_doc, quality_flag
+  -- What the AI originally suggested (single item, not the whole response)
+  ai_suggestion TEXT NOT NULL,
+  -- What the clinician did with it
+  clinician_action TEXT NOT NULL,
+  -- actions: accepted, modified, rejected, added
+  --   accepted = used as-is
+  --   modified = used but changed (clinician_value captures the edit)
+  --   rejected = explicitly dismissed or ignored
+  --   added    = clinician added something the AI did not suggest
+  clinician_value TEXT,
+  -- The provider who took the action
+  provider_name TEXT DEFAULT 'Dr. Demo',
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (encounter_id) REFERENCES encounters(id),
+  FOREIGN KEY (ai_interaction_id) REFERENCES ai_interactions(id)
+);
+
+-- Index for analytics queries: aggregate by stage, type, action
+CREATE INDEX IF NOT EXISTS idx_overrides_stage_type
+  ON ai_suggestion_overrides(stage, suggestion_type);
+CREATE INDEX IF NOT EXISTS idx_overrides_encounter
+  ON ai_suggestion_overrides(encounter_id);
+CREATE INDEX IF NOT EXISTS idx_overrides_provider
+  ON ai_suggestion_overrides(provider_name);
