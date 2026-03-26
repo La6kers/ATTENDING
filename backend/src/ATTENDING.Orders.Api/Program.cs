@@ -26,6 +26,13 @@ if (!string.IsNullOrWhiteSpace(keyVaultUri))
         new Azure.Identity.DefaultAzureCredential());
     Log.Information("Azure Key Vault configuration source active: {Uri}", keyVaultUri);
 }
+else if (builder.Environment.IsProduction())
+{
+    Log.Warning("SECURITY WARNING: AzureKeyVault:Uri is NOT configured in Production. " +
+                "Secrets are being loaded from local configuration (appsettings/env vars) " +
+                "instead of Azure Key Vault. This is unsafe for production deployments. " +
+                "Set AzureKeyVault:Uri to your Key Vault instance URI.");
+}
 
 // Configure Serilog with PHI-safe logging
 Log.Logger = new LoggerConfiguration()
@@ -42,7 +49,7 @@ builder.Host.UseSerilog();
 
 // Add services
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 builder.Services.AddInfrastructureHealthChecks(builder.Configuration);
 
 // Background service exceptions should NOT stop the host — clinical system must stay up.
@@ -105,10 +112,18 @@ builder.Services.AddControllers()
 // ============================================================
 var devBypass = builder.Configuration.GetValue<bool>("Authentication:DevBypass");
 
-if (devBypass && builder.Environment.IsProduction())
-    throw new InvalidOperationException("Authentication:DevBypass must not be enabled in production.");
+// HARD GATE: DevBypass is ONLY permitted in Development. Not Staging, not Production, not any other
+// environment. This is a defense-in-depth measure -- DevAuthHandler also refuses to construct
+// outside Development, but we block registration entirely here at startup.
+if (devBypass && !builder.Environment.IsDevelopment())
+{
+    throw new InvalidOperationException(
+        $"SECURITY VIOLATION: Authentication:DevBypass is enabled in '{builder.Environment.EnvironmentName}' environment. " +
+        "DevBypass is strictly limited to the Development environment. " +
+        "Remove or set Authentication:DevBypass=false in your configuration immediately.");
+}
 
-if (devBypass && !builder.Environment.IsProduction() && builder.Environment.IsDevelopment())
+if (devBypass && builder.Environment.IsDevelopment())
 {
     Log.Warning("Authentication bypass enabled — all requests treated as authenticated (dev only)");
 
@@ -141,14 +156,46 @@ else
                 },
                 OnTokenValidated = context =>
                 {
-                    // Verify MFA was completed for provider roles
+                    // Verify MFA was completed for provider roles.
+                    // Check both 'acr' (authentication context class reference) and
+                    // 'amr' (authentication methods reference) claims for MFA evidence.
                     var roles = context.Principal?.FindAll(ClaimTypes.Role)?.Select(c => c.Value);
                     if (roles?.Contains("Provider") == true)
                     {
                         var acr = context.Principal?.FindFirst("acr")?.Value;
-                        if (acr != "b2c_1a_signup_signin_mfa" && acr != "possessionorinherence")
+                        var amrClaims = context.Principal?.FindAll("amr")?.Select(c => c.Value).ToList()
+                            ?? new List<string>();
+
+                        // MFA is satisfied if:
+                        // 1. acr indicates an MFA policy was used, OR
+                        // 2. amr contains "mfa" (explicit MFA method), OR
+                        // 3. amr contains multiple factors (e.g., "pwd" + "otp"/"rsa"/"sms"/"fido")
+                        var acrIndicatesMfa = acr == "b2c_1a_signup_signin_mfa"
+                                           || acr == "possessionorinherence";
+                        var amrIndicatesMfa = amrClaims.Contains("mfa")
+                                           || (amrClaims.Contains("pwd") && amrClaims.Any(m =>
+                                                m == "otp" || m == "rsa" || m == "sms"
+                                                || m == "fido" || m == "hwk" || m == "swk"));
+
+                        if (!acrIndicatesMfa && !amrIndicatesMfa)
                         {
-                            context.Fail("MFA is required for provider access.");
+                            // In Production: hard rejection for Provider role without MFA
+                            // In non-Production: also reject, but log for diagnostics
+                            var env = context.HttpContext.RequestServices
+                                .GetRequiredService<IHostEnvironment>();
+                            var logger = context.HttpContext.RequestServices
+                                .GetRequiredService<ILoggerFactory>()
+                                .CreateLogger("MfaEnforcement");
+
+                            logger.LogWarning(
+                                "MFA enforcement: Provider access denied. " +
+                                "acr={Acr}, amr=[{Amr}], environment={Environment}",
+                                acr ?? "(null)",
+                                string.Join(", ", amrClaims),
+                                env.EnvironmentName);
+
+                            context.Fail("MFA is required for provider access. " +
+                                "Complete multi-factor authentication and retry.");
                         }
                     }
                     return Task.CompletedTask;

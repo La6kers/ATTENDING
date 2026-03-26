@@ -24,7 +24,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment? hostEnvironment = null)
     {
         // --------------------------------------------------------
         // Audit Interceptor (auto-populates CreatedBy/ModifiedBy/DeletedBy)
@@ -86,12 +87,35 @@ public static class DependencyInjection
 
         if (!string.IsNullOrWhiteSpace(redisConnectionString))
         {
+            // Production TLS enforcement: verify the connection string indicates TLS/SSL.
+            // The programmatic Ssl=true below forces it regardless, but warn if the
+            // connection string itself doesn't reflect this (indicates possible misconfiguration
+            // in appsettings that could cause confusion or be copy-pasted to other contexts).
+            if (hostEnvironment?.IsProduction() == true)
+            {
+                var connLower = redisConnectionString.ToLowerInvariant();
+                var hasSslFlag = connLower.Contains("ssl=true") || connLower.Contains("sslprotocol");
+                var hasRedissScheme = connLower.StartsWith("rediss://");
+                if (!hasSslFlag && !hasRedissScheme)
+                {
+                    var logger = services.BuildServiceProvider()
+                        .GetRequiredService<ILoggerFactory>()
+                        .CreateLogger("RedisSecurityCheck");
+                    logger.LogWarning(
+                        "SECURITY WARNING: Redis connection string in Production does not " +
+                        "contain 'ssl=true' or 'rediss://' scheme. TLS 1.2 is enforced " +
+                        "programmatically, but the connection string should explicitly " +
+                        "reflect TLS configuration to prevent misconfiguration drift.");
+                }
+            }
+
             // Production/staging: use Redis with connection resilience
             services.AddStackExchangeRedisCache(options =>
             {
                 options.ConfigurationOptions = StackExchange.Redis.ConfigurationOptions.Parse(redisConnectionString);
                 options.ConfigurationOptions.Ssl = true;
-                options.ConfigurationOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+                options.ConfigurationOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                                                          | System.Security.Authentication.SslProtocols.Tls13;
                 options.ConfigurationOptions.AbortOnConnectFail = false;
                 options.ConfigurationOptions.ConnectRetry = 3;
                 options.ConfigurationOptions.ReconnectRetryPolicy = new StackExchange.Redis.ExponentialRetry(5000);
@@ -103,7 +127,17 @@ public static class DependencyInjection
         else
         {
             // Development fallback: in-memory distributed cache
-            // WARNING: Not suitable for production – single instance, no persistence
+            // WARNING: Not suitable for production -- single instance, no persistence
+            if (hostEnvironment?.IsProduction() == true)
+            {
+                var logger = services.BuildServiceProvider()
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("RedisSecurityCheck");
+                logger.LogWarning(
+                    "SECURITY WARNING: No Redis connection string configured in Production. " +
+                    "Falling back to in-memory distributed cache which is NOT suitable for " +
+                    "production deployments (single-instance, no persistence, no cross-node sharing).");
+            }
             services.AddDistributedMemoryCache();
         }
 
@@ -119,7 +153,8 @@ public static class DependencyInjection
             {
                 var opts = StackExchange.Redis.ConfigurationOptions.Parse(redisConnectionString);
                 opts.Ssl = true;
-                opts.SslProtocols = System.Security.Authentication.SslProtocols.Tls12;
+                opts.SslProtocols = System.Security.Authentication.SslProtocols.Tls12
+                                  | System.Security.Authentication.SslProtocols.Tls13;
                 opts.AbortOnConnectFail = false;
                 opts.ConnectRetry = 3;
                 opts.ReconnectRetryPolicy = new StackExchange.Redis.ExponentialRetry(5000);
