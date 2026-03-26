@@ -1,63 +1,33 @@
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-
-const BRAND = {
-  primary: "#1A8FA8",
-  deepNavy: "#0C3547",
-  coral: "#E87461",
-  lightTeal: "#4FD1C5",
-  white: "#FFFFFF",
-};
+import { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { MobileAuthProvider } from '../lib/auth/MobileAuthProvider';
+import { BRAND } from '../lib/constants';
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" backgroundColor={BRAND.deepNavy} />
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: BRAND.deepNavy,
-          },
-          headerTintColor: BRAND.white,
-          headerTitleStyle: {
-            fontWeight: "700",
-            fontSize: 18,
-          },
-          contentStyle: {
-            backgroundColor: "#F0FAFA",
-          },
-        }}
-      >
-        <Stack.Screen
-          name="index"
-          options={{
-            title: "ATTENDING AI",
-            headerLargeTitle: true,
-          }}
-        />
-        <Stack.Screen
-          name="compass"
-          options={{
-            title: "COMPASS Assessment",
-          }}
-        />
-        <Stack.Screen
-          name="health"
-          options={{
-            title: "Health Dashboard",
-          }}
-        />
-        <Stack.Screen
-          name="emergency-access"
-          options={{
-            title: "Emergency Access",
-            headerStyle: {
-              backgroundColor: BRAND.coral,
-            },
-          }}
-        />
-      </Stack>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <MobileAuthProvider>
+          <StatusBar style="light" backgroundColor={BRAND.deepNavy} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="compass"
+              options={{
+                headerShown: true,
+                title: 'COMPASS Assessment',
+                headerStyle: { backgroundColor: BRAND.deepNavy },
+                headerTintColor: BRAND.white,
+                headerTitleStyle: { fontWeight: '700' },
+              }}
+            />
+          </Stack>
+        </MobileAuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

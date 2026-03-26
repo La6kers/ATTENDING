@@ -1,0 +1,50 @@
+name: Mobile Release
+
+on:
+  push:
+    tags:
+      - 'mobile-v*'
+
+defaults:
+  run:
+    working-directory: apps/mobile
+
+jobs:
+  build-and-submit:
+    name: Production Build & Submit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+        working-directory: .
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # Run tests before production build
+      - name: Run tests
+        run: npm run test:coverage -- --ci
+
+      # Build for both platforms
+      - name: Build production (iOS)
+        run: eas build --profile production --platform ios --non-interactive
+
+      - name: Build production (Android)
+        run: eas build --profile production --platform android --non-interactive
+
+      # Submit to stores
+      - name: Submit to App Store
+        run: eas submit --profile production --platform ios --non-interactive
+        continue-on-error: true
+
+      - name: Submit to Google Play
+        run: eas submit --profile production --platform android --non-interactive
+        continue-on-error: true

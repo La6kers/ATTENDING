@@ -637,6 +637,53 @@ model MedicationOrder {
   @@index([organizationId, createdAt])
 }
 
+// ============== PHARMACIES & PRICING ==============
+
+model Pharmacy {
+  id          String   @id @default(cuid())
+  name        String
+  chain       String?
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  phone       String
+  fax         String?
+  npi         String?
+  latitude    Float?
+  longitude   Float?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  prices      PharmacyPrice[]
+
+  @@index([zipCode])
+  @@index([chain])
+  @@index([isActive])
+}
+
+model PharmacyPrice {
+  id              String   @id @default(cuid())
+  pharmacyId      String
+  medicationName  String
+  strength        String
+  form            String
+  quantity        Int
+  cashPrice       Float
+  source          String   @default("manual")
+  lastVerified    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  pharmacy        Pharmacy @relation(fields: [pharmacyId], references: [id], onDelete: Cascade)
+
+  @@unique([pharmacyId, medicationName, strength, form, quantity])
+  @@index([medicationName, strength, form, quantity])
+  @@index([pharmacyId])
+  @@index([lastVerified])
+}
+
 // ============== REFERRALS ==============
 
 model Referral {
