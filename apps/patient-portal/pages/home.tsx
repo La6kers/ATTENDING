@@ -422,6 +422,7 @@ export default function PatientHome() {
                 draggableHandle=".widget-drag-handle"
                 isResizable={true}
                 isDraggable={true}
+                resizeHandles={['s']}
                 margin={[16, 16]}
                 containerPadding={[0, 0]}
               >
