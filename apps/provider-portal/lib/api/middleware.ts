@@ -149,51 +149,35 @@ async function logAuditEntry(entry: AuditLogEntry): Promise<void> {
 }
 
 // =============================================================================
-// Development Mode Auth Bypass
+// Auth Bypass REMOVED — Phase 0 Security Hardening
+// SKIP_AUTH and getDevUser() have been removed. All requests must
+// authenticate via NextAuth session (CredentialsProvider in dev,
+// Azure AD B2C in production).
 // =============================================================================
-
-function getDevUser(): SessionUser {
-  return {
-    id: 'dev-user-001',
-    name: 'Dr. Dev Provider',
-    email: 'dev@attending.ai',
-    role: 'provider',
-  };
-}
 
 // =============================================================================
 // Main Middleware Functions
 // =============================================================================
 
 /**
- * Wrap an API handler with authentication
- * In development mode, uses a mock user
+ * Wrap an API handler with authentication.
+ * Requires a valid NextAuth session in all environments.
  */
 export function withAuth(handler: AuthenticatedHandler): NextApiHandler {
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    // Development mode bypass
-    if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
-      const authenticatedReq = req as AuthenticatedRequest;
-      authenticatedReq.user = getDevUser();
-      authenticatedReq.sessionId = 'dev-session-001';
-      return handler(authenticatedReq, res);
-    }
-    
-    // Get session from NextAuth
     const session = await getServerSession(req, res, authOptions);
-    
+
     if (!session || !session.user) {
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'Authentication required',
       });
     }
-    
-    // Attach user to request
+
     const authenticatedReq = req as AuthenticatedRequest;
     authenticatedReq.user = session.user as SessionUser;
     authenticatedReq.sessionId = (session as any).sessionId || 'unknown';
-    
+
     return handler(authenticatedReq, res);
   };
 }
@@ -303,25 +287,18 @@ export function withApiMiddleware(
     
     // Authentication (if required)
     if (options.requireAuth !== false) {
-      // Development mode bypass
-      if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
-        const authenticatedReq = req as AuthenticatedRequest;
-        authenticatedReq.user = getDevUser();
-        authenticatedReq.sessionId = 'dev-session-001';
-      } else {
-        const session = await getServerSession(req, res, authOptions);
-        
-        if (!session || !session.user) {
-          return res.status(401).json({
-            error: 'Unauthorized',
-            message: 'Authentication required',
-          });
-        }
-        
-        const authenticatedReq = req as AuthenticatedRequest;
-        authenticatedReq.user = session.user as SessionUser;
-        authenticatedReq.sessionId = (session as any).sessionId || 'unknown';
+      const session = await getServerSession(req, res, authOptions);
+
+      if (!session || !session.user) {
+        return res.status(401).json({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        });
       }
+
+      const authenticatedReq = req as AuthenticatedRequest;
+      authenticatedReq.user = session.user as SessionUser;
+      authenticatedReq.sessionId = (session as any).sessionId || 'unknown';
     }
     
     const authenticatedReq = req as AuthenticatedRequest;

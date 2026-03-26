@@ -7,10 +7,11 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { 
-  clinicalProtocolEngine, 
-  type ProtocolResult 
+import {
+  clinicalProtocolEngine,
+  type ProtocolResult
 } from '@attending/clinical-services';
+import { requireAuth } from '@/lib/api/auth';
 
 interface ProtocolApiRequest {
   condition: string;
@@ -76,11 +77,10 @@ function validateRequest(body: unknown): { valid: boolean; errors: string[] } {
   return { valid: errors.length === 0, errors };
 }
 
-export default async function handler(
+export default requireAuth(async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ProtocolResponse>
 ) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
@@ -166,4 +166,4 @@ export default async function handler(
       timestamp: new Date().toISOString(),
     });
   }
-}
+});

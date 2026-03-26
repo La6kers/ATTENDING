@@ -16,8 +16,9 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { backendFetch, isBackendAvailable, BackendError } from '@/lib/api/backendProxy';
+import { requireAuth } from '@/lib/api/auth';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default requireAuth(async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Reconstruct the backend path from the catch-all segments
   const { path } = req.query;
   const segments = Array.isArray(path) ? path : [path];
@@ -64,4 +65,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-}
+});

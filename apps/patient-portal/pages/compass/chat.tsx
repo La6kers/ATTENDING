@@ -238,6 +238,13 @@ export default function CompassChatPage() {
           </div>
         </header>
 
+        {/* Clinical disclaimer */}
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-1.5 text-center">
+          <p className="text-[10px] text-blue-700">
+            Not a substitute for emergency services. Call 911 for emergencies. Your responses will be reviewed by your healthcare provider.
+          </p>
+        </div>
+
         {/* Demo notice */}
         {demo === 'true' && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center">

@@ -191,6 +191,20 @@ export default function CompassLanding() {
             </div>
           </div>
 
+          {/* Clinical disclaimer */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex gap-3">
+              <Shield className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  This tool does not provide medical advice, diagnosis, or treatment. Your responses
+                  will be reviewed by your healthcare provider, who makes all clinical decisions.
+                  ATTENDING AI is a decision support assistant — not a substitute for professional medical care.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* CTA */}
           <button
             onClick={handleStart}

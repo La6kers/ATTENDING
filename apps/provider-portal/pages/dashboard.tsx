@@ -261,7 +261,13 @@ export default function ProviderDashboard() {
       </Head>
 
       <ProviderShell contextBadge="Dashboard" currentPage="dashboard" fullWidth>
-        <div className="flex h-[calc(100vh-112px)]">
+        {/* Clinical disclaimer */}
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-1.5">
+          <p className="text-[10px] text-blue-700 text-center">
+            Clinical decision support only. Not a diagnostic tool. Provider judgment required. AI assists with information — it does not make clinical decisions.
+          </p>
+        </div>
+        <div className="flex h-[calc(100vh-136px)]">
 
           {/* ═══ SIDEBAR: Work Links ═══ */}
           <div className="w-[240px] flex-shrink-0 border-r border-gray-200 flex flex-col"
