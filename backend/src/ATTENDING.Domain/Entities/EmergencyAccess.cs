@@ -137,8 +137,43 @@ public class EmergencyAccessProfile : BaseEntity, IHasDomainEvents
 /// <summary>
 /// Record of a first responder accessing a patient's emergency medical record.
 /// Every field is required for HIPAA compliance.
-/// 
-/// This is an immutable audit record — once created, it cannot be modified or deleted.
+///
+/// This is an immutable audit record -- once created, it cannot be modified or deleted.
+///
+/// ── Patent 12 Mapping: Emergency Medical Access ───────────────────────────
+/// This entity implements the reduction-to-practice for Patent 12 ("Emergency
+/// Medical Access"), which covers a crash-detection and first-responder
+/// authentication system that provides time-limited access to critical
+/// patient medical data during emergencies.
+///
+/// Patent 12 claim elements mapped to this entity:
+///   Claim 1 — Who accessed (responder identity)
+///             → ResponderName, BadgeNumber, Agency, ResponderPhotoUri
+///   Claim 2 — When (timestamp of access)
+///             → AccessGrantedAt, AccessExpiresAt, AccessEndedAt
+///   Claim 3 — What was accessed (which data fields)
+///             → SectionsViewed (CSV of facesheet sections: DNR, Allergies,
+///               Medications, Diagnoses, EmergencyContacts, ImplantedDevices)
+///   Claim 4 — How access was granted (trigger mechanism)
+///             → TriggerType ("GForce" = crash detection, "Manual" = manual unlock,
+///               "TimerAutoGrant" = countdown expiry)
+///             → ConsentMethod ("PatientApproved", "AutoGrantTimeout", "ManualOverride")
+///             → PeakGForce (accelerometer reading at trigger, null if manual)
+///   Claim 5 — GPS coordinates at time of access
+///             → TriggerLatitude, TriggerLongitude
+///   Claim 6 — HIPAA compliance acknowledgment
+///             → HipaaAcknowledged (required true to create the log)
+///   Claim 7 — Time-limited access window
+///             → AccessWindowMinutes (configured on EmergencyAccessProfile)
+///             → IsAccessValid() enforces expiry
+///
+/// Supporting entities:
+///   - EmergencyAccessProfile — patient opt-in, G-force threshold, access window config
+///   - EmergencyFacesheet — read-only snapshot served during access
+///
+/// Supporting events:
+///   - EmergencyRecordAccessedEvent — raised on Create() for real-time alerting
+/// ──────────────────────────────────────────────────────────────────────────
 /// </summary>
 public class EmergencyAccessLog : BaseEntity, IHasDomainEvents
 {

@@ -121,7 +121,15 @@ public static class EventBusExtensions
         services.AddMassTransit(cfg =>
         {
             RegisterConsumers(cfg);
-            cfg.UsingInMemory((ctx, inMem) => inMem.ConfigureEndpoints(ctx));
+            cfg.UsingInMemory((ctx, inMem) =>
+            {
+                // Retry policy — match Azure Service Bus configuration for consistency.
+                // Without this, transient failures (e.g., DbContext concurrency during
+                // event handling) would immediately fault the message with no retry.
+                inMem.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
+
+                inMem.ConfigureEndpoints(ctx);
+            });
         });
 
         // Override the in-process IEventBus with MassTransit-backed implementation
