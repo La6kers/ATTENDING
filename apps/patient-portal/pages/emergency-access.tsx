@@ -169,118 +169,117 @@ const QuickVitalInfo: React.FC<{
 
   return (
     <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, #0C3547, #0C4C5E)`, fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Header bar */}
-      <div style={{ background: CORAL, padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 44, height: 44, background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Heart size={22} color={CORAL} />
+      {/* Header bar — large patient name for quick ID */}
+      <div style={{ background: CORAL, padding: '20px 24px', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 52, height: 52, background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Heart size={26} color={CORAL} />
           </div>
           <div>
-            <h1 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>EMERGENCY VITAL INFO</h1>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0 }}>
-              {info.patientName} • {info.age}yo • DOB: {info.dateOfBirth}
+            <h1 style={{ color: 'white', fontSize: '1.375rem', fontWeight: 700, margin: 0 }}>EMERGENCY VITAL INFO</h1>
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.1rem', margin: 0, fontWeight: 600 }}>
+              {info.patientName} • {info.age}yo
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', margin: 0 }}>
+              DOB: {info.dateOfBirth}
             </p>
           </div>
         </div>
       </div>
 
-      <div style={{ padding: '16px 20px', paddingBottom: 120 }}>
-        {/* Blood Type — huge and prominent */}
-        <div style={{ background: 'rgba(232,116,97,0.15)', border: '2px solid rgba(232,116,97,0.4)', borderRadius: 16, padding: '16px 20px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Droplets size={32} color={CORAL} />
-          <div>
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: 1 }}>Blood Type</div>
-            <div style={{ color: 'white', fontSize: '2rem', fontWeight: 700 }}>{info.bloodType}</div>
+      <div style={{ padding: '20px 24px', paddingBottom: 130 }}>
+        {/* Blood Type + Code Status — side by side, HUGE */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+          <div style={{ background: 'rgba(232,116,97,0.15)', border: '2px solid rgba(232,116,97,0.4)', borderRadius: 18, padding: '20px 16px', textAlign: 'center' }}>
+            <Droplets size={36} color={CORAL} style={{ margin: '0 auto 8px' }} />
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: 1.5 }}>Blood Type</div>
+            <div style={{ color: 'white', fontSize: '3rem', fontWeight: 700, lineHeight: 1.1 }}>{info.bloodType}</div>
           </div>
-        </div>
-
-        {/* Code Status */}
-        <div style={{ background: info.dnr ? 'rgba(232,116,97,0.2)' : 'rgba(79,209,197,0.15)', border: `2px solid ${info.dnr ? 'rgba(232,116,97,0.5)' : 'rgba(79,209,197,0.4)'}`, borderRadius: 16, padding: '16px 20px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <Shield size={28} color={info.dnr ? CORAL : '#4FD1C5'} />
-          <div>
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: 1 }}>Code Status</div>
-            <div style={{ color: 'white', fontSize: '1.5rem', fontWeight: 700 }}>
+          <div style={{ background: info.dnr ? 'rgba(232,116,97,0.2)' : 'rgba(79,209,197,0.15)', border: `2px solid ${info.dnr ? 'rgba(232,116,97,0.5)' : 'rgba(79,209,197,0.4)'}`, borderRadius: 18, padding: '20px 16px', textAlign: 'center' }}>
+            <Shield size={36} color={info.dnr ? CORAL : '#4FD1C5'} style={{ margin: '0 auto 8px' }} />
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: 1.5 }}>Code Status</div>
+            <div style={{ color: 'white', fontSize: '2rem', fontWeight: 700, lineHeight: 1.1 }}>
               {info.dnr ? '⚠️ DNR' : 'FULL CODE'}
             </div>
           </div>
         </div>
 
-        {/* Critical Alerts */}
+        {/* Critical Alerts — large text */}
         {info.notes && (
-          <div style={{ background: 'rgba(245,158,11,0.15)', border: '2px solid rgba(245,158,11,0.3)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <AlertTriangle size={18} color="#FBBF24" />
-              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.875rem' }}>CRITICAL ALERTS</span>
+          <div style={{ background: 'rgba(245,158,11,0.15)', border: '2px solid rgba(245,158,11,0.3)', borderRadius: 18, padding: 20, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <AlertTriangle size={24} color="#FBBF24" />
+              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '1.1rem' }}>CRITICAL ALERTS</span>
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>{info.notes}</p>
+            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.125rem', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{info.notes}</p>
           </div>
         )}
 
-        {/* Allergies */}
-        <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <AlertTriangle size={18} color={CORAL_LIGHT} />
-            <span style={{ color: CORAL_LIGHT, fontWeight: 700, fontSize: '0.875rem' }}>ALLERGIES</span>
+        {/* Allergies — large pills */}
+        <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: 20, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <AlertTriangle size={22} color={CORAL_LIGHT} />
+            <span style={{ color: CORAL_LIGHT, fontWeight: 700, fontSize: '1.05rem' }}>ALLERGIES</span>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 10 }}>
             {info.allergies.map((allergy, idx) => (
-              <span key={idx} style={{ padding: '8px 16px', background: 'rgba(232,116,97,0.2)', border: '1px solid rgba(232,116,97,0.3)', borderRadius: 24, color: 'white', fontWeight: 600, fontSize: '0.9rem' }}>
+              <span key={idx} style={{ padding: '12px 20px', background: 'rgba(232,116,97,0.2)', border: '1px solid rgba(232,116,97,0.3)', borderRadius: 28, color: 'white', fontWeight: 700, fontSize: '1.15rem' }}>
                 ⚠️ {allergy}
               </span>
             ))}
           </div>
         </div>
 
-        {/* Critical Medications */}
+        {/* Critical Medications — large */}
         {criticalMeds.length > 0 && (
-          <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Pill size={18} color="#FBBF24" />
-              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.875rem' }}>HIGH-RISK MEDICATIONS</span>
+          <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: 20, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <Pill size={22} color="#FBBF24" />
+              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '1.05rem' }}>HIGH-RISK MEDICATIONS</span>
             </div>
             {criticalMeds.map((med, idx) => (
-              <div key={idx} style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: 12, marginBottom: idx < criticalMeds.length - 1 ? 8 : 0 }}>
-                <div style={{ color: 'white', fontWeight: 600 }}>{med.name}</div>
-                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>{med.dosage} • {med.frequency}</div>
+              <div key={idx} style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 14, padding: 16, marginBottom: idx < criticalMeds.length - 1 ? 10 : 0 }}>
+                <div style={{ color: 'white', fontWeight: 700, fontSize: '1.2rem' }}>{med.name}</div>
+                <div style={{ color: 'rgba(255,255,255,0.65)', fontSize: '1rem', marginTop: 2 }}>{med.dosage} • {med.frequency}</div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Implants */}
+        {/* Implants — large */}
         {info.implants.length > 0 && (
-          <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Syringe size={18} color="#FBBF24" />
-              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.875rem' }}>IMPLANTS / DEVICES</span>
+          <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: 20, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <Syringe size={22} color="#FBBF24" />
+              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '1.05rem' }}>IMPLANTS / DEVICES</span>
             </div>
             {info.implants.map((implant, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'rgba(255,255,255,0.85)' }}>
-                <AlertCircle size={16} style={{ marginTop: 3, flexShrink: 0, color: '#FBBF24' }} />
-                <span style={{ fontWeight: 500 }}>{implant}</span>
+              <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, color: 'rgba(255,255,255,0.9)' }}>
+                <AlertCircle size={20} style={{ marginTop: 3, flexShrink: 0, color: '#FBBF24' }} />
+                <span style={{ fontWeight: 600, fontSize: '1.1rem', lineHeight: 1.4 }}>{implant}</span>
               </div>
             ))}
           </div>
         )}
 
-        {/* Emergency Contacts — quick-dial */}
-        <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <Phone size={18} color="#4FD1C5" />
-            <span style={{ color: '#4FD1C5', fontWeight: 700, fontSize: '0.875rem' }}>EMERGENCY CONTACTS</span>
+        {/* Emergency Contacts — large tap targets */}
+        <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 18, padding: 20, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <Phone size={22} color="#4FD1C5" />
+            <span style={{ color: '#4FD1C5', fontWeight: 700, fontSize: '1.05rem' }}>EMERGENCY CONTACTS</span>
           </div>
           {info.emergencyContacts.map((contact, idx) => (
             <a key={idx} href={`tel:${contact.phone.replace(/\D/g, '')}`}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(79,209,197,0.1)', borderRadius: 12, padding: 12, marginBottom: idx < info.emergencyContacts.length - 1 ? 8 : 0, textDecoration: 'none' }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(79,209,197,0.1)', borderRadius: 14, padding: '16px 18px', marginBottom: idx < info.emergencyContacts.length - 1 ? 10 : 0, textDecoration: 'none' }}>
               <div>
-                <div style={{ color: 'white', fontWeight: 600 }}>
+                <div style={{ color: 'white', fontWeight: 700, fontSize: '1.15rem' }}>
                   {contact.name}
-                  {contact.isPrimary && <span style={{ marginLeft: 8, padding: '2px 8px', background: 'rgba(79,209,197,0.2)', color: '#4FD1C5', borderRadius: 6, fontSize: '0.7rem', fontWeight: 700 }}>PRIMARY</span>}
+                  {contact.isPrimary && <span style={{ marginLeft: 10, padding: '3px 10px', background: 'rgba(79,209,197,0.2)', color: '#4FD1C5', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700 }}>PRIMARY</span>}
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>{contact.relationship}</div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', marginTop: 2 }}>{contact.relationship}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4FD1C5', fontWeight: 700, fontSize: '0.9rem' }}>
-                <Phone size={16} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#4FD1C5', fontWeight: 700, fontSize: '1.05rem' }}>
+                <Phone size={20} />
                 {contact.phone}
               </div>
             </a>
@@ -289,16 +288,16 @@ const QuickVitalInfo: React.FC<{
       </div>
 
       {/* Fixed bottom: Unlock Full Chart */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', paddingBottom: 24, background: 'linear-gradient(transparent, #0C3547 30%)' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '20px 24px', paddingBottom: 28, background: 'linear-gradient(transparent, #0C3547 30%)' }}>
         <button
           onClick={onRequestFullAccess}
-          style={{ width: '100%', padding: '16px 0', background: CORAL, color: 'white', borderRadius: 16, fontWeight: 700, fontSize: '1rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 20px rgba(232,116,97,0.4)' }}
+          style={{ width: '100%', padding: '18px 0', background: CORAL, color: 'white', borderRadius: 18, fontWeight: 700, fontSize: '1.15rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, boxShadow: '0 4px 24px rgba(232,116,97,0.4)' }}
         >
-          <Lock size={18} />
+          <Lock size={22} />
           Unlock Full Medical Chart
-          <ChevronRight size={18} />
+          <ChevronRight size={22} />
         </button>
-        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', marginTop: 8 }}>
+        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '0.75rem', marginTop: 10 }}>
           Requires first responder identification + photo
         </p>
       </div>
@@ -393,39 +392,39 @@ const FullMedicalChart: React.FC<{
   accessTime: Date;
 }> = ({ info, accessTime }) => {
   return (
-    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, #0C3547, #0C4C5E)`, fontFamily: "'DM Sans', sans-serif", paddingBottom: 80 }}>
-      {/* Header */}
-      <div style={{ background: CORAL, padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 44, height: 44, background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Heart size={22} color={CORAL} />
+    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, #0C3547, #0C4C5E)`, fontFamily: "'DM Sans', sans-serif", paddingBottom: 60, fontSize: '0.85rem' }}>
+      {/* Header — compact */}
+      <div style={{ background: CORAL, padding: '12px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Heart size={18} color={CORAL} />
           </div>
           <div>
-            <h1 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>FULL MEDICAL CHART</h1>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0 }}>
+            <h1 style={{ color: 'white', fontSize: '0.95rem', fontWeight: 700, margin: 0 }}>FULL MEDICAL CHART</h1>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', margin: 0 }}>
               {info.patientName} • {info.age}yo • DOB: {info.dateOfBirth}
             </p>
           </div>
         </div>
       </div>
 
-      <div style={{ padding: '16px 20px' }}>
-        {/* Quick stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
-          <div style={{ background: 'rgba(232,116,97,0.15)', border: '1px solid rgba(232,116,97,0.3)', borderRadius: 14, padding: '12px 0', textAlign: 'center' }}>
-            <Droplets size={20} color={CORAL_LIGHT} style={{ margin: '0 auto 4px' }} />
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Blood Type</div>
-            <div style={{ color: 'white', fontSize: '1.25rem', fontWeight: 700 }}>{info.bloodType}</div>
+      <div style={{ padding: '12px 16px' }}>
+        {/* Quick stats row — compact */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+          <div style={{ background: 'rgba(232,116,97,0.15)', border: '1px solid rgba(232,116,97,0.3)', borderRadius: 10, padding: '8px 0', textAlign: 'center' }}>
+            <Droplets size={16} color={CORAL_LIGHT} style={{ margin: '0 auto 2px' }} />
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Blood Type</div>
+            <div style={{ color: 'white', fontSize: '1rem', fontWeight: 700 }}>{info.bloodType}</div>
           </div>
-          <div style={{ background: info.dnr ? 'rgba(232,116,97,0.15)' : 'rgba(79,209,197,0.12)', border: `1px solid ${info.dnr ? 'rgba(232,116,97,0.3)' : 'rgba(79,209,197,0.3)'}`, borderRadius: 14, padding: '12px 0', textAlign: 'center' }}>
-            <Shield size={20} color={info.dnr ? CORAL_LIGHT : '#4FD1C5'} style={{ margin: '0 auto 4px' }} />
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Status</div>
-            <div style={{ color: 'white', fontSize: '1rem', fontWeight: 700 }}>{info.dnr ? 'DNR' : 'Full Code'}</div>
+          <div style={{ background: info.dnr ? 'rgba(232,116,97,0.15)' : 'rgba(79,209,197,0.12)', border: `1px solid ${info.dnr ? 'rgba(232,116,97,0.3)' : 'rgba(79,209,197,0.3)'}`, borderRadius: 10, padding: '8px 0', textAlign: 'center' }}>
+            <Shield size={16} color={info.dnr ? CORAL_LIGHT : '#4FD1C5'} style={{ margin: '0 auto 2px' }} />
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Status</div>
+            <div style={{ color: 'white', fontSize: '0.85rem', fontWeight: 700 }}>{info.dnr ? 'DNR' : 'Full Code'}</div>
           </div>
-          <div style={{ background: 'rgba(79,209,197,0.12)', border: '1px solid rgba(79,209,197,0.3)', borderRadius: 14, padding: '12px 0', textAlign: 'center' }}>
-            <Activity size={20} color="#4FD1C5" style={{ margin: '0 auto 4px' }} />
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Meds</div>
-            <div style={{ color: 'white', fontSize: '1rem', fontWeight: 700 }}>{info.medications.length} active</div>
+          <div style={{ background: 'rgba(79,209,197,0.12)', border: '1px solid rgba(79,209,197,0.3)', borderRadius: 10, padding: '8px 0', textAlign: 'center' }}>
+            <Activity size={16} color="#4FD1C5" style={{ margin: '0 auto 2px' }} />
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Meds</div>
+            <div style={{ color: 'white', fontSize: '0.85rem', fontWeight: 700 }}>{info.medications.length} active</div>
           </div>
         </div>
 
@@ -568,10 +567,10 @@ const SectionCard: React.FC<{
   titleColor: string;
   children: React.ReactNode;
 }> = ({ title, icon, titleColor, children }) => (
-  <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, marginBottom: 10 }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+  <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: 12, marginBottom: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 8 }}>
       {icon}
-      <span style={{ color: titleColor, fontWeight: 700, fontSize: '0.8rem', letterSpacing: 0.5 }}>{title}</span>
+      <span style={{ color: titleColor, fontWeight: 700, fontSize: '0.7rem', letterSpacing: 0.5, textTransform: 'uppercase' as const }}>{title}</span>
     </div>
     {children}
   </div>
