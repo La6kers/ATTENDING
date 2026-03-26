@@ -188,9 +188,11 @@
     .portal-snf::before { background: linear-gradient(90deg, #06b6d4, #0891b2); }
     .portal-admin::before { background: linear-gradient(90deg, #0F5F76, var(--header-dark)); }
     .portal-pharmacy::before { background: linear-gradient(90deg, #14b8a6, #0d9488); }
+    .portal-compass::before { background: linear-gradient(90deg, var(--primary-teal), var(--gold)); }
 
     .icon-provider { background: linear-gradient(135deg, var(--primary-teal), var(--light-teal)); }
     .icon-patient { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .icon-compass { background: linear-gradient(135deg, var(--primary-teal), var(--gold)); }
     .icon-ems { background: linear-gradient(135deg, #ef4444, #dc2626); }
     .icon-er { background: linear-gradient(135deg, var(--coral), #d4624f); }
     .icon-it { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
@@ -239,17 +241,27 @@
       </a>
 
       <!-- Patient Portal -->
-      <a href="//localhost:4501/" class="portal-card portal-patient">
+      <a href="//localhost:4501/api/auth/signin" class="portal-card portal-patient">
         <div class="card-icon icon-patient">👤</div>
         <div class="card-title">Patient Portal</div>
         <div class="card-description">
-          COMPASS self-intake, crash detection, referral tracker, health records,
+          Mobile health dashboard with recent visits, crash detection, referral tracker,
           emergency access, medication tracking, appointments, and secure messaging.
-          <span style="display:block;margin-top:0.5rem;color:rgba(255,255,255,0.4);font-size:0.7rem;">
-            Public: /compass &bull; Protected: /home, /health, /emergency (requires patient auth)
-          </span>
         </div>
-        <div class="card-status"><span class="dot dot-live"></span> Live — COMPASS public, protected pages require auth</div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Sign in with any email (dev mode)</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- COMPASS -->
+      <a href="//localhost:4501/compass" class="portal-card portal-compass">
+        <div class="card-icon icon-compass">🧭</div>
+        <div class="card-title">COMPASS <span class="badge">AI</span></div>
+        <div class="card-description">
+          AI-guided pre-visit health assessment. Patients answer questions in a
+          chat format — COMPASS generates a clinical summary for the provider.
+          No login required.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Public access, no auth required</div>
         <span class="card-arrow">→</span>
       </a>
 

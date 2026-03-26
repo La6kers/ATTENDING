@@ -10,7 +10,7 @@ export default function Index() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/compass');
+    router.replace('/home');
   }, [router]);
 
   return (
