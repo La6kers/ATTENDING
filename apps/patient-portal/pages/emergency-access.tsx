@@ -2,7 +2,12 @@
 // ATTENDING AI - Emergency Access Page
 // apps/patient-portal/pages/emergency-access.tsx
 //
-// The page shown when crash is detected or when emergency access is triggered
+// Three-stage flow:
+//   1. Countdown (crash-triggered) → cancelable
+//   2. Quick Vital Info — immediate access, no ID required
+//      Shows: blood type, allergies, critical meds, implants, code status
+//      + button to unlock full chart
+//   3. Full Chart Access — requires name + badge + auto photo capture
 // =============================================================================
 
 import React, { useState, useEffect } from 'react';
@@ -20,7 +25,15 @@ import {
   Syringe,
   FileText,
   Camera,
+  Lock,
+  ChevronRight,
+  Activity,
 } from 'lucide-react';
+
+// Brand coral color
+const CORAL = '#E87461';
+const CORAL_DARK = '#D4604F';
+const CORAL_LIGHT = '#F2998E';
 
 // =============================================================================
 // Types
@@ -93,11 +106,11 @@ const mockMedicalInfo: MedicalInfo = {
   physicianPhone: '(555) 345-6789',
   insuranceProvider: 'Blue Cross Blue Shield',
   insuranceId: 'XYZ123456789',
-  notes: 'Patient on anticoagulation (Eliquis) - INCREASED BLEEDING RISK. Has pacemaker - AVOID MRI without cardiology clearance. Contact cardiology for pacemaker interrogation if needed.',
+  notes: 'Patient on anticoagulation (Eliquis) - INCREASED BLEEDING RISK. Has pacemaker - AVOID MRI without cardiology clearance.',
 };
 
 // =============================================================================
-// Countdown Screen Component
+// Stage 0: Countdown Screen (crash-triggered)
 // =============================================================================
 
 const CountdownScreen: React.FC<{
@@ -108,52 +121,35 @@ const CountdownScreen: React.FC<{
   const [countdown, setCountdown] = useState(seconds);
 
   useEffect(() => {
-    if (countdown <= 0) {
-      onExpire();
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setCountdown(prev => prev - 1);
-    }, 1000);
-
+    if (countdown <= 0) { onExpire(); return; }
+    const timer = setInterval(() => setCountdown((p) => p - 1), 1000);
     return () => clearInterval(timer);
   }, [countdown, onExpire]);
 
   return (
-    <div className="min-h-screen bg-red-600 flex flex-col items-center justify-center p-6 text-white">
-      {/* Pulsing Alert */}
-      <div className="relative mb-8">
-        <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center animate-pulse">
-          <AlertTriangle size={64} className="text-red-600" />
+    <div style={{ minHeight: '100vh', background: `linear-gradient(135deg, ${CORAL_DARK}, ${CORAL})`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, color: 'white' }}>
+      <div style={{ position: 'relative', marginBottom: 32 }}>
+        <div style={{ width: 128, height: 128, background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <AlertTriangle size={64} color={CORAL} />
         </div>
-        <div className="absolute inset-0 w-32 h-32 bg-white rounded-full animate-ping opacity-30" />
       </div>
-
-      <h1 className="text-3xl font-bold mb-2">CRASH DETECTED</h1>
-      <p className="text-red-100 text-center mb-8 max-w-xs">
+      <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: 8 }}>CRASH DETECTED</h1>
+      <p style={{ color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginBottom: 32, maxWidth: 280 }}>
         Emergency Medical Access will activate in:
       </p>
-
-      {/* Countdown Timer */}
-      <div className="text-8xl font-bold mb-8 tabular-nums">
+      <div style={{ fontSize: '5rem', fontWeight: 700, marginBottom: 32, fontVariantNumeric: 'tabular-nums' }}>
         {countdown}
       </div>
-
-      <p className="text-red-100 text-center mb-8 max-w-xs">
+      <p style={{ color: 'rgba(255,255,255,0.75)', textAlign: 'center', marginBottom: 32 }}>
         Tap below if you're okay to cancel
       </p>
-
-      {/* Cancel Button */}
       <button
         onClick={onCancel}
-        className="w-full max-w-xs py-4 bg-white text-red-600 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform"
+        style={{ width: '100%', maxWidth: 320, padding: '16px 0', background: 'white', color: CORAL, borderRadius: 12, fontWeight: 700, fontSize: '1.125rem', border: 'none', cursor: 'pointer' }}
       >
         I'M OKAY - CANCEL
       </button>
-
-      {/* Info */}
-      <div className="mt-8 text-center text-red-200 text-sm">
+      <div style={{ marginTop: 32, textAlign: 'center', color: 'rgba(255,255,255,0.6)', fontSize: '0.875rem' }}>
         <p>Your emergency contacts will be notified</p>
         <p>Location will be shared with emergency services</p>
       </div>
@@ -162,17 +158,165 @@ const CountdownScreen: React.FC<{
 };
 
 // =============================================================================
-// First Responder Identification Component
+// Stage 1: Quick Vital Info (NO identification required)
+// =============================================================================
+
+const QuickVitalInfo: React.FC<{
+  info: MedicalInfo;
+  onRequestFullAccess: () => void;
+}> = ({ info, onRequestFullAccess }) => {
+  const criticalMeds = info.medications.filter((m) => m.critical);
+
+  return (
+    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, #0C3547, #0C4C5E)`, fontFamily: "'DM Sans', sans-serif" }}>
+      {/* Header bar */}
+      <div style={{ background: CORAL, padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 44, height: 44, background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Heart size={22} color={CORAL} />
+          </div>
+          <div>
+            <h1 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>EMERGENCY VITAL INFO</h1>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0 }}>
+              {info.patientName} • {info.age}yo • DOB: {info.dateOfBirth}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: '16px 20px', paddingBottom: 120 }}>
+        {/* Blood Type — huge and prominent */}
+        <div style={{ background: 'rgba(232,116,97,0.15)', border: '2px solid rgba(232,116,97,0.4)', borderRadius: 16, padding: '16px 20px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Droplets size={32} color={CORAL} />
+          <div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: 1 }}>Blood Type</div>
+            <div style={{ color: 'white', fontSize: '2rem', fontWeight: 700 }}>{info.bloodType}</div>
+          </div>
+        </div>
+
+        {/* Code Status */}
+        <div style={{ background: info.dnr ? 'rgba(232,116,97,0.2)' : 'rgba(79,209,197,0.15)', border: `2px solid ${info.dnr ? 'rgba(232,116,97,0.5)' : 'rgba(79,209,197,0.4)'}`, borderRadius: 16, padding: '16px 20px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Shield size={28} color={info.dnr ? CORAL : '#4FD1C5'} />
+          <div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: 1 }}>Code Status</div>
+            <div style={{ color: 'white', fontSize: '1.5rem', fontWeight: 700 }}>
+              {info.dnr ? '⚠️ DNR' : 'FULL CODE'}
+            </div>
+          </div>
+        </div>
+
+        {/* Critical Alerts */}
+        {info.notes && (
+          <div style={{ background: 'rgba(245,158,11,0.15)', border: '2px solid rgba(245,158,11,0.3)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <AlertTriangle size={18} color="#FBBF24" />
+              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.875rem' }}>CRITICAL ALERTS</span>
+            </div>
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>{info.notes}</p>
+          </div>
+        )}
+
+        {/* Allergies */}
+        <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <AlertTriangle size={18} color={CORAL_LIGHT} />
+            <span style={{ color: CORAL_LIGHT, fontWeight: 700, fontSize: '0.875rem' }}>ALLERGIES</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 8 }}>
+            {info.allergies.map((allergy, idx) => (
+              <span key={idx} style={{ padding: '8px 16px', background: 'rgba(232,116,97,0.2)', border: '1px solid rgba(232,116,97,0.3)', borderRadius: 24, color: 'white', fontWeight: 600, fontSize: '0.9rem' }}>
+                ⚠️ {allergy}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Critical Medications */}
+        {criticalMeds.length > 0 && (
+          <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Pill size={18} color="#FBBF24" />
+              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.875rem' }}>HIGH-RISK MEDICATIONS</span>
+            </div>
+            {criticalMeds.map((med, idx) => (
+              <div key={idx} style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: 12, marginBottom: idx < criticalMeds.length - 1 ? 8 : 0 }}>
+                <div style={{ color: 'white', fontWeight: 600 }}>{med.name}</div>
+                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem' }}>{med.dosage} • {med.frequency}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Implants */}
+        {info.implants.length > 0 && (
+          <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Syringe size={18} color="#FBBF24" />
+              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.875rem' }}>IMPLANTS / DEVICES</span>
+            </div>
+            {info.implants.map((implant, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'rgba(255,255,255,0.85)' }}>
+                <AlertCircle size={16} style={{ marginTop: 3, flexShrink: 0, color: '#FBBF24' }} />
+                <span style={{ fontWeight: 500 }}>{implant}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Emergency Contacts — quick-dial */}
+        <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 16, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <Phone size={18} color="#4FD1C5" />
+            <span style={{ color: '#4FD1C5', fontWeight: 700, fontSize: '0.875rem' }}>EMERGENCY CONTACTS</span>
+          </div>
+          {info.emergencyContacts.map((contact, idx) => (
+            <a key={idx} href={`tel:${contact.phone.replace(/\D/g, '')}`}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(79,209,197,0.1)', borderRadius: 12, padding: 12, marginBottom: idx < info.emergencyContacts.length - 1 ? 8 : 0, textDecoration: 'none' }}>
+              <div>
+                <div style={{ color: 'white', fontWeight: 600 }}>
+                  {contact.name}
+                  {contact.isPrimary && <span style={{ marginLeft: 8, padding: '2px 8px', background: 'rgba(79,209,197,0.2)', color: '#4FD1C5', borderRadius: 6, fontSize: '0.7rem', fontWeight: 700 }}>PRIMARY</span>}
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>{contact.relationship}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4FD1C5', fontWeight: 700, fontSize: '0.9rem' }}>
+                <Phone size={16} />
+                {contact.phone}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Fixed bottom: Unlock Full Chart */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', paddingBottom: 24, background: 'linear-gradient(transparent, #0C3547 30%)' }}>
+        <button
+          onClick={onRequestFullAccess}
+          style={{ width: '100%', padding: '16px 0', background: CORAL, color: 'white', borderRadius: 16, fontWeight: 700, fontSize: '1rem', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 4px 20px rgba(232,116,97,0.4)' }}
+        >
+          <Lock size={18} />
+          Unlock Full Medical Chart
+          <ChevronRight size={18} />
+        </button>
+        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: '0.7rem', marginTop: 8 }}>
+          Requires first responder identification + photo
+        </p>
+      </div>
+    </div>
+  );
+};
+
+// =============================================================================
+// Stage 2: Responder Identification (Name + Badge + Photo)
 // =============================================================================
 
 const ResponderIdentification: React.FC<{
   onSuccess: () => void;
-  onCaptureFace: () => void;
+  onCaptureFace: () => Promise<void>;
 }> = ({ onSuccess, onCaptureFace }) => {
   const [responderName, setResponderName] = useState('');
   const [badgeNumber, setBadgeNumber] = useState('');
   const [agency, setAgency] = useState('');
-  const [photoTaken, setPhotoTaken] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const canSubmit = responderName.trim().length > 1 && badgeNumber.trim().length > 1;
@@ -180,124 +324,59 @@ const ResponderIdentification: React.FC<{
   const handleAccess = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
-
-    // Capture photo automatically
-    try {
-      await onCaptureFace();
-      setPhotoTaken(true);
-    } catch {
-      // Continue even if photo fails
-    }
-
-    // Log access
+    try { await onCaptureFace(); } catch { /* continue */ }
     console.log('🔐 Emergency access by first responder:', {
-      name: responderName,
-      badgeNumber,
-      agency,
+      name: responderName, badgeNumber, agency,
       timestamp: new Date().toISOString(),
     });
-
-    // Brief delay to show photo capture
-    setTimeout(() => {
-      onSuccess();
-    }, 800);
+    setTimeout(onSuccess, 800);
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-red-600 p-6">
-      {/* Emergency Header */}
-      <div className="text-center pt-8 mb-8">
-        <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-          <AlertTriangle size={40} className="text-red-600" />
+    <div style={{ minHeight: '100vh', background: `linear-gradient(135deg, #0C3547, #0C4C5E)`, fontFamily: "'DM Sans', sans-serif", display: 'flex', flexDirection: 'column', padding: 24 }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', paddingTop: 32, marginBottom: 32 }}>
+        <div style={{ width: 72, height: 72, background: CORAL, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <Lock size={32} color="white" />
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">EMERGENCY MEDICAL ACCESS</h1>
-        <p className="text-red-100 text-lg">First Responder Identification</p>
+        <h1 style={{ color: 'white', fontSize: '1.375rem', fontWeight: 700, margin: '0 0 4px 0' }}>FULL CHART ACCESS</h1>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem', margin: 0 }}>First responder identification required</p>
       </div>
 
-      {/* ID Form */}
-      <div className="max-w-sm mx-auto w-full space-y-4 flex-1">
-        {/* Name */}
-        <div>
-          <label className="block text-red-100 text-sm font-semibold mb-1.5">
-            Full Name *
-          </label>
-          <input
-            type="text"
-            value={responderName}
-            onChange={(e) => setResponderName(e.target.value)}
-            placeholder="Enter your full name"
-            autoFocus
-            className="w-full px-4 py-3.5 bg-white rounded-xl text-gray-900 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-white/30"
-          />
+      {/* Form */}
+      <div style={{ maxWidth: 380, margin: '0 auto', width: '100%', flex: 1 }}>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, marginBottom: 6 }}>Full Name *</label>
+          <input type="text" value={responderName} onChange={(e) => setResponderName(e.target.value)} placeholder="Enter your full name" autoFocus
+            style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, color: 'white', fontSize: '1rem', fontWeight: 500, outline: 'none', boxSizing: 'border-box' as const }} />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, marginBottom: 6 }}>Badge / ID Number *</label>
+          <input type="text" value={badgeNumber} onChange={(e) => setBadgeNumber(e.target.value)} placeholder="Enter badge or ID number"
+            style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, color: 'white', fontSize: '1rem', fontWeight: 500, outline: 'none', boxSizing: 'border-box' as const }} />
+        </div>
+        <div style={{ marginBottom: 24 }}>
+          <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 600, marginBottom: 6 }}>Agency / Department</label>
+          <input type="text" value={agency} onChange={(e) => setAgency(e.target.value)} placeholder="Fire dept, EMS, Police, etc."
+            style={{ width: '100%', padding: '14px 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12, color: 'white', fontSize: '1rem', fontWeight: 500, outline: 'none', boxSizing: 'border-box' as const }} />
         </div>
 
-        {/* Badge Number */}
-        <div>
-          <label className="block text-red-100 text-sm font-semibold mb-1.5">
-            Badge / ID Number *
-          </label>
-          <input
-            type="text"
-            value={badgeNumber}
-            onChange={(e) => setBadgeNumber(e.target.value)}
-            placeholder="Enter badge or ID number"
-            className="w-full px-4 py-3.5 bg-white rounded-xl text-gray-900 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-white/30"
-          />
-        </div>
-
-        {/* Agency (optional) */}
-        <div>
-          <label className="block text-red-100 text-sm font-semibold mb-1.5">
-            Agency / Department
-          </label>
-          <input
-            type="text"
-            value={agency}
-            onChange={(e) => setAgency(e.target.value)}
-            placeholder="Fire dept, EMS, Police, etc."
-            className="w-full px-4 py-3.5 bg-white/90 rounded-xl text-gray-900 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-white/30"
-          />
-        </div>
-
-        {/* Access Button */}
-        <button
-          onClick={handleAccess}
-          disabled={!canSubmit || submitting}
-          className={`w-full py-4 rounded-xl font-bold text-lg transition-all mt-6 ${
-            canSubmit && !submitting
-              ? 'bg-white text-red-600 active:scale-95 shadow-lg'
-              : 'bg-white/30 text-white/60 cursor-not-allowed'
-          }`}
-        >
+        <button onClick={handleAccess} disabled={!canSubmit || submitting}
+          style={{ width: '100%', padding: '16px 0', background: canSubmit && !submitting ? CORAL : 'rgba(255,255,255,0.1)', color: 'white', borderRadius: 14, fontWeight: 700, fontSize: '1rem', border: 'none', cursor: canSubmit ? 'pointer' : 'not-allowed', opacity: canSubmit ? 1 : 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: canSubmit ? '0 4px 20px rgba(232,116,97,0.3)' : 'none' }}>
           {submitting ? (
-            <span className="flex items-center justify-center gap-2">
-              <Camera size={20} />
-              Capturing photo & granting access...
-            </span>
+            <><Camera size={18} /> Capturing photo & granting access...</>
           ) : (
-            <span className="flex items-center justify-center gap-2">
-              <Shield size={20} />
-              ACCESS MEDICAL RECORDS
-            </span>
+            <><Shield size={18} /> ACCESS FULL MEDICAL CHART</>
           )}
         </button>
-
-        {photoTaken && (
-          <div className="flex items-center justify-center gap-2 text-white bg-white/20 rounded-lg py-2">
-            <Camera size={16} />
-            <span className="text-sm font-medium">Photo captured for security log</span>
-          </div>
-        )}
       </div>
 
-      {/* Footer Info */}
-      <div className="text-center text-red-100 text-sm mt-6 pb-4 space-y-1">
-        <p className="font-semibold">🚨 For authorized first responders only</p>
-        <p className="flex items-center justify-center gap-2 text-red-200">
-          <Camera size={14} />
-          A photo is automatically captured for security
-        </p>
-        <p className="text-red-200/70 text-xs">
+      {/* Footer */}
+      <div style={{ textAlign: 'center', paddingBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', marginBottom: 4 }}>
+          <Camera size={13} /> A photo is automatically captured for security
+        </div>
+        <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.7rem', margin: 0 }}>
           All access is logged with timestamp, location, and responder ID
         </p>
       </div>
@@ -306,258 +385,197 @@ const ResponderIdentification: React.FC<{
 };
 
 // =============================================================================
-// Medical Info Display Component
+// Stage 3: Full Medical Chart Display
 // =============================================================================
 
-const MedicalInfoDisplay: React.FC<{
+const FullMedicalChart: React.FC<{
   info: MedicalInfo;
   accessTime: Date;
 }> = ({ info, accessTime }) => {
   return (
-    <div className="min-h-screen bg-white pb-20">
-      {/* Critical Header */}
-      <div className="bg-red-600 text-white p-4 sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-            <Heart size={24} className="text-red-600" />
+    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, #0C3547, #0C4C5E)`, fontFamily: "'DM Sans', sans-serif", paddingBottom: 80 }}>
+      {/* Header */}
+      <div style={{ background: CORAL, padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 44, height: 44, background: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Heart size={22} color={CORAL} />
           </div>
           <div>
-            <h1 className="text-lg font-bold">EMERGENCY MEDICAL INFO</h1>
-            <p className="text-red-100 text-sm">
+            <h1 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>FULL MEDICAL CHART</h1>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', margin: 0 }}>
               {info.patientName} • {info.age}yo • DOB: {info.dateOfBirth}
             </p>
           </div>
         </div>
       </div>
 
-      {/* CRITICAL ALERTS - Most Important Info First */}
-      <div className="bg-red-50 border-b-4 border-red-600 p-4">
-        <h2 className="font-bold text-red-800 mb-3 flex items-center gap-2 text-lg">
-          <AlertTriangle size={20} />
-          ⚠️ CRITICAL ALERTS
-        </h2>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 bg-red-100 p-3 rounded-lg">
-            <Droplets size={24} className="text-red-700" />
-            <span className="font-bold text-red-800 text-lg">Blood Type: {info.bloodType}</span>
+      <div style={{ padding: '16px 20px' }}>
+        {/* Quick stats row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 16 }}>
+          <div style={{ background: 'rgba(232,116,97,0.15)', border: '1px solid rgba(232,116,97,0.3)', borderRadius: 14, padding: '12px 0', textAlign: 'center' }}>
+            <Droplets size={20} color={CORAL_LIGHT} style={{ margin: '0 auto 4px' }} />
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Blood Type</div>
+            <div style={{ color: 'white', fontSize: '1.25rem', fontWeight: 700 }}>{info.bloodType}</div>
           </div>
-          
-          <div className="bg-red-200 p-3 rounded-lg border-2 border-red-400">
-            <p className="font-bold text-red-900 text-lg">
-              ⚠️ ON BLOOD THINNERS (Eliquis) - HIGH BLEEDING RISK
-            </p>
+          <div style={{ background: info.dnr ? 'rgba(232,116,97,0.15)' : 'rgba(79,209,197,0.12)', border: `1px solid ${info.dnr ? 'rgba(232,116,97,0.3)' : 'rgba(79,209,197,0.3)'}`, borderRadius: 14, padding: '12px 0', textAlign: 'center' }}>
+            <Shield size={20} color={info.dnr ? CORAL_LIGHT : '#4FD1C5'} style={{ margin: '0 auto 4px' }} />
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Status</div>
+            <div style={{ color: 'white', fontSize: '1rem', fontWeight: 700 }}>{info.dnr ? 'DNR' : 'Full Code'}</div>
           </div>
-          
-          <div className="bg-yellow-100 p-3 rounded-lg border-2 border-yellow-400">
-            <p className="font-bold text-yellow-900 text-lg">
-              ⚠️ HAS PACEMAKER - NO MRI WITHOUT CARDIOLOGY
-            </p>
+          <div style={{ background: 'rgba(79,209,197,0.12)', border: '1px solid rgba(79,209,197,0.3)', borderRadius: 14, padding: '12px 0', textAlign: 'center' }}>
+            <Activity size={20} color="#4FD1C5" style={{ margin: '0 auto 4px' }} />
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.65rem', fontWeight: 600, textTransform: 'uppercase' as const }}>Meds</div>
+            <div style={{ color: 'white', fontSize: '1rem', fontWeight: 700 }}>{info.medications.length} active</div>
           </div>
         </div>
-      </div>
 
-      {/* Allergies - Critical */}
-      <div className="bg-orange-50 p-4 border-b-2 border-orange-300">
-        <h2 className="font-bold text-orange-800 mb-3 flex items-center gap-2 text-lg">
-          <AlertTriangle size={20} />
-          ALLERGIES
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {info.allergies.map((allergy, idx) => (
-            <span
-              key={idx}
-              className="px-4 py-2 bg-orange-200 text-orange-900 rounded-full font-bold text-lg"
-            >
-              ⚠️ {allergy}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Medical Conditions */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-lg">
-          <FileText size={20} />
-          MEDICAL CONDITIONS
-        </h2>
-        <div className="space-y-2">
-          {info.conditions.map((condition, idx) => (
-            <div key={idx} className="flex items-center gap-2 text-gray-700 text-lg">
-              <div className="w-3 h-3 bg-blue-500 rounded-full" />
-              {condition}
+        {/* Critical Notes */}
+        {info.notes && (
+          <div style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 14, padding: 14, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+              <AlertTriangle size={16} color="#FBBF24" />
+              <span style={{ color: '#FBBF24', fontWeight: 700, fontSize: '0.8rem' }}>CRITICAL NOTES</span>
             </div>
-          ))}
-        </div>
-      </div>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>{info.notes}</p>
+          </div>
+        )}
 
-      {/* Current Medications */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-lg">
-          <Pill size={20} />
-          CURRENT MEDICATIONS
-        </h2>
-        <div className="space-y-3">
-          {info.medications.map((med, idx) => (
-            <div 
-              key={idx} 
-              className={`rounded-lg p-3 ${
-                med.critical ? 'bg-red-50 border-2 border-red-300' : 'bg-gray-50'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {med.critical && <AlertTriangle size={16} className="text-red-600" />}
-                <p className={`font-semibold ${med.critical ? 'text-red-900' : 'text-gray-900'}`}>
-                  {med.name}
-                </p>
-              </div>
-              <p className="text-gray-600">
-                {med.dosage} • {med.frequency}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Implants/Devices */}
-      {info.implants.length > 0 && (
-        <div className="p-4 border-b border-gray-200 bg-yellow-50">
-          <h2 className="font-bold text-yellow-800 mb-3 flex items-center gap-2 text-lg">
-            <Syringe size={20} />
-            IMPLANTS / MEDICAL DEVICES
-          </h2>
-          <div className="space-y-2">
-            {info.implants.map((implant, idx) => (
-              <div key={idx} className="flex items-start gap-2 text-yellow-900">
-                <AlertCircle size={18} className="mt-1 flex-shrink-0" />
-                <span className="font-medium">{implant}</span>
-              </div>
+        {/* Allergies */}
+        <SectionCard title="ALLERGIES" icon={<AlertTriangle size={16} color={CORAL_LIGHT} />} titleColor={CORAL_LIGHT}>
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
+            {info.allergies.map((a, i) => (
+              <span key={i} style={{ padding: '6px 14px', background: 'rgba(232,116,97,0.15)', border: '1px solid rgba(232,116,97,0.25)', borderRadius: 20, color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>⚠️ {a}</span>
             ))}
           </div>
-        </div>
-      )}
+        </SectionCard>
 
-      {/* Emergency Contacts */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-lg">
-          <Phone size={20} />
-          EMERGENCY CONTACTS
-        </h2>
-        <div className="space-y-3">
-          {info.emergencyContacts.map((contact, idx) => (
-            <a
-              key={idx}
-              href={`tel:${contact.phone.replace(/\D/g, '')}`}
-              className="flex items-center justify-between bg-green-50 rounded-lg p-4 border border-green-200 active:bg-green-100"
-            >
-              <div>
-                <p className="font-semibold text-gray-900 text-lg">
-                  {contact.name}
-                  {contact.isPrimary && (
-                    <span className="ml-2 px-2 py-0.5 bg-green-200 text-green-800 text-sm rounded">
-                      PRIMARY
-                    </span>
-                  )}
-                </p>
-                <p className="text-gray-600">{contact.relationship}</p>
+        {/* Medical Conditions */}
+        <SectionCard title="MEDICAL CONDITIONS" icon={<FileText size={16} color="#93C5FD" />} titleColor="#93C5FD">
+          {info.conditions.map((c, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', color: 'rgba(255,255,255,0.85)', fontSize: '0.9rem' }}>
+              <div style={{ width: 8, height: 8, borderRadius: 4, background: '#93C5FD', flexShrink: 0 }} />
+              {c}
+            </div>
+          ))}
+        </SectionCard>
+
+        {/* All Medications */}
+        <SectionCard title="CURRENT MEDICATIONS" icon={<Pill size={16} color="#4FD1C5" />} titleColor="#4FD1C5">
+          {info.medications.map((med, i) => (
+            <div key={i} style={{ background: med.critical ? 'rgba(232,116,97,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${med.critical ? 'rgba(232,116,97,0.2)' : 'rgba(255,255,255,0.06)'}`, borderRadius: 10, padding: 10, marginBottom: i < info.medications.length - 1 ? 6 : 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {med.critical && <AlertTriangle size={14} color={CORAL} />}
+                <span style={{ color: 'white', fontWeight: 600 }}>{med.name}</span>
               </div>
-              <div className="flex items-center gap-2 text-green-700 font-bold">
-                <Phone size={20} />
-                <span className="text-lg">{contact.phone}</span>
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', marginTop: 2 }}>{med.dosage} • {med.frequency}</div>
+            </div>
+          ))}
+        </SectionCard>
+
+        {/* Implants */}
+        {info.implants.length > 0 && (
+          <SectionCard title="IMPLANTS / DEVICES" icon={<Syringe size={16} color="#FBBF24" />} titleColor="#FBBF24">
+            {info.implants.map((imp, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: 'rgba(255,255,255,0.85)' }}>
+                <AlertCircle size={16} color="#FBBF24" style={{ marginTop: 2, flexShrink: 0 }} />
+                <span style={{ fontWeight: 500 }}>{imp}</span>
+              </div>
+            ))}
+          </SectionCard>
+        )}
+
+        {/* Emergency Contacts */}
+        <SectionCard title="EMERGENCY CONTACTS" icon={<Phone size={16} color="#4FD1C5" />} titleColor="#4FD1C5">
+          {info.emergencyContacts.map((contact, i) => (
+            <a key={i} href={`tel:${contact.phone.replace(/\D/g, '')}`}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(79,209,197,0.08)', borderRadius: 10, padding: 12, marginBottom: i < info.emergencyContacts.length - 1 ? 6 : 0, textDecoration: 'none' }}>
+              <div>
+                <div style={{ color: 'white', fontWeight: 600 }}>
+                  {contact.name}
+                  {contact.isPrimary && <span style={{ marginLeft: 6, fontSize: '0.65rem', padding: '1px 6px', background: 'rgba(79,209,197,0.2)', color: '#4FD1C5', borderRadius: 4, fontWeight: 700 }}>PRIMARY</span>}
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem' }}>{contact.relationship}</div>
+              </div>
+              <div style={{ color: '#4FD1C5', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Phone size={14} /> {contact.phone}
               </div>
             </a>
           ))}
-        </div>
-      </div>
+        </SectionCard>
 
-      {/* Physician */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-lg">
-          <User size={20} />
-          PRIMARY PHYSICIAN
-        </h2>
-        <a
-          href={`tel:${info.physicianPhone.replace(/\D/g, '')}`}
-          className="flex items-center justify-between bg-blue-50 rounded-lg p-4 border border-blue-200 active:bg-blue-100"
-        >
-          <div>
-            <p className="font-semibold text-gray-900 text-lg">{info.physicianName}</p>
-            <p className="text-gray-600">Primary Care Physician</p>
-          </div>
-          <div className="flex items-center gap-2 text-blue-700 font-bold">
-            <Phone size={20} />
-            <span className="text-lg">{info.physicianPhone}</span>
-          </div>
-        </a>
-      </div>
+        {/* Physician */}
+        <SectionCard title="PRIMARY PHYSICIAN" icon={<User size={16} color="#93C5FD" />} titleColor="#93C5FD">
+          <a href={`tel:${info.physicianPhone.replace(/\D/g, '')}`}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(147,197,253,0.08)', borderRadius: 10, padding: 12, textDecoration: 'none' }}>
+            <div>
+              <div style={{ color: 'white', fontWeight: 600 }}>{info.physicianName}</div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem' }}>Primary Care Physician</div>
+            </div>
+            <div style={{ color: '#93C5FD', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Phone size={14} /> {info.physicianPhone}
+            </div>
+          </a>
+        </SectionCard>
 
-      {/* Medical Directives */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2 text-lg">
-          <Shield size={20} />
-          MEDICAL DIRECTIVES
-        </h2>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span className="font-medium">Organ Donor</span>
-            <span className={info.organDonor ? 'text-green-600 font-bold' : 'text-gray-400'}>
-              {info.organDonor ? '✓ YES' : 'No'}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <span className="font-medium">Advance Directive on File</span>
-            <span className={info.advanceDirective ? 'text-green-600 font-bold' : 'text-gray-400'}>
-              {info.advanceDirective ? '✓ YES' : 'No'}
-            </span>
-          </div>
-          <div className={`flex items-center justify-between p-3 rounded-lg ${
-            info.dnr ? 'bg-red-100 border-2 border-red-300' : 'bg-gray-50'
-          }`}>
-            <span className="font-medium">DNR Order</span>
-            <span className={info.dnr ? 'text-red-700 font-bold text-xl' : 'text-gray-600'}>
+        {/* Directives */}
+        <SectionCard title="MEDICAL DIRECTIVES" icon={<Shield size={16} color="#C4B5FD" />} titleColor="#C4B5FD">
+          {[
+            { label: 'Organ Donor', value: info.organDonor },
+            { label: 'Advance Directive on File', value: info.advanceDirective },
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{item.label}</span>
+              <span style={{ color: item.value ? '#4FD1C5' : 'rgba(255,255,255,0.3)', fontWeight: 700 }}>{item.value ? '✓ YES' : 'No'}</span>
+            </div>
+          ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>DNR Order</span>
+            <span style={{ color: info.dnr ? CORAL : 'rgba(255,255,255,0.7)', fontWeight: 700, fontSize: info.dnr ? '1rem' : undefined }}>
               {info.dnr ? '⚠️ YES - DNR' : 'No - Full Code'}
             </span>
           </div>
-        </div>
-      </div>
+        </SectionCard>
 
-      {/* Insurance */}
-      {info.insuranceProvider && (
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="font-bold text-gray-800 mb-3">INSURANCE</h2>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="font-semibold text-gray-900">{info.insuranceProvider}</p>
-            <p className="text-gray-600">ID: {info.insuranceId}</p>
+        {/* Insurance */}
+        {info.insuranceProvider && (
+          <SectionCard title="INSURANCE" icon={<FileText size={16} color="rgba(255,255,255,0.5)" />} titleColor="rgba(255,255,255,0.6)">
+            <div style={{ color: 'white', fontWeight: 600 }}>{info.insuranceProvider}</div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>ID: {info.insuranceId}</div>
+          </SectionCard>
+        )}
+
+        {/* Footer */}
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem', marginBottom: 4 }}>
+            <Camera size={13} /> Access photo captured for security
           </div>
+          <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.7rem', margin: 0 }}>
+            ATTENDING AI Emergency Medical Access • {accessTime.toLocaleString()}
+          </p>
         </div>
-      )}
-
-      {/* Additional Notes */}
-      {info.notes && (
-        <div className="p-4 bg-yellow-50 border-b-4 border-yellow-400">
-          <h2 className="font-bold text-yellow-800 mb-2 flex items-center gap-2 text-lg">
-            <AlertCircle size={20} />
-            IMPORTANT NOTES FOR CARE TEAM
-          </h2>
-          <p className="text-yellow-900 font-medium">{info.notes}</p>
-        </div>
-      )}
-
-      {/* Footer */}
-      <div className="p-4 bg-gray-100 text-center">
-        <div className="flex items-center justify-center gap-2 text-gray-600 mb-2">
-          <Camera size={16} />
-          <span className="text-sm">Access photo captured for security</span>
-        </div>
-        <p className="text-sm text-gray-500">
-          ATTENDING AI Emergency Medical Access
-        </p>
-        <p className="text-xs text-gray-400">
-          Accessed: {accessTime.toLocaleString()}
-        </p>
       </div>
     </div>
   );
 };
+
+// =============================================================================
+// Section Card Helper
+// =============================================================================
+
+const SectionCard: React.FC<{
+  title: string;
+  icon: React.ReactNode;
+  titleColor: string;
+  children: React.ReactNode;
+}> = ({ title, icon, titleColor, children }) => (
+  <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 14, marginBottom: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+      {icon}
+      <span style={{ color: titleColor, fontWeight: 700, fontSize: '0.8rem', letterSpacing: 0.5 }}>{title}</span>
+    </div>
+    {children}
+  </div>
+);
 
 // =============================================================================
 // Main Emergency Access Page
@@ -565,77 +583,41 @@ const MedicalInfoDisplay: React.FC<{
 
 export default function EmergencyAccessPage() {
   const router = useRouter();
-  const { mode } = router.query; // 'crash' for auto-triggered, 'preview' for testing
-  
-  const [stage, setStage] = useState<'countdown' | 'pin' | 'display'>('pin');
+  const { mode } = router.query;
+
+  // Stages: countdown → vitals → identify → fullchart
+  const [stage, setStage] = useState<'countdown' | 'vitals' | 'identify' | 'fullchart'>('vitals');
   const [accessTime, setAccessTime] = useState<Date>(new Date());
 
-  // If triggered by crash detection, start with countdown
   useEffect(() => {
-    if (mode === 'crash') {
-      setStage('countdown');
-    } else if (mode === 'preview') {
-      setStage('display');
-      setAccessTime(new Date());
-    }
+    if (mode === 'crash') setStage('countdown');
+    else if (mode === 'preview') { setStage('fullchart'); setAccessTime(new Date()); }
   }, [mode]);
-
-  const handleCancelCountdown = () => {
-    // User is okay - go back to dashboard
-    router.push('/dashboard');
-  };
-
-  const handleCountdownExpire = () => {
-    // Countdown finished - show PIN entry
-    setStage('pin');
-  };
-
-  const handlePINSuccess = () => {
-    setAccessTime(new Date());
-    setStage('display');
-  };
 
   const captureFacePhoto = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
-      });
-      
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       const video = document.createElement('video');
       video.srcObject = stream;
       await video.play();
-
       const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx?.drawImage(video, 0, 0);
-      
+      canvas.getContext('2d')?.drawImage(video, 0, 0);
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((t) => t.stop());
 
-      // Get location
       let location;
       try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-        });
-        location = {
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        };
-      } catch {
-        // Location not available
-      }
+        const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 5000 }));
+        location = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      } catch { /* location not available */ }
 
-      // Log to console (in production, send to server)
       console.log('🔐 Emergency access logged:', {
         timestamp: new Date().toISOString(),
-        imageData: '[CAPTURED - ' + (imageData.length / 1024).toFixed(1) + 'KB]',
-        location,
-        userAgent: navigator.userAgent,
+        imageData: `[CAPTURED - ${(imageData.length / 1024).toFixed(1)}KB]`,
+        location, userAgent: navigator.userAgent,
       });
-
     } catch (error) {
       console.error('Failed to capture photo:', error);
     }
@@ -646,29 +628,26 @@ export default function EmergencyAccessPage() {
       <Head>
         <title>Emergency Medical Access | ATTENDING AI</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#dc2626" />
+        <meta name="theme-color" content={CORAL} />
       </Head>
 
       {stage === 'countdown' && (
-        <CountdownScreen
-          seconds={30}
-          onCancel={handleCancelCountdown}
-          onExpire={handleCountdownExpire}
-        />
+        <CountdownScreen seconds={30} onCancel={() => router.push('/home')} onExpire={() => setStage('vitals')} />
       )}
 
-      {stage === 'pin' && (
+      {stage === 'vitals' && (
+        <QuickVitalInfo info={mockMedicalInfo} onRequestFullAccess={() => setStage('identify')} />
+      )}
+
+      {stage === 'identify' && (
         <ResponderIdentification
-          onSuccess={handlePINSuccess}
+          onSuccess={() => { setAccessTime(new Date()); setStage('fullchart'); }}
           onCaptureFace={captureFacePhoto}
         />
       )}
 
-      {stage === 'display' && (
-        <MedicalInfoDisplay
-          info={mockMedicalInfo}
-          accessTime={accessTime}
-        />
+      {stage === 'fullchart' && (
+        <FullMedicalChart info={mockMedicalInfo} accessTime={accessTime} />
       )}
     </>
   );
