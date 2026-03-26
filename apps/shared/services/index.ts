@@ -2,48 +2,60 @@
 // ATTENDING AI - Services Index
 // apps/shared/services/index.ts
 //
-// Central export for all ATTENDING AI services
+// Central export for all ATTENDING AI services.
+//
+// Services are organized into three tiers:
+//   ACTIVE      — Currently imported and used by provider/patient portals
+//   FUTURE      — Built but behind feature flags, ready for activation
+//   PLANNED     — Not yet implemented (exports commented out)
+//
+// See FEATURE_INVENTORY.md for the full audit.
 // =============================================================================
 
-// Clinical Intelligence Services
+// ---------------------------------------------------------------------------
+// ACTIVE: Clinical Intelligence Services
+// ---------------------------------------------------------------------------
 export { AmbientScribeService, ambientScribeService } from './ai-scribe/AmbientScribeService';
+export { ClinicalDecisionEngine, clinicalDecisionEngine } from './clinical-decision/ClinicalDecisionEngine';
+
+// ---------------------------------------------------------------------------
+// ACTIVE: Intervention Services (under interventions/)
+// ---------------------------------------------------------------------------
+export { SmartOrderAssistant, smartOrderAssistant } from './interventions/SmartOrderAssistant';
+export { ClinicalTrialMatcher, clinicalTrialMatcher } from './interventions/ClinicalTrialMatcher';
+export { MedicationOptimizer, medicationOptimizer } from './interventions/MedicationOptimizer';
+export { CareCoordinationHub, careCoordinationHub } from './interventions/CareCoordinationHub';
+export { SDOHService, sdohService } from './interventions/SDOHService';
+
+// ---------------------------------------------------------------------------
+// FUTURE-TOGGLE: Built services, not yet wired to UI
+// Activate via FeatureFlags.ts when ready
+// ---------------------------------------------------------------------------
 export { DeteriorationAlertService, deteriorationAlertService } from './predictive-alerts/DeteriorationAlertService';
 export { DiagnosticSolverService, diagnosticSolverService } from './diagnostic-solver/DiagnosticSolverService';
 export { ImageAnalysisService, imageAnalysisService } from './clinical-imaging/ImageAnalysisService';
-
-// Workflow Optimization Services
 export { SmartInboxService, smartInboxService } from './smart-inbox/SmartInboxService';
 export { CareGapsService, careGapsService } from './care-gaps/CareGapsService';
-export { SmartSchedulingService, smartSchedulingService } from './smart-scheduling/SmartSchedulingService';
-export { PeerConsultService, peerConsultService } from './peer-consult/PeerConsultService';
 
-// Patient Engagement Services
-export { MedicationBuddyService, medicationBuddyService } from './patient-engagement/MedicationBuddyService';
-export { HealthCoachingService, healthCoachingService } from './patient-engagement/HealthCoachingService';
-export { FamilyHealthHubService, familyHealthHubService } from './patient-engagement/FamilyHealthHubService';
-export { PostDischargeConciergeService, postDischargeConciergeService } from './patient-engagement/PostDischargeConciergeService';
+// ---------------------------------------------------------------------------
+// PLANNED: Not yet implemented — uncomment when service is built
+// ---------------------------------------------------------------------------
+// export { SmartSchedulingService } from './smart-scheduling/SmartSchedulingService';
+// export { PeerConsultService } from './peer-consult/PeerConsultService';
+// export { MedicationBuddyService } from './patient-engagement/MedicationBuddyService';
+// export { HealthCoachingService } from './patient-engagement/HealthCoachingService';
+// export { FamilyHealthHubService } from './patient-engagement/FamilyHealthHubService';
+// export { PostDischargeConciergeService } from './patient-engagement/PostDischargeConciergeService';
+// export { MentalHealthService } from './mental-health/MentalHealthService';
+// export { SocialSupportService } from './social-support/SocialSupportService';
+// export { EndOfLifeService } from './end-of-life/EndOfLifeService';
+// export { MedicalInterpreterService } from './interpreter/MedicalInterpreterService';
+// export { PopulationHealthService } from './population-health/PopulationHealthService';
+// export { WearablesService } from './wearables/WearablesService';
 
-// Specialized Care Services
-export { MentalHealthService, mentalHealthService } from './mental-health/MentalHealthService';
-export { SocialSupportService, socialSupportService } from './social-support/SocialSupportService';
-export { EndOfLifeService, endOfLifeService } from './end-of-life/EndOfLifeService';
-
-// Platform Services
-export { MedicalInterpreterService, medicalInterpreterService } from './interpreter/MedicalInterpreterService';
-export { PopulationHealthService, populationHealthService } from './population-health/PopulationHealthService';
-export { WearablesService, wearablesService } from './wearables/WearablesService';
-
-// Previously built services
-export { ClinicalDecisionEngine, clinicalDecisionEngine } from './clinical-decision/ClinicalDecisionEngine';
-export { SmartOrderAssistant, smartOrderAssistant } from './smart-order/SmartOrderAssistant';
-export { ClinicalTrialMatcher, clinicalTrialMatcher } from './clinical-trials/ClinicalTrialMatcher';
-export { MedicationOptimizer, medicationOptimizer } from './medication-optimizer/MedicationOptimizer';
-export { CareCoordinationHub, careCoordinationHub } from './care-coordination/CareCoordinationHub';
-export { SDOHService, sdohService } from './sdoh/SDOHService';
-
-// =============================================================================
+// ---------------------------------------------------------------------------
 // Plug-and-Play Architecture
-// =============================================================================
+// ---------------------------------------------------------------------------
 
 // Service Registry - enables modular service management
 export * from './registry';
