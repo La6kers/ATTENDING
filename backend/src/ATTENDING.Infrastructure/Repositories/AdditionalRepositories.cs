@@ -140,6 +140,7 @@ public class AssessmentRepository : Repository<PatientAssessment>, IAssessmentRe
     {
         return await DbSet
             .Where(a => a.PatientId == patientId)
+            .Include(a => a.Patient)
             .OrderByDescending(a => a.StartedAt)
             .ToListAsync(cancellationToken);
     }

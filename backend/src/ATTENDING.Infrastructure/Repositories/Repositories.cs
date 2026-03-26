@@ -214,6 +214,8 @@ public class EncounterRepository : Repository<Encounter>, IEncounterRepository
     {
         return await DbSet
             .Where(e => e.PatientId == patientId)
+            .Include(e => e.Patient)
+            .Include(e => e.Provider)
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -222,6 +224,8 @@ public class EncounterRepository : Repository<Encounter>, IEncounterRepository
     {
         return await DbSet
             .Where(e => e.ProviderId == providerId)
+            .Include(e => e.Patient)
+            .Include(e => e.Provider)
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -255,6 +259,7 @@ public class EncounterRepository : Repository<Encounter>, IEncounterRepository
                         e.ScheduledAt >= today &&
                         e.ScheduledAt < tomorrow)
             .Include(e => e.Patient)
+            .Include(e => e.Provider)
             .OrderBy(e => e.ScheduledAt)
             .ToListAsync(cancellationToken);
     }
@@ -288,6 +293,7 @@ public class LabOrderRepository : Repository<LabOrder>, ILabOrderRepository
     {
         return await DbSet
             .Where(o => o.PatientId == patientId)
+            .Include(o => o.Result)
             .OrderByDescending(o => o.OrderedAt)
             .ToListAsync(cancellationToken);
     }
@@ -296,6 +302,7 @@ public class LabOrderRepository : Repository<LabOrder>, ILabOrderRepository
     {
         return await DbSet
             .Where(o => o.EncounterId == encounterId)
+            .Include(o => o.Result)
             .OrderByDescending(o => o.OrderedAt)
             .ToListAsync(cancellationToken);
     }
@@ -346,6 +353,8 @@ public class LabOrderRepository : Repository<LabOrder>, ILabOrderRepository
     {
         return await DbSet
             .Include(o => o.Result)
+            .Include(o => o.Patient)
+            .Include(o => o.OrderingProvider)
             .FirstOrDefaultAsync(o => o.Id == labOrderId, cancellationToken);
     }
 }
