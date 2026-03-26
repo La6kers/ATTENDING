@@ -40,7 +40,7 @@ export default function PatientLanding() {
                   <div style={{ color: 'white', fontWeight: 600, fontSize: '1rem' }}>{c.label}</div>
                   <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.8rem', marginTop: 2 }}>{c.desc}</div>
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '1.2rem' }}>›</div>
+                <div style={{ width: 20, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }} />
               </div>
             </a>
           ))}
