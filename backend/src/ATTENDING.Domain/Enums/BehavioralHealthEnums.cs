@@ -112,11 +112,12 @@ public enum PtsdScreenResult
 /// </summary>
 public enum ScreeningStatus
 {
-    Initiated   = 1,   // Session opened, no responses yet
-    InProgress  = 2,   // At least one response recorded
-    Completed   = 3,   // All items answered, score computed
-    Reviewed    = 4,   // Provider has reviewed and documented action
-    Abandoned   = 5,   // Patient did not complete
+    Initiated          = 1,   // Session opened, no responses yet
+    InProgress         = 2,   // At least one response recorded
+    Completed          = 3,   // All items answered, score computed
+    Reviewed           = 4,   // Provider has reviewed and documented action
+    Abandoned          = 5,   // Patient did not complete
+    PendingSafetyPlan  = 6,   // Scored but safety plan required before completion
 }
 
 /// <summary>

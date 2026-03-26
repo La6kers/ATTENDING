@@ -325,6 +325,15 @@ public class BehavioralHealthScreening : BaseEntity, IAggregateRoot, IHasDomainE
     {
         SafetyPlanJson = safetyPlanJson;
         SetModified(providerId);
+
+        // If screening was waiting on a safety plan, transition to Completed
+        if (Status == ScreeningStatus.PendingSafetyPlan)
+        {
+            Status = ScreeningStatus.Completed;
+            CompletedAt = DateTime.UtcNow;
+            _domainEvents.Add(new BehavioralHealthScreeningCompletedEvent(
+                Id, PatientId, Instrument, TotalScore ?? 0, RecommendedAction));
+        }
     }
 
     // ── Provider review ───────────────────────────────────────────────────
@@ -361,9 +370,13 @@ public class BehavioralHealthScreening : BaseEntity, IAggregateRoot, IHasDomainE
                               or BehavioralHealthAction.ImmediateSafetyIntervention
             && string.IsNullOrWhiteSpace(SafetyPlanJson))
         {
-            throw new InvalidOperationException(
-                $"A safety plan is required before completing a screening with recommended action '{RecommendedAction}'. " +
-                "Call RecordSafetyPlan() before scoring.");
+            // Screening is scored but cannot be finalized until safety plan is recorded.
+            // Set to PendingSafetyPlan status — the provider must call RecordSafetyPlan()
+            // then re-complete. This ensures scoring data is persisted even when a safety
+            // plan is still needed.
+            Status = ScreeningStatus.PendingSafetyPlan;
+            SetModified();
+            return;
         }
 
         Status = ScreeningStatus.Completed;

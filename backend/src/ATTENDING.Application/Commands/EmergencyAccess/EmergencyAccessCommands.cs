@@ -55,10 +55,14 @@ public class ConfigureEmergencyProfileHandler
         else if (!cmd.IsEnabled && profile.IsEnabled)
             profile.Disable();
 
-        profile.UpdateSettings(
-            gForceThreshold: cmd.GForceThreshold,
-            autoGrantTimeoutSeconds: cmd.AutoGrantTimeoutSeconds,
-            accessWindowMinutes: cmd.AccessWindowMinutes);
+        // Only update settings when profile is enabled (domain invariant)
+        if (profile.IsEnabled)
+        {
+            profile.UpdateSettings(
+                gForceThreshold: cmd.GForceThreshold,
+                autoGrantTimeoutSeconds: cmd.AutoGrantTimeoutSeconds,
+                accessWindowMinutes: cmd.AccessWindowMinutes);
+        }
 
         profile.MarkReviewed();
         await _repository.SaveChangesAsync(ct);

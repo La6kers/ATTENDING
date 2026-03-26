@@ -88,6 +88,7 @@ public class EmergencyAccessTests
     public void Profile_UpdateGForce_ValidRange(double threshold)
     {
         var profile = EmergencyAccessProfile.Create(_orgId, _patientId);
+        profile.Enable();
         profile.UpdateSettings(gForceThreshold: (decimal)threshold);
         Assert.Equal((decimal)threshold, profile.GForceThreshold);
     }
@@ -101,6 +102,7 @@ public class EmergencyAccessTests
     public void Profile_UpdateGForce_InvalidRange_Throws(double threshold)
     {
         var profile = EmergencyAccessProfile.Create(_orgId, _patientId);
+        profile.Enable();
         Assert.Throws<DomainException>(() =>
             profile.UpdateSettings(gForceThreshold: (decimal)threshold));
     }
@@ -113,6 +115,7 @@ public class EmergencyAccessTests
     public void Profile_UpdateTimeout_ValidRange(int seconds)
     {
         var profile = EmergencyAccessProfile.Create(_orgId, _patientId);
+        profile.Enable();
         profile.UpdateSettings(autoGrantTimeoutSeconds: seconds);
         Assert.Equal(seconds, profile.AutoGrantTimeoutSeconds);
     }
@@ -125,6 +128,7 @@ public class EmergencyAccessTests
     public void Profile_UpdateTimeout_InvalidRange_Throws(int seconds)
     {
         var profile = EmergencyAccessProfile.Create(_orgId, _patientId);
+        profile.Enable();
         Assert.Throws<DomainException>(() =>
             profile.UpdateSettings(autoGrantTimeoutSeconds: seconds));
     }
@@ -137,6 +141,7 @@ public class EmergencyAccessTests
     public void Profile_UpdateAccessWindow_ValidRange(int minutes)
     {
         var profile = EmergencyAccessProfile.Create(_orgId, _patientId);
+        profile.Enable();
         profile.UpdateSettings(accessWindowMinutes: minutes);
         Assert.Equal(minutes, profile.AccessWindowMinutes);
     }
@@ -148,6 +153,7 @@ public class EmergencyAccessTests
     public void Profile_UpdateAccessWindow_InvalidRange_Throws(int minutes)
     {
         var profile = EmergencyAccessProfile.Create(_orgId, _patientId);
+        profile.Enable();
         Assert.Throws<DomainException>(() =>
             profile.UpdateSettings(accessWindowMinutes: minutes));
     }
@@ -168,6 +174,7 @@ public class EmergencyAccessTests
     public void Profile_UpdateVisibility_SelectiveHiding()
     {
         var profile = EmergencyAccessProfile.Create(_orgId, _patientId);
+        profile.Enable();
         profile.UpdateSettings(showMeds: false, showImplants: false);
 
         Assert.True(profile.ShowDnrStatus);

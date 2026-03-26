@@ -86,7 +86,7 @@ public class BehavioralHealthRepository : IBehavioralHealthRepository
     {
         return await _context.Set<BehavioralHealthScreening>()
             .Where(s => s.HasSuicideRisk
-                     && s.Status == ScreeningStatus.Completed
+                     && (s.Status == ScreeningStatus.Completed || s.Status == ScreeningStatus.PendingSafetyPlan)
                      && s.RecommendedAction >= BehavioralHealthAction.SafetyPlanRequired)
             .OrderByDescending(s => s.CompletedAt)
             .ToListAsync(ct);

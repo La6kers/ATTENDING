@@ -109,6 +109,7 @@ public class PatientHandlerTests
         }.AsReadOnly();
         _repoMock.Setup(r => r.SearchAsync("Smith", 0, 20, default)).ReturnsAsync(patients);
         _repoMock.Setup(r => r.SearchAsync("Smith", 0, 10000, default)).ReturnsAsync(patients);
+        _repoMock.Setup(r => r.SearchCountAsync("Smith", default)).ReturnsAsync(2);
 
         var handler = new SearchPatientsHandler(_repoMock.Object);
         var (result, total) = await handler.Handle(new SearchPatientsQuery("Smith"), default);

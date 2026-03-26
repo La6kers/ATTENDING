@@ -425,7 +425,11 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
 });
 
 // Prometheus metrics endpoint — scraped by monitoring infrastructure
-app.MapPrometheusScrapingEndpoint("/metrics");
+// Only register if OpenTelemetry MeterProvider was configured (skipped in Testing)
+if (app.Services.GetService<OpenTelemetry.Metrics.MeterProvider>() is not null)
+{
+    app.MapPrometheusScrapingEndpoint("/metrics");
+}
 
 // Startup logging
 Log.Information("==============================================");

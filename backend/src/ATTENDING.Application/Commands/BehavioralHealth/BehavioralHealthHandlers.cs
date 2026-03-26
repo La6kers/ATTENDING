@@ -148,6 +148,10 @@ public class ScoreScreeningHandler
         {
             return Result.Failure<ScreeningScored>(Error.Custom("BehavioralHealth.InvalidInput", ex.Message));
         }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("safety plan", StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Failure<ScreeningScored>(Error.Custom("BehavioralHealth.SafetyPlanRequired", ex.Message));
+        }
 
         if (screening.SafetyPlanJson is null
             && screening.RecommendedAction >= BehavioralHealthAction.SafetyPlanRequired)

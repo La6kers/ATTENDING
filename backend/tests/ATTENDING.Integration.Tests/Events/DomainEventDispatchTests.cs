@@ -2,6 +2,7 @@ using FluentAssertions;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using ATTENDING.Application.Events;
 using ATTENDING.Application.Events.Handlers;
 using ATTENDING.Application.Interfaces;
@@ -42,6 +43,7 @@ public class DomainEventDispatchTests
         public Task<Patient?> GetByMrnAsync(string mrn, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
         public Task<IReadOnlyList<Patient>> GetAllAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Patient>>(Array.Empty<Patient>());
         public Task<IReadOnlyList<Patient>> SearchAsync(string? term, int skip = 0, int take = 20, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<Patient>>(Array.Empty<Patient>());
+        public Task<int> SearchCountAsync(string? term, CancellationToken ct = default) => Task.FromResult(0);
         public Task<Patient?> GetWithAllergiesAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
         public Task<Patient?> GetWithConditionsAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
         public Task<Patient?> GetWithFullHistoryAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Patient?>(null);
@@ -73,7 +75,7 @@ public class DomainEventDispatchTests
     public async Task DispatchEvents_EmergencyProtocol_ShouldPublish()
     {
         var sp = BuildTestProvider();
-        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
+        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>(), NullLogger<MediatRDomainEventDispatcher>.Instance);
 
         var evt = new EmergencyProtocolTriggeredEvent(Guid.NewGuid(), Guid.NewGuid(), "Chest pain", "Call 911");
 
@@ -88,7 +90,7 @@ public class DomainEventDispatchTests
     public async Task DispatchEvents_RedFlag_ShouldPublish()
     {
         var sp = BuildTestProvider();
-        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
+        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>(), NullLogger<MediatRDomainEventDispatcher>.Instance);
 
         var evt = new RedFlagDetectedEvent(
             Guid.NewGuid(), Guid.NewGuid(), "Cardiovascular",
@@ -105,7 +107,7 @@ public class DomainEventDispatchTests
     public async Task DispatchEvents_CriticalLabResult_ShouldPublish()
     {
         var sp = BuildTestProvider();
-        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
+        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>(), NullLogger<MediatRDomainEventDispatcher>.Instance);
 
         var evt = new LabOrderResultedEvent(Guid.NewGuid(), true);
 
@@ -120,7 +122,7 @@ public class DomainEventDispatchTests
     public async Task DispatchEvents_NonCriticalLabResult_ShouldNotNotify()
     {
         var sp = BuildTestProvider();
-        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
+        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>(), NullLogger<MediatRDomainEventDispatcher>.Instance);
 
         var evt = new LabOrderResultedEvent(Guid.NewGuid(), isCritical: false);
 
@@ -135,7 +137,7 @@ public class DomainEventDispatchTests
     public async Task DispatchEvents_MultipleEvents_ShouldPublishAll()
     {
         var sp = BuildTestProvider();
-        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>());
+        var dispatcher = new MediatRDomainEventDispatcher(sp.GetRequiredService<IMediator>(), NullLogger<MediatRDomainEventDispatcher>.Instance);
 
         var events = new DomainEvent[]
         {
