@@ -313,3 +313,6 @@ backend/build-and-test-*.ps1
 
 # Debris files
 "e 1 - Production Fundamentals"
+# Claude Code workspace metadata
+.claude/
+nul
