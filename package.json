@@ -8,7 +8,9 @@
     "apps/shared",
     "apps/provider-portal",
     "apps/patient-portal",
-    "apps/compass-admin"
+    "apps/compass-admin",
+    "apps/ems-portal",
+    "services/ems-backend"
   ],
   "prisma": {
     "schema": "prisma/schema.prisma",
@@ -26,11 +28,13 @@
     "dev:patient": "npm run dev --workspace=apps/patient-portal",
     "dev": "turbo run dev --parallel",
     "dev:backend": "dotnet run --project backend/src/ATTENDING.Orders.Api --launch-profile Development --environment Development",
-    "dev:all": "concurrently \"npm run dev:provider\" \"npm run dev:patient\"",
+    "dev:ems": "npm run dev --workspace=apps/ems-portal",
+    "dev:ems-backend": "npm run dev --workspace=services/ems-backend",
+    "dev:all": "concurrently \"npm run dev:provider\" \"npm run dev:patient\" \"npm run dev:ems-backend\" \"npm run dev:ems\"",
     "db:up": "docker compose up sqlserver redis -d --wait",
     "db:down": "docker compose stop sqlserver redis",
     "db:logs": "docker compose logs sqlserver --tail=50",
-    "dev:full": "npm run db:up && concurrently --names \"backend,provider,patient\" --prefix-colors \"blue,green,yellow\" \"npm run dev:backend\" \"npm run dev:provider\" \"npm run dev:patient\"",
+    "dev:full": "npm run db:up && concurrently --names \"backend,provider,patient,ems-backend,ems\" --prefix-colors \"blue,green,yellow,red,magenta\" \"npm run dev:backend\" \"npm run dev:provider\" \"npm run dev:patient\" \"npm run dev:ems-backend\" \"npm run dev:ems\"",
     "setup": "node scripts/setup-dev.js",
     "dev:setup": "node scripts/dev-setup.js",
     "build": "turbo run build",
