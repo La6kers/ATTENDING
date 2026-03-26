@@ -7,9 +7,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* react-grid-layout */
-@import 'react-grid-layout/css/styles.css';
-@import 'react-resizable/css/styles.css';
 
 /* ========================================
    ATTENDING AI — Teal Brand Design Tokens

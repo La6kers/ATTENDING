@@ -11,9 +11,35 @@
 
 import type { AppProps } from 'next/app';
 import { SessionProvider } from 'next-auth/react';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 import '../styles/globals.css';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
+
+// Error boundary to prevent blank white screens
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #0C3547, #1A8FA8)', color: 'white', fontFamily: 'DM Sans, sans-serif', padding: '2rem' }}>
+          <div style={{ textAlign: 'center', maxWidth: '400px' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>Something went wrong</h1>
+            <p style={{ fontSize: '0.875rem', opacity: 0.7, marginBottom: '1.5rem' }}>{this.state.error.message}</p>
+            <button onClick={() => { this.setState({ error: null }); window.location.reload(); }}
+              style={{ padding: '0.75rem 1.5rem', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '0.75rem', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+              Reload
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App({
   Component,
@@ -62,6 +88,7 @@ export default function App({
   if (!mounted) return null;
 
   return (
+    <ErrorBoundary>
     <SessionProvider session={session}>
       <Head>
         <meta
@@ -78,5 +105,6 @@ export default function App({
       </Head>
       <Component {...pageProps} />
     </SessionProvider>
+    </ErrorBoundary>
   );
 }
