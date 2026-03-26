@@ -34,7 +34,9 @@ const nextConfig = {
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
       {
         key: 'Content-Security-Policy',
-        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'",
+        value: isProduction
+          ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'"
+          : "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:* http://localhost:*; frame-ancestors 'none'",
       },
     ];
 

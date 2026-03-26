@@ -162,107 +162,143 @@ const CountdownScreen: React.FC<{
 };
 
 // =============================================================================
-// PIN Entry Component
+// First Responder Identification Component
 // =============================================================================
 
-const PINEntry: React.FC<{
+const ResponderIdentification: React.FC<{
   onSuccess: () => void;
   onCaptureFace: () => void;
 }> = ({ onSuccess, onCaptureFace }) => {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState(false);
-  const [attempts, setAttempts] = useState(0);
-  const CORRECT_PIN = '911911'; // Universal first responder PIN
+  const [responderName, setResponderName] = useState('');
+  const [badgeNumber, setBadgeNumber] = useState('');
+  const [agency, setAgency] = useState('');
+  const [photoTaken, setPhotoTaken] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handlePinInput = (digit: string) => {
-    if (pin.length < 6) {
-      const newPin = pin + digit;
-      setPin(newPin);
-      setError(false);
-      
-      if (newPin.length === 6) {
-        if (newPin === CORRECT_PIN) {
-          onCaptureFace();
-          onSuccess();
-        } else {
-          setError(true);
-          setAttempts(prev => prev + 1);
-          setTimeout(() => setPin(''), 500);
-        }
-      }
+  const canSubmit = responderName.trim().length > 1 && badgeNumber.trim().length > 1;
+
+  const handleAccess = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+
+    // Capture photo automatically
+    try {
+      await onCaptureFace();
+      setPhotoTaken(true);
+    } catch {
+      // Continue even if photo fails
     }
-  };
 
-  const handleBackspace = () => {
-    setPin(prev => prev.slice(0, -1));
-    setError(false);
+    // Log access
+    console.log('🔐 Emergency access by first responder:', {
+      name: responderName,
+      badgeNumber,
+      agency,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Brief delay to show photo capture
+    setTimeout(() => {
+      onSuccess();
+    }, 800);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-red-600 p-6">
+    <div className="flex flex-col min-h-screen bg-red-600 p-6">
       {/* Emergency Header */}
-      <div className="text-center mb-8">
+      <div className="text-center pt-8 mb-8">
         <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
           <AlertTriangle size={40} className="text-red-600" />
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">EMERGENCY MEDICAL ACCESS</h1>
-        <p className="text-red-100">Enter First Responder PIN</p>
+        <p className="text-red-100 text-lg">First Responder Identification</p>
       </div>
 
-      {/* PIN Display */}
-      <div className="flex gap-3 mb-6">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div
-            key={i}
-            className={`w-12 h-14 rounded-lg flex items-center justify-center text-2xl font-bold transition-all ${
-              error
-                ? 'bg-red-300 border-2 border-red-200'
-                : pin.length > i
-                ? 'bg-white text-red-600'
-                : 'bg-red-500 border-2 border-red-400'
-            }`}
-          >
-            {pin.length > i ? '•' : ''}
+      {/* ID Form */}
+      <div className="max-w-sm mx-auto w-full space-y-4 flex-1">
+        {/* Name */}
+        <div>
+          <label className="block text-red-100 text-sm font-semibold mb-1.5">
+            Full Name *
+          </label>
+          <input
+            type="text"
+            value={responderName}
+            onChange={(e) => setResponderName(e.target.value)}
+            placeholder="Enter your full name"
+            autoFocus
+            className="w-full px-4 py-3.5 bg-white rounded-xl text-gray-900 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-white/30"
+          />
+        </div>
+
+        {/* Badge Number */}
+        <div>
+          <label className="block text-red-100 text-sm font-semibold mb-1.5">
+            Badge / ID Number *
+          </label>
+          <input
+            type="text"
+            value={badgeNumber}
+            onChange={(e) => setBadgeNumber(e.target.value)}
+            placeholder="Enter badge or ID number"
+            className="w-full px-4 py-3.5 bg-white rounded-xl text-gray-900 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-white/30"
+          />
+        </div>
+
+        {/* Agency (optional) */}
+        <div>
+          <label className="block text-red-100 text-sm font-semibold mb-1.5">
+            Agency / Department
+          </label>
+          <input
+            type="text"
+            value={agency}
+            onChange={(e) => setAgency(e.target.value)}
+            placeholder="Fire dept, EMS, Police, etc."
+            className="w-full px-4 py-3.5 bg-white/90 rounded-xl text-gray-900 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-white/30"
+          />
+        </div>
+
+        {/* Access Button */}
+        <button
+          onClick={handleAccess}
+          disabled={!canSubmit || submitting}
+          className={`w-full py-4 rounded-xl font-bold text-lg transition-all mt-6 ${
+            canSubmit && !submitting
+              ? 'bg-white text-red-600 active:scale-95 shadow-lg'
+              : 'bg-white/30 text-white/60 cursor-not-allowed'
+          }`}
+        >
+          {submitting ? (
+            <span className="flex items-center justify-center gap-2">
+              <Camera size={20} />
+              Capturing photo & granting access...
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <Shield size={20} />
+              ACCESS MEDICAL RECORDS
+            </span>
+          )}
+        </button>
+
+        {photoTaken && (
+          <div className="flex items-center justify-center gap-2 text-white bg-white/20 rounded-lg py-2">
+            <Camera size={16} />
+            <span className="text-sm font-medium">Photo captured for security log</span>
           </div>
-        ))}
+        )}
       </div>
 
-      {error && (
-        <p className="text-red-100 mb-4 flex items-center gap-2">
-          <AlertCircle size={16} />
-          Incorrect PIN. Attempt {attempts}/5
-        </p>
-      )}
-
-      {/* Number Pad */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, null, 0, 'back'].map((item, idx) => (
-          <button
-            key={idx}
-            onClick={() => {
-              if (item === 'back') handleBackspace();
-              else if (item !== null) handlePinInput(String(item));
-            }}
-            disabled={item === null}
-            className={`w-16 h-16 rounded-full text-xl font-bold transition-all ${
-              item === null
-                ? 'invisible'
-                : item === 'back'
-                ? 'bg-red-500 text-white'
-                : 'bg-white text-red-600 active:bg-red-100'
-            }`}
-          >
-            {item === 'back' ? '⌫' : item}
-          </button>
-        ))}
-      </div>
-
-      {/* Info */}
-      <div className="text-center text-red-100 text-sm">
-        <p className="mb-2">🚨 For authorized first responders only</p>
-        <p className="flex items-center justify-center gap-2">
+      {/* Footer Info */}
+      <div className="text-center text-red-100 text-sm mt-6 pb-4 space-y-1">
+        <p className="font-semibold">🚨 For authorized first responders only</p>
+        <p className="flex items-center justify-center gap-2 text-red-200">
           <Camera size={14} />
-          Access is logged and photographed for security
+          A photo is automatically captured for security
+        </p>
+        <p className="text-red-200/70 text-xs">
+          All access is logged with timestamp, location, and responder ID
         </p>
       </div>
     </div>
@@ -622,7 +658,7 @@ export default function EmergencyAccessPage() {
       )}
 
       {stage === 'pin' && (
-        <PINEntry
+        <ResponderIdentification
           onSuccess={handlePINSuccess}
           onCaptureFace={captureFacePhoto}
         />

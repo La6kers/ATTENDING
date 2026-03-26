@@ -85,7 +85,18 @@ export default function App({
     }
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0C3547, #0C4C5E, #1A8FA8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.1)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+            <span style={{ color: 'white', fontWeight: 700, fontSize: 20 }}>A</span>
+          </div>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary>

@@ -110,13 +110,13 @@ const AssessmentCard: React.FC<{ assessment: Assessment }> = ({ assessment }) =>
 
   return (
     <Link href={`/results/${assessment.id}`}>
-      <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-purple-300 transition-all cursor-pointer">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 hover:shadow-md hover:border-white/20 transition-all cursor-pointer">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="font-medium text-gray-900 line-clamp-1">{assessment.chiefComplaint}</h3>
-            <p className="text-sm text-gray-500 mt-1">{formatDate(assessment.submittedAt)}</p>
+            <h3 className="font-medium text-white line-clamp-1">{assessment.chiefComplaint}</h3>
+            <p className="text-sm text-white/60 mt-1">{formatDate(assessment.submittedAt)}</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-gray-400" />
+          <ChevronRight className="w-5 h-5 text-white/40" />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -125,7 +125,7 @@ const AssessmentCard: React.FC<{ assessment: Assessment }> = ({ assessment }) =>
         </div>
 
         {assessment.providerName && assessment.status === 'completed' && (
-          <p className="text-xs text-gray-500 mt-2">Reviewed by Dr. {assessment.providerName}</p>
+          <p className="text-xs text-white/60 mt-2">Reviewed by Dr. {assessment.providerName}</p>
         )}
       </div>
     </Link>
@@ -151,15 +151,15 @@ const NotificationItem: React.FC<{ notification: Notification }> = ({ notificati
   };
 
   return (
-    <div className={`p-3 rounded-lg ${notification.read ? 'bg-gray-50' : 'bg-purple-50 border-l-4 border-purple-500'}`}>
+    <div className={`p-3 rounded-lg ${notification.read ? 'bg-white/5' : 'bg-white/10 border-l-4 border-teal-400'}`}>
       <div className="flex items-start justify-between">
         <div>
-          <h4 className={`text-sm font-medium ${notification.read ? 'text-gray-700' : 'text-purple-900'}`}>
+          <h4 className={`text-sm font-medium ${notification.read ? 'text-white/60' : 'text-white'}`}>
             {notification.title}
           </h4>
-          <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+          <p className="text-xs text-white/60 mt-1">{notification.message}</p>
         </div>
-        <span className="text-xs text-gray-400">{formatTime(notification.timestamp)}</span>
+        <span className="text-xs text-white/40">{formatTime(notification.timestamp)}</span>
       </div>
     </div>
   );
@@ -187,10 +187,10 @@ const QuickStats: React.FC<{ assessments: Assessment[] }> = ({ assessments }) =>
   return (
     <div className="grid grid-cols-3 gap-3">
       {stats.map((stat) => (
-        <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-3 text-center">
+        <div key={stat.label} className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-3 text-center">
           <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />
-          <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-          <p className="text-xs text-gray-500">{stat.label}</p>
+          <p className="text-2xl font-bold text-white">{stat.value}</p>
+          <p className="text-xs text-white/60">{stat.label}</p>
         </div>
       ))}
     </div>
@@ -293,13 +293,13 @@ export default function PatientDashboard() {
         <meta name="description" content="Your patient dashboard" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #0C3547 0%, #0C4C5E 30%, #115E72 100%)' }}>
         {/* Header */}
-        <header className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <header className="bg-[#0C3547]/80 backdrop-blur-md border-b border-white/10 text-white">
           <div className="max-w-lg mx-auto px-4 py-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-200 text-sm">Welcome back,</p>
+                <p className="text-white/60 text-sm">Welcome back,</p>
                 <h1 className="text-xl font-semibold">{patientName || 'Patient'}</h1>
               </div>
               <div className="flex items-center gap-3">
@@ -345,8 +345,8 @@ export default function PatientDashboard() {
           {/* Recent Assessments */}
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Assessments</h2>
-              <Link href="/health-summary" className="text-sm text-purple-600 hover:text-purple-700">
+              <h2 className="text-lg font-semibold text-white">Recent Assessments</h2>
+              <Link href="/health-summary" className="text-sm text-teal-300 hover:text-teal-200">
                 View All
               </Link>
             </div>
@@ -354,9 +354,9 @@ export default function PatientDashboard() {
             {loading ? (
               <div className="space-y-3">
                 {[1, 2].map((i) => (
-                  <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 animate-pulse">
+                    <div className="h-4 bg-white/20 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-white/20 rounded w-1/2" />
                   </div>
                 ))}
               </div>
@@ -367,10 +367,10 @@ export default function PatientDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
-                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">No assessments yet</p>
-                <p className="text-sm text-gray-400 mt-1">Start your first COMPASS assessment</p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-6 text-center">
+                <FileText className="w-12 h-12 text-white/30 mx-auto mb-3" />
+                <p className="text-white/60">No assessments yet</p>
+                <p className="text-sm text-white/40 mt-1">Start your first COMPASS assessment</p>
               </div>
             )}
           </section>
@@ -378,7 +378,7 @@ export default function PatientDashboard() {
           {/* Notifications */}
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
+              <h2 className="text-lg font-semibold text-white">Notifications</h2>
               {unreadCount > 0 && (
                 <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{unreadCount} new</span>
               )}
@@ -391,9 +391,9 @@ export default function PatientDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-                <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No notifications</p>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 text-center">
+                <Bell className="w-8 h-8 text-white/30 mx-auto mb-2" />
+                <p className="text-sm text-white/60">No notifications</p>
               </div>
             )}
           </section>
@@ -421,32 +421,32 @@ export default function PatientDashboard() {
           {/* Quick Links */}
           <section className="grid grid-cols-2 gap-3">
             <Link href="/health-summary">
-              <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all">
-                <Activity className="w-6 h-6 text-purple-600 mb-2" />
-                <p className="font-medium text-gray-900">Health Summary</p>
-                <p className="text-xs text-gray-500">View your health history</p>
+              <button className="w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 text-left hover:border-white/20 hover:shadow-md transition-all">
+                <Activity className="w-6 h-6 text-teal-300 mb-2" />
+                <p className="font-medium text-white">Health Summary</p>
+                <p className="text-xs text-white/60">View your health history</p>
               </button>
             </Link>
             <Link href="/care-resources">
-              <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all relative">
-                <Heart className="w-6 h-6 text-purple-600 mb-2" />
-                <p className="font-medium text-gray-900">Care Resources</p>
-                <p className="text-xs text-gray-500">Support & trials</p>
+              <button className="w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 text-left hover:border-white/20 hover:shadow-md transition-all relative">
+                <Heart className="w-6 h-6 text-teal-300 mb-2" />
+                <p className="font-medium text-white">Care Resources</p>
+                <p className="text-xs text-white/60">Support & trials</p>
                 <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full"></span>
               </button>
             </Link>
             <Link href="/profile">
-              <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all">
-                <User className="w-6 h-6 text-purple-600 mb-2" />
-                <p className="font-medium text-gray-900">Profile</p>
-                <p className="text-xs text-gray-500">Manage your info</p>
+              <button className="w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 text-left hover:border-white/20 hover:shadow-md transition-all">
+                <User className="w-6 h-6 text-teal-300 mb-2" />
+                <p className="font-medium text-white">Profile</p>
+                <p className="text-xs text-white/60">Manage your info</p>
               </button>
             </Link>
             <Link href="/chat">
-              <button className="w-full bg-white rounded-xl border border-gray-200 p-4 text-left hover:border-purple-300 hover:shadow-md transition-all">
-                <MessageSquare className="w-6 h-6 text-purple-600 mb-2" />
-                <p className="font-medium text-gray-900">New Assessment</p>
-                <p className="text-xs text-gray-500">Start a health check</p>
+              <button className="w-full bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 text-left hover:border-white/20 hover:shadow-md transition-all">
+                <MessageSquare className="w-6 h-6 text-teal-300 mb-2" />
+                <p className="font-medium text-white">New Assessment</p>
+                <p className="text-xs text-white/60">Start a health check</p>
               </button>
             </Link>
           </section>

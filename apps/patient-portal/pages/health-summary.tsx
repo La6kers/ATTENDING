@@ -73,7 +73,7 @@ const FilterTabs: React.FC<{
           className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
             activeFilter === filter.id
               ? 'bg-purple-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              : 'bg-white/10 text-white/60 hover:bg-white/20'
           }`}
         >
           {filter.label}
@@ -108,7 +108,7 @@ const AssessmentListItem: React.FC<{ assessment: Assessment }> = ({ assessment }
 
   return (
     <Link href={`/results/${assessment.id}`}>
-      <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md hover:border-purple-300 transition-all cursor-pointer">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 hover:shadow-md hover:border-white/20 transition-all cursor-pointer">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
@@ -127,23 +127,23 @@ const AssessmentListItem: React.FC<{ assessment: Assessment }> = ({ assessment }
                 </span>
               )}
             </div>
-            <h3 className="font-medium text-gray-900">{assessment.chiefComplaint}</h3>
-            <p className="text-sm text-gray-500 mt-1">{formatDate(assessment.submittedAt)}</p>
+            <h3 className="font-medium text-white">{assessment.chiefComplaint}</h3>
+            <p className="text-sm text-white/60 mt-1">{formatDate(assessment.submittedAt)}</p>
 
             {assessment.diagnosis && assessment.diagnosis.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {assessment.diagnosis.slice(0, 2).map((dx, i) => (
-                  <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                  <span key={i} className="text-xs bg-white/10 text-white/60 px-2 py-0.5 rounded">
                     {dx}
                   </span>
                 ))}
                 {assessment.diagnosis.length > 2 && (
-                  <span className="text-xs text-gray-400">+{assessment.diagnosis.length - 2} more</span>
+                  <span className="text-xs text-white/40">+{assessment.diagnosis.length - 2} more</span>
                 )}
               </div>
             )}
           </div>
-          <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          <ChevronRight className="w-5 h-5 text-white/40 flex-shrink-0" />
         </div>
       </div>
     </Link>
@@ -156,8 +156,8 @@ const AssessmentListItem: React.FC<{ assessment: Assessment }> = ({ assessment }
 
 const HealthProfileCard: React.FC<{ profile: HealthProfile }> = ({ profile }) => {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3">
+    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+      <div className="bg-white/10 px-4 py-3">
         <h3 className="text-white font-semibold flex items-center gap-2">
           <Heart className="w-5 h-5" />
           Health Profile
@@ -167,8 +167,8 @@ const HealthProfileCard: React.FC<{ profile: HealthProfile }> = ({ profile }) =>
       <div className="p-4 space-y-4">
         {/* Conditions */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            <Stethoscope className="w-4 h-4 text-purple-600" />
+          <h4 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
+            <Stethoscope className="w-4 h-4 text-teal-300" />
             Medical Conditions
           </h4>
           {profile.conditions.length > 0 ? (
@@ -180,14 +180,14 @@ const HealthProfileCard: React.FC<{ profile: HealthProfile }> = ({ profile }) =>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">None reported</p>
+            <p className="text-sm text-white/40">None reported</p>
           )}
         </div>
 
         {/* Medications */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            <Pill className="w-4 h-4 text-blue-600" />
+          <h4 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
+            <Pill className="w-4 h-4 text-blue-400" />
             Current Medications
           </h4>
           {profile.medications.length > 0 ? (
@@ -199,14 +199,14 @@ const HealthProfileCard: React.FC<{ profile: HealthProfile }> = ({ profile }) =>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">None reported</p>
+            <p className="text-sm text-white/40">None reported</p>
           )}
         </div>
 
         {/* Allergies */}
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-red-600" />
+          <h4 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400" />
             Allergies
           </h4>
           {profile.allergies.length > 0 && profile.allergies[0] !== 'NKDA' ? (
@@ -218,11 +218,11 @@ const HealthProfileCard: React.FC<{ profile: HealthProfile }> = ({ profile }) =>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">No known drug allergies (NKDA)</p>
+            <p className="text-sm text-white/40">No known drug allergies (NKDA)</p>
           )}
         </div>
 
-        <p className="text-xs text-gray-400 pt-2 border-t">
+        <p className="text-xs text-white/40 pt-2 border-t border-white/10">
           Last updated: {new Date(profile.lastUpdated).toLocaleDateString()}
         </p>
       </div>
@@ -338,15 +338,15 @@ export default function HealthSummaryPage() {
         <meta name="description" content="View your health history and past assessments" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #0C3547 0%, #0C4C5E 30%, #115E72 100%)' }}>
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <header className="bg-[#0C3547]/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-10">
           <div className="max-w-lg mx-auto px-4 py-4">
             <div className="flex items-center gap-3">
-              <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                <ArrowLeft className="w-5 h-5 text-white/60" />
               </button>
-              <h1 className="text-lg font-semibold text-gray-900">Health Summary</h1>
+              <h1 className="text-lg font-semibold text-white">Health Summary</h1>
             </div>
           </div>
         </header>
@@ -358,17 +358,17 @@ export default function HealthSummaryPage() {
 
           {/* Assessments Section */}
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Assessment History</h2>
+            <h2 className="text-lg font-semibold text-white mb-3">Assessment History</h2>
 
             {/* Search */}
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input
                 type="text"
                 placeholder="Search assessments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent"
               />
             </div>
 
@@ -379,10 +379,10 @@ export default function HealthSummaryPage() {
             <div className="space-y-3 mt-4">
               {loading ? (
                 [1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-2" />
-                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 animate-pulse">
+                    <div className="h-4 bg-white/20 rounded w-1/4 mb-2" />
+                    <div className="h-5 bg-white/20 rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-white/20 rounded w-1/2" />
                   </div>
                 ))
               ) : filteredAssessments.length > 0 ? (
@@ -390,9 +390,9 @@ export default function HealthSummaryPage() {
                   <AssessmentListItem key={assessment.id} assessment={assessment} />
                 ))
               ) : (
-                <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
-                  <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No assessments found</p>
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-6 text-center">
+                  <FileText className="w-12 h-12 text-white/30 mx-auto mb-3" />
+                  <p className="text-white/60">No assessments found</p>
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}

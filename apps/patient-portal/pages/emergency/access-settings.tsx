@@ -58,24 +58,24 @@ function ToggleRow({
     <div className="flex items-center justify-between py-3">
       <div className="flex items-center gap-3 flex-1 min-w-0">
         {Icon && (
-          <div className="w-8 h-8 rounded-lg bg-attending-50 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
             <Icon className="w-4 h-4 text-attending-primary" />
           </div>
         )}
         <div className="min-w-0">
-          <p className="text-sm font-medium text-attending-deep-navy">{label}</p>
-          <p className="text-xs text-attending-200">{sublabel}</p>
+          <p className="text-sm font-medium text-white">{label}</p>
+          <p className="text-xs text-white/50">{sublabel}</p>
         </div>
       </div>
       <button
         onClick={onToggle}
-        className={`relative w-12 h-7 rounded-full transition-colors flex-shrink-0 ml-3 ${
-          enabled ? 'bg-attending-primary' : 'bg-gray-300'
+        className={`relative w-[52px] h-[28px] rounded-full transition-colors flex-shrink-0 ml-3 ${
+          enabled ? 'bg-[#4FD1C5]' : 'bg-white/20'
         }`}
       >
         <span
-          className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
-            enabled ? 'translate-x-5' : 'translate-x-0.5'
+          className={`absolute top-[3px] left-[3px] w-[22px] h-[22px] bg-white rounded-full shadow transition-transform ${
+            enabled ? 'translate-x-[24px]' : 'translate-x-0'
           }`}
         />
       </button>
@@ -102,8 +102,8 @@ function SelectorRow({
 }) {
   return (
     <div className="py-3">
-      <p className="text-sm font-medium text-attending-deep-navy">{label}</p>
-      <p className="text-xs text-attending-200 mb-2">{sublabel}</p>
+      <p className="text-sm font-medium text-white">{label}</p>
+      <p className="text-xs text-white/50 mb-2">{sublabel}</p>
       <div className="flex gap-2 flex-wrap">
         {options.map((opt) => (
           <button
@@ -112,7 +112,7 @@ function SelectorRow({
             className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
               String(value) === String(opt.value)
                 ? 'bg-attending-primary text-white shadow-teal'
-                : 'bg-attending-50 text-attending-200 hover:text-attending-deep-navy'
+                : 'bg-white/10 text-white/50 hover:text-white'
             }`}
           >
             {opt.label}
@@ -221,11 +221,11 @@ export default function AccessSettingsPage() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => router.back()}
-                  className="w-9 h-9 rounded-full bg-attending-50 flex items-center justify-center"
+                  className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"
                 >
-                  <ArrowLeft className="w-5 h-5 text-attending-deep-navy" />
+                  <ArrowLeft className="w-5 h-5 text-white" />
                 </button>
-                <h1 className="text-lg font-bold text-attending-deep-navy">First Responder Access</h1>
+                <h1 className="text-lg font-bold text-white">First Responder Access</h1>
               </div>
               <button
                 onClick={handleSave}
@@ -254,11 +254,11 @@ export default function AccessSettingsPage() {
           {settings.enabled && (
             <>
               {/* Info banner */}
-              <div className="bg-attending-50 border border-attending-200 rounded-xl p-4 flex gap-3">
+              <div className="bg-white/10 border border-attending-200 rounded-xl p-4 flex gap-3">
                 <Info className="w-5 h-5 text-attending-primary flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-attending-deep-navy">
+                <div className="text-xs text-white">
                   <p className="font-semibold mb-1">How it works</p>
-                  <p className="text-attending-200">
+                  <p className="text-white/50">
                     If a severe impact is detected, a countdown begins. If not dismissed, your
                     phone displays a Quick Access screen. First responders enter your PIN to view
                     your full medical facesheet. Every access is logged and you're notified.
@@ -268,12 +268,12 @@ export default function AccessSettingsPage() {
 
               {/* PIN */}
               <section>
-                <h3 className="text-sm font-semibold text-attending-deep-navy mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <Lock className="w-4 h-4 text-attending-primary" />
                   Access PIN
                 </h3>
                 <div className="card-attending p-4">
-                  <p className="text-xs text-attending-200 mb-3">
+                  <p className="text-xs text-white/50 mb-3">
                     First responders enter this PIN to access your full medical record
                   </p>
                   <div className="flex items-center gap-3">
@@ -285,22 +285,22 @@ export default function AccessSettingsPage() {
                         update('pin', val);
                       }}
                       maxLength={6}
-                      className="flex-1 px-4 py-3 bg-attending-50 border-0 rounded-xl text-2xl font-mono text-center tracking-[0.5em] text-attending-deep-navy focus:ring-2 focus:ring-attending-primary/30"
+                      className="flex-1 px-4 py-3 bg-white/10 border-0 rounded-xl text-2xl font-mono text-center tracking-[0.5em] text-white focus:ring-2 focus:ring-attending-primary/30"
                     />
                     <button
                       onClick={() => setShowPIN(!showPIN)}
-                      className="w-10 h-10 rounded-lg bg-attending-50 flex items-center justify-center"
+                      className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center"
                     >
                       <Eye className="w-4 h-4 text-attending-primary" />
                     </button>
                   </div>
-                  <p className="text-[10px] text-attending-200 mt-2">4–6 digit PIN · displayed on Quick Access screen to verified responders</p>
+                  <p className="text-[10px] text-white/50 mt-2">4–6 digit PIN · displayed on Quick Access screen to verified responders</p>
                 </div>
               </section>
 
               {/* Timing */}
               <section>
-                <h3 className="text-sm font-semibold text-attending-deep-navy mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <Timer className="w-4 h-4 text-attending-primary" />
                   Timing
                 </h3>
@@ -334,7 +334,7 @@ export default function AccessSettingsPage() {
 
               {/* Security */}
               <section>
-                <h3 className="text-sm font-semibold text-attending-deep-navy mb-3">Security</h3>
+                <h3 className="text-sm font-semibold text-white mb-3">Security</h3>
                 <div className="card-attending px-4 divide-y divide-attending-50">
                   <ToggleRow
                     label="Capture Photo on Access"
@@ -367,7 +367,7 @@ export default function AccessSettingsPage() {
 
               {/* Visible Data */}
               <section>
-                <h3 className="text-sm font-semibold text-attending-deep-navy mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <Eye className="w-4 h-4 text-attending-primary" />
                   Visible to Responders
                 </h3>

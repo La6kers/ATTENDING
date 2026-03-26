@@ -107,7 +107,7 @@ export default function EmergencySettingsPage() {
         <meta name="description" content="Configure emergency medical access and crash detection" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #0C3547 0%, #0C4C5E 30%, #115E72 100%)' }}>
         {/* Header */}
         <header className="bg-gradient-to-r from-red-600 to-red-700 text-white">
           <div className="max-w-lg mx-auto px-4 py-6">
@@ -153,18 +153,18 @@ export default function EmergencySettingsPage() {
           </div>
 
           {/* Crash Detection */}
-          <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Car size={18} className="text-red-600" />
+          <section className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <Car size={18} className="text-red-400" />
                 Crash Detection
               </h3>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-white/10">
               <div className="p-4 flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Enable Crash Detection</p>
-                  <p className="text-sm text-gray-500">Detect severe impacts using phone sensors</p>
+                  <p className="font-medium text-white">Enable Crash Detection</p>
+                  <p className="text-sm text-white/60">Detect severe impacts using phone sensors</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -181,8 +181,8 @@ export default function EmergencySettingsPage() {
                 <>
                   <div className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium text-gray-900">G-Force Sensitivity</p>
-                      <span className="text-sm text-gray-500">{settings.gForceThreshold}G</span>
+                      <p className="font-medium text-white">G-Force Sensitivity</p>
+                      <span className="text-sm text-white/60">{settings.gForceThreshold}G</span>
                     </div>
                     <input
                       type="range"
@@ -193,7 +193,7 @@ export default function EmergencySettingsPage() {
                       onChange={(e) => updateSetting('gForceThreshold', parseFloat(e.target.value))}
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-600"
                     />
-                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <div className="flex justify-between text-xs text-white/40 mt-1">
                       <span>More Sensitive</span>
                       <span>Less Sensitive</span>
                     </div>
@@ -201,8 +201,8 @@ export default function EmergencySettingsPage() {
 
                   <div className="p-4 flex items-center justify-between">
                     <div className="flex-1">
-                      <p className="font-medium text-gray-900">Countdown Timer</p>
-                      <p className="text-sm text-gray-500">Seconds before emergency activation</p>
+                      <p className="font-medium text-white">Countdown Timer</p>
+                      <p className="text-sm text-white/60">Seconds before emergency activation</p>
                     </div>
                     <select
                       value={settings.countdownSeconds}
@@ -241,18 +241,18 @@ export default function EmergencySettingsPage() {
           </section>
 
           {/* Emergency Access Settings */}
-          <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Heart size={18} className="text-red-600" />
+          <section className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <Heart size={18} className="text-red-400" />
                 Emergency Access
               </h3>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-white/10">
               <div className="p-4 flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Enable Emergency Access</p>
-                  <p className="text-sm text-gray-500">Allow first responders to view your medical info</p>
+                  <p className="font-medium text-white">Enable Emergency Access</p>
+                  <p className="text-sm text-white/60">Allow first responders to view your medical info</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -267,12 +267,12 @@ export default function EmergencySettingsPage() {
 
               <div className="p-4 flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">First Responder PIN</p>
-                  <p className="text-sm text-gray-500">PIN required to access your medical info</p>
+                  <p className="font-medium text-white">First Responder PIN</p>
+                  <p className="text-sm text-white/60">PIN required to access your medical info</p>
                 </div>
                 <button
                   onClick={() => setShowPINModal(true)}
-                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium"
+                  className="px-3 py-2 bg-white/10 text-white/80 rounded-lg text-sm font-medium"
                 >
                   {settings.firstResponderPIN ? '••••••' : 'Set PIN'}
                 </button>
@@ -280,8 +280,8 @@ export default function EmergencySettingsPage() {
 
               <div className="p-4 flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Capture Photo on Access</p>
-                  <p className="text-sm text-gray-500">Take photo of person accessing your info</p>
+                  <p className="font-medium text-white">Capture Photo on Access</p>
+                  <p className="text-sm text-white/60">Take photo of person accessing your info</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -296,8 +296,8 @@ export default function EmergencySettingsPage() {
 
               <div className="p-4 flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Show on Lock Screen</p>
-                  <p className="text-sm text-gray-500">Display emergency access button when locked</p>
+                  <p className="font-medium text-white">Show on Lock Screen</p>
+                  <p className="text-sm text-white/60">Display emergency access button when locked</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -313,18 +313,18 @@ export default function EmergencySettingsPage() {
           </section>
 
           {/* Notifications */}
-          <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Bell size={18} className="text-red-600" />
+          <section className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <Bell size={18} className="text-red-400" />
                 Emergency Notifications
               </h3>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-white/10">
               <div className="p-4 flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Notify Emergency Contacts</p>
-                  <p className="text-sm text-gray-500">Send SMS when emergency mode activates</p>
+                  <p className="font-medium text-white">Notify Emergency Contacts</p>
+                  <p className="text-sm text-white/60">Send SMS when emergency mode activates</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -339,8 +339,8 @@ export default function EmergencySettingsPage() {
 
               <div className="p-4 flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">Auto-Call 911</p>
-                  <p className="text-sm text-gray-500">Automatically call emergency services</p>
+                  <p className="font-medium text-white">Auto-Call 911</p>
+                  <p className="text-sm text-white/60">Automatically call emergency services</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -356,10 +356,10 @@ export default function EmergencySettingsPage() {
           </section>
 
           {/* Emergency Contacts */}
-          <section className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Phone size={18} className="text-red-600" />
+          <section className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <Phone size={18} className="text-red-400" />
                 Emergency Contacts
               </h3>
               <button
@@ -372,14 +372,14 @@ export default function EmergencySettingsPage() {
                 <Plus size={20} />
               </button>
             </div>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-white/10">
               {contacts.map((contact) => (
                 <div key={contact.id} className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                    <User size={20} className="text-gray-400" />
+                  <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                    <User size={20} className="text-white/40" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-white">
                       {contact.name}
                       {contact.isPrimary && (
                         <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded">
@@ -387,14 +387,14 @@ export default function EmergencySettingsPage() {
                         </span>
                       )}
                     </p>
-                    <p className="text-sm text-gray-500">{contact.relationship} • {contact.phone}</p>
+                    <p className="text-sm text-white/60">{contact.relationship} • {contact.phone}</p>
                   </div>
                   <button
                     onClick={() => {
                       setEditingContact(contact);
                       setShowContactModal(true);
                     }}
-                    className="p-2 text-gray-400 hover:text-gray-600"
+                    className="p-2 text-white/40 hover:text-white/60"
                   >
                     <Edit2 size={16} />
                   </button>
@@ -411,7 +411,7 @@ export default function EmergencySettingsPage() {
                 Preview Emergency Medical ID
               </button>
             </Link>
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-white/60">
               See how first responders will view your medical information
             </p>
           </section>

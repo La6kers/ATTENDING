@@ -94,9 +94,10 @@ function BottomTabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-light safe-area-bottom"
+      className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom"
       style={{
-        boxShadow: '0 -2px 12px rgba(12, 53, 71, 0.06)',
+        background: 'linear-gradient(135deg, #0C3547, #0C4C5E)',
+        boxShadow: '0 -2px 16px rgba(12, 53, 71, 0.25)',
       }}
     >
       <div className="max-w-lg mx-auto flex items-center justify-around h-[68px] px-2">
@@ -118,7 +119,7 @@ function BottomTabBar() {
                 </div>
                 <span
                   className={`text-[10px] mt-1 font-semibold ${
-                    active ? 'text-attending-primary' : 'text-attending-700'
+                    active ? 'text-[#4FD1C5]' : 'text-white/50'
                   }`}
                 >
                   {tab.label}
@@ -136,7 +137,7 @@ function BottomTabBar() {
               <div className="relative">
                 <Icon
                   className={`w-6 h-6 transition-colors ${
-                    active ? 'text-attending-primary' : 'text-attending-200'
+                    active ? 'text-[#4FD1C5]' : 'text-white/40'
                   }`}
                   strokeWidth={active ? 2.2 : 1.8}
                 />
@@ -148,13 +149,13 @@ function BottomTabBar() {
               </div>
               <span
                 className={`text-[10px] font-medium transition-colors ${
-                  active ? 'text-attending-primary font-semibold' : 'text-attending-200'
+                  active ? 'text-[#4FD1C5] font-semibold' : 'text-white/40'
                 }`}
               >
                 {tab.label}
               </span>
               {active && (
-                <div className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 bg-attending-primary rounded-full" />
+                <div className="absolute -top-px left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#4FD1C5] rounded-full" />
               )}
             </Link>
           );
@@ -170,7 +171,7 @@ function BottomTabBar() {
 
 export default function AppShell({ children, hideNav = false, header }: AppShellProps) {
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-surface-bg flex flex-col">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col" style={{ background: 'linear-gradient(180deg, #0C3547 0%, #0C4C5E 30%, #115E72 100%)' }}>
       {/* Optional custom header */}
       {header}
 

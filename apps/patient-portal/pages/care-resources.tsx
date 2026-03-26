@@ -146,15 +146,15 @@ const ResourceCard: React.FC<{ resource: CommunityResource }> = ({ resource }) =
   const Icon = categoryIcons[resource.category] || Building;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
       <div className="p-4">
         <div className="flex items-start gap-3 mb-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <Icon size={20} className="text-purple-600" />
+          <div className="p-2 bg-white/10 rounded-lg">
+            <Icon size={20} className="text-teal-300" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">{resource.name}</h3>
-            <p className="text-sm text-gray-500">{resource.category}</p>
+            <h3 className="font-semibold text-white">{resource.name}</h3>
+            <p className="text-sm text-white/60">{resource.category}</p>
           </div>
           {resource.rating && (
             <div className="flex items-center gap-1 text-amber-500">
@@ -164,21 +164,21 @@ const ResourceCard: React.FC<{ resource: CommunityResource }> = ({ resource }) =
           )}
         </div>
 
-        <p className="text-sm text-gray-600 mb-3">{resource.description}</p>
+        <p className="text-sm text-white/60 mb-3">{resource.description}</p>
 
         <div className="space-y-2 mb-3">
           {resource.phone && (
-            <a href={`tel:${resource.phone}`} className="flex items-center gap-2 text-sm text-purple-600">
+            <a href={`tel:${resource.phone}`} className="flex items-center gap-2 text-sm text-teal-300">
               <Phone size={14} />
               {resource.phone}
             </a>
           )}
           {resource.address && (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-white/60">
               <MapPin size={14} />
               {resource.address}
               {resource.distance !== undefined && (
-                <span className="text-purple-600">({resource.distance} mi)</span>
+                <span className="text-teal-300">({resource.distance} mi)</span>
               )}
             </div>
           )}
@@ -186,18 +186,18 @@ const ResourceCard: React.FC<{ resource: CommunityResource }> = ({ resource }) =
 
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-sm text-purple-600 flex items-center gap-1"
+          className="text-sm text-teal-300 flex items-center gap-1"
         >
           {expanded ? 'Show less' : 'Show services'}
           <ChevronRight size={14} className={expanded ? 'rotate-90' : ''} />
         </button>
 
         {expanded && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <p className="text-xs font-medium text-gray-500 mb-2">Services offered:</p>
+          <div className="mt-3 pt-3 border-t border-white/10">
+            <p className="text-xs font-medium text-white/60 mb-2">Services offered:</p>
             <div className="flex flex-wrap gap-1">
               {resource.services.map((service, idx) => (
-                <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                <span key={idx} className="px-2 py-1 bg-white/10 text-white/80 text-xs rounded-full">
                   {service}
                 </span>
               ))}
@@ -219,9 +219,9 @@ const ResourceCard: React.FC<{ resource: CommunityResource }> = ({ resource }) =
               href={resource.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 border border-gray-300 rounded-lg"
+              className="px-4 py-2 border border-white/10 rounded-lg"
             >
-              <ExternalLink size={16} className="text-gray-500" />
+              <ExternalLink size={16} className="text-white/60" />
             </a>
           )}
         </div>
@@ -246,7 +246,7 @@ const TrialCard: React.FC<{
   const status = statusConfig[trial.status];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -263,11 +263,11 @@ const TrialCard: React.FC<{
           </div>
         </div>
 
-        <h3 className="font-semibold text-gray-900 mb-2">{trial.title}</h3>
-        <p className="text-sm text-purple-600 mb-2">{trial.condition}</p>
-        <p className="text-sm text-gray-600 mb-3">{trial.summary}</p>
+        <h3 className="font-semibold text-white mb-2">{trial.title}</h3>
+        <p className="text-sm text-teal-300 mb-2">{trial.condition}</p>
+        <p className="text-sm text-white/60 mb-3">{trial.summary}</p>
 
-        <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+        <div className="flex items-center gap-4 text-sm text-white/60 mb-4">
           <div className="flex items-center gap-1">
             <Building size={14} />
             {trial.location}
@@ -288,7 +288,7 @@ const TrialCard: React.FC<{
             </button>
             <button
               onClick={() => onNotInterested(trial.id)}
-              className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg"
+              className="px-4 py-2 border border-white/10 text-white/60 text-sm rounded-lg"
             >
               Not Now
             </button>
@@ -337,11 +337,11 @@ export default function CareResourcesPage() {
         <meta name="description" content="Community resources and clinical trial opportunities" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #0C3547 0%, #0C4C5E 30%, #115E72 100%)' }}>
         {/* Header */}
-        <header className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <header className="bg-[#0C3547]/80 backdrop-blur-md border-b border-white/10 text-white">
           <div className="max-w-lg mx-auto px-4 py-6">
-            <Link href="/dashboard" className="flex items-center gap-2 text-purple-200 mb-4">
+            <Link href="/dashboard" className="flex items-center gap-2 text-white/60 mb-4">
               <ArrowLeft size={20} />
               Back to Dashboard
             </Link>
@@ -351,22 +351,22 @@ export default function CareResourcesPage() {
               </div>
               <div>
                 <h1 className="text-xl font-semibold">Care Resources</h1>
-                <p className="text-purple-200 text-sm">Support services and research opportunities</p>
+                <p className="text-white/60 text-sm">Support services and research opportunities</p>
               </div>
             </div>
           </div>
         </header>
 
         {/* Tabs */}
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="bg-[#0C3547]/80 backdrop-blur-md border-b border-white/10 sticky top-0 z-10">
           <div className="max-w-lg mx-auto px-4">
             <div className="flex">
               <button
                 onClick={() => setActiveTab('resources')}
                 className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === 'resources'
-                    ? 'border-purple-600 text-purple-600'
-                    : 'border-transparent text-gray-500'
+                    ? 'border-teal-300 text-teal-300'
+                    : 'border-transparent text-white/60'
                 }`}
               >
                 <Building size={16} className="inline mr-2" />
@@ -376,8 +376,8 @@ export default function CareResourcesPage() {
                 onClick={() => setActiveTab('trials')}
                 className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors relative ${
                   activeTab === 'trials'
-                    ? 'border-purple-600 text-purple-600'
-                    : 'border-transparent text-gray-500'
+                    ? 'border-teal-300 text-teal-300'
+                    : 'border-transparent text-white/60'
                 }`}
               >
                 <FlaskConical size={16} className="inline mr-2" />
@@ -408,12 +408,12 @@ export default function CareResourcesPage() {
                 <ResourceCard key={resource.id} resource={resource} />
               ))}
 
-              <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-                <MessageSquare size={24} className="text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4 text-center">
+                <MessageSquare size={24} className="text-white/40 mx-auto mb-2" />
+                <p className="text-sm text-white/60">
                   Need help finding other resources?
                 </p>
-                <Link href="/chat" className="text-sm text-purple-600 font-medium">
+                <Link href="/chat" className="text-sm text-teal-300 font-medium">
                   Message your care team →
                 </Link>
               </div>
@@ -444,9 +444,9 @@ export default function CareResourcesPage() {
                 />
               ))}
 
-              <div className="bg-white rounded-xl border border-gray-200 p-4">
-                <h3 className="font-medium text-gray-900 mb-2">About Clinical Trials</h3>
-                <ul className="text-sm text-gray-600 space-y-2">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 p-4">
+                <h3 className="font-medium text-white mb-2">About Clinical Trials</h3>
+                <ul className="text-sm text-white/60 space-y-2">
                   <li className="flex items-start gap-2">
                     <CheckCircle size={14} className="text-green-500 mt-0.5" />
                     Participation is always voluntary

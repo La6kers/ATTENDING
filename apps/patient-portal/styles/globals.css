@@ -147,18 +147,52 @@
   .react-grid-item.cssTransforms {
     transition: transform 150ms ease;
   }
-  .react-grid-item > .react-resizable-handle {
-    background: none;
-    width: 20px;
-    height: 20px;
+  /* Resize handle: centered bottom grip bar instead of corner arrow */
+  .react-grid-item > .react-resizable-handle,
+  .react-grid-item > .react-resizable-handle-se,
+  .react-grid-item > .react-resizable-handle-s {
+    background: none !important;
+    background-image: none !important;
+    width: 100% !important;
+    height: 18px !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    cursor: ns-resize !important;
     z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    padding: 0 !important;
   }
-  .react-grid-item > .react-resizable-handle::after {
-    border-color: var(--attending-primary-teal) !important;
-    width: 8px !important;
-    height: 8px !important;
-    right: 6px !important;
-    bottom: 6px !important;
+  .react-grid-item:hover > .react-resizable-handle,
+  .react-grid-item:hover > .react-resizable-handle-se,
+  .react-grid-item:hover > .react-resizable-handle-s {
+    opacity: 1;
+  }
+  .react-grid-item > .react-resizable-handle::after,
+  .react-grid-item > .react-resizable-handle-se::after,
+  .react-grid-item > .react-resizable-handle-s::after {
+    content: '' !important;
+    width: 32px !important;
+    height: 4px !important;
+    border: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    border-radius: 2px !important;
+    background: rgba(255, 255, 255, 0.3) !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    right: auto !important;
+    bottom: auto !important;
+    transition: background 0.15s ease, width 0.15s ease;
+  }
+  .react-grid-item:hover > .react-resizable-handle::after,
+  .react-grid-item:hover > .react-resizable-handle-se::after,
+  .react-grid-item:hover > .react-resizable-handle-s::after {
+    background: rgba(79, 209, 197, 0.6) !important;
+    width: 48px !important;
   }
   .react-grid-item.react-grid-placeholder {
     background: rgba(26, 143, 168, 0.25) !important;
