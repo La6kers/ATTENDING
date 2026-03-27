@@ -120,11 +120,11 @@ export const navigationSections: NavSection[] = [
     label: 'Care Management',
     items: [
       { id: 'care-coordination', label: 'Care Coordination', icon: Heart, href: '/interventions?module=coordination' },
-      { id: 'pathways', label: 'Clinical Pathways', icon: GitBranch, href: '/pathways' },
+      { id: 'pathways', label: 'Clinical Pathways', icon: GitBranch, href: '/treatment-plans' },
       { id: 'sdoh', label: 'Social Care (SDOH)', icon: Home, href: '/interventions?module=sdoh' },
       { id: 'med-optimizer', label: 'Medication Optimizer', icon: Pill, href: '/interventions?module=medications', isAI: true },
       { id: 'clinical-trials', label: 'Clinical Trials', icon: Activity, href: '/interventions?module=trials' },
-      { id: 'patient-companion', label: 'Patient Companion', icon: UserCircle, href: '/patient-companion' },
+      { id: 'patient-outreach', label: 'Patient Outreach', icon: UserCircle, href: '/patient-outreach' },
     ],
   },
   {
@@ -133,7 +133,7 @@ export const navigationSections: NavSection[] = [
     items: [
       { id: 'population', label: 'Population Dashboard', icon: UsersRound, href: '/population-health' },
       { id: 'outcomes', label: 'Clinical Outcomes', icon: Target, href: '/outcomes' },
-      { id: 'predictive', label: 'Predictive Analytics', icon: Sparkles, href: '/predictive', isAI: true },
+      { id: 'predictive', label: 'Predictive Analytics', icon: Sparkles, href: '/predictive-risk', isAI: true },
     ],
   },
   {
@@ -141,7 +141,7 @@ export const navigationSections: NavSection[] = [
     label: 'Analytics & Reports',
     items: [
       { id: 'executive', label: 'Executive Dashboard', icon: BarChart3, href: '/executive-analytics' },
-      { id: 'provider-performance', label: 'Provider Performance', icon: TrendingUp, href: '/provider-performance' },
+      { id: 'provider-performance', label: 'Provider Performance', icon: TrendingUp, href: '/my-performance' },
       { id: 'quality', label: 'Quality Measures', icon: ClipboardList, href: '/quality-measures', isNew: true },
       { id: 'outreach', label: 'Patient Outreach', icon: Send, href: '/patient-outreach', isNew: true },
     ],
@@ -152,7 +152,7 @@ export const navigationSections: NavSection[] = [
     items: [
       { id: 'integrations', label: 'Integration Hub', icon: LinkIcon, href: '/integrations' },
       { id: 'settings', label: 'Settings', icon: Settings, href: '/settings' },
-      { id: 'accessibility', label: 'Accessibility', icon: Globe, href: '/accessibility' },
+      { id: 'accessibility', label: 'Accessibility', icon: Globe, href: '/settings' },
     ],
   },
 ];
