@@ -9,6 +9,7 @@
 import type { NextApiRequest, NextApiResponse, NextApiHandler } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions, type SessionUser } from '../auth';
+import { verifyCsrfToken } from '@attending/shared/lib/security';
 
 // =============================================================================
 // Types
@@ -29,6 +30,7 @@ export type AuthenticatedHandler = (
 export interface MiddlewareOptions {
   roles?: ProviderRole[];
   requireAuth?: boolean;
+  requireCsrf?: boolean;
   auditLog?: boolean;
   rateLimit?: {
     maxRequests: number;
@@ -300,7 +302,24 @@ export function withApiMiddleware(
       authenticatedReq.user = session.user as SessionUser;
       authenticatedReq.sessionId = (session as any).sessionId || 'unknown';
     }
-    
+
+    // CSRF validation for state-changing requests
+    if (options.requireCsrf !== false && !['GET', 'HEAD', 'OPTIONS'].includes(req.method || '')) {
+      const csrfSecret = req.cookies['__Host-csrf-token'];
+      const csrfToken = req.headers['x-csrf-token'] as string;
+
+      if (csrfSecret && csrfToken) {
+        if (!verifyCsrfToken(csrfSecret, csrfToken)) {
+          return res.status(403).json({
+            error: 'Forbidden',
+            message: 'Invalid CSRF token',
+          });
+        }
+      }
+      // If no CSRF cookie/header present, allow request through —
+      // enforcement will tighten as client-side CSRF fetch is implemented.
+    }
+
     const authenticatedReq = req as AuthenticatedRequest;
     
     // Role-based authorization

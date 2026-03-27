@@ -21,7 +21,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@attending/shared/lib/prisma';
 import { buildNextAuthProviders } from '@attending/shared/lib/auth/ssoProviders';
 import type { SSOProviderConfig } from '@attending/shared/lib/auth/ssoProviders';
-import { createHash } from 'crypto';
+import { hashData, verifyHash } from '@attending/shared/lib/security';
 
 // ============================================================
 // Runtime environment detection
@@ -102,21 +102,18 @@ function buildProviders() {
 
         if (!user || !user.isActive) return null;
 
-        // Verify password: SHA-256 hash comparison
-        const inputHash = createHash('sha256')
-          .update(credentials.password)
-          .digest('hex');
-
+        // Verify password: PBKDF2 with salt (100,000 iterations, SHA-512)
         if (user.password) {
-          // User has a stored password hash — compare
-          if (inputHash !== user.password) return null;
+          // User has a stored password hash — verify
+          if (!verifyHash(credentials.password, user.password)) return null;
         } else {
           // No password stored yet — accept the provided password
-          // and store its hash for future logins (first-login bootstrap).
+          // and store its PBKDF2 hash for future logins (first-login bootstrap).
           try {
+            const hashedPassword = hashData(credentials.password);
             await prisma.user.update({
               where: { id: user.id },
-              data: { password: inputHash },
+              data: { password: hashedPassword },
             });
           } catch {
             // DB write failed — still allow this login, hash will be set next time
