@@ -475,3 +475,384 @@ public class Curb65Score : IClinicalGuideline
             risk, probability, recommendation, criteria);
     }
 }
+
+/// <summary>
+/// Ottawa Knee Rules — clinical decision rule for knee radiography.
+///
+/// Determines whether knee X-rays are needed after acute knee injury.
+/// Nearly 100% sensitivity for fractures when applied correctly.
+///
+/// Source: Stiell IG et al. JAMA. 1996;275(8):611-615.
+/// </summary>
+public class OttawaKneeRules : IClinicalGuideline
+{
+    public string GuidelineName => "Ottawa Knee Rules";
+    public string Version => "Ottawa Knee Rules, 1996";
+    public string SourceCitation => "Stiell IG et al. JAMA. 1996;275(8):611-615";
+    public string[] ApplicableComplaints => new[]
+    {
+        "knee pain", "knee injury", "knee swelling", "fell on knee",
+        "twisted knee", "knee trauma", "knee sprain"
+    };
+
+    public bool IsApplicable(GuidelineInput input)
+    {
+        return input.PresentationContains(ApplicableComplaints);
+    }
+
+    public GuidelineResult Evaluate(GuidelineInput input)
+    {
+        var criteria = new List<ScoredCriterion>();
+        decimal score = 0;
+
+        // 1. Age >= 55
+        var ageOver55 = input.PatientAge >= 55;
+        criteria.Add(new("Age >= 55 years", ageOver55, 1, input.PatientAge > 0 ? $"Age: {input.PatientAge}" : null));
+        if (ageOver55) score += 1;
+
+        // 2. Isolated tenderness of patella (no other bony tenderness)
+        var patellaTender = input.PresentationContains("patella tender", "patellar tender",
+            "kneecap tender", "patella pain");
+        criteria.Add(new("Isolated tenderness of patella", patellaTender, 1, null));
+        if (patellaTender) score += 1;
+
+        // 3. Tenderness at head of fibula
+        var fibulaTender = input.PresentationContains("fibula tender", "fibular head",
+            "lateral knee tender");
+        criteria.Add(new("Tenderness at head of fibula", fibulaTender, 1, null));
+        if (fibulaTender) score += 1;
+
+        // 4. Inability to flex to 90 degrees
+        var cantFlex = input.PresentationContains("cannot flex", "can't flex", "unable to flex",
+            "can't bend knee", "cannot bend knee", "limited flexion");
+        criteria.Add(new("Inability to flex to 90 degrees", cantFlex, 1, null));
+        if (cantFlex) score += 1;
+
+        // 5. Inability to bear weight (4 steps immediately and in ED)
+        var cantBearWeight = input.PresentationContains("cannot walk", "can't walk",
+            "unable to walk", "non-weight bearing", "cannot bear weight", "can't bear weight",
+            "limping");
+        criteria.Add(new("Inability to bear weight (4 steps)", cantBearWeight, 1, null));
+        if (cantBearWeight) score += 1;
+
+        var xrayNeeded = score >= 1;
+        var (risk, probability) = xrayNeeded
+            ? ("Positive", 0.07m)  // ~7% fracture rate when rules positive
+            : ("Negative", 0.001m); // <0.1% fracture rate when rules negative
+
+        var recommendation = xrayNeeded
+            ? $"Ottawa Knee Rules POSITIVE ({score} criteria). Knee radiography indicated to rule out fracture."
+            : "Ottawa Knee Rules NEGATIVE. Knee radiography not indicated. " +
+              "Safe discharge with weight-bearing as tolerated, ice, and follow-up if symptoms worsen.";
+
+        return new GuidelineResult(
+            GuidelineName, SourceCitation, score, 5,
+            risk, probability, recommendation, criteria);
+    }
+}
+
+/// <summary>
+/// PECARN Head Injury Prediction Rule — pediatric head CT decision rule.
+///
+/// Identifies children at very low risk of clinically-important traumatic
+/// brain injury (ciTBI) who do NOT need head CT. Two age-stratified algorithms.
+///
+/// Source: Kuppermann N et al. Lancet. 2009;374(9696):1160-1170.
+/// </summary>
+public class PecarnHeadInjury : IClinicalGuideline
+{
+    public string GuidelineName => "PECARN Head Injury Prediction Rule";
+    public string Version => "PECARN, 2009";
+    public string SourceCitation => "Kuppermann N et al. Lancet. 2009;374(9696):1160-1170";
+    public string[] ApplicableComplaints => new[]
+    {
+        "head injury", "head trauma", "fell hit head", "concussion",
+        "hit head", "head laceration", "bump on head", "loss of consciousness"
+    };
+
+    public bool IsApplicable(GuidelineInput input)
+    {
+        return input.PatientAge < 18 && input.PresentationContains(ApplicableComplaints);
+    }
+
+    public GuidelineResult Evaluate(GuidelineInput input)
+    {
+        var criteria = new List<ScoredCriterion>();
+        decimal score = 0;
+        var isUnder2 = input.PatientAge < 2;
+
+        // 1. Altered mental status (GCS < 15)
+        var alteredMental = input.PresentationContains("altered mental", "confused", "lethargic",
+            "drowsy", "irritable", "agitated", "gcs", "not acting normally",
+            "unresponsive", "somnolent");
+        criteria.Add(new("Altered mental status", alteredMental, 2, null));
+        if (alteredMental) score += 2;
+
+        // 2. Palpable skull fracture (< 2y) or signs of basilar skull fracture (>= 2y)
+        var skullFracture = isUnder2
+            ? input.PresentationContains("skull fracture", "palpable defect", "boggy swelling",
+                "fontanelle bulging")
+            : input.PresentationContains("skull fracture", "basilar", "battle sign",
+                "raccoon eyes", "hemotympanum", "csf otorrhea", "csf rhinorrhea");
+        var fractureName = isUnder2 ? "Palpable skull fracture" : "Signs of basilar skull fracture";
+        criteria.Add(new(fractureName, skullFracture, 2, null));
+        if (skullFracture) score += 2;
+
+        // 3. Loss of consciousness
+        var loc = input.PresentationContains("loss of consciousness", "loc", "passed out",
+            "blacked out", "knocked out", "unresponsive");
+        criteria.Add(new("Loss of consciousness", loc, 1, null));
+        if (loc) score += 1;
+
+        // 4. Severe mechanism of injury
+        var severeMechanism = input.PresentationContains("motor vehicle", "mva", "mvc",
+            "ejected", "pedestrian struck", "bicycle", "fall greater than",
+            "fall > 3 feet", "fall > 5 feet", "high impact");
+        criteria.Add(new("Severe mechanism of injury", severeMechanism, 1, null));
+        if (severeMechanism) score += 1;
+
+        // 5. Vomiting (for >= 2y) or scalp hematoma not frontal (for < 2y)
+        if (isUnder2)
+        {
+            var nonFrontalHematoma = input.PresentationContains("parietal hematoma",
+                "occipital hematoma", "temporal hematoma", "non-frontal");
+            criteria.Add(new("Scalp hematoma (non-frontal)", nonFrontalHematoma, 1, null));
+            if (nonFrontalHematoma) score += 1;
+        }
+        else
+        {
+            var vomiting = input.PresentationContains("vomiting", "vomited", "threw up", "emesis");
+            criteria.Add(new("Vomiting", vomiting, 1, null));
+            if (vomiting) score += 1;
+        }
+
+        // 6. Severe or worsening headache (for >= 2y)
+        if (!isUnder2)
+        {
+            var severeHeadache = input.PresentationContains("severe headache", "worst headache",
+                "worsening headache", "headache getting worse");
+            criteria.Add(new("Severe or worsening headache", severeHeadache, 1, null));
+            if (severeHeadache) score += 1;
+        }
+
+        var (risk, probability) = score switch
+        {
+            0 => ("Very Low", 0.001m),    // <0.05% ciTBI risk — CT not recommended
+            1 => ("Low", 0.009m),          // ~0.9% — observation vs CT
+            _ => ("Not Low", 0.044m),      // ~4.4% — CT recommended
+        };
+
+        var recommendation = score switch
+        {
+            0 => "PECARN VERY LOW RISK. Head CT NOT recommended. " +
+                 "Observation with discharge instructions. Return if symptoms worsen.",
+            1 => "PECARN LOW RISK. Consider observation (4-6 hours) vs. head CT based on " +
+                 "clinical judgment, parental preference, and worsening symptoms.",
+            _ => "PECARN criteria positive. Head CT RECOMMENDED to evaluate for " +
+                 "clinically-important traumatic brain injury."
+        };
+
+        return new GuidelineResult(
+            GuidelineName, SourceCitation, score, isUnder2 ? 7m : 8m,
+            risk, probability, recommendation, criteria);
+    }
+}
+
+/// <summary>
+/// Centor Score (Modified/McIsaac) — strep pharyngitis decision rule.
+///
+/// Predicts likelihood of Group A Streptococcal pharyngitis to guide
+/// testing and empiric antibiotic decisions.
+///
+/// Source: McIsaac WJ et al. CMAJ. 2000;163(7):811-815.
+/// </summary>
+public class CentorScore : IClinicalGuideline
+{
+    public string GuidelineName => "Modified Centor (McIsaac) Score";
+    public string Version => "McIsaac Modified Centor, 2000";
+    public string SourceCitation => "McIsaac WJ et al. CMAJ. 2000;163(7):811-815";
+    public string[] ApplicableComplaints => new[]
+    {
+        "sore throat", "pharyngitis", "throat pain", "difficulty swallowing",
+        "tonsillitis", "strep", "odynophagia"
+    };
+
+    public bool IsApplicable(GuidelineInput input)
+    {
+        return input.PresentationContains(ApplicableComplaints);
+    }
+
+    public GuidelineResult Evaluate(GuidelineInput input)
+    {
+        var criteria = new List<ScoredCriterion>();
+        decimal score = 0;
+
+        // 1. Tonsillar exudates or swelling (+1)
+        var exudates = input.PresentationContains("exudate", "tonsillar swelling",
+            "tonsillar enlargement", "pus on tonsils", "white patches");
+        criteria.Add(new("Tonsillar exudates or swelling", exudates, 1, null));
+        if (exudates) score += 1;
+
+        // 2. Tender/swollen anterior cervical lymph nodes (+1)
+        var lymphNodes = input.PresentationContains("lymph node", "lymphadenopathy",
+            "swollen glands", "tender nodes", "anterior cervical", "neck swelling");
+        criteria.Add(new("Tender/swollen anterior cervical lymph nodes", lymphNodes, 1, null));
+        if (lymphNodes) score += 1;
+
+        // 3. Fever (temperature > 38°C / 100.4°F) (+1)
+        var fever = (input.Vitals?.TemperatureCelsius.HasValue == true && input.Vitals.TemperatureCelsius > 38.0m) ||
+                    input.PresentationContains("fever", "febrile");
+        criteria.Add(new("Fever > 38°C (100.4°F)", fever, 1,
+            input.Vitals?.TemperatureCelsius != null ? $"Temp: {input.Vitals.TemperatureCelsius}°C" : null));
+        if (fever) score += 1;
+
+        // 4. Absence of cough (+1)
+        var noCough = !input.PresentationContains("cough", "coughing");
+        criteria.Add(new("Absence of cough", noCough, 1, null));
+        if (noCough) score += 1;
+
+        // 5. Age modifier (McIsaac modification)
+        // Age 3-14: +1, Age 15-44: 0, Age >= 45: -1
+        var ageModifier = input.PatientAge switch
+        {
+            >= 3 and <= 14 => 1,
+            >= 45 => -1,
+            _ => 0,
+        };
+        var ageMet = ageModifier > 0;
+        criteria.Add(new("Age 3-14 (+1) or ≥45 (-1)", ageMet, ageModifier,
+            $"Age: {input.PatientAge}, modifier: {ageModifier:+#;-#;0}"));
+        score += ageModifier;
+        if (score < 0) score = 0;
+
+        var (risk, probability) = score switch
+        {
+            <= 0 => ("Very Low", 0.025m),
+            1 => ("Low", 0.07m),
+            2 => ("Low-Moderate", 0.15m),
+            3 => ("Moderate", 0.30m),
+            _ => ("High", 0.50m),
+        };
+
+        var recommendation = score switch
+        {
+            <= 1 => "Centor 0-1: Low probability of GAS. No testing or antibiotics needed. " +
+                     "Symptomatic treatment only.",
+            2 or 3 => "Centor 2-3: Moderate probability of GAS. Rapid strep test indicated. " +
+                       "Treat with antibiotics only if test positive.",
+            _ => "Centor 4+: High probability of GAS. Consider empiric antibiotics or " +
+                 "rapid strep test. Amoxicillin 500mg TID x 10 days is first-line."
+        };
+
+        return new GuidelineResult(
+            GuidelineName, SourceCitation, score, 5,
+            risk, probability, recommendation, criteria);
+    }
+}
+
+/// <summary>
+/// CHA₂DS₂-VASc Score — stroke risk in atrial fibrillation.
+///
+/// Predicts annual stroke risk in non-valvular atrial fibrillation
+/// to guide anticoagulation decisions.
+///
+/// Source: Lip GY et al. Chest. 2010;137(2):263-272.
+/// </summary>
+public class Chads2VascScore : IClinicalGuideline
+{
+    public string GuidelineName => "CHA₂DS₂-VASc Score";
+    public string Version => "CHA₂DS₂-VASc, 2010";
+    public string SourceCitation => "Lip GY et al. Chest. 2010;137(2):263-272";
+    public string[] ApplicableComplaints => new[]
+    {
+        "atrial fibrillation", "afib", "a-fib", "af", "irregular heartbeat",
+        "palpitations", "irregular rhythm", "atrial flutter"
+    };
+
+    public bool IsApplicable(GuidelineInput input)
+    {
+        return input.PresentationContains(ApplicableComplaints) ||
+               input.HasCondition("atrial fibrillation", "afib", "atrial flutter");
+    }
+
+    public GuidelineResult Evaluate(GuidelineInput input)
+    {
+        var criteria = new List<ScoredCriterion>();
+        decimal score = 0;
+
+        // C — Congestive heart failure (+1)
+        var chf = input.HasCondition("heart failure", "chf", "hfref", "hfpef",
+            "cardiomyopathy", "reduced ejection fraction");
+        criteria.Add(new("Congestive heart failure / LV dysfunction", chf, 1, null));
+        if (chf) score += 1;
+
+        // H — Hypertension (+1)
+        var htn = input.HasCondition("hypertension", "htn", "high blood pressure") ||
+                  (input.Vitals?.SystolicBp >= 140);
+        criteria.Add(new("Hypertension", htn, 1,
+            input.Vitals?.SystolicBp != null ? $"SBP: {input.Vitals.SystolicBp}" : null));
+        if (htn) score += 1;
+
+        // A₂ — Age ≥ 75 (+2)
+        var age75 = input.PatientAge >= 75;
+        criteria.Add(new("Age ≥ 75", age75, 2, $"Age: {input.PatientAge}"));
+        if (age75) score += 2;
+
+        // D — Diabetes mellitus (+1)
+        var diabetes = input.HasCondition("diabetes", "dm", "type 2", "type 1",
+            "a1c", "hyperglycemia");
+        criteria.Add(new("Diabetes mellitus", diabetes, 1, null));
+        if (diabetes) score += 1;
+
+        // S₂ — Stroke/TIA/thromboembolism (+2)
+        var stroke = input.HasCondition("stroke", "cva", "tia", "transient ischemic",
+            "cerebrovascular", "thromboembolism");
+        criteria.Add(new("Stroke / TIA / thromboembolism history", stroke, 2, null));
+        if (stroke) score += 2;
+
+        // V — Vascular disease (prior MI, PAD, aortic plaque) (+1)
+        var vascular = input.HasCondition("myocardial infarction", "mi", "pad",
+            "peripheral arterial", "aortic plaque", "coronary artery disease", "cad",
+            "stent", "cabg", "bypass");
+        criteria.Add(new("Vascular disease (MI, PAD, aortic plaque)", vascular, 1, null));
+        if (vascular) score += 1;
+
+        // A — Age 65-74 (+1)
+        var age65 = input.PatientAge >= 65 && input.PatientAge < 75;
+        criteria.Add(new("Age 65-74", age65, 1, $"Age: {input.PatientAge}"));
+        if (age65) score += 1;
+
+        // Sc — Sex category (female +1)
+        var female = input.PatientSex.Equals("female", StringComparison.OrdinalIgnoreCase) ||
+                     input.PatientSex.Equals("f", StringComparison.OrdinalIgnoreCase);
+        criteria.Add(new("Sex category (female)", female, 1, $"Sex: {input.PatientSex}"));
+        if (female) score += 1;
+
+        var (risk, probability) = score switch
+        {
+            0 => ("Low", 0.002m),       // 0.2% annual stroke risk
+            1 => ("Low-Moderate", 0.013m), // 1.3%
+            2 => ("Moderate", 0.022m),    // 2.2%
+            3 => ("Moderate-High", 0.032m), // 3.2%
+            4 => ("High", 0.040m),        // 4.0%
+            5 => ("High", 0.067m),        // 6.7%
+            6 => ("Very High", 0.098m),   // 9.8%
+            _ => ("Very High", 0.152m),   // 15.2%+
+        };
+
+        var recommendation = score switch
+        {
+            0 => "CHA₂DS₂-VASc 0 (male) or 1 (female): Low risk. " +
+                 "No anticoagulation recommended. Reassess annually.",
+            1 when !female => "CHA₂DS₂-VASc 1 (male): Consider oral anticoagulation. " +
+                 "Discuss risks/benefits with patient. DOACs preferred over warfarin.",
+            _ => $"CHA₂DS₂-VASc {score}: Oral anticoagulation RECOMMENDED. " +
+                 "DOACs (apixaban, rivaroxaban, dabigatran, edoxaban) preferred over warfarin. " +
+                 "Assess bleeding risk (HAS-BLED). Ensure renal function checked before prescribing."
+        };
+
+        return new GuidelineResult(
+            GuidelineName, SourceCitation, score, 9,
+            risk, probability, recommendation, criteria);
+    }
+}

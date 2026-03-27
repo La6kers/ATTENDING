@@ -28,10 +28,10 @@ if (!string.IsNullOrWhiteSpace(keyVaultUri))
 }
 else if (builder.Environment.IsProduction())
 {
-    Log.Warning("SECURITY WARNING: AzureKeyVault:Uri is NOT configured in Production. " +
-                "Secrets are being loaded from local configuration (appsettings/env vars) " +
-                "instead of Azure Key Vault. This is unsafe for production deployments. " +
-                "Set AzureKeyVault:Uri to your Key Vault instance URI.");
+    throw new InvalidOperationException(
+        "SECURITY ERROR: AzureKeyVault:Uri is NOT configured in Production. " +
+        "Secrets must be loaded from Azure Key Vault in production deployments. " +
+        "Set AzureKeyVault:Uri to your Key Vault instance URI.");
 }
 
 // Configure Serilog with PHI-safe logging

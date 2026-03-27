@@ -728,16 +728,39 @@ export const assessmentMachine = createMachine<AssessmentContext, AssessmentEven
       invoke: {
         id: 'submitAssessment',
         src: (ctx) => {
-          // This would be replaced with actual API call via CompassBridge
-          return new Promise<{ success: boolean; assessmentId: string }>((resolve, reject) => {
-            setTimeout(() => {
-              // Simulate API call
-              if (Math.random() > 0.05) { // 95% success rate
-                resolve({ success: true, assessmentId: ctx.sessionId });
-              } else {
-                reject(new Error('Network error. Please try again.'));
-              }
-            }, 1500);
+          const payload = {
+            sessionId: ctx.sessionId,
+            patientId: ctx.patientId,
+            chiefComplaint: ctx.chiefComplaint,
+            symptoms: JSON.stringify(ctx.detectedRedFlags.map(rf => rf.symptom)),
+            hpiNarrative: JSON.stringify(ctx.hpiData),
+            reviewOfSystems: ctx.userResponses.reviewOfSystems
+              ? JSON.stringify(ctx.userResponses.reviewOfSystems)
+              : null,
+            medications: ctx.userResponses.medications
+              ? JSON.stringify(ctx.userResponses.medications)
+              : null,
+            allergies: ctx.userResponses.allergies
+              ? JSON.stringify(ctx.userResponses.allergies)
+              : null,
+            redFlagsDetected: JSON.stringify(ctx.detectedRedFlags),
+            triageLevel: ctx.urgencyLevel === 'high' ? 'EMERGENCY'
+              : ctx.urgencyLevel === 'medium' ? 'URGENT'
+              : 'ROUTINE',
+            conversation: JSON.stringify(ctx.questionHistory),
+            completedAt: new Date().toISOString(),
+          };
+
+          return fetch('/api/assessments/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          }).then(async (res) => {
+            if (!res.ok) {
+              const errBody = await res.json().catch(() => ({}));
+              throw new Error(errBody.error || `Server error (${res.status})`);
+            }
+            return res.json();
           });
         },
         onDone: {

@@ -1,11 +1,15 @@
 // ============================================================
-// Claim Conversation API
+// Claim Assessment API
 // apps/provider-portal/pages/api/chat/conversations/[id]/claim.ts
+//
+// Assigns a provider to a patient assessment so they can
+// review it and begin the clinical encounter.
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@attending/shared/lib/prisma';
 
 export default async function handler(
   req: NextApiRequest,
@@ -17,50 +21,46 @@ export default async function handler(
   }
 
   const session = await getServerSession(req, res, authOptions);
-  
+
   if (!session) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { id: conversationId } = req.query;
+  const { id: assessmentId } = req.query;
 
-  if (!conversationId || typeof conversationId !== 'string') {
-    return res.status(400).json({ error: 'Conversation ID is required' });
+  if (!assessmentId || typeof assessmentId !== 'string') {
+    return res.status(400).json({ error: 'Assessment ID is required' });
   }
 
   try {
-    // In production, update database
-    // await prisma.chatConversation.update({
-    //   where: { id: conversationId },
-    //   data: {
-    //     providerId: session.user.id,
-    //     providerName: session.user.name,
-    //     status: 'claimed',
-    //     claimedAt: new Date(),
-    //   },
-    // });
+    const assessment = await prisma.patientAssessment.update({
+      where: { id: assessmentId },
+      data: {
+        assignedProviderId: (session.user as any).id,
+        status: 'CLAIMED',
+        lastActivityAt: new Date(),
+      },
+      select: {
+        id: true,
+        assignedProviderId: true,
+        status: true,
+        chiefComplaint: true,
+        triageLevel: true,
+        lastActivityAt: true,
+        patient: {
+          select: { firstName: true, lastName: true, mrn: true },
+        },
+      },
+    });
 
-    // For now, return mock success
-    const claimedConversation = {
-      id: conversationId,
-      providerId: session.user.id,
-      providerName: session.user.name,
-      status: 'claimed',
-      claimedAt: new Date().toISOString(),
-    };
-
-    // TODO: Emit WebSocket event
-    // socket.emit('conversation:claimed', claimedConversation);
-
-    // Add audit log
-    console.log(`[Audit] Conversation ${conversationId} claimed by ${session.user.email}`);
+    console.log(`[Audit] Assessment ${assessmentId} claimed by ${(session.user as any).email}`);
 
     return res.status(200).json({
       success: true,
-      conversation: claimedConversation,
+      assessment,
     });
   } catch (error) {
-    console.error('Claim conversation error:', error);
-    return res.status(500).json({ error: 'Failed to claim conversation' });
+    console.error('Claim assessment error:', error);
+    return res.status(500).json({ error: 'Failed to claim assessment' });
   }
 }

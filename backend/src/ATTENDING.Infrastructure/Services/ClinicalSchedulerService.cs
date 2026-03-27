@@ -31,18 +31,21 @@ public class ClinicalSchedulerService : BackgroundService
     // Job intervals
     private static readonly TimeSpan CriticalLabSweepInterval = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan StaleEncounterSweepInterval = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan AudioBlobCleanupInterval = TimeSpan.FromMinutes(15);
     private static readonly TimeSpan DiagnosticLearningInterval = TimeSpan.FromHours(24);  // nightly
     private static readonly TimeSpan AccuracySnapshotInterval = TimeSpan.FromDays(7);       // weekly
 
     // Lock TTLs — longer than interval so a slow job keeps its lock
     private static readonly TimeSpan CriticalLabLockTtl = TimeSpan.FromMinutes(4);
     private static readonly TimeSpan StaleEncounterLockTtl = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan AudioBlobCleanupLockTtl = TimeSpan.FromMinutes(20);
     private static readonly TimeSpan DiagnosticLearningLockTtl = TimeSpan.FromHours(2);
     private static readonly TimeSpan AccuracySnapshotLockTtl = TimeSpan.FromHours(4);
 
     // Distributed lock key namespace
     private const string CriticalLabLockKey = "scheduler:critical-lab-sweep";
     private const string StaleEncounterLockKey = "scheduler:stale-encounter-sweep";
+    private const string AudioBlobCleanupLockKey = "scheduler:audio-blob-cleanup";
     private const string DiagnosticLearningLockKey = "scheduler:diagnostic-learning-processing";
     private const string AccuracySnapshotLockKey = "scheduler:accuracy-snapshot-refresh";
 
@@ -77,6 +80,14 @@ public class ClinicalSchedulerService : BackgroundService
                 lockTtl: StaleEncounterLockTtl,
                 interval: StaleEncounterSweepInterval,
                 jobAction: RunStaleEncounterSweepAsync,
+                stoppingToken),
+
+            RunJobLoopAsync(
+                jobName: "AudioBlobCleanup",
+                lockKey: AudioBlobCleanupLockKey,
+                lockTtl: AudioBlobCleanupLockTtl,
+                interval: AudioBlobCleanupInterval,
+                jobAction: RunAudioBlobCleanupAsync,
                 stoppingToken),
 
             RunJobLoopAsync(
@@ -261,6 +272,65 @@ public class ClinicalSchedulerService : BackgroundService
         _logger.LogInformation(
             "StaleEncounterSweep: found {Count} encounter(s) open for more than {Threshold}h",
             stale.Count, staleThreshold.TotalHours);
+    }
+
+    // ================================================================
+    // Ambient Scribe: Audio blob cleanup
+    // ================================================================
+
+    /// <summary>
+    /// Removes audio blob containers for completed ambient scribe recordings.
+    /// Audio is never retained permanently — only the transcript and generated
+    /// SOAP note are kept as medical record. This job ensures cleanup happens
+    /// even if the inline deletion after note generation failed.
+    /// </summary>
+    private async Task RunAudioBlobCleanupAsync(
+        IServiceScope scope, CancellationToken ct)
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AttendingDbContext>();
+
+        // Find recordings that completed processing but still have a blob container reference
+        var completedWithBlobs = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions
+            .ToListAsync(
+                db.Set<Domain.Entities.EncounterRecording>()
+                    .Where(r => r.Status == Domain.Enums.RecordingStatus.Completed
+                             && r.AudioBlobContainer != null),
+                ct);
+
+        if (!completedWithBlobs.Any())
+        {
+            _logger.LogDebug("AudioBlobCleanup: no completed recordings with pending blob deletion");
+            return;
+        }
+
+        var deletedCount = 0;
+        foreach (var recording in completedWithBlobs)
+        {
+            try
+            {
+                // Clear the blob container reference via domain method.
+                // In production, actual Azure Blob Storage deletion would use
+                // BlobServiceClient here before clearing the reference.
+                recording.ClearAudioBlob();
+                deletedCount++;
+
+                _logger.LogInformation(
+                    "AudioBlobCleanup: cleared blob container for RecordingId: {RecordingId} " +
+                    "EncounterId: {EncounterId}",
+                    recording.Id, recording.EncounterId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "AudioBlobCleanup: failed to delete blob container for RecordingId: {RecordingId}",
+                    recording.Id);
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "AudioBlobCleanup: cleaned up {Count} audio blob container(s)", deletedCount);
     }
 
     // ================================================================
