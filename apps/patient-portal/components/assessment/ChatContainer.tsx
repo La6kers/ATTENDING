@@ -53,18 +53,18 @@ const ProgressBar: React.FC<{ progress: number; phase?: DetailedAssessmentPhase 
   };
 
   return (
-    <div className="px-4 py-2 bg-white/80 backdrop-blur border-b border-gray-100">
+    <div className="px-4 py-2 bg-white/5 border-b border-white/10">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-gray-500">Assessment Progress</span>
-        <span className="text-xs font-medium text-teal-600">{Math.round(progress)}%</span>
+        <span className="text-xs text-white/50">Assessment Progress</span>
+        <span className="text-xs font-medium text-attending-light">{Math.round(progress)}%</span>
       </div>
-      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-teal-600 to-teal-800 transition-all duration-500 ease-out"
+          className="h-full bg-gradient-to-r from-attending-primary to-attending-light transition-all duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>
-      {phase && <p className="text-xs text-gray-400 mt-1">{formatPhaseName(phase)}</p>}
+      {phase && <p className="text-xs text-white/40 mt-1">{formatPhaseName(phase)}</p>}
     </div>
   );
 };
@@ -77,7 +77,7 @@ const ChatHeader: React.FC<{
   patientName?: string;
   onBack?: () => void;
 }> = ({ patientName, onBack }) => (
-  <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-800 text-white">
+  <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-attending-header to-attending-deep-navy text-white">
     <div className="flex items-center gap-3">
       {onBack && (
         <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
@@ -118,7 +118,7 @@ const MessageList: React.FC<{
   };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2" style={{ background: 'transparent' }}>
       {messages.map((message) => (
         <MessageBubble key={message.id} message={message} />
       ))}
@@ -166,7 +166,7 @@ const InputArea: React.FC<{
   };
 
   return (
-    <div className="px-4 py-3 bg-white border-t border-gray-200">
+    <div className="px-4 py-3 bg-[#0a3d4e] border-t border-white/10">
       <div className="flex items-end gap-2">
         {/* Voice input button */}
         {showVoice && (
@@ -194,10 +194,10 @@ const InputArea: React.FC<{
             disabled={disabled}
             rows={1}
             className={`
-              w-full px-4 py-2.5 pr-12 rounded-2xl border border-gray-200
-              resize-none focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
-              disabled:bg-gray-100 disabled:cursor-not-allowed
-              text-gray-800 placeholder-gray-400
+              w-full px-4 py-2.5 pr-12 rounded-2xl border border-white/20
+              resize-none focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent
+              disabled:bg-white/5 disabled:cursor-not-allowed
+              bg-white/10 text-white placeholder-white/50
             `}
             style={{ maxHeight: '120px' }}
           />
@@ -211,7 +211,7 @@ const InputArea: React.FC<{
             p-2.5 rounded-full transition-all
             ${
               value.trim()
-                ? 'bg-gradient-to-r from-teal-600 to-teal-800 text-white shadow-md hover:shadow-lg transform hover:scale-105'
+                ? 'bg-gradient-to-r from-attending-header to-attending-deep-navy text-white shadow-md hover:shadow-lg transform hover:scale-105'
                 : 'bg-gray-100 text-gray-400'
             }
             disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
@@ -316,9 +316,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   }, [isListening, onInputChange]);
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-gray-50 to-white">
+    <div className="flex flex-col h-full bg-transparent">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-800 text-white">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-attending-header to-attending-deep-navy text-white">
         <div className="flex items-center gap-3">
           {onBack && (
             <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">

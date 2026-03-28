@@ -34,7 +34,7 @@ const SubmissionSuccess: React.FC<{
   const isUrgent = triageLevel === 'EMERGENCY' || triageLevel === 'HIGH';
 
   return (
-    <div className="min-h-screen bg-surface-bg flex items-center justify-center p-5">
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: 'linear-gradient(135deg, #0c3547 0%, #0c4c5e 50%, #0f5f76 100%)' }}>
       <div className="max-w-md w-full text-center">
         <div
           className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
@@ -232,7 +232,7 @@ export default function CompassChatPage() {
         <meta name="theme-color" content="#0C4C5E" />
       </Head>
 
-      <div className="h-screen h-[100dvh] flex flex-col bg-surface-bg">
+      <div className="h-screen h-[100dvh] flex flex-col" style={{ background: 'linear-gradient(135deg, #0c3547 0%, #0c4c5e 50%, #0f5f76 100%)' }}>
         {/* Header — matches patient portal AppShell teal gradient */}
         <header className="bg-gradient-to-r from-attending-header to-attending-deep-navy safe-area-top">
           <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
