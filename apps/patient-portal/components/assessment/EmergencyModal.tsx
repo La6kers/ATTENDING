@@ -222,42 +222,61 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
     }
   }, [isOpen]);
 
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [confirmText, setConfirmText] = useState('');
+  const [showContinue, setShowContinue] = useState(false);
+
+  // 10-second delay before showing the continue option
+  useEffect(() => {
+    if (isOpen) {
+      setShowContinue(false);
+      setConfirmText('');
+      const timer = setTimeout(() => setShowContinue(true), 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   // Geolocation for ER finder
   const findNearbyERs = useCallback(async () => {
     setIsLoadingERs(true);
     setShowERFinder(true);
 
+    // Get user location
     try {
-      // In production, this would use Google Places API or similar
-      // For now, simulate with mock data
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setNearbyERs([
-        {
-          name: 'Memorial Hospital Emergency',
-          address: '123 Medical Center Drive',
-          distance: '2.3 miles',
-          waitTime: '15 min',
-          phone: '(555) 123-4567'
-        },
-        {
-          name: 'St. Mary\'s Regional Medical Center',
-          address: '456 Healthcare Blvd',
-          distance: '4.1 miles',
-          waitTime: '25 min',
-          phone: '(555) 234-5678'
-        },
-        {
-          name: 'University Medical Center ER',
-          address: '789 University Ave',
-          distance: '5.8 miles',
-          waitTime: '10 min',
-          phone: '(555) 345-6789'
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        });
+      });
+      const { latitude, longitude } = position.coords;
+      setUserLocation({ lat: latitude, lng: longitude });
+
+      // Try Google Places API if key is available
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+      if (apiKey && navigator.onLine) {
+        try {
+          const res = await fetch(
+            `/api/emergency/nearby-facilities?lat=${latitude}&lng=${longitude}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setNearbyERs(data.facilities || []);
+            setIsLoadingERs(false);
+            return;
+          }
+        } catch {
+          // Fall through to static fallback
         }
-      ]);
-    } catch (error) {
-      console.error('Error finding ERs:', error);
-    } finally {
+      }
+
+      // Offline / no API key fallback — open Google Maps directly
+      setNearbyERs([]);
+      setIsLoadingERs(false);
+    } catch {
+      // Geolocation denied or unavailable
+      setNearbyERs([]);
       setIsLoadingERs(false);
     }
   }, []);
@@ -275,11 +294,8 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop with pulse animation */}
-      <div 
-        className="absolute inset-0 bg-black/60 animate-pulse"
-        style={{ animationDuration: '2s' }}
-      />
+      {/* Backdrop — no click-to-close, this is a hard stop */}
+      <div className="absolute inset-0 bg-black/70" />
       
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
@@ -353,18 +369,18 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
             <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                Nearby Emergency Rooms
+                Nearby Emergency Facilities
               </h3>
               {isLoadingERs ? (
                 <div className="flex items-center justify-center py-4">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                  <span className="ml-2 text-blue-600">Finding nearby ERs...</span>
+                  <span className="ml-2 text-blue-600">Finding nearby facilities...</span>
                 </div>
-              ) : (
+              ) : nearbyERs.length > 0 ? (
                 <div className="space-y-3">
                   {nearbyERs.map((er, idx) => (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       className="bg-white p-3 rounded-lg border border-blue-100 hover:border-blue-300 transition-colors"
                     >
                       <div className="flex justify-between items-start">
@@ -378,27 +394,62 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
                             )}
                           </div>
                         </div>
-                        <a
-                          href={`tel:${er.phone}`}
-                          className="p-2 bg-green-100 rounded-full text-green-600 hover:bg-green-200"
-                        >
-                          <Phone className="w-4 h-4" />
-                        </a>
+                        <div className="flex gap-2">
+                          {userLocation && (
+                            <a
+                              href={`https://www.google.com/maps/dir/${userLocation.lat},${userLocation.lng}/${encodeURIComponent(er.address)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 bg-blue-100 rounded-full text-blue-600 hover:bg-blue-200"
+                              title="Get Directions"
+                            >
+                              <MapPin className="w-4 h-4" />
+                            </a>
+                          )}
+                          <a
+                            href={`tel:${er.phone}`}
+                            className="p-2 bg-green-100 rounded-full text-green-600 hover:bg-green-200"
+                            title="Call"
+                          >
+                            <Phone className="w-4 h-4" />
+                          </a>
+                        </div>
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                /* Offline fallback — direct to Google Maps */
+                <div className="text-center py-3">
+                  <p className="text-sm text-blue-700 mb-3">
+                    {userLocation
+                      ? 'Open maps to find emergency rooms near you:'
+                      : 'Enable location services to find nearby emergency rooms:'}
+                  </p>
+                  <a
+                    href={userLocation
+                      ? `https://www.google.com/maps/search/emergency+room/@${userLocation.lat},${userLocation.lng},13z`
+                      : 'https://www.google.com/maps/search/emergency+room+near+me'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    Open Google Maps
+                  </a>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons — HARD STOP: no dismiss without explicit acknowledgment */}
         <div className="p-4 bg-gray-50 border-t space-y-3">
           {/* Primary: Call 911 */}
           <button
             onClick={handleCall911}
-            className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-colors shadow-lg"
+            className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-colors shadow-lg animate-pulse"
+            style={{ animationDuration: '2s' }}
           >
             <Phone className="w-6 h-6" />
             Call 911 Now
@@ -413,7 +464,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
               <MapPin className="w-5 h-5" />
               Find Nearest ER
             </button>
-            
+
             {onNotifyProvider && (
               <button
                 onClick={onNotifyProvider}
@@ -425,24 +476,33 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
             )}
           </div>
 
-          {/* Continue Assessment (if symptoms are acknowledged) */}
-          <button
-            onClick={onContinueAssessment}
-            className="w-full py-2 text-gray-600 hover:text-gray-800 text-sm flex items-center justify-center gap-1 transition-colors"
-          >
-            My symptoms are not this severe
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          {/* Continue Assessment — requires explicit confirmation */}
+          {showContinue && (
+            <div className="pt-3 border-t border-gray-200">
+              <p className="text-xs text-gray-500 mb-2 text-center">
+                If your symptoms are not severe, type <strong>I UNDERSTAND</strong> below to continue the assessment.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder='Type "I UNDERSTAND"'
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                />
+                <button
+                  onClick={onContinueAssessment}
+                  disabled={confirmText.trim().toUpperCase() !== 'I UNDERSTAND'}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Close button - small and de-emphasized */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors"
-          aria-label="Close"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* NO close button — this is a hard stop */}
       </div>
     </div>
   );

@@ -13,12 +13,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { AlertTriangle, CheckCircle, Clock, WifiOff, Stethoscope, ArrowLeft, Home } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, WifiOff, Stethoscope, ArrowLeft, Home, List, FileText } from 'lucide-react';
 
 import { useChatStore } from '../../store/useChatStore';
 import { ChatContainer } from '../../components/assessment/ChatContainer';
 import { EmergencyModal } from '../../components/assessment/EmergencyModal';
 import type { QuickReply } from '../../components/assessment/QuickReplies';
+import { evaluateTextForRedFlags } from '@attending/shared/lib/clinical-ai/redFlagTextEvaluator';
 
 // ============================================================
 // Submission Success
@@ -119,6 +120,8 @@ export default function CompassChatPage() {
     assessmentData,
     urgencyLevel,
     redFlags,
+    hpiFormat,
+    setHpiFormat,
   } = useChatStore();
 
   const [inputValue, setInputValue] = useState('');
@@ -154,9 +157,17 @@ export default function CompassChatPage() {
         await handleSubmitAssessment();
         return;
       }
+
+      // Tier 0: Client-side red flag detection BEFORE API call (offline-capable)
+      const clientFlags = evaluateTextForRedFlags(text);
+      if (clientFlags.flags.some(f => f.severity === 'critical')) {
+        // Show emergency hard stop IMMEDIATELY — no network needed
+        setEmergencyModal(true);
+      }
+
       await sendMessage(text);
     },
-    [isAIProcessing, sendMessage] // eslint-disable-line
+    [isAIProcessing, sendMessage, setEmergencyModal] // eslint-disable-line
   );
 
   const handleQuickReply = useCallback(
@@ -222,28 +233,62 @@ export default function CompassChatPage() {
       </Head>
 
       <div className="h-screen h-[100dvh] flex flex-col bg-surface-bg">
-        {/* Header */}
-        <header className="bg-white border-b border-light safe-area-top">
-          <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-            <button
-              onClick={handleBack}
-              className="w-9 h-9 rounded-full bg-attending-50 flex items-center justify-center"
-            >
-              <ArrowLeft className="w-5 h-5 text-attending-deep-navy" />
-            </button>
-            <div className="flex items-center gap-2">
-              <Stethoscope className="w-5 h-5 text-attending-primary" />
-              <span className="text-lg font-bold text-attending-deep-navy">COMPASS</span>
+        {/* Header — matches patient portal AppShell teal gradient */}
+        <header className="bg-gradient-to-r from-attending-header to-attending-deep-navy safe-area-top">
+          <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBack}
+                className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </button>
+              <div className="flex items-center gap-2">
+                <Stethoscope className="w-5 h-5 text-white/90" />
+                <span className="text-lg font-bold text-white">COMPASS</span>
+              </div>
+            </div>
+
+            {/* HPI Format Toggle */}
+            <div className="flex items-center bg-white/15 rounded-lg p-0.5">
+              <button
+                onClick={() => setHpiFormat('bulleted')}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  hpiFormat === 'bulleted' ? 'bg-white text-attending-deep-navy' : 'text-white/80 hover:text-white'
+                }`}
+                title="Summary view"
+              >
+                <List className="w-3.5 h-3.5" />
+                Summary
+              </button>
+              <button
+                onClick={() => setHpiFormat('oldcarts')}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  hpiFormat === 'oldcarts' ? 'bg-white text-attending-deep-navy' : 'text-white/80 hover:text-white'
+                }`}
+                title="Detailed OLDCARTS view"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Detailed
+              </button>
+            </div>
+          </div>
+
+          {/* Progress bar in header */}
+          <div className="px-4 pb-2">
+            <div className="max-w-lg mx-auto">
+              <div className="h-1 bg-white/20 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-attending-light transition-all duration-500 ease-out rounded-full"
+                  style={{ width: `${getProgress()}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-white/60 mt-1">
+                Not a substitute for emergency services. Call 911 for emergencies.
+              </p>
             </div>
           </div>
         </header>
-
-        {/* Clinical disclaimer */}
-        <div className="bg-blue-50 border-b border-blue-200 px-4 py-1.5 text-center">
-          <p className="text-[10px] text-blue-700">
-            Not a substitute for emergency services. Call 911 for emergencies. Your responses will be reviewed by your healthcare provider.
-          </p>
-        </div>
 
         {/* Demo notice */}
         {demo === 'true' && (

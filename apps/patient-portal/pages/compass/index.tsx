@@ -296,20 +296,20 @@ export default function CompassLanding() {
           <meta name="theme-color" content="#0C4C5E" />
         </Head>
         <div className="min-h-screen bg-surface-bg">
-          <header className="bg-white border-b border-light">
+          <header className="bg-gradient-to-r from-attending-header to-attending-deep-navy">
             <div className="max-w-lg mx-auto px-5 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 bg-attending-gradient rounded-lg flex items-center justify-center">
+                <div className="w-9 h-9 bg-white/15 rounded-lg flex items-center justify-center">
                   <Stethoscope className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <span className="text-lg font-bold text-attending-deep-navy">COMPASS</span>
-                  <p className="text-[10px] text-attending-200 uppercase tracking-wider">Pre-Visit Assessment</p>
+                  <span className="text-lg font-bold text-white">COMPASS</span>
+                  <p className="text-[10px] text-white/60 uppercase tracking-wider">Pre-Visit Assessment</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 px-2 py-1 bg-green-50 rounded-full">
-                <Shield className="w-3.5 h-3.5 text-green-600" />
-                <span className="text-[10px] text-green-700 font-semibold">HIPAA Secure</span>
+              <div className="flex items-center gap-1 px-2 py-1 bg-white/15 rounded-full">
+                <Shield className="w-3.5 h-3.5 text-white/80" />
+                <span className="text-[10px] text-white/80 font-semibold">HIPAA Secure</span>
               </div>
             </div>
           </header>
@@ -326,17 +326,17 @@ export default function CompassLanding() {
         <title>Assessment | ATTENDING AI</title>
       </Head>
       <AppShell hideNav>
-        <header className="bg-white border-b border-light safe-area-top">
+        <header className="bg-gradient-to-r from-attending-header to-attending-deep-navy safe-area-top">
           <div className="max-w-lg mx-auto px-5 py-3 flex items-center gap-3">
             <button
               onClick={() => router.push('/home')}
-              className="w-9 h-9 rounded-full bg-attending-50 flex items-center justify-center hover:bg-attending-100 transition-colors"
+              className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center hover:bg-white/25 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-attending-deep-navy" />
+              <ArrowLeft className="w-5 h-5 text-white" />
             </button>
             <div className="flex items-center gap-2">
-              <Stethoscope className="w-5 h-5 text-attending-primary" />
-              <span className="text-lg font-bold text-attending-deep-navy">COMPASS</span>
+              <Stethoscope className="w-5 h-5 text-white/90" />
+              <span className="text-lg font-bold text-white">COMPASS</span>
             </div>
           </div>
         </header>
