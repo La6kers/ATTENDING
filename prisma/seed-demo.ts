@@ -5,6 +5,13 @@
 // Run: npx ts-node prisma/seed-demo.ts
 
 import { PrismaClient } from '@prisma/client';
+import * as crypto from 'crypto';
+
+function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+  return `${salt}:${hash}`;
+}
 
 const prisma = new PrismaClient();
 
@@ -57,6 +64,23 @@ async function main() {
     },
   });
   console.log('✓ Provider:', provider.name);
+
+  // Demo login account (email: demo@attending.ai / password: demo1234)
+  const demoUser = await prisma.user.upsert({
+    where: { email: 'demo@attending.ai' },
+    update: { organizationId: org.id, isActive: true },
+    create: {
+      organizationId: org.id,
+      email: 'demo@attending.ai',
+      name: 'Demo Provider',
+      role: 'PROVIDER',
+      specialty: 'Family Medicine',
+      npi: '1234567890',
+      password: hashPassword('demo1234'),
+      isActive: true,
+    },
+  });
+  console.log('✓ Demo user:', demoUser.email, '(password: demo1234)');
 
   // =========================================================================
   // 2. Patients
@@ -279,7 +303,7 @@ async function main() {
   console.log('\n✅ Demo seed complete!');
   console.log(`   ${patients.length} patients`);
   console.log(`   ${assessmentData.length} assessments`);
-  console.log(`   1 provider (Dr. Scott Isbell)`);
+  console.log(`   2 providers (Dr. Scott Isbell + demo@attending.ai / demo1234)`);
 }
 
 main()
