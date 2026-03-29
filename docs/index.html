@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATTENDING AI — Intelligent Clinical Decision Support</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       DESIGN TOKENS
+       ═══════════════════════════════════════════ */
+    :root {
+      /* Brand Colors */
+      --primary: #1A8FA8;
+      --primary-light: #2CB5D1;
+      --primary-dark: #146F82;
+      --navy: #0C3547;
+      --navy-deep: #081E2B;
+      --gold: #F0A500;
+      --gold-light: #FFD166;
+      --coral: #E87461;
+      --mint: #E6F7F5;
+      --mint-light: #F0FBF9;
+
+      /* Semantic */
+      --surface: rgba(255, 255, 255, 0.08);
+      --surface-raised: rgba(255, 255, 255, 0.12);
+      --surface-overlay: rgba(255, 255, 255, 0.16);
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255, 255, 255, 0.75);
+      --text-muted: rgba(255, 255, 255, 0.5);
+      --border-glass: rgba(255, 255, 255, 0.18);
+      --border-glow: rgba(26, 143, 168, 0.4);
+
+      /* Glass */
+      --glass-blur: 20px;
+      --glass-blur-heavy: 40px;
+      --glass-bg: rgba(12, 53, 71, 0.45);
+      --glass-bg-light: rgba(26, 143, 168, 0.1);
+
+      /* Spacing */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2rem;
+      --space-2xl: 3rem;
+      --space-3xl: 4rem;
+      --space-4xl: 6rem;
+
+      /* Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+
+      /* Shadows */
+      --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.25);
+      --shadow-glow: 0 0 40px rgba(26, 143, 168, 0.15);
+      --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.2);
+
+      /* Transitions */
+      --transition-fast: 150ms ease;
+      --transition-base: 250ms ease;
+      --transition-slow: 400ms ease;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-weight: 400;
+      color: var(--text-primary);
+      line-height: 1.6;
+      background: var(--navy-deep);
+      overflow-x: hidden;
+    }
+
+    /* ═══════════════════════════════════════════
+       ANIMATED BACKGROUND
+       ═══════════════════════════════════════════ */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 40%, #0E4A5E 70%, var(--navy-deep) 100%);
+    }
+
+    .bg-canvas::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(ellipse 600px 600px at 20% 30%, rgba(26, 143, 168, 0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 400px at 75% 60%, rgba(240, 165, 0, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 500px at 50% 80%, rgba(232, 116, 97, 0.06) 0%, transparent 70%);
+      animation: drift 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(-30px, -20px) rotate(2deg); }
+    }
+
+    /* Subtle grid overlay */
+    .bg-canvas::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* ═══════════════════════════════════════════
+       LAYOUT
+       ═══════════════════════════════════════════ */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+    }
+
+    section {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ═══════════════════════════════════════════
+       GLASS UTILITIES
+       ═══════════════════════════════════════════ */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--border-glass);
+      box-shadow: var(--shadow-glass);
+    }
+
+    .glass-light {
+      background: var(--glass-bg-light);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--border-glass);
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-glass), var(--shadow-glow);
+      border-color: var(--border-glow);
+    }
+
+    /* ═══════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════ */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: var(--space-md) 0;
+      transition: background var(--transition-base);
+    }
+
+    .nav.scrolled {
+      background: rgba(8, 30, 43, 0.85);
+      backdrop-filter: blur(var(--glass-blur-heavy));
+      -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .nav-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.875rem;
+      letter-spacing: -0.5px;
+      box-shadow: 0 0 20px rgba(26, 143, 168, 0.3);
+    }
+
+    .nav-logo-text {
+      font-weight: 700;
+      font-size: 1.125rem;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-logo-text span {
+      color: var(--primary-light);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: var(--space-xl);
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color var(--transition-fast);
+      position: relative;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+      color: var(--text-primary);
+    }
+
+    .nav-links a:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 4px;
+      border-radius: 2px;
+    }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* ═══════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: 0.625rem 1.25rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      line-height: 1;
+      border: none;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary-light);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(26, 143, 168, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 24px rgba(26, 143, 168, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border-glass);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-raised);
+      border-color: var(--border-glow);
+    }
+
+    .btn-lg {
+      padding: 0.875rem 1.75rem;
+      font-size: 1rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       HERO
+       ═══════════════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: var(--space-4xl) 0;
+    }
+
+    .hero-content {
+      max-width: 680px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-xs) var(--space-md);
+      background: var(--surface);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-full);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      backdrop-filter: blur(10px);
+      margin-bottom: var(--space-xl);
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(240, 165, 0, 0.4); }
+      50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(240, 165, 0, 0); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 3.75rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-lg);
+    }
+
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--primary-light), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      max-width: 540px;
+      margin-bottom: var(--space-2xl);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+    }
+
+    /* ═══════════════════════════════════════════
+       STATS BAR
+       ═══════════════════════════════════════════ */
+    .stats-bar {
+      padding: var(--space-3xl) 0;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-lg);
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: var(--space-xl);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      border: 1px solid var(--border-glass);
+      backdrop-filter: blur(var(--glass-blur));
+    }
+
+    .stat-value {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--primary-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: var(--space-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ═══════════════════════════════════════════
+       FEATURES
+       ═══════════════════════════════════════════ */
+    .features {
+      padding: var(--space-4xl) 0;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto var(--space-3xl);
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--primary-light);
+      margin-bottom: var(--space-sm);
+    }
+
+    .section-title {
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: var(--space-md);
+    }
+
+    .section-desc {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+    }
+
+    .feature-card {
+      padding: var(--space-2xl);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-lg);
+      font-size: 1.25rem;
+    }
+
+    .feature-icon.teal {
+      background: rgba(26, 143, 168, 0.15);
+      border: 1px solid rgba(26, 143, 168, 0.3);
+      color: var(--primary-light);
+    }
+
+    .feature-icon.gold {
+      background: rgba(240, 165, 0, 0.12);
+      border: 1px solid rgba(240, 165, 0, 0.25);
+      color: var(--gold);
+    }
+
+    .feature-icon.coral {
+      background: rgba(232, 116, 97, 0.12);
+      border: 1px solid rgba(232, 116, 97, 0.25);
+      color: var(--coral);
+    }
+
+    .feature-card h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ═══════════════════════════════════════════
+       BENTO GRID
+       ═══════════════════════════════════════════ */
+    .bento {
+      padding: var(--space-4xl) 0;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(200px, auto);
+      gap: var(--space-lg);
+    }
+
+    .bento-card {
+      padding: var(--space-2xl);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bento-card.span-8 { grid-column: span 8; }
+    .bento-card.span-4 { grid-column: span 4; }
+    .bento-card.span-6 { grid-column: span 6; }
+    .bento-card.span-12 { grid-column: span 12; }
+
+    .bento-card .bento-visual {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 60%;
+      height: 100%;
+      opacity: 0.06;
+      pointer-events: none;
+    }
+
+    .bento-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+    }
+
+    .bento-card p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 420px;
+    }
+
+    .bento-highlight {
+      background: linear-gradient(135deg, rgba(26, 143, 168, 0.2), rgba(12, 53, 71, 0.6));
+      border-color: var(--border-glow);
+    }
+
+    /* Decorative code block inside a bento card */
+    .code-preview {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-sm);
+      padding: var(--space-md);
+      margin-top: var(--space-lg);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      line-height: 1.8;
+      overflow: hidden;
+    }
+
+    .code-preview .keyword { color: var(--primary-light); }
+    .code-preview .string { color: var(--gold); }
+    .code-preview .comment { color: var(--text-muted); }
+
+    /* ═══════════════════════════════════════════
+       WORKFLOW / STEPS
+       ═══════════════════════════════════════════ */
+    .workflow {
+      padding: var(--space-4xl) 0;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-xl);
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 36px;
+      left: 16.67%;
+      right: 16.67%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--gold), var(--coral));
+      opacity: 0.3;
+    }
+
+    .step {
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-lg);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--glass-bg);
+      border: 2px solid var(--border-glass);
+      backdrop-filter: blur(var(--glass-blur));
+      position: relative;
+      z-index: 1;
+    }
+
+    .step:nth-child(1) .step-number { border-color: var(--primary); color: var(--primary-light); }
+    .step:nth-child(2) .step-number { border-color: var(--gold); color: var(--gold); }
+    .step:nth-child(3) .step-number { border-color: var(--coral); color: var(--coral); }
+
+    .step h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+    }
+
+    .step p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    /* ═══════════════════════════════════════════
+       CTA SECTION
+       ═══════════════════════════════════════════ */
+    .cta {
+      padding: var(--space-4xl) 0;
+    }
+
+    .cta-card {
+      text-align: center;
+      padding: var(--space-3xl) var(--space-2xl);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(26, 143, 168, 0.15), rgba(240, 165, 0, 0.08));
+      border: 1px solid var(--border-glow);
+      backdrop-filter: blur(var(--glass-blur-heavy));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(26, 143, 168, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-card h2 {
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--space-md);
+      position: relative;
+    }
+
+    .cta-card p {
+      color: var(--text-secondary);
+      margin-bottom: var(--space-2xl);
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+    }
+
+    .cta-actions {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-md);
+      position: relative;
+    }
+
+    /* ═══════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════ */
+    .footer {
+      padding: var(--space-2xl) 0;
+      border-top: 1px solid var(--border-glass);
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-copy {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: var(--space-lg);
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+
+    .footer-links a:hover { color: var(--text-primary); }
+    .footer-links a:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    /* ═══════════════════════════════════════════
+       ANIMATIONS
+       ═══════════════════════════════════════════ */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .bento-card.span-8, .bento-card.span-4 { grid-column: span 6; }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; gap: var(--space-2xl); }
+      .steps::before { display: none; }
+      .bento-card.span-8, .bento-card.span-4,
+      .bento-card.span-6, .bento-card.span-12 { grid-column: span 12; }
+      .footer-inner { flex-direction: column; gap: var(--space-md); text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .hero-actions { flex-direction: column; }
+      .cta-actions { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background -->
+  <div class="bg-canvas" aria-hidden="true"></div>
+
+  <!-- Navigation -->
+  <nav class="nav" id="nav" role="navigation" aria-label="Main navigation">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo" aria-label="ATTENDING AI Home">
+        <div class="nav-logo-icon">Ai</div>
+        <div class="nav-logo-text">ATTENDING<span>AI</span></div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#platform">Platform</a></li>
+        <li><a href="#workflow">How It Works</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="#contact" class="btn btn-ghost">Log In</a>
+        <a href="#contact" class="btn btn-primary">Request Demo</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-content fade-up">
+        <div class="hero-badge">
+          <span class="hero-badge-dot" aria-hidden="true"></span>
+          Clinical Decision Support &middot; AI-Powered
+        </div>
+        <h1>
+          Smarter care starts with<br>
+          <span class="highlight">ATTENDING AI</span>
+        </h1>
+        <p>
+          Real-time clinical intelligence that supports physicians at the point of care.
+          From differential diagnosis to risk stratification, ATTENDING AI augments
+          clinical decision-making with evidence-based insights.
+        </p>
+        <div class="hero-actions">
+          <a href="#contact" class="btn btn-primary btn-lg">Get Started</a>
+          <a href="#features" class="btn btn-ghost btn-lg">Learn More</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="stats-bar" aria-label="Key metrics">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item fade-up">
+          <div class="stat-value">98%</div>
+          <div class="stat-label">Diagnostic Accuracy</div>
+        </div>
+        <div class="stat-item fade-up">
+          <div class="stat-value">40%</div>
+          <div class="stat-label">Faster Assessments</div>
+        </div>
+        <div class="stat-item fade-up">
+          <div class="stat-value">24/7</div>
+          <div class="stat-label">Always Available</div>
+        </div>
+        <div class="stat-item fade-up">
+          <div class="stat-value">HIPAA</div>
+          <div class="stat-label">Fully Compliant</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">Capabilities</div>
+        <h2 class="section-title">Built for the clinical frontline</h2>
+        <p class="section-desc">
+          Purpose-built AI tools that integrate seamlessly into clinical workflows,
+          reducing cognitive load while improving patient outcomes.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="glass-card feature-card fade-up">
+          <div class="feature-icon teal">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>Differential Diagnosis</h3>
+          <p>AI-generated differential lists ranked by probability, drawing from current clinical evidence and patient-specific factors.</p>
+        </div>
+        <div class="glass-card feature-card fade-up">
+          <div class="feature-icon gold">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h3>Red Flag Detection</h3>
+          <p>Automatic identification of critical symptoms and findings that require immediate clinical attention or escalation.</p>
+        </div>
+        <div class="glass-card feature-card fade-up">
+          <div class="feature-icon coral">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <h3>Smart Documentation</h3>
+          <p>Structured clinical notes generated in real time, formatted for EHR integration with appropriate medical coding suggestions.</p>
+        </div>
+        <div class="glass-card feature-card fade-up">
+          <div class="feature-icon teal">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3>Real-Time Alerts</h3>
+          <p>Proactive notifications for drug interactions, critical lab values, and time-sensitive clinical decisions.</p>
+        </div>
+        <div class="glass-card feature-card fade-up">
+          <div class="feature-icon gold">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h3>Care Coordination</h3>
+          <p>Seamless handoff intelligence that ensures continuity across shifts, departments, and care transitions.</p>
+        </div>
+        <div class="glass-card feature-card fade-up">
+          <div class="feature-icon coral">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h3>Enterprise Security</h3>
+          <p>HIPAA-compliant infrastructure with end-to-end encryption, role-based access, and comprehensive audit trails.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bento Grid -->
+  <section class="bento" id="platform">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">Platform</div>
+        <h2 class="section-title">Designed for every care setting</h2>
+        <p class="section-desc">
+          From emergency departments to skilled nursing facilities,
+          ATTENDING AI adapts to your clinical environment.
+        </p>
+      </div>
+      <div class="bento-grid">
+        <div class="glass-card bento-card bento-highlight span-8 fade-up">
+          <h3>Provider Portal</h3>
+          <p>
+            A comprehensive clinical dashboard with real-time patient assessments,
+            AI-driven insights, and integrated decision support tools — all in a
+            single, unified interface.
+          </p>
+          <div class="code-preview" aria-hidden="true">
+            <span class="comment">// Real-time clinical intelligence</span><br>
+            <span class="keyword">const</span> assessment = <span class="keyword">await</span> attending.<span class="keyword">analyze</span>({<br>
+            &nbsp;&nbsp;patient: currentPatient,<br>
+            &nbsp;&nbsp;mode: <span class="string">"comprehensive"</span>,<br>
+            &nbsp;&nbsp;flags: [<span class="string">"red-flags"</span>, <span class="string">"interactions"</span>]<br>
+            });
+          </div>
+        </div>
+        <div class="glass-card bento-card span-4 fade-up">
+          <h3>COMPASS Assessment</h3>
+          <p>Patient-facing intake that captures structured clinical data before the encounter begins.</p>
+        </div>
+        <div class="glass-card bento-card span-4 fade-up">
+          <h3>EMS Integration</h3>
+          <p>Pre-arrival data from first responders flows directly into the clinical workflow.</p>
+        </div>
+        <div class="glass-card bento-card span-8 fade-up">
+          <h3>SNF Transfer Protocol</h3>
+          <p>
+            Intelligent transfer coordination between acute care and skilled nursing facilities.
+            Automated documentation, risk scoring, and bed management ensure safe,
+            efficient transitions of care.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Workflow -->
+  <section class="workflow" id="workflow">
+    <div class="container">
+      <div class="section-header fade-up">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-title">Three steps to better outcomes</h2>
+        <p class="section-desc">
+          ATTENDING AI integrates into your existing workflow without disruption.
+        </p>
+      </div>
+      <div class="steps">
+        <div class="step fade-up">
+          <div class="step-number">1</div>
+          <h3>Patient Intake</h3>
+          <p>COMPASS captures structured symptoms and history before the clinical encounter.</p>
+        </div>
+        <div class="step fade-up">
+          <div class="step-number">2</div>
+          <h3>AI Analysis</h3>
+          <p>ATTENDING processes data in real time, generating differentials, flags, and recommendations.</p>
+        </div>
+        <div class="step fade-up">
+          <div class="step-number">3</div>
+          <h3>Clinical Action</h3>
+          <p>Physicians review AI insights at the point of care and make informed decisions faster.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="contact">
+    <div class="container">
+      <div class="cta-card fade-up">
+        <h2>Ready to transform clinical care?</h2>
+        <p>Join leading healthcare organizations using ATTENDING AI to improve outcomes and reduce clinician burden.</p>
+        <div class="cta-actions">
+          <a href="mailto:info@attendingai.com" class="btn btn-primary btn-lg">Request a Demo</a>
+          <a href="#features" class="btn btn-ghost btn-lg">View Documentation</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-copy">&copy; 2026 ATTENDING AI. All rights reserved.</div>
+      <ul class="footer-links">
+        <li><a href="#">Privacy Policy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">HIPAA Compliance</a></li>
+      </ul>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // Scroll-aware nav
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    // Intersection Observer for fade-up animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          // Stagger siblings
+          const siblings = entry.target.parentElement.querySelectorAll('.fade-up');
+          const index = Array.from(siblings).indexOf(entry.target);
+          setTimeout(() => {
+            entry.target.classList.add('visible');
+          }, index * 100);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
