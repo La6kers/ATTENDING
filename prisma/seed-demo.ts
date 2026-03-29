@@ -75,7 +75,7 @@ async function main() {
       name: 'Demo Provider',
       role: 'PROVIDER',
       specialty: 'Family Medicine',
-      npi: '1234567890',
+      npi: '1234509876',
       password: hashPassword('demo1234'),
       isActive: true,
     },
