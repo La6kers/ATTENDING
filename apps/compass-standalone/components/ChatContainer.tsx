@@ -197,7 +197,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
 
   const handleSend = useCallback(() => {
     // If there's a staged image, send it

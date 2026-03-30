@@ -31,9 +31,7 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Build compass-standalone
-        run: |
-          cd apps/compass-standalone
-          npx next build
+        run: npm run build --workspace=apps/compass-standalone
         env:
           NEXT_TELEMETRY_DISABLED: 1
 
