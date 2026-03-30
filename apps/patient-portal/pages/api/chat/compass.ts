@@ -14,22 +14,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { AssessmentPhase, UrgencyLevel, HistoryOfPresentIllness } from '@attending/shared';
 import { rateLimit, getClientIp, sanitizeInput } from '@attending/shared/lib/security';
-
-// Red flag patterns for emergency detection
-const RED_FLAG_PATTERNS = [
-  { pattern: /chest pain|chest tightness|pressure in chest/i, flag: 'Chest Pain', severity: 'critical' as const },
-  { pattern: /can't breathe|difficulty breathing|short of breath|gasping/i, flag: 'Dyspnea', severity: 'critical' as const },
-  { pattern: /worst headache|thunderclap|sudden severe headache/i, flag: 'Thunderclap Headache', severity: 'critical' as const },
-  { pattern: /suicidal|want to die|kill myself|end my life/i, flag: 'Suicidal Ideation', severity: 'critical' as const },
-  { pattern: /bleeding heavily|can't stop bleeding|hemorrhage/i, flag: 'Hemorrhage', severity: 'critical' as const },
-  { pattern: /stroke|face drooping|arm weakness|slurred speech/i, flag: 'Stroke Symptoms', severity: 'critical' as const },
-  { pattern: /unconscious|passed out|fainted|syncope/i, flag: 'Loss of Consciousness', severity: 'high' as const },
-  { pattern: /severe pain.*10|worst pain|excruciating/i, flag: 'Severe Pain', severity: 'high' as const },
-  { pattern: /blood in stool|vomiting blood|coughing blood/i, flag: 'GI Bleeding', severity: 'high' as const },
-  { pattern: /vision loss|can't see|sudden blindness/i, flag: 'Vision Changes', severity: 'high' as const },
-  { pattern: /high fever|104|105|106 degrees/i, flag: 'High Fever', severity: 'high' as const },
-  { pattern: /confusion|disoriented|altered mental/i, flag: 'Altered Mental Status', severity: 'high' as const },
-];
+import { evaluateTextForRedFlags } from '@attending/shared/lib/clinical-ai/redFlagTextEvaluator';
 
 // Phase transitions and questions
 // Phase questions - used for reference, potentially for future AI prompt construction
@@ -190,35 +175,27 @@ export default async function handler(
   }
 }
 
-// Detect red flags in user input
+// Detect red flags using the canonical shared evaluator (23 rules, offline-capable)
 function detectRedFlags(message: string): string[] {
-  const flags: string[] = [];
-  
-  for (const { pattern, flag } of RED_FLAG_PATTERNS) {
-    pattern.lastIndex = 0;
-    if (pattern.test(message)) {
-      flags.push(flag);
-    }
-  }
-  
-  return [...new Set(flags)]; // Remove duplicates
+  const result = evaluateTextForRedFlags(message);
+  return result.flags.map(f => f.name);
 }
 
-// Calculate urgency level
+// Calculate urgency level using the shared evaluator's severity
 function calculateUrgency(redFlags: string[], clinicalData: any): UrgencyLevel {
-  const criticalFlags = RED_FLAG_PATTERNS
-    .filter(p => p.severity === 'critical')
-    .map(p => p.flag);
-  
-  const hasCritical = redFlags.some(f => criticalFlags.includes(f));
-  if (hasCritical) return 'high';
-  
+  // Re-evaluate to get severity (cached from same tick, negligible cost)
+  const result = evaluateTextForRedFlags(
+    [...redFlags, ...(clinicalData?.redFlags || [])].join(' ')
+  );
+
+  if (result.overallSeverity === 'critical') return 'high';
+
   const existingFlags = clinicalData?.redFlags || [];
   const allFlags = [...existingFlags, ...redFlags];
-  
+
   if (allFlags.length >= 3) return 'high';
   if (allFlags.length >= 1) return 'moderate';
-  
+
   return 'standard';
 }
 

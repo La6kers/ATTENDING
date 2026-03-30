@@ -98,14 +98,11 @@ public static class DependencyInjection
                 var hasRedissScheme = connLower.StartsWith("rediss://");
                 if (!hasSslFlag && !hasRedissScheme)
                 {
-                    var logger = services.BuildServiceProvider()
-                        .GetRequiredService<ILoggerFactory>()
-                        .CreateLogger("RedisSecurityCheck");
-                    logger.LogWarning(
-                        "SECURITY WARNING: Redis connection string in Production does not " +
-                        "contain 'ssl=true' or 'rediss://' scheme. TLS 1.2 is enforced " +
-                        "programmatically, but the connection string should explicitly " +
-                        "reflect TLS configuration to prevent misconfiguration drift.");
+                    throw new InvalidOperationException(
+                        "SECURITY ERROR: Redis connection string in Production must contain " +
+                        "'ssl=true' or use 'rediss://' scheme. TLS 1.2+ is enforced programmatically, " +
+                        "but the connection string must explicitly declare TLS to prevent " +
+                        "misconfiguration drift when copied to other contexts.");
                 }
             }
 
@@ -310,6 +307,14 @@ public static class DependencyInjection
             Domain.ClinicalGuidelines.Guidelines.OttawaAnkleRules>();
         services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
             Domain.ClinicalGuidelines.Guidelines.Curb65Score>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.OttawaKneeRules>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.PecarnHeadInjury>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.CentorScore>();
+        services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,
+            Domain.ClinicalGuidelines.Guidelines.Chads2VascScore>();
 
         // Behavioral health guidelines
         services.AddSingleton<Domain.ClinicalGuidelines.IClinicalGuideline,

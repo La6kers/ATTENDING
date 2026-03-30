@@ -11,7 +11,10 @@ import {
 } from './types';
 
 // Re-export types that other modules need
-export type { RedFlagEvaluation, RedFlagMatch, RedFlagSeverity, RedFlagCategory };
+export type { RedFlag, RedFlagEvaluation, RedFlagMatch, RedFlagSeverity, RedFlagCategory };
+
+/** Monotonically increasing version. Bump on every rule change. */
+export const RED_FLAG_RULES_VERSION = '2.0.0';
 
 // =============================================================================
 // Red Flag Definitions
@@ -307,6 +310,137 @@ export const RED_FLAGS: RedFlag[] = [
     timeframe: 'immediate',
     icdCodes: ['G83.4'],
   },
+  // v2.0 additions — conditions from clinicalServices.ts that were missing
+  {
+    id: 'rf-aortic-dissection',
+    name: 'Aortic Dissection',
+    description: 'Tearing of the aortic wall requiring emergent surgical evaluation',
+    severity: 'critical',
+    category: 'cardiovascular',
+    triggerCriteria: [
+      'sudden tearing chest pain',
+      'sudden tearing back pain',
+      'ripping pain between shoulder blades',
+      'blood pressure differential between arms',
+      'pulse deficit',
+      'sudden severe back pain with hypertension',
+      'tearing pain radiating to back',
+    ],
+    recommendedAction: 'STAT CT angiogram chest/abdomen/pelvis. BP control target SBP <120. Vascular surgery consult. Pain management.',
+    timeframe: 'immediate',
+    icdCodes: ['I71.0'],
+  },
+  {
+    id: 'rf-pneumothorax',
+    name: 'Pneumothorax',
+    description: 'Collapse of lung requiring urgent evaluation and possible intervention',
+    severity: 'critical',
+    category: 'respiratory',
+    triggerCriteria: [
+      'sudden chest pain with shortness of breath after trauma',
+      'absent breath sounds on one side',
+      'subcutaneous emphysema',
+      'sudden pleuritic chest pain with respiratory distress',
+      'chest trauma with dyspnea',
+      'tracheal deviation',
+    ],
+    recommendedAction: 'Chest X-ray STAT. Needle decompression if tension pneumothorax suspected (2nd ICS midclavicular). Chest tube if confirmed.',
+    timeframe: 'immediate',
+    icdCodes: ['J93.9'],
+  },
+  {
+    id: 'rf-status-epilepticus',
+    name: 'Status Epilepticus',
+    description: 'Prolonged or repetitive seizure activity requiring emergent treatment',
+    severity: 'critical',
+    category: 'neurological',
+    triggerCriteria: [
+      'seizure lasting more than 5 minutes',
+      'continuous seizure activity',
+      'multiple seizures without recovery between',
+      'ongoing convulsions',
+      'prolonged seizure not stopping',
+      'back to back seizures',
+    ],
+    recommendedAction: 'Benzodiazepines immediately (lorazepam 4mg IV or midazolam 10mg IM). Airway management. Neurology consult. Load anti-epileptic.',
+    timeframe: 'immediate',
+    icdCodes: ['G41.9'],
+  },
+  {
+    id: 'rf-acute-abdomen',
+    name: 'Acute Abdomen / Perforated Viscus',
+    description: 'Surgical emergency with peritoneal signs requiring immediate evaluation',
+    severity: 'critical',
+    category: 'other',
+    triggerCriteria: [
+      'rigid abdomen',
+      'board-like abdomen',
+      'rebound tenderness with guarding',
+      'absent bowel sounds with abdominal pain',
+      'peritoneal signs',
+      'sudden severe abdominal pain with rigidity',
+      'free air on imaging',
+    ],
+    recommendedAction: 'Surgical consult STAT. CT abdomen/pelvis with contrast. NPO, IV fluids, type and screen. Broad-spectrum antibiotics.',
+    timeframe: 'immediate',
+    icdCodes: ['K35.80', 'R10.0'],
+  },
+  {
+    id: 'rf-eclampsia',
+    name: 'Eclampsia',
+    description: 'Seizure in pregnancy or postpartum with hypertension',
+    severity: 'critical',
+    category: 'obstetric',
+    triggerCriteria: [
+      'seizure in pregnancy',
+      'seizure with hypertension in pregnant patient',
+      'pregnant with convulsions',
+      'postpartum seizure with hypertension',
+      'eclamptic seizure',
+      'pregnancy with severe headache and visual changes',
+    ],
+    recommendedAction: 'Magnesium sulfate 4-6g IV loading dose. Delivery planning. ICU admission. OB emergency consult. BP control.',
+    timeframe: 'immediate',
+    icdCodes: ['O15.0'],
+  },
+  {
+    id: 'rf-severe-hypoglycemia',
+    name: 'Severe Hypoglycemia',
+    description: 'Critically low blood sugar causing neurological symptoms',
+    severity: 'critical',
+    category: 'metabolic',
+    triggerCriteria: [
+      'blood glucose below 54',
+      'blood glucose below 40',
+      'altered mental status with low blood sugar',
+      'diabetic with confusion and sweating',
+      'seizure with hypoglycemia',
+      'unresponsive with low glucose',
+      'hypoglycemic episode with loss of consciousness',
+    ],
+    recommendedAction: 'IV dextrose D50 one amp (25g). Glucagon 1mg IM if no IV access. Frequent glucose monitoring every 15 minutes. Identify cause.',
+    timeframe: 'immediate',
+    icdCodes: ['E16.2'],
+  },
+  {
+    id: 'rf-acute-limb-ischemia',
+    name: 'Acute Limb Ischemia',
+    description: 'Sudden loss of blood flow to an extremity threatening limb viability',
+    severity: 'critical',
+    category: 'cardiovascular',
+    triggerCriteria: [
+      'sudden pale cold extremity',
+      'absent pulse in extremity',
+      'pain with pallor and pulselessness',
+      'sudden severe limb pain with pallor',
+      'mottled extremity with absent pulses',
+      'acute onset limb pain with numbness',
+      'six Ps: pain, pallor, pulselessness, paresthesia, paralysis, poikilothermia',
+    ],
+    recommendedAction: 'Vascular surgery consult STAT. Heparin anticoagulation. Consider thrombectomy or bypass within 6 hours for limb salvage.',
+    timeframe: 'immediate',
+    icdCodes: ['I74.3'],
+  },
 ];
 
 // =============================================================================
@@ -406,9 +540,15 @@ const MEDICAL_SYNONYMS: Record<string, string[]> = {
   'altered mental status': ['confused', 'confusion', 'disoriented', 'lethargic', 'drowsy', 'not alert', 'ams'],
   'fever': ['febrile', 'high temperature', 'temp elevated', 'pyrexia'],
   'infant': ['baby', 'newborn', 'neonate'],
+  'seizure': ['convulsion', 'convulsions', 'fit', 'fits', 'seizing', 'convulsing'],
+  'rigid abdomen': ['board-like abdomen', 'abdominal rigidity', 'guarding', 'peritonitis'],
+  'hypoglycemia': ['low blood sugar', 'low glucose', 'glucose low'],
+  'ischemia': ['no blood flow', 'loss of blood flow', 'blocked artery'],
+  'pneumothorax': ['collapsed lung', 'lung collapse'],
+  'dissection': ['tearing pain', 'ripping pain'],
 };
 
-function expandWithSynonyms(text: string): string {
+export function expandWithSynonyms(text: string): string {
   let expanded = text.toLowerCase();
   
   // Add synonyms to searchable text
@@ -668,7 +808,7 @@ function checkSingleTermMatch(criterion: string, expandedText: string): boolean 
   return false;
 }
 
-function extractKeywords(text: string): string[] {
+export function extractKeywords(text: string): string[] {
   const stopWords = new Set(['with', 'and', 'or', 'the', 'a', 'an', 'in', 'on', 'to', 'of']);
   return text
     .split(/\s+/)

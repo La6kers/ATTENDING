@@ -22,73 +22,7 @@ import {
   Palette,
 } from 'lucide-react';
 import { CompassAdminShell } from '@/components/layout/CompassAdminShell';
-
-// =============================================================================
-// Simple QR Code Generator (SVG-based, no external deps)
-// Generates a basic QR-style grid pattern for the URL.
-// In production, use a proper QR library like 'qrcode'.
-// =============================================================================
-
-function QRCodeSVG({ url, size = 200 }: { url: string; size?: number }) {
-  // Simple visual placeholder — in production, use a proper QR encoder
-  // This creates a deterministic pattern from the URL string
-  const cells = 21; // QR version 1 is 21x21
-  const cellSize = size / cells;
-
-  const getPattern = (): boolean[][] => {
-    const grid: boolean[][] = Array(cells).fill(null).map(() => Array(cells).fill(false));
-    // Finder patterns (top-left, top-right, bottom-left)
-    const drawFinder = (ox: number, oy: number) => {
-      for (let y = 0; y < 7; y++)
-        for (let x = 0; x < 7; x++)
-          grid[oy + y][ox + x] = (y === 0 || y === 6 || x === 0 || x === 6 ||
-            (y >= 2 && y <= 4 && x >= 2 && x <= 4));
-    };
-    drawFinder(0, 0);
-    drawFinder(cells - 7, 0);
-    drawFinder(0, cells - 7);
-
-    // Data area — deterministic from URL
-    let hash = 0;
-    for (let i = 0; i < url.length; i++) {
-      hash = ((hash << 5) - hash + url.charCodeAt(i)) | 0;
-    }
-    for (let y = 0; y < cells; y++) {
-      for (let x = 0; x < cells; x++) {
-        if (grid[y][x]) continue; // Skip finder patterns
-        // Avoid timing patterns
-        if (y === 6 || x === 6) { grid[y][x] = (x + y) % 2 === 0; continue; }
-        // Data
-        const seed = hash ^ ((y * cells + x) * 2654435761);
-        grid[y][x] = (seed & 0x3) !== 0;
-      }
-    }
-    return grid;
-  };
-
-  const pattern = getPattern();
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rounded-lg">
-      <rect width={size} height={size} fill="white" />
-      {pattern.map((row, y) =>
-        row.map((cell, x) =>
-          cell ? (
-            <rect
-              key={`${x}-${y}`}
-              x={x * cellSize}
-              y={y * cellSize}
-              width={cellSize}
-              height={cellSize}
-              fill="#115e59"
-              rx={cellSize * 0.1}
-            />
-          ) : null
-        )
-      )}
-    </svg>
-  );
-}
+import { QRCodeSVG } from 'qrcode.react';
 
 // =============================================================================
 // Main Page
@@ -276,7 +210,7 @@ export default function CheckinSetupPage() {
                 <p className="text-sm text-gray-500 mb-6 max-w-xs mx-auto">{welcomeMessage}</p>
 
                 <div className="inline-block p-4 bg-white rounded-2xl shadow-lg border border-gray-100 mb-4">
-                  <QRCodeSVG url={checkinUrl} size={220} />
+                  <QRCodeSVG value={checkinUrl} size={220} fgColor="#115e59" />
                 </div>
 
                 <p className="text-xs text-gray-400 font-mono mb-6">{checkinUrl}</p>

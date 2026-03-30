@@ -182,7 +182,7 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
       case 'danger':
         return 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200 hover:border-red-400';
       default:
-        return 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-teal-300';
+        return 'bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/40';
     }
   };
 

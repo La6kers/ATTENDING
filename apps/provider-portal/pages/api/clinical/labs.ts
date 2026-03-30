@@ -8,6 +8,7 @@
 // =============================================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { requireAuth } from '@/lib/api/auth';
 
 // =============================================================================
 // Types
@@ -291,11 +292,10 @@ function validateRequest(body: unknown): { valid: boolean; errors: string[] } {
 // API Handler
 // =============================================================================
 
-export default async function handler(
+export default requireAuth(async function handler(
   req: NextApiRequest,
   res: NextApiResponse<LabResponse>
 ) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
@@ -377,7 +377,7 @@ export default async function handler(
       timestamp: new Date().toISOString(),
     });
   }
-}
+});
 
 function generateClinicalContext(
   request: LabRequest, 

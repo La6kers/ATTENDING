@@ -9,12 +9,22 @@ export * from './types';
 // Red Flag Detection
 export {
   RED_FLAGS,
+  RED_FLAG_RULES_VERSION,
   evaluateRedFlags,
   hasImmediateRedFlags,
   getRedFlagsByCategory,
   getActionableRedFlags,
   formatRedFlagAlert,
+  expandWithSynonyms,
+  extractKeywords,
 } from './redFlagDetection';
+
+// Text-Based Red Flag Evaluator (offline-first, zero network dependency)
+export {
+  evaluateTextForRedFlags,
+  type TextRedFlagResult,
+  type TextRedFlagMatch,
+} from './redFlagTextEvaluator';
 
 // BioMistral Client
 export {

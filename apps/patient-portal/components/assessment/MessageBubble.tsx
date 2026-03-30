@@ -68,9 +68,9 @@ const Avatar: React.FC<{ role: MessageRole; isEmergency?: boolean }> = ({ role, 
 
 const TypingIndicator: React.FC = () => (
   <div className="flex items-center gap-1 py-2 px-3">
-    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+    <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+    <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+    <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
   </div>
 );
 
@@ -202,10 +202,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           relative px-4 py-3 rounded-2xl shadow-sm
           ${
             isUser
-              ? 'bg-gradient-to-br from-teal-600 to-teal-800 text-white rounded-tr-sm'
+              ? 'bg-gradient-to-br from-attending-primary to-attending-light text-white rounded-tr-sm'
               : hasRedFlag
-                ? 'bg-red-50 text-gray-800 border-2 border-red-300 rounded-tl-sm'
-                : 'bg-white text-gray-800 border border-gray-200 rounded-tl-sm'
+                ? 'bg-red-900/40 text-white border-2 border-red-500/60 rounded-tl-sm'
+                : 'bg-white/10 text-white border border-white/15 rounded-tl-sm backdrop-blur-sm'
           }
         `}
         >
@@ -224,7 +224,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {showTimestamp && !isTyping && (
           <span
             className={`
-            text-xs text-gray-400 mt-1 px-1
+            text-xs text-white/40 mt-1 px-1
             ${isUser ? 'text-right' : 'text-left'}
           `}
           >

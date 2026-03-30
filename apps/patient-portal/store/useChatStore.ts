@@ -37,43 +37,20 @@ import {
 export type { DetailedAssessmentPhase as AssessmentPhase, UrgencyLevel, QuickReply, ChatMessage, RedFlag, HPIData, AssessmentData };
 
 // =============================================================================
-// Fallback Red Flag Detection (if clinical-services not available)
+// Red Flag Detection — Uses shared canonical evaluator (23 rules, offline-first)
 // =============================================================================
 
-const RED_FLAG_PATTERNS = [
-  { pattern: /chest pain|chest tightness|pressure in chest/i, severity: 'critical' as const, flag: 'Cardiac symptoms', category: 'cardiovascular' },
-  { pattern: /can'?t breathe|shortness of breath|difficulty breathing|sob/i, severity: 'critical' as const, flag: 'Respiratory distress', category: 'respiratory' },
-  { pattern: /worst headache|thunderclap|sudden severe headache/i, severity: 'critical' as const, flag: 'Severe headache - rule out SAH', category: 'neurological' },
-  { pattern: /sudden weakness|face droop|slurred speech|can'?t move/i, severity: 'critical' as const, flag: 'Stroke symptoms', category: 'neurological' },
-  { pattern: /suicid|kill myself|end my life|want to die/i, severity: 'critical' as const, flag: 'Suicidal ideation - psychiatric emergency', category: 'psychiatric' },
-  { pattern: /blood in stool|vomiting blood|black stool|melena/i, severity: 'urgent' as const, flag: 'GI bleeding', category: 'gastrointestinal' },
-  { pattern: /severe abdominal pain|rigid abdomen/i, severity: 'urgent' as const, flag: 'Acute abdomen', category: 'gastrointestinal' },
-  { pattern: /allergic reaction|throat swelling|anaphylaxis/i, severity: 'critical' as const, flag: 'Anaphylaxis', category: 'allergic' },
-  { pattern: /fever.*(\d{3}|104|105)|very high fever/i, severity: 'urgent' as const, flag: 'High fever', category: 'infectious' },
-  { pattern: /unconscious|passed out|fainted|syncope/i, severity: 'urgent' as const, flag: 'Syncope/LOC', category: 'neurological' },
-  { pattern: /pregnant.*bleeding|vaginal bleeding.*pregnant/i, severity: 'critical' as const, flag: 'Pregnancy bleeding', category: 'obstetric' },
-  { pattern: /numbness.*face|numbness.*arm|numbness.*leg/i, severity: 'urgent' as const, flag: 'Neurological symptoms', category: 'neurological' },
-  { pattern: /vision loss|sudden blind|can'?t see/i, severity: 'urgent' as const, flag: 'Vision loss', category: 'neurological' },
-  { pattern: /seizure|convulsion/i, severity: 'urgent' as const, flag: 'Seizure activity', category: 'neurological' },
-];
-
-function detectRedFlagsInline(text: string): RedFlag[] {
-  const flags: RedFlag[] = [];
-
-  RED_FLAG_PATTERNS.forEach(({ pattern, severity, flag, category }) => {
-    if (pattern.test(text)) {
-      flags.push(createRedFlag(flag, severity, text, category));
-    }
-  });
-
-  return flags;
-}
+import { evaluateTextForRedFlags } from '@attending/shared/lib/clinical-ai/redFlagTextEvaluator';
 
 /**
- * Detect red flags using inline pattern matching.
+ * Detect red flags using the canonical shared evaluator.
+ * Works offline (Tier 0) — hardcoded rules, zero network dependency.
  */
 function detectRedFlags(text: string): RedFlag[] {
-  return detectRedFlagsInline(text);
+  const result = evaluateTextForRedFlags(text);
+  return result.flags.map(f =>
+    createRedFlag(f.name, f.severity === 'critical' ? 'critical' : 'urgent', text, f.category)
+  );
 }
 
 // =============================================================================
@@ -248,6 +225,7 @@ interface ChatState {
   // UI State
   isAIProcessing: boolean;
   showEmergencyModal: boolean;
+  hpiFormat: 'bulleted' | 'oldcarts';
   error: string | null;
 
   // Actions
@@ -255,6 +233,7 @@ interface ChatState {
   sendMessage: (content: string) => Promise<void>;
   handleQuickReply: (reply: QuickReply) => Promise<void>;
   setEmergencyModal: (show: boolean) => void;
+  setHpiFormat: (format: 'bulleted' | 'oldcarts') => void;
   handleEmergency: () => void;
   submitAssessment: () => Promise<void>;
   resetSession: () => void;
@@ -283,6 +262,7 @@ export const useChatStore = create<ChatState>()(
         redFlags: [],
         isAIProcessing: false,
         showEmergencyModal: false,
+        hpiFormat: 'bulleted' as 'bulleted' | 'oldcarts',
         error: null,
 
         // =======================================================================
@@ -449,6 +429,7 @@ export const useChatStore = create<ChatState>()(
         // Emergency Modal
         // =======================================================================
         setEmergencyModal: (show: boolean) => set({ showEmergencyModal: show }),
+        setHpiFormat: (format: 'bulleted' | 'oldcarts') => set({ hpiFormat: format }),
 
         handleEmergency: () => {
           set((state) => {
@@ -555,35 +536,57 @@ export const useChatStore = create<ChatState>()(
         // Get Assessment Summary
         // =======================================================================
         getAssessmentSummary: () => {
-          const { assessmentData, redFlags, urgencyLevel } = get();
-          const { chiefComplaint, hpi, medications, allergies, medicalHistory } = assessmentData;
+          const { assessmentData, redFlags, urgencyLevel, hpiFormat } = get();
+          const { chiefComplaint, hpi, medications, allergies, medicalHistory, socialHistory } = assessmentData;
 
-          let summary = '';
+          if (hpiFormat === 'oldcarts') {
+            // OLDCARTS structured comprehensive format
+            let summary = '';
+            if (chiefComplaint) summary += `**Chief Complaint:** ${chiefComplaint}\n\n`;
 
-          if (chiefComplaint) {
-            summary += `**Chief Complaint:** ${chiefComplaint}\n\n`;
+            summary += `**HISTORY OF PRESENT ILLNESS**\n\n`;
+            if (hpi.onset) summary += `**Onset:** ${hpi.onset}\n\n`;
+            if (hpi.location) summary += `**Location:** ${hpi.location}\n\n`;
+            if (hpi.duration) summary += `**Duration:** ${hpi.duration}\n\n`;
+            if (hpi.character) summary += `**Character:** ${hpi.character}\n\n`;
+            if (hpi.aggravating?.length) summary += `**Aggravating Factors:** ${hpi.aggravating.join('; ')}\n\n`;
+            if (hpi.relieving?.length) summary += `**Relieving Factors:** ${hpi.relieving.join('; ')}\n\n`;
+            if (hpi.timing) summary += `**Timing:** ${hpi.timing}\n\n`;
+            if (hpi.severity) summary += `**Severity:** ${hpi.severity}/10 on pain scale\n\n`;
+            if (hpi.associated?.length) summary += `**Associated Symptoms:** ${hpi.associated.join(', ')}\n\n`;
+
+            summary += `**Past Medical History:** ${medicalHistory.length > 0 ? medicalHistory.join(', ') : 'None reported'}\n`;
+            summary += `**Medications:** ${medications.length > 0 ? medications.join(', ') : 'None reported'}\n`;
+            summary += `**Allergies:** ${allergies.length > 0 ? allergies.join(', ') : 'NKDA'}\n`;
+            if (socialHistory) summary += `**Social History:** ${typeof socialHistory === 'string' ? socialHistory : (socialHistory as any).smoking || 'Not reported'}\n`;
+
+            if (redFlags.length > 0) {
+              summary += `\n⚠️ **Red Flags Detected:** ${redFlags.map((rf) => rf.symptom).join(', ')}\n`;
+            }
+            summary += `\n**Urgency Level:** ${urgencyLevel.toUpperCase()}`;
+            return summary;
           }
 
-          summary += `**History of Present Illness:**\n`;
-          if (hpi.onset) summary += `- Onset: ${hpi.onset}\n`;
-          if (hpi.location) summary += `- Location: ${hpi.location}\n`;
-          if (hpi.duration) summary += `- Duration: ${hpi.duration}\n`;
-          if (hpi.character) summary += `- Character: ${hpi.character}\n`;
-          if (hpi.severity) summary += `- Severity: ${hpi.severity}/10\n`;
-          if (hpi.aggravating?.length) summary += `- Aggravating factors: ${hpi.aggravating.join(', ')}\n`;
-          if (hpi.relieving?.length) summary += `- Relieving factors: ${hpi.relieving.join(', ')}\n`;
-          if (hpi.associated?.length) summary += `- Associated symptoms: ${hpi.associated.join(', ')}\n`;
+          // Bulleted simple symptom list (default)
+          let summary = '';
+          if (chiefComplaint) summary += `**Chief Complaint:** ${chiefComplaint}\n\n`;
+
+          summary += `**Symptoms:**\n`;
+          if (chiefComplaint) summary += `• ${chiefComplaint}`;
+          if (hpi.severity) summary += ` — ${hpi.severity}/10`;
+          if (hpi.onset) summary += `, ${hpi.onset.toLowerCase()}`;
+          summary += '\n';
+          if (hpi.associated?.length) {
+            hpi.associated.forEach(s => { summary += `• ${s}\n`; });
+          }
 
           summary += `\n**Medications:** ${medications.length > 0 ? medications.join(', ') : 'None reported'}\n`;
           summary += `**Allergies:** ${allergies.length > 0 ? allergies.join(', ') : 'NKDA'}\n`;
-          summary += `**Medical History:** ${medicalHistory.length > 0 ? medicalHistory.join(', ') : 'None reported'}\n`;
 
           if (redFlags.length > 0) {
             summary += `\n⚠️ **Red Flags Detected:** ${redFlags.map((rf) => rf.symptom).join(', ')}\n`;
           }
-
           summary += `\n**Urgency Level:** ${urgencyLevel.toUpperCase()}`;
-
           return summary;
         },
       })),

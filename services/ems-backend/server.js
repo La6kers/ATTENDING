@@ -13,6 +13,7 @@ import aiRouter from './routes/ai.js';
 import overridesRouter from './routes/overrides.js';
 import billingRouter from './routes/billing.js';
 import emsRouter from './routes/ems.js';
+import { apiAuth } from './middleware/apiAuth.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '..', '..', '.env') });
@@ -41,15 +42,7 @@ app.use(cors(IS_PRODUCTION ? {
 
 app.use(express.json({ limit: '10mb' }));
 
-// API Routes
-app.use('/api/patients', patientsRouter);
-app.use('/api/encounters', encountersRouter);
-app.use('/api/ai', aiRouter);
-app.use('/api/overrides', overridesRouter);
-app.use('/api/billing', billingRouter);
-app.use('/api/ems', emsRouter);
-
-// Health check — Azure App Service uses this to determine container readiness
+// Health check — placed before auth middleware so probes don't need API keys
 app.get('/api/health', async (req, res) => {
   const health = {
     status: 'ok',
@@ -93,6 +86,17 @@ app.get('/health/ready', async (req, res) => {
     res.status(503).send('NOT READY');
   }
 });
+
+// API key authentication for all /api routes (health checks are above, excluded)
+app.use('/api', apiAuth);
+
+// Authenticated API Routes
+app.use('/api/patients', patientsRouter);
+app.use('/api/encounters', encountersRouter);
+app.use('/api/ai', aiRouter);
+app.use('/api/overrides', overridesRouter);
+app.use('/api/billing', billingRouter);
+app.use('/api/ems', emsRouter);
 
 // In production, serve the built frontend as static files
 if (IS_PRODUCTION) {

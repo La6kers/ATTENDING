@@ -169,6 +169,17 @@ public class EncounterRecording : BaseEntity, IAggregateRoot, IHasDomainEvents
     {
         TotalAudioSeconds += seconds;
     }
+
+    /// <summary>
+    /// Clears the audio blob container reference after the background cleanup
+    /// job has deleted the actual Azure Blob Storage container.
+    /// Audio is never retained permanently — only transcript and note are kept.
+    /// </summary>
+    public void ClearAudioBlob()
+    {
+        AudioBlobContainer = null;
+        SetModified();
+    }
 }
 
 /// <summary>

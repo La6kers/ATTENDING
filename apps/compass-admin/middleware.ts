@@ -1,13 +1,9 @@
 // =============================================================================
-// ATTENDING AI - Provider Portal Middleware
-// apps/provider-portal/middleware.ts
+// ATTENDING AI - COMPASS Admin Middleware
+// apps/compass-admin/middleware.ts
 //
-// Protects all provider-facing pages and API routes with NextAuth session
-// enforcement in ALL environments (dev bypass removed — Phase 0 hardening).
-//
-// RESPONSE BY REQUEST TYPE:
-//   Page routes  — unauthenticated → 302 redirect to /auth/signin
-//   API routes   — unauthenticated → 401 JSON { error: 'Unauthorized' }
+// Protects all admin pages and API routes with NextAuth session enforcement.
+// Pattern matches provider-portal/middleware.ts (Phase 0 hardened).
 //
 // PUBLIC PATHS (never protected):
 //   /auth/*          — sign-in, sign-out, error, callback routes
@@ -15,8 +11,6 @@
 //   /api/health      — health check for uptime monitoring
 //   /_next/*         — Next.js static assets
 //   /favicon.ico     — browser favicon
-//   /sounds/*        — clinical alert audio files
-//   /icons/*         — PWA icon assets
 // =============================================================================
 
 import { getToken } from 'next-auth/jwt';
@@ -32,7 +26,7 @@ export async function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
-  // API routes — return 401 JSON so XHR/fetch callers get a proper status code.
+  // API routes — return 401 JSON
   if (pathname.startsWith('/api/')) {
     return new NextResponse(
       JSON.stringify({ error: 'Unauthorized' }),
@@ -43,16 +37,15 @@ export async function middleware(req: NextRequest) {
     );
   }
 
-  // Page routes — redirect to sign-in.
+  // Page routes — redirect to sign-in
   const signInUrl = req.nextUrl.clone();
   signInUrl.pathname = '/auth/signin';
   signInUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
   return NextResponse.redirect(signInUrl);
 }
 
-// Route matcher: exclude all public/static paths.
 export const config = {
   matcher: [
-    '/((?!auth|api/auth|api/health|_next/static|_next/image|favicon\\.ico|sounds|icons).*)',
+    '/((?!auth|api/auth|api/health|_next/static|_next/image|favicon\\.ico).*)',
   ],
 };

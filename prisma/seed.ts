@@ -58,6 +58,23 @@ async function main() {
   console.log(`[2] Provider: ${provider.name}`);
 
   // =========================================================================
+  // 2b. DR. ISBELL — Founder/CEO physician account
+  // =========================================================================
+  const drIsbell = await prisma.user.upsert({
+    where: { email: 'scott.isbell@attending.ai' },
+    update: { organizationId: org.id },
+    create: {
+      organizationId: org.id,
+      email: 'scott.isbell@attending.ai',
+      name: 'Dr. Scott Isbell',
+      role: 'ADMIN',
+      specialty: 'Emergency Medicine',
+      department: 'Administration',
+    },
+  });
+  console.log(`[2b] Founder: ${drIsbell.name}`);
+
+  // =========================================================================
   // 3. PATIENT — arrives at the clinic with multiple chronic conditions
   // =========================================================================
   const patient = await prisma.patient.upsert({

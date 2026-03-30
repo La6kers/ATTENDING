@@ -21,6 +21,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from '@attending/shared/lib/prisma';
 import { buildNextAuthProviders } from '@attending/shared/lib/auth/ssoProviders';
 import type { SSOProviderConfig } from '@attending/shared/lib/auth/ssoProviders';
+import { hashData, verifyHash } from '@attending/shared/lib/security';
 
 // ============================================================
 // Runtime environment detection
@@ -70,52 +71,65 @@ function buildProviders() {
     return buildNextAuthProviders([b2cConfig]);
   }
 
-  // --- Development: email-only credentials (no password) ---
-  if (isDev) {
-    return [
-      CredentialsProvider({
-        id: 'dev-credentials',
-        name: 'Development Login',
-        credentials: {
-          email: { label: 'Email', type: 'email', placeholder: 'provider@attending.ai' },
-        },
-        async authorize(credentials): Promise<User | null> {
-          if (!credentials?.email) return null;
+  // --- Credentials provider (all environments without B2C) ---
+  // Phase 0 hardening: password is required in all environments.
+  // Passwords are SHA-256 hashed and stored in the user's password field.
+  // First login with no stored password: the provided password is hashed
+  // and saved for future logins (bootstrap flow).
+  return [
+    CredentialsProvider({
+      id: 'dev-credentials',
+      name: 'ATTENDING Login',
+      credentials: {
+        email: { label: 'Email', type: 'email', placeholder: 'scott.isbell@attending.ai' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials): Promise<User | null> {
+        if (!credentials?.email || !credentials?.password) return null;
 
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true,
-              isActive: true,
-              organizationId: true,
-            },
-          });
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            isActive: true,
+            organizationId: true,
+            password: true,
+          },
+        });
 
-          if (!user || !user.isActive) return null;
+        if (!user || !user.isActive) return null;
 
-          return {
-            id: user.id,
-            email: user.email ?? '',
-            name: user.name ?? '',
-            role: user.role,
-            organizationId: user.organizationId ?? '',
-          } as User & { role: string; organizationId: string };
-        },
-      }),
-    ];
-  }
+        // Verify password: PBKDF2 with salt (100,000 iterations, SHA-512)
+        if (user.password) {
+          // User has a stored password hash — verify
+          if (!verifyHash(credentials.password, user.password)) return null;
+        } else {
+          // No password stored yet — accept the provided password
+          // and store its PBKDF2 hash for future logins (first-login bootstrap).
+          try {
+            const hashedPassword = hashData(credentials.password);
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { password: hashedPassword },
+            });
+          } catch {
+            // DB write failed — still allow this login, hash will be set next time
+          }
+        }
 
-  // No provider configured and not in dev mode — fail loudly at startup
-  // so misconfigured deployments are caught immediately rather than at
-  // the first login attempt.
-  throw new Error(
-    '[ATTENDING] No authentication provider configured. ' +
-    'Set AZURE_AD_B2C_TENANT, AZURE_AD_B2C_CLIENT_ID, AZURE_AD_B2C_CLIENT_SECRET ' +
-    'for production, or set NODE_ENV=development for local dev.'
-  );
+        return {
+          id: user.id,
+          email: user.email ?? '',
+          name: user.name ?? '',
+          role: user.role,
+          organizationId: user.organizationId ?? '',
+        } as User & { role: string; organizationId: string };
+      },
+    }),
+  ];
 }
 
 // ============================================================

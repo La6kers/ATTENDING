@@ -306,7 +306,7 @@ export interface CachedClinicalData {
 const CACHE_DURATIONS: Record<string, number> = {
   symptoms: 24 * 60 * 60 * 1000, // 24 hours
   'body-parts': 7 * 24 * 60 * 60 * 1000, // 7 days
-  'red-flags': 24 * 60 * 60 * 1000, // 24 hours
+  'red-flags': 7 * 24 * 60 * 60 * 1000, // 7 days — safety-critical, never delete on expiry
   medications: 24 * 60 * 60 * 1000, // 24 hours
   conditions: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
@@ -349,11 +349,31 @@ export async function getCachedClinicalData(
   return cached.data;
 }
 
+/**
+ * Get cached clinical data with staleness metadata instead of deleting expired items.
+ * Critical for red flags: stale data is infinitely better than no data.
+ */
+export async function getCachedClinicalDataWithStaleness(
+  type: CachedClinicalData['type']
+): Promise<{ data: unknown; isStale: boolean; cachedAt: string; version: string } | null> {
+  const cached = await getItem<CachedClinicalData>(STORES.CLINICAL_DATA, type);
+
+  if (!cached) {
+    return null;
+  }
+
+  const isStale = new Date(cached.expiresAt) < new Date();
+  // Do NOT delete — return with stale flag
+  return { data: cached.data, isStale, cachedAt: cached.cachedAt, version: cached.version };
+}
+
 export async function clearExpiredCache(): Promise<void> {
   const allCached = await getAllItems<CachedClinicalData>(STORES.CLINICAL_DATA);
   const now = new Date();
   
   for (const item of allCached) {
+    // Never delete red-flags cache — stale rules are better than no rules
+    if (item.type === 'red-flags') continue;
     if (new Date(item.expiresAt) < now) {
       await deleteItem(STORES.CLINICAL_DATA, item.key);
     }

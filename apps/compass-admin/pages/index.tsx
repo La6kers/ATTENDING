@@ -191,14 +191,14 @@ export default function AdminDashboard() {
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <Link
-                  href="/clinics/new"
+                  href="/clinics"
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-compass-600 text-white rounded-lg text-sm font-medium hover:bg-compass-700 transition-colors"
                 >
                   <Building2 className="w-4 h-4" />
                   Add Clinic
                 </Link>
                 <Link
-                  href="/settings/providers/new"
+                  href="/settings/providers"
                   className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 text-teal-100 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
                 >
                   <UserPlus className="w-4 h-4" />

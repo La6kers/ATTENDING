@@ -31,5 +31,10 @@
   },
   "peerDependencies": {
     "@attending/fhir": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@attending/fhir": {
+      "optional": true
+    }
   }
 }

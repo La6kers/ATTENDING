@@ -45,64 +45,14 @@ export async function getSession(req: NextApiRequest, res: NextApiResponse) {
 }
 
 // ============================================================
-// DEV/DEMO BYPASS
+// AUTH BYPASS REMOVED — Phase 0 Security Hardening
 // ============================================================
-
-const isDev = process.env.NODE_ENV === 'development';
-const isDemo = process.env.DEMO_MODE === 'true';
-// Set NEXTAUTH_ENFORCE=true (e.g. in playwright E2E) to disable the dev
-// bypass entirely and get proper 401 responses without a running database.
-const enforceInDev = process.env.NEXTAUTH_ENFORCE === 'true';
-
-/**
- * Check if dev/demo bypass is allowed.
- * Bypass is enabled when:
- *   - In development mode (NODE_ENV=development), OR
- *   - Demo mode is enabled (DEMO_MODE=true)
- * AND:
- *   - NEXTAUTH_ENFORCE is NOT set to true
- */
-function isDevOrDemoBypassAllowed(): boolean {
-  if (enforceInDev) return false;
-  return isDev || isDemo;
-}
-
-/**
- * In dev/demo mode without a session, return a mock session using
- * the first PROVIDER user in the database.
- *
- * Returns null (gracefully) when:
- *   - Not in development AND not in demo mode
- *   - NEXTAUTH_ENFORCE=true is set
- *   - Database is unavailable (prevents 500 errors during E2E runs)
- */
-async function getDevSession(): Promise<AttendingSession | null> {
-  if (!isDevOrDemoBypassAllowed()) return null;
-  try {
-    const user = await prisma.user.findFirst({
-      where: { role: 'PROVIDER' },
-    });
-    if (!user) return null;
-
-    // Log dev session usage for audit awareness (only in demo mode)
-    if (isDemo && !isDev) {
-      console.log('[AUTH] Demo mode session created for user:', user.email);
-    }
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email ?? '',
-        name: user.name ?? '',
-        role: user.role,
-      },
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    };
-  } catch {
-    // Database unavailable — degrade gracefully to 401 instead of 500.
-    return null;
-  }
-}
+// DEMO_MODE and dev session bypass have been removed.
+// All environments now require real NextAuth authentication.
+// Use the sign-in page at /auth/signin to authenticate.
+// In development, the CredentialsProvider allows email-based
+// login against seeded database users (password required).
+// ============================================================
 
 // ============================================================
 // MIDDLEWARE: requireAuth
@@ -112,12 +62,7 @@ export function requireAuth(
   handler: (req: NextApiRequest, res: NextApiResponse, session: AttendingSession) => Promise<void>
 ) {
   return async (req: NextApiRequest, res: NextApiResponse) => {
-    let session = await getSession(req, res);
-
-    // Dev/Demo fallback: auto-authenticate as first provider
-    if (!session && isDevOrDemoBypassAllowed()) {
-      session = await getDevSession();
-    }
+    const session = await getSession(req, res);
 
     if (!session) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -134,11 +79,7 @@ export function requireAuth(
 export function requireRole(roles: string[]) {
   return (handler: (req: NextApiRequest, res: NextApiResponse, session: AttendingSession) => Promise<void>) => {
     return async (req: NextApiRequest, res: NextApiResponse) => {
-      let session = await getSession(req, res);
-
-      if (!session && isDevOrDemoBypassAllowed()) {
-        session = await getDevSession();
-      }
+      const session = await getSession(req, res);
 
       if (!session) {
         return res.status(401).json({ error: 'Unauthorized' });

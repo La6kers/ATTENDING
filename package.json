@@ -11,7 +11,9 @@
     "apps/compass-admin",
     "apps/compass-standalone",
     "apps/ems-portal",
-    "services/ems-backend"
+    "services/ems-backend",
+    "services/notification-service",
+    "services/cds-hooks"
   ],
   "prisma": {
     "schema": "prisma/schema.prisma",
@@ -83,6 +85,7 @@
     "@typescript-eslint/parser": "^8.53.0",
     "@vitejs/plugin-react": "^5.1.2",
     "concurrently": "^8.2.0",
+    "husky": "^9.0.0",
     "jsdom": "^27.4.0",
     "prisma": "^5.0.0",
     "rimraf": "^5.0.0",
@@ -100,6 +103,9 @@
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": "eslint --no-error-on-unmatched-pattern"
   },
   "overrides": {
     "react": "18.2.0",
