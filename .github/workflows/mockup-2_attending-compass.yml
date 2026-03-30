@@ -89,4 +89,4 @@ jobs:
           app-name: 'attending-compass'
           slot-name: 'Production'
           package: .
-          startup-command: 'node apps/compass-standalone/server.js'
+          startup-command: 'cd apps/compass-standalone && node server.js'
