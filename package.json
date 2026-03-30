@@ -9,6 +9,7 @@
     "apps/provider-portal",
     "apps/patient-portal",
     "apps/compass-admin",
+    "apps/compass-standalone",
     "apps/ems-portal",
     "services/ems-backend"
   ],
