@@ -71,6 +71,18 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DBCC7AEA5F274322940C4DC6E34C0065 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_7D6F23FEE8394D3AA6B27C04B79E7FEB }}
 
+      - name: Set Azure App Settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'attending-compass'
+          app-settings-json: |
+            [
+              { "name": "PORT", "value": "8080" },
+              { "name": "HOSTNAME", "value": "0.0.0.0" },
+              { "name": "NEXT_TELEMETRY_DISABLED", "value": "1" },
+              { "name": "NODE_ENV", "value": "production" }
+            ]
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
