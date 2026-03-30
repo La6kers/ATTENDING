@@ -37,44 +37,41 @@ jobs:
 
       - name: Prepare standalone output for deployment
         run: |
-          # The standalone output for a monorepo app lives at:
-          # .next/standalone/apps/compass-standalone/  (server.js + .next/ + pages/)
-          # .next/standalone/node_modules/             (minimal node_modules)
-          #
-          # We flatten this so server.js is at the deploy root with .next next to it
+          # Keep the monorepo structure — Next.js hardcodes relativeAppDir
           STANDALONE=apps/compass-standalone/.next/standalone
-          APP_DIR=$STANDALONE/apps/compass-standalone
 
-          mkdir -p deploy
+          # The standalone output already has the correct structure:
+          # standalone/apps/compass-standalone/server.js
+          # standalone/apps/compass-standalone/.next/
+          # standalone/node_modules/
 
-          # Copy server.js and .next build output
-          cp $APP_DIR/server.js deploy/
-          cp $APP_DIR/package.json deploy/
-          cp -r $APP_DIR/.next deploy/.next
-          cp -r $APP_DIR/pages deploy/pages 2>/dev/null || true
-
-          # Copy static assets into .next/static
-          cp -r apps/compass-standalone/.next/static deploy/.next/static
-
-          # Copy node_modules from standalone root
-          cp -r $STANDALONE/node_modules deploy/node_modules
+          # Copy static assets into the nested .next
+          mkdir -p $STANDALONE/apps/compass-standalone/.next/static
+          cp -r apps/compass-standalone/.next/static $STANDALONE/apps/compass-standalone/.next/
 
           # Copy public folder
           if [ -d "apps/compass-standalone/public" ]; then
-            cp -r apps/compass-standalone/public deploy/public
+            cp -r apps/compass-standalone/public $STANDALONE/apps/compass-standalone/public
           fi
 
-          # Debug: verify structure
+          # Create a root startup script that enters the app dir
+          cat > $STANDALONE/startup.sh << 'SCRIPT'
+          #!/bin/sh
+          cd /home/site/wwwroot/apps/compass-standalone
+          node server.js
+          SCRIPT
+          chmod +x $STANDALONE/startup.sh
+
           echo "=== Deploy structure ==="
-          ls -la deploy/
-          echo "=== .next contents ==="
-          ls deploy/.next/
+          ls -la $STANDALONE/
+          ls -la $STANDALONE/apps/compass-standalone/
+          ls $STANDALONE/apps/compass-standalone/.next/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: compass-standalone
-          path: ./deploy
+          path: apps/compass-standalone/.next/standalone
 
   deploy:
     runs-on: ubuntu-latest
@@ -114,4 +111,4 @@ jobs:
           app-name: 'attending-compass'
           slot-name: 'Production'
           package: .
-          startup-command: 'node server.js'
+          startup-command: 'cd /home/site/wwwroot/apps/compass-standalone && node server.js'
