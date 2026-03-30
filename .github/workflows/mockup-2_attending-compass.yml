@@ -37,13 +37,38 @@ jobs:
 
       - name: Prepare standalone output for deployment
         run: |
-          # Next.js standalone output includes server.js + minimal node_modules
-          cp -r apps/compass-standalone/.next/standalone ./deploy
-          cp -r apps/compass-standalone/.next/static ./deploy/apps/compass-standalone/.next/static
-          # Copy public folder if it exists
+          # The standalone output for a monorepo app lives at:
+          # .next/standalone/apps/compass-standalone/  (server.js + .next/ + pages/)
+          # .next/standalone/node_modules/             (minimal node_modules)
+          #
+          # We flatten this so server.js is at the deploy root with .next next to it
+          STANDALONE=apps/compass-standalone/.next/standalone
+          APP_DIR=$STANDALONE/apps/compass-standalone
+
+          mkdir -p deploy
+
+          # Copy server.js and .next build output
+          cp $APP_DIR/server.js deploy/
+          cp $APP_DIR/package.json deploy/
+          cp -r $APP_DIR/.next deploy/.next
+          cp -r $APP_DIR/pages deploy/pages 2>/dev/null || true
+
+          # Copy static assets into .next/static
+          cp -r apps/compass-standalone/.next/static deploy/.next/static
+
+          # Copy node_modules from standalone root
+          cp -r $STANDALONE/node_modules deploy/node_modules
+
+          # Copy public folder
           if [ -d "apps/compass-standalone/public" ]; then
-            cp -r apps/compass-standalone/public ./deploy/apps/compass-standalone/public
+            cp -r apps/compass-standalone/public deploy/public
           fi
+
+          # Debug: verify structure
+          echo "=== Deploy structure ==="
+          ls -la deploy/
+          echo "=== .next contents ==="
+          ls deploy/.next/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -89,4 +114,4 @@ jobs:
           app-name: 'attending-compass'
           slot-name: 'Production'
           package: .
-          startup-command: 'cd apps/compass-standalone && node server.js'
+          startup-command: 'node server.js'
