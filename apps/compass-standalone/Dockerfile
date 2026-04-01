@@ -22,9 +22,8 @@ RUN npm ci --ignore-scripts --workspace=apps/compass-standalone --workspace=apps
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# npm workspaces hoists all deps to root node_modules
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/shared/node_modules ./apps/shared/node_modules 2>/dev/null || true
-COPY --from=deps /app/apps/compass-standalone/node_modules ./apps/compass-standalone/node_modules 2>/dev/null || true
 
 COPY package.json turbo.json tsconfig.json ./
 COPY apps/shared ./apps/shared
@@ -47,7 +46,7 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder --chown=nextjs:nodejs /app/apps/compass-standalone/public ./apps/compass-standalone/public 2>/dev/null || true
+# Copy standalone output + static assets
 COPY --from=builder --chown=nextjs:nodejs /app/apps/compass-standalone/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/compass-standalone/.next/static ./apps/compass-standalone/.next/static
 
