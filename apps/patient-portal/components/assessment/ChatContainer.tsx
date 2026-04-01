@@ -34,6 +34,7 @@ export interface ChatContainerProps {
   patientName?: string;
   disabled?: boolean;
   showVoiceInput?: boolean;
+  multiSelect?: boolean;
 }
 
 // ============================================================================
@@ -143,8 +144,16 @@ const InputArea: React.FC<{
   showVoice?: boolean;
   isListening?: boolean;
   onVoiceToggle?: () => void;
-}> = ({ value, onChange, onSend, disabled, showVoice, isListening, onVoiceToggle }) => {
+  autoFocus?: boolean;
+}> = ({ value, onChange, onSend, disabled, showVoice, isListening, onVoiceToggle, autoFocus }) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus text input when no quick replies are available
+  useEffect(() => {
+    if (autoFocus && !disabled) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [autoFocus, disabled]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -166,7 +175,7 @@ const InputArea: React.FC<{
   };
 
   return (
-    <div className="px-4 py-3 bg-[#0a3d4e] border-t border-white/10">
+    <div className="px-4 py-3 bg-[#0a3d4e]">
       <div className="flex items-end gap-2">
         {/* Voice input button */}
         {showVoice && (
@@ -242,6 +251,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   patientName,
   disabled = false,
   showVoiceInput = false,
+  multiSelect = false,
 }) => {
   const [isListening, setIsListening] = useState(false);
 
@@ -359,17 +369,21 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         showVoice={showVoiceInput}
         isListening={isListening}
         onVoiceToggle={toggleVoice}
+        autoFocus={quickReplies.length === 0}
       />
 
       {/* Quick Reply Buttons — below the input area */}
       {quickReplies.length > 0 && !isTyping && (
-        <div className="px-4 py-2 bg-white border-t border-gray-100">
-          <p className="text-[10px] text-gray-400 mb-1.5 text-center">or tap a quick reply</p>
+        <div className="px-4 py-2 bg-[#0a3d4e]/80 border-t border-white/5">
+          <p className="text-[10px] text-white/40 mb-1.5 text-center">
+            {multiSelect ? 'select all that apply, then tap Done' : 'or tap a quick reply'}
+          </p>
           <QuickReplies
             replies={quickReplies}
             onSelect={handleQuickReply}
             disabled={disabled}
             columns={quickReplies.length <= 2 ? 2 : quickReplies.length <= 4 ? 2 : 3}
+            multiSelect={multiSelect}
           />
         </div>
       )}

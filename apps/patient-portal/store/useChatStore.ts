@@ -130,15 +130,41 @@ const PHASE_CONFIG: Record<DetailedAssessmentPhase, PhaseConfig> = {
     nextPhase: 'hpiAggravating',
   },
   hpiAggravating: {
-    question: 'What makes it worse? (movement, eating, breathing, lying down, etc.)',
+    question: 'What makes it worse? Select all that apply, or type your own.',
+    quickReplies: [
+      { id: 'agg_movement', text: 'Movement', value: 'Movement', multiSelect: true },
+      { id: 'agg_eating', text: 'Eating', value: 'Eating', multiSelect: true },
+      { id: 'agg_breathing', text: 'Deep breathing', value: 'Deep breathing', multiSelect: true },
+      { id: 'agg_lying', text: 'Lying down', value: 'Lying down', multiSelect: true },
+      { id: 'agg_exertion', text: 'Exertion', value: 'Physical exertion', multiSelect: true },
+      { id: 'agg_stress', text: 'Stress', value: 'Stress', multiSelect: true },
+      { id: 'agg_none', text: 'Nothing specific', value: 'Nothing specific' },
+    ],
     nextPhase: 'hpiRelieving',
   },
   hpiRelieving: {
-    question: 'What makes it better? (rest, medication, position change, etc.)',
+    question: 'What makes it better? Select all that apply, or type your own.',
+    quickReplies: [
+      { id: 'rel_rest', text: 'Rest', value: 'Rest', multiSelect: true },
+      { id: 'rel_meds', text: 'Medication', value: 'Medication', multiSelect: true },
+      { id: 'rel_ice', text: 'Ice/Heat', value: 'Ice or heat', multiSelect: true },
+      { id: 'rel_position', text: 'Position change', value: 'Position change', multiSelect: true },
+      { id: 'rel_food', text: 'Eating/Drinking', value: 'Eating or drinking', multiSelect: true },
+      { id: 'rel_none', text: 'Nothing helps', value: 'Nothing helps' },
+    ],
     nextPhase: 'hpiAssociated',
   },
   hpiAssociated: {
-    question: 'Are you experiencing any other symptoms along with this? (nausea, fever, dizziness, etc.)',
+    question: 'Are you experiencing any other symptoms? Select all that apply, or type your own.',
+    quickReplies: [
+      { id: 'assoc_nausea', text: 'Nausea', value: 'Nausea', multiSelect: true },
+      { id: 'assoc_fever', text: 'Fever', value: 'Fever', multiSelect: true },
+      { id: 'assoc_dizzy', text: 'Dizziness', value: 'Dizziness', multiSelect: true },
+      { id: 'assoc_fatigue', text: 'Fatigue', value: 'Fatigue', multiSelect: true },
+      { id: 'assoc_headache', text: 'Headache', value: 'Headache', multiSelect: true },
+      { id: 'assoc_sob', text: 'Shortness of breath', value: 'Shortness of breath', multiSelect: true },
+      { id: 'assoc_none', text: 'None of these', value: 'No associated symptoms' },
+    ],
     nextPhase: 'medications',
   },
   reviewOfSystems: {
@@ -177,6 +203,14 @@ const PHASE_CONFIG: Record<DetailedAssessmentPhase, PhaseConfig> = {
   riskAssessment: {
     question: 'Is there anything else you think is important for your healthcare provider to know?',
     quickReplies: [{ id: 'nothing', text: 'Nothing else', value: 'No additional information' }],
+    nextPhase: 'askingMultipleComplaints',
+  },
+  askingMultipleComplaints: {
+    question: 'Do you have any other symptoms or concerns you\'d like to discuss with your provider?',
+    quickReplies: [
+      { id: 'yes_another', text: 'Yes, I have another concern', value: 'yes_another_concern' },
+      { id: 'no_done', text: 'No, that covers everything', value: 'no_all_covered' },
+    ],
     nextPhase: 'summary',
   },
   summary: {
@@ -225,7 +259,7 @@ interface ChatState {
   // UI State
   isAIProcessing: boolean;
   showEmergencyModal: boolean;
-  hpiFormat: 'bulleted' | 'oldcarts';
+  hpiFormat: 'narrative' | 'bulleted' | 'oldcarts';
   error: string | null;
 
   // Actions
@@ -233,7 +267,8 @@ interface ChatState {
   sendMessage: (content: string) => Promise<void>;
   handleQuickReply: (reply: QuickReply) => Promise<void>;
   setEmergencyModal: (show: boolean) => void;
-  setHpiFormat: (format: 'bulleted' | 'oldcarts') => void;
+  setHpiFormat: (format: 'narrative' | 'bulleted' | 'oldcarts') => void;
+  getNarrativeSummary: () => string;
   handleEmergency: () => void;
   submitAssessment: () => Promise<void>;
   resetSession: () => void;
@@ -262,7 +297,7 @@ export const useChatStore = create<ChatState>()(
         redFlags: [],
         isAIProcessing: false,
         showEmergencyModal: false,
-        hpiFormat: 'bulleted' as 'bulleted' | 'oldcarts',
+        hpiFormat: 'narrative' as 'narrative' | 'bulleted' | 'oldcarts',
         error: null,
 
         // =======================================================================
@@ -324,7 +359,12 @@ export const useChatStore = create<ChatState>()(
                 state.assessmentData.dateOfBirth = content;
                 break;
               case 'chiefComplaint':
-                state.assessmentData.chiefComplaint = content;
+                // Append if looping back for multiple complaints
+                if (state.assessmentData.chiefComplaint) {
+                  state.assessmentData.chiefComplaint += '; Also: ' + content;
+                } else {
+                  state.assessmentData.chiefComplaint = content;
+                }
                 break;
               case 'hpiOnset':
                 state.assessmentData.hpi.onset = content;
@@ -384,7 +424,14 @@ export const useChatStore = create<ChatState>()(
 
           // Move to next phase and add assistant response
           const phaseConfig = PHASE_CONFIG[currentPhase];
-          const nextPhase = phaseConfig.nextPhase;
+          let nextPhase = phaseConfig.nextPhase;
+
+          // Conditional branching: multiple complaints loop
+          if (currentPhase === 'askingMultipleComplaints') {
+            const isYes = content.toLowerCase().includes('yes') || content.includes('yes_another_concern');
+            nextPhase = isYes ? 'chiefComplaint' : 'summary';
+          }
+
           const nextConfig = PHASE_CONFIG[nextPhase];
 
           set((state) => {
@@ -408,6 +455,7 @@ export const useChatStore = create<ChatState>()(
                 createMessage('assistant', nextConfig.question, {
                   phase: nextPhase,
                   quickReplies: nextConfig.quickReplies,
+                  multiSelect: nextConfig.quickReplies?.some(r => r.multiSelect) ?? false,
                 })
               );
             }
@@ -429,7 +477,7 @@ export const useChatStore = create<ChatState>()(
         // Emergency Modal
         // =======================================================================
         setEmergencyModal: (show: boolean) => set({ showEmergencyModal: show }),
-        setHpiFormat: (format: 'bulleted' | 'oldcarts') => set({ hpiFormat: format }),
+        setHpiFormat: (format: 'narrative' | 'bulleted' | 'oldcarts') => set({ hpiFormat: format }),
 
         handleEmergency: () => {
           set((state) => {
@@ -535,9 +583,88 @@ export const useChatStore = create<ChatState>()(
         // =======================================================================
         // Get Assessment Summary
         // =======================================================================
+        // Standalone narrative getter (always returns paragraph form)
+        getNarrativeSummary: () => {
+          const { assessmentData, redFlags, urgencyLevel } = get();
+          const { chiefComplaint, patientName, hpi, medications, allergies, medicalHistory, socialHistory } = assessmentData;
+          const parts: string[] = [];
+
+          // Opening with chief complaint
+          const name = patientName || 'Patient';
+          if (chiefComplaint) {
+            parts.push(`${name} presents with ${chiefComplaint.toLowerCase().replace(/^i have |^i've been having |^i'm having /i, '')}`);
+          }
+
+          // Onset and duration
+          if (hpi.onset) parts.push(`that ${hpi.onset.toLowerCase().startsWith('started') ? hpi.onset.toLowerCase() : 'started ' + hpi.onset.toLowerCase()}`);
+          if (hpi.duration) parts.push(`lasting ${hpi.duration.toLowerCase()}`);
+
+          // Location
+          if (hpi.location) parts.push(`located ${hpi.location.toLowerCase()}`);
+
+          // Character and severity
+          if (hpi.character) parts.push(`described as ${hpi.character.toLowerCase()}`);
+          if (hpi.severity) parts.push(`rated ${hpi.severity}/10 in severity`);
+
+          let narrative = parts.join(', ') + '.';
+
+          // Timing
+          if (hpi.timing) narrative += ` The symptoms are ${hpi.timing.toLowerCase()}.`;
+
+          // Aggravating and relieving
+          if (hpi.aggravating?.length && hpi.aggravating[0]) {
+            narrative += ` Pain is aggravated by ${hpi.aggravating.join(', ').toLowerCase()}.`;
+          }
+          if (hpi.relieving?.length && hpi.relieving[0]) {
+            narrative += ` Relieved by ${hpi.relieving.join(', ').toLowerCase()}.`;
+          }
+
+          // Associated symptoms
+          if (hpi.associated?.length && hpi.associated[0]) {
+            narrative += ` Associated symptoms include ${hpi.associated.join(', ').toLowerCase()}.`;
+          }
+
+          // Medical history block
+          const historyParts: string[] = [];
+          if (medications.length > 0 && !medications[0].toLowerCase().includes('no')) {
+            historyParts.push(`Current medications include ${medications.join(', ')}`);
+          } else {
+            historyParts.push('No current medications reported');
+          }
+          if (allergies.length > 0 && allergies[0] !== 'NKDA') {
+            historyParts.push(`allergies to ${allergies.join(', ')}`);
+          } else {
+            historyParts.push('no known drug allergies');
+          }
+          narrative += ' ' + historyParts.join('; ') + '.';
+
+          if (medicalHistory.length > 0 && !medicalHistory[0].toLowerCase().includes('no')) {
+            narrative += ` Past medical history includes ${medicalHistory.join(', ')}.`;
+          }
+          if (socialHistory) {
+            const smoking = typeof socialHistory === 'string' ? socialHistory : (socialHistory as any).smoking;
+            if (smoking && !smoking.toLowerCase().includes('no')) {
+              narrative += ` Social history: ${smoking}.`;
+            }
+          }
+
+          // Red flags
+          if (redFlags.length > 0) {
+            narrative += `\n\nRed Flags Detected: ${redFlags.map(rf => rf.symptom).join(', ')}.`;
+          }
+          narrative += `\n\nUrgency Level: ${urgencyLevel.toUpperCase()}`;
+
+          return narrative;
+        },
+
         getAssessmentSummary: () => {
           const { assessmentData, redFlags, urgencyLevel, hpiFormat } = get();
           const { chiefComplaint, hpi, medications, allergies, medicalHistory, socialHistory } = assessmentData;
+
+          // Narrative paragraph format (default)
+          if (hpiFormat === 'narrative') {
+            return get().getNarrativeSummary();
+          }
 
           if (hpiFormat === 'oldcarts') {
             // OLDCARTS structured comprehensive format

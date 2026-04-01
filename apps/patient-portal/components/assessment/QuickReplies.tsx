@@ -8,8 +8,8 @@
 // UPDATED: Uses unified QuickReply type from @attending/shared/types
 // =============================================================================
 
-import React from 'react';
-import { ArrowRight, Check, X, Clock, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Check, X, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 // Import unified types from shared
 import type { QuickReply } from '../../../shared/types/chat.types';
@@ -28,6 +28,7 @@ export interface QuickRepliesProps {
   columns?: 1 | 2 | 3;
   size?: 'sm' | 'md' | 'lg';
   showIcons?: boolean;
+  multiSelect?: boolean;
 }
 
 // ============================================================================
@@ -162,7 +163,15 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
   columns = 2,
   size = 'md',
   showIcons = true,
+  multiSelect = false,
 }) => {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Reset selections when replies change (phase advanced)
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [replies]);
+
   // Size classes
   const sizeClasses = {
     sm: 'px-3 py-2 text-sm',
@@ -171,7 +180,10 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
   };
 
   // Variant classes
-  const getVariantClasses = (variant?: string) => {
+  const getVariantClasses = (variant?: string, isSelected?: boolean) => {
+    if (isSelected) {
+      return 'bg-teal-500/30 border-teal-400 text-white ring-2 ring-teal-400/50';
+    }
     switch (variant) {
       case 'primary':
         return 'bg-teal-100 border-teal-300 text-teal-700 hover:bg-teal-200 hover:border-teal-400';
@@ -193,27 +205,67 @@ export const QuickReplies: React.FC<QuickRepliesProps> = ({
     3: 'grid-cols-3',
   };
 
+  const handleClick = (reply: QuickReply) => {
+    if (multiSelect && reply.multiSelect) {
+      // Toggle selection
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        if (next.has(reply.id)) {
+          next.delete(reply.id);
+        } else {
+          next.add(reply.id);
+        }
+        return next;
+      });
+    } else {
+      // Immediate single-select (or non-multiSelect option like "None")
+      onSelect(reply);
+    }
+  };
+
+  const handleDone = () => {
+    const selectedReplies = replies.filter(r => selectedIds.has(r.id));
+    const combinedValue = selectedReplies.map(r => r.value || r.text).join(', ');
+    onSelect({ id: 'multi_done', text: combinedValue, value: combinedValue });
+    setSelectedIds(new Set());
+  };
+
   return (
-    <div className={`grid ${gridClasses[columns]} gap-2`}>
-      {replies.map((reply) => (
+    <div>
+      <div className={`grid ${gridClasses[columns]} gap-2`}>
+        {replies.map((reply) => {
+          const isSelected = selectedIds.has(reply.id);
+          return (
+            <button
+              key={reply.id}
+              onClick={() => handleClick(reply)}
+              disabled={disabled}
+              className={`
+                ${sizeClasses[size]}
+                ${getVariantClasses(reply.variant, isSelected)}
+                rounded-xl border-2 font-medium
+                transition-all duration-200
+                flex items-center justify-center gap-2
+                disabled:opacity-50 disabled:cursor-not-allowed
+                hover:shadow-md active:scale-[0.98]
+              `}
+            >
+              {isSelected && <CheckCircle2 className="w-4 h-4 text-teal-300" />}
+              {!isSelected && showIcons && reply.icon && getIcon(reply.icon)}
+              <span>{reply.text}</span>
+            </button>
+          );
+        })}
+      </div>
+      {/* Done button for multi-select */}
+      {multiSelect && selectedIds.size > 0 && (
         <button
-          key={reply.id}
-          onClick={() => onSelect(reply)}
-          disabled={disabled}
-          className={`
-            ${sizeClasses[size]}
-            ${getVariantClasses(reply.variant)}
-            rounded-xl border-2 font-medium
-            transition-all duration-200
-            flex items-center justify-center gap-2
-            disabled:opacity-50 disabled:cursor-not-allowed
-            hover:shadow-md active:scale-[0.98]
-          `}
+          onClick={handleDone}
+          className="w-full mt-2 px-4 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-semibold transition-all hover:shadow-lg active:scale-[0.98]"
         >
-          {showIcons && reply.icon && getIcon(reply.icon)}
-          <span>{reply.text}</span>
+          Done ({selectedIds.size} selected)
         </button>
-      ))}
+      )}
     </div>
   );
 };

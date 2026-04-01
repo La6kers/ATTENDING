@@ -13,13 +13,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { AlertTriangle, CheckCircle, Clock, WifiOff, Stethoscope, ArrowLeft, Home, List, FileText } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, WifiOff, Stethoscope, ArrowLeft, Home, List, FileText, AlignLeft } from 'lucide-react';
 
 import { useChatStore } from '../../store/useChatStore';
 import { ChatContainer } from '../../components/assessment/ChatContainer';
 import { EmergencyModal } from '../../components/assessment/EmergencyModal';
+import { AssessmentResultView } from '../../components/assessment/AssessmentResultView';
 import type { QuickReply } from '../../components/assessment/QuickReplies';
 import { evaluateTextForRedFlags } from '@attending/shared/lib/clinical-ai/redFlagTextEvaluator';
+import { generateDifferentialDiagnosis } from '../../lib/differentialDiagnosis';
 
 // ============================================================
 // Submission Success
@@ -122,6 +124,8 @@ export default function CompassChatPage() {
     redFlags,
     hpiFormat,
     setHpiFormat,
+    getNarrativeSummary,
+    getAssessmentSummary,
   } = useChatStore();
 
   const [inputValue, setInputValue] = useState('');
@@ -148,6 +152,7 @@ export default function CompassChatPage() {
   const lastAssistantMessage = [...messages].reverse().find((m) => m.role === 'assistant');
   const quickReplies: QuickReply[] =
     (lastAssistantMessage?.metadata?.quickReplies as QuickReply[]) ?? [];
+  const isMultiSelect = lastAssistantMessage?.metadata?.multiSelect ?? false;
 
   const handleSend = useCallback(
     async (text: string) => {
@@ -213,12 +218,24 @@ export default function CompassChatPage() {
     initializeSession();
   }, [resetSession, initializeSession]);
 
-  // Success screen
-  if (currentPhase === 'complete' && submissionResult) {
+  // Result view — show after assessment is complete (summary phase or submitted)
+  if (currentPhase === 'summary' || currentPhase === 'complete' || (currentPhase === 'providerHandoff')) {
+    const narrative = getNarrativeSummary();
+    const dxList = generateDifferentialDiagnosis(
+      assessmentData.chiefComplaint || '',
+      assessmentData.hpi,
+      redFlags,
+    );
     return (
-      <SubmissionSuccess
-        queuePosition={submissionResult.queuePosition}
-        triageLevel={submissionResult.triageLevel}
+      <AssessmentResultView
+        patientName={assessmentData.patientName || undefined}
+        summary={narrative}
+        differentialDiagnosis={dxList}
+        redFlags={redFlags}
+        urgencyLevel={urgencyLevel}
+        isSubmitted={currentPhase === 'complete' || !!submissionResult}
+        isSubmitting={isSubmitting}
+        onSubmit={handleSubmitAssessment}
         onNewAssessment={handleNewAssessment}
         onGoHome={() => router.push('/home')}
       />
@@ -251,6 +268,16 @@ export default function CompassChatPage() {
 
             {/* HPI Format Toggle */}
             <div className="flex items-center bg-white/15 rounded-lg p-0.5">
+              <button
+                onClick={() => setHpiFormat('narrative')}
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  hpiFormat === 'narrative' ? 'bg-white text-attending-deep-navy' : 'text-white/80 hover:text-white'
+                }`}
+                title="Narrative paragraph view"
+              >
+                <AlignLeft className="w-3.5 h-3.5" />
+                Narrative
+              </button>
               <button
                 onClick={() => setHpiFormat('bulleted')}
                 className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
@@ -329,6 +356,7 @@ export default function CompassChatPage() {
               patientName={assessmentData.patientName || undefined}
               disabled={currentPhase === 'complete' || isSubmitting}
               showVoiceInput={true}
+              multiSelect={isMultiSelect}
             />
           ) : (
             <div className="h-full flex items-center justify-center">

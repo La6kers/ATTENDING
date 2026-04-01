@@ -48,6 +48,7 @@ export type DetailedAssessmentPhase =
   | 'socialHistory'
   | 'familyHistory'
   | 'riskAssessment'   // Used by XState machine
+  | 'askingMultipleComplaints' // Loop for additional complaints
   // Summary and completion
   | 'summary'
   | 'providerHandoff'  // Used by XState machine
@@ -91,6 +92,7 @@ export const PHASE_CATEGORY_MAP: Record<DetailedAssessmentPhase, HighLevelAssess
   socialHistory: 'medical-history',
   familyHistory: 'medical-history',
   riskAssessment: 'risk-stratification',
+  askingMultipleComplaints: 'risk-stratification',
   summary: 'clinical-summary',
   providerHandoff: 'clinical-summary',
   emergency: 'clinical-summary',
@@ -123,6 +125,7 @@ export const PHASE_PROGRESS: Record<DetailedAssessmentPhase, number> = {
   socialHistory: 75,
   familyHistory: 80,
   riskAssessment: 85,
+  askingMultipleComplaints: 88,
   summary: 90,
   providerHandoff: 95,
   emergency: 100,
@@ -195,6 +198,7 @@ export interface QuickReply {
   icon?: 'check' | 'x' | 'clock' | 'arrow' | 'alert';
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
   category?: string;
+  multiSelect?: boolean;
 }
 
 // =============================================================================
@@ -213,6 +217,7 @@ export type MessageRole = 'user' | 'assistant' | 'system';
 export interface MessageMetadata {
   phase?: DetailedAssessmentPhase;
   quickReplies?: QuickReply[];
+  multiSelect?: boolean;
   isRedFlag?: boolean;
   isEmergency?: boolean;
   urgencyTrigger?: boolean;
