@@ -28,6 +28,7 @@ export interface ChatContainerProps {
   stagedImage?: { dataUrl: string } | null;
   onRemoveStagedImage?: () => void;
   onSendImage?: (text?: string) => void;
+  multiSelect?: boolean;
 }
 
 // ============================================================
@@ -95,8 +96,16 @@ const InputArea: React.FC<{
   onPhotoClick?: () => void;
   stagedImage?: { dataUrl: string } | null;
   onRemoveStagedImage?: () => void;
-}> = ({ value, onChange, onSend, disabled, isListening, onVoiceToggle, onPhotoClick, stagedImage, onRemoveStagedImage }) => {
+  autoFocus?: boolean;
+}> = ({ value, onChange, onSend, disabled, isListening, onVoiceToggle, onPhotoClick, stagedImage, onRemoveStagedImage, autoFocus }) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus text input when no quick replies are available
+  useEffect(() => {
+    if (autoFocus && !disabled) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [autoFocus, disabled]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -116,7 +125,7 @@ const InputArea: React.FC<{
   const hasContent = value.trim() || stagedImage;
 
   return (
-    <div className="px-4 py-3 bg-[#0A2D3D] border-t border-white/10">
+    <div className="px-4 py-3 bg-[#0A2D3D]">
       {/* Staged image preview */}
       {stagedImage && (
         <div className="mb-2">
@@ -194,6 +203,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   stagedImage,
   onRemoveStagedImage,
   onSendImage,
+  multiSelect = false,
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
@@ -299,13 +309,16 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         onPhotoClick={onPhotoClick}
         stagedImage={stagedImage}
         onRemoveStagedImage={onRemoveStagedImage}
+        autoFocus={quickReplies.length === 0}
       />
 
       {/* Quick Replies */}
       {quickReplies.length > 0 && !isTyping && (
-        <div className="px-4 py-2 bg-[#0A2D3D] border-t border-white/5">
-          <p className="text-[10px] text-white/30 mb-1.5 text-center">or tap a quick reply</p>
-          <QuickReplies replies={quickReplies} onSelect={handleQuickReply} disabled={disabled} />
+        <div className="px-4 py-2 bg-[#0A2D3D]/80 border-t border-white/5">
+          <p className="text-[10px] text-white/30 mb-1.5 text-center">
+            {multiSelect ? 'select all that apply, then tap Done' : 'or tap a quick reply'}
+          </p>
+          <QuickReplies replies={quickReplies} onSelect={handleQuickReply} disabled={disabled} multiSelect={multiSelect} />
         </div>
       )}
     </div>

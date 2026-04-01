@@ -64,8 +64,10 @@ export type CompassPhase =
   | 'hpiSeverity'
   | 'hpiTiming'
   | 'hpiContext'
-  | 'hpiModifying'
+  | 'hpiAggravating'
+  | 'hpiRelieving'
   | 'hpiAssociated'
+  | 'askingMultipleComplaints'
   | 'generating'
   | 'results'
   | 'emergency';
@@ -73,8 +75,8 @@ export type CompassPhase =
 const COMPASS_PHASES: CompassPhase[] = [
   'welcome', 'demographics', 'chiefComplaint',
   'hpiOnset', 'hpiLocation', 'hpiDuration', 'hpiCharacter',
-  'hpiSeverity', 'hpiTiming', 'hpiContext', 'hpiModifying', 'hpiAssociated',
-  'generating', 'results',
+  'hpiSeverity', 'hpiTiming', 'hpiContext', 'hpiAggravating', 'hpiRelieving', 'hpiAssociated',
+  'askingMultipleComplaints', 'generating', 'results',
 ];
 
 export function getCompassProgress(phase: CompassPhase): number {
@@ -231,20 +233,51 @@ const PHASE_CONFIG: Record<CompassPhase, PhaseConfig> = {
   },
   hpiContext: {
     question: 'What were you doing when this started? Any triggering events or activities?',
-    nextPhase: 'hpiModifying',
+    nextPhase: 'hpiAggravating',
   },
-  hpiModifying: {
-    question: 'What makes it worse? What makes it better? (movement, rest, medications, position changes, etc.)',
+  hpiAggravating: {
+    question: 'What makes it worse? Select all that apply, or type your own.',
+    quickReplies: [
+      { id: 'agg_movement', text: 'Movement', value: 'Movement', multiSelect: true },
+      { id: 'agg_eating', text: 'Eating', value: 'Eating', multiSelect: true },
+      { id: 'agg_breathing', text: 'Deep breathing', value: 'Deep breathing', multiSelect: true },
+      { id: 'agg_lying', text: 'Lying down', value: 'Lying down', multiSelect: true },
+      { id: 'agg_exertion', text: 'Exertion', value: 'Physical exertion', multiSelect: true },
+      { id: 'agg_stress', text: 'Stress', value: 'Stress', multiSelect: true },
+      { id: 'agg_none', text: 'Nothing specific', value: 'Nothing specific' },
+    ],
+    nextPhase: 'hpiRelieving',
+  },
+  hpiRelieving: {
+    question: 'What makes it better? Select all that apply, or type your own.',
+    quickReplies: [
+      { id: 'rel_rest', text: 'Rest', value: 'Rest', multiSelect: true },
+      { id: 'rel_meds', text: 'Medication', value: 'Medication', multiSelect: true },
+      { id: 'rel_ice', text: 'Ice/Heat', value: 'Ice or heat', multiSelect: true },
+      { id: 'rel_position', text: 'Position change', value: 'Position change', multiSelect: true },
+      { id: 'rel_food', text: 'Eating/Drinking', value: 'Eating or drinking', multiSelect: true },
+      { id: 'rel_none', text: 'Nothing helps', value: 'Nothing helps' },
+    ],
     nextPhase: 'hpiAssociated',
   },
   hpiAssociated: {
-    question: 'Are you experiencing any other symptoms along with this? (nausea, fever, dizziness, weakness, etc.)',
+    question: 'Are you experiencing any other symptoms? Select all that apply, or type your own.',
     quickReplies: [
-      { id: 'fever', text: 'Fever/Chills', value: 'fever' },
-      { id: 'nausea', text: 'Nausea', value: 'nausea' },
-      { id: 'dizziness', text: 'Dizziness', value: 'dizziness' },
-      { id: 'fatigue', text: 'Fatigue', value: 'fatigue' },
-      { id: 'none', text: 'None', value: 'No associated symptoms' },
+      { id: 'assoc_fever', text: 'Fever/Chills', value: 'Fever', multiSelect: true },
+      { id: 'assoc_nausea', text: 'Nausea', value: 'Nausea', multiSelect: true },
+      { id: 'assoc_dizzy', text: 'Dizziness', value: 'Dizziness', multiSelect: true },
+      { id: 'assoc_fatigue', text: 'Fatigue', value: 'Fatigue', multiSelect: true },
+      { id: 'assoc_headache', text: 'Headache', value: 'Headache', multiSelect: true },
+      { id: 'assoc_sob', text: 'Shortness of breath', value: 'Shortness of breath', multiSelect: true },
+      { id: 'assoc_none', text: 'None of these', value: 'No associated symptoms' },
+    ],
+    nextPhase: 'askingMultipleComplaints',
+  },
+  askingMultipleComplaints: {
+    question: 'Do you have any other symptoms or concerns you\'d like to discuss with your provider?',
+    quickReplies: [
+      { id: 'yes_another', text: 'Yes, I have another concern', value: 'yes_another_concern' },
+      { id: 'no_done', text: 'No, that covers everything', value: 'no_all_covered' },
     ],
     nextPhase: 'generating',
   },
@@ -399,7 +432,12 @@ export const useCompassStore = create<CompassState>()(
               state.assessmentData.dateOfBirth = content;
               break;
             case 'chiefComplaint':
-              state.assessmentData.chiefComplaint = content;
+              // Append if looping back for multiple complaints
+              if (state.assessmentData.chiefComplaint) {
+                state.assessmentData.chiefComplaint += '; Also: ' + content;
+              } else {
+                state.assessmentData.chiefComplaint = content;
+              }
               break;
             case 'hpiOnset':
               state.assessmentData.hpi.onset = content;
@@ -425,12 +463,12 @@ export const useCompassStore = create<CompassState>()(
               break;
             case 'hpiContext':
               break;
-            case 'hpiModifying': {
-              const parts = content.split(/worse|better|;|,/).map(s => s.trim()).filter(Boolean);
-              state.assessmentData.hpi.aggravating = [parts[0] || content];
-              if (parts[1]) state.assessmentData.hpi.relieving = [parts[1]];
+            case 'hpiAggravating':
+              state.assessmentData.hpi.aggravating = content.split(/[,;]/).map(s => s.trim()).filter(Boolean);
               break;
-            }
+            case 'hpiRelieving':
+              state.assessmentData.hpi.relieving = content.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+              break;
             case 'hpiAssociated':
               state.assessmentData.hpi.associated = content
                 .split(/[,;]/)
@@ -444,7 +482,13 @@ export const useCompassStore = create<CompassState>()(
         await new Promise((resolve) => setTimeout(resolve, 600 + Math.random() * 400));
 
         const phaseConfig = PHASE_CONFIG[currentPhase];
-        const nextPhase = phaseConfig.nextPhase;
+        let nextPhase = phaseConfig.nextPhase;
+
+        // Conditional branching: multiple complaints loop
+        if (currentPhase === 'askingMultipleComplaints') {
+          const isYes = content.toLowerCase().includes('yes') || content.includes('yes_another_concern');
+          nextPhase = isYes ? 'chiefComplaint' : 'generating';
+        }
 
         // If next phase is 'generating', trigger diagnosis
         if (nextPhase === 'generating') {
@@ -519,6 +563,7 @@ export const useCompassStore = create<CompassState>()(
               createMessage('assistant', nextConfig.question, {
                 phase: nextPhase as DetailedAssessmentPhase,
                 quickReplies: nextConfig.quickReplies,
+                multiSelect: nextConfig.quickReplies?.some(r => r.multiSelect) ?? false,
               })
             );
           });

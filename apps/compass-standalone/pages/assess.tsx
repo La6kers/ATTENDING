@@ -51,6 +51,7 @@ export default function AssessPage() {
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant');
   const quickReplies: QuickReply[] = (lastAssistant?.metadata?.quickReplies as QuickReply[]) ?? [];
+  const isMultiSelect = lastAssistant?.metadata?.multiSelect ?? false;
 
   const handleSend = useCallback(async (text: string) => {
     if (!text.trim() || isProcessing) return;
@@ -144,6 +145,7 @@ export default function AssessPage() {
               stagedImage={stagedImage}
               onRemoveStagedImage={clearStagedImage}
               onSendImage={handleSendImage}
+              multiSelect={isMultiSelect}
             />
           ) : (
             <div className="h-full flex items-center justify-center">
