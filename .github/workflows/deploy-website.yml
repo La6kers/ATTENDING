@@ -1,0 +1,34 @@
+name: Deploy Website (attendingai.health)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/website/**'
+      - '.github/workflows/deploy-website.yml'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: apps/website
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Website
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          mkdir -p dist
+          cp index.html dist/index.html
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          skip_app_build: true
+          app_location: "apps/website/dist"
