@@ -19,6 +19,7 @@ interface DiagnoseRequest {
   dateOfBirth?: string;
   gender?: string;
   redFlags?: string[];
+  symptomSpecificAnswers?: Record<string, string>;
 }
 
 export default async function handler(
@@ -31,7 +32,7 @@ export default async function handler(
 
   try {
     const body = req.body as DiagnoseRequest;
-    const { chiefComplaint, hpi, patientName, dateOfBirth, gender, redFlags } = body;
+    const { chiefComplaint, hpi, patientName, dateOfBirth, gender, redFlags, symptomSpecificAnswers } = body;
 
     if (!chiefComplaint) {
       return res.status(400).json({ error: 'Chief complaint is required' });
@@ -74,6 +75,7 @@ export default async function handler(
         gender: (gender?.toLowerCase() as 'male' | 'female' | 'other') || 'other',
       },
       redFlags,
+      symptomSpecificAnswers,
     };
 
     // Generate differentials

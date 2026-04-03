@@ -26,6 +26,8 @@ import type {
   DifferentialDiagnosisResult,
 } from '@attending/shared/lib/ai/differentialDiagnosis';
 
+import { getSymptomModule, type SymptomModule } from '../lib/symptomQuestions';
+
 // Re-export types for components
 export type { DetailedAssessmentPhase, UrgencyLevel, QuickReply, ChatMessage, RedFlag, HPIData };
 
@@ -67,6 +69,7 @@ export type CompassPhase =
   | 'hpiAggravating'
   | 'hpiRelieving'
   | 'hpiAssociated'
+  | 'symptomSpecific'
   | 'askingMultipleComplaints'
   | 'generating'
   | 'results'
@@ -76,7 +79,7 @@ const COMPASS_PHASES: CompassPhase[] = [
   'welcome', 'demographics', 'chiefComplaint',
   'hpiOnset', 'hpiLocation', 'hpiDuration', 'hpiCharacter',
   'hpiSeverity', 'hpiTiming', 'hpiContext', 'hpiAggravating', 'hpiRelieving', 'hpiAssociated',
-  'askingMultipleComplaints', 'generating', 'results',
+  'symptomSpecific', 'askingMultipleComplaints', 'generating', 'results',
 ];
 
 export function getCompassProgress(phase: CompassPhase): number {
@@ -273,6 +276,10 @@ const PHASE_CONFIG: Record<CompassPhase, PhaseConfig> = {
     ],
     nextPhase: 'askingMultipleComplaints',
   },
+  symptomSpecific: {
+    question: '', // Dynamic — set from activeSymptomModule in sendMessage()
+    nextPhase: 'askingMultipleComplaints',
+  },
   askingMultipleComplaints: {
     question: 'Do you have any other symptoms or concerns you\'d like to discuss with your provider?',
     quickReplies: [
@@ -325,6 +332,7 @@ export interface CompassAssessmentData {
   gender?: string;
   chiefComplaint?: string;
   hpi: HPIData;
+  symptomSpecificAnswers?: Record<string, string>;
 }
 
 interface CompassState {
@@ -343,6 +351,8 @@ interface CompassState {
   hpiNarrative: string | null;
   attachedImages: AttachedImage[];
   stagedImage: { base64: string; dataUrl: string; mimeType: string } | null;
+  activeSymptomModule: SymptomModule | null;
+  symptomQuestionIndex: number;
 
   initializeSession: () => void;
   sendMessage: (content: string) => Promise<void>;
@@ -379,6 +389,8 @@ export const useCompassStore = create<CompassState>()(
       hpiNarrative: null,
       attachedImages: [],
       stagedImage: null,
+      activeSymptomModule: null,
+      symptomQuestionIndex: 0,
 
       initializeSession: () => {
         const sessionId = generateSessionId();
@@ -475,6 +487,20 @@ export const useCompassStore = create<CompassState>()(
                 .map((s) => s.trim())
                 .filter(Boolean);
               break;
+            case 'symptomSpecific': {
+              // Store the answer using the current question's dataKey
+              const mod = state.activeSymptomModule;
+              if (mod) {
+                const q = mod.questions[state.symptomQuestionIndex];
+                if (q) {
+                  if (!state.assessmentData.symptomSpecificAnswers) {
+                    state.assessmentData.symptomSpecificAnswers = {};
+                  }
+                  state.assessmentData.symptomSpecificAnswers[q.dataKey] = content;
+                }
+              }
+              break;
+            }
           }
         });
 
@@ -484,9 +510,57 @@ export const useCompassStore = create<CompassState>()(
         const phaseConfig = PHASE_CONFIG[currentPhase];
         let nextPhase = phaseConfig.nextPhase;
 
+        // === Symptom-specific question injection ===
+        // After hpiAssociated: check if we have a complaint-specific module
+        if (currentPhase === 'hpiAssociated') {
+          const { assessmentData: ad } = get();
+          const symptomMod = getSymptomModule(ad.chiefComplaint || '');
+          if (symptomMod && symptomMod.questions.length > 0) {
+            set((state) => {
+              state.activeSymptomModule = symptomMod;
+              state.symptomQuestionIndex = 0;
+            });
+            nextPhase = 'symptomSpecific';
+          }
+          // else: no module → falls through to askingMultipleComplaints via PHASE_CONFIG
+        }
+
+        // During symptomSpecific: advance to next question or move on
+        if (currentPhase === 'symptomSpecific') {
+          const { activeSymptomModule: mod, symptomQuestionIndex: idx } = get();
+          const nextIdx = idx + 1;
+          if (mod && nextIdx < mod.questions.length) {
+            // More symptom-specific questions remain
+            set((state) => { state.symptomQuestionIndex = nextIdx; });
+            const nextQ = mod.questions[nextIdx];
+            set((state) => {
+              state.currentPhase = 'symptomSpecific';
+              state.isProcessing = false;
+              state.messages.push(
+                createMessage('assistant', nextQ.question, {
+                  phase: 'symptomSpecific' as DetailedAssessmentPhase,
+                  quickReplies: nextQ.quickReplies,
+                  multiSelect: nextQ.quickReplies.some(r => r.multiSelect) || false,
+                })
+              );
+            });
+            return; // handled — don't fall through
+          } else {
+            // All symptom questions done → proceed to askingMultipleComplaints
+            nextPhase = 'askingMultipleComplaints';
+          }
+        }
+
         // Conditional branching: multiple complaints loop
         if (currentPhase === 'askingMultipleComplaints') {
           const isYes = content.toLowerCase().includes('yes') || content.includes('yes_another_concern');
+          if (isYes) {
+            // Clear symptom module so it re-evaluates for the new complaint
+            set((state) => {
+              state.activeSymptomModule = null;
+              state.symptomQuestionIndex = 0;
+            });
+          }
           nextPhase = isYes ? 'chiefComplaint' : 'generating';
         }
 
@@ -521,6 +595,7 @@ export const useCompassStore = create<CompassState>()(
                 hpi: assessmentData.hpi,
                 patientName: assessmentData.patientName,
                 dateOfBirth: assessmentData.dateOfBirth,
+                symptomSpecificAnswers: assessmentData.symptomSpecificAnswers,
                 redFlags: [
                   ...currentRedFlags.map((rf) => rf.symptom),
                   ...imageFindings,
@@ -550,6 +625,35 @@ export const useCompassStore = create<CompassState>()(
               state.currentPhase = 'results';
               state.messages.push(
                 createMessage('system', 'Unable to generate AI diagnosis. Showing available assessment data.')
+              );
+            });
+          }
+        } else if (nextPhase === 'symptomSpecific') {
+          // Show the first symptom-specific question from the active module
+          const { activeSymptomModule: mod } = get();
+          const firstQ = mod?.questions[0];
+          if (firstQ) {
+            const moduleLabel = mod!.label;
+            set((state) => {
+              state.currentPhase = 'symptomSpecific';
+              state.isProcessing = false;
+              // Intro message
+              state.messages.push(
+                createMessage('assistant',
+                  `I have a few more questions specific to your symptoms to help your provider. (${moduleLabel})`,
+                  { phase: 'symptomSpecific' as DetailedAssessmentPhase }
+                )
+              );
+            });
+            // Small delay then show first question
+            await new Promise((resolve) => setTimeout(resolve, 400));
+            set((state) => {
+              state.messages.push(
+                createMessage('assistant', firstQ.question, {
+                  phase: 'symptomSpecific' as DetailedAssessmentPhase,
+                  quickReplies: firstQ.quickReplies,
+                  multiSelect: firstQ.quickReplies.some(r => r.multiSelect) || false,
+                })
               );
             });
           }
@@ -676,7 +780,7 @@ export const useCompassStore = create<CompassState>()(
               )
             );
           });
-        } catch (err) {
+        } catch (_err) {
           set((state) => {
             const img = state.attachedImages.find(i => i.id === imageId);
             if (img) img.isAnalyzing = false;
@@ -708,6 +812,8 @@ export const useCompassStore = create<CompassState>()(
           hpiNarrative: null,
           attachedImages: [],
           stagedImage: null,
+          activeSymptomModule: null,
+          symptomQuestionIndex: 0,
         });
       },
 

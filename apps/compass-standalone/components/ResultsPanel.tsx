@@ -8,11 +8,11 @@ import React, { useState } from 'react';
 import {
   FileText, Activity, AlertTriangle, ChevronDown, ChevronUp,
   Printer, RefreshCw, Stethoscope, ClipboardList, Beaker,
-  Radio, Users, Shield, Download, Camera, Share2, Check, Link,
+  Radio, Users, Shield, Camera, Share2, Check, Link,
 } from 'lucide-react';
 import type { DifferentialDiagnosisResult, DifferentialDiagnosis } from '@attending/shared/lib/ai/differentialDiagnosis';
 import type { HPIData, RedFlag } from '@attending/shared/types/chat.types';
-import { buildStructuredHpi } from '../lib/hpiNarrative';
+import { buildStructuredHpi, buildBulletedSummary, buildSoapNote, type SummaryFormat } from '../lib/hpiNarrative';
 import type { AttachedImage } from '../store/useCompassStore';
 import { buildShareableLink, type SharedAssessment } from '../lib/assessmentShare';
 import { ConfidenceRing } from './ConfidenceRing';
@@ -182,6 +182,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
   const mustRuleOutIds = new Set(diagnosisResult?.mustRuleOut.map(d => d.diagnosis) || []);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [summaryFormat, setSummaryFormat] = useState<SummaryFormat>('narrative');
 
   const handlePrint = () => {
     window.print();
@@ -320,25 +321,66 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
         </div>
       )}
 
-      {/* HPI Narrative */}
+      {/* HPI — Format Selector + Content */}
       <div className="card-attending p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <FileText className="w-4 h-4 text-teal-600" />
-          <h3 className="font-semibold text-gray-800">History of Present Illness</h3>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-teal-600" />
+            <h3 className="font-semibold text-gray-800">History of Present Illness</h3>
+          </div>
+          <div className="flex bg-gray-100 rounded-lg p-0.5">
+            {([
+              { key: 'narrative' as const, label: 'Narrative' },
+              { key: 'bulleted' as const, label: 'Bulleted' },
+              { key: 'soap' as const, label: 'SOAP' },
+            ]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setSummaryFormat(key)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                  summaryFormat === key
+                    ? 'bg-teal-600 text-white shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-        {hpiNarrative && (
-          <p className="text-gray-700 leading-relaxed mb-4 bg-gray-50 rounded-lg p-3 border border-gray-100 italic">
-            {hpiNarrative}
-          </p>
-        )}
-        <div className="grid grid-cols-2 gap-3">
-          {Object.entries(structuredHpi).map(([key, value]) => (
-            <div key={key} className="bg-gray-50 rounded-lg p-2.5">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{key}</span>
-              <p className="text-sm text-gray-800 font-medium mt-0.5">{value}</p>
+
+        {/* Narrative format */}
+        {summaryFormat === 'narrative' && (
+          <>
+            {hpiNarrative && (
+              <p className="text-gray-700 leading-relaxed mb-4 bg-gray-50 rounded-lg p-3 border border-gray-100 italic">
+                {hpiNarrative}
+              </p>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              {Object.entries(structuredHpi).map(([key, value]) => (
+                <div key={key} className="bg-gray-50 rounded-lg p-2.5">
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{key}</span>
+                  <p className="text-sm text-gray-800 font-medium mt-0.5">{value}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
+
+        {/* Bulleted format */}
+        {summaryFormat === 'bulleted' && (
+          <pre className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100 whitespace-pre-wrap font-sans">
+            {buildBulletedSummary(hpiData, chiefComplaint, patientName)}
+          </pre>
+        )}
+
+        {/* SOAP format */}
+        {summaryFormat === 'soap' && (
+          <pre className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100 whitespace-pre-wrap font-sans">
+            {buildSoapNote(hpiData, chiefComplaint, patientName, diagnosisResult, redFlags)}
+          </pre>
+        )}
       </div>
 
       {/* Differential Diagnoses */}
