@@ -46,9 +46,12 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone output + static assets
+# Copy standalone output (server.js is at root in Docker builds)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/compass-standalone/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/compass-standalone/.next/static ./apps/compass-standalone/.next/static
+# Copy static assets
+COPY --from=builder --chown=nextjs:nodejs /app/apps/compass-standalone/.next/static ./.next/static
+# Copy node_modules from deps (standalone doesn't include them in Docker monorepo builds)
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 
@@ -57,5 +60,4 @@ EXPOSE 3005
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget --spider -q http://localhost:3005/ || exit 1
 
-# Next.js standalone may place server.js at root or nested — try both
-CMD ["sh", "-c", "if [ -f apps/compass-standalone/server.js ]; then node apps/compass-standalone/server.js; else node server.js; fi"]
+CMD ["node", "server.js"]
