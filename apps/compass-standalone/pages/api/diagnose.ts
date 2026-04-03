@@ -20,6 +20,14 @@ interface ImageCondition {
   reasoning: string;
 }
 
+interface VitalsInput {
+  heartRate?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  temperature?: number;
+  oxygenSaturation?: number;
+}
+
 interface DiagnoseRequest {
   chiefComplaint: string;
   hpi: HPIData;
@@ -29,6 +37,8 @@ interface DiagnoseRequest {
   redFlags?: string[];
   symptomSpecificAnswers?: Record<string, string>;
   imageSuggestedConditions?: ImageCondition[];
+  vitals?: VitalsInput;
+  medications?: string[];
 }
 
 export default async function handler(
@@ -44,6 +54,7 @@ export default async function handler(
     const {
       chiefComplaint, hpi, patientName, dateOfBirth, gender,
       redFlags, symptomSpecificAnswers, imageSuggestedConditions,
+      vitals, medications,
     } = body;
 
     if (!chiefComplaint) {
@@ -108,6 +119,17 @@ export default async function handler(
         age,
         gender: (gender?.toLowerCase() as 'male' | 'female' | 'other') || 'other',
       },
+      vitals: vitals ? {
+        heartRate: vitals.heartRate,
+        oxygenSaturation: vitals.oxygenSaturation,
+        temperature: vitals.temperature,
+        bloodPressure: (vitals.bloodPressureSystolic && vitals.bloodPressureDiastolic)
+          ? { systolic: vitals.bloodPressureSystolic, diastolic: vitals.bloodPressureDiastolic }
+          : undefined,
+      } : undefined,
+      medicalHistory: medications && medications.length > 0
+        ? { conditions: [], medications, allergies: [] }
+        : undefined,
       redFlags: enhancedRedFlags,
       symptomSpecificAnswers: enhancedAnswers,
     };

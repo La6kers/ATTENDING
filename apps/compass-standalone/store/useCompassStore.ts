@@ -58,6 +58,8 @@ function createCompassMessage(
 export type CompassPhase =
   | 'welcome'
   | 'demographics'
+  | 'vitals'
+  | 'medications'
   | 'chiefComplaint'
   | 'hpiOnset'
   | 'hpiLocation'
@@ -76,7 +78,7 @@ export type CompassPhase =
   | 'emergency';
 
 const COMPASS_PHASES: CompassPhase[] = [
-  'welcome', 'demographics', 'chiefComplaint',
+  'welcome', 'demographics', 'vitals', 'medications', 'chiefComplaint',
   'hpiOnset', 'hpiLocation', 'hpiDuration', 'hpiCharacter',
   'hpiSeverity', 'hpiTiming', 'hpiContext', 'hpiAggravating', 'hpiRelieving', 'hpiAssociated',
   'symptomSpecific', 'askingMultipleComplaints', 'generating', 'results',
@@ -175,6 +177,27 @@ const PHASE_CONFIG: Record<CompassPhase, PhaseConfig> = {
   },
   demographics: {
     question: 'Thanks! To help us assess your condition, could you share your date of birth and gender?',
+    nextPhase: 'vitals',
+  },
+  vitals: {
+    question: 'Do you have any recent vital signs (heart rate, blood pressure, temperature, or oxygen level)? Share what you have, or skip if you don\'t have this information.',
+    quickReplies: [
+      { id: 'vitals_skip', text: "I don't have this info", value: "I don't have this info" },
+    ],
+    nextPhase: 'medications',
+  },
+  medications: {
+    question: 'Are you currently taking any medications? Select all that apply, or type your own.',
+    quickReplies: [
+      { id: 'med_bp', text: 'Blood pressure med', value: 'Blood pressure medication', multiSelect: true },
+      { id: 'med_statin', text: 'Cholesterol med', value: 'Cholesterol medication (statin)', multiSelect: true },
+      { id: 'med_thinner', text: 'Blood thinner', value: 'Blood thinner (anticoagulant)', multiSelect: true },
+      { id: 'med_nsaid', text: 'Pain med (NSAID)', value: 'Pain medication (NSAID)', multiSelect: true },
+      { id: 'med_diabetes', text: 'Diabetes med', value: 'Diabetes medication', multiSelect: true },
+      { id: 'med_thyroid', text: 'Thyroid med', value: 'Thyroid medication', multiSelect: true },
+      { id: 'med_antidep', text: 'Antidepressant', value: 'Antidepressant', multiSelect: true },
+      { id: 'med_none', text: 'None / I don\'t know', value: 'No medications reported' },
+    ],
     nextPhase: 'chiefComplaint',
   },
   chiefComplaint: {
@@ -327,6 +350,15 @@ export interface ImageAnalysisResult {
   provider: string;
 }
 
+export interface CompassVitals {
+  heartRate?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  temperature?: number;
+  oxygenSaturation?: number;
+  raw?: string; // Original text for reference
+}
+
 export interface CompassAssessmentData {
   sessionId: string;
   patientName?: string;
@@ -335,6 +367,8 @@ export interface CompassAssessmentData {
   chiefComplaint?: string;
   hpi: HPIData;
   symptomSpecificAnswers?: Record<string, string>;
+  vitals?: CompassVitals;
+  medications?: string[];
 }
 
 interface CompassState {
@@ -445,7 +479,46 @@ export const useCompassStore = create<CompassState>()(
               break;
             case 'demographics':
               state.assessmentData.dateOfBirth = content;
+              // Try to extract gender from the text
+              if (/\b(female|woman|girl)\b/i.test(content)) {
+                state.assessmentData.gender = 'female';
+              } else if (/\b(male|man|boy)\b/i.test(content)) {
+                state.assessmentData.gender = 'male';
+              }
               break;
+            case 'vitals': {
+              // Parse vitals from free text, skip if user says skip
+              if (/don'?t\s*have|skip|no\s*vitals/i.test(content)) {
+                // No vitals — that's fine
+                break;
+              }
+              const vitals: CompassVitals = { raw: content };
+              // Heart rate: "HR 88", "heart rate 88", "pulse 88", "88 bpm"
+              const hrMatch = content.match(/(?:hr|heart\s*rate|pulse)\s*[:=]?\s*(\d{2,3})/i) || content.match(/(\d{2,3})\s*bpm/i);
+              if (hrMatch) vitals.heartRate = parseInt(hrMatch[1]);
+              // Blood pressure: "120/80", "BP 120/80", "blood pressure 120/80"
+              const bpMatch = content.match(/(\d{2,3})\s*\/\s*(\d{2,3})/);
+              if (bpMatch) {
+                vitals.bloodPressureSystolic = parseInt(bpMatch[1]);
+                vitals.bloodPressureDiastolic = parseInt(bpMatch[2]);
+              }
+              // Temperature: "temp 101", "temperature 99.5", "101.2°F", "38.5°C"
+              const tempMatch = content.match(/(?:temp|temperature)\s*[:=]?\s*([\d.]+)/i) || content.match(/([\d.]+)\s*°?\s*[FC]/i);
+              if (tempMatch) vitals.temperature = parseFloat(tempMatch[1]);
+              // Oxygen saturation: "SpO2 95", "O2 sat 92", "oxygen 94", "95%"
+              const o2Match = content.match(/(?:spo2|o2\s*sat|oxygen)\s*[:=]?\s*(\d{2,3})/i) || content.match(/(\d{2,3})\s*%/);
+              if (o2Match) vitals.oxygenSaturation = parseInt(o2Match[1]);
+              state.assessmentData.vitals = vitals;
+              break;
+            }
+            case 'medications': {
+              if (content.includes('No medications reported') || /\bnone\b|don'?t\s*know/i.test(content)) {
+                state.assessmentData.medications = [];
+              } else {
+                state.assessmentData.medications = content.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+              }
+              break;
+            }
             case 'chiefComplaint':
               // Append if looping back for multiple complaints
               if (state.assessmentData.chiefComplaint) {
@@ -610,7 +683,10 @@ export const useCompassStore = create<CompassState>()(
                 hpi: assessmentData.hpi,
                 patientName: assessmentData.patientName,
                 dateOfBirth: assessmentData.dateOfBirth,
+                gender: assessmentData.gender,
                 symptomSpecificAnswers: assessmentData.symptomSpecificAnswers,
+                vitals: assessmentData.vitals,
+                medications: assessmentData.medications,
                 imageSuggestedConditions,
                 redFlags: [
                   ...currentRedFlags.map((rf) => rf.symptom),

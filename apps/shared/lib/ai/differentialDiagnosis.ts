@@ -10,6 +10,7 @@
 import { applyLikelihoodRatios, applySymptomBoosts } from './symptomDiagnosisBoosts';
 import { applyGraphBoosts, applyGraphLikelihoodRatios, getGraphStats } from './symptomCauseGraph';
 import { getPreTestProbabilities, hasPrevalenceData } from './clinicalPrevalence';
+import { applyMedicationLikelihoodRatios } from './medicationDiagnosisRules';
 
 // ============================================================
 // TYPES
@@ -505,6 +506,46 @@ export class DifferentialDiagnosisService {
       for (const [dx, ev] of graphEvidence) {
         const existing = allEvidence.get(dx) || [];
         allEvidence.set(dx, [...existing, ...ev]);
+      }
+
+      // --- Step 4b: Apply vitals-based likelihood ratios ---
+      if (presentation.vitals) {
+        const v = presentation.vitals;
+        const vitalsLRs: { condition: boolean; diagnosis: string; lr: number; evidence: string }[] = [
+          { condition: !!(v.heartRate && v.heartRate > 100), diagnosis: 'Acute Coronary Syndrome', lr: 1.8, evidence: `Tachycardia (HR ${v.heartRate}) — cardiac etiology (LR 1.8)` },
+          { condition: !!(v.heartRate && v.heartRate > 100), diagnosis: 'Pulmonary Embolism', lr: 2.0, evidence: `Tachycardia (HR ${v.heartRate}) — PE risk (LR 2.0)` },
+          { condition: !!(v.heartRate && v.heartRate > 100), diagnosis: 'Sepsis', lr: 2.5, evidence: `Tachycardia (HR ${v.heartRate}) — sepsis criterion (LR 2.5)` },
+          { condition: !!(v.heartRate && v.heartRate < 50), diagnosis: 'Medication side effect', lr: 2.0, evidence: `Bradycardia (HR ${v.heartRate}) — drug effect (LR 2.0)` },
+          { condition: !!(v.oxygenSaturation && v.oxygenSaturation < 92), diagnosis: 'Pulmonary Embolism', lr: 3.5, evidence: `Hypoxia (SpO2 ${v.oxygenSaturation}%) — PE (LR 3.5)` },
+          { condition: !!(v.oxygenSaturation && v.oxygenSaturation < 92), diagnosis: 'Pneumonia', lr: 2.5, evidence: `Hypoxia (SpO2 ${v.oxygenSaturation}%) — pneumonia (LR 2.5)` },
+          { condition: !!(v.oxygenSaturation && v.oxygenSaturation < 92), diagnosis: 'COPD exacerbation', lr: 2.5, evidence: `Hypoxia (SpO2 ${v.oxygenSaturation}%) — COPD (LR 2.5)` },
+          { condition: !!(v.temperature && v.temperature > 100.4), diagnosis: 'Sepsis', lr: 3.0, evidence: `Fever (${v.temperature}°) — sepsis risk (LR 3.0)` },
+          { condition: !!(v.temperature && v.temperature > 100.4), diagnosis: 'Pneumonia', lr: 2.0, evidence: `Fever (${v.temperature}°) — infection (LR 2.0)` },
+          { condition: !!(v.temperature && v.temperature > 100.4), diagnosis: 'Meningitis', lr: 2.5, evidence: `Fever (${v.temperature}°) — meningitis (LR 2.5)` },
+          { condition: !!(v.bloodPressure && v.bloodPressure.systolic < 90), diagnosis: 'Sepsis', lr: 5.0, evidence: `Hypotension (BP ${v.bloodPressure?.systolic}/${v.bloodPressure?.diastolic}) — shock (LR 5.0)` },
+          { condition: !!(v.bloodPressure && v.bloodPressure.systolic < 90), diagnosis: 'GI bleeding', lr: 3.0, evidence: `Hypotension — hemorrhagic shock (LR 3.0)` },
+          { condition: !!(v.bloodPressure && v.bloodPressure.systolic < 90), diagnosis: 'Ectopic Pregnancy', lr: 3.0, evidence: `Hypotension — ruptured ectopic (LR 3.0)` },
+          { condition: !!(v.bloodPressure && v.bloodPressure.systolic > 180), diagnosis: 'Stroke', lr: 2.5, evidence: `Hypertensive crisis (BP ${v.bloodPressure?.systolic}) — stroke risk (LR 2.5)` },
+          { condition: !!(v.bloodPressure && v.bloodPressure.systolic > 180), diagnosis: 'Aortic Dissection', lr: 2.0, evidence: `Hypertension — dissection risk (LR 2.0)` },
+        ];
+        for (const rule of vitalsLRs) {
+          if (rule.condition) {
+            const currentOdds = odds.get(rule.diagnosis) || 0.01;
+            odds.set(rule.diagnosis, currentOdds * rule.lr);
+            const existing = allEvidence.get(rule.diagnosis) || [];
+            existing.push(rule.evidence);
+            allEvidence.set(rule.diagnosis, existing);
+          }
+        }
+      }
+
+      // --- Step 4c: Apply medication-based likelihood ratios ---
+      if (presentation.medicalHistory?.medications && presentation.medicalHistory.medications.length > 0) {
+        const medEvidence = applyMedicationLikelihoodRatios(presentation.medicalHistory.medications, odds);
+        for (const [dx, ev] of medEvidence) {
+          const existing = allEvidence.get(dx) || [];
+          allEvidence.set(dx, [...existing, ...ev]);
+        }
       }
 
       // --- Step 5: Convert odds back to posterior probabilities ---
