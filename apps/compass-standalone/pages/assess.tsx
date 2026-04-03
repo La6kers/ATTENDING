@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { ArrowLeft, Stethoscope } from 'lucide-react';
+import { ArrowLeft, Compass } from 'lucide-react';
 
 import { useCompassStore } from '../store/useCompassStore';
 import { ChatContainer } from '../components/ChatContainer';
@@ -107,7 +107,7 @@ export default function AssessPage() {
                 <ArrowLeft className="w-5 h-5 text-white" />
               </button>
               <div className="flex items-center gap-2">
-                <Stethoscope className="w-5 h-5 text-attending-light-teal" />
+                <Compass className="w-5 h-5 text-attending-light-teal" />
                 <span className="text-lg font-bold text-white">COMPASS Results</span>
               </div>
             </div>

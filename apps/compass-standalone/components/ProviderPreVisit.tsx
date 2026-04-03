@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import {
   User, FileText, Activity, AlertTriangle, ChevronDown, ChevronUp,
-  Printer, Stethoscope, ClipboardList, Beaker, Radio, Users,
+  Printer, Compass, ClipboardList, Beaker, Radio, Users,
   Shield, CheckCircle, Circle, Camera, ArrowRight, Clock,
   Heart, Zap,
 } from 'lucide-react';
@@ -207,7 +207,7 @@ export const ProviderPreVisit: React.FC<ProviderPreVisitProps> = ({
       <div className="bg-attending-gradient rounded-xl p-5 border border-white/10">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Stethoscope className="w-5 h-5 text-attending-light-teal" />
+            <Compass className="w-5 h-5 text-attending-light-teal" />
             <span className="font-bold text-lg text-white">COMPASS</span>
             <span className="text-white/40 text-sm">Provider Review</span>
           </div>
