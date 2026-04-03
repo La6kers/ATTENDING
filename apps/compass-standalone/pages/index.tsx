@@ -7,7 +7,7 @@ import React from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import {
-  Stethoscope, FileText, Activity, Shield, Clock, ArrowRight,
+  Compass, FileText, Activity, Shield, Clock, ArrowRight,
   MessageCircle, Sparkles, Heart, AlertTriangle,
 } from 'lucide-react';
 
@@ -50,7 +50,7 @@ export default function LandingPage() {
           <div className="max-w-lg mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-attending-gradient rounded-xl flex items-center justify-center shadow-teal">
-                <Stethoscope className="w-5 h-5 text-white" />
+                <Compass className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white tracking-tight">COMPASS</h1>
@@ -70,7 +70,7 @@ export default function LandingPage() {
             {/* Hero */}
             <div className="text-center">
               <div className="w-20 h-20 bg-attending-gradient rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-teal-lg">
-                <Stethoscope className="w-10 h-10 text-white" />
+                <Compass className="w-10 h-10 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-white mb-3">
                 Clinical Assessment
