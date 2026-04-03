@@ -1,7 +1,8 @@
 // ============================================================
 // COMPASS Standalone — Diagnosis API
 // Generates HPI narrative + differential diagnoses
-// Uses shared DifferentialDiagnosisService with local fallback
+// Uses shared DifferentialDiagnosisService with Bayesian engine
+// Integrates image analysis findings into differential scoring
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -12,6 +13,13 @@ import {
 import { buildHpiNarrative } from '../../lib/hpiNarrative';
 import type { HPIData } from '@attending/shared/types/chat.types';
 
+interface ImageCondition {
+  name: string;
+  confidence: number;
+  bodyRegion: string;
+  reasoning: string;
+}
+
 interface DiagnoseRequest {
   chiefComplaint: string;
   hpi: HPIData;
@@ -20,6 +28,7 @@ interface DiagnoseRequest {
   gender?: string;
   redFlags?: string[];
   symptomSpecificAnswers?: Record<string, string>;
+  imageSuggestedConditions?: ImageCondition[];
 }
 
 export default async function handler(
@@ -32,7 +41,10 @@ export default async function handler(
 
   try {
     const body = req.body as DiagnoseRequest;
-    const { chiefComplaint, hpi, patientName, dateOfBirth, gender, redFlags, symptomSpecificAnswers } = body;
+    const {
+      chiefComplaint, hpi, patientName, dateOfBirth, gender,
+      redFlags, symptomSpecificAnswers, imageSuggestedConditions,
+    } = body;
 
     if (!chiefComplaint) {
       return res.status(400).json({ error: 'Chief complaint is required' });
@@ -42,7 +54,7 @@ export default async function handler(
     const hpiNarrative = buildHpiNarrative(hpi || {}, chiefComplaint, patientName);
 
     // Estimate age from DOB
-    let age = 40; // default
+    let age = 40;
     if (dateOfBirth) {
       const dob = new Date(dateOfBirth);
       if (!isNaN(dob.getTime())) {
@@ -50,7 +62,25 @@ export default async function handler(
       }
     }
 
-    // Build presentation for diagnosis engine
+    // Merge image-suggested conditions into red flags and symptom answers
+    // This cross-references visual AI findings with the Bayesian differential engine
+    const enhancedRedFlags = [...(redFlags || [])];
+    const enhancedAnswers = { ...(symptomSpecificAnswers || {}) };
+
+    if (imageSuggestedConditions && imageSuggestedConditions.length > 0) {
+      for (const imgCondition of imageSuggestedConditions) {
+        // High-confidence image findings become red flag indicators
+        if (imgCondition.confidence >= 60) {
+          enhancedRedFlags.push(`Image finding: ${imgCondition.name} (${imgCondition.confidence}% — ${imgCondition.bodyRegion})`);
+        }
+        // Inject image conditions as pseudo-symptom-specific answers
+        // This allows the Bayesian engine's LR rules to pick them up
+        enhancedAnswers[`image_${imgCondition.bodyRegion}`] =
+          `${imgCondition.name} — ${imgCondition.reasoning}`;
+      }
+    }
+
+    // Build presentation for Bayesian diagnosis engine
     const presentation: PatientPresentation = {
       chiefComplaint,
       duration: hpi?.duration,
@@ -69,16 +99,20 @@ export default async function handler(
         ...(hpi?.associated || [])
           .filter(s => s && s.toLowerCase() !== 'no associated symptoms')
           .map(s => ({ name: s })),
+        // Add image-suggested conditions as additional symptom data
+        ...(imageSuggestedConditions || [])
+          .filter(c => c.confidence >= 40)
+          .map(c => ({ name: `${c.name} (image analysis — ${c.bodyRegion})` })),
       ],
       demographics: {
         age,
         gender: (gender?.toLowerCase() as 'male' | 'female' | 'other') || 'other',
       },
-      redFlags,
-      symptomSpecificAnswers,
+      redFlags: enhancedRedFlags,
+      symptomSpecificAnswers: enhancedAnswers,
     };
 
-    // Generate differentials
+    // Generate differentials via Bayesian engine
     const diagnosisService = new DifferentialDiagnosisService({
       provider: (process.env.AI_PROVIDER as 'biomistral' | 'azure-openai' | 'anthropic' | 'local') || 'local',
       endpoint: process.env.AI_ENDPOINT,

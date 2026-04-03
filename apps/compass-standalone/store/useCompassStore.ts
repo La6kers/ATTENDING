@@ -314,6 +314,8 @@ export interface AttachedImage {
   analysis?: ImageAnalysisResult | null;
   isAnalyzing?: boolean;
   phase: CompassPhase;
+  bodyRegion?: string;
+  shotLabel?: string;
 }
 
 export interface ImageAnalysisResult {
@@ -350,7 +352,7 @@ interface CompassState {
   diagnosisResult: DifferentialDiagnosisResult | null;
   hpiNarrative: string | null;
   attachedImages: AttachedImage[];
-  stagedImage: { base64: string; dataUrl: string; mimeType: string } | null;
+  stagedImage: { base64: string; dataUrl: string; mimeType: string; bodyRegion?: string; shotLabel?: string } | null;
   activeSymptomModule: SymptomModule | null;
   symptomQuestionIndex: number;
 
@@ -362,9 +364,10 @@ interface CompassState {
   resetSession: () => void;
   getProgress: () => number;
   startNewAssessment: () => void;
-  stageImage: (base64: string, mimeType: string) => void;
+  stageImage: (base64: string, mimeType: string, bodyRegion?: string, shotLabel?: string) => void;
   clearStagedImage: () => void;
   sendImageMessage: (text?: string) => Promise<void>;
+  sendMultipleImages: (photos: { base64: string; mimeType: string; bodyRegion: string; shotLabel: string }[]) => Promise<void>;
 }
 
 // =============================================================================
@@ -579,13 +582,25 @@ export const useCompassStore = create<CompassState>()(
           // Call diagnosis API
           try {
             const { assessmentData, redFlags: currentRedFlags, attachedImages } = get();
-            // Collect image analysis findings to enhance diagnosis
+            // Collect image analysis findings for differential diagnosis cross-referencing
             const imageFindings = attachedImages
               .filter(img => img.analysis)
               .flatMap(img => [
                 ...(img.analysis?.findings || []),
                 ...(img.analysis?.suggestedConditions || []).map(c => `${c.name} (${c.confidence}% from image)`),
               ]);
+
+            // Structured image conditions for Bayesian integration
+            const imageSuggestedConditions = attachedImages
+              .filter(img => img.analysis?.suggestedConditions)
+              .flatMap(img =>
+                (img.analysis?.suggestedConditions || []).map(c => ({
+                  name: c.name,
+                  confidence: c.confidence,
+                  bodyRegion: img.bodyRegion || 'unknown',
+                  reasoning: c.reasoning,
+                }))
+              );
 
             const response = await fetch('/api/diagnose', {
               method: 'POST',
@@ -596,6 +611,7 @@ export const useCompassStore = create<CompassState>()(
                 patientName: assessmentData.patientName,
                 dateOfBirth: assessmentData.dateOfBirth,
                 symptomSpecificAnswers: assessmentData.symptomSpecificAnswers,
+                imageSuggestedConditions,
                 redFlags: [
                   ...currentRedFlags.map((rf) => rf.symptom),
                   ...imageFindings,
@@ -686,9 +702,9 @@ export const useCompassStore = create<CompassState>()(
         });
       },
 
-      stageImage: (base64: string, mimeType: string) => {
+      stageImage: (base64: string, mimeType: string, bodyRegion?: string, shotLabel?: string) => {
         const dataUrl = `data:${mimeType};base64,${base64}`;
-        set({ stagedImage: { base64, dataUrl, mimeType } });
+        set({ stagedImage: { base64, dataUrl, mimeType, bodyRegion, shotLabel } });
       },
 
       clearStagedImage: () => {
@@ -717,6 +733,8 @@ export const useCompassStore = create<CompassState>()(
           mimeType: stagedImage.mimeType,
           isAnalyzing: true,
           phase: currentPhase,
+          bodyRegion: stagedImage.bodyRegion,
+          shotLabel: stagedImage.shotLabel,
         };
 
         set((state) => {
@@ -739,6 +757,8 @@ export const useCompassStore = create<CompassState>()(
                 hpiSummary: [assessmentData.hpi.onset, assessmentData.hpi.location, assessmentData.hpi.character]
                   .filter(Boolean).join('. '),
                 phase: currentPhase,
+                bodyRegion: stagedImage.bodyRegion,
+                shotLabel: stagedImage.shotLabel,
               },
             }),
           });
@@ -792,6 +812,16 @@ export const useCompassStore = create<CompassState>()(
               )
             );
           });
+        }
+      },
+
+      sendMultipleImages: async (photos: { base64: string; mimeType: string; bodyRegion: string; shotLabel: string }[]) => {
+        // Stage and send each photo sequentially
+        for (const photo of photos) {
+          get().stageImage(photo.base64, photo.mimeType, photo.bodyRegion, photo.shotLabel);
+          await get().sendImageMessage(`${photo.shotLabel} — ${photo.bodyRegion}`);
+          // Small delay between sends for UI readability
+          await new Promise((r) => setTimeout(r, 300));
         }
       },
 

@@ -73,9 +73,14 @@ export default function AssessPage() {
     }
   }, [currentPhase, isInitialized, router]);
 
-  const handlePhotoCapture = useCallback((base64: string, mimeType: string) => {
-    stageImage(base64, mimeType);
+  const handlePhotoCapture = useCallback((base64: string, mimeType: string, bodyRegion?: string, shotLabel?: string) => {
+    stageImage(base64, mimeType, bodyRegion, shotLabel);
   }, [stageImage]);
+
+  const handlePhotoCaptureAll = useCallback(async (photos: { base64: string; mimeType: string; bodyRegion: string; shotLabel: string }[]) => {
+    const { sendMultipleImages } = useCompassStore.getState();
+    await sendMultipleImages(photos);
+  }, []);
 
   const handleSendImage = useCallback(async (text?: string) => {
     await sendImageMessage(text);
@@ -162,6 +167,7 @@ export default function AssessPage() {
           isOpen={showPhotoCapture}
           onClose={() => setShowPhotoCapture(false)}
           onCapture={handlePhotoCapture}
+          onCaptureAll={handlePhotoCaptureAll}
         />
 
         {/* Emergency Modal */}

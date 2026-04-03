@@ -20,6 +20,8 @@ interface ImageAnalysisRequest {
     chiefComplaint?: string;
     hpiSummary?: string;
     phase?: string;
+    bodyRegion?: string;
+    shotLabel?: string;
   };
 }
 
@@ -38,6 +40,37 @@ interface ImageAnalysisResult {
   provider: string;
 }
 
+// Region-specific focus conditions for vision AI
+const REGION_FOCUS: Record<string, string> = {
+  'head_face': 'skin lesion, rash, swelling, asymmetry, discoloration, laceration, bruising, masses',
+  'neck_throat': 'erythema, exudate, tonsillar swelling, lymphadenopathy, uvular deviation, peritonsillar bulge, masses, thyroid enlargement',
+  'chest': 'rash, skin lesion, swelling, bruising, surgical sites, chest wall deformity',
+  'abdomen': 'distension, rash, surgical scars, hernia, bruising, skin changes, wounds, striae',
+  'upper_back': 'rash, skin lesion, swelling, curvature abnormality, bruising, mole changes',
+  'lower_back': 'rash, swelling, curvature, bruising, pilonidal changes, sacral abnormalities',
+  'left_arm': 'rash, swelling, bruising, deformity, wounds, skin lesion, joint swelling, edema',
+  'right_arm': 'rash, swelling, bruising, deformity, wounds, skin lesion, joint swelling, edema',
+  'left_hand': 'joint deformity, swelling, skin lesion, nail changes, wounds, rash, nodules, contracture, joint erosions',
+  'right_hand': 'joint deformity, swelling, skin lesion, nail changes, wounds, rash, nodules, contracture, joint erosions',
+  'left_leg': 'swelling, rash, bruising, varicose veins, wounds, skin discoloration, deformity, edema, DVT signs',
+  'right_leg': 'swelling, rash, bruising, varicose veins, wounds, skin discoloration, deformity, edema, DVT signs',
+  'left_foot': 'wounds, ulcers, deformity, swelling, skin changes, nail changes, callus, bunion, diabetic changes',
+  'right_foot': 'wounds, ulcers, deformity, swelling, skin changes, nail changes, callus, bunion, diabetic changes',
+  'skin_general': 'rash distribution pattern, lesion morphology, color changes, texture, scale, vesicles, papules, plaques, urticaria, petechiae',
+  'eye': 'redness, discharge, swelling, ptosis, pupil asymmetry, stye, chalazion, subconjunctival hemorrhage, foreign body',
+  'other': 'general assessment of visible pathology',
+};
+
+// Map region IDs to human-readable labels
+const REGION_LABELS: Record<string, string> = {
+  'head_face': 'head and face', 'neck_throat': 'neck and throat', 'chest': 'chest',
+  'abdomen': 'abdomen', 'upper_back': 'upper back', 'lower_back': 'lower back',
+  'left_arm': 'left arm', 'right_arm': 'right arm', 'left_hand': 'left hand',
+  'right_hand': 'right hand', 'left_leg': 'left leg', 'right_leg': 'right leg',
+  'left_foot': 'left foot', 'right_foot': 'right foot', 'skin_general': 'skin',
+  'eye': 'eye', 'other': 'body area',
+};
+
 function buildClinicalVisionPrompt(context?: ImageAnalysisRequest['context']): string {
   let prompt = `You are a clinical image analysis assistant supporting healthcare providers. Analyze this clinical photograph and provide a structured assessment.
 
@@ -51,6 +84,16 @@ Respond ONLY with valid JSON in this exact format:
   "urgency": "routine|urgent|emergent",
   "recommendations": ["recommendation 1", "recommendation 2"]
 }`;
+
+  // Region-specific context (most important enhancement)
+  if (context?.bodyRegion) {
+    const regionLabel = REGION_LABELS[context.bodyRegion] || context.bodyRegion;
+    const focusAreas = REGION_FOCUS[context.bodyRegion] || 'general assessment';
+    const shotDesc = context.shotLabel ? ` (${context.shotLabel.toLowerCase()} view)` : '';
+    prompt += `\n\nANATOMICAL CONTEXT: This is a photograph of the patient's ${regionLabel}${shotDesc}.`;
+    prompt += `\nFocus your analysis on: ${focusAreas}.`;
+    prompt += `\nAssess for clinically significant findings relevant to this anatomical region.`;
+  }
 
   if (context?.chiefComplaint) {
     prompt += `\n\nPatient context — Chief complaint: ${context.chiefComplaint}`;
