@@ -130,6 +130,14 @@ const DiagnosisCard: React.FC<{
                     <p className="text-xs text-purple-600">{dx.recommendedWorkup.imaging.join(', ')}</p>
                   </div>
                 )}
+                {dx.recommendedWorkup.procedures && dx.recommendedWorkup.procedures.length > 0 && (
+                  <div className="bg-amber-50 rounded-lg p-2">
+                    <div className="flex items-center gap-1 text-xs font-medium text-amber-700 mb-1">
+                      <Stethoscope className="w-3 h-3" /> Exam / Procedures
+                    </div>
+                    <p className="text-xs text-amber-600">{dx.recommendedWorkup.procedures.join(', ')}</p>
+                  </div>
+                )}
                 {dx.recommendedWorkup.consults && dx.recommendedWorkup.consults.length > 0 && (
                   <div className="bg-teal-50 rounded-lg p-2">
                     <div className="flex items-center gap-1 text-xs font-medium text-teal-700 mb-1">
@@ -402,14 +410,79 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
             </div>
           )}
 
+          {/* Clinical Scoring Tools */}
+          {diagnosisResult.intelligentWorkup?.scoringToolResults && diagnosisResult.intelligentWorkup.scoringToolResults.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                <Activity className="w-4 h-4 text-teal-600" />
+                Clinical Decision Tools
+              </h4>
+              {diagnosisResult.intelligentWorkup.scoringToolResults.map((result, i) => (
+                <div key={i} className={`rounded-xl p-3 border ${
+                  result.riskLevel === 'very-high' ? 'bg-red-50 border-red-200' :
+                  result.riskLevel === 'high' ? 'bg-amber-50 border-amber-200' :
+                  result.riskLevel === 'moderate' ? 'bg-yellow-50 border-yellow-200' :
+                  'bg-green-50 border-green-200'
+                }`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-gray-800">{result.toolName}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      result.riskLevel === 'very-high' ? 'bg-red-200 text-red-800' :
+                      result.riskLevel === 'high' ? 'bg-amber-200 text-amber-800' :
+                      result.riskLevel === 'moderate' ? 'bg-yellow-200 text-yellow-800' :
+                      'bg-green-200 text-green-800'
+                    }`}>
+                      {result.score}/{result.maxScore}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-700 mb-1.5">{result.interpretation}</p>
+                  <p className="text-[10px] text-gray-400">{result.source}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Choosing Wisely Alerts */}
+          {diagnosisResult.intelligentWorkup?.choosingWiselyAlerts && diagnosisResult.intelligentWorkup.choosingWiselyAlerts.length > 0 && (
+            <div className="space-y-2">
+              {diagnosisResult.intelligentWorkup.choosingWiselyAlerts.map((alert, i) => (
+                <div key={i} className="bg-amber-50 border border-amber-300 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                    <span className="text-xs font-bold text-amber-800">Choosing Wisely</span>
+                  </div>
+                  <p className="text-xs text-amber-700 mb-1">{alert.description}</p>
+                  <p className="text-[10px] text-amber-600">Alternative: {alert.alternative}</p>
+                  <p className="text-[10px] text-amber-400 mt-0.5">{alert.source}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Recommended Actions */}
           {diagnosisResult.recommendedActions.length > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <h4 className="text-sm font-semibold text-blue-800 mb-2">Recommended Next Steps</h4>
-              <ul className="space-y-1">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-blue-800">Recommended Next Steps</h4>
+                {diagnosisResult.intelligentWorkup && (
+                  <span className="text-[10px] text-blue-400">{diagnosisResult.intelligentWorkup.consolidationSummary}</span>
+                )}
+              </div>
+              <ul className="space-y-1.5">
                 {diagnosisResult.recommendedActions.map((action, i) => (
-                  <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
-                    <span className="text-blue-500 font-bold">{i + 1}.</span> {action}
+                  <li key={i} className={`text-sm flex items-start gap-2 ${
+                    action.startsWith('STAT:') ? 'text-red-700 font-medium' :
+                    action.startsWith('⚠') ? 'text-amber-700' :
+                    'text-blue-700'
+                  }`}>
+                    {action.startsWith('STAT:') ? (
+                      <span className="text-[10px] bg-red-200 text-red-800 px-1.5 py-0.5 rounded font-bold flex-shrink-0 mt-0.5">STAT</span>
+                    ) : action.startsWith('⚠') ? (
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <span className="text-blue-500 font-bold">{i + 1}.</span>
+                    )}
+                    {action.startsWith('STAT:') ? action.replace('STAT: ', '') : action.startsWith('⚠ ') ? action.slice(2) : action}
                   </li>
                 ))}
               </ul>

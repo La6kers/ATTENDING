@@ -11,6 +11,7 @@ import { applyLikelihoodRatios, applySymptomBoosts } from './symptomDiagnosisBoo
 import { applyGraphBoosts, applyGraphLikelihoodRatios, getGraphStats } from './symptomCauseGraph';
 import { getPreTestProbabilities, hasPrevalenceData } from './clinicalPrevalence';
 import { applyMedicationLikelihoodRatios } from './medicationDiagnosisRules';
+import { generateIntelligentWorkup, formatWorkupAsActions, type IntelligentWorkup } from './workupIntelligence';
 
 // ============================================================
 // TYPES
@@ -140,7 +141,10 @@ export interface DifferentialDiagnosisResult {
   
   /** Recommended next steps */
   recommendedActions: string[];
-  
+
+  /** Intelligent workup with evidence grades, priorities, and scoring tool results */
+  intelligentWorkup?: IntelligentWorkup;
+
   /** AI model used */
   model: string;
   
@@ -356,12 +360,17 @@ export class DifferentialDiagnosisService {
         });
       }
 
+      // Generate intelligent workup using the full 7-layer pipeline
+      const topDifferentials = differentials.slice(0, 10);
+      const intelligentWorkup = generateIntelligentWorkup(presentation, topDifferentials);
+
       const result: DifferentialDiagnosisResult = {
-        differentials: differentials.slice(0, 10),
+        differentials: topDifferentials,
         primaryDiagnosis: differentials[0],
         mustRuleOut,
         clinicalImpression: this.generateClinicalImpression(presentation, differentials),
-        recommendedActions: this.generateRecommendedActions(differentials),
+        recommendedActions: formatWorkupAsActions(intelligentWorkup),
+        intelligentWorkup,
         model: this.config.provider,
         overallConfidence: this.calculateOverallConfidence(differentials),
         generatedAt: new Date().toISOString(),
