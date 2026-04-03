@@ -57,4 +57,5 @@ EXPOSE 3005
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD wget --spider -q http://localhost:3005/ || exit 1
 
-CMD ["node", "apps/compass-standalone/server.js"]
+# Next.js standalone may place server.js at root or nested — try both
+CMD ["sh", "-c", "if [ -f apps/compass-standalone/server.js ]; then node apps/compass-standalone/server.js; else node server.js; fi"]
