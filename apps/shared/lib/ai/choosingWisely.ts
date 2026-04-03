@@ -3,6 +3,11 @@
 // AAFP "Do Not Order" rules for cost-conscious, evidence-based care
 // Source: AAFP Choosing Wisely Campaign (choosingwisely.org)
 // ============================================================
+//
+// TODO(SECURITY): These clinical ordering rules are currently bundled into
+// the frontend. Move to the backend workup pipeline so the rule set and
+// logic are not visible in the browser bundle.
+// ============================================================
 
 import type { PatientPresentation } from './differentialDiagnosis';
 

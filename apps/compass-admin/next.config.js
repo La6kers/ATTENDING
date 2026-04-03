@@ -2,6 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  // Do not expose source maps to the browser in production (security hardening)
+  productionBrowserSourceMaps: false,
   output: 'standalone',
   transpilePackages: ['@attending/shared'],
 

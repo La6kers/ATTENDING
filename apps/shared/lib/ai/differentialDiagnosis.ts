@@ -6,6 +6,20 @@
 // differential diagnoses with confidence scoring
 // Supports: BioMistral, Azure OpenAI, Local inference
 // ============================================================
+//
+// TODO(SECURITY): This module is currently imported by frontend code and will
+// be included in the browser bundle, exposing the full Bayesian scoring logic,
+// ICD-10 mappings, and likelihood ratios to end users.
+//
+// For HIPAA/production hardening, this entire module should be moved to a
+// server-side API route (e.g. pages/api/clinical/differential.ts or the
+// .NET backend). The frontend should call the API endpoint and receive only
+// the resulting differential list — not execute the algorithm itself.
+//
+// Impact: prevents reverse-engineering of proprietary scoring weights and
+// protects any PHI that flows through the algorithm from being accessible
+// in browser memory / devtools.
+// ============================================================
 
 import { applyLikelihoodRatios, applySymptomBoosts } from './symptomDiagnosisBoosts';
 import { applyGraphBoosts, applyGraphLikelihoodRatios, getGraphStats } from './symptomCauseGraph';

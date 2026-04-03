@@ -6,6 +6,20 @@
 // AssessmentResultView component. Keeps the DifferentialDx interface for
 // backward compatibility while using the full Bayesian pipeline underneath.
 // =============================================================================
+//
+// TODO(SECURITY): This adapter (and the full shared Bayesian pipeline it
+// imports) is currently executed client-side in the patient browser bundle.
+// The differential diagnosis algorithm — including scoring weights, ICD-10
+// mappings, and likelihood ratios — is therefore fully visible in DevTools.
+//
+// Recommended migration:
+//   1. Move computation to pages/api/clinical/differential.ts (or .NET backend)
+//   2. Replace this client-side call with a fetch() to that API endpoint
+//   3. Return only the DifferentialDx[] result array to the browser
+//
+// This also ensures that PHI flowing through the algorithm (symptoms, vitals,
+// medications) is processed server-side under HIPAA-compliant logging controls.
+// =============================================================================
 
 import {
   DifferentialDiagnosisService,

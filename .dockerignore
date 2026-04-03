@@ -16,8 +16,21 @@ node_modules
 # Environment files (secrets — pass via env vars or Docker secrets)
 .env
 .env.local
+.env.development
+.env.test
 .env.production
+.env.staging
 .env.*.local
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets
+credentials.json
+serviceAccountKey.json
+*.credentials
 
 # Development files
 .git

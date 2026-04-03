@@ -29,6 +29,14 @@ import { hashData, verifyHash } from '@attending/shared/lib/security';
 
 const isDev = process.env.NODE_ENV === 'development';
 
+// TODO(AZURE-KEY-VAULT): AZURE_AD_B2C_CLIENT_SECRET, NEXTAUTH_SECRET, and the
+// database connection string should be sourced from Azure Key Vault in production.
+// Use Azure App Service Key Vault references:
+//   Set the env var value to "@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/<name>/)"
+//   in App Service Configuration — Azure resolves it automatically at startup.
+// Alternatively, use @azure/keyvault-secrets + DefaultAzureCredential in a
+// startup module to populate process.env before app startup.
+// See: https://learn.microsoft.com/azure/app-service/app-service-key-vault-references
 const b2cTenant     = process.env.AZURE_AD_B2C_TENANT;
 const b2cClientId   = process.env.AZURE_AD_B2C_CLIENT_ID;
 const b2cSecret     = process.env.AZURE_AD_B2C_CLIENT_SECRET;

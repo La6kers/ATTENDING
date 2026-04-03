@@ -121,14 +121,18 @@ public class ExceptionMiddleware
     {
         var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
 
-        _logger.LogWarning("Resource not found: {Path}. TraceId: {TraceId}",
-            context.Request.Path, traceId);
+        // Log the full message server-side (may contain internal field names / IDs)
+        _logger.LogWarning("Resource not found: {Path}. Message: {Message}. TraceId: {TraceId}",
+            context.Request.Path, ex.Message, traceId);
 
         var problemDetails = new ProblemDetails
         {
             Title = "Resource Not Found",
             Status = StatusCodes.Status404NotFound,
-            Detail = ex.Message,
+            // Return generic message in production — ex.Message may expose internal field names or DB schema details
+            Detail = _environment.IsDevelopment()
+                ? ex.Message
+                : "The requested resource was not found.",
             Instance = context.Request.Path,
             Extensions = { ["traceId"] = traceId }
         };
@@ -163,6 +167,7 @@ public class ExceptionMiddleware
     {
         var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
 
+        // Log full detail server-side; the message may reference internal workflow state
         _logger.LogWarning("Business rule violation on {Path}: {Message}. TraceId: {TraceId}",
             context.Request.Path, ex.Message, traceId);
 
@@ -170,7 +175,11 @@ public class ExceptionMiddleware
         {
             Title = "Business Rule Violation",
             Status = StatusCodes.Status422UnprocessableEntity,
-            Detail = ex.Message,
+            // In production, return a safe generic message — ex.Message can expose internal
+            // workflow state or entity field names that should not be client-visible.
+            Detail = _environment.IsDevelopment()
+                ? ex.Message
+                : "The requested operation could not be completed. Please check your input and try again.",
             Instance = context.Request.Path,
             Extensions = { ["traceId"] = traceId }
         };

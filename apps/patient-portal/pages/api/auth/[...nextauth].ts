@@ -10,6 +10,16 @@ import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import crypto from 'crypto';
 
+// TODO(AZURE-KEY-VAULT): In production, NEXTAUTH_SECRET and any other sensitive
+// environment variables should be sourced from Azure Key Vault rather than
+// plain App Service configuration or .env files.
+// Options:
+//   1. Azure App Service Key Vault references:
+//      Set the env var value to "@Microsoft.KeyVault(SecretUri=https://...)"
+//      in App Service Configuration — Azure resolves it automatically at startup.
+//   2. Azure SDK (@azure/keyvault-secrets + @azure/identity) in a startup
+//      script to populate process.env before this file is imported.
+// See: https://learn.microsoft.com/azure/app-service/app-service-key-vault-references
 if (process.env.NODE_ENV === 'production' && !process.env.NEXTAUTH_SECRET) {
   throw new Error('NEXTAUTH_SECRET environment variable is required in production');
 }

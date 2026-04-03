@@ -3,6 +3,12 @@
 // Orchestrates: scoring tools → conditional workup → consolidation
 // → Choosing Wisely filters → evidence grading → prioritization
 //
+// TODO(SECURITY): This workup recommendation engine (including all 7 pipeline
+// stages, evidence grading, and Choosing Wisely filters) is currently bundled
+// into the frontend. Proprietary ordering logic and clinical rules should run
+// server-side only. Move this pipeline to the .NET backend or an API route
+// and expose only the resulting workup actions to the client.
+//
 // This replaces static workup lookup with a 7-layer pipeline:
 // 1. Base workup from diagnosis-specific maps
 // 2. Clinical scoring tools modify (add/remove tests)

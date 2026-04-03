@@ -2,6 +2,18 @@
 // Singleton Prisma Client for ATTENDING AI Platform
 // This prevents multiple Prisma Client instances in development
 
+// TODO(AZURE-KEY-VAULT): The DATABASE_URL environment variable (consumed by
+// Prisma at startup) must be sourced from Azure Key Vault in production — never
+// from a committed .env file. Recommended approach:
+//   Option A (preferred): Azure App Service Key Vault reference —
+//     Set DATABASE_URL in App Service Configuration as:
+//     "@Microsoft.KeyVault(SecretUri=https://<vault>.vault.azure.net/secrets/database-url/)"
+//     Azure resolves the reference automatically before Node.js starts.
+//   Option B: Use @azure/keyvault-secrets + DefaultAzureCredential in an
+//     instrumentation.ts startup hook to populate process.env.DATABASE_URL
+//     before the first Prisma import.
+// See: https://learn.microsoft.com/azure/app-service/app-service-key-vault-references
+
 import { PrismaClient } from '@prisma/client';
 import { applySoftDeleteMiddleware } from './softDeleteMiddleware';
 import { applyTenantMiddleware } from './multiTenant';

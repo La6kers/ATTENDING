@@ -8,6 +8,12 @@
 // A cause appearing under 21 symptoms (e.g., Diabetes) has ISF=0.05 (red herring).
 // This separates discriminative diagnoses from systemic noise.
 // ============================================================
+//
+// TODO(SECURITY): The full symptom-cause graph (edge weights, ISF values,
+// curated mappings) is currently shipped to the browser as part of the
+// frontend bundle. This proprietary clinical knowledge base should be
+// served from a backend API rather than exposed client-side.
+// ============================================================
 
 import graphData from './symptomCauseGraph.json';
 

@@ -5,6 +5,18 @@
 //
 // Sources: MDCalc, original validation studies
 // ============================================================
+//
+// TODO(SECURITY): This module is currently included in the frontend bundle,
+// exposing validated clinical scoring algorithms (Wells, HEART, Ottawa, etc.)
+// and their internal scoring criteria to browser clients.
+//
+// For production, this logic should run exclusively server-side. Move to the
+// .NET backend (ATTENDING.Application layer) or a Next.js API route, and
+// return only the computed score + recommendation to the frontend.
+//
+// Keeping proprietary clinical decision logic server-side also protects
+// against manipulation of scoring inputs via browser devtools.
+// ============================================================
 
 import type { PatientPresentation, VitalSigns } from './differentialDiagnosis';
 

@@ -13,6 +13,15 @@
 //
 // Estimated time savings are based on ~45 seconds per ROS system question.
 // =============================================================================
+//
+// TODO(SECURITY): This skip-logic module encodes clinically-driven ROS
+// branching rules and is currently bundled client-side. While the UX
+// branching itself can remain client-side for responsiveness, the underlying
+// clinical mappings (relevantSystems per complaint, conditional triggers)
+// constitute proprietary clinical logic. Consider serving the rules as a
+// server-side configuration endpoint so they are not statically compiled
+// into the browser bundle.
+// =============================================================================
 
 // =============================================================================
 // Types

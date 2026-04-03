@@ -4,6 +4,8 @@ const nextConfig = {
   swcMinify: true,
   // Remove X-Powered-By: Next.js header (security hardening)
   poweredByHeader: false,
+  // Do not expose source maps to the browser in production (security hardening)
+  productionBrowserSourceMaps: false,
 
   // Standalone output for Docker deployments
   output: 'standalone',
@@ -12,7 +14,7 @@ const nextConfig = {
   transpilePackages: ['@attending/shared', '@attending/ui-primitives', 'react-leaflet', '@react-leaflet/core'],
 
   // Configure webpack for workspace resolution
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     // Handle workspace package resolution
     config.resolve.symlinks = true;
     return config;

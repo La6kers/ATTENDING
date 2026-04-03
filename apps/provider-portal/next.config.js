@@ -4,6 +4,8 @@ const nextConfig = {
   swcMinify: true,
   // Remove X-Powered-By: Next.js header (security hardening)
   poweredByHeader: false,
+  // Do not expose source maps to the browser in production (security hardening)
+  productionBrowserSourceMaps: false,
 
   // Standalone output for Docker deployments (copies only needed node_modules)
   output: 'standalone',
