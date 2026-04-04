@@ -170,12 +170,9 @@ export default function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiDocumentation>
 ) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  // CORS — use shared origin-validated middleware instead of wildcard
+  const { cors } = await import('@attending/shared/lib/cors');
+  if (await cors(req, res)) return; // Handled preflight
   
   return res.status(200).json(API_DOCUMENTATION);
 }

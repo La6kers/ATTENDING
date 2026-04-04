@@ -11,7 +11,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { generateOpenAPISpec } from '@attending/shared/lib/openapi';
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).json({ error: 'Method not allowed' });
@@ -28,6 +28,8 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Spec is public
+  // CORS — use shared origin-validated middleware instead of wildcard
+  const { cors: applyCors } = await import('@attending/shared/lib/cors');
+  await applyCors(req, res);
   return res.status(200).json(spec);
 }

@@ -1,6 +1,7 @@
 // ============================================================
 // COMPASS Standalone — Image Analysis API
 // AI Vision agent: Claude Vision → Azure OpenAI GPT-4V → local fallback
+// With rate limiting, origin validation, retry logic
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
@@ -40,6 +41,47 @@ interface ImageAnalysisResult {
   provider: string;
 }
 
+// Rate limiter (5 image analyses/minute per IP — more restrictive due to cost)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60_000;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
+function validateOrigin(req: NextApiRequest): boolean {
+  const origin = req.headers.origin || req.headers.referer || '';
+  const allowedOrigins = [
+    process.env.NEXTAUTH_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    'https://attending-compass.azurewebsites.net',
+  ].filter(Boolean);
+  if (process.env.NODE_ENV === 'development') return true;
+  return allowedOrigins.some(allowed => origin.startsWith(allowed as string));
+}
+
+// Retry helper with exponential backoff
+async function withRetry<T>(fn: () => Promise<T>, retries = 2, delayMs = 1000): Promise<T> {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i === retries) throw err;
+      await new Promise(r => setTimeout(r, delayMs * Math.pow(2, i)));
+    }
+  }
+  throw new Error('Retry exhausted');
+}
+
 // Region-specific focus conditions for vision AI
 const REGION_FOCUS: Record<string, string> = {
   'head_face': 'skin lesion, rash, swelling, asymmetry, discoloration, laceration, bruising, masses',
@@ -61,7 +103,6 @@ const REGION_FOCUS: Record<string, string> = {
   'other': 'general assessment of visible pathology',
 };
 
-// Map region IDs to human-readable labels
 const REGION_LABELS: Record<string, string> = {
   'head_face': 'head and face', 'neck_throat': 'neck and throat', 'chest': 'chest',
   'abdomen': 'abdomen', 'upper_back': 'upper back', 'lower_back': 'lower back',
@@ -85,7 +126,6 @@ Respond ONLY with valid JSON in this exact format:
   "recommendations": ["recommendation 1", "recommendation 2"]
 }`;
 
-  // Region-specific context (most important enhancement)
   if (context?.bodyRegion) {
     const regionLabel = REGION_LABELS[context.bodyRegion] || context.bodyRegion;
     const focusAreas = REGION_FOCUS[context.bodyRegion] || 'general assessment';
@@ -118,52 +158,42 @@ async function analyzeWithClaude(
   const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
   const prompt = buildClinicalVisionPrompt(context);
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      max_tokens: 2048,
-      messages: [
-        {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 2048,
+        messages: [{
           role: 'user',
           content: [
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: mimeType,
-                data: base64Image,
-              },
-            },
-            {
-              type: 'text',
-              text: prompt,
-            },
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Image } },
+            { type: 'text', text: prompt },
           ],
-        },
-      ],
-    }),
-  });
+        }],
+      }),
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Claude Vision API error ${response.status}: ${errText}`);
+    if (!response.ok) throw new Error(`Claude Vision API error ${response.status}`);
+
+    const data = await response.json();
+    const text = data.content[0].text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Failed to parse Claude Vision response');
+
+    return { ...JSON.parse(jsonMatch[0]), provider: 'claude-vision' };
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const data = await response.json();
-  const text = data.content[0].text;
-
-  // Extract JSON from response (handle markdown code blocks)
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Failed to parse Claude Vision response');
-
-  const result = JSON.parse(jsonMatch[0]);
-  return { ...result, provider: 'claude-vision' };
 }
 
 async function analyzeWithAzureOpenAI(
@@ -180,41 +210,38 @@ async function analyzeWithAzureOpenAI(
   const prompt = buildClinicalVisionPrompt(context);
   const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=2024-02-15-preview`;
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messages: [
-        {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{
           role: 'user',
           content: [
-            {
-              type: 'image_url',
-              image_url: {
-                url: `data:${mimeType};base64,${base64Image}`,
-              },
-            },
+            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64Image}` } },
             { type: 'text', text: prompt },
           ],
-        },
-      ],
-      max_tokens: 2048,
-      temperature: 0.2,
-    }),
-  });
+        }],
+        max_tokens: 2048,
+        temperature: 0.2,
+      }),
+      signal: controller.signal,
+    });
 
-  if (!response.ok) throw new Error(`Azure OpenAI error: ${response.status}`);
+    if (!response.ok) throw new Error(`Azure OpenAI error: ${response.status}`);
 
-  const data = await response.json();
-  const text = data.choices[0].message.content;
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Failed to parse Azure OpenAI response');
+    const data = await response.json();
+    const text = data.choices[0].message.content;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Failed to parse Azure OpenAI response');
 
-  const result = JSON.parse(jsonMatch[0]);
-  return { ...result, provider: 'azure-openai-vision' };
+    return { ...JSON.parse(jsonMatch[0]), provider: 'azure-openai-vision' };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function localFallback(): ImageAnalysisResult {
@@ -236,23 +263,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Rate limiting
+  const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim()
+    || req.socket.remoteAddress || 'unknown';
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
+  // Origin validation
+  if (!validateOrigin(req)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Cache-Control', 'no-store');
+
   try {
     const { image, mimeType, context } = req.body as ImageAnalysisRequest;
 
-    // --- Input Validation ---
     if (!image || typeof image !== 'string') {
       return res.status(400).json({ error: 'Image data is required and must be a base64 string' });
     }
 
-    // Validate MIME type
     const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     const safeMimeType = ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : 'image/jpeg';
 
-    // Validate base64 is decodable and within size limits
     try {
       const decoded = Buffer.from(image, 'base64');
-      const MAX_IMAGE_SIZE = 8 * 1024 * 1024; // 8MB decoded
-      if (decoded.length > MAX_IMAGE_SIZE) {
+      if (decoded.length > 8 * 1024 * 1024) {
         return res.status(400).json({ error: 'Image exceeds maximum size of 8MB' });
       }
       if (decoded.length < 100) {
@@ -262,26 +302,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid base64 image encoding' });
     }
 
-    // Sanitize context strings (prevent injection into AI prompts)
     const safeContext = context ? {
       chiefComplaint: context.chiefComplaint?.slice(0, 500),
       hpiSummary: context.hpiSummary?.slice(0, 1000),
       phase: context.phase?.slice(0, 50),
+      bodyRegion: context.bodyRegion?.slice(0, 50),
+      shotLabel: context.shotLabel?.slice(0, 50),
     } : undefined;
 
-    // Try Claude Vision first, then Azure, then local fallback
+    // Try Claude with retry, then Azure with retry, then local fallback
     let result: ImageAnalysisResult;
 
     try {
-      result = await analyzeWithClaude(image, safeMimeType, safeContext);
-      console.log('[COMPASS Vision] Analysis via Claude Vision');
-    } catch (claudeErr) {
-      console.log('[COMPASS Vision] Claude Vision unavailable, trying Azure');
+      result = await withRetry(() => analyzeWithClaude(image, safeMimeType, safeContext), 1, 2000);
+    } catch {
       try {
-        result = await analyzeWithAzureOpenAI(image, safeMimeType, safeContext);
-        console.log('[COMPASS Vision] Analysis via Azure OpenAI Vision');
-      } catch (azureErr) {
-        console.log('[COMPASS Vision] Azure Vision unavailable, using fallback');
+        result = await withRetry(() => analyzeWithAzureOpenAI(image, safeMimeType, safeContext), 1, 2000);
+      } catch {
         result = localFallback();
       }
     }
@@ -290,7 +327,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     console.error('[COMPASS Vision] Error:', error);
     return res.status(500).json({
-      error: 'Image analysis failed',
+      error: 'Image analysis failed. Please try again.',
       ...localFallback(),
     });
   }

@@ -147,6 +147,8 @@ const InputArea: React.FC<{
           onClick={onVoiceToggle}
           disabled={disabled}
           style={{ height: '44px', width: '44px' }}
+          aria-label={isListening ? 'Stop listening' : 'Start voice input'}
+          aria-pressed={isListening}
           className={`flex-shrink-0 rounded-full flex items-center justify-center transition-colors ${
             isListening ? 'bg-red-500/20 text-red-400 animate-pulse' : 'bg-white/10 text-white/60 hover:bg-white/20'
           } disabled:opacity-50`}
@@ -271,7 +273,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       <div className="flex items-center justify-between px-4 py-3 bg-[#0A2D3D] border-b border-white/10 text-white">
         <div className="flex items-center gap-3">
           {onBack && (
-            <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+            <button onClick={onBack} className="p-1 hover:bg-white/20 rounded-full transition-colors" aria-label="Go back">
               <ChevronLeft className="w-5 h-5" />
             </button>
           )}
@@ -287,6 +289,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
           onClick={() => { setTtsEnabled(!ttsEnabled); if (ttsEnabled) window.speechSynthesis.cancel(); }}
           className={`p-2 rounded-full transition-colors ${ttsEnabled ? 'bg-white/30' : 'hover:bg-white/20'}`}
           title={ttsEnabled ? 'Turn off read-aloud' : 'Read questions aloud'}
+          aria-label={ttsEnabled ? 'Turn off read-aloud' : 'Read questions aloud'}
+          aria-pressed={ttsEnabled}
         >
           {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
         </button>
@@ -315,8 +319,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       {/* Quick Replies */}
       {quickReplies.length > 0 && !isTyping && (
         <div className="px-4 py-2 bg-[#0A2D3D]/80 border-t border-white/5">
-          <p className="text-[10px] text-white/30 mb-1.5 text-center">
-            {multiSelect ? 'select all that apply, then tap Done' : 'or tap a quick reply'}
+          <p className="text-xs text-white/50 mb-1.5 text-center">
+            {multiSelect ? 'Select all that apply, then tap Done' : 'Or tap a quick reply'}
           </p>
           <QuickReplies replies={quickReplies} onSelect={handleQuickReply} disabled={disabled} multiSelect={multiSelect} />
         </div>

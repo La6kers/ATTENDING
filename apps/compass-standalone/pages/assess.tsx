@@ -5,42 +5,58 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { ArrowLeft, Compass } from 'lucide-react';
 
 import { useCompassStore } from '../store/useCompassStore';
+import { useShallow } from 'zustand/react/shallow';
 import { ChatContainer } from '../components/ChatContainer';
-import { ResultsPanel } from '../components/ResultsPanel';
 import { EmergencyBanner } from '../components/EmergencyBanner';
-import { PhotoCapture } from '../components/PhotoCapture';
 import type { QuickReply } from '@attending/shared/types/chat.types';
+
+// Dynamic imports — loaded only when needed (code splitting)
+const ResultsPanel = dynamic(() => import('../components/ResultsPanel').then(m => ({ default: m.ResultsPanel })), {
+  loading: () => <div className="h-full flex items-center justify-center"><div className="w-10 h-10 border-4 border-attending-light-teal/30 border-t-attending-light-teal rounded-full animate-spin" /></div>,
+});
+const PhotoCapture = dynamic(() => import('../components/PhotoCapture').then(m => ({ default: m.PhotoCapture })), {
+  ssr: false,
+});
 
 export default function AssessPage() {
   const router = useRouter();
+  // Split selectors to reduce unnecessary re-renders
   const {
-    isInitialized,
-    initializeSession,
-    messages,
-    currentPhase,
-    isProcessing,
-    showEmergencyModal,
-    setEmergencyModal,
-    dismissEmergency,
-    sendMessage,
-    handleQuickReply: storeQuickReply,
-    getProgress,
-    assessmentData,
-    urgencyLevel,
-    redFlags,
-    diagnosisResult,
-    hpiNarrative,
-    startNewAssessment,
-    attachedImages,
-    stagedImage,
-    stageImage,
-    clearStagedImage,
-    sendImageMessage,
-  } = useCompassStore();
+    isInitialized, initializeSession, messages, currentPhase, isProcessing,
+    showEmergencyModal, setEmergencyModal, dismissEmergency,
+    sendMessage, handleQuickReply: storeQuickReply, getProgress,
+    assessmentData, urgencyLevel, redFlags, diagnosisResult, hpiNarrative,
+    startNewAssessment, attachedImages, stagedImage, stageImage,
+    clearStagedImage, sendImageMessage,
+  } = useCompassStore(useShallow((s) => ({
+    isInitialized: s.isInitialized,
+    initializeSession: s.initializeSession,
+    messages: s.messages,
+    currentPhase: s.currentPhase,
+    isProcessing: s.isProcessing,
+    showEmergencyModal: s.showEmergencyModal,
+    setEmergencyModal: s.setEmergencyModal,
+    dismissEmergency: s.dismissEmergency,
+    sendMessage: s.sendMessage,
+    handleQuickReply: s.handleQuickReply,
+    getProgress: s.getProgress,
+    assessmentData: s.assessmentData,
+    urgencyLevel: s.urgencyLevel,
+    redFlags: s.redFlags,
+    diagnosisResult: s.diagnosisResult,
+    hpiNarrative: s.hpiNarrative,
+    startNewAssessment: s.startNewAssessment,
+    attachedImages: s.attachedImages,
+    stagedImage: s.stagedImage,
+    stageImage: s.stageImage,
+    clearStagedImage: s.clearStagedImage,
+    sendImageMessage: s.sendImageMessage,
+  })));
 
   const [inputValue, setInputValue] = useState('');
   const [showPhotoCapture, setShowPhotoCapture] = useState(false);
