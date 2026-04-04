@@ -374,6 +374,220 @@ async function main() {
   console.log('[10] Audit trail logged');
 
   // =========================================================================
+  // ORG 2 — CROSS-TENANT ISOLATION TEST
+  // A second organization with intentionally overlapping MRNs to prove that
+  // tenant scoping prevents data leakage between organizations.
+  // =========================================================================
+  console.log('\n--- Seeding second organization for cross-tenant isolation test ---\n');
+
+  // =========================================================================
+  // T1. SECOND ORGANIZATION
+  // =========================================================================
+  const org2 = await prisma.organization.upsert({
+    where: { slug: 'test-regional' },
+    update: {},
+    create: {
+      name: 'Test Regional Hospital',
+      slug: 'test-regional',
+      type: 'HOSPITAL',
+      npi: '8888888888',
+      address: '200 Hospital Drive',
+      city: 'Shelbyville',
+      state: 'MO',
+      zipCode: '65401',
+      phone: '555-0200',
+      tier: 'enterprise',
+      settings: JSON.stringify({ timezone: 'America/Chicago' }),
+      featureFlags: JSON.stringify({
+        FEATURE_AI_DIFFERENTIAL_DIAGNOSIS: true,
+        FEATURE_AI_LAB_ORDERING: true,
+        FEATURE_AI_DRUG_RECOMMENDATIONS: true,
+        FEATURE_AMBIENT_DOCUMENTATION: true,
+        FEATURE_IMAGING_ORDERS: true,
+        FEATURE_MEDICATION_ORDERS: true,
+        FEATURE_REFERRAL_ORDERS: true,
+      }),
+    },
+  });
+  console.log(`[T1] Organization: ${org2.name} (${org2.id})`);
+
+  // =========================================================================
+  // T2. PROVIDER — scoped to second org
+  // =========================================================================
+  const provider2 = await prisma.user.upsert({
+    where: { email: 'dr.jones@test-regional.org' },
+    update: { organizationId: org2.id },
+    create: {
+      organizationId: org2.id,
+      email: 'dr.jones@test-regional.org',
+      name: 'Dr. Marcus Jones',
+      role: 'PROVIDER',
+      specialty: 'Internal Medicine',
+      npi: '9876543210',
+      department: 'General Medicine',
+    },
+  });
+  console.log(`[T2] Provider: ${provider2.name}`);
+
+  // =========================================================================
+  // T3. PATIENTS — MRN-SEED-001 and MRN-SEED-002 intentionally overlap with
+  //     org1's patients.  The composite unique key (organizationId, mrn) means
+  //     these are distinct records even though the MRN strings are identical.
+  // =========================================================================
+  const patient2a = await prisma.patient.upsert({
+    where: { organizationId_mrn: { organizationId: org2.id, mrn: 'MRN-SEED-001' } },
+    update: {},
+    create: {
+      organizationId: org2.id,
+      mrn: 'MRN-SEED-001',          // same MRN string as org1's John Doe — different tenant
+      firstName: 'Alice',
+      lastName: 'Rivera',
+      dateOfBirth: new Date('1978-07-22'),
+      gender: 'Female',
+      email: 'alice.rivera@email.com',
+      phone: '555-5678',
+      address: '789 Elm Street',
+      city: 'Shelbyville',
+      state: 'MO',
+      zipCode: '65401',
+    },
+  });
+  console.log(`[T3a] Patient: ${patient2a.firstName} ${patient2a.lastName} (${patient2a.mrn}) — org2, overlapping MRN`);
+
+  const patient2b = await prisma.patient.upsert({
+    where: { organizationId_mrn: { organizationId: org2.id, mrn: 'MRN-SEED-002' } },
+    update: {},
+    create: {
+      organizationId: org2.id,
+      mrn: 'MRN-SEED-002',
+      firstName: 'Carlos',
+      lastName: 'Nguyen',
+      dateOfBirth: new Date('1950-11-08'),
+      gender: 'Male',
+      email: 'carlos.nguyen@email.com',
+      phone: '555-9012',
+      address: '321 Maple Court',
+      city: 'Shelbyville',
+      state: 'MO',
+      zipCode: '65401',
+    },
+  });
+  console.log(`[T3b] Patient: ${patient2b.firstName} ${patient2b.lastName} (${patient2b.mrn})`);
+
+  // =========================================================================
+  // T4. CLINICAL RECORDS — scoped to org2.  Proves that queries filtered by
+  //     organizationId cannot return these rows for org1 consumers.
+  // =========================================================================
+
+  // Allergy — org2 / patient2a
+  await prisma.allergy.create({
+    data: {
+      organizationId: org2.id,
+      patientId: patient2a.id,
+      allergen: 'Aspirin',
+      reaction: 'Bronchospasm',
+      severity: 'SEVERE',
+      status: 'ACTIVE',
+    },
+  });
+  await prisma.allergy.create({
+    data: {
+      organizationId: org2.id,
+      patientId: patient2b.id,
+      allergen: 'Contrast dye',
+      reaction: 'Urticaria',
+      severity: 'MODERATE',
+      status: 'ACTIVE',
+    },
+  });
+  console.log('[T4a] Allergies (org2): Aspirin/severe (Rivera), Contrast dye/moderate (Nguyen)');
+
+  // Medications — org2
+  await prisma.medication.create({
+    data: {
+      organizationId: org2.id,
+      patientId: patient2a.id,
+      name: 'Amlodipine',
+      genericName: 'Amlodipine Besylate',
+      dose: '5mg',
+      frequency: 'Daily',
+      route: 'PO',
+      status: 'ACTIVE',
+      startDate: new Date('2024-02-01'),
+    },
+  });
+  await prisma.medication.create({
+    data: {
+      organizationId: org2.id,
+      patientId: patient2b.id,
+      name: 'Warfarin',
+      genericName: 'Warfarin Sodium',
+      dose: '5mg',
+      frequency: 'Daily',
+      route: 'PO',
+      status: 'ACTIVE',
+      startDate: new Date('2023-09-15'),
+    },
+  });
+  console.log('[T4b] Medications (org2): Amlodipine 5mg daily (Rivera), Warfarin 5mg daily (Nguyen)');
+
+  // Conditions — org2
+  await prisma.condition.create({
+    data: {
+      organizationId: org2.id,
+      patientId: patient2a.id,
+      name: 'Asthma',
+      icdCode: 'J45.50',
+      status: 'ACTIVE',
+      onsetDate: new Date('2015-04-10'),
+    },
+  });
+  await prisma.condition.create({
+    data: {
+      organizationId: org2.id,
+      patientId: patient2b.id,
+      name: 'Atrial Fibrillation',
+      icdCode: 'I48.91',
+      status: 'ACTIVE',
+      onsetDate: new Date('2022-06-20'),
+    },
+  });
+  console.log('[T4c] Conditions (org2): Asthma/J45.50 (Rivera), AFib/I48.91 (Nguyen)');
+
+  // VitalSigns — org2 (standalone, not tied to an encounter)
+  await prisma.vitalSign.create({
+    data: {
+      organizationId: org2.id,
+      patientId: patient2a.id,
+      heartRate: 76,
+      bloodPressureSystolic: 128,
+      bloodPressureDiastolic: 82,
+      respiratoryRate: 14,
+      temperature: 98.6,
+      oxygenSaturation: 99,
+      weight: 148,
+      height: 65,
+      painLevel: 1,
+    },
+  });
+  await prisma.vitalSign.create({
+    data: {
+      organizationId: org2.id,
+      patientId: patient2b.id,
+      heartRate: 68,
+      bloodPressureSystolic: 118,
+      bloodPressureDiastolic: 74,
+      respiratoryRate: 16,
+      temperature: 97.9,
+      oxygenSaturation: 96,
+      weight: 172,
+      height: 68,
+      painLevel: 0,
+    },
+  });
+  console.log('[T4d] VitalSigns (org2): Rivera BP 128/82, HR 76; Nguyen BP 118/74, HR 68');
+
+  // =========================================================================
   // SUMMARY
   // =========================================================================
   console.log('\n--- Seed completed successfully ---');
@@ -384,6 +598,13 @@ async function main() {
   console.log('  Clinical data: 2 allergies, 3 medications, 3 conditions');
   console.log('  Visit: Vitals → COMPASS Assessment → Lab Order → 6 Results → SOAP Note');
   console.log('  Audit trail: HIPAA-compliant encounter record');
+  console.log('');
+  console.log('Cross-tenant isolation data seeded:');
+  console.log(`  Organization: ${org2.name}`);
+  console.log(`  Provider: ${provider2.name} (${provider2.specialty})`);
+  console.log(`  Patient A: ${patient2a.firstName} ${patient2a.lastName} (${patient2a.mrn}) — overlapping MRN with org1`);
+  console.log(`  Patient B: ${patient2b.firstName} ${patient2b.lastName} (${patient2b.mrn})`);
+  console.log('  Clinical data: 2 allergies, 2 medications, 2 conditions, 2 vital sign records');
 }
 
 main()
