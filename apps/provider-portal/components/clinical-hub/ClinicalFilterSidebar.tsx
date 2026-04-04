@@ -106,7 +106,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({ filter, isActive, onClick }
     >
       <span className="truncate">{filter.label}</span>
       <span className={cn(
-        "text-[10px] px-1.5 py-0.5 rounded-full font-semibold",
+        "text-xs px-1.5 py-0.5 rounded-full font-semibold",
         isActive
           ? "bg-white/30"
           : "bg-gray-200 text-gray-600"

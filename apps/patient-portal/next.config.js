@@ -13,6 +13,10 @@ const nextConfig = {
   // Transpile the shared workspace package
   transpilePackages: ['@attending/shared', '@attending/ui-primitives', 'react-leaflet', '@react-leaflet/core'],
 
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
+
   // Configure webpack for workspace resolution
   webpack: (config) => {
     // Handle workspace package resolution

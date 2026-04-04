@@ -137,7 +137,7 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, color }) => {
 
   return (
     <div className={cn("p-2 rounded", colorClasses[color])}>
-      <div className="text-[10px] font-semibold opacity-75">{label}</div>
+      <div className="text-xs font-semibold opacity-75">{label}</div>
       <div className="text-lg font-bold">{value}</div>
     </div>
   );
@@ -163,7 +163,7 @@ const Timeline: React.FC<{ messages: ClinicalMessage[] }> = ({ messages }) => {
             "absolute -left-3 top-1.5 w-2 h-2 rounded-full border-2 border-white",
             msg.priority >= 8 ? "bg-red-600" : "bg-gray-400"
           )}></div>
-          <div className="text-[9px] text-gray-500 font-semibold uppercase">{msg.time}</div>
+          <div className="text-[11px] text-gray-500 font-semibold uppercase">{msg.time}</div>
           <div className="text-gray-700 mt-0.5">
             {msg.patient} - {msg.preview.substring(0, 60)}...
           </div>

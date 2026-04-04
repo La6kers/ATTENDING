@@ -128,9 +128,9 @@ const nextConfig = {
     ];
   },
 
-  // Enable instrumentation hook for startup validation
   experimental: {
     instrumentationHook: true,
+    optimizePackageImports: ['lucide-react'],
   },
 }
 

@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useShallow } from 'zustand/react/shallow';
 import {
   TestTube, Brain, Package, Search, Filter, AlertTriangle,
   CheckCircle, RefreshCw, X
@@ -50,13 +51,26 @@ export default function Labs() {
 
   const {
     patientContext, selectedLabs, aiRecommendations,
-    loadingRecommendations, // was isLoadingRecommendations before store refactor
+    loadingRecommendations,
     searchQuery, categoryFilter, clinicalIndication, specialInstructions, submitting, error,
     setPatientContext, addLab, addLabPanel, removeLab, updateLabPriority,
     setClinicalIndication, setSpecialInstructions, setSearchQuery, setCategoryFilter,
     addAIRecommendedLabs, submitOrder, clearOrder,
     getSelectedLabsArray, getFilteredCatalog, getTotalCost, getStatCount, getFastingRequired,
-  } = useLabOrderingStore();
+  } = useLabOrderingStore(useShallow((s) => ({
+    patientContext: s.patientContext, selectedLabs: s.selectedLabs,
+    aiRecommendations: s.aiRecommendations, loadingRecommendations: s.loadingRecommendations,
+    searchQuery: s.searchQuery, categoryFilter: s.categoryFilter,
+    clinicalIndication: s.clinicalIndication, specialInstructions: s.specialInstructions,
+    submitting: s.submitting, error: s.error,
+    setPatientContext: s.setPatientContext, addLab: s.addLab, addLabPanel: s.addLabPanel,
+    removeLab: s.removeLab, updateLabPriority: s.updateLabPriority,
+    setClinicalIndication: s.setClinicalIndication, setSpecialInstructions: s.setSpecialInstructions,
+    setSearchQuery: s.setSearchQuery, setCategoryFilter: s.setCategoryFilter,
+    addAIRecommendedLabs: s.addAIRecommendedLabs, submitOrder: s.submitOrder, clearOrder: s.clearOrder,
+    getSelectedLabsArray: s.getSelectedLabsArray, getFilteredCatalog: s.getFilteredCatalog,
+    getTotalCost: s.getTotalCost, getStatCount: s.getStatCount, getFastingRequired: s.getFastingRequired,
+  })));
 
   // Load real patient from URL params, or fall back to DEMO_PATIENT
   const { patientId, encounterId, assessmentId, chiefComplaint } = router.query;

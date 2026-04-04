@@ -8,6 +8,7 @@ import { NotificationProvider } from '../lib/api/NotificationContext';
 import { ToastProvider } from '../components/shared';
 import { useAuthTokenBridge } from '../lib/api/useAuthTokenBridge';
 import { FhirProvider } from '@attending/shared/lib/fhir/FhirProvider';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 /**
  * Inner app wrapper that has access to the NextAuth session context.
@@ -59,8 +60,10 @@ function AppInner({ Component, pageProps }: { Component: AppProps['Component']; 
 
 export default function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
-    <SessionProvider session={session}>
-      <AppInner Component={Component} pageProps={pageProps} />
-    </SessionProvider>
+    <ErrorBoundary>
+      <SessionProvider session={session}>
+        <AppInner Component={Component} pageProps={pageProps} />
+      </SessionProvider>
+    </ErrorBoundary>
   );
 }

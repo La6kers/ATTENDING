@@ -26,8 +26,22 @@ import type { NextRequest } from 'next/server';
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  if (token) {
-    return NextResponse.next();
+  // Security headers on every response
+  const response = token ? NextResponse.next() : undefined;
+  if (response) {
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob:",
+      "connect-src 'self' ws://localhost:* http://localhost:* https://*.azure.com https://*.openai.azure.com",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join('; ');
+    response.headers.set('Content-Security-Policy', csp);
+    return response;
   }
 
   const { pathname } = req.nextUrl;
