@@ -24,7 +24,7 @@ import {
 
 import type {
   DifferentialDiagnosisResult,
-} from '@attending/shared/lib/ai/differentialDiagnosis';
+} from '@attending/shared/lib/ai/differentialDiagnosis.types';
 
 import { getSymptomModule, type SymptomModule } from '../lib/symptomQuestions';
 

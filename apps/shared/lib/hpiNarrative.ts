@@ -7,7 +7,7 @@
 // ============================================================
 
 import type { HPIData, RedFlag } from '../types/chat.types';
-import type { DifferentialDiagnosisResult } from './ai/differentialDiagnosis';
+import type { DifferentialDiagnosisResult } from './ai/differentialDiagnosis.types';
 
 export type SummaryFormat = 'narrative' | 'bulleted' | 'soap';
 

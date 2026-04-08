@@ -10,7 +10,7 @@ import {
   Shield, CheckCircle, Circle, Camera, ArrowRight, Clock,
   Heart, Zap,
 } from 'lucide-react';
-import type { DifferentialDiagnosisResult, DifferentialDiagnosis } from '@attending/shared/lib/ai/differentialDiagnosis';
+import type { DifferentialDiagnosisResult, DifferentialDiagnosis } from '@attending/shared/lib/ai/differentialDiagnosis.types';
 import type { HPIData } from '@attending/shared/types/chat.types';
 import type { SharedAssessment } from '../lib/assessmentShare';
 import { buildStructuredHpi } from '../lib/hpiNarrative';

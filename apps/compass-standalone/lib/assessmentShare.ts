@@ -5,7 +5,7 @@
 // ============================================================
 
 import type { HPIData } from '@attending/shared/types/chat.types';
-import type { DifferentialDiagnosisResult } from '@attending/shared/lib/ai/differentialDiagnosis';
+import type { DifferentialDiagnosisResult } from '@attending/shared/lib/ai/differentialDiagnosis.types';
 import type { ImageAnalysisResult } from '../store/useCompassStore';
 
 export interface SharedAssessment {

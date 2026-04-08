@@ -10,7 +10,7 @@ import {
   Printer, RefreshCw, Stethoscope, ClipboardList, Beaker,
   Radio, Users, Shield, Camera, Share2, Check, Link,
 } from 'lucide-react';
-import type { DifferentialDiagnosisResult, DifferentialDiagnosis } from '@attending/shared/lib/ai/differentialDiagnosis';
+import type { DifferentialDiagnosisResult, DifferentialDiagnosis } from '@attending/shared/lib/ai/differentialDiagnosis.types';
 import type { HPIData, RedFlag } from '@attending/shared/types/chat.types';
 import { buildStructuredHpi, buildBulletedSummary, buildSoapNote, type SummaryFormat } from '../lib/hpiNarrative';
 import type { AttachedImage } from '../store/useCompassStore';
