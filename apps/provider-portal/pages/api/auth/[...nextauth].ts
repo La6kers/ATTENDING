@@ -115,16 +115,23 @@ function buildProviders() {
           // User has a stored password hash — verify
           if (!verifyHash(credentials.password, user.password)) return null;
         } else {
-          // No password stored yet — accept the provided password
-          // and store its PBKDF2 hash for future logins (first-login bootstrap).
+          // No password stored yet — first-login password setup.
+          // Enforce minimum password requirements before accepting.
+          const pw = credentials.password;
+          if (pw.length < 8) return null; // Reject weak passwords silently
+          if (!/[A-Z]/.test(pw) || !/[a-z]/.test(pw) || !/[0-9]/.test(pw)) return null;
+
           try {
-            const hashedPassword = hashData(credentials.password);
+            const hashedPassword = hashData(pw);
             await prisma.user.update({
               where: { id: user.id },
               data: { password: hashedPassword },
             });
+            console.log(`[AUTH] First-login password set for user ${user.email} (id: ${user.id})`);
           } catch {
-            // DB write failed — still allow this login, hash will be set next time
+            // DB write failed — reject login so password isn't lost
+            console.error(`[AUTH] Failed to store first-login password for ${user.email}`);
+            return null;
           }
         }
 
@@ -194,9 +201,22 @@ export const authOptions: NextAuthOptions = {
           // Keep role/org in sync with DB in case they were updated
           token.role = dbUser.role;
           token.organizationId = dbUser.organizationId;
-        } catch {
-          // DB unavailable — allow token to pass (fail open on DB errors
-          // rather than locking out all users during an outage)
+          // Reset fail-open counter on successful DB check
+          (token as any)._dbFailCount = 0;
+        } catch (dbError) {
+          // DB unavailable — track consecutive failures.
+          // HIPAA: fail-closed after 3 consecutive DB errors to prevent
+          // deactivated users from retaining access during extended outages.
+          const failCount = ((token as any)._dbFailCount || 0) + 1;
+          (token as any)._dbFailCount = failCount;
+
+          console.error(`[AUTH] DB check failed (attempt ${failCount}):`, dbError instanceof Error ? dbError.message : 'Unknown');
+
+          if (failCount >= 3) {
+            console.error(`[AUTH] Fail-closed: ${failCount} consecutive DB failures — signing out user ${token.id}`);
+            return null as any;
+          }
+          // Allow pass-through for first 2 failures (transient DB blips)
         }
       }
 
