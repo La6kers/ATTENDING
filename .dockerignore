@@ -32,6 +32,10 @@ credentials.json
 serviceAccountKey.json
 *.credentials
 
+# Claude worktrees and flow state
+.claude/
+.mcp.json
+
 # Development files
 .git
 .github
@@ -67,6 +71,12 @@ Dockerfile*
 # Scripts (not needed in image)
 scripts/
 infrastructure/
+
+# Not needed for compass-standalone build
+archive/
+backend/
+data/
+packages/ui-primitives/node_modules/
 
 # Misc
 *.log

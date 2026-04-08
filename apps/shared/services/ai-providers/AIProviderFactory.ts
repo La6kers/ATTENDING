@@ -9,11 +9,44 @@
  * @author ATTENDING AI Team
  */
 
+import {
+  CLINICAL_SYSTEM_PROMPT,
+  buildExtractionPrompt,
+  buildDifferentialPrompt,
+  buildDocumentationPrompt,
+  buildInteractionPrompt,
+  buildOrderPrompt,
+} from './clinicalPrompts';
+
 // ============================================================================
 // Types & Interfaces
 // ============================================================================
 
 export type AIProviderType = 'biomistral' | 'openai' | 'anthropic' | 'azure-openai' | 'mock';
+
+export type ClinicalTaskType =
+  | 'extraction'        // Extract structured data from text — needs ~500 output tokens
+  | 'differential'      // Generate differential diagnosis — needs ~1000 output tokens
+  | 'documentation'     // Generate SOAP/HPI/notes — needs ~1500 output tokens
+  | 'interaction_check' // Drug interaction check — needs ~500 output tokens
+  | 'order_recommend'   // Lab/imaging recommendations — needs ~500 output tokens
+  | 'image_analysis'    // Vision analysis — needs ~1000 output tokens
+  | 'general';          // Uncategorized — uses default 2048
+
+// Task-specific maxTokens limits to avoid wasting output tokens
+const TASK_TOKEN_LIMITS: Record<ClinicalTaskType, number> = {
+  extraction: 512,
+  differential: 1024,
+  documentation: 1536,
+  interaction_check: 512,
+  order_recommend: 512,
+  image_analysis: 1024,
+  general: 2048,
+};
+
+export function getMaxTokensForTask(task: ClinicalTaskType): number {
+  return TASK_TOKEN_LIMITS[task] || 2048;
+}
 
 export interface AICompletionOptions {
   temperature?: number;
@@ -22,6 +55,7 @@ export interface AICompletionOptions {
   stopSequences?: string[];
   systemPrompt?: string;
   responseFormat?: 'text' | 'json';
+  taskType?: ClinicalTaskType;
 }
 
 export interface AICompletionResult {
@@ -221,7 +255,7 @@ export class BioMistralProvider implements IClinicalAIProvider {
       body: JSON.stringify({
         model: this.modelId,
         prompt: options?.systemPrompt ? `${options.systemPrompt}\n\n${prompt}` : prompt,
-        max_tokens: options?.maxTokens || 2048,
+        max_tokens: options?.maxTokens || getMaxTokensForTask(options?.taskType || 'general'),
         temperature: options?.temperature || 0.3,
         top_p: options?.topP || 0.9,
         stop: options?.stopSequences,
@@ -248,30 +282,18 @@ export class BioMistralProvider implements IClinicalAIProvider {
   }
 
   async extractClinicalData(text: string): Promise<ClinicalExtractionResult> {
-    const prompt = `Extract structured clinical information from the following patient narrative. Return JSON with: chiefComplaint, symptoms (array), duration, severity, medications (array), allergies (array), vitalSigns (object), redFlags (array).
-
-Patient narrative:
-${text}
-
-JSON output:`;
-
-    const result = await this.complete(prompt, { 
+    const result = await this.complete(buildExtractionPrompt(text), {
       temperature: 0.1,
       responseFormat: 'json',
-      maxTokens: 1024,
+      taskType: 'extraction',
+      systemPrompt: CLINICAL_SYSTEM_PROMPT,
     });
 
     try {
       const parsed = JSON.parse(result.content);
       return { ...parsed, confidence: 0.85 };
     } catch {
-      return {
-        symptoms: [],
-        medications: [],
-        allergies: [],
-        redFlags: [],
-        confidence: 0,
-      };
+      return { symptoms: [], medications: [], allergies: [], redFlags: [], confidence: 0 };
     }
   }
 
@@ -279,27 +301,11 @@ JSON output:`;
     symptoms: string[],
     context?: PatientContext
   ): Promise<DifferentialDiagnosisResult> {
-    const contextStr = context ? `
-Patient: ${context.age || 'unknown'} year old ${context.sex || 'patient'}
-Medical History: ${context.medicalHistory?.join(', ') || 'None reported'}
-Current Medications: ${context.currentMedications?.join(', ') || 'None'}
-Allergies: ${context.allergies?.join(', ') || 'NKDA'}` : '';
-
-    const prompt = `Generate a differential diagnosis for a patient with the following presentation:
-${contextStr}
-Symptoms: ${symptoms.join(', ')}
-
-Provide up to 5 diagnoses ranked by probability. For each include:
-- ICD-10 code
-- Probability (0-100)
-- Supporting findings
-- Contradicting findings  
-- Recommended tests
-
-Also assess urgency level (routine/urgent/emergent).
-Return as JSON.`;
-
-    const result = await this.complete(prompt, { temperature: 0.2, maxTokens: 2048 });
+    const result = await this.complete(buildDifferentialPrompt(symptoms, context), {
+      temperature: 0.2,
+      taskType: 'differential',
+      systemPrompt: CLINICAL_SYSTEM_PROMPT,
+    });
 
     try {
       return JSON.parse(result.content);
@@ -309,25 +315,20 @@ Return as JSON.`;
   }
 
   async generateDocumentation(encounter: EncounterData, format: 'soap' | 'hpi' | 'assessment' | 'plan'): Promise<string> {
-    const prompts: Record<string, string> = {
-      soap: `Generate a complete SOAP note for the following encounter:\n${JSON.stringify(encounter, null, 2)}`,
-      hpi: `Generate a detailed HPI narrative for: Chief Complaint: ${encounter.chiefComplaint}\nSymptoms: ${encounter.symptoms?.join(', ')}`,
-      assessment: `Generate a clinical assessment section for:\n${JSON.stringify(encounter, null, 2)}`,
-      plan: `Generate a treatment plan for:\n${JSON.stringify(encounter, null, 2)}`,
-    };
-
-    const result = await this.complete(prompts[format], { temperature: 0.3, maxTokens: 2048 });
+    const result = await this.complete(buildDocumentationPrompt(encounter, format), {
+      temperature: 0.3,
+      taskType: 'documentation',
+      systemPrompt: CLINICAL_SYSTEM_PROMPT,
+    });
     return result.content;
   }
 
   async checkInteractions(medications: string[]): Promise<DrugInteractionResult> {
-    const prompt = `Check for drug interactions between these medications: ${medications.join(', ')}
-
-Return JSON with:
-- interactions: array of { drugs: string[], severity: minor|moderate|major|contraindicated, description, recommendation }
-- overallRisk: low|moderate|high`;
-
-    const result = await this.complete(prompt, { temperature: 0.1, maxTokens: 1024 });
+    const result = await this.complete(buildInteractionPrompt(medications), {
+      temperature: 0.1,
+      taskType: 'interaction_check',
+      systemPrompt: CLINICAL_SYSTEM_PROMPT,
+    });
 
     try {
       return JSON.parse(result.content);
@@ -337,18 +338,11 @@ Return JSON with:
   }
 
   async recommendOrders(diagnosis: string, currentOrders: string[]): Promise<OrderRecommendation[]> {
-    const prompt = `For a patient with diagnosis: ${diagnosis}
-Current orders: ${currentOrders.join(', ') || 'None'}
-
-Recommend additional labs, imaging, referrals, or procedures. Return JSON array with:
-- type: lab|imaging|referral|procedure
-- name: order name
-- code: CPT/LOINC if applicable
-- rationale: brief explanation
-- priority: routine|urgent|stat
-- confidence: 0-1`;
-
-    const result = await this.complete(prompt, { temperature: 0.2, maxTokens: 1024 });
+    const result = await this.complete(buildOrderPrompt(diagnosis, currentOrders), {
+      temperature: 0.2,
+      taskType: 'order_recommend',
+      systemPrompt: CLINICAL_SYSTEM_PROMPT,
+    });
 
     try {
       return JSON.parse(result.content);
@@ -401,7 +395,7 @@ export class OpenAIProvider implements IClinicalAIProvider {
       body: JSON.stringify({
         model: this.modelId,
         messages,
-        max_tokens: options?.maxTokens || 2048,
+        max_tokens: options?.maxTokens || getMaxTokensForTask(options?.taskType || 'general'),
         temperature: options?.temperature || 0.3,
         top_p: options?.topP || 0.9,
         stop: options?.stopSequences,
@@ -445,7 +439,7 @@ export class OpenAIProvider implements IClinicalAIProvider {
             { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
           ],
         }],
-        max_tokens: 1024,
+        max_tokens: getMaxTokensForTask('image_analysis'),
       }),
     });
 
@@ -583,7 +577,7 @@ export class AnthropicProvider implements IClinicalAIProvider {
       },
       body: JSON.stringify({
         model: this.modelId,
-        max_tokens: options?.maxTokens || 2048,
+        max_tokens: options?.maxTokens || getMaxTokensForTask(options?.taskType || 'general'),
         system: options?.systemPrompt,
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -647,6 +641,143 @@ export class AnthropicProvider implements IClinicalAIProvider {
 
   async recommendOrders(diagnosis: string, currentOrders: string[]): Promise<OrderRecommendation[]> {
     const result = await this.complete(`Orders for ${diagnosis}. Current: ${currentOrders.join(', ')}. Return JSON array only.`);
+    try {
+      return JSON.parse(result.content);
+    } catch {
+      return [];
+    }
+  }
+
+  async healthCheck(): Promise<boolean> {
+    try {
+      await this.complete('test', { maxTokens: 5 });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+// ============================================================================
+// Azure OpenAI Provider (HIPAA BAA, uses api-key header, deployment-based URL)
+// ============================================================================
+
+export class AzureOpenAIProvider implements IClinicalAIProvider {
+  readonly providerType: AIProviderType = 'azure-openai';
+  readonly modelId: string;
+  private apiKey: string;
+  private endpoint: string;
+  private deployment: string;
+  private apiVersion: string;
+
+  constructor(config: { apiKey: string; endpoint: string; deployment: string; apiVersion?: string }) {
+    this.apiKey = config.apiKey;
+    this.endpoint = config.endpoint.replace(/\/$/, ''); // strip trailing slash
+    this.deployment = config.deployment;
+    this.apiVersion = config.apiVersion || '2024-10-21';
+    this.modelId = config.deployment;
+  }
+
+  private get completionsUrl(): string {
+    return `${this.endpoint}/openai/deployments/${this.deployment}/chat/completions?api-version=${this.apiVersion}`;
+  }
+
+  async complete(prompt: string, options?: AICompletionOptions): Promise<AICompletionResult> {
+    const startTime = Date.now();
+
+    const messages: Array<{ role: string; content: string }> = [];
+    if (options?.systemPrompt) {
+      messages.push({ role: 'system', content: options.systemPrompt });
+    }
+    messages.push({ role: 'user', content: prompt });
+
+    const response = await fetch(this.completionsUrl, {
+      method: 'POST',
+      headers: {
+        'api-key': this.apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages,
+        max_tokens: options?.maxTokens || getMaxTokensForTask(options?.taskType || 'general'),
+        temperature: options?.temperature || 0.3,
+        top_p: options?.topP || 0.9,
+        stop: options?.stopSequences,
+        response_format: options?.responseFormat === 'json' ? { type: 'json_object' } : undefined,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Azure OpenAI API error: ${response.status} - ${error}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      content: data.choices[0].message.content,
+      usage: {
+        promptTokens: data.usage?.prompt_tokens || 0,
+        completionTokens: data.usage?.completion_tokens || 0,
+        totalTokens: data.usage?.total_tokens || 0,
+      },
+      model: this.deployment,
+      provider: this.providerType,
+      latency: Date.now() - startTime,
+    };
+  }
+
+  async extractClinicalData(text: string): Promise<ClinicalExtractionResult> {
+    const result = await this.complete(
+      `Extract structured clinical information from: "${text}"
+       Return JSON: { chiefComplaint, symptoms[], duration, severity, medications[], allergies[], redFlags[] }`,
+      { temperature: 0.1, responseFormat: 'json', taskType: 'extraction' }
+    );
+    try {
+      return { ...JSON.parse(result.content), confidence: 0.9 };
+    } catch {
+      return { symptoms: [], medications: [], allergies: [], redFlags: [], confidence: 0 };
+    }
+  }
+
+  async generateDifferential(symptoms: string[], context?: PatientContext): Promise<DifferentialDiagnosisResult> {
+    const result = await this.complete(
+      `Generate differential diagnosis for: ${symptoms.join(', ')}
+       Patient context: ${JSON.stringify(context || {})}
+       Return JSON with diagnoses array and urgency level.`,
+      { temperature: 0.2, responseFormat: 'json', taskType: 'differential' }
+    );
+    try {
+      return JSON.parse(result.content);
+    } catch {
+      return { diagnoses: [], urgency: 'routine', reasoning: '' };
+    }
+  }
+
+  async generateDocumentation(encounter: EncounterData, format: string): Promise<string> {
+    return (await this.complete(
+      `Generate ${format.toUpperCase()} note for: ${JSON.stringify(encounter)}`,
+      { temperature: 0.3, taskType: 'documentation' }
+    )).content;
+  }
+
+  async checkInteractions(medications: string[]): Promise<DrugInteractionResult> {
+    const result = await this.complete(
+      `Check drug interactions: ${medications.join(', ')}. Return JSON with interactions array and overallRisk.`,
+      { temperature: 0.1, responseFormat: 'json', taskType: 'interaction_check' }
+    );
+    try {
+      return JSON.parse(result.content);
+    } catch {
+      return { interactions: [], overallRisk: 'low' };
+    }
+  }
+
+  async recommendOrders(diagnosis: string, currentOrders: string[]): Promise<OrderRecommendation[]> {
+    const result = await this.complete(
+      `Orders for ${diagnosis}. Current: ${currentOrders.join(', ')}. Return JSON array with type, name, code, rationale, priority, confidence.`,
+      { temperature: 0.2, responseFormat: 'json', taskType: 'order_recommend' }
+    );
     try {
       return JSON.parse(result.content);
     } catch {
@@ -828,10 +959,10 @@ export class AIProviderFactory {
         });
 
       case 'azure-openai':
-        return new OpenAIProvider({
-          apiKey: config.apiKey!,
-          model: config.model || 'gpt-4',
-          baseUrl: config.baseUrl,
+        return new AzureOpenAIProvider({
+          apiKey: config.apiKey || process.env.AZURE_OPENAI_KEY || '',
+          endpoint: config.baseUrl || process.env.AZURE_OPENAI_ENDPOINT || '',
+          deployment: config.model || process.env.AZURE_OPENAI_DEPLOYMENT || 'gpt-4o',
         });
 
       case 'mock':

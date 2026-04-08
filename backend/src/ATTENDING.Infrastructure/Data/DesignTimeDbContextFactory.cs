@@ -17,7 +17,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AttendingD
             .Build();
 
         var connectionString = configuration.GetConnectionString("AttendingDb")
-            ?? "Server=localhost,1433;Database=attending_db;User Id=sa;Password=Attending_Dev_2026!;TrustServerCertificate=True;MultipleActiveResultSets=true";
+            ?? throw new InvalidOperationException("ConnectionStrings:AttendingDb not configured. Set it in appsettings.Development.json or use dotnet user-secrets.");
 
         var optionsBuilder = new DbContextOptionsBuilder<AttendingDbContext>();
         optionsBuilder.UseSqlServer(connectionString, sqlOptions =>

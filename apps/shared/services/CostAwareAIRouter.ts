@@ -15,6 +15,67 @@
 import type { AICompletionResult, AIProviderType, PatientContext } from './ai-providers/AIProviderFactory';
 
 // ============================================================
+// IN-MEMORY CLINICAL CACHE (swap for Redis in production)
+// ============================================================
+
+interface CacheEntry<T> {
+  data: T;
+  cachedAt: number;
+  hits: number;
+}
+
+class ClinicalCache {
+  private store = new Map<string, CacheEntry<any>>();
+  private readonly maxEntries: number;
+  private readonly ttlMs: number;
+
+  constructor(maxEntries = 200, ttlSeconds = 3600) {
+    this.maxEntries = maxEntries;
+    this.ttlMs = ttlSeconds * 1000;
+  }
+
+  get<T>(key: string): T | null {
+    const entry = this.store.get(key);
+    if (!entry) return null;
+
+    // Check TTL
+    if (Date.now() - entry.cachedAt > this.ttlMs) {
+      this.store.delete(key);
+      return null;
+    }
+
+    entry.hits++;
+    return entry.data as T;
+  }
+
+  set<T>(key: string, data: T): void {
+    // Evict oldest if at capacity
+    if (this.store.size >= this.maxEntries) {
+      const oldest = [...this.store.entries()]
+        .sort((a, b) => a[1].cachedAt - b[1].cachedAt)[0];
+      if (oldest) this.store.delete(oldest[0]);
+    }
+
+    this.store.set(key, { data, cachedAt: Date.now(), hits: 0 });
+  }
+
+  getStats(): { size: number; hitRate: string } {
+    const entries = [...this.store.values()];
+    const totalHits = entries.reduce((sum, e) => sum + e.hits, 0);
+    return {
+      size: this.store.size,
+      hitRate: entries.length > 0 ? `${Math.round((totalHits / Math.max(totalHits + entries.length, 1)) * 100)}%` : '0%',
+    };
+  }
+}
+
+// Singleton cache instance
+const clinicalCache = new ClinicalCache(
+  parseInt(process.env.AI_CACHE_MAX_ENTRIES || '200', 10),
+  parseInt(process.env.AI_CACHE_TTL || '3600', 10)
+);
+
+// ============================================================
 // TYPES
 // ============================================================
 
@@ -276,14 +337,13 @@ export class CostAwareAIRouter {
       }
     }
 
-    // Check cache
-    // In production: const cached = await clinicalCache.getCachedDifferential(symptoms, cc);
-    // For now, signal that cache should be checked
+    // Check in-memory cache before making model calls
     const cacheKey = this.buildCacheSignature(input.chiefComplaint || '', input.symptoms || []);
-    if (cacheKey) {
+    const cached = clinicalCache.get<DiagnosisCacheEntry>(cacheKey);
+    if (cached) {
       return {
         source: 'cache',
-        reason: 'Check cache before inference',
+        reason: `Cache hit (${clinicalCache.getStats().size} entries, ${clinicalCache.getStats().hitRate} hit rate)`,
         estimatedCost: 0,
       };
     }
@@ -461,14 +521,45 @@ export class CostAwareAIRouter {
     cacheHitRate: string;
     modelCalls: number;
     savingsEstimate: string;
+    cacheSize?: number;
   } {
+    const cacheStats = clinicalCache.getStats();
     return {
       encounterCost: this.getEncounterCost(),
-      localResolutions: '~65%',     // Would be calculated from actual stats
-      cacheHitRate: '~20%',         // Would come from clinicalCache.getStats()
-      modelCalls: 0,                // Track actual calls
-      savingsEstimate: '~70%',      // vs calling LLM for everything
+      localResolutions: '~65%',
+      cacheHitRate: cacheStats.hitRate,
+      modelCalls: 0,
+      savingsEstimate: '~70%',
+      cacheSize: cacheStats.size,
     };
+  }
+
+  // ----------------------------------------------------------
+  // 6. Cache management
+  // ----------------------------------------------------------
+
+  /**
+   * Cache a differential result for reuse by similar presentations.
+   * Call after a successful model inference to avoid repeat calls.
+   */
+  cacheDifferential(chiefComplaint: string, symptoms: string[], result: DiagnosisCacheEntry): void {
+    const key = this.buildCacheSignature(chiefComplaint, symptoms);
+    clinicalCache.set(key, result);
+  }
+
+  /**
+   * Retrieve a cached differential if available.
+   */
+  getCachedDifferential(chiefComplaint: string, symptoms: string[]): DiagnosisCacheEntry | null {
+    const key = this.buildCacheSignature(chiefComplaint, symptoms);
+    return clinicalCache.get<DiagnosisCacheEntry>(key);
+  }
+
+  /**
+   * Get cache statistics for monitoring.
+   */
+  getCacheStats(): { size: number; hitRate: string } {
+    return clinicalCache.getStats();
   }
 
   // ----------------------------------------------------------
