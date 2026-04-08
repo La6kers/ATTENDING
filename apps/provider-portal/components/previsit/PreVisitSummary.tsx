@@ -127,6 +127,7 @@ export interface PreVisitData {
     factors: RiskFactor[];
   };
   actionItems: ActionItem[];
+  soapNote?: string;
   suggestedDiagnoses?: SuggestedDiagnosis[];
   criticalAlert?: {
     message: string;
@@ -455,7 +456,9 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
   
   const [allExpanded, setAllExpanded] = useState(true);
   const [sectionStatus, setSectionStatus] = useState<Record<string, 'pending' | 'reviewed'>>({
+    soapNote: 'pending',
     chiefComplaint: 'pending',
+    diagnoses: 'pending',
     medications: 'pending',
     vitals: 'pending',
     riskAssessment: 'pending',
@@ -649,6 +652,29 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
 
         {/* Collapsible Sections - WHITE CARDS */}
         <div className="space-y-4">
+          {/* SOAP Note (Pre-Visit) — Default first section */}
+          {data.soapNote && (
+            <CollapsibleSection
+              title="SOAP Note (Pre-Visit)"
+              defaultOpen={true}
+              status={sectionStatus.soapNote}
+              priority="normal"
+              onMarkReviewed={() => markSectionReviewed('soapNote')}
+            >
+              <div className="pt-4">
+                <div className="flex items-center gap-2 mb-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg">
+                  <FileText className="w-4 h-4 text-indigo-600" />
+                  <p className="text-sm text-indigo-800">
+                    Auto-generated from COMPASS assessment. Objective and Plan sections update after provider exam.
+                  </p>
+                </div>
+                <pre className="whitespace-pre-wrap text-sm text-gray-800 font-mono bg-gray-50 rounded-lg p-4 leading-relaxed border border-gray-200">
+                  {data.soapNote}
+                </pre>
+              </div>
+            </CollapsibleSection>
+          )}
+
           {/* Chief Complaint & History */}
           <CollapsibleSection
             title="Chief Complaint & History"
@@ -677,22 +703,23 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
             </div>
           </CollapsibleSection>
 
-          {/* AI Suggested Diagnoses */}
-          {data.suggestedDiagnoses && data.suggestedDiagnoses.length > 0 && (
-            <CollapsibleSection
-              title="AI Suggested Diagnoses"
-              badge={data.suggestedDiagnoses.length}
-              defaultOpen={allExpanded}
-              status={sectionStatus.chiefComplaint === 'reviewed' ? 'reviewed' : 'pending'}
-              priority={data.suggestedDiagnoses.some(d => d.category === 'rule-out' && d.confidence >= 0.25) ? 'high' : 'normal'}
-            >
-              <div className="pt-4">
-                <div className="flex items-center gap-2 mb-4 p-3 bg-teal-50 border border-teal-100 rounded-lg">
-                  <Sparkles className="w-4 h-4 text-teal-600" />
-                  <p className="text-sm text-teal-800">
-                    Based on COMPASS assessment, patient history, and clinical data. Tap a diagnosis to see criteria, rationale, and PE instructions.
-                  </p>
-                </div>
+          {/* AI Suggested Diagnoses — always shown */}
+          <CollapsibleSection
+            title="AI Suggested Diagnoses"
+            badge={data.suggestedDiagnoses?.length || 0}
+            defaultOpen={allExpanded}
+            status={sectionStatus.diagnoses}
+            priority={data.suggestedDiagnoses?.some(d => d.category === 'rule-out' && d.confidence >= 0.25) ? 'high' : 'normal'}
+            onMarkReviewed={() => markSectionReviewed('diagnoses')}
+          >
+            <div className="pt-4">
+              <div className="flex items-center gap-2 mb-4 p-3 bg-teal-50 border border-teal-100 rounded-lg">
+                <Sparkles className="w-4 h-4 text-teal-600" />
+                <p className="text-sm text-teal-800">
+                  Based on COMPASS assessment, patient history, and clinical data. Tap a diagnosis to see criteria, rationale, and PE instructions.
+                </p>
+              </div>
+              {data.suggestedDiagnoses && data.suggestedDiagnoses.length > 0 ? (
                 <div className="space-y-3">
                   {data.suggestedDiagnoses
                     .sort((a, b) => b.confidence - a.confidence)
@@ -705,9 +732,15 @@ export const PreVisitSummary: React.FC<PreVisitSummaryProps> = ({
                       />
                     ))}
                 </div>
-              </div>
-            </CollapsibleSection>
-          )}
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <Brain className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <p className="font-medium">Differential diagnosis pending</p>
+                  <p className="text-sm mt-1">Will be generated after clinical evaluation</p>
+                </div>
+              )}
+            </div>
+          </CollapsibleSection>
 
           {/* Current Medications */}
           <CollapsibleSection

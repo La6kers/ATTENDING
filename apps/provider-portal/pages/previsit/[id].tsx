@@ -13,6 +13,7 @@ import { useRouter } from 'next/router';
 import type { PreVisitData, PatientVitals, SuggestedDiagnosis } from '@/components/previsit';
 import { PreVisitSummary } from '@/components/previsit';
 import { CostAwareAIRouter } from '@attending/shared/services/CostAwareAIRouter';
+import { buildSoapNote } from '@attending/shared/lib/hpiNarrative';
 import { usePatientFhirEnrichment } from '@/hooks/usePatientFhirEnrichment';
 
 // ============================================================
@@ -392,7 +393,50 @@ export default function PreVisitPage() {
       .then((data) => {
         setRawAssessment(data);
         const mapped = mapApiToPreVisitData(data);
-        mapped.suggestedDiagnoses = generateAIDiagnoses(data);
+        const diagnoses = generateAIDiagnoses(data);
+        mapped.suggestedDiagnoses = diagnoses;
+
+        // Generate SOAP note from assessment data
+        const hpiData = data.hpi || {};
+        const redFlagsForSoap = (data.redFlags || []).map((rf: string) => ({
+          symptom: rf,
+          severity: 'warning' as const,
+        }));
+        // Build a minimal DifferentialDiagnosisResult for the SOAP note
+        const dxDifferentials = diagnoses.map(d => ({
+          diagnosis: d.name,
+          icdCode: d.icdCode,
+          confidence: Math.round(d.confidence * 100),
+          reasoning: d.rationale || '',
+          supportingFindings: d.supportingEvidence || [],
+          againstFindings: d.concerns || [],
+          urgency: (d.confidence >= 0.5 ? 'urgent' as const : 'routine' as const),
+          recommendedWorkup: { labs: [] as string[], imaging: [] as string[] },
+        }));
+        const dxResult = diagnoses.length > 0 ? {
+          differentials: dxDifferentials,
+          primaryDiagnosis: dxDifferentials[0],
+          mustRuleOut: dxDifferentials.filter(d => d.urgency === 'urgent'),
+          clinicalImpression: `${data.chiefComplaint || 'Unspecified'} — pre-visit assessment completed via COMPASS.`,
+          recommendedActions: diagnoses
+            .filter(d => d.diagnosticCriteria?.length)
+            .slice(0, 3)
+            .map(d => `Evaluate for ${d.name} (${d.icdCode})`),
+          intelligentWorkup: undefined,
+          model: 'local',
+          overallConfidence: 0,
+          generatedAt: new Date().toISOString(),
+          requestId: '',
+        } : null;
+
+        mapped.soapNote = buildSoapNote(
+          hpiData,
+          data.chiefComplaint,
+          data.patient?.firstName ? `${data.patient.firstName} ${data.patient.lastName || ''}`.trim() : undefined,
+          dxResult,
+          redFlagsForSoap
+        );
+
         setBaseData(mapped);
         setLoading(false);
       })
