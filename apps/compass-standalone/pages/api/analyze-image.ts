@@ -6,6 +6,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { logClinicalAudit, createImageAuditEntry } from '@attending/shared/lib/audit/clinicalAuditLog';
+import { z } from 'zod';
 
 export const config = {
   api: {
@@ -15,17 +16,23 @@ export const config = {
   },
 };
 
-interface ImageAnalysisRequest {
-  image: string; // base64
-  mimeType: string;
-  context?: {
-    chiefComplaint?: string;
-    hpiSummary?: string;
-    phase?: string;
-    bodyRegion?: string;
-    shotLabel?: string;
-  };
-}
+// ============================================================
+// Zod Validation
+// ============================================================
+
+const ImageAnalysisRequestSchema = z.object({
+  image: z.string().min(100).max(15_000_000), // base64 image, min ~75 bytes actual
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
+  context: z.object({
+    chiefComplaint: z.string().max(500).optional(),
+    hpiSummary: z.string().max(2000).optional(),
+    phase: z.string().max(50).optional(),
+    bodyRegion: z.string().max(100).optional(),
+    shotLabel: z.string().max(100).optional(),
+  }).optional(),
+});
+
+type ImageAnalysisRequest = z.infer<typeof ImageAnalysisRequestSchema>;
 
 interface SuggestedCondition {
   name: string;
@@ -282,14 +289,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader('Cache-Control', 'no-store');
 
   try {
-    const { image, mimeType, context } = req.body as ImageAnalysisRequest;
-
-    if (!image || typeof image !== 'string') {
-      return res.status(400).json({ error: 'Image data is required and must be a base64 string' });
+    // Validate request body with Zod schema
+    const parseResult = ImageAnalysisRequestSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        error: 'Invalid image analysis request',
+        details: parseResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`),
+      });
     }
 
-    const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    const safeMimeType = ALLOWED_MIME_TYPES.includes(mimeType) ? mimeType : 'image/jpeg';
+    const { image, mimeType, context } = parseResult.data;
+    const safeMimeType = mimeType;
 
     try {
       const decoded = Buffer.from(image, 'base64');

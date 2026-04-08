@@ -504,7 +504,11 @@ export class OpenAIProvider implements IClinicalAIProvider {
        Return JSON: { chiefComplaint, symptoms[], duration, severity, medications[], allergies[], redFlags[] }`,
       { temperature: 0.1, responseFormat: 'json' }
     );
-    return { ...JSON.parse(result.content), confidence: 0.9 };
+    try {
+      return { ...JSON.parse(result.content), confidence: 0.9 };
+    } catch {
+      return { symptoms: [], medications: [], allergies: [], redFlags: [], confidence: 0 };
+    }
   }
 
   async generateDifferential(symptoms: string[], context?: PatientContext): Promise<DifferentialDiagnosisResult> {
@@ -514,7 +518,11 @@ export class OpenAIProvider implements IClinicalAIProvider {
        Return JSON with diagnoses array and urgency level.`,
       { temperature: 0.2 }
     );
-    return JSON.parse(result.content);
+    try {
+      return JSON.parse(result.content);
+    } catch {
+      return { diagnoses: [], urgency: 'routine', reasoning: '' } as any;
+    }
   }
 
   async generateDocumentation(encounter: EncounterData, format: string): Promise<string> {
@@ -530,7 +538,11 @@ export class OpenAIProvider implements IClinicalAIProvider {
       `Check drug interactions: ${medications.join(', ')}. Return JSON.`,
       { temperature: 0.1, responseFormat: 'json' }
     );
-    return JSON.parse(result.content);
+    try {
+      return JSON.parse(result.content);
+    } catch {
+      return { interactions: [], overallRisk: 'low' };
+    }
   }
 
   async recommendOrders(diagnosis: string, currentOrders: string[]): Promise<OrderRecommendation[]> {
@@ -538,7 +550,11 @@ export class OpenAIProvider implements IClinicalAIProvider {
       `Recommend orders for ${diagnosis}. Current: ${currentOrders.join(', ')}. Return JSON array.`,
       { temperature: 0.2, responseFormat: 'json' }
     );
-    return JSON.parse(result.content);
+    try {
+      return JSON.parse(result.content);
+    } catch {
+      return [];
+    }
   }
 
   async healthCheck(): Promise<boolean> {

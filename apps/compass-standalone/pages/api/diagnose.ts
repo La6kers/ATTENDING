@@ -11,36 +11,41 @@ import {
   type PatientPresentation,
 } from '@attending/shared/lib/ai/differentialDiagnosis';
 import { buildHpiNarrative } from '../../lib/hpiNarrative';
-import type { HPIData } from '@attending/shared/types/chat.types';
 import crypto from 'crypto';
 import { logClinicalAudit, createDiagnoseAuditEntry } from '@attending/shared/lib/audit/clinicalAuditLog';
+import { z } from 'zod';
+import type { HPIData } from '@attending/shared/types/chat.types';
 
-interface ImageCondition {
-  name: string;
-  confidence: number;
-  bodyRegion: string;
-  reasoning: string;
-}
+// ============================================================
+// Zod Validation Schemas (runtime type safety for clinical data)
+// ============================================================
 
-interface VitalsInput {
-  heartRate?: number;
-  bloodPressureSystolic?: number;
-  bloodPressureDiastolic?: number;
-  temperature?: number;
-  oxygenSaturation?: number;
-}
+const ImageConditionSchema = z.object({
+  name: z.string().max(200),
+  confidence: z.number().min(0).max(100),
+  bodyRegion: z.string().max(100),
+  reasoning: z.string().max(1000),
+});
 
-interface DiagnoseRequest {
-  chiefComplaint: string;
-  hpi: HPIData;
-  mrn?: string;
-  gender?: string;
-  redFlags?: string[];
-  symptomSpecificAnswers?: Record<string, string>;
-  imageSuggestedConditions?: ImageCondition[];
-  vitals?: VitalsInput;
-  medications?: string[];
-}
+const VitalsSchema = z.object({
+  heartRate: z.number().min(0).max(300).optional(),
+  bloodPressureSystolic: z.number().min(0).max(400).optional(),
+  bloodPressureDiastolic: z.number().min(0).max(300).optional(),
+  temperature: z.number().min(70).max(115).optional(),
+  oxygenSaturation: z.number().min(0).max(100).optional(),
+}).optional();
+
+const DiagnoseRequestSchema = z.object({
+  chiefComplaint: z.string().min(1).max(500),
+  hpi: z.any().transform((val): HPIData => val || {}),
+  mrn: z.string().max(50).optional(),
+  gender: z.string().max(30).optional(),
+  redFlags: z.array(z.string().max(200)).max(20).optional(),
+  symptomSpecificAnswers: z.record(z.string(), z.string().max(500)).optional(),
+  imageSuggestedConditions: z.array(ImageConditionSchema).max(10).optional(),
+  vitals: VitalsSchema,
+  medications: z.array(z.string().max(100)).max(30).optional(),
+});
 
 // Simple in-memory rate limiter (per IP, 20 requests/minute)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -98,16 +103,20 @@ export default async function handler(
   res.setHeader('Cache-Control', 'no-store');
 
   try {
-    const body = req.body as DiagnoseRequest;
+    // Validate request body with Zod schema
+    const parseResult = DiagnoseRequestSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        error: 'Invalid request data',
+        details: parseResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`),
+      });
+    }
+
     const {
       chiefComplaint, hpi, mrn, gender,
       redFlags, symptomSpecificAnswers, imageSuggestedConditions,
       vitals, medications,
-    } = body;
-
-    if (!chiefComplaint || typeof chiefComplaint !== 'string') {
-      return res.status(400).json({ error: 'Chief complaint is required' });
-    }
+    } = parseResult.data;
 
     // Sanitize string inputs
     const safeChiefComplaint = chiefComplaint.slice(0, 500);
