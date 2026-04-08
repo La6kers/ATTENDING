@@ -26,8 +26,7 @@ interface ResultsPanelProps {
   urgencyLevel: string;
   onStartNew: () => void;
   attachedImages?: AttachedImage[];
-  patientName?: string;
-  dateOfBirth?: string;
+  mrn?: string;
   gender?: string;
 }
 
@@ -182,8 +181,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
   urgencyLevel,
   onStartNew,
   attachedImages = [],
-  patientName,
-  dateOfBirth,
+  mrn,
   gender,
 }) => {
   const structuredHpi = buildStructuredHpi(hpiData);
@@ -198,8 +196,7 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
 
   const handleShare = async () => {
     const sharedData: SharedAssessment = {
-      patientName,
-      dateOfBirth,
+      mrn,
       gender,
       chiefComplaint,
       hpi: hpiData,
@@ -379,14 +376,14 @@ export const ResultsPanel: React.FC<ResultsPanelProps> = ({
         {/* Bulleted format */}
         {summaryFormat === 'bulleted' && (
           <pre className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100 whitespace-pre-wrap font-sans">
-            {buildBulletedSummary(hpiData, chiefComplaint, patientName)}
+            {buildBulletedSummary(hpiData, chiefComplaint, mrn ? `Patient (MRN: ${mrn})` : undefined)}
           </pre>
         )}
 
         {/* SOAP format */}
         {summaryFormat === 'soap' && (
           <pre className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-4 border border-gray-100 whitespace-pre-wrap font-sans">
-            {buildSoapNote(hpiData, chiefComplaint, patientName, diagnosisResult, redFlags)}
+            {buildSoapNote(hpiData, chiefComplaint, mrn ? `Patient (MRN: ${mrn})` : undefined, diagnosisResult, redFlags)}
           </pre>
         )}
       </div>

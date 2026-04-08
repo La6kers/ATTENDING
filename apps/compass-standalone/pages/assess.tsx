@@ -143,8 +143,7 @@ export default function AssessPage() {
                 urgencyLevel={urgencyLevel}
                 onStartNew={() => startNewAssessment()}
                 attachedImages={attachedImages}
-                patientName={assessmentData.patientName}
-                dateOfBirth={assessmentData.dateOfBirth}
+                mrn={assessmentData.mrn}
                 gender={assessmentData.gender}
               />
             </div>
@@ -160,7 +159,7 @@ export default function AssessPage() {
               onBack={handleBack}
               progress={getProgress()}
               currentPhase={currentPhase}
-              patientName={assessmentData.patientName}
+              patientName={assessmentData.mrn ? `MRN: ${assessmentData.mrn}` : undefined}
               disabled={currentPhase === 'generating'}
               onPhotoClick={() => setShowPhotoCapture(true)}
               stagedImage={stagedImage}
@@ -190,7 +189,7 @@ export default function AssessPage() {
         <EmergencyBanner
           isOpen={showEmergencyModal}
           symptoms={redFlags.map((rf) => rf.symptom)}
-          patientName={assessmentData.patientName}
+          patientName={assessmentData.mrn ? `MRN: ${assessmentData.mrn}` : 'Patient'}
           onClose={() => setEmergencyModal(false)}
           onContinue={() => dismissEmergency()}
         />

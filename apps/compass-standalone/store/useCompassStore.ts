@@ -172,11 +172,17 @@ interface PhaseConfig {
 
 const PHASE_CONFIG: Record<CompassPhase, PhaseConfig> = {
   welcome: {
-    question: "Hello! I'm COMPASS, your clinical assessment assistant. I'll help gather information about your symptoms and provide a preliminary assessment. What's your name?",
+    question: "Hello! I'm COMPASS, your clinical assessment assistant. I'll help gather information about your symptoms and provide a preliminary assessment. What is your MRN (medical record number)? If you don't have one, just type \"new\".",
     nextPhase: 'demographics',
   },
   demographics: {
-    question: 'Thanks! To help us assess your condition, could you share your date of birth and gender?',
+    question: 'Thanks! What is your gender?',
+    quickReplies: [
+      { id: 'gender_male', text: 'Male', value: 'Male' },
+      { id: 'gender_female', text: 'Female', value: 'Female' },
+      { id: 'gender_other', text: 'Other', value: 'Other' },
+      { id: 'gender_prefer_not', text: 'Prefer not to say', value: 'Prefer not to say' },
+    ],
     nextPhase: 'vitals',
   },
   vitals: {
@@ -361,9 +367,13 @@ export interface CompassVitals {
 
 export interface CompassAssessmentData {
   sessionId: string;
-  patientName?: string;
-  dateOfBirth?: string;
+  /** Medical Record Number — used instead of patient name for demo/pre-pilot */
+  mrn?: string;
   gender?: string;
+  /** @deprecated Use mrn instead */
+  patientName?: string;
+  /** @deprecated Removed from demo flow — will be populated from patient portal auth */
+  dateOfBirth?: string;
   chiefComplaint?: string;
   hpi: HPIData;
   symptomSpecificAnswers?: Record<string, string>;
@@ -475,15 +485,21 @@ export const useCompassStore = create<CompassState>()(
           // Store data based on phase
           switch (currentPhase) {
             case 'welcome':
-              state.assessmentData.patientName = content;
+              // Store MRN (or generate a session-based one if user says "new")
+              state.assessmentData.mrn = /^new$/i.test(content.trim())
+                ? `DEMO-${state.sessionId.slice(0, 8).toUpperCase()}`
+                : content.trim();
               break;
             case 'demographics':
-              state.assessmentData.dateOfBirth = content;
-              // Try to extract gender from the text
+              // Extract gender from response
               if (/\b(female|woman|girl)\b/i.test(content)) {
                 state.assessmentData.gender = 'female';
               } else if (/\b(male|man|boy)\b/i.test(content)) {
                 state.assessmentData.gender = 'male';
+              } else if (/\b(other)\b/i.test(content)) {
+                state.assessmentData.gender = 'other';
+              } else {
+                state.assessmentData.gender = content.trim();
               }
               break;
             case 'vitals': {
@@ -681,8 +697,7 @@ export const useCompassStore = create<CompassState>()(
               body: JSON.stringify({
                 chiefComplaint: assessmentData.chiefComplaint,
                 hpi: assessmentData.hpi,
-                patientName: assessmentData.patientName,
-                dateOfBirth: assessmentData.dateOfBirth,
+                mrn: assessmentData.mrn,
                 gender: assessmentData.gender,
                 symptomSpecificAnswers: assessmentData.symptomSpecificAnswers,
                 vitals: assessmentData.vitals,

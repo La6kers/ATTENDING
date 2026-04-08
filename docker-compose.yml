@@ -156,7 +156,7 @@ services:
       ASPNETCORE_URLS: "http://+:8080"
       ConnectionStrings__AttendingDb: "Server=sqlserver;Database=attending_db;User=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=True"
       ConnectionStrings__Redis: "redis:6379"
-      Authentication__DevBypass: "true"
+      Authentication__DevBypass: "${AUTH_DEV_BYPASS:-false}"
       Cors__AllowedOrigins__0: "http://localhost:3000"
       Cors__AllowedOrigins__1: "http://localhost:3001"
     depends_on:

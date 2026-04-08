@@ -5,6 +5,7 @@
 // ============================================================
 
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { logClinicalAudit, createImageAuditEntry } from '@attending/shared/lib/audit/clinicalAuditLog';
 
 export const config = {
   api: {
@@ -313,19 +314,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Try Claude with retry, then Azure with retry, then local fallback
     let result: ImageAnalysisResult;
 
+    const startTime = Date.now();
+    let provider = 'local';
+
     try {
       result = await withRetry(() => analyzeWithClaude(image, safeMimeType, safeContext), 1, 2000);
+      provider = 'anthropic';
     } catch {
       try {
         result = await withRetry(() => analyzeWithAzureOpenAI(image, safeMimeType, safeContext), 1, 2000);
+        provider = 'azure-openai';
       } catch {
         result = localFallback();
+        provider = 'local';
       }
     }
+
+    // HIPAA audit log
+    logClinicalAudit(createImageAuditEntry({
+      requestId: `img-${Date.now().toString(36)}`,
+      clientIp: clientIp,
+      bodyRegion: safeContext?.bodyRegion,
+      provider,
+      latencyMs: Date.now() - startTime,
+      success: true,
+    }));
 
     return res.status(200).json(result);
   } catch (error) {
     console.error('[COMPASS Vision] Error:', error);
+
+    logClinicalAudit(createImageAuditEntry({
+      requestId: `img-${Date.now().toString(36)}`,
+      clientIp: clientIp,
+      provider: 'error',
+      latencyMs: 0,
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+    }));
+
     return res.status(500).json({
       error: 'Image analysis failed. Please try again.',
       ...localFallback(),

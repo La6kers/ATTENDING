@@ -13,6 +13,7 @@ import {
 import { buildHpiNarrative } from '../../lib/hpiNarrative';
 import type { HPIData } from '@attending/shared/types/chat.types';
 import crypto from 'crypto';
+import { logClinicalAudit, createDiagnoseAuditEntry } from '@attending/shared/lib/audit/clinicalAuditLog';
 
 interface ImageCondition {
   name: string;
@@ -32,8 +33,7 @@ interface VitalsInput {
 interface DiagnoseRequest {
   chiefComplaint: string;
   hpi: HPIData;
-  patientName?: string;
-  dateOfBirth?: string;
+  mrn?: string;
   gender?: string;
   redFlags?: string[];
   symptomSpecificAnswers?: Record<string, string>;
@@ -100,7 +100,7 @@ export default async function handler(
   try {
     const body = req.body as DiagnoseRequest;
     const {
-      chiefComplaint, hpi, patientName, dateOfBirth, gender,
+      chiefComplaint, hpi, mrn, gender,
       redFlags, symptomSpecificAnswers, imageSuggestedConditions,
       vitals, medications,
     } = body;
@@ -111,19 +111,13 @@ export default async function handler(
 
     // Sanitize string inputs
     const safeChiefComplaint = chiefComplaint.slice(0, 500);
-    const safeName = patientName?.slice(0, 100);
+    const safeMrn = mrn?.slice(0, 50);
 
-    // Build HPI narrative
-    const hpiNarrative = buildHpiNarrative(hpi || {}, safeChiefComplaint, safeName);
+    // Build HPI narrative (use MRN as identifier, not patient name)
+    const hpiNarrative = buildHpiNarrative(hpi || {}, safeChiefComplaint, safeMrn ? `Patient (MRN: ${safeMrn})` : undefined);
 
-    // Estimate age from DOB
-    let age = 40;
-    if (dateOfBirth) {
-      const dob = new Date(dateOfBirth);
-      if (!isNaN(dob.getTime())) {
-        age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-      }
-    }
+    // Default age — will be populated from patient portal auth when connected
+    const age = 40;
 
     // Merge image-suggested conditions into red flags and symptom answers
     const enhancedRedFlags = [...(redFlags || [])];
@@ -183,16 +177,35 @@ export default async function handler(
     // Generate differentials via Bayesian engine with timeout
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30_000);
+    const startTime = Date.now();
 
+    const aiProvider = (process.env.AI_PROVIDER as 'biomistral' | 'azure-openai' | 'anthropic' | 'local') || 'local';
     const diagnosisService = new DifferentialDiagnosisService({
-      provider: (process.env.AI_PROVIDER as 'biomistral' | 'azure-openai' | 'anthropic' | 'local') || 'local',
-      endpoint: process.env.AI_ENDPOINT,
-      apiKey: process.env.AI_API_KEY,
-      model: process.env.AI_MODEL,
+      provider: aiProvider,
+      endpoint: process.env.AI_ENDPOINT || process.env.AZURE_OPENAI_ENDPOINT,
+      apiKey: process.env.AI_API_KEY || process.env.AZURE_OPENAI_KEY,
+      model: process.env.AI_MODEL || process.env.AZURE_OPENAI_DEPLOYMENT,
     });
 
     const differentials = await diagnosisService.generateDifferentials(presentation);
     clearTimeout(timeout);
+
+    const latencyMs = Date.now() - startTime;
+
+    // HIPAA audit log — no raw PHI, only hashed identifiers and categories
+    logClinicalAudit(createDiagnoseAuditEntry({
+      requestId: crypto.randomUUID(),
+      clientIp: clientIp,
+      chiefComplaint: safeChiefComplaint,
+      mrn: safeMrn,
+      symptomCount: presentation.symptoms.length,
+      redFlagCount: enhancedRedFlags.length,
+      differentialCount: differentials.differentials.length,
+      provider: aiProvider,
+      aiInvoked: aiProvider !== 'local',
+      latencyMs,
+      success: true,
+    }));
 
     return res.status(200).json({
       hpiNarrative,
@@ -201,6 +214,22 @@ export default async function handler(
     });
   } catch (error) {
     console.error('[COMPASS Diagnose] Error:', error);
+
+    // Audit log the failure too
+    logClinicalAudit(createDiagnoseAuditEntry({
+      requestId: crypto.randomUUID(),
+      clientIp: clientIp,
+      chiefComplaint: req.body?.chiefComplaint || 'unknown',
+      symptomCount: 0,
+      redFlagCount: 0,
+      differentialCount: 0,
+      provider: process.env.AI_PROVIDER || 'local',
+      aiInvoked: false,
+      latencyMs: 0,
+      success: false,
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+    }));
+
     return res.status(500).json({
       error: 'Failed to generate diagnosis. Please try again.',
     });

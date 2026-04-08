@@ -9,8 +9,8 @@ import type { DifferentialDiagnosisResult } from '@attending/shared/lib/ai/diffe
 import type { ImageAnalysisResult } from '../store/useCompassStore';
 
 export interface SharedAssessment {
-  patientName?: string;
-  dateOfBirth?: string;
+  /** Medical Record Number — no PII in shared links */
+  mrn?: string;
   gender?: string;
   chiefComplaint?: string;
   hpi: HPIData;
@@ -25,6 +25,10 @@ export interface SharedAssessment {
   }[];
   generatedAt: string;
   compassVersion: string;
+  /** @deprecated Use mrn instead. Kept for backward compatibility with existing shared links. */
+  patientName?: string;
+  /** @deprecated Use mrn instead. Kept for backward compatibility with existing shared links. */
+  dateOfBirth?: string;
 }
 
 // ============================================================
