@@ -1,0 +1,23 @@
+{
+  "name": "@attending/identity",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./providers/*": "./src/providers/*.ts",
+    "./middleware/*": "./src/middleware/*.ts"
+  },
+  "dependencies": {
+    "jose": "^5.2.0",
+    "openid-client": "^5.7.0",
+    "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "next-auth": "^4.24.0"
+  },
+  "peerDependenciesMeta": {
+    "next-auth": { "optional": true }
+  }
+}

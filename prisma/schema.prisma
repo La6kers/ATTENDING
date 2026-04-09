@@ -83,6 +83,11 @@ model Organization {
   clinicalImages     ClinicalImage[]
   populationFlags    PatientPopulationFlag[]
   usageRecords       UsageRecord[]
+  // CMS HTE models
+  identityVerifications IdentityVerification[]
+  patientConsents       PatientConsent[]
+  aiConversationReviews AIConversationReview[]
+  aiModelVersions       AIModelVersion[]
 
   @@index([slug])
   @@index([isActive])
@@ -127,6 +132,8 @@ model User {
   assignedAssessments PatientAssessment[]     @relation("AssignedProvider")
   environmentSession  UserEnvironmentSession?
   reviewedImages      ClinicalImage[]
+  // CMS HTE models
+  aiConversationReviews AIConversationReview[]
 
   @@index([email])
   @@index([npi])
@@ -248,6 +255,10 @@ model Patient {
   clinicalNotes    ClinicalNote[]
   populationFlags  PatientPopulationFlag[]
   clinicalImages   ClinicalImage[]
+  // CMS HTE models
+  identityVerifications IdentityVerification[]
+  patientConsents       PatientConsent[]
+  aiConversationReviews AIConversationReview[]
 
   @@unique([organizationId, mrn])
   @@index([mrn])
@@ -1536,4 +1547,144 @@ model UsageRecord {
   @@index([organizationId])
   @@index([event])
   @@index([day])
+}
+
+// ============== CMS HTE: IDENTITY VERIFICATION ==============
+// IAL2 identity verification via ID.me, CLEAR, or Login.gov
+// Links patients to CMS-approved digital identities
+
+model IdentityVerification {
+  id              String    @id @default(cuid())
+  patientId       String
+  organizationId  String
+  provider        String    // "idme", "clear", "logingov"
+  providerSubject String    // Unique ID from identity provider
+  ialLevel        String    // "IAL1", "IAL2", "IAL3"
+  verifiedAt      DateTime
+  expiresAt       DateTime?
+  lastUsedAt      DateTime  @default(now())
+  tokenHash       String?   // Hashed credential token (no raw tokens stored)
+  attributes      String?   @db.NVarChar(Max) // JSON: verified claims (encrypted)
+  isActive        Boolean   @default(true)
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([provider, providerSubject])
+  @@index([patientId])
+  @@index([organizationId])
+  @@index([provider])
+  @@index([ialLevel])
+  @@index([isActive])
+}
+
+// ============== CMS HTE: PATIENT CONSENT ==============
+// Granular patient consent for FHIR data access, AI analysis, and network queries
+// CMS requires "query specificity" — patients control what data is retrieved
+
+model PatientConsent {
+  id              String    @id @default(cuid())
+  patientId       String
+  organizationId  String
+  consentType     String    // "fhir-data-access", "ai-analysis", "data-sharing", "research", "emergency-access"
+  status          String    @default("active") // "active", "revoked", "expired", "pending"
+  dataCategories  String    @db.NVarChar(Max) // JSON array: ["medications", "labs", "conditions"]
+  networkIds      String?   @db.NVarChar(Max) // JSON array: CMS-Aligned Network IDs patient authorized
+  purpose         String?
+  grantedAt       DateTime  @default(now())
+  revokedAt       DateTime?
+  expiresAt       DateTime?
+  grantedBy       String    // IAL2-verified identity subject
+  revokedBy       String?
+  auditTrail      String?   @db.NVarChar(Max) // JSON: consent change history
+  deletedAt       DateTime?
+  deletedBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  patient      Patient      @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([patientId])
+  @@index([organizationId])
+  @@index([consentType])
+  @@index([status])
+  @@index([patientId, consentType, status])
+}
+
+// ============== CMS HTE: AI CONVERSATION REVIEW ==============
+// CMS requires "human oversight — clinician review of conversations to identify potential harm"
+// Tracks AI conversations and their clinician review status
+
+model AIConversationReview {
+  id                    String    @id @default(cuid())
+  organizationId        String
+  patientId             String?
+  encounterId           String?
+  conversationId        String    @unique // Links to AI conversation
+  // AI metadata
+  modelName             String    // "biomistral", "claude-sonnet-4", etc.
+  modelVersion          String
+  contentClassification String    // "clinical-guidance", "educational", "emergency"
+  confidenceScore       Float?
+  recommendationType    String?   // "differential-diagnosis", "medication-suggestion", etc.
+  recommendationSummary String?   @db.NVarChar(Max) // No PHI — clinical pattern metadata only
+  // Review
+  reviewStatus          String    @default("pending") // "pending", "approved", "flagged", "rejected", "auto-approved"
+  reviewedById          String?
+  reviewedAt            DateTime?
+  reviewAction          String?   // "accepted", "modified", "rejected", "escalated"
+  reviewNotes           String?   @db.NVarChar(Max)
+  // Safety
+  harmIndicators        String?   @db.NVarChar(Max) // JSON: AI-detected harm markers
+  safetyFlags           String?   @db.NVarChar(Max) // JSON: ["drug-interaction", "red-flag"]
+  harmPotential         String    @default("none") // "none", "low", "medium", "high"
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  patient      Patient?     @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewedBy   User?        @relation(fields: [reviewedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([organizationId])
+  @@index([patientId])
+  @@index([reviewStatus])
+  @@index([harmPotential])
+  @@index([createdAt])
+  @@index([reviewStatus, organizationId])
+}
+
+// ============== CMS HTE: AI MODEL VERSION REGISTRY ==============
+// Tracks AI model versions, validation data, and deployment status
+// Required for DiMe Seal clinical evidence and NIST AI RMF compliance
+
+model AIModelVersion {
+  id              String    @id @default(cuid())
+  organizationId  String
+  modelName       String    // "biomistral", "claude-sonnet-4", etc.
+  version         String
+  provider        String    // "anthropic", "local", "azure", "biomistral"
+  capabilities    String    @db.NVarChar(Max) // JSON array
+  status          String    @default("testing") // "active", "deprecated", "retired", "testing"
+  deployedAt      DateTime  @default(now())
+  retiredAt       DateTime?
+  // Validation & governance
+  validationData  String?   @db.NVarChar(Max) // JSON: accuracy, precision, recall, F1, AUC
+  biasAssessment  String?   @db.NVarChar(Max) // JSON: demographic performance analysis
+  safetyRecord    String?   @db.NVarChar(Max) // JSON: adverse events, safety metrics
+  approvedBy      String?
+  approvalDate    DateTime?
+  reviewSchedule  String?   // "monthly", "quarterly", "biannual", "annual"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([organizationId, modelName, version])
+  @@index([organizationId])
+  @@index([modelName])
+  @@index([status])
 }

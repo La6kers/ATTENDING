@@ -133,8 +133,19 @@ if (devBypass && builder.Environment.IsDevelopment())
 }
 else
 {
-    builder.Services.AddAuthentication()
-        .AddJwtBearer(options =>
+    // CMS HTE: Multiple JWT bearer schemes
+    // - "Bearer" (default): Azure AD B2C for providers
+    // - "IDme": ID.me OIDC for IAL2-verified patients
+    var idmeIssuer = builder.Configuration["IDme:Issuer"];
+    var idmeClientId = builder.Configuration["IDme:ClientId"];
+
+    var authBuilder = builder.Services.AddAuthentication(options =>
+        {
+            // Default scheme handles Azure AD B2C (provider auth)
+            options.DefaultAuthenticateScheme = "MultiScheme";
+            options.DefaultChallengeScheme = "MultiScheme";
+        })
+        .AddJwtBearer("AzureAdB2C", options =>
         {
             options.Authority = builder.Configuration["AzureAdB2C:Authority"];
             options.Audience = builder.Configuration["AzureAdB2C:ClientId"];
@@ -202,9 +213,107 @@ else
                 }
             };
         });
+
+    // CMS HTE: ID.me JWT bearer for IAL2-verified patients
+    if (!string.IsNullOrEmpty(idmeIssuer) && !string.IsNullOrEmpty(idmeClientId))
+    {
+        Log.Information("ID.me IAL2 authentication enabled (issuer: {Issuer})", idmeIssuer);
+        authBuilder.AddJwtBearer("IDme", options =>
+        {
+            options.Authority = idmeIssuer;
+            options.Audience = idmeClientId;
+            options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = idmeIssuer,
+                ValidateAudience = true,
+                ValidAudience = idmeClientId,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromMinutes(2),
+            };
+            options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    // Verify IAL2 claim
+                    var ialClaim = context.Principal?.FindFirst("ial")?.Value
+                        ?? context.Principal?.FindFirst("http://idmanagement.gov/ns/assurance/ial")?.Value;
+                    var verified = context.Principal?.FindFirst("verified")?.Value;
+
+                    // Accept IAL2 or IAL3, or verified=true
+                    var meetsIAL2 = ialClaim == "2"
+                        || ialClaim == "http://idmanagement.gov/ns/assurance/ial/2"
+                        || ialClaim == "3"
+                        || ialClaim == "http://idmanagement.gov/ns/assurance/ial/3"
+                        || verified == "true";
+
+                    if (!meetsIAL2)
+                    {
+                        context.Fail("IAL2 identity verification required for patient data access.");
+                    }
+                    return Task.CompletedTask;
+                }
+            };
+        });
+    }
+
+    // Multi-scheme policy: accepts either AzureAdB2C or IDme tokens
+    authBuilder.AddPolicyScheme("MultiScheme", "Multi-Auth", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            // Check the Authorization header for token issuer hints
+            var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+            {
+                var token = authHeader.Substring("Bearer ".Length).Trim();
+                // Quick check: ID.me tokens typically have id.me in the issuer
+                // Parse the JWT payload to check issuer (without full validation)
+                try
+                {
+                    var parts = token.Split('.');
+                    if (parts.Length == 3)
+                    {
+                        var payload = System.Text.Encoding.UTF8.GetString(
+                            Convert.FromBase64String(PadBase64(parts[1])));
+                        if (payload.Contains("id.me") || payload.Contains("idmelabs"))
+                            return "IDme";
+                    }
+                }
+                catch { /* Fall through to default */ }
+            }
+            return "AzureAdB2C";
+        };
+    });
 }
 
-builder.Services.AddAuthorization();
+// Helper for base64url padding
+static string PadBase64(string base64)
+{
+    switch (base64.Length % 4)
+    {
+        case 2: return base64 + "==";
+        case 3: return base64 + "=";
+        default: return base64;
+    }
+}
+
+builder.Services.AddAuthorization(options =>
+{
+    // CMS HTE: Policy for endpoints requiring IAL2-verified patient identity
+    options.AddPolicy("IAL2Required", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("ial"); // ID.me tokens carry IAL claim
+    });
+
+    // Provider-only endpoints (existing Azure AD B2C)
+    options.AddPolicy("ProviderAccess", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole("Provider", "Admin");
+    });
+});
 
 // Add CORS
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();

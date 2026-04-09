@@ -10,6 +10,15 @@ import NextAuth, { type NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import crypto from 'crypto';
 
+// CMS HTE: ID.me IAL2 identity verification provider
+// See: packages/identity for full IAL2 implementation
+// ID.me OIDC integration for Medicare App Library compliance
+const IDME_ENABLED = !!process.env.IDME_CLIENT_ID;
+const IDME_SANDBOX = process.env.IDME_USE_SANDBOX === 'true';
+const IDME_ISSUER = IDME_SANDBOX
+  ? 'https://api.idmelabs.com/oidc'
+  : 'https://api.id.me/oidc';
+
 // TODO(AZURE-KEY-VAULT): In production, NEXTAUTH_SECRET and any other sensitive
 // environment variables should be sourced from Azure Key Vault rather than
 // plain App Service configuration or .env files.
@@ -55,8 +64,45 @@ function getNextAuthSecret(): string | undefined {
   return undefined;
 }
 
+// Build ID.me OIDC provider for NextAuth (CMS HTE requirement)
+function getIdmeProvider() {
+  if (!IDME_ENABLED) return null;
+  return {
+    id: 'idme',
+    name: 'ID.me',
+    type: 'oauth' as const,
+    wellKnown: `${IDME_ISSUER}/.well-known/openid-configuration`,
+    clientId: process.env.IDME_CLIENT_ID!,
+    clientSecret: process.env.IDME_CLIENT_SECRET!,
+    authorization: {
+      params: {
+        scope: 'openid profile email http://idmanagement.gov/ns/assurance/ial/2',
+        response_type: 'code',
+      },
+    },
+    idToken: true,
+    checks: ['state', 'nonce'] as const,
+    profile(profile: any) {
+      return {
+        id: profile.sub,
+        name: [profile.fname, profile.lname].filter(Boolean).join(' ') || profile.email,
+        email: profile.email,
+        image: null,
+        // CMS HTE: Store IAL level and verification status
+        ialLevel: profile.ial || 'IAL1',
+        verified: profile.verified || false,
+        identityProvider: 'idme' as const,
+      };
+    },
+  };
+}
+
+const idmeProvider = getIdmeProvider();
+
 export const authOptions: NextAuthOptions = {
   providers: [
+    // CMS HTE: ID.me IAL2 identity verification (when configured)
+    ...(idmeProvider ? [idmeProvider] : []),
     CredentialsProvider({
       name: 'Patient Login',
       credentials: {
@@ -79,9 +125,21 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
+        // CMS HTE: Carry IAL2 identity verification data in JWT
+        if ((user as any).ialLevel) {
+          token.ialLevel = (user as any).ialLevel;
+          token.identityVerified = (user as any).verified;
+          token.identityProvider = (user as any).identityProvider;
+        }
+      }
+      // Store ID.me access token for FHIR data retrieval
+      if (account?.provider === 'idme') {
+        token.idmeAccessToken = account.access_token;
+        token.idmeRefreshToken = account.refresh_token;
+        token.identityProvider = 'idme';
       }
       // Embed organizationId from environment for patient portal sessions
       token.organizationId = process.env.DEFAULT_ORGANIZATION_ID || null;
@@ -91,6 +149,12 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).organizationId = token.organizationId;
+        // CMS HTE: Expose IAL2 status in session for client-side checks
+        (session.user as any).identityVerification = {
+          ialLevel: token.ialLevel || null,
+          verified: token.identityVerified || false,
+          provider: token.identityProvider || null,
+        };
       }
       return session;
     },
