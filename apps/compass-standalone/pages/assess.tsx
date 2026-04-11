@@ -15,6 +15,39 @@ import { ChatContainer } from '../components/ChatContainer';
 import { EmergencyBanner } from '../components/EmergencyBanner';
 import type { QuickReply } from '@attending/shared/types/chat.types';
 
+/**
+ * Track the visible viewport height via `visualViewport`. On mobile browsers
+ * `100vh` / `100dvh` does not always shrink when the on-screen keyboard opens,
+ * which causes the chat input to slide below the keyboard. We mirror the real
+ * visible height into a CSS variable so the app container resizes with the
+ * keyboard and the input + quick replies stay in view.
+ */
+function useVisibleViewportHeight() {
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const vv = window.visualViewport;
+    const setHeight = () => {
+      const h = vv?.height ?? window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', `${h}px`);
+    };
+    setHeight();
+    if (vv) {
+      vv.addEventListener('resize', setHeight);
+      vv.addEventListener('scroll', setHeight);
+    } else {
+      window.addEventListener('resize', setHeight);
+    }
+    return () => {
+      if (vv) {
+        vv.removeEventListener('resize', setHeight);
+        vv.removeEventListener('scroll', setHeight);
+      } else {
+        window.removeEventListener('resize', setHeight);
+      }
+    };
+  }, []);
+}
+
 // Dynamic imports — loaded only when needed (code splitting)
 const ResultsPanel = dynamic(() => import('../components/ResultsPanel').then(m => ({ default: m.ResultsPanel })), {
   loading: () => <div className="h-full flex items-center justify-center"><div className="w-10 h-10 border-4 border-attending-light-teal/30 border-t-attending-light-teal rounded-full animate-spin" /></div>,
@@ -24,6 +57,7 @@ const PhotoCapture = dynamic(() => import('../components/PhotoCapture').then(m =
 });
 
 export default function AssessPage() {
+  useVisibleViewportHeight();
   const router = useRouter();
   // Split selectors to reduce unnecessary re-renders
   const {
@@ -111,7 +145,10 @@ export default function AssessPage() {
         <meta name="theme-color" content="#0C3547" />
       </Head>
 
-      <div className="h-screen h-[100dvh] flex flex-col bg-attending-deep-navy">
+      <div
+        className="flex flex-col bg-attending-deep-navy overflow-hidden"
+        style={{ height: 'var(--app-height, 100dvh)' }}
+      >
         {/* Results header */}
         {showResults && (
           <header className="bg-attending-deep-navy border-b border-white/10 safe-area-top print:hidden">

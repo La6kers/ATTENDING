@@ -8,8 +8,12 @@ import { Send, Mic, MicOff, ChevronLeft, Volume2, VolumeX, Compass, Camera } fro
 import { MessageBubble } from './MessageBubble';
 import { QuickReplies } from './QuickReplies';
 import { StagedImagePreview } from './ImagePreview';
+import { NumberPad } from './NumberPad';
 import type { ChatMessage, QuickReply } from '@attending/shared/types/chat.types';
 import type { CompassPhase } from '../store/useCompassStore';
+
+// Sentinel value: quick reply that opens the numeric MRN keypad instead of sending text.
+const MRN_PAD_SENTINEL = '__open_mrn_pad__';
 
 export interface ChatContainerProps {
   messages: ChatMessage[];
@@ -68,16 +72,23 @@ const MessageList: React.FC<{ messages: ChatMessage[]; isTyping?: boolean }> = (
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Jump to bottom on every new message / typing indicator change so the
+    // latest response is always pinned to the bottom of the viewport.
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isTyping]);
 
   const typingMsg: ChatMessage = { id: 'typing', role: 'assistant', content: '', timestamp: new Date().toISOString() };
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-attending-deep-navy">
-      {messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)}
-      {isTyping && <MessageBubble message={typingMsg} isTyping />}
-      <div ref={bottomRef} />
+    // Outer: scrollable viewport. Inner: flex column with `justify-end` so that
+    // when there are few messages they visually stick to the bottom of the chat
+    // area and each new response pushes older ones upward.
+    <div className="flex-1 overflow-y-auto bg-attending-deep-navy">
+      <div className="min-h-full flex flex-col justify-end px-4 py-4 space-y-2">
+        {messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)}
+        {isTyping && <MessageBubble message={typingMsg} isTyping />}
+        <div ref={bottomRef} />
+      </div>
     </div>
   );
 };
@@ -160,11 +171,20 @@ const InputArea: React.FC<{
           value={value}
           onChange={handleInput}
           onKeyPress={handleKeyPress}
+          onFocus={() => {
+            // Ensure the input scrolls into view after the virtual keyboard
+            // animates open on mobile (fires after the viewport resize).
+            setTimeout(() => {
+              inputRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+            }, 300);
+          }}
           placeholder={stagedImage ? "Add a description (optional)..." : "Type your message..."}
           disabled={disabled}
           rows={1}
-          className="flex-1 min-w-0 px-4 py-2.5 rounded-2xl border border-white/20 bg-white/10 resize-none focus:outline-none focus:ring-2 focus:ring-attending-light-teal/50 focus:border-transparent disabled:bg-white/5 text-white placeholder-white/40"
-          style={{ maxHeight: '120px' }}
+          // 16px minimum font-size prevents iOS Safari from zooming on focus,
+          // which is another common cause of the "keypad covers input" bug.
+          className="flex-1 min-w-0 px-4 py-2.5 rounded-2xl border border-white/20 bg-white/10 resize-none focus:outline-none focus:ring-2 focus:ring-attending-light-teal/50 focus:border-transparent disabled:bg-white/5 text-white placeholder-white/40 text-base"
+          style={{ maxHeight: '120px', fontSize: '16px' }}
         />
         <button
           onClick={onSend}
@@ -209,8 +229,15 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [showMrnPad, setShowMrnPad] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
+
+  // If the current phase is no longer welcome (e.g., user completed MRN entry),
+  // dismiss the keypad so it doesn't reappear on subsequent phases.
+  useEffect(() => {
+    if (currentPhase !== 'welcome' && showMrnPad) setShowMrnPad(false);
+  }, [currentPhase, showMrnPad]);
 
   const handleSend = useCallback(() => {
     // If there's a staged image, send it
@@ -226,9 +253,20 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
   }, [inputValue, disabled, onSend, onInputChange, stagedImage, onSendImage]);
 
   const handleQuickReply = useCallback((reply: QuickReply) => {
+    // Intercept the "Enter MRN" sentinel — open the numeric keypad instead of
+    // sending a message. The actual MRN value is submitted from the pad.
+    if ((reply.value || reply.text) === MRN_PAD_SENTINEL) {
+      setShowMrnPad(true);
+      return;
+    }
     if (onQuickReply) onQuickReply(reply);
     else onSend(reply.value || reply.text);
   }, [onQuickReply, onSend]);
+
+  const handleMrnSubmit = useCallback((mrn: string) => {
+    setShowMrnPad(false);
+    onSend(mrn);
+  }, [onSend]);
 
   // TTS
   useEffect(() => {
@@ -302,28 +340,39 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
       {/* Messages */}
       <MessageList messages={messages} isTyping={isTyping} />
 
-      {/* Input */}
-      <InputArea
-        value={inputValue}
-        onChange={onInputChange}
-        onSend={handleSend}
-        disabled={disabled || isTyping}
-        isListening={isListening}
-        onVoiceToggle={toggleVoice}
-        onPhotoClick={onPhotoClick}
-        stagedImage={stagedImage}
-        onRemoveStagedImage={onRemoveStagedImage}
-        autoFocus={quickReplies.length === 0}
-      />
+      {/* Footer: either the numeric MRN keypad, or the normal input + quick replies */}
+      {showMrnPad ? (
+        <NumberPad
+          onSubmit={handleMrnSubmit}
+          onCancel={() => setShowMrnPad(false)}
+          minLength={1}
+          maxLength={12}
+          label="Enter MRN"
+        />
+      ) : (
+        <>
+          <InputArea
+            value={inputValue}
+            onChange={onInputChange}
+            onSend={handleSend}
+            disabled={disabled || isTyping}
+            isListening={isListening}
+            onVoiceToggle={toggleVoice}
+            onPhotoClick={onPhotoClick}
+            stagedImage={stagedImage}
+            onRemoveStagedImage={onRemoveStagedImage}
+            autoFocus={quickReplies.length === 0}
+          />
 
-      {/* Quick Replies */}
-      {quickReplies.length > 0 && !isTyping && (
-        <div className="px-4 py-2 bg-[#0A2D3D]/80 border-t border-white/5">
-          <p className="text-xs text-white/50 mb-1.5 text-center">
-            {multiSelect ? 'Select all that apply, then tap Done' : 'Or tap a quick reply'}
-          </p>
-          <QuickReplies replies={quickReplies} onSelect={handleQuickReply} disabled={disabled} multiSelect={multiSelect} />
-        </div>
+          {quickReplies.length > 0 && !isTyping && (
+            <div className="px-4 py-2 bg-[#0A2D3D]/80 border-t border-white/5">
+              <p className="text-xs text-white/50 mb-1.5 text-center">
+                {multiSelect ? 'Select all that apply, then tap Done' : 'Or tap a quick reply'}
+              </p>
+              <QuickReplies replies={quickReplies} onSelect={handleQuickReply} disabled={disabled} multiSelect={multiSelect} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
