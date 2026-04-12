@@ -64,7 +64,7 @@
     .nav.scrolled{background:rgba(8,30,43,0.88);backdrop-filter:blur(var(--blur-heavy));border-bottom:1px solid var(--border-glass);padding:0.5rem 0}
     .nav-inner{display:flex;align-items:center;justify-content:space-between}
     .nav-logo{display:flex;align-items:center;gap:0.5rem;text-decoration:none}
-    .nav-logo-icon{width:38px;height:38px;border-radius:var(--r-sm);overflow:hidden;box-shadow:0 0 24px rgba(26,143,168,0.35);flex-shrink:0}
+    .nav-logo-icon{width:38px;height:38px;border-radius:0;overflow:hidden;box-shadow:0 0 24px rgba(26,143,168,0.35);flex-shrink:0}
     .nav-logo-icon img{width:100%;height:100%;object-fit:cover}
     .nav-logo-text{font-weight:800;font-size:1.125rem;letter-spacing:-0.02em}
     .nav-logo-text span{color:var(--primary-light)}
@@ -98,7 +98,7 @@
     @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.5}}
 
     /* Hero */
-    .hero{min-height:100vh;min-height:100dvh;display:flex;align-items:center;padding:8rem 0 4rem}
+    .hero{min-height:100vh;min-height:100dvh;display:flex;align-items:center;padding:5.5rem 0 3rem}
     .hero-grid{display:grid;grid-template-columns:1fr;gap:3rem;align-items:center;justify-items:center}
     .hero-content{max-width:620px;text-align:center;margin:0 auto}
     /* (hero-tabs CSS removed — audience tabs no longer in use) */
@@ -312,7 +312,7 @@
   <div class="container">
     <div class="hero-grid">
       <div class="hero-content fade-up">
-        <h2 class="fade-up" style="font-size:clamp(1rem,2vw,1.25rem);font-weight:600;color:var(--text-secondary);letter-spacing:0.02em;margin-bottom:1rem">Your pre-visit conversation — <span class="highlight" style="font-weight:800">so your doctor already knows your story</span> before you walk in.</h2>
+        <h2 class="fade-up" style="font-size:clamp(1rem,2vw,1.25rem);font-weight:600;color:var(--text-secondary);letter-spacing:0.02em;margin-bottom:1rem">No more repeating your history. No more lost records. <span class="highlight" style="font-weight:800">Your full story, ready before you walk in.</span></h2>
         <h1 id="hero-headline">
           <span class="hero-line">Built <span class="highlight">Different.</span></span>
           <span class="hero-line">Built By A Physician.</span>
@@ -639,7 +639,7 @@
   // cycle every 20 seconds with a gentle cross-fade. Rotation pauses on
   // hover so visitors can finish reading.
   const heroQuotes=[
-    '"No more repeating your history. No more lost records." — <span class="highlight">your full story, ready before you walk in.</span>',
+    'Your pre-visit conversation — <span class="highlight">so your doctor already knows your story</span> before you walk in.',
     'Safety-critical red flag detection — <span class="highlight">14 patterns across 18 emergency conditions</span>, evaluated on every answer.',
     'Physician-designed. Works offline. <span class="highlight">Built for the clinics that need it most.</span>'
   ];
