@@ -1,0 +1,283 @@
+// ============================================================
+// Referral Orders Page - Streamlined with consistent full-page gradient
+// pages/referrals.tsx
+// ============================================================
+
+import { useState, useEffect } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { 
+  UserPlus, ArrowLeft, Home, CheckCircle, AlertTriangle, Clock, Filter
+} from 'lucide-react';
+import { ProviderShell } from '@/components/layout/ProviderShell';
+import { ReferralsReview } from '@/components/referrals';
+import { SimpleCriticalAlert, useToast } from '@/components/shared';
+import { ReferralOrderingPanel } from '@/components/referral-ordering';
+import type { PatientContext as StorePatientContext } from '@/store/referralOrderingStore';
+import type { PatientContext as PanelPatientContext } from '@/components/referral-ordering/types';
+import { fetchPatientContext } from '@/lib/fetchPatientContext';
+import { DEMO_PATIENT } from '@/lib/demoPatient';
+
+const theme = {
+  gradient: 'linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%)',
+};
+
+// DEMO_PATIENT imported from @/lib/demoPatient
+
+export default function ReferralsPage() {
+  const router = useRouter();
+  const { patientId, assessmentId, encounterId } = router.query;
+  
+  const [patientContext, setPatientContext] = useState<StorePatientContext | null>(null);
+  const [viewMode, setViewMode] = useState<'review' | 'order'>('review');
+  const [activeTab, setActiveTab] = useState<'new' | 'pending' | 'history'>('new');
+  const [pendingReferrals, setPendingReferrals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [alertDismissed, setAlertDismissed] = useState(false);
+  const toast = useToast();
+
+  const normalizedPatientContext: PanelPatientContext | null = patientContext ? {
+    ...patientContext,
+    allergies: patientContext.allergies?.map(a => typeof a === 'string' ? a : a.allergen) || [],
+    insurancePlan: patientContext.insurancePlan || '',
+    pcp: patientContext.pcp || '',
+    redFlags: patientContext.redFlags || [],
+  } : null;
+
+  // Load real patient context when patientId is in URL, otherwise demo
+  useEffect(() => {
+    const pid = patientId as string | undefined;
+    const aid = assessmentId as string | undefined;
+    if (!pid) {
+      setPatientContext(DEMO_PATIENT);
+    } else {
+      fetchPatientContext(pid, aid)
+        .then((ctx) => {
+          // Referral store expects allergies as string[] (not objects)
+          setPatientContext({
+            ...ctx,
+            allergies: ctx.allergyNames,
+          } as StorePatientContext);
+        })
+        .catch((err) => {
+          console.error('[Referrals] Failed to load patient context:', err);
+          setPatientContext(DEMO_PATIENT);
+        });
+    }
+
+    fetch('/api/referrals?status=PENDING')
+      .then(res => res.json())
+      .then(data => {
+        setPendingReferrals(data.referrals || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [patientId, assessmentId]);
+
+  const handleOrderComplete = (referralIds: string[]) => {
+    toast.success('Referrals submitted!', `${referralIds.length} referral(s) sent`);
+    fetch('/api/referrals?status=PENDING')
+      .then(res => res.json())
+      .then(data => setPendingReferrals(data.referrals || []));
+  };
+
+  if (!patientContext) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: theme.gradient }}>
+        <div className="text-center text-white">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Head>
+        <title>Referral Orders | ATTENDING AI</title>
+      </Head>
+
+      <ProviderShell contextBadge="Referrals" currentPage="referrals"
+        headerRight={
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button onClick={() => setViewMode('review')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'review' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>Review</button>
+            <button onClick={() => setViewMode('order')} className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'order' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>New Referral</button>
+          </div>
+        }
+      >
+        {viewMode === 'review' ? (
+          <main className="max-w-full px-6 py-6">
+            <div style={{ height: 'calc(100vh - 180px)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 32px rgba(12, 53, 71, 0.2)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <ReferralsReview />
+            </div>
+          </main>
+        ) : (
+        <main className="max-w-7xl mx-auto px-6 py-6">
+          {/* Patient Banner */}
+          <div className="bg-white rounded-2xl p-5 shadow-lg mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 font-bold">
+                  {patientContext.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{patientContext.name}</h3>
+                  <p className="text-sm text-gray-500">{patientContext.age}yo {patientContext.gender} • {patientContext.mrn}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Insurance</p>
+                <p className="font-medium text-gray-900">{patientContext.insurancePlan}</p>
+              </div>
+            </div>
+            {patientContext.chiefComplaint && (
+              <p className="mt-3 text-sm text-gray-600">{patientContext.chiefComplaint}</p>
+            )}
+          </div>
+
+          {/* Critical Alert - Click to dismiss */}
+          {patientContext.redFlags && patientContext.redFlags.length > 0 && !alertDismissed && (
+            <SimpleCriticalAlert
+              title="Critical Red Flags Detected"
+              message={`${patientContext.redFlags.length} red flag(s): ${patientContext.redFlags.join(', ')}. Consider urgent specialty referral.`}
+              actionLabel="View Emergency Protocol"
+              onAction={() => {
+                toast.info('Emergency Protocol', 'Consider urgent neurology or neurosurgery referral');
+                setAlertDismissed(true);
+              }}
+              onDismiss={() => setAlertDismissed(true)}
+              className="mb-6"
+            />
+          )}
+
+          {/* Tabs */}
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div className="flex border-b">
+              {[
+                { id: 'new', label: 'New Referral', icon: UserPlus },
+                { id: 'pending', label: 'Pending', icon: Clock, count: pendingReferrals.length },
+                { id: 'history', label: 'History', icon: CheckCircle },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as 'new' | 'pending' | 'history')}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-teal-600 text-teal-600 bg-teal-50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${
+                      activeTab === tab.id ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'new' && normalizedPatientContext && (
+                <ReferralOrderingPanel
+                  patientContext={normalizedPatientContext}
+                  encounterId={encounterId && typeof encounterId === 'string' ? encounterId : undefined}
+                  onOrderComplete={handleOrderComplete}
+                />
+              )}
+
+              {activeTab === 'pending' && (
+                <div className="space-y-4">
+                  {loading ? (
+                    <div className="text-center py-8 text-gray-500">Loading...</div>
+                  ) : pendingReferrals.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Clock className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                      <p className="text-gray-500">No pending referrals</p>
+                    </div>
+                  ) : (
+                    pendingReferrals.map(ref => (
+                      <div key={ref.id} className="p-4 border border-gray-200 rounded-xl hover:border-teal-300 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900">{ref.specialtyName}</p>
+                            <p className="text-sm text-gray-500">{ref.clinicalQuestion}</p>
+                          </div>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                            ref.urgency === 'STAT' ? 'bg-red-100 text-red-700' :
+                            ref.urgency === 'URGENT' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {ref.urgency}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'history' && (
+                <div className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Specialty</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Patient</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Date Referred</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Date Completed</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Urgency</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700">Consult Summary</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { specialty: 'Cardiology', patient: 'Margaret Sullivan', dateReferred: '2026-01-12', dateCompleted: '2026-01-28', urgency: 'URGENT', status: 'Completed', summary: 'Echo showed mild LVH; started on ACE inhibitor. Follow-up in 3 months.' },
+                          { specialty: 'Neurology', patient: 'James Whitfield', dateReferred: '2026-01-20', dateCompleted: '2026-02-10', urgency: 'ROUTINE', status: 'Completed', summary: 'MRI brain unremarkable. Migraine prophylaxis initiated with topiramate 25mg.' },
+                          { specialty: 'Orthopedics', patient: 'Linda Chen', dateReferred: '2026-02-03', dateCompleted: '2026-02-14', urgency: 'URGENT', status: 'Completed', summary: 'Right knee MRI: medial meniscus tear. Arthroscopic repair scheduled 03/05.' },
+                          { specialty: 'Endocrinology', patient: 'Robert Garcia', dateReferred: '2026-02-08', dateCompleted: '', urgency: 'ROUTINE', status: 'Cancelled', summary: 'Patient relocated out of state. Records transferred to new PCP.' },
+                          { specialty: 'Pulmonology', patient: 'Diane Kowalski', dateReferred: '2026-02-15', dateCompleted: '', urgency: 'STAT', status: 'No Show', summary: 'Patient did not attend. Rescheduled for 03/12; contacted via phone.' },
+                        ].map((row, idx) => (
+                          <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                            <td className="py-3 px-4 font-medium text-gray-900">{row.specialty}</td>
+                            <td className="py-3 px-4 text-gray-700">{row.patient}</td>
+                            <td className="py-3 px-4 text-gray-600">{row.dateReferred}</td>
+                            <td className="py-3 px-4 text-gray-600">{row.dateCompleted || '—'}</td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                row.urgency === 'STAT' ? 'bg-red-100 text-red-700' :
+                                row.urgency === 'URGENT' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                              }`}>
+                                {row.urgency}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                                row.status === 'Completed' ? 'bg-teal-100 text-teal-700' :
+                                row.status === 'Cancelled' ? 'bg-gray-100 text-gray-600' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {row.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-gray-600 max-w-xs truncate" title={row.summary}>{row.summary}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+        )}
+      </ProviderShell>
+    </>
+  );
+}

@@ -673,6 +673,9 @@
 
   // Smooth scroll
   document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{const t=document.querySelector(a.getAttribute('href'));if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'})}})});
+
+  // Hidden demo access — click the copyright text 5 times
+  (function(){let c=0,t=0;const el=document.querySelector('.footer-copy');if(!el)return;el.style.cursor='default';el.addEventListener('click',()=>{const n=Date.now();if(n-t>2000)c=0;t=n;c++;if(c>=5){c=0;window.location.href='/demo.html'}})})();
 </script>
 </body>
 </html>

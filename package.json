@@ -1,0 +1,114 @@
+{
+  "name": "attending-ai",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@10.2.0",
+  "workspaces": [
+    "packages/*",
+    "apps/shared",
+    "apps/provider-portal",
+    "apps/patient-portal",
+    "apps/compass-admin",
+    "apps/compass-standalone",
+    "apps/ems-portal",
+    "services/ems-backend",
+    "services/notification-service",
+    "services/cds-hooks"
+  ],
+  "prisma": {
+    "schema": "prisma/schema.prisma",
+    "seed": "npx ts-node prisma/seed-demo.ts"
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "esModuleInterop": true
+    }
+  },
+  "scripts": {
+    "prepare": "husky",
+    "dev:provider": "npm run dev --workspace=apps/provider-portal",
+    "dev:patient": "npm run dev --workspace=apps/patient-portal",
+    "dev": "turbo run dev --parallel",
+    "dev:backend": "dotnet run --project backend/src/ATTENDING.Orders.Api --launch-profile Development --environment Development",
+    "dev:ems": "npm run dev --workspace=apps/ems-portal",
+    "dev:ems-backend": "npm run dev --workspace=services/ems-backend",
+    "dev:all": "concurrently \"npm run dev:provider\" \"npm run dev:patient\" \"npm run dev:ems-backend\" \"npm run dev:ems\"",
+    "db:up": "docker compose up sqlserver redis -d --wait",
+    "db:down": "docker compose stop sqlserver redis",
+    "db:logs": "docker compose logs sqlserver --tail=50",
+    "dev:full": "npm run db:up && concurrently --names \"backend,provider,patient,ems-backend,ems\" --prefix-colors \"blue,green,yellow,red,magenta\" \"npm run dev:backend\" \"npm run dev:provider\" \"npm run dev:patient\" \"npm run dev:ems-backend\" \"npm run dev:ems\"",
+    "setup": "node scripts/setup-dev.js",
+    "dev:setup": "node scripts/dev-setup.js",
+    "build": "turbo run build",
+    "build:provider": "turbo run build --filter=provider-portal",
+    "build:patient": "turbo run build --filter=patient-portal",
+    "lint": "turbo run lint",
+    "clean": "npx rimraf node_modules apps/provider-portal/node_modules apps/patient-portal/node_modules apps/shared/node_modules apps/provider-portal/.next apps/patient-portal/.next",
+    "clean:cache": "npx rimraf .next apps/*/.next node_modules/.cache",
+    "reinstall": "npm run clean && npm install",
+    "db:generate": "npx prisma generate --schema=prisma/schema.prisma",
+    "db:push": "echo '⚠ db:push is disabled — use db:push:dev for local dev or db:migrate:deploy for production' && exit 1",
+    "db:push:dev": "npx prisma db push --schema=prisma/schema.prisma",
+    "db:migrate": "npx prisma migrate dev --schema=prisma/schema.prisma",
+    "db:studio": "npx prisma studio --schema=prisma/schema.prisma",
+    "db:seed": "npx tsx prisma/seed.ts",
+    "db:reset": "npx prisma migrate reset --force --schema=prisma/schema.prisma",
+    "db:migrate:deploy": "npx prisma migrate deploy --schema=prisma/schema.prisma",
+    "db:migrate:status": "npx prisma migrate status --schema=prisma/schema.prisma",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run tests/integration",
+    "test:e2e": "cd apps/provider-portal && npx playwright test",
+    "test:e2e:ui": "cd apps/provider-portal && npx playwright test --ui",
+    "test:all": "npm run test:run && npm run test:e2e",
+    "test:smoke": "k6 run tests/load/smoke-backend.js",
+    "test:load": "k6 run tests/load/clinical-backend.js",
+    "test:backend": "cd backend && dotnet test --filter \"Category!=Docker\" --no-restore --verbosity normal",
+    "test:backend:coverage": "cd backend && dotnet test --filter \"Category!=Docker\" --collect:\"XPlat Code Coverage\" --results-directory coverage-results && dotnet-reportgenerator-globaltool -reports:\"coverage-results/**/*.xml\" -targetdir:\"coverage-report\" -reporttypes:Html",
+    "test:clinical-safety": "vitest run --config tests/clinical-safety/vitest.config.ts",
+    "test:clinical-safety:watch": "vitest --config tests/clinical-safety/vitest.config.ts",
+    "test:clinical-safety:coverage": "vitest run --config tests/clinical-safety/vitest.config.ts --coverage",
+    "typecheck": "tsc --noEmit --project tsconfig.json",
+    "typecheck:all": "npm run typecheck --workspaces --if-present",
+    "start:provider": "npm run start --workspace=apps/provider-portal",
+    "start:patient": "npm run start --workspace=apps/patient-portal"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.53.0",
+    "@typescript-eslint/parser": "^8.53.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "concurrently": "^8.2.0",
+    "husky": "^9.0.0",
+    "jsdom": "^27.4.0",
+    "prisma": "^5.0.0",
+    "rimraf": "^5.0.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.17"
+  },
+  "dependencies": {
+    "@next/bundle-analyzer": "^16.1.4",
+    "@prisma/client": "^5.0.0",
+    "zod": "^4.3.6"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": "eslint --no-error-on-unmatched-pattern"
+  },
+  "overrides": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  }
+}

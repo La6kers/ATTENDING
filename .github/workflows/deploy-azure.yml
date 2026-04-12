@@ -1,0 +1,130 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/provider-portal/**'
+      - 'apps/shared/**'
+      - 'backend/**'
+      - 'prisma/**'
+      - 'Dockerfile'
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  AZURE_RG: attending-${{ github.event.inputs.environment || 'staging' }}-rg
+  ACR_NAME: attendingacr
+  PORTAL_APP: attending-portal-${{ github.event.inputs.environment || 'staging' }}
+  API_APP: attending-api-${{ github.event.inputs.environment || 'staging' }}
+
+jobs:
+  build-and-deploy-portal:
+    name: Build & Deploy Provider Portal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push portal image
+        run: |
+          docker build \
+            -t ${{ env.ACR_NAME }}.azurecr.io/provider-portal:${{ github.sha }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/provider-portal:latest \
+            -f apps/provider-portal/Dockerfile \
+            .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/provider-portal:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/provider-portal:latest
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.PORTAL_APP }}
+          images: ${{ env.ACR_NAME }}.azurecr.io/provider-portal:${{ github.sha }}
+
+      - name: Verify deployment
+        run: |
+          sleep 30
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.PORTAL_APP }}.azurewebsites.net/api/health)
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed with status $STATUS"
+            exit 1
+          fi
+          echo "Health check passed"
+
+  build-and-deploy-api:
+    name: Build & Deploy Backend API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push API image
+        run: |
+          docker build \
+            -t ${{ env.ACR_NAME }}.azurecr.io/attending-api:${{ github.sha }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/attending-api:latest \
+            -f backend/Dockerfile \
+            .
+          docker push ${{ env.ACR_NAME }}.azurecr.io/attending-api:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/attending-api:latest
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.API_APP }}
+          images: ${{ env.ACR_NAME }}.azurecr.io/attending-api:${{ github.sha }}
+
+      - name: Verify deployment
+        run: |
+          sleep 30
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://${{ env.API_APP }}.azurewebsites.net/health/ready)
+          if [ "$STATUS" != "200" ]; then
+            echo "Health check failed with status $STATUS"
+            exit 1
+          fi
+          echo "Health check passed"
+
+  smoke-test:
+    name: Post-Deploy Smoke Test
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy-portal, build-and-deploy-api]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D68
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Run smoke tests
+        run: |
+          K6_BASE_URL=https://${{ env.API_APP }}.azurewebsites.net \
+          k6 run infrastructure/load-testing/smoke.js
+        continue-on-error: true

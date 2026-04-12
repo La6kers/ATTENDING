@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATTENDING AI — Clinical Intelligence Platform</title>
+  <meta name="description" content="ATTENDING AI — AI-powered clinical intelligence platform transforming healthcare delivery" />
+  <meta name="theme-color" content="#1A8FA8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --deep-navy: #0C3547;
+      --header-dark: #0C4C5E;
+      --primary-teal: #1A8FA8;
+      --light-teal: #25B8A9;
+      --pale-mint: #E6F7F5;
+      --gold: #F0A500;
+      --coral: #E87461;
+      --coral-light: #FCE8E5;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--deep-navy) 0%, var(--primary-teal) 50%, var(--light-teal) 100%);
+      color: white;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      padding: 2rem 2rem 0;
+      text-align: center;
+      position: relative;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 300px;
+      background: radial-gradient(ellipse at top, rgba(255,255,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .logo {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+      position: relative;
+    }
+    .logo span {
+      background: linear-gradient(135deg, #fff 0%, #7dd3c8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .tagline {
+      font-size: 1.1rem;
+      color: rgba(125, 211, 200, 0.8);
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.5);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Portal Grid */
+    .grid-container {
+      max-width: 1200px;
+      margin: 3rem auto;
+      padding: 0 2rem 4rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+    /* Portal Card */
+    .portal-card {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 1rem;
+      padding: 1.75rem;
+      text-decoration: none;
+      color: white;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .portal-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(26, 143, 168, 0.3);
+    }
+    .portal-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 1rem 1rem 0 0;
+    }
+
+    .card-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-title .badge {
+      font-size: 0.625rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary-teal), var(--light-teal));
+    }
+    .card-description {
+      font-size: 0.8125rem;
+      color: rgba(200, 230, 230, 0.7);
+      line-height: 1.5;
+    }
+    .card-status {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: rgba(200, 230, 230, 0.5);
+    }
+    .card-status .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .dot-live { background: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.5); }
+    .dot-dev { background: var(--gold); }
+    .dot-planned { background: rgba(255,255,255,0.3); }
+
+    .card-arrow {
+      position: absolute;
+      right: 1.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      transition: all 0.3s ease;
+      color: rgba(255,255,255,0.6);
+    }
+    .portal-card:hover .card-arrow {
+      opacity: 1;
+      right: 1.25rem;
+    }
+
+    /* Color accents per portal */
+    .portal-provider::before { background: linear-gradient(90deg, var(--primary-teal), var(--light-teal)); }
+    .portal-patient::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .portal-ems::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .portal-er::before { background: linear-gradient(90deg, var(--coral), #d4624f); }
+    .portal-it::before { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+    .portal-analytics::before { background: linear-gradient(90deg, var(--gold), var(--gold)); }
+    .portal-snf::before { background: linear-gradient(90deg, #06b6d4, #0891b2); }
+    .portal-admin::before { background: linear-gradient(90deg, #0F5F76, var(--header-dark)); }
+    .portal-pharmacy::before { background: linear-gradient(90deg, #14b8a6, #0d9488); }
+    .portal-compass::before { background: linear-gradient(90deg, var(--primary-teal), var(--gold)); }
+
+    .icon-provider { background: linear-gradient(135deg, var(--primary-teal), var(--light-teal)); }
+    .icon-patient { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .icon-compass { background: linear-gradient(135deg, var(--primary-teal), var(--gold)); }
+    .icon-ems { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .icon-er { background: linear-gradient(135deg, var(--coral), #d4624f); }
+    .icon-it { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .icon-analytics { background: linear-gradient(135deg, var(--gold), #d48f00); }
+    .icon-snf { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+    .icon-admin { background: linear-gradient(135deg, #0F5F76, var(--header-dark)); }
+    .icon-pharmacy { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.75rem;
+    }
+    .footer a { color: rgba(125, 211, 200, 0.6); text-decoration: none; }
+    .footer a:hover { color: rgba(125, 211, 200, 1); }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo"><span>ATTENDING</span></div>
+    <p class="tagline">Clinical Intelligence Platform</p>
+    <p class="subtitle">
+      AI-powered healthcare delivery across the entire continuum of care.
+      Select a portal to get started.
+    </p>
+  </div>
+
+  <!-- Portal Grid -->
+  <div class="grid-container">
+    <div class="grid">
+
+      <!-- Provider Portal -->
+      <a href="http://localhost:4502/dashboard" class="portal-card portal-provider">
+        <div class="card-icon icon-provider">🩺</div>
+        <div class="card-title">Provider Portal <span class="badge">AI</span></div>
+        <div class="card-description">
+          Clinical workspace with AI-assisted diagnosis, COMPASS pre-visit intelligence,
+          ambient documentation, and decision support. 70+ pages.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Dashboard, Schedule, Assessments, Labs, Imaging</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- Patient Portal -->
+      <a href="http://localhost:4501/api/auth/signin" class="portal-card portal-patient">
+        <div class="card-icon icon-patient">👤</div>
+        <div class="card-title">Patient Portal</div>
+        <div class="card-description">
+          Mobile health dashboard with recent visits, crash detection, referral tracker,
+          emergency access, medication tracking, appointments, and secure messaging.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Sign in with any email (dev mode)</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- COMPASS -->
+      <a href="http://localhost:4501/compass" class="portal-card portal-compass">
+        <div class="card-icon icon-compass">🧭</div>
+        <div class="card-title">COMPASS <span class="badge">AI</span></div>
+        <div class="card-description">
+          AI-guided pre-visit health assessment. Patients answer questions in a
+          chat format — COMPASS generates a clinical summary for the provider.
+          No login required.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Public access, no auth required</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- EMS Portal -->
+      <a href="http://localhost:5173/ems" class="portal-card portal-ems">
+        <div class="card-icon icon-ems">🚑</div>
+        <div class="card-title">EMS Portal <span class="badge">AI</span></div>
+        <div class="card-description">
+          Ambient listening during transport, real-time vitals capture,
+          AI-generated handoff briefs, and automatic ER notification. Patent 15.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Dispatch, Encounter, Ambient Listening</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- ER Portal -->
+      <a href="http://localhost:5173/er" class="portal-card portal-er">
+        <div class="card-icon icon-er">🏥</div>
+        <div class="card-title">ER Incoming <span class="badge">AI</span></div>
+        <div class="card-description">
+          Real-time EMS patient tracking, AI-powered pre-arrival summaries,
+          vitals trends, and structured handoff acceptance. WebSocket live updates.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — WebSocket, AI Summaries, Handoff</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- SNF / Post-Acute -->
+      <a href="http://localhost:4502/clinical" class="portal-card portal-snf">
+        <div class="card-icon icon-snf">🏢</div>
+        <div class="card-title">SNF Transfer <span class="badge">AI</span></div>
+        <div class="card-description">
+          INTERACT-compliant transfer documentation, MAR reconciliation,
+          wound staging, isolation precautions, and PPR flagging. Patent 16.
+        </div>
+        <div class="card-status"><span class="dot dot-dev"></span> Clinical Workspace live — Transfer module in development</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- IT / Infrastructure -->
+      <a href="http://localhost:4502/integrations" class="portal-card portal-it">
+        <div class="card-icon icon-it">⚙️</div>
+        <div class="card-title">IT Administration</div>
+        <div class="card-description">
+          EHR integration management (Epic, Cerner), FHIR configuration,
+          user provisioning, security audit logs, and system monitoring.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Settings, Integrations, EHR Connection</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- Data Analytics -->
+      <a href="http://localhost:4502/executive-analytics" class="portal-card portal-analytics">
+        <div class="card-icon icon-analytics">📊</div>
+        <div class="card-title">Data Analytics <span class="badge">AI</span></div>
+        <div class="card-description">
+          Diagnosis coding accuracy, ML model performance, population health metrics,
+          quality measures (CMS MIPS), and predictive risk analytics.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Executive, Population Health, Predictive Risk</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- Admin / Billing -->
+      <a href="http://localhost:4502/quality-measures" class="portal-card portal-admin">
+        <div class="card-icon icon-admin">💼</div>
+        <div class="card-title">Admin & Billing</div>
+        <div class="card-description">
+          Practice administration, revenue cycle management, E/M level optimization,
+          ICD-10/CPT coding engine, and financial reporting.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Quality Measures, Outcomes, Performance</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+      <!-- Pharmacy -->
+      <a href="http://localhost:4502/medications" class="portal-card portal-pharmacy">
+        <div class="card-icon icon-pharmacy">💊</div>
+        <div class="card-title">Pharmacy <span class="badge">AI</span></div>
+        <div class="card-description">
+          Medication reconciliation, drug interaction checking, e-prescribing,
+          formulary management, and AI-powered deprescribing recommendations.
+        </div>
+        <div class="card-status"><span class="dot dot-live"></span> Live — Medications, Treatment Plan, Pharmacy Availability</div>
+        <span class="card-arrow">→</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>ATTENDING AI &copy; 2026 — <a href="https://github.com/La6kers/ATTENDING">GitHub</a></p>
+    <p style="margin-top: 0.5rem;">Built for the Rural Health Transformation Program</p>
+  </div>
+
+</body>
+</html>

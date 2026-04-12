@@ -1,0 +1,203 @@
+{
+  "$schema": "https://hl7.org/fhir/smart-app-launch/smart-configuration-schema.json",
+  "app_name": "ATTENDING AI - Clinical Intelligence Platform",
+  "app_id": "attending-ai-clinical-intelligence",
+  "app_version": "1.0.0",
+  "vendor": {
+    "name": "La6kers Healthcare Technology",
+    "url": "https://la6kers.com",
+    "support_email": "support@attending.ai",
+    "privacy_policy_url": "https://attending.ai/privacy",
+    "terms_of_service_url": "https://attending.ai/terms"
+  },
+  
+  "description": {
+    "short": "AI-powered clinical decision support and patient assessment platform",
+    "long": "ATTENDING AI is a comprehensive clinical intelligence platform that combines AI-powered patient symptom assessment (COMPASS) with provider clinical decision support (ATTENDING). The platform integrates seamlessly with EHR systems via FHIR R4 to enhance diagnostic accuracy, reduce documentation burden, and improve patient outcomes—especially in rural healthcare settings."
+  },
+  
+  "category": [
+    "Clinical Decision Support",
+    "Patient Assessment",
+    "Triage",
+    "Documentation"
+  ],
+  
+  "smart_version": "2.0",
+  "fhir_versions": ["4.0.1"],
+  
+  "launch_modes": [
+    {
+      "type": "ehr-launch",
+      "description": "Launch from within EHR patient context"
+    },
+    {
+      "type": "standalone-launch",
+      "description": "Launch independently with patient selection"
+    },
+    {
+      "type": "cds-hooks",
+      "description": "Clinical Decision Support hooks integration"
+    }
+  ],
+  
+  "launch_url": "https://provider.attending.ai/launch",
+  "redirect_uris": [
+    "https://provider.attending.ai/callback",
+    "https://provider.attending.ai/api/auth/callback/epic"
+  ],
+  
+  "scopes": {
+    "required": [
+      "openid",
+      "fhirUser",
+      "launch",
+      "patient/Patient.read",
+      "patient/Condition.read",
+      "patient/AllergyIntolerance.read",
+      "patient/MedicationRequest.read",
+      "patient/Observation.read"
+    ],
+    "optional": [
+      "patient/Encounter.read",
+      "patient/DiagnosticReport.read",
+      "patient/ServiceRequest.write",
+      "patient/MedicationRequest.write",
+      "user/Practitioner.read"
+    ]
+  },
+  
+  "fhir_resources": {
+    "read": [
+      "Patient",
+      "Condition",
+      "AllergyIntolerance",
+      "MedicationRequest",
+      "Observation",
+      "Encounter",
+      "DiagnosticReport",
+      "Practitioner"
+    ],
+    "write": [
+      "ServiceRequest",
+      "MedicationRequest",
+      "DocumentReference"
+    ]
+  },
+  
+  "cds_hooks": [
+    {
+      "hook": "patient-view",
+      "id": "attending-patient-summary",
+      "title": "ATTENDING AI Patient Summary",
+      "description": "Displays AI-generated patient summary and clinical recommendations",
+      "prefetch": {
+        "patient": "Patient/{{context.patientId}}",
+        "conditions": "Condition?patient={{context.patientId}}&clinical-status=active",
+        "allergies": "AllergyIntolerance?patient={{context.patientId}}"
+      }
+    },
+    {
+      "hook": "order-select",
+      "id": "attending-order-recommendations",
+      "title": "ATTENDING AI Order Recommendations",
+      "description": "AI-powered lab and imaging recommendations based on clinical context",
+      "prefetch": {
+        "patient": "Patient/{{context.patientId}}",
+        "conditions": "Condition?patient={{context.patientId}}&clinical-status=active"
+      }
+    },
+    {
+      "hook": "order-sign",
+      "id": "attending-drug-safety",
+      "title": "ATTENDING AI Drug Safety Check",
+      "description": "Enhanced drug interaction and allergy checking",
+      "prefetch": {
+        "patient": "Patient/{{context.patientId}}",
+        "medications": "MedicationRequest?patient={{context.patientId}}&status=active",
+        "allergies": "AllergyIntolerance?patient={{context.patientId}}"
+      }
+    }
+  ],
+  
+  "ui_integration": {
+    "supports_iframe": true,
+    "min_width": 800,
+    "min_height": 600,
+    "responsive": true,
+    "dark_mode_support": true
+  },
+  
+  "security": {
+    "token_endpoint_auth_method": "client_secret_post",
+    "pkce_required": true,
+    "supports_refresh_tokens": true,
+    "token_lifetime_minutes": 60,
+    "refresh_token_lifetime_hours": 24
+  },
+  
+  "compliance": {
+    "hipaa_compliant": true,
+    "soc2_certified": false,
+    "hitrust_certified": false,
+    "onc_certified": "pending",
+    "fda_cleared": "not_applicable"
+  },
+  
+  "audit_logging": {
+    "enabled": true,
+    "phi_access_logged": true,
+    "exports_available": true,
+    "retention_days": 2555
+  },
+  
+  "support": {
+    "documentation_url": "https://docs.attending.ai",
+    "api_documentation_url": "https://api.attending.ai/docs",
+    "support_hours": "24/7",
+    "response_time_sla": "4 hours",
+    "phone": "+1-555-ATTEND1",
+    "email": "support@attending.ai"
+  },
+  
+  "pricing": {
+    "model": "subscription",
+    "free_trial_days": 30,
+    "pricing_url": "https://attending.ai/pricing"
+  },
+  
+  "screenshots": [
+    {
+      "url": "https://attending.ai/screenshots/dashboard.png",
+      "description": "Provider dashboard showing patient queue"
+    },
+    {
+      "url": "https://attending.ai/screenshots/assessment.png",
+      "description": "AI-powered patient assessment interface"
+    },
+    {
+      "url": "https://attending.ai/screenshots/differential.png",
+      "description": "Differential diagnosis with AI recommendations"
+    }
+  ],
+  
+  "demo": {
+    "demo_available": true,
+    "demo_url": "https://demo.attending.ai",
+    "demo_credentials": {
+      "note": "Contact sales@attending.ai for demo access"
+    }
+  },
+  
+  "certifications_pending": [
+    "ONC Health IT Certification (2015 Edition Cures Update)",
+    "Epic App Orchard Review",
+    "Oracle Health Marketplace Review"
+  ],
+  
+  "contact": {
+    "sales": "sales@attending.ai",
+    "technical": "integration@attending.ai",
+    "security": "security@attending.ai"
+  }
+}

@@ -1,0 +1,79 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  // Allow builds with TS/ESLint errors (demo environment)
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
+  // Remove X-Powered-By: Next.js header (security hardening)
+  poweredByHeader: false,
+  // Do not expose source maps to the browser in production (security hardening)
+  productionBrowserSourceMaps: false,
+
+  // Standalone output for Docker deployments
+  output: 'standalone',
+
+  // Transpile the shared workspace package
+  transpilePackages: ['@attending/shared', '@attending/ui-primitives', 'react-leaflet', '@react-leaflet/core'],
+
+  // Monorepo: trace from repo root so standalone includes node_modules
+  outputFileTracingRoot: require('path').join(__dirname, '../../'),
+
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
+
+  // Configure webpack for workspace resolution
+  webpack: (config) => {
+    // Handle workspace package resolution
+    config.resolve.symlinks = true;
+    return config;
+  },
+
+  // ============================================================
+  // Security Headers
+  // Applied to all routes as static headers.
+  // ============================================================
+  async headers() {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // Base headers applied to all routes
+    const securityHeaders = [
+      { key: 'X-Frame-Options', value: 'DENY' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-XSS-Protection', value: '1; mode=block' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+      {
+        key: 'Content-Security-Policy',
+        value: isProduction
+          ? "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; frame-ancestors 'none'"
+          : "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws://localhost:* http://localhost:*; frame-ancestors 'none'",
+      },
+    ];
+
+    if (isProduction) {
+      securityHeaders.push({
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000; includeSubDomains',
+      });
+    }
+
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          ...securityHeaders,
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+        ],
+      },
+    ];
+  },
+}
+
+module.exports = nextConfig

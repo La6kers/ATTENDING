@@ -1,0 +1,114 @@
+# ATTENDING AI - Configuration
+# Note: Actual secrets should be stored in Azure Key Vault or similar
+# and injected via External Secrets Operator or CSI driver
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: attending-config
+  namespace: attending
+  labels:
+    app.kubernetes.io/name: attending
+data:
+  # API Configuration
+  API_VERSION: "v1"
+  ASPNETCORE_ENVIRONMENT: "Production"
+  
+  # Logging
+  Serilog__MinimumLevel__Default: "Information"
+  Serilog__MinimumLevel__Override__Microsoft: "Warning"
+  Serilog__MinimumLevel__Override__System: "Warning"
+  
+  # CORS
+  Cors__AllowedOrigins__0: "https://app.attendingai.com"
+  Cors__AllowedOrigins__1: "https://patient.attendingai.com"
+  
+  # SignalR
+  SignalR__EnableDetailedErrors: "false"
+  SignalR__KeepAliveIntervalSeconds: "15"
+  SignalR__ClientTimeoutIntervalSeconds: "30"
+  
+  # AI Service
+  ClinicalAi__Model: "biomistral"
+  ClinicalAi__TimeoutSeconds: "30"
+  
+  # Feature Flags
+  Features__EnableFhirIntegration: "true"
+  Features__EnableAiRecommendations: "true"
+  Features__EnableRealTimeNotifications: "true"
+
+---
+# ConfigMap for FHIR configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fhir-config
+  namespace: attending
+  labels:
+    app.kubernetes.io/name: attending
+data:
+  # Epic FHIR
+  Epic__BaseUrl: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4"
+  Epic__Scope: "patient/*.read system/*.read"
+  
+  # Oracle Health (Cerner)
+  OracleHealth__BaseUrl: "https://fhir-myrecord.cerner.com/r4"
+  OracleHealth__Scope: "patient/*.read system/*.read"
+
+---
+# Secret template (use External Secrets Operator in production)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: attending-secrets
+  namespace: attending
+  labels:
+    app.kubernetes.io/name: attending
+type: Opaque
+stringData:
+  # Database - replace with actual values or use External Secrets
+  ConnectionStrings__AttendingDb: "REPLACE_WITH_CONNECTION_STRING"
+  
+  # Redis
+  ConnectionStrings__Redis: "REPLACE_WITH_REDIS_CONNECTION"
+  
+  # Azure AD B2C
+  AzureAdB2C__Instance: "https://yourtenantname.b2clogin.com"
+  AzureAdB2C__Domain: "yourtenantname.onmicrosoft.com"
+  AzureAdB2C__ClientId: "REPLACE_WITH_CLIENT_ID"
+  AzureAdB2C__ClientSecret: "REPLACE_WITH_CLIENT_SECRET"
+  
+  # FHIR Client Secrets
+  Epic__ClientId: "REPLACE_WITH_EPIC_CLIENT_ID"
+  Epic__ClientSecret: "REPLACE_WITH_EPIC_CLIENT_SECRET"
+  
+  # AI Service
+  ClinicalAi__ApiKey: "REPLACE_WITH_AI_API_KEY"
+  
+  # Application Insights
+  ApplicationInsights__ConnectionString: "REPLACE_WITH_APPINSIGHTS_CONNECTION"
+
+---
+# External Secrets example (if using External Secrets Operator)
+# apiVersion: external-secrets.io/v1beta1
+# kind: ExternalSecret
+# metadata:
+#   name: attending-external-secrets
+#   namespace: attending
+# spec:
+#   refreshInterval: 1h
+#   secretStoreRef:
+#     kind: ClusterSecretStore
+#     name: azure-key-vault
+#   target:
+#     name: attending-secrets
+#     creationPolicy: Owner
+#   data:
+#     - secretKey: ConnectionStrings__AttendingDb
+#       remoteRef:
+#         key: attending-db-connection-string
+#     - secretKey: AzureAdB2C__ClientSecret
+#       remoteRef:
+#         key: attending-b2c-client-secret

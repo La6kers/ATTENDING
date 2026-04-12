@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ATTENDING AI Brand — shared with all portals */
+    --deep-navy: #0C3547;
+    --header-dark: #0C4C5E;
+    --mid-teal: #0F5F76;
+    --primary-teal: #1A8FA8;
+    --light-teal: #25B8A9;
+    --pale-mint: #E6F7F5;
+    --gold: #F0A500;
+    --gold-dark: #D48F00;
+    --gold-light: #FEF8E7;
+    --coral: #E87461;
+    --coral-light: #FCE8E5;
+  }
+
+  body {
+    @apply antialiased;
+    background: linear-gradient(135deg, #0C3547 0%, #0F5F76 100%);
+    background-attachment: fixed;
+    color: #E2E8F0;
+  }
+}
+
+@layer utilities {
+  .bg-compass-gradient {
+    background: linear-gradient(180deg, #1A8FA8 0%, #0C4C5E 100%);
+  }
+  
+  .bg-compass-gradient-body {
+    background: linear-gradient(135deg, #0C3547 0%, #1A8FA8 100%);
+  }
+
+  .text-brand-gradient {
+    background: linear-gradient(135deg, #1A8FA8 0%, #25B8A9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

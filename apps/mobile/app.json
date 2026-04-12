@@ -1,0 +1,76 @@
+{
+  "expo": {
+    "name": "ATTENDING AI",
+    "slug": "attending-ai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "attending-ai",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0C4C5E"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.attendingai.mobile",
+      "infoPlist": {
+        "NSMotionUsageDescription": "ATTENDING AI uses motion sensors for crash detection in emergency access mode.",
+        "NSLocationWhenInUseUsageDescription": "ATTENDING AI uses your location during crash detection to share with emergency responders.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "ATTENDING AI uses your location during crash detection to share with emergency responders."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0C4C5E"
+      },
+      "package": "com.attendingai.mobile",
+      "permissions": [
+        "HIGH_SAMPLING_RATE_SENSORS",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sensors",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1A8FA8"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ATTENDING AI uses your location during crash detection to share with emergency responders."
+        }
+      ],
+      "expo-sqlite",
+      "expo-crypto"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "primaryColor": "#0C4C5E",
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}

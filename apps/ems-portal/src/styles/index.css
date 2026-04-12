@@ -1,0 +1,170 @@
+/* ============================================================
+   ATTENDING AI — Teal / Coral / Gold Design System
+   Ported from provider-portal globals.css
+   ============================================================ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ATTENDING AI Brand Colors */
+    --deep-navy: #0C3547;
+    --header-dark: #0C4C5E;
+    --mid-teal: #0F5F76;
+    --primary-teal: #1A8FA8;
+    --light-teal: #25B8A9;
+    --pale-mint: #E6F7F5;
+
+    --gold: #F0A500;
+    --gold-dark: #D48F00;
+    --gold-light: #FEF8E7;
+
+    --coral: #E87461;
+    --coral-light: #FCE8E5;
+
+    /* Surfaces */
+    --surface-bg: #F0F7F9;
+    --surface-card: #FFFFFF;
+    --surface-hover: #F7FBFC;
+
+    /* Text */
+    --text-primary: #0C3547;
+    --text-secondary: #4A7A8A;
+    --text-muted: #7BA3B0;
+    --text-inverse: #FFFFFF;
+
+    /* Borders */
+    --border-light: #D4EEF6;
+    --border-default: #B0D8E4;
+    --border-strong: #1A8FA8;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(12, 53, 71, 0.06);
+    --shadow-md: 0 4px 12px rgba(12, 53, 71, 0.08);
+    --shadow-lg: 0 8px 24px rgba(12, 53, 71, 0.12);
+    --shadow-teal: 0 4px 14px rgba(26, 143, 168, 0.2);
+    --shadow-teal-lg: 0 8px 24px rgba(26, 143, 168, 0.25);
+
+    /* Clinical */
+    --status-critical: #EF4444;
+    --status-warning: #F0A500;
+    --status-success: #22C55E;
+    --status-info: #1A8FA8;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--surface-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+}
+
+/* ============================================================
+   BRAND UTILITIES
+   ============================================================ */
+@layer utilities {
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, var(--header-dark) 0%, var(--primary-teal) 100%);
+  }
+  .bg-brand-gradient-header {
+    background: linear-gradient(180deg, var(--primary-teal) 0%, var(--header-dark) 100%);
+  }
+  .bg-brand-gradient-subtle {
+    background: linear-gradient(135deg, var(--pale-mint) 0%, var(--surface-bg) 100%);
+  }
+  .bg-brand-gradient-gold {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  }
+  .shadow-brand {
+    box-shadow: var(--shadow-teal);
+  }
+  .shadow-brand-hover {
+    box-shadow: var(--shadow-teal-lg);
+  }
+}
+
+/* ============================================================
+   COMPONENT CLASSES
+   ============================================================ */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-attending-500 text-white rounded-xl font-medium
+           hover:bg-attending-600 transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-attending-400 focus:ring-offset-2;
+    box-shadow: var(--shadow-teal);
+  }
+  .btn-primary:hover {
+    box-shadow: var(--shadow-teal-lg);
+  }
+  .btn-secondary {
+    @apply px-4 py-2 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium
+           hover:bg-slate-50 hover:border-attending-200 transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-attending-400 focus:ring-offset-2;
+  }
+  .btn-coral {
+    @apply px-4 py-2 rounded-xl font-medium text-white transition-all;
+    background: var(--coral);
+  }
+  .btn-coral:hover {
+    background: #D4624F;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-slate-200;
+    box-shadow: var(--shadow-sm);
+  }
+  .card:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .card-section {
+    @apply bg-white rounded-xl border border-slate-200 overflow-hidden;
+  }
+  .card-section-header {
+    @apply p-4 border-b border-slate-200 flex items-center justify-between;
+  }
+  .input {
+    @apply w-full px-3 py-2 border border-slate-200 rounded-xl
+           focus:outline-none focus:ring-2 focus:ring-attending-400 focus:border-attending-400
+           placeholder-slate-400 transition-all;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-intake    { @apply bg-yellow-100 text-yellow-800; }
+  .badge-waiting   { @apply bg-orange-100 text-orange-800; }
+  .badge-in_progress { @apply bg-teal-100 text-teal-800; }
+  .badge-charting  { @apply bg-purple-100 text-purple-800; }
+  .badge-review    { @apply bg-indigo-100 text-indigo-800; }
+  .badge-completed { @apply bg-green-100 text-green-800; }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes intake-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes intake-scale-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.intake-fade-in  { animation: intake-fade-in 0.35s ease-out both; }
+.intake-scale-in { animation: intake-scale-in 0.4s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .intake-fade-in, .intake-scale-in { animation: none; }
+}

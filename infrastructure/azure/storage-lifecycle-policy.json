@@ -1,0 +1,115 @@
+// ============================================================
+// ATTENDING AI - Azure Blob Storage Lifecycle Policy
+// infrastructure/azure/storage-lifecycle-policy.json
+//
+// Automated tiering for PHI Audit Logs:
+//   0-90 days:   Hot tier    (active queries, compliance audits)
+//   90-365 days: Cool tier   (infrequent access, lower cost)
+//   365+ days:   Archive tier (HIPAA 6-year retention)
+//   2190 days:   Delete      (6 years = 2190 days)
+//
+// Cost reduction: ~70% vs keeping all data in Hot tier
+//
+// Deploy with:
+//   az storage account management-policy create \
+//     --account-name <storage-account> \
+//     --resource-group <rg> \
+//     --policy @infrastructure/azure/storage-lifecycle-policy.json
+// ============================================================
+{
+  "rules": [
+    {
+      "enabled": true,
+      "name": "AuditLogsCoolTier",
+      "type": "Lifecycle",
+      "definition": {
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["audit-logs/"]
+        },
+        "actions": {
+          "baseBlob": {
+            "tierToCool": {
+              "daysAfterModificationGreaterThan": 90
+            }
+          }
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "name": "AuditLogsArchiveTier",
+      "type": "Lifecycle",
+      "definition": {
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["audit-logs/"]
+        },
+        "actions": {
+          "baseBlob": {
+            "tierToArchive": {
+              "daysAfterModificationGreaterThan": 365
+            }
+          }
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "name": "AuditLogsRetentionDelete",
+      "type": "Lifecycle",
+      "definition": {
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["audit-logs/"]
+        },
+        "actions": {
+          "baseBlob": {
+            "delete": {
+              "daysAfterModificationGreaterThan": 2190
+            }
+          }
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "name": "FHIRExportCleanup",
+      "type": "Lifecycle",
+      "definition": {
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["fhir-exports/"]
+        },
+        "actions": {
+          "baseBlob": {
+            "tierToCool": {
+              "daysAfterModificationGreaterThan": 7
+            },
+            "delete": {
+              "daysAfterModificationGreaterThan": 90
+            }
+          }
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "name": "TempFilesCleanup",
+      "type": "Lifecycle",
+      "definition": {
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["temp/"]
+        },
+        "actions": {
+          "baseBlob": {
+            "delete": {
+              "daysAfterModificationGreaterThan": 1
+            }
+          }
+        }
+      }
+    }
+  ]
+}

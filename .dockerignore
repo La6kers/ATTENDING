@@ -1,0 +1,83 @@
+# ============================================================
+# ATTENDING AI - Docker Ignore
+# Prevents unnecessary files from entering the build context
+# ============================================================
+
+# Dependencies (rebuilt in container)
+node_modules
+**/node_modules
+
+# Build outputs
+.next
+**/dist
+**/.next
+**/out
+
+# Environment files (secrets — pass via env vars or Docker secrets)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+.env.*.local
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets
+credentials.json
+serviceAccountKey.json
+*.credentials
+
+# Claude worktrees and flow state
+.claude/
+.mcp.json
+
+# Development files
+.git
+.github
+.vscode
+*.md
+!README.md
+docs/
+tests/
+**/__tests__/
+**/*.test.*
+**/*.spec.*
+coverage/
+
+# Database files (keep schema.prisma and migrations for builds)
+prisma/dev.db
+prisma/dev.db-journal
+prisma/seed*.ts
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Scripts (not needed in image)
+scripts/
+infrastructure/
+
+# Not needed for compass-standalone build
+archive/
+backend/
+data/
+packages/ui-primitives/node_modules/
+
+# Misc
+*.log
+npm-debug.log*

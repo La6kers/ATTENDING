@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATTENDING — Patient App</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--deep-navy:#0C3547;--header-dark:#0C4C5E;--mid-teal:#0F5F76;--primary-teal:#1A8FA8;--light-teal:#25B8A9;--pale-mint:#E6F7F5;--gold:#F0A500;--gold-dark:#D48F00;--gold-light:#FEF8E7;--coral:#E87461;--coral-light:#FCE8E5;--white:#FFFFFF;--gray-50:#F8FAFC;--gray-100:#F1F5F9;--gray-200:#E2E8F0;--gray-300:#CBD5E1;--gray-500:#64748B;--gray-700:#334155;--gray-900:#0F172A;--red:#EF4444;--green:#22C55E;--green-light:#DCFCE7}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',-apple-system,sans-serif;background:#E8ECF0;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}.phone{width:390px;height:844px;background:var(--gray-50);border-radius:44px;overflow:hidden;position:relative;box-shadow:0 0 0 2px #1a1a1a,0 0 0 6px #333,0 0 0 8px #1a1a1a,0 25px 60px rgba(0,0,0,0.4)}.phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:160px;height:34px;background:#1a1a1a;border-radius:0 0 20px 20px;z-index:100}.status-bar{height:54px;padding:14px 28px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;color:var(--gray-700);background:var(--white);position:relative;z-index:50}.status-bar.teal-bg{background:var(--primary-teal);color:white}.status-bar .time{font-size:15px;font-weight:700}.status-icons{display:flex;gap:5px;align-items:center;font-size:11px}.screen-wrapper{height:calc(844px - 54px - 82px);overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}.screen-wrapper::-webkit-scrollbar{display:none}.screen{display:none}.screen.active{display:block;animation:fadeIn .25s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}.tab-bar{height:82px;background:var(--white);border-top:1px solid var(--gray-200);display:flex;justify-content:space-around;align-items:flex-start;padding-top:10px;position:absolute;bottom:0;left:0;right:0;z-index:90}.tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 12px;border:none;background:none;transition:all .2s;position:relative}.tab-item .tab-icon{font-size:22px;line-height:1}.tab-item .tab-label{font-size:10px;font-weight:500;color:var(--gray-500)}.tab-item.active .tab-icon{color:var(--primary-teal)}.tab-item.active .tab-label{color:var(--primary-teal);font-weight:700}.tab-item .tab-dot{width:5px;height:5px;border-radius:50%;background:var(--coral);display:none;position:absolute;top:2px;right:8px}.tab-item.has-badge .tab-dot{display:block}.card{background:var(--white);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(12,53,71,0.06)}.section-label{font-size:13px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding:0 4px}.pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;gap:4px}.pill.teal{background:var(--pale-mint);color:var(--mid-teal)}.pill.gold{background:var(--gold-light);color:var(--gold-dark)}.pill.coral{background:var(--coral-light);color:var(--coral)}.pill.green{background:var(--green-light);color:#15803D}.pill.gray{background:var(--gray-100);color:var(--gray-700)}.home-header{background:linear-gradient(135deg,var(--primary-teal) 0%,var(--header-dark) 100%);padding:20px 20px 28px;color:white}.home-greeting{font-size:14px;opacity:.85;margin-bottom:2px}.home-name{font-size:24px;font-weight:700;margin-bottom:16px}.health-score-row{display:flex;gap:12px}.health-score-card{flex:1;background:rgba(255,255,255,0.15);border-radius:14px;padding:14px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.1)}.health-score-card .hs-label{font-size:11px;opacity:.8;margin-bottom:4px}.health-score-card .hs-value{font-size:22px;font-weight:700}.health-score-card .hs-sub{font-size:11px;opacity:.7;margin-top:2px}.home-body{padding:16px 20px}.quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}.qa-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;background:var(--white);border:1px solid var(--gray-200);border-radius:14px;cursor:pointer;transition:all .2s}.qa-btn:hover{border-color:var(--primary-teal);background:var(--pale-mint)}.qa-btn .qa-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px}.qa-btn .qa-label{font-size:11px;font-weight:600;color:var(--gray-700);text-align:center;line-height:1.2}.qa-icon.teal{background:var(--pale-mint);color:var(--primary-teal)}.qa-icon.gold{background:var(--gold-light);color:var(--gold)}.qa-icon.coral{background:var(--coral-light);color:var(--coral)}.qa-icon.red{background:#FEE2E2;color:var(--red)}.upcoming-card{display:flex;align-items:center;gap:14px;padding:14px}.upcoming-date{width:50px;height:56px;background:var(--pale-mint);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}.upcoming-date .ud-month{font-size:10px;font-weight:700;color:var(--primary-teal);text-transform:uppercase}.upcoming-date .ud-day{font-size:20px;font-weight:700;color:var(--deep-navy)}.upcoming-info{flex:1}.upcoming-info .ui-title{font-size:14px;font-weight:600;color:var(--gray-900)}.upcoming-info .ui-detail{font-size:12px;color:var(--gray-500);margin-top:2px}.upcoming-info .ui-time{font-size:12px;color:var(--primary-teal);font-weight:600;margin-top:4px}.med-reminder{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100)}.med-reminder:last-child{border-bottom:none}.med-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}.med-info{flex:1}.med-info .mi-name{font-size:14px;font-weight:600;color:var(--gray-900)}.med-info .mi-dose{font-size:12px;color:var(--gray-500)}.med-check{width:32px;height:32px;border-radius:50%;border:2px solid var(--gray-300);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:none;color:transparent;font-size:14px}.med-check.taken{background:var(--light-teal);border-color:var(--light-teal);color:white}.alert-banner{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--gold-light);border-radius:12px;border-left:4px solid var(--gold);margin-bottom:12px}.alert-banner .ab-icon{font-size:20px;flex-shrink:0}.alert-banner .ab-text{font-size:13px;color:var(--gray-700);line-height:1.4}.alert-banner .ab-text strong{color:var(--gray-900)}.health-header{background:linear-gradient(135deg,var(--primary-teal) 0%,var(--header-dark) 100%);padding:20px;color:white}.health-header h1{font-size:22px;font-weight:700}.health-header p{font-size:13px;opacity:.8;margin-top:4px}.health-tabs{display:flex;gap:0;background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 16px;overflow-x:auto}.health-tab{padding:12px 14px;font-size:13px;font-weight:500;color:var(--gray-500);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}.health-tab.active{color:var(--primary-teal);border-bottom-color:var(--primary-teal);font-weight:700}.health-content{padding:16px 20px}.med-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--gray-100)}.med-row:last-child{border-bottom:none}.med-icon-wrap{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}.med-details{flex:1}.med-details .md-name{font-size:14px;font-weight:600;color:var(--gray-900)}.med-details .md-dose{font-size:12px;color:var(--gray-500);margin-top:2px}.med-details .md-schedule{font-size:11px;color:var(--primary-teal);font-weight:500;margin-top:4px}.med-status{text-align:right}.allergy-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--gray-100)}.allergy-item:last-child{border-bottom:none}.allergy-severity{width:8px;height:8px;border-radius:50%;flex-shrink:0}.allergy-info{flex:1}.allergy-info .ai-name{font-size:14px;font-weight:600;color:var(--gray-900)}.allergy-info .ai-reaction{font-size:12px;color:var(--gray-500)}.vitals-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.vital-card{background:var(--white);border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(12,53,71,0.06)}.vital-card .vc-label{font-size:11px;color:var(--gray-500);font-weight:500}.vital-card .vc-value{font-size:22px;font-weight:700;color:var(--gray-900);margin-top:4px}.vital-card .vc-unit{font-size:12px;color:var(--gray-500);font-weight:400}.vital-card .vc-date{font-size:10px;color:var(--gray-500);margin-top:6px}.vital-card .vc-trend{font-size:11px;font-weight:600;margin-top:2px}.vc-trend.up{color:var(--coral)}.vc-trend.down{color:var(--green)}.vc-trend.normal{color:var(--light-teal)}.msg-header{background:var(--white);padding:16px 20px;border-bottom:1px solid var(--gray-200)}.msg-header h1{font-size:22px;font-weight:700;color:var(--gray-900)}.msg-header p{font-size:13px;color:var(--gray-500);margin-top:2px}.msg-list{padding:12px 20px}.msg-thread{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--gray-100);cursor:pointer;transition:background .2s}.msg-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0}.msg-preview{flex:1;min-width:0}.msg-preview .mp-name{font-size:14px;font-weight:600;color:var(--gray-900)}.msg-preview .mp-subject{font-size:13px;color:var(--gray-700);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.msg-preview .mp-snippet{font-size:12px;color:var(--gray-500);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.msg-meta{text-align:right;flex-shrink:0}.msg-meta .mm-time{font-size:11px;color:var(--gray-500)}.msg-unread{width:8px;height:8px;border-radius:50%;background:var(--primary-teal);margin-top:8px;margin-left:auto}.msg-thread.unread .mp-name{color:var(--deep-navy)}.msg-thread.unread .mp-subject{font-weight:600;color:var(--gray-900)}.msg-detail-header{background:var(--white);padding:14px 20px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:12px}.msg-back{width:32px;height:32px;border-radius:50%;border:none;background:var(--gray-100);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}.msg-detail-body{padding:16px 20px;flex:1}.msg-bubble{max-width:85%;padding:12px 16px;border-radius:18px;margin-bottom:10px;font-size:14px;line-height:1.5}.msg-bubble.received{background:var(--white);border:1px solid var(--gray-200);color:var(--gray-900);border-bottom-left-radius:4px}.msg-bubble.sent{background:var(--primary-teal);color:white;margin-left:auto;border-bottom-right-radius:4px}.msg-bubble .mb-sender{font-size:11px;font-weight:600;margin-bottom:4px;opacity:.7}.msg-bubble .mb-time{font-size:10px;margin-top:6px;opacity:.6}.msg-compose{padding:12px 20px;background:var(--white);border-top:1px solid var(--gray-200);display:flex;gap:10px;align-items:center}.msg-input{flex:1;padding:10px 14px;border:1px solid var(--gray-200);border-radius:20px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none}.msg-input:focus{border-color:var(--primary-teal)}.msg-send{width:38px;height:38px;border-radius:50%;background:var(--primary-teal);border:none;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}.emergency-header{background:linear-gradient(135deg,var(--coral) 0%,#C0392B 100%);padding:20px;color:white}.emergency-header h1{font-size:22px;font-weight:700}.emergency-header p{font-size:13px;opacity:.85;margin-top:4px}.emergency-body{padding:16px 20px}.emergency-status-card{background:var(--white);border-radius:16px;padding:20px;margin-bottom:12px;text-align:center;border:2px solid var(--green)}.es-icon{font-size:48px;margin-bottom:8px}.es-title{font-size:18px;font-weight:700;color:var(--gray-900)}.es-desc{font-size:13px;color:var(--gray-500);margin-top:4px}.emergency-feature{display:flex;align-items:center;gap:14px;padding:16px;cursor:pointer;transition:background .15s}.emergency-feature:hover{background:var(--gray-50)}.ef-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}.ef-info{flex:1}.ef-info .ef-title{font-size:14px;font-weight:600;color:var(--gray-900)}.ef-info .ef-desc{font-size:12px;color:var(--gray-500);margin-top:2px}.ef-arrow{color:var(--gray-300);font-size:16px}.emergency-contacts{margin-top:4px}.ec-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100)}.ec-row:last-child{border-bottom:none}.ec-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:white;flex-shrink:0}.ec-info{flex:1}.ec-info .ec-name{font-size:14px;font-weight:600;color:var(--gray-900)}.ec-info .ec-rel{font-size:12px;color:var(--gray-500)}.ec-call{width:32px;height:32px;border-radius:50%;background:var(--pale-mint);border:none;color:var(--primary-teal);cursor:pointer;display:flex;align-items:center;justify-content:center}.labs-header{background:var(--white);padding:16px 20px;border-bottom:1px solid var(--gray-200)}.labs-header h1{font-size:22px;font-weight:700;color:var(--gray-900)}.lab-result-card{padding:16px}.lr-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}.lr-title{font-size:15px;font-weight:700;color:var(--gray-900)}.lr-date{font-size:12px;color:var(--gray-500)}.lr-ordered{font-size:12px;color:var(--gray-500);margin-top:2px}.lr-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)}.lr-item:last-child{border-bottom:none}.lr-name{flex:1;font-size:13px;color:var(--gray-700)}.lr-value{font-size:14px;font-weight:700;margin-right:8px}.lr-value.normal{color:var(--gray-900)}.lr-value.high{color:var(--coral)}.lr-value.low{color:var(--gold-dark)}.lr-range{font-size:11px;color:var(--gray-500)}.lr-flag{width:6px;height:6px;border-radius:50%;margin-left:8px;flex-shrink:0}.lr-flag.abnormal{background:var(--coral)}.appt-header{background:linear-gradient(135deg,var(--primary-teal) 0%,var(--header-dark) 100%);padding:20px;color:white}.appt-header h1{font-size:22px;font-weight:700}.appt-card{display:flex;gap:14px;padding:16px;cursor:pointer}.appt-time-col{width:56px;text-align:center;flex-shrink:0}.appt-time-col .at-time{font-size:14px;font-weight:700;color:var(--gray-900)}.appt-time-col .at-ampm{font-size:11px;color:var(--gray-500)}.appt-divider{width:3px;background:var(--primary-teal);border-radius:2px;flex-shrink:0}.appt-details{flex:1}.appt-details .ad-type{font-size:14px;font-weight:600;color:var(--gray-900)}.appt-details .ad-provider{font-size:13px;color:var(--gray-500);margin-top:2px}.appt-details .ad-location{font-size:12px;color:var(--gray-500);margin-top:2px}.appt-status-badge{margin-top:6px}.profile-header{background:linear-gradient(135deg,var(--primary-teal) 0%,var(--header-dark) 100%);padding:24px 20px;color:white;text-align:center}.profile-avatar{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 10px;border:3px solid rgba(255,255,255,0.3)}.profile-name{font-size:20px;font-weight:700}.profile-id{font-size:12px;opacity:.75;margin-top:4px;font-family:'DM Mono',monospace}.profile-body{padding:16px 20px}.profile-item{display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;transition:background .15s}.profile-item:hover{background:var(--gray-50)}.pi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:var(--pale-mint);color:var(--primary-teal)}.pi-info{flex:1}.pi-info .pi-label{font-size:14px;font-weight:500;color:var(--gray-900)}.pi-info .pi-value{font-size:12px;color:var(--gray-500);margin-top:1px}.pi-arrow{color:var(--gray-300)}.screen-indicator{position:absolute;top:56px;right:16px;z-index:99;font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,0.3);color:white;pointer-events:none}@media(max-width:440px){body{padding:0}.phone{width:100vw;height:100vh;border-radius:0;box-shadow:none}.phone::before{display:none}}
+</style>
+</head>
+<body>
+<div class="phone">
+<div class="status-bar teal-bg" id="statusBar"><span class="time">9:41</span><div class="status-icons"><span>●●●●○</span> <span>WiFi</span> <span>🔋 87%</span></div></div>
+<div class="screen-indicator" id="screenIndicator">HOME</div>
+<div class="screen-wrapper" id="screenWrapper">
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+<div class="home-header">
+<div class="home-greeting">Good morning</div>
+<div class="home-name">Sarah Chen</div>
+<div class="health-score-row">
+<div class="health-score-card"><div class="hs-label">Next Appointment</div><div class="hs-value">Mar 5</div><div class="hs-sub">Dr. Williams · 10:30 AM</div></div>
+<div class="health-score-card"><div class="hs-label">Medications</div><div class="hs-value">3 of 4</div><div class="hs-sub">Taken today</div></div>
+</div>
+</div>
+<div class="home-body">
+<div class="alert-banner"><div class="ab-icon">🔬</div><div class="ab-text"><strong>New lab results</strong> available from Feb 25. Tap to review.</div></div>
+<div class="section-label">Quick Actions</div>
+<div class="quick-actions">
+<button class="qa-btn" onclick="showScreen('messages')"><div class="qa-icon teal">💬</div><div class="qa-label">Message</div></button>
+<button class="qa-btn" onclick="showScreen('labs')"><div class="qa-icon gold">🔬</div><div class="qa-label">Lab Results</div></button>
+<button class="qa-btn" onclick="showScreen('appointments')"><div class="qa-icon teal">📅</div><div class="qa-label">Appts</div></button>
+<button class="qa-btn" onclick="showScreen('emergency')"><div class="qa-icon red">🆘</div><div class="qa-label">Emergency</div></button>
+</div>
+<div class="section-label">Today's Medications</div>
+<div class="card">
+<div class="med-reminder"><div class="med-dot" style="background:var(--primary-teal)"></div><div class="med-info"><div class="mi-name">Lisinopril 10mg</div><div class="mi-dose">Morning · with food</div></div><button class="med-check taken" onclick="this.classList.toggle('taken')">✓</button></div>
+<div class="med-reminder"><div class="med-dot" style="background:var(--gold)"></div><div class="med-info"><div class="mi-name">Metformin 500mg</div><div class="mi-dose">Morning · with breakfast</div></div><button class="med-check taken" onclick="this.classList.toggle('taken')">✓</button></div>
+<div class="med-reminder"><div class="med-dot" style="background:var(--light-teal)"></div><div class="med-info"><div class="mi-name">Atorvastatin 20mg</div><div class="mi-dose">Evening · any time</div></div><button class="med-check taken" onclick="this.classList.toggle('taken')">✓</button></div>
+<div class="med-reminder"><div class="med-dot" style="background:var(--coral)"></div><div class="med-info"><div class="mi-name">Metformin 500mg</div><div class="mi-dose">Evening · with dinner</div></div><button class="med-check" onclick="this.classList.toggle('taken')">✓</button></div>
+</div>
+<div class="section-label">Upcoming</div>
+<div class="card upcoming-card" onclick="showScreen('appointments')"><div class="upcoming-date"><div class="ud-month">MAR</div><div class="ud-day">5</div></div><div class="upcoming-info"><div class="ui-title">Annual Physical</div><div class="ui-detail">Dr. James Williams · Internal Medicine</div><div class="ui-time">10:30 AM · Riverside Medical</div></div></div>
+<div style="height:20px"></div>
+</div>
+</div>
+
+<!-- MY HEALTH -->
+<div class="screen" id="screen-health">
+<div class="health-header"><h1>My Health</h1><p>Your medical information at a glance</p></div>
+<div class="health-tabs">
+<button class="health-tab active" onclick="showHealthTab('meds',this)">Medications</button>
+<button class="health-tab" onclick="showHealthTab('allergies',this)">Allergies</button>
+<button class="health-tab" onclick="showHealthTab('conditions',this)">Conditions</button>
+<button class="health-tab" onclick="showHealthTab('vitals',this)">Vitals</button>
+</div>
+<div class="health-content">
+<div class="health-panel active" id="panel-meds"><div class="card">
+<div class="med-row"><div class="med-icon-wrap" style="background:var(--pale-mint);color:var(--primary-teal)">💊</div><div class="med-details"><div class="md-name">Lisinopril 10mg</div><div class="md-dose">1 tablet by mouth daily</div><div class="md-schedule">Every morning with food</div></div><div class="med-status"><span class="pill teal">Active</span></div></div>
+<div class="med-row"><div class="med-icon-wrap" style="background:var(--gold-light);color:var(--gold)">💊</div><div class="med-details"><div class="md-name">Metformin 500mg</div><div class="md-dose">1 tablet by mouth twice daily</div><div class="md-schedule">Morning &amp; evening with meals</div></div><div class="med-status"><span class="pill teal">Active</span></div></div>
+<div class="med-row"><div class="med-icon-wrap" style="background:var(--pale-mint);color:var(--light-teal)">💊</div><div class="med-details"><div class="md-name">Atorvastatin 20mg</div><div class="md-dose">1 tablet by mouth at bedtime</div><div class="md-schedule">Every evening</div></div><div class="med-status"><span class="pill teal">Active</span></div></div>
+<div class="med-row"><div class="med-icon-wrap" style="background:var(--gray-100);color:var(--gray-500)">💊</div><div class="med-details"><div class="md-name">Amoxicillin 500mg</div><div class="md-dose">1 capsule three times daily × 10 days</div><div class="md-schedule">Completed Feb 10, 2026</div></div><div class="med-status"><span class="pill gray">Completed</span></div></div>
+</div></div>
+<div class="health-panel" id="panel-allergies" style="display:none"><div class="card">
+<div class="allergy-item"><div class="allergy-severity" style="background:var(--red)"></div><div class="allergy-info"><div class="ai-name">Penicillin</div><div class="ai-reaction">Anaphylaxis · Severe</div></div><span class="pill coral">Severe</span></div>
+<div class="allergy-item"><div class="allergy-severity" style="background:var(--gold)"></div><div class="allergy-info"><div class="ai-name">Sulfa drugs</div><div class="ai-reaction">Rash, hives · Moderate</div></div><span class="pill gold">Moderate</span></div>
+<div class="allergy-item"><div class="allergy-severity" style="background:var(--gold)"></div><div class="allergy-info"><div class="ai-name">Latex</div><div class="ai-reaction">Contact dermatitis · Moderate</div></div><span class="pill gold">Moderate</span></div>
+<div class="allergy-item"><div class="allergy-severity" style="background:var(--light-teal)"></div><div class="allergy-info"><div class="ai-name">Ibuprofen</div><div class="ai-reaction">Upset stomach · Mild</div></div><span class="pill teal">Mild</span></div>
+</div></div>
+<div class="health-panel" id="panel-conditions" style="display:none"><div class="card">
+<div class="allergy-item"><div class="allergy-severity" style="background:var(--primary-teal)"></div><div class="allergy-info"><div class="ai-name">Hypertension</div><div class="ai-reaction">Diagnosed 2021 · Managed</div></div><span class="pill teal">Controlled</span></div>
+<div class="allergy-item"><div class="allergy-severity" style="background:var(--gold)"></div><div class="allergy-info"><div class="ai-name">Type 2 Diabetes</div><div class="ai-reaction">Diagnosed 2022 · A1C 6.8</div></div><span class="pill gold">Monitoring</span></div>
+<div class="allergy-item"><div class="allergy-severity" style="background:var(--primary-teal)"></div><div class="allergy-info"><div class="ai-name">Hyperlipidemia</div><div class="ai-reaction">Diagnosed 2022 · On statin</div></div><span class="pill teal">Controlled</span></div>
+</div></div>
+<div class="health-panel" id="panel-vitals" style="display:none"><div class="vitals-grid">
+<div class="vital-card"><div class="vc-label">Blood Pressure</div><div class="vc-value">128<span class="vc-unit">/82</span></div><div class="vc-trend down">↓ 4 from last</div><div class="vc-date">Feb 25, 2026</div></div>
+<div class="vital-card"><div class="vc-label">Heart Rate</div><div class="vc-value">72 <span class="vc-unit">bpm</span></div><div class="vc-trend normal">→ Stable</div><div class="vc-date">Feb 25, 2026</div></div>
+<div class="vital-card"><div class="vc-label">Weight</div><div class="vc-value">168 <span class="vc-unit">lbs</span></div><div class="vc-trend down">↓ 3 lbs this month</div><div class="vc-date">Feb 25, 2026</div></div>
+<div class="vital-card"><div class="vc-label">Blood Glucose</div><div class="vc-value">126 <span class="vc-unit">mg/dL</span></div><div class="vc-trend up">↑ 8 from last</div><div class="vc-date">Feb 25, 2026</div></div>
+<div class="vital-card"><div class="vc-label">SpO2</div><div class="vc-value">98<span class="vc-unit">%</span></div><div class="vc-trend normal">→ Normal</div><div class="vc-date">Feb 25, 2026</div></div>
+<div class="vital-card"><div class="vc-label">Temperature</div><div class="vc-value">98.4<span class="vc-unit">°F</span></div><div class="vc-trend normal">→ Normal</div><div class="vc-date">Feb 25, 2026</div></div>
+</div></div>
+</div>
+</div>
+
+<!-- MESSAGES -->
+<div class="screen" id="screen-messages">
+<div id="msgListView">
+<div class="msg-header"><h1>Messages</h1><p>Secure messages with your care team</p></div>
+<div class="msg-list">
+<div class="msg-thread unread" onclick="showMessageDetail()"><div class="msg-avatar" style="background:var(--primary-teal)">JW</div><div class="msg-preview"><div class="mp-name">Dr. James Williams</div><div class="mp-subject">Lab Results — Follow Up Needed</div><div class="mp-snippet">Your recent lab results are in. Your A1C has improved to 6.8 which is...</div></div><div class="msg-meta"><div class="mm-time">2h ago</div><div class="msg-unread"></div></div></div>
+<div class="msg-thread" onclick="showMessageDetail()"><div class="msg-avatar" style="background:var(--mid-teal)">RM</div><div class="msg-preview"><div class="mp-name">Riverside Medical</div><div class="mp-subject">Appointment Reminder</div><div class="mp-snippet">Reminder: You have an appointment on March 5 at 10:30 AM...</div></div><div class="msg-meta"><div class="mm-time">Yesterday</div></div></div>
+<div class="msg-thread" onclick="showMessageDetail()"><div class="msg-avatar" style="background:var(--light-teal)">LP</div><div class="msg-preview"><div class="mp-name">Lisa Park, PharmD</div><div class="mp-subject">Medication Question Response</div><div class="mp-snippet">Yes, you can take your Metformin with or without food...</div></div><div class="msg-meta"><div class="mm-time">Feb 24</div></div></div>
+<div class="msg-thread" onclick="showMessageDetail()"><div class="msg-avatar" style="background:var(--gold-dark)">BL</div><div class="msg-preview"><div class="mp-name">Billing Department</div><div class="mp-subject">Insurance Claim Processed</div><div class="mp-snippet">Your claim for the visit on Feb 15 has been processed...</div></div><div class="msg-meta"><div class="mm-time">Feb 20</div></div></div>
+</div>
+</div>
+<div id="msgDetailView" style="display:none">
+<div class="msg-detail-header"><button class="msg-back" onclick="hideMessageDetail()">←</button><div><div style="font-size:15px;font-weight:700;color:var(--gray-900)">Dr. James Williams</div><div style="font-size:12px;color:var(--gray-500)">Lab Results — Follow Up Needed</div></div></div>
+<div class="msg-detail-body">
+<div class="msg-bubble received"><div class="mb-sender">Dr. Williams</div>Hi Sarah, your recent lab results are in. Great news — your A1C has improved to 6.8%, down from 7.1% last quarter. Your blood pressure is also trending nicely at 128/82.<div class="mb-time">Today, 7:32 AM</div></div>
+<div class="msg-bubble received">I'd like to discuss adjusting your Metformin at your March 5 appointment. Keep up the dietary changes — they're clearly making a difference.<div class="mb-time">Today, 7:33 AM</div></div>
+<div class="msg-bubble sent">That's wonderful news! I've been walking 30 minutes every day. Should I continue the same Metformin dosage until our appointment?<div class="mb-time">Today, 8:15 AM</div></div>
+<div class="msg-bubble received">Yes, keep your current dosage for now. The walking is excellent — keep that up. We'll review everything on the 5th. See you then!<div class="mb-time">Today, 8:22 AM</div></div>
+</div>
+<div class="msg-compose"><input class="msg-input" type="text" placeholder="Type a message..."><button class="msg-send">→</button></div>
+</div>
+</div>
+
+<!-- EMERGENCY -->
+<div class="screen" id="screen-emergency">
+<div class="emergency-header"><h1>🆘 Emergency Access</h1><p>Impact detection &amp; first responder medical info</p></div>
+<div class="emergency-body">
+<div class="emergency-status-card"><div class="es-icon">🛡️</div><div class="es-title">Emergency Access Active</div><div class="es-desc">Impact detection monitoring in background<br><span style="color:var(--green);font-weight:600">● Sensors active</span></div></div>
+<div class="section-label">Settings</div>
+<div class="card" style="padding:0;overflow:hidden">
+<div class="emergency-feature" onclick="alert('Opens impact detection settings — see emergency-access-v3.html')"><div class="ef-icon" style="background:#FEE2E2;color:var(--red)">💥</div><div class="ef-info"><div class="ef-title">Impact Detection</div><div class="ef-desc">G-force threshold: 4.0g · Countdown: 3 min</div></div><div class="ef-arrow">›</div></div>
+<div class="emergency-feature"><div class="ef-icon" style="background:var(--coral-light);color:var(--coral)">📞</div><div class="ef-info"><div class="ef-title">Auto-911 Call</div><div class="ef-desc">Enabled · Calls after countdown expires</div></div><div class="ef-arrow">›</div></div>
+<div class="emergency-feature"><div class="ef-icon" style="background:var(--pale-mint);color:var(--primary-teal)">📋</div><div class="ef-info"><div class="ef-title">Medical Facesheet</div><div class="ef-desc">Shared: Allergies, meds, conditions, DNR status</div></div><div class="ef-arrow">›</div></div>
+<div class="emergency-feature"><div class="ef-icon" style="background:var(--gold-light);color:var(--gold)">⏱️</div><div class="ef-info"><div class="ef-title">Access Window</div><div class="ef-desc">2 hours · Extendable in 30-min increments</div></div><div class="ef-arrow">›</div></div>
+</div>
+<div class="section-label">Emergency Contacts</div>
+<div class="card emergency-contacts">
+<div class="ec-row"><div class="ec-avatar" style="background:var(--primary-teal)">MC</div><div class="ec-info"><div class="ec-name">Michael Chen</div><div class="ec-rel">Spouse · Primary contact</div></div><button class="ec-call">📞</button></div>
+<div class="ec-row"><div class="ec-avatar" style="background:var(--mid-teal)">LC</div><div class="ec-info"><div class="ec-name">Linda Chen</div><div class="ec-rel">Mother · Secondary contact</div></div><button class="ec-call">📞</button></div>
+</div>
+<div class="section-label">Recent Access Events</div>
+<div class="card"><div style="text-align:center;padding:20px;color:var(--gray-500);font-size:13px">✓ No emergency access events<br><span style="font-size:12px;color:var(--gray-300)">Events appear here when your medical info is accessed</span></div></div>
+<div style="height:20px"></div>
+</div>
+</div>
+
+<!-- LAB RESULTS -->
+<div class="screen" id="screen-labs">
+<div class="labs-header"><h1>Lab Results</h1></div>
+<div style="padding:16px 20px">
+<div class="card lab-result-card"><div class="lr-header"><div><div class="lr-title">Comprehensive Metabolic Panel</div><div class="lr-ordered">Ordered by Dr. Williams</div></div><div><span class="pill green">Reviewed</span><div class="lr-date" style="margin-top:4px">Feb 25, 2026</div></div></div>
+<div class="lr-item"><div class="lr-name">Glucose</div><div class="lr-value high">126</div><div class="lr-range">70–100 mg/dL</div><div class="lr-flag abnormal"></div></div>
+<div class="lr-item"><div class="lr-name">BUN</div><div class="lr-value normal">18</div><div class="lr-range">7–20 mg/dL</div><div class="lr-flag"></div></div>
+<div class="lr-item"><div class="lr-name">Creatinine</div><div class="lr-value normal">0.9</div><div class="lr-range">0.6–1.2 mg/dL</div><div class="lr-flag"></div></div>
+<div class="lr-item"><div class="lr-name">Sodium</div><div class="lr-value normal">140</div><div class="lr-range">136–145 mEq/L</div><div class="lr-flag"></div></div>
+<div class="lr-item"><div class="lr-name">Potassium</div><div class="lr-value normal">4.2</div><div class="lr-range">3.5–5.0 mEq/L</div><div class="lr-flag"></div></div>
+</div>
+<div class="card lab-result-card"><div class="lr-header"><div><div class="lr-title">Hemoglobin A1C</div><div class="lr-ordered">Ordered by Dr. Williams</div></div><div><span class="pill green">Reviewed</span><div class="lr-date" style="margin-top:4px">Feb 25, 2026</div></div></div>
+<div class="lr-item"><div class="lr-name">A1C</div><div class="lr-value high">6.8%</div><div class="lr-range">&lt;5.7% normal</div><div class="lr-flag abnormal"></div></div>
+<div style="padding:10px 0 4px;font-size:12px;color:var(--gray-500)"><span style="color:var(--green);font-weight:600">↓ Improved</span> from 7.1% (Nov 2025)</div>
+</div>
+<div class="card lab-result-card"><div class="lr-header"><div><div class="lr-title">Lipid Panel</div><div class="lr-ordered">Ordered by Dr. Williams</div></div><div><span class="pill green">Reviewed</span><div class="lr-date" style="margin-top:4px">Feb 25, 2026</div></div></div>
+<div class="lr-item"><div class="lr-name">Total Cholesterol</div><div class="lr-value normal">195</div><div class="lr-range">&lt;200 mg/dL</div><div class="lr-flag"></div></div>
+<div class="lr-item"><div class="lr-name">LDL</div><div class="lr-value normal">112</div><div class="lr-range">&lt;130 mg/dL</div><div class="lr-flag"></div></div>
+<div class="lr-item"><div class="lr-name">HDL</div><div class="lr-value normal">52</div><div class="lr-range">&gt;40 mg/dL</div><div class="lr-flag"></div></div>
+<div class="lr-item"><div class="lr-name">Triglycerides</div><div class="lr-value high">162</div><div class="lr-range">&lt;150 mg/dL</div><div class="lr-flag abnormal"></div></div>
+</div>
+<div style="height:20px"></div>
+</div>
+</div>
+
+<!-- APPOINTMENTS -->
+<div class="screen" id="screen-appointments">
+<div class="appt-header"><h1>Appointments</h1></div>
+<div style="padding:16px 20px">
+<div class="section-label">Upcoming</div>
+<div class="card appt-card"><div class="appt-time-col"><div class="at-time">10:30</div><div class="at-ampm">AM</div></div><div class="appt-divider"></div><div class="appt-details"><div class="ad-type">Annual Physical</div><div class="ad-provider">Dr. James Williams · Internal Medicine</div><div class="ad-location">📍 Riverside Medical Center</div><div class="appt-status-badge"><span class="pill teal">Mar 5, 2026</span></div></div></div>
+<div class="card appt-card"><div class="appt-time-col"><div class="at-time">2:00</div><div class="at-ampm">PM</div></div><div class="appt-divider" style="background:var(--gold)"></div><div class="appt-details"><div class="ad-type">Eye Exam</div><div class="ad-provider">Dr. Rachel Kim · Ophthalmology</div><div class="ad-location">📍 Vision Care Associates</div><div class="appt-status-badge"><span class="pill gold">Mar 18, 2026</span></div></div></div>
+<div class="section-label" style="margin-top:8px">Past Visits</div>
+<div class="card appt-card" style="opacity:0.7"><div class="appt-time-col"><div class="at-time">9:00</div><div class="at-ampm">AM</div></div><div class="appt-divider" style="background:var(--gray-300)"></div><div class="appt-details"><div class="ad-type">Follow-up Visit</div><div class="ad-provider">Dr. James Williams · Internal Medicine</div><div class="ad-location">📍 Riverside Medical Center</div><div class="appt-status-badge"><span class="pill gray">Feb 15, 2026 · Completed</span></div></div></div>
+<div class="card appt-card" style="opacity:0.7"><div class="appt-time-col"><div class="at-time">11:00</div><div class="at-ampm">AM</div></div><div class="appt-divider" style="background:var(--gray-300)"></div><div class="appt-details"><div class="ad-type">Lab Work</div><div class="ad-provider">Quest Diagnostics</div><div class="ad-location">📍 Quest — Parker Rd</div><div class="appt-status-badge"><span class="pill gray">Feb 10, 2026 · Completed</span></div></div></div>
+<div style="height:20px"></div>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div class="screen" id="screen-profile">
+<div class="profile-header"><div class="profile-avatar">SC</div><div class="profile-name">Sarah Chen</div><div class="profile-id">MRN: ATT-2024-00847</div></div>
+<div class="profile-body">
+<div class="section-label">Personal Info</div>
+<div class="card" style="padding:0;overflow:hidden">
+<div class="profile-item"><div class="pi-icon">📧</div><div class="pi-info"><div class="pi-label">Email</div><div class="pi-value">sarah.chen@email.com</div></div><div class="pi-arrow">›</div></div>
+<div class="profile-item"><div class="pi-icon">📱</div><div class="pi-info"><div class="pi-label">Phone</div><div class="pi-value">(303) 555-0147</div></div><div class="pi-arrow">›</div></div>
+<div class="profile-item"><div class="pi-icon">📍</div><div class="pi-info"><div class="pi-label">Address</div><div class="pi-value">1842 Pine Valley Dr, Parker, CO 80134</div></div><div class="pi-arrow">›</div></div>
+<div class="profile-item"><div class="pi-icon">🏥</div><div class="pi-info"><div class="pi-label">Insurance</div><div class="pi-value">United Healthcare · PPO</div></div><div class="pi-arrow">›</div></div>
+</div>
+<div class="section-label">Preferences</div>
+<div class="card" style="padding:0;overflow:hidden">
+<div class="profile-item"><div class="pi-icon">🔔</div><div class="pi-info"><div class="pi-label">Notifications</div><div class="pi-value">Push, Email, SMS</div></div><div class="pi-arrow">›</div></div>
+<div class="profile-item"><div class="pi-icon">🌐</div><div class="pi-info"><div class="pi-label">Language</div><div class="pi-value">English</div></div><div class="pi-arrow">›</div></div>
+<div class="profile-item"><div class="pi-icon">🔒</div><div class="pi-info"><div class="pi-label">Privacy &amp; Security</div><div class="pi-value">Biometric login enabled</div></div><div class="pi-arrow">›</div></div>
+</div>
+<div class="section-label">About</div>
+<div class="card" style="padding:0;overflow:hidden">
+<div class="profile-item"><div class="pi-icon" style="background:var(--gray-100);color:var(--gray-500)">ℹ️</div><div class="pi-info"><div class="pi-label">App Version</div><div class="pi-value">ATTENDING Patient v1.0.0</div></div></div>
+<div class="profile-item"><div class="pi-icon" style="background:var(--gray-100);color:var(--gray-500)">📄</div><div class="pi-info"><div class="pi-label">Terms &amp; Privacy Policy</div></div><div class="pi-arrow">›</div></div>
+</div>
+<div style="text-align:center;padding:20px"><button style="padding:12px 32px;border-radius:12px;border:1px solid var(--coral);background:none;color:var(--coral);font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer">Sign Out</button></div>
+</div>
+</div>
+
+</div>
+<div class="tab-bar">
+<button class="tab-item active" onclick="showScreen('home')"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+<button class="tab-item" onclick="showScreen('health')"><span class="tab-icon">❤️</span><span class="tab-label">My Health</span></button>
+<button class="tab-item has-badge" onclick="showScreen('messages')"><span class="tab-icon">💬</span><span class="tab-label">Messages</span><span class="tab-dot"></span></button>
+<button class="tab-item" onclick="showScreen('emergency')"><span class="tab-icon">🆘</span><span class="tab-label">Emergency</span></button>
+<button class="tab-item" onclick="showScreen('profile')"><span class="tab-icon">👤</span><span class="tab-label">Profile</span></button>
+</div>
+</div>
+<script>
+const screenNames={home:'HOME',health:'MY HEALTH',messages:'MESSAGES',emergency:'EMERGENCY',labs:'LAB RESULTS',appointments:'APPOINTMENTS',profile:'PROFILE'};
+const tealStatusScreens=['home','health','appointments','profile'];
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const t=document.getElementById('screen-'+id);if(t){t.classList.add('active');document.getElementById('screenWrapper').scrollTop=0}document.querySelectorAll('.tab-item').forEach(t=>t.classList.remove('active'));const m={home:0,health:1,messages:2,emergency:3,profile:4,labs:1,appointments:1};document.querySelectorAll('.tab-item')[m[id]??0]?.classList.add('active');const sb=document.getElementById('statusBar');if(id==='emergency'){sb.className='status-bar';sb.style.background=''}else if(tealStatusScreens.includes(id)){sb.className='status-bar teal-bg'}else{sb.className='status-bar'}document.getElementById('screenIndicator').textContent=screenNames[id]||id.toUpperCase();if(id==='messages'){document.getElementById('msgListView').style.display='';document.getElementById('msgDetailView').style.display='none'}}
+function showHealthTab(p,b){document.querySelectorAll('.health-panel').forEach(x=>x.style.display='none');document.querySelectorAll('.health-tab').forEach(x=>x.classList.remove('active'));document.getElementById('panel-'+p).style.display='';b.classList.add('active')}
+function showMessageDetail(){document.getElementById('msgListView').style.display='none';const d=document.getElementById('msgDetailView');d.style.display='flex';d.style.flexDirection='column';d.style.height='100%'}
+function hideMessageDetail(){document.getElementById('msgListView').style.display='';document.getElementById('msgDetailView').style.display='none'}
+function updateClock(){const n=new Date();document.querySelector('.status-bar .time').textContent=`${n.getHours()}:${n.getMinutes().toString().padStart(2,'0')}`}updateClock();setInterval(updateClock,30000);
+</script>
+</body>
+</html>

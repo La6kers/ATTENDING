@@ -1,0 +1,53 @@
+using System.Reflection;
+using FluentValidation;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using ATTENDING.Application.Behaviors;
+using ATTENDING.Application.Events;
+using ATTENDING.Domain.Interfaces;
+
+namespace ATTENDING.Application;
+
+/// <summary>
+/// Dependency injection configuration for Application layer
+/// </summary>
+public static class DependencyInjection
+{
+    public static IServiceCollection AddApplication(this IServiceCollection services)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+
+        // MediatR
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+
+        // FluentValidation
+        services.AddValidatorsFromAssembly(assembly);
+
+        // Pipeline behaviors (order matters — outermost first!)
+        // TracingBehavior is outermost: span covers validation + handler + DB
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TracingMediatorBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ConcurrencyExceptionBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(InputSanitizationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+
+        // Clinical guideline services
+        services.AddSingleton<ATTENDING.Application.Services.SymptomGuidelineRouter>();
+        services.AddSingleton<ATTENDING.Application.Services.GuidelineEvaluator>();
+
+        // ML Diagnostic Learning Engine (d5)
+        services.AddScoped<ATTENDING.Application.Services.DiagnosticLearningService>();
+
+        // Domain event dispatcher (used by AttendingDbContext post-save)
+        services.AddScoped<IDomainEventDispatcher, MediatRDomainEventDispatcher>();
+
+        // Event bus (used by application code for imperative event publishing)
+        // Backed by the in-process dispatcher; swap to MassTransitEventBus for multi-pod.
+        services.AddScoped<ATTENDING.Application.Interfaces.IEventBus,
+            ATTENDING.Application.Events.InProcessEventBus>();
+
+        return services;
+    }
+}

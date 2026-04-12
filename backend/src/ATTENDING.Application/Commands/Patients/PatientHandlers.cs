@@ -1,0 +1,105 @@
+using MediatR;
+using Microsoft.Extensions.Logging;
+using ATTENDING.Domain.Common;
+using ATTENDING.Domain.Entities;
+using ATTENDING.Domain.Enums;
+using ATTENDING.Domain.Interfaces;
+
+namespace ATTENDING.Application.Commands.Patients;
+
+#pragma warning disable CS0618 // GetAllAsync is intentionally obsolete; callers that need it use concrete methods
+
+public class CreatePatientHandler : IRequestHandler<CreatePatientCommand, Result<PatientCreated>>
+{
+    private readonly IPatientRepository _repo;
+    private readonly IUnitOfWork _uow;
+    private readonly ILogger<CreatePatientHandler> _logger;
+
+    private readonly ICurrentUserService _currentUser;
+
+    public CreatePatientHandler(IPatientRepository repo, IUnitOfWork uow, ILogger<CreatePatientHandler> logger, ICurrentUserService currentUser)
+    {
+        _repo = repo;
+        _uow = uow;
+        _logger = logger;
+        _currentUser = currentUser;
+    }
+
+    public async Task<Result<PatientCreated>> Handle(CreatePatientCommand cmd, CancellationToken ct)
+    {
+        var existing = await _repo.GetByMrnAsync(cmd.MRN, ct);
+        if (existing != null)
+            return Result.Failure<PatientCreated>(DomainErrors.Patient.DuplicateMrn(cmd.MRN));
+
+        // Resolve tenant from authenticated user; fall back to empty guid (interceptor
+        // will set it from the audit context if the claim is missing in dev/test).
+        var orgId = _currentUser.TenantId ?? Guid.Empty;
+
+        // Parse sex string to strongly-typed enum (accepts "Male", "male", "M", etc.).
+        if (!Enum.TryParse<BiologicalSex>(cmd.Sex, ignoreCase: true, out var sex))
+            sex = BiologicalSex.Unknown;
+
+        var patient = Patient.Create(orgId, cmd.MRN, cmd.FirstName, cmd.LastName, cmd.DateOfBirth, sex);
+        await _repo.AddAsync(patient, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Patient created: {MRN} {Name}", patient.MRN, patient.FullName);
+        return new PatientCreated(patient.Id, patient.MRN);
+    }
+}
+
+public class AddAllergyHandler : IRequestHandler<AddAllergyCommand, Result<AllergyAdded>>
+{
+    private readonly IPatientRepository _repo;
+    private readonly IUnitOfWork _uow;
+
+    public AddAllergyHandler(IPatientRepository repo, IUnitOfWork uow)
+    {
+        _repo = repo;
+        _uow = uow;
+    }
+
+    public async Task<Result<AllergyAdded>> Handle(AddAllergyCommand cmd, CancellationToken ct)
+    {
+        // Verify patient exists without loading the Allergies collection.
+        // GetWithAllergiesAsync uses a filtered Include which caused DbUpdateConcurrencyException
+        // in EF InMemory: change tracker incorrectly marks newly-added children as Modified.
+        // Using GetByIdAsync (FindAsync) + AddAllergyAsync (direct DbSet insert) avoids this.
+        var patient = await _repo.GetByIdAsync(cmd.PatientId, ct);
+        if (patient == null)
+            return Result.Failure<AllergyAdded>(DomainErrors.Patient.NotFound(cmd.PatientId));
+
+        var allergy = Allergy.Create(cmd.PatientId, cmd.Allergen, cmd.Severity, cmd.Reaction,
+            organizationId: patient.OrganizationId);
+        await _repo.AddAllergyAsync(allergy, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        return new AllergyAdded(allergy.Id);
+    }
+}
+
+public class AddConditionHandler : IRequestHandler<AddConditionCommand, Result<ConditionAdded>>
+{
+    private readonly IPatientRepository _repo;
+    private readonly IUnitOfWork _uow;
+
+    public AddConditionHandler(IPatientRepository repo, IUnitOfWork uow)
+    {
+        _repo = repo;
+        _uow = uow;
+    }
+
+    public async Task<Result<ConditionAdded>> Handle(AddConditionCommand cmd, CancellationToken ct)
+    {
+        var patient = await _repo.GetWithConditionsAsync(cmd.PatientId, ct);
+        if (patient == null)
+            return Result.Failure<ConditionAdded>(DomainErrors.Patient.NotFound(cmd.PatientId));
+
+        var condition = MedicalCondition.Create(cmd.PatientId, cmd.Code, cmd.Name, cmd.OnsetDate,
+            organizationId: patient.OrganizationId);
+        patient.Conditions.Add(condition);
+        await _uow.SaveChangesAsync(ct);
+
+        return new ConditionAdded(condition.Id);
+    }
+}

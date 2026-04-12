@@ -1,0 +1,175 @@
+# ATTENDING AI - Helm Values Template
+# Use this as a base for environment-specific configurations
+
+# Global settings
+global:
+  environment: production
+  domain: attendingai.com
+
+# API Configuration
+api:
+  replicaCount: 3
+  
+  image:
+    repository: ghcr.io/attending-ai/attending-api
+    tag: latest
+    pullPolicy: Always
+  
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilization: 70
+    targetMemoryUtilization: 80
+  
+  # Health checks
+  healthCheck:
+    liveness:
+      path: /health/live
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    readiness:
+      path: /health/ready
+      initialDelaySeconds: 5
+      periodSeconds: 5
+  
+  # Environment variables
+  env:
+    ASPNETCORE_ENVIRONMENT: Production
+    API_VERSION: v1
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: api.attendingai.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: attending-api-tls
+      hosts:
+        - api.attendingai.com
+
+# SignalR specific ingress
+signalr:
+  enabled: true
+  stickySession:
+    enabled: true
+    cookieName: ATTENDINGSRAFFINITY
+    cookieExpires: 28800
+
+# Database Configuration
+database:
+  # Using Azure SQL
+  type: azuresql
+  # Connection string from secret
+  existingSecret: attending-secrets
+  secretKey: ConnectionStrings__AttendingDb
+
+# Redis Configuration
+redis:
+  # Using Azure Cache for Redis
+  enabled: true
+  existingSecret: attending-secrets
+  secretKey: ConnectionStrings__Redis
+
+# Azure AD B2C Configuration
+auth:
+  provider: azureadb2c
+  existingSecret: attending-secrets
+
+# FHIR Integration
+fhir:
+  epic:
+    enabled: true
+    baseUrl: https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4
+  oracleHealth:
+    enabled: false
+
+# AI Service Configuration
+ai:
+  enabled: true
+  provider: biomistral
+  model: biomistral
+  timeoutSeconds: 30
+
+# Monitoring
+monitoring:
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+  
+  grafana:
+    enabled: true
+    dashboards:
+      enabled: true
+
+# Security
+security:
+  networkPolicy:
+    enabled: true
+  podSecurityPolicy:
+    enabled: false
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Service Account
+serviceAccount:
+  create: true
+  name: attending-api
+  annotations: {}
+
+# Secrets Management
+# Use External Secrets Operator with Azure Key Vault
+externalSecrets:
+  enabled: true
+  secretStore:
+    kind: ClusterSecretStore
+    name: azure-key-vault
+  refreshInterval: 1h
+
+---
+# Environment-specific overrides
+
+# Staging values
+# staging:
+#   api:
+#     replicaCount: 2
+#     autoscaling:
+#       minReplicas: 2
+#       maxReplicas: 5
+#   ingress:
+#     hosts:
+#       - host: staging-api.attendingai.com
+
+# Development values
+# development:
+#   api:
+#     replicaCount: 1
+#     autoscaling:
+#       enabled: false
+#   monitoring:
+#     prometheus:
+#       enabled: false

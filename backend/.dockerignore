@@ -1,0 +1,30 @@
+﻿**/bin/
+**/obj/
+**/node_modules/
+**/.git
+**/.vs
+**/.vscode
+**/TestResults/
+**/*.user
+**/*.suo
+*.md
+# Environment files & secrets — inject via Azure Key Vault / App Service config
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+.secrets
+credentials.json
+serviceAccountKey.json
+*.credentials
+# Test and development artifacts
+**/*.test.*
+**/*.spec.*
+**/tests/
+**/Tests/
+coverage/

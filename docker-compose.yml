@@ -1,0 +1,243 @@
+# ============================================================
+# ATTENDING AI - Docker Compose
+# docker-compose.yml
+#
+# Local development and full-stack container environment.
+# Uses MS SQL Server 2022 (aligned with Azure SQL production).
+#
+# Usage:
+#   Development (DB + Redis only):
+#     npm run db:up
+#
+#   Full stack (all services):
+#     docker compose up
+#
+#   With observability (Seq + Jaeger):
+#     docker compose --profile observability up
+# ============================================================
+
+services:
+  # ==========================================================================
+  # DATABASE - MS SQL Server 2022
+  # ==========================================================================
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
+    container_name: attending-sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${MSSQL_SA_PASSWORD}" -Q "SELECT 1" -C -b
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ==========================================================================
+  # DATABASE INITIALIZATION
+  # Creates attending_db on first run (idempotent)
+  # ==========================================================================
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-CU16-ubuntu-22.04
+    container_name: attending-sqlserver-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}"
+    entrypoint: ["/opt/mssql-tools18/bin/sqlcmd", "-S", "sqlserver", "-U", "sa", "-P", "${MSSQL_SA_PASSWORD}", "-C", "-Q", "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'attending_db') CREATE DATABASE attending_db;"]
+    restart: "no"
+
+  # ==========================================================================
+  # REDIS - Cache & SignalR backplane
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: attending-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # PROVIDER PORTAL (Next.js)
+  # ==========================================================================
+  provider-portal:
+    build:
+      context: .
+      dockerfile: apps/provider-portal/Dockerfile
+    container_name: attending-provider-portal
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=sqlserver://sqlserver:1433;database=attending_db;user=sa;password=${MSSQL_SA_PASSWORD};trustServerCertificate=true;encrypt=true
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_URL=http://localhost:3000
+      # NEXTAUTH_SECRET is required — no fallback. Must be set in .env or as an env var.
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required. Set it in .env}
+      - BACKEND_API_URL=http://api:8080
+      - AZURE_AD_B2C_TENANT=${AZURE_AD_B2C_TENANT:-}
+      - AZURE_AD_B2C_CLIENT_ID=${AZURE_AD_B2C_CLIENT_ID:-}
+      - AZURE_AD_B2C_CLIENT_SECRET=${AZURE_AD_B2C_CLIENT_SECRET:-}
+      - AZURE_AD_B2C_USER_FLOW=${AZURE_AD_B2C_USER_FLOW:-}
+    depends_on:
+      api:
+        condition: service_healthy
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================================================
+  # PATIENT PORTAL / COMPASS (Next.js)
+  # ==========================================================================
+  patient-portal:
+    build:
+      context: .
+      dockerfile: apps/patient-portal/Dockerfile
+    container_name: attending-patient-portal
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=sqlserver://sqlserver:1433;database=attending_db;user=sa;password=${MSSQL_SA_PASSWORD};trustServerCertificate=true;encrypt=true
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_URL=http://localhost:3001
+      # NEXTAUTH_SECRET is required — no fallback.
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required. Set it in .env}
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+      - BACKEND_API_URL=http://api:8080
+    depends_on:
+      api:
+        condition: service_healthy
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================================================
+  # .NET BACKEND API (CQRS / Clinical Intelligence)
+  # ==========================================================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: attending-api
+    restart: unless-stopped
+    ports:
+      - "5080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__AttendingDb: "Server=sqlserver;Database=attending_db;User=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=True"
+      ConnectionStrings__Redis: "redis:6379"
+      Authentication__DevBypass: "${AUTH_DEV_BYPASS:-false}"
+      Cors__AllowedOrigins__0: "http://localhost:3000"
+      Cors__AllowedOrigins__1: "http://localhost:3001"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ==========================================================================
+  # SEQ - Structured log viewer
+  # http://localhost:5341
+  # Activate with: docker compose --profile observability up
+  # ==========================================================================
+  seq:
+    image: datalust/seq:2024.1
+    container_name: attending-seq
+    restart: unless-stopped
+    ports:
+      - "5341:80"
+    environment:
+      ACCEPT_EULA: "Y"
+    volumes:
+      - seq_data:/data
+    profiles:
+      - observability
+
+  # ==========================================================================
+  # JAEGER - Distributed tracing
+  # UI:   http://localhost:16686
+  # OTLP: grpc://localhost:4317
+  # Activate with: docker compose --profile observability up
+  # ==========================================================================
+  jaeger:
+    image: jaegertracing/all-in-one:1.54
+    container_name: attending-jaeger
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: "memory"
+    profiles:
+      - observability
+
+  # ==========================================================================
+  # NGINX - Reverse proxy for production-like local setup
+  # Activate with: docker compose --profile production up
+  # ==========================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: attending-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - provider-portal
+      - patient-portal
+    profiles:
+      - production
+
+volumes:
+  sqlserver_data:
+    driver: local
+  redis_data:
+    driver: local
+  seq_data:
+    driver: local
+
+networks:
+  default:
+    name: attending-network
+    driver: bridge

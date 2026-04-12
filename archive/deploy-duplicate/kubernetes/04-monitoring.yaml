@@ -1,0 +1,229 @@
+# ATTENDING AI - Monitoring Configuration
+---
+# ServiceMonitor for Prometheus (if using Prometheus Operator)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: attending-api-monitor
+  namespace: attending
+  labels:
+    app.kubernetes.io/name: attending
+    app.kubernetes.io/component: api
+    release: prometheus  # Match your Prometheus release label
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: attending
+      app.kubernetes.io/component: api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+  namespaceSelector:
+    matchNames:
+      - attending
+
+---
+# PrometheusRule for alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: attending-api-alerts
+  namespace: attending
+  labels:
+    app.kubernetes.io/name: attending
+    release: prometheus
+spec:
+  groups:
+    - name: attending-api
+      rules:
+        # High error rate
+        - alert: AttendingApiHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{job="attending-api", status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="attending-api"}[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            team: attending
+          annotations:
+            summary: "High error rate on ATTENDING API"
+            description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+        
+        # High latency
+        - alert: AttendingApiHighLatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_request_duration_seconds_bucket{job="attending-api"}[5m])) by (le)
+            ) > 1
+          for: 5m
+          labels:
+            severity: warning
+            team: attending
+          annotations:
+            summary: "High latency on ATTENDING API"
+            description: "95th percentile latency is {{ $value | humanizeDuration }}"
+        
+        # Pod restarts
+        - alert: AttendingApiPodRestarts
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="attending", container="api"}[1h]) > 3
+          for: 5m
+          labels:
+            severity: warning
+            team: attending
+          annotations:
+            summary: "ATTENDING API pods restarting frequently"
+            description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last hour"
+        
+        # Pod not ready
+        - alert: AttendingApiPodNotReady
+          expr: |
+            kube_pod_status_ready{namespace="attending", condition="true"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            team: attending
+          annotations:
+            summary: "ATTENDING API pod not ready"
+            description: "Pod {{ $labels.pod }} has been not ready for 5 minutes"
+        
+        # Critical lab result not acknowledged
+        - alert: CriticalLabResultUnacknowledged
+          expr: |
+            attending_critical_results_unacknowledged > 0
+          for: 15m
+          labels:
+            severity: critical
+            team: attending
+            clinical: true
+          annotations:
+            summary: "Critical lab result not acknowledged"
+            description: "{{ $value }} critical lab results have not been acknowledged for 15+ minutes"
+        
+        # Emergency assessment pending
+        - alert: EmergencyAssessmentPending
+          expr: |
+            attending_emergency_assessments_pending > 0
+          for: 5m
+          labels:
+            severity: critical
+            team: attending
+            clinical: true
+          annotations:
+            summary: "Emergency assessment pending review"
+            description: "{{ $value }} emergency assessments are pending for 5+ minutes"
+
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: attending-grafana-dashboard
+  namespace: attending
+  labels:
+    grafana_dashboard: "1"
+data:
+  attending-overview.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 100},
+                  {"color": "red", "value": 500}
+                ]
+              },
+              "unit": "reqps"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "id": 1,
+          "options": {},
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{job=\"attending-api\"}[5m]))",
+              "legendFormat": "Requests/sec"
+            }
+          ],
+          "title": "Request Rate",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {"mode": "palette-classic"},
+              "unit": "percentunit"
+            }
+          },
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "id": 2,
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{job=\"attending-api\", status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"attending-api\"}[5m]))",
+              "legendFormat": "Error Rate"
+            }
+          ],
+          "title": "Error Rate",
+          "type": "gauge"
+        },
+        {
+          "datasource": {
+            "type": "prometheus"
+          },
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+          "id": 3,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job=\"attending-api\"}[5m])) by (le))",
+              "legendFormat": "p50"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"attending-api\"}[5m])) by (le))",
+              "legendFormat": "p95"
+            },
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"attending-api\"}[5m])) by (le))",
+              "legendFormat": "p99"
+            }
+          ],
+          "title": "Request Latency",
+          "type": "timeseries"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["attending", "api"],
+      "templating": {"list": []},
+      "time": {"from": "now-1h", "to": "now"},
+      "timepicker": {},
+      "timezone": "",
+      "title": "ATTENDING AI Overview",
+      "uid": "attending-overview",
+      "version": 1,
+      "weekStart": ""
+    }

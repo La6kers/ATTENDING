@@ -1,0 +1,173 @@
+name: Deploy Demo Environment
+
+# Trigger manually from GitHub Actions tab, or on push to mockup-2 with [demo] in commit
+on:
+  workflow_dispatch:
+    inputs:
+      seed_database:
+        description: 'Seed database with demo data'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      component:
+        description: 'Which component to deploy'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - provider-portal
+          - patient-portal
+          - api
+
+env:
+  AZURE_RG: compass-standalone-rg
+  ACR_NAME: compassacr2026
+  ACR_LOGIN_SERVER: compassacr2026.azurecr.io
+  PROVIDER_APP: attending-provider
+  PATIENT_APP: attending-patient
+  API_APP: attending-api
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: demo
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Set image tag
+        run: echo "TAG=$(date +%Y%m%d)-${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      # --- Provider Portal ---
+      - name: Build Provider Portal
+        if: inputs.component == 'all' || inputs.component == 'provider-portal'
+        run: |
+          docker build \
+            -f apps/provider-portal/Dockerfile \
+            -t ${{ env.ACR_LOGIN_SERVER }}/attending-provider:${{ env.TAG }} \
+            -t ${{ env.ACR_LOGIN_SERVER }}/attending-provider:latest \
+            .
+          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-provider:${{ env.TAG }}
+          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-provider:latest
+
+      - name: Deploy Provider Portal
+        if: inputs.component == 'all' || inputs.component == 'provider-portal'
+        run: |
+          az webapp config container set \
+            --resource-group ${{ env.AZURE_RG }} \
+            --name ${{ env.PROVIDER_APP }} \
+            --container-image-name ${{ env.ACR_LOGIN_SERVER }}/attending-provider:${{ env.TAG }} \
+            --container-registry-url https://${{ env.ACR_LOGIN_SERVER }}
+          az webapp start -g ${{ env.AZURE_RG }} -n ${{ env.PROVIDER_APP }}
+
+      # --- Patient Portal (COMPASS) ---
+      - name: Build Patient Portal
+        if: inputs.component == 'all' || inputs.component == 'patient-portal'
+        run: |
+          docker build \
+            -f apps/patient-portal/Dockerfile \
+            -t ${{ env.ACR_LOGIN_SERVER }}/attending-patient:${{ env.TAG }} \
+            -t ${{ env.ACR_LOGIN_SERVER }}/attending-patient:latest \
+            .
+          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-patient:${{ env.TAG }}
+          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-patient:latest
+
+      - name: Deploy Patient Portal
+        if: inputs.component == 'all' || inputs.component == 'patient-portal'
+        run: |
+          az webapp config container set \
+            --resource-group ${{ env.AZURE_RG }} \
+            --name ${{ env.PATIENT_APP }} \
+            --container-image-name ${{ env.ACR_LOGIN_SERVER }}/attending-patient:${{ env.TAG }} \
+            --container-registry-url https://${{ env.ACR_LOGIN_SERVER }}
+          az webapp start -g ${{ env.AZURE_RG }} -n ${{ env.PATIENT_APP }}
+
+      # --- API Backend ---
+      - name: Build API Backend
+        if: inputs.component == 'all' || inputs.component == 'api'
+        run: |
+          docker build \
+            -f backend/Dockerfile \
+            -t ${{ env.ACR_LOGIN_SERVER }}/attending-api:${{ env.TAG }} \
+            -t ${{ env.ACR_LOGIN_SERVER }}/attending-api:latest \
+            backend/
+          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-api:${{ env.TAG }}
+          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-api:latest
+
+      - name: Deploy API Backend
+        if: inputs.component == 'all' || inputs.component == 'api'
+        run: |
+          az webapp config container set \
+            --resource-group ${{ env.AZURE_RG }} \
+            --name ${{ env.API_APP }} \
+            --container-image-name ${{ env.ACR_LOGIN_SERVER }}/attending-api:${{ env.TAG }} \
+            --container-registry-url https://${{ env.ACR_LOGIN_SERVER }}
+          az webapp start -g ${{ env.AZURE_RG }} -n ${{ env.API_APP }}
+
+      # --- Database Seed ---
+      - name: Setup Node.js
+        if: inputs.seed_database == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        if: inputs.seed_database == 'true'
+        run: npm ci
+
+      - name: Run migrations and seed
+        if: inputs.seed_database == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
+        run: |
+          npx prisma migrate deploy
+          npx ts-node prisma/seed-demo.ts
+
+      # --- Health Check ---
+      - name: Health Check
+        run: |
+          echo "Waiting 60s for services to start..."
+          sleep 60
+
+          check() {
+            local name=$1 url=$2
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
+            if [ "$status" = "200" ] || [ "$status" = "301" ] || [ "$status" = "302" ]; then
+              echo "  $name: OK ($status)"
+            else
+              echo "  $name: WARNING ($status)"
+            fi
+          }
+
+          echo "Health check results:"
+          check "API"      "https://${{ env.API_APP }}.azurewebsites.net/health/live"
+          check "Provider" "https://${{ env.PROVIDER_APP }}.azurewebsites.net"
+          check "COMPASS"  "https://${{ env.PATIENT_APP }}.azurewebsites.net"
+
+      - name: Deploy Summary
+        run: |
+          echo "## Demo Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | URL |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| Provider Portal | https://${{ env.PROVIDER_APP }}.azurewebsites.net |" >> $GITHUB_STEP_SUMMARY
+          echo "| Patient Portal | https://${{ env.PATIENT_APP }}.azurewebsites.net |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Backend | https://${{ env.API_APP }}.azurewebsites.net |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** \`${{ env.TAG }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Login:** demo@attending.ai / demo1234" >> $GITHUB_STEP_SUMMARY

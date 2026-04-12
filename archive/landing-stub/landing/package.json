@@ -1,0 +1,11 @@
+{
+  "name": "@attending/landing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ATTENDING AI Landing Hub - Central portal routing entry point",
+  "scripts": {
+    "dev": "npx serve public -l 8080 --cors",
+    "preview": "npx serve public -l 8080 --cors",
+    "start": "npx serve public -l 8080 --cors"
+  }
+}
