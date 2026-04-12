@@ -8,7 +8,7 @@
 
 # --- Stage 1: Dependencies ---
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY package.json package-lock.json turbo.json ./
@@ -45,7 +45,7 @@ RUN cd apps/shared && sed -i 's/"build": "tsc --noEmit"/"build": "echo skip-type
 
 # --- Stage 3: Runner ---
 FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 ENV NODE_ENV=production

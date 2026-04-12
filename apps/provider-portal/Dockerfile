@@ -13,7 +13,7 @@
 # Stage 1: Dependencies
 # ==========================================================
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Copy package files for all workspaces
@@ -31,7 +31,7 @@ RUN npx prisma generate
 # Stage 2: Builder
 # ==========================================================
 FROM node:20-alpine AS builder
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -64,7 +64,7 @@ RUN cd apps/shared && sed -i 's/"build": "tsc --noEmit"/"build": "echo skip-type
 # Stage 3: Production Runner
 # ==========================================================
 FROM node:20-alpine AS runner
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 
 WORKDIR /app
 
