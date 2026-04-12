@@ -80,6 +80,8 @@ RUN adduser --system --uid 1001 nextjs
 # Copy built output (standalone server + build output)
 COPY --from=builder /app/apps/provider-portal/public ./apps/provider-portal/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/provider-portal/.next/standalone ./
+# Static files: standalone server.js looks at /app/.next/static/ (not the monorepo subpath)
+COPY --from=builder --chown=nextjs:nodejs /app/apps/provider-portal/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/provider-portal/.next/static ./apps/provider-portal/.next/static
 
 # Standalone in monorepo doesn't include node_modules — copy from builder
