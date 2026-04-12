@@ -39,8 +39,8 @@ export default function LandingPage() {
   return (
     <>
       <Head>
-        <title>COMPASS | Clinical Assessment</title>
-        <meta name="description" content="AI-powered clinical assessment — HPI generation and differential diagnosis" />
+        <title>COMPASS | Pre-Visit Health Check</title>
+        <meta name="description" content="Tell COMPASS what's going on in a 5-minute chat. Your doctor sees a complete report before your visit — no forms, no repeating your history." />
         <meta name="theme-color" content="#0C3547" />
       </Head>
 
@@ -54,7 +54,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white tracking-tight">COMPASS</h1>
-                <p className="text-[10px] text-white/50 uppercase tracking-wider">Clinical Assessment System</p>
+                <p className="text-[10px] text-white/50 uppercase tracking-wider">Pre-Visit Assessment</p>
               </div>
             </div>
             <div className="flex items-center gap-1 px-2.5 py-1 bg-white/10 rounded-full">
@@ -73,11 +73,11 @@ export default function LandingPage() {
                 <Compass className="w-10 h-10 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-white mb-3">
-                Clinical Assessment
+                Your Pre-Visit Conversation
               </h2>
               <p className="text-white/60 max-w-md mx-auto">
-                Answer a few questions about your symptoms. COMPASS will generate a structured
-                HPI and suggest possible diagnoses.
+                Tell COMPASS what's going on in a 5-minute chat. We'll put together a
+                complete report for your doctor — so they already know your story before you walk in.
               </p>
             </div>
 
@@ -95,13 +95,13 @@ export default function LandingPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/10 rounded-xl p-3 text-center">
                   <FileText className="w-6 h-6 text-attending-light-teal mx-auto mb-2" />
-                  <h4 className="text-sm font-semibold text-white">HPI Narrative</h4>
-                  <p className="text-[11px] text-white/50 mt-1">Structured OLDCARTS clinical narrative</p>
+                  <h4 className="text-sm font-semibold text-white">Your Health Story</h4>
+                  <p className="text-[11px] text-white/50 mt-1">A complete narrative of your symptoms, in your own words</p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-3 text-center">
                   <Activity className="w-6 h-6 text-attending-gold mx-auto mb-2" />
-                  <h4 className="text-sm font-semibold text-white">Differential Dx</h4>
-                  <p className="text-[11px] text-white/50 mt-1">Ranked diagnoses with confidence scores</p>
+                  <h4 className="text-sm font-semibold text-white">Decision Support</h4>
+                  <p className="text-[11px] text-white/50 mt-1">Evidence-based options for your doctor to consider</p>
                 </div>
               </div>
             </div>
@@ -115,13 +115,13 @@ export default function LandingPage() {
               />
               <FeatureCard
                 icon={<Sparkles className="w-5 h-5 text-attending-gold" />}
-                title="AI-Powered Analysis"
-                description="Intelligent symptom analysis with red flag detection"
+                title="Safety-Critical Alerts"
+                description="14 red-flag patterns checked on every answer — across 18 emergency conditions"
               />
               <FeatureCard
                 icon={<Heart className="w-5 h-5 text-attending-coral" />}
-                title="Clinical Decision Support"
-                description="Evidence-based differential diagnoses with workup recommendations"
+                title="Better Prepared Visits"
+                description="Your provider arrives with your full story — so you can focus on getting care"
               />
             </div>
 
@@ -143,7 +143,7 @@ export default function LandingPage() {
               onClick={() => router.push('/assess')}
               className="w-full py-4 bg-attending-primary text-white rounded-xl font-semibold text-lg shadow-teal hover:shadow-teal-lg hover:bg-attending-400 transition-all flex items-center justify-center gap-2"
             >
-              Start Assessment
+              Start a COMPASS Health Check
               <ArrowRight className="w-5 h-5" />
             </button>
 

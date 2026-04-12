@@ -172,7 +172,7 @@ interface PhaseConfig {
 
 const PHASE_CONFIG: Record<CompassPhase, PhaseConfig> = {
   welcome: {
-    question: "Hello! I'm COMPASS, your clinical assessment assistant. I'll help gather information about your symptoms and provide a preliminary assessment. Are you a new patient, or do you have an MRN (medical record number)?",
+    question: "Hi, I'm COMPASS. I'll ask a few questions about what's going on so your doctor can get a head start on your visit. Are you a new patient, or do you have an MRN (medical record number)?",
     quickReplies: [
       { id: 'welcome_new', text: 'New Patient', value: 'new', variant: 'primary', icon: 'check' },
       { id: 'welcome_mrn', text: 'Enter MRN', value: '__open_mrn_pad__', variant: 'primary' },
