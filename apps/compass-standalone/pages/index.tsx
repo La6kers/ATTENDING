@@ -40,7 +40,7 @@ export default function LandingPage() {
     <>
       <Head>
         <title>COMPASS | Pre-Visit Health Check</title>
-        <meta name="description" content="Tell COMPASS what's going on in a 5-minute chat. Your doctor sees a complete report before your visit — no forms, no repeating your history." />
+        <meta name="description" content="The right information, in the right place, before your visit. COMPASS captures your full story in a 5-minute conversation — so you never repeat yourself and your provider can make confident decisions, faster." />
         <meta name="theme-color" content="#0C3547" />
       </Head>
 
@@ -76,8 +76,9 @@ export default function LandingPage() {
                 Your Pre-Visit Conversation
               </h2>
               <p className="text-white/60 max-w-md mx-auto">
-                Tell COMPASS what's going on in a 5-minute chat. We'll put together a
-                complete report for your doctor — so they already know your story before you walk in.
+                The right information, in the right place, before your visit. COMPASS captures your
+                full story in a simple 5-minute conversation — so you never repeat yourself and your
+                provider can make confident decisions, faster.
               </p>
             </div>
 
