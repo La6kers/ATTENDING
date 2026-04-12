@@ -4,10 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ATTENDING AI — Physician-Designed Clinical Decision Support</title>
-  <meta name="description" content="Physician-designed AI that reduces documentation burden by 75%, supports diagnostic reasoning, and sets up in 5 minutes — built rural-first for the clinics that need it most.">
+  <meta name="description" content="Tell COMPASS what's going on in a 5-minute chat. Your doctor sees a complete report before your visit — no forms, no repeating your history. Built by a physician. HIPAA-compliant.">
+  <link rel="canonical" href="https://attendingai.health/">
+  <link rel="icon" type="image/png" href="logo.png">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ATTENDING AI — Built Different. Built By A Physician.">
+  <meta property="og:description" content="Your pre-visit conversation — so your doctor already knows your story before you walk in. 5-minute chat. Complete report. HIPAA-compliant.">
+  <meta property="og:url" content="https://attendingai.health/">
+  <meta property="og:image" content="https://attendingai.health/logo.png">
+  <meta property="og:site_name" content="ATTENDING AI">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="ATTENDING AI — Built Different. Built By A Physician.">
+  <meta name="twitter:description" content="Your pre-visit conversation — so your doctor already knows your story before you walk in.">
+  <meta name="twitter:image" content="https://attendingai.health/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <!-- JSON-LD Organization schema -->
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"ATTENDING AI","url":"https://attendingai.health","logo":"https://attendingai.health/logo.png","description":"Physician-designed AI clinical decision support for rural healthcare","founder":{"@type":"Person","name":"Dr. Scott Isbell","jobTitle":"Family Physician, CEO & Founder"},"sameAs":[]}</script>
   <style>
     :root {
       --primary:#1A8FA8;--primary-light:#2CB5D1;--primary-dark:#146F82;
@@ -17,7 +33,7 @@
       --coral:#E87461;--coral-100:rgba(232,116,97,0.12);
       --success:#07CA6B;--success-100:rgba(7,202,107,0.15);
       --danger:#EF4444;
-      --text-primary:#FFFFFF;--text-secondary:rgba(255,255,255,0.72);--text-muted:rgba(255,255,255,0.45);
+      --text-primary:#FFFFFF;--text-secondary:rgba(255,255,255,0.72);--text-muted:rgba(255,255,255,0.58);
       --glass-bg:rgba(12,53,71,0.45);--glass-bg-heavy:rgba(8,30,43,0.7);
       --surface:rgba(255,255,255,0.06);--surface-raised:rgba(255,255,255,0.10);
       --border-glass:rgba(255,255,255,0.12);--border-glass-bright:rgba(255,255,255,0.20);--border-glow:rgba(26,143,168,0.35);
@@ -82,14 +98,10 @@
     @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.5}}
 
     /* Hero */
-    .hero{min-height:100vh;display:flex;align-items:center;padding:8rem 0 4rem}
+    .hero{min-height:100vh;min-height:100dvh;display:flex;align-items:center;padding:8rem 0 4rem}
     .hero-grid{display:grid;grid-template-columns:1fr;gap:3rem;align-items:center;justify-items:center}
     .hero-content{max-width:620px;text-align:center;margin:0 auto}
-    .hero-tabs{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.5rem;justify-content:center}
-    .hero-tab{padding:0.5rem 1rem;font-size:0.8125rem;font-weight:600;border-radius:var(--r-full);background:var(--surface);border:1px solid var(--border-glass);color:var(--text-secondary);cursor:pointer;transition:all var(--t-fast);font-family:inherit}
-    .hero-tab:hover{background:var(--surface-raised);color:var(--text-primary)}
-    .hero-tab.active{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border-color:transparent;box-shadow:0 4px 20px rgba(26,143,168,0.3)}
-    .hero-tab:focus-visible{outline:2px solid var(--primary-light);outline-offset:2px}
+    /* (hero-tabs CSS removed — audience tabs no longer in use) */
     .hero h1{font-size:clamp(2rem,5vw,3.75rem);font-weight:900;line-height:1.05;letter-spacing:-0.03em;margin-bottom:1.25rem;text-align:center}
     .hero h1 .hero-line{display:block}
     .hero h1 .highlight{background:linear-gradient(135deg,var(--primary-light),var(--gold-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -275,6 +287,7 @@
   </style>
 </head>
 <body>
+<a href="#hero" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:9999;padding:0.75rem 1.5rem;background:var(--primary);color:#fff;font-weight:700;border-radius:0 0 var(--r-sm) var(--r-sm);text-decoration:none;font-size:0.875rem" onfocus="this.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:0;z-index:9999;padding:0.75rem 1.5rem;background:var(--primary);color:#fff;font-weight:700;border-radius:0 0 8px 8px;text-decoration:none;font-size:0.875rem'" onblur="this.style.cssText='position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden'">Skip to content</a>
 <div class="bg-canvas" aria-hidden="true"></div>
 
 <!-- NAV -->
@@ -293,7 +306,8 @@
   </div>
 </nav>
 
-<!-- HERO — Rotating Audience Tabs -->
+<main id="main-content">
+<!-- HERO -->
 <section class="hero" id="hero">
   <div class="container">
     <div class="hero-grid">
@@ -304,7 +318,7 @@
           <span class="hero-line">Built By A Physician.</span>
         </h1>
         <p class="hero-descriptor">Tell <strong>COMPASS</strong> what's going on in a 5-minute chat. Your doctor sees a complete report before your visit — no forms, no repeating your history, no lost details.</p>
-        <p id="hero-quote-rotator" class="hero-quote-rotator" aria-live="polite"></p>
+        <p id="hero-quote-rotator" class="hero-quote-rotator" aria-live="polite" role="status" aria-label="Rotating feature highlights"></p>
         <div class="hero-actions">
           <a href="https://attending-compass.azurewebsites.net" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">Start a COMPASS Health Check <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
         </div>
@@ -345,10 +359,10 @@
 
 <!-- STATS -->
 <section class="stats" aria-label="Key metrics"><div class="container"><div class="stats-grid">
-  <div class="stat-card fade-up"><div class="stat-value">~75%</div><div class="stat-label">Est. Less Documentation*</div></div>
-  <div class="stat-card fade-up"><div class="stat-value">~25%</div><div class="stat-label">Est. More Patients*</div></div>
+  <div class="stat-card fade-up"><div class="stat-value">5 min</div><div class="stat-label">Setup — No Infrastructure</div></div>
   <div class="stat-card fade-up"><div class="stat-value">18</div><div class="stat-label">Emergency Conditions Detected</div></div>
-  <div class="stat-card fade-up"><div class="stat-value">5 min</div><div class="stat-label">Setup Time</div></div>
+  <div class="stat-card fade-up"><div class="stat-value">~75%</div><div class="stat-label">Est. Less Documentation*</div></div>
+  <div class="stat-card fade-up"><div class="stat-value">~25%</div><div class="stat-label">Est. More Patients per Provider*</div></div>
 </div></div></section>
 
 <!-- COMPASS DEEP DIVE -->
@@ -376,14 +390,13 @@
     <div style="display:flex;justify-content:center">
       <div class="phone-frame" aria-hidden="true"><div class="phone-notch"></div><div class="phone-screen">
         <div class="mock-header"><div class="mock-header-left"><div class="mock-logo"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></div><div><div class="mock-title">COMPASS</div></div></div></div>
-        <div class="mock-progress"><div class="mock-progress-bar"><div class="mock-progress-fill" style="width:45%"></div></div><div class="mock-progress-label">Step 5 of 12</div></div>
+        <div class="mock-progress"><div class="mock-progress-bar"><div class="mock-progress-fill" style="width:85%"></div></div><div class="mock-progress-label">Step 11 of 12</div></div>
         <div class="mock-chat">
-          <div class="mock-msg ai"><div class="lbl">COMPASS</div>What brings you in today? Please describe your main concern.</div>
-          <div class="mock-msg user">I've been having chest pain for 3 days. Gets worse when I walk up stairs.</div>
-          <div class="mock-msg ai"><div class="lbl">COMPASS</div>When did this start?</div>
-          <div class="mock-qr-wrap"><span class="mock-qr">Today</span><span class="mock-qr">Yesterday</span><span class="mock-qr sel">Few days ago</span><span class="mock-qr">About a week</span></div>
-          <div class="mock-msg ai"><div class="lbl">COMPASS</div>On a scale of 0–10, how severe is the pain at its worst?</div>
-          <div class="mock-qr-wrap"><span class="mock-qr">1-3 Mild</span><span class="mock-qr">4-5 Moderate</span><span class="mock-qr sel" style="background:var(--gold);color:#fff;border-color:var(--gold)">6-7 Significant</span><span class="mock-qr" style="color:#DC2626;border-color:rgba(239,68,68,0.3)">8-9 Severe</span></div>
+          <div class="mock-msg ai"><div class="lbl">COMPASS</div>Have you had any of these associated symptoms?</div>
+          <div class="mock-qr-wrap"><span class="mock-qr sel">Shortness of breath</span><span class="mock-qr sel">Sweating</span><span class="mock-qr">Nausea</span><span class="mock-qr">Dizziness</span></div>
+          <div class="mock-msg ai"><div class="lbl">COMPASS</div>Is there anything else you'd like your provider to know?</div>
+          <div class="mock-msg user">My father had a heart attack at 55. I'm worried.</div>
+          <div class="mock-msg ai"><div class="lbl">COMPASS</div>Thank you — family history noted. I'm preparing your report now. Your provider will see this before your visit.</div>
         </div>
       </div></div>
     </div>
@@ -452,8 +465,8 @@
 <section class="novel" id="technology"><div class="container">
   <div class="section-header fade-up">
     <div class="section-label">Physician-Designed Technology</div>
-    <h2 class="section-title">Built different. Built by a physician.</h2>
-    <p class="section-desc">Not a wrapper around ChatGPT. Not an EHR add-on. Purpose-built clinical intelligence with a patent filed (USPTO #19/215,389).</p>
+    <h2 class="section-title">Purpose-built clinical intelligence</h2>
+    <p class="section-desc">Not a wrapper around ChatGPT. Not an EHR add-on. Physician-designed, patent-filed (USPTO #19/215,389), and built to run where connectivity is never guaranteed.</p>
   </div>
   <div class="novel-grid">
     <div class="glass-card novel-card nt fade-up"><div class="novel-icon teal"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><h3>Tiered Clinical Intelligence</h3><p>Three layers that work independently. Safety-critical detection works offline — always. Cloud AI enhances when available but is never required for patient safety.</p></div>
@@ -474,7 +487,7 @@
 <section class="founder" id="story"><div class="container">
   <div class="section-header fade-up">
     <div class="section-label">Our Story</div>
-    <h2 class="section-title">Built by a physician who lives the problem</h2>
+    <h2 class="section-title">A physician who lives the problem he's solving</h2>
   </div>
   <div class="glass-card founder-card fade-up">
     <div class="founder-grid">
@@ -563,8 +576,8 @@
 <!-- CTA -->
 <section class="cta" id="contact"><div class="container">
   <div class="cta-card fade-up">
-    <h2>Ready to transform your clinical workflow?</h2>
-    <p>Join our pilot program. 5-minute setup. No contracts. No infrastructure. Just better care.</p>
+    <h2>Ready to see what COMPASS can do?</h2>
+    <p>Patients: try a health check in 5 minutes. Physicians: see how COMPASS changes your workflow. No contracts. No infrastructure. Just better care.</p>
     <div class="cta-actions">
       <a href="https://attending-compass.azurewebsites.net" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">Start a COMPASS Health Check <svg class="btn-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
       <a href="#compass" class="btn btn-ghost btn-lg">Explore COMPASS</a>
@@ -572,6 +585,7 @@
   </div>
 </div></section>
 
+</main>
 <!-- FOOTER -->
 <footer class="footer"><div class="container">
   <div class="footer-grid">
@@ -582,11 +596,11 @@
     </div>
     <div class="footer-col"><h4>Product</h4><ul><li><a href="#compass">COMPASS</a></li><li><a href="#technology">Technology</a></li><li><a href="#platform">Platform</a></li><li><a href="#features">Why ATTENDING AI</a></li></ul></div>
     <div class="footer-col"><h4>Solutions</h4><ul><li><a href="#compass">Primary Care</a></li><li><a href="#platform">SNF Transfers</a></li><li><a href="#platform">EMS Integration</a></li><li><a href="#rural">Rural Health</a></li></ul></div>
-    <div class="footer-col"><h4>Company</h4><ul><li><a href="#story">Our Story</a></li><li><a href="#contact">Pilot Program</a></li><li><a href="#contact">Contact</a></li><li><a href="#">Careers</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="#story">Our Story</a></li><li><a href="#contact">Pilot Program</a></li><li><a href="#contact">Contact</a></li></ul></div>
   </div>
   <div class="footer-bottom">
-    <span class="footer-copy">&copy; 2026 ATTENDING AI LLC. All rights reserved. &nbsp;|&nbsp; attendingai.health</span>
-    <ul class="footer-legal"><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">HIPAA Compliance</a></li><li><a href="#">BAA Request</a></li></ul>
+    <span class="footer-copy">&copy; 2026 ATTENDING AI LLC. All rights reserved. &nbsp;|&nbsp; <a href="https://attendingai.health" style="color:var(--text-muted);text-decoration:none">attendingai.health</a></span>
+    <ul class="footer-legal"><li><a href="#contact">Privacy</a></li><li><a href="#contact">Terms</a></li><li><a href="#contact">HIPAA</a></li><li><a href="#contact">BAA Request</a></li></ul>
   </div>
 </div></footer>
 
@@ -594,6 +608,31 @@
   // Nav scroll
   const nav=document.getElementById('nav');
   window.addEventListener('scroll',()=>{nav.classList.toggle('scrolled',window.scrollY>40)},{passive:true});
+
+  // Mobile menu toggle
+  const mobileBtn=document.querySelector('.nav-mobile');
+  const navLinks=document.querySelector('.nav-links');
+  if(mobileBtn&&navLinks){
+    mobileBtn.setAttribute('aria-expanded','false');
+    mobileBtn.addEventListener('click',()=>{
+      const open=navLinks.style.display==='flex';
+      navLinks.style.display=open?'':'flex';
+      navLinks.style.flexDirection='column';
+      navLinks.style.position='absolute';
+      navLinks.style.top='100%';
+      navLinks.style.left='0';
+      navLinks.style.right='0';
+      navLinks.style.background='rgba(8,30,43,0.95)';
+      navLinks.style.backdropFilter='blur(20px)';
+      navLinks.style.padding=open?'':'1rem 1.5rem';
+      navLinks.style.gap=open?'':'1rem';
+      navLinks.style.borderBottom=open?'':'1px solid rgba(255,255,255,0.1)';
+      mobileBtn.setAttribute('aria-expanded',String(!open));
+      if(open)navLinks.removeAttribute('style');
+    });
+    // Close on link click
+    navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{navLinks.removeAttribute('style');mobileBtn.setAttribute('aria-expanded','false')}));
+  }
 
   // Rotating quotes below the pinned hero headline. The H1 stays static
   // ("Built different. Built by a physician.") and the quotes below it
