@@ -11,7 +11,7 @@ import {
   useCancelLabOrder,
   LabOrderSummary,
   CreateLabOrderRequest 
-} from '../lib/api/backend';
+} from '../../lib/api/backend';
 
 // Priority badge colors
 const priorityColors: Record<string, string> = {

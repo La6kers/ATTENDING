@@ -23,7 +23,7 @@ import {
   type Diagnosis,
   type FindingState,
   type TreatmentPlan,
-} from './encounterMockData';
+} from '../../lib/encounter/encounterMockData';
 import {
   Play,
   Pause,

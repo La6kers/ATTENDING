@@ -166,13 +166,13 @@ const API_DOCUMENTATION: ApiDocumentation = {
   ],
 };
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ApiDocumentation>
 ) {
   // CORS — use shared origin-validated middleware instead of wildcard
   const { cors } = await import('@attending/shared/lib/cors');
   if (await cors(req, res)) return; // Handled preflight
-  
+
   return res.status(200).json(API_DOCUMENTATION);
 }

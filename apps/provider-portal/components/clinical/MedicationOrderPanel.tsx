@@ -13,7 +13,7 @@ import {
   MedicationOrderResponse,
   DrugInteractionResponse,
   CreateMedicationOrderRequest,
-} from '../lib/api/backend';
+} from '../../lib/api/backend';
 
 // Severity colors for drug interactions
 const severityColors: Record<string, string> = {
