@@ -25,8 +25,6 @@ import { categoryConfig } from './theme';
 import {
   prescanMessage,
   gatherChartContext,
-  mockLLMCall,
-  runInboxAgent,
   type InboxAIResponse,
   type PendedAction as AgentPendedAction,
   type AIDraft as AgentAIDraft,
@@ -497,31 +495,37 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
   const [aiReasoning, setAiReasoning] = useState('');
 
   useEffect(() => {
-    // Use the AI agent pipeline
+    // Call server-side AI agent via API route (real Azure OpenAI)
     const runAgent = async () => {
-      const agentResult = await runInboxAgent(
-        {
-          patientId: item.patientId,
-          from: item.patientName,
-          subject: item.subject,
-          content: item.content,
-          category: item.category,
-          chiefComplaint: item.chiefComplaint,
-          symptoms: item.symptoms,
-        },
-        {
-          conditions: chart.conditions,
-          medications: chart.medications,
-          recentLabs: chart.recentLabs,
-          allergies: chart.allergies,
-          recentVitals: chart.recentVitals,
-          lastVisit: chart.lastVisit,
-        },
-        {
+      const res = await fetch('/api/ai/inbox-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: {
+            patientId: item.patientId,
+            from: item.patientName,
+            subject: item.subject,
+            content: item.content,
+            category: item.category,
+            chiefComplaint: item.chiefComplaint,
+            symptoms: item.symptoms,
+          },
+          chartData: {
+            conditions: chart.conditions,
+            medications: chart.medications,
+            recentLabs: chart.recentLabs,
+            allergies: chart.allergies,
+            recentVitals: chart.recentVitals,
+            lastVisit: chart.lastVisit,
+          },
           providerName: 'Dr. Thomas Reed',
-          llmCall: mockLLMCall, // Swap with real Claude API call in production
-        },
-      );
+        }),
+      });
+      if (!res.ok) {
+        console.error('[AI] inbox-draft API error:', res.status);
+        return;
+      }
+      const agentResult: InboxAIResponse = await res.json();
 
       // Map agent actions to component format (add icons)
       const iconForType: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -573,30 +577,38 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
 
   const regenerateDrafts = useCallback(() => {
     setIsRegenerating(true);
-    // Re-run agent
-    runInboxAgent(
-      {
-        patientId: item.patientId,
-        from: item.patientName,
-        subject: item.subject,
-        content: item.content,
-        category: item.category,
-        chiefComplaint: item.chiefComplaint,
-        symptoms: item.symptoms,
-      },
-      {
-        conditions: chart.conditions,
-        medications: chart.medications,
-        recentLabs: chart.recentLabs,
-        allergies: chart.allergies,
-        recentVitals: chart.recentVitals,
-        lastVisit: chart.lastVisit,
-      },
-      {
+    // Re-run agent via server-side API (real Azure OpenAI)
+    fetch('/api/ai/inbox-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: {
+          patientId: item.patientId,
+          from: item.patientName,
+          subject: item.subject,
+          content: item.content,
+          category: item.category,
+          chiefComplaint: item.chiefComplaint,
+          symptoms: item.symptoms,
+        },
+        chartData: {
+          conditions: chart.conditions,
+          medications: chart.medications,
+          recentLabs: chart.recentLabs,
+          allergies: chart.allergies,
+          recentVitals: chart.recentVitals,
+          lastVisit: chart.lastVisit,
+        },
         providerName: 'Dr. Thomas Reed',
-        llmCall: mockLLMCall,
-      },
-    ).then(agentResult => {
+      }),
+    }).then(res => {
+      if (!res.ok) {
+        console.error('[AI] inbox-draft regenerate error:', res.status);
+        setIsRegenerating(false);
+        return Promise.reject('API error');
+      }
+      return res.json();
+    }).then((agentResult: InboxAIResponse) => {
       const iconForType: Record<string, React.ComponentType<{ className?: string }>> = {
         'lab': Beaker, 'referral': ArrowRightLeft, 'refill': Pill,
         'appointment': Calendar, 'follow-up': Calendar, 'imaging': FileSearch,
