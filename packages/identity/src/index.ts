@@ -39,3 +39,28 @@ export {
   extractIdentityFromSession,
 } from './middleware/ial2-verify';
 export type { IAL2VerificationContext } from './middleware/ial2-verify';
+
+// Passkeys / WebAuthn (AAL2)
+export { WebAuthnService } from './passkeys/webauthn-service';
+export type {
+  ChallengeStore,
+  PasskeyVerifier,
+  WebAuthnServiceConfig,
+} from './passkeys/webauthn-service';
+export type {
+  PasskeyCredential,
+  PasskeyChallenge,
+  RegistrationOptions,
+  RegistrationChallenge,
+  RegistrationResponse,
+  RegistrationVerification,
+  AuthenticationOptions,
+  AuthenticationChallenge,
+  AuthenticationResponse,
+  AuthenticationVerification,
+  PasskeyErrorCode,
+} from './passkeys/types';
+export {
+  PasskeyCredentialSchema,
+  PasskeyChallengeSchema,
+} from './passkeys/types';

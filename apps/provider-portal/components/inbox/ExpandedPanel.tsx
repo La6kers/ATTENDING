@@ -490,14 +490,31 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(true);
   const [showAllActions, setShowAllActions] = useState(false);
   const [aiSeverity, setAiSeverity] = useState<SeverityLevel>('routine');
   const [aiReasoning, setAiReasoning] = useState('');
 
   useEffect(() => {
+    // Clear stale state immediately when switching messages
+    setPendedActions([]);
+    setDrafts([]);
+    setStaffDraft(null);
+    setStaffInstruction(null);
+    setSelectedDraftId('');
+    setResponse('');
+    setResponseAudience('patient');
+    setIsEditing(false);
+    setIsCopied(false);
+    setAiSeverity('routine');
+    setAiReasoning('');
+    setIsAiLoading(true);
+
     // Call server-side AI agent via API route (real Azure OpenAI)
+    const controller = new AbortController();
     const runAgent = async () => {
       const res = await fetch('/api/ai/inbox-draft', {
+        signal: controller.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -523,6 +540,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
       });
       if (!res.ok) {
         console.error('[AI] inbox-draft API error:', res.status);
+        setIsAiLoading(false);
         return;
       }
       const agentResult: InboxAIResponse = await res.json();
@@ -570,9 +588,13 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
       setResponseAudience('patient');
       setIsEditing(false);
       setIsCopied(false);
+      setIsAiLoading(false);
     };
 
-    runAgent();
+    runAgent().catch(err => {
+      if (err.name !== 'AbortError') setIsAiLoading(false);
+    });
+    return () => controller.abort();
   }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const regenerateDrafts = useCallback(() => {
@@ -907,8 +929,34 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
 
         {/* RIGHT: AI Actions + Response Composer */}
         <div className="w-[58%] flex flex-col overflow-hidden">
+          {/* AI Loading State */}
+          {isAiLoading && (
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'rgba(200, 164, 78, 0.15)', border: '1px solid rgba(200, 164, 78, 0.3)' }}>
+                  <Brain className="w-6 h-6 animate-pulse" style={{ color: '#c8a44e' }} />
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-ping"
+                  style={{ background: '#1A8FA8' }} />
+              </div>
+              <div className="text-center">
+                <div className="text-sm font-semibold text-white mb-1">Analyzing with AI</div>
+                <div className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  Reviewing chart data, vitals, labs, and medications...
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                style={{ background: 'rgba(26, 143, 168, 0.1)', border: '1px solid rgba(26, 143, 168, 0.2)' }}>
+                <Activity className="w-3 h-3" style={{ color: '#1A8FA8' }} />
+                <span className="text-[10px] font-medium" style={{ color: '#7dd3c8' }}>
+                  Azure OpenAI &middot; Generating clinical recommendations
+                </span>
+              </div>
+            </div>
+          )}
           {/* AI-Pended Actions */}
-          {pendedActions.length > 0 && (
+          {!isAiLoading && pendedActions.length > 0 && (
             <div className="p-4 flex-shrink-0 overflow-y-auto" style={{ maxHeight: '40%', borderBottom: '2px solid #c8a44e' }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -994,7 +1042,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
           )}
 
           {/* Response Composer */}
-          <div className="flex-1 flex flex-col p-4 overflow-y-auto" style={{ borderTop: pendedActions.length === 0 ? 'none' : undefined }}>
+          {!isAiLoading && <div className="flex-1 flex flex-col p-4 overflow-y-auto" style={{ borderTop: pendedActions.length === 0 ? 'none' : undefined }}>
             <div className="flex items-center gap-2 mb-3 flex-shrink-0">
               <Edit3 className="w-4 h-4" style={{ color: '#c8a44e' }} />
               <span className="text-sm font-bold text-white">
@@ -1199,7 +1247,7 @@ export const ExpandedPanel: React.FC<ExpandedPanelProps> = ({
                 )}
               </div>
             </div>
-          </div>
+          </div>}
         </div>
       </div>
     </div>
