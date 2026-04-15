@@ -1,16 +1,26 @@
 # Deploy COMPASS Standalone to Azure Web App (Container)
 # Builds Docker image, pushes to ACR, deploys to App Service
+#
+# Branch flow: dev (work) → mockup-2 (staging, no auto-deploy) → main (PROD, auto-deploys here)
+# Before this change, the deploy was triggered from mockup-2. That made mockup-2
+# effectively production even though the name implied staging. We've now moved
+# the deploy trigger to main so the branch names match the actual roles:
+#   dev       → active development, direct commits
+#   mockup-2  → integration/staging, no auto-deploy
+#   main      → production, every push to compass-standalone/shared auto-deploys
+# The staging env is currently the same Azure App Service until a second env is
+# provisioned — merging to main ships straight to attending-compass.azurewebsites.net.
 
 name: Build and deploy COMPASS Standalone to Azure Web App
 
 on:
   push:
     branches:
-      - mockup-2
+      - main
     paths:
       - 'apps/compass-standalone/**'
       - 'apps/shared/**'
-      - '.github/workflows/mockup-2_attending-compass.yml'
+      - '.github/workflows/main_attending-compass.yml'
   workflow_dispatch:
 
 env:
