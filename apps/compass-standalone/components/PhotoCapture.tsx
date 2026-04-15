@@ -284,7 +284,8 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({ isOpen, onClose, onC
           {mode === 'region' && (
             <div className="space-y-3">
               <p className="text-sm text-white/60 mb-2">
-                Select the body area to get specific photo guidance for your provider.
+                Photos are <strong className="text-white/80">optional</strong>. If they help your
+                provider, pick a body area below — otherwise you can skip and keep chatting.
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {BODY_REGIONS.map((region) => (
@@ -298,6 +299,12 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({ isOpen, onClose, onC
                   </button>
                 ))}
               </div>
+              <button
+                onClick={onClose}
+                className="w-full py-2.5 mt-2 text-sm text-white/60 hover:text-white transition-colors border border-white/10 rounded-xl bg-white/5 hover:bg-white/10"
+              >
+                Skip photos — continue the chat
+              </button>
             </div>
           )}
 
@@ -422,6 +429,13 @@ export const PhotoCapture: React.FC<PhotoCaptureProps> = ({ isOpen, onClose, onC
               </button>
 
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+
+              <button
+                onClick={onClose}
+                className="w-full py-2 text-xs text-white/50 hover:text-white/80 transition-colors"
+              >
+                Skip — continue chat without photos
+              </button>
             </div>
           )}
 

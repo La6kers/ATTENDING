@@ -41,10 +41,13 @@ export interface ChatContainerProps {
 
 const formatPhaseName = (phase?: string): string => {
   if (!phase) return '';
+  // Split on camelCase first, then restore the HPI acronym. The prior order
+  // (replace hpi → HPI → then split on every capital) produced "H P I Severity"
+  // because the split treated each letter of "HPI" as a word boundary.
   return phase
-    .replace(/hpi/g, 'HPI')
-    .replace(/([A-Z])/g, ' $1')
-    .replace(/^./, (s) => s.toUpperCase())
+    .replace(/([A-Z])/g, ' $1')           // 'hpiSeverity' → 'hpi Severity'
+    .replace(/^./, (s) => s.toUpperCase()) // 'Hpi Severity'
+    .replace(/\bHpi\b/g, 'HPI')            // 'HPI Severity'
     .trim();
 };
 

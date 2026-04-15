@@ -11,6 +11,18 @@ import type { DifferentialDiagnosisResult } from './ai/differentialDiagnosis.typ
 
 export type SummaryFormat = 'narrative' | 'bulleted' | 'soap';
 
+// One-word or filler responses that should be treated as "not reported"
+// rather than dropped into the narrative verbatim. Prevents output like
+// "The symptoms are located in the no. Timing: no."
+const NON_ANSWER_RE = /^(no|nope|nothing|none|n\/a|na|idk|dunno|unknown|unsure|skip|-|\.)$/i;
+function isReal(value: string | undefined | null): value is string {
+  if (!value) return false;
+  const v = value.trim();
+  if (v.length < 2) return false;
+  if (NON_ANSWER_RE.test(v)) return false;
+  return true;
+}
+
 export function buildHpiNarrative(
   hpi: HPIData,
   chiefComplaint?: string,
@@ -23,16 +35,16 @@ export function buildHpiNarrative(
     parts.push(`${subject} presents with a chief complaint of ${chiefComplaint}.`);
   }
 
-  if (hpi.onset) {
+  if (isReal(hpi.onset)) {
     parts.push(`The symptoms began ${hpi.onset.toLowerCase().replace(/^started?\s*/i, '')}.`);
   }
-  if (hpi.location) {
+  if (isReal(hpi.location)) {
     parts.push(`The symptoms are located in the ${hpi.location.toLowerCase()}.`);
   }
-  if (hpi.duration) {
+  if (isReal(hpi.duration)) {
     parts.push(`Episodes last ${hpi.duration.toLowerCase()}.`);
   }
-  if (hpi.character) {
+  if (isReal(hpi.character)) {
     parts.push(`The quality is described as ${hpi.character.toLowerCase()}.`);
   }
   if (hpi.severity !== undefined && hpi.severity !== null) {
@@ -42,17 +54,19 @@ export function buildHpiNarrative(
       hpi.severity <= 8 ? 'severe' : 'very severe';
     parts.push(`Severity is rated ${hpi.severity}/10 (${severityLabel}).`);
   }
-  if (hpi.timing) {
+  if (isReal(hpi.timing)) {
     parts.push(`Timing: ${hpi.timing}.`);
   }
-  if (hpi.aggravating?.length) {
-    parts.push(`Aggravating factors include ${hpi.aggravating.join(', ')}.`);
+  const aggFiltered = (hpi.aggravating || []).filter(isReal);
+  if (aggFiltered.length > 0) {
+    parts.push(`Aggravating factors include ${aggFiltered.join(', ')}.`);
   }
-  if (hpi.relieving?.length) {
-    parts.push(`Relieving factors include ${hpi.relieving.join(', ')}.`);
+  const relFiltered = (hpi.relieving || []).filter(isReal);
+  if (relFiltered.length > 0) {
+    parts.push(`Relieving factors include ${relFiltered.join(', ')}.`);
   }
   if (hpi.associated?.length) {
-    const filtered = hpi.associated.filter(s => s && s.toLowerCase() !== 'no associated symptoms');
+    const filtered = hpi.associated.filter(s => isReal(s) && s.toLowerCase() !== 'no associated symptoms');
     if (filtered.length > 0) {
       parts.push(`Associated symptoms include ${filtered.join(', ')}.`);
     } else {
@@ -64,16 +78,22 @@ export function buildHpiNarrative(
 }
 
 export function buildStructuredHpi(hpi: HPIData): Record<string, string> {
+  // Apply the same filler-word filter the narrative uses so the structured
+  // HPI cards don't display "Timing: Nothing" or "Location: no" when the
+  // patient typed a one-word filler answer.
   const structured: Record<string, string> = {};
-  if (hpi.onset) structured['Onset'] = hpi.onset;
-  if (hpi.location) structured['Location'] = hpi.location;
-  if (hpi.duration) structured['Duration'] = hpi.duration;
-  if (hpi.character) structured['Character'] = hpi.character;
+  if (isReal(hpi.onset)) structured['Onset'] = hpi.onset;
+  if (isReal(hpi.location)) structured['Location'] = hpi.location;
+  if (isReal(hpi.duration)) structured['Duration'] = hpi.duration;
+  if (isReal(hpi.character)) structured['Character'] = hpi.character;
   if (hpi.severity !== undefined) structured['Severity'] = `${hpi.severity}/10`;
-  if (hpi.timing) structured['Timing'] = hpi.timing;
-  if (hpi.aggravating?.length) structured['Aggravating Factors'] = hpi.aggravating.join(', ');
-  if (hpi.relieving?.length) structured['Relieving Factors'] = hpi.relieving.join(', ');
-  if (hpi.associated?.length) structured['Associated Symptoms'] = hpi.associated.join(', ');
+  if (isReal(hpi.timing)) structured['Timing'] = hpi.timing;
+  const aggFiltered = (hpi.aggravating || []).filter(isReal);
+  if (aggFiltered.length) structured['Aggravating Factors'] = aggFiltered.join(', ');
+  const relFiltered = (hpi.relieving || []).filter(isReal);
+  if (relFiltered.length) structured['Relieving Factors'] = relFiltered.join(', ');
+  const assocFiltered = (hpi.associated || []).filter(isReal);
+  if (assocFiltered.length) structured['Associated Symptoms'] = assocFiltered.join(', ');
   return structured;
 }
 

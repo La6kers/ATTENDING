@@ -273,7 +273,11 @@ export function generateIntelligentWorkup(
     ...imaging.map(i => i.name),
     ...procedures.map(p => p.name),
   ];
-  const choosingWiselyAlerts = checkChoosingWisely(presentation, allTestNames);
+  // Pass the top differential names so the Choosing Wisely filter can gate
+  // each rule against the actual clinical context (prevents URI/headache/etc
+  // recommendations from firing on unrelated presentations).
+  const topDxNames = differentials.slice(0, 5).map(d => d.diagnosis);
+  const choosingWiselyAlerts = checkChoosingWisely(presentation, allTestNames, topDxNames);
 
   // Flag tests but don't remove them — let the physician decide
   for (const alert of choosingWiselyAlerts) {

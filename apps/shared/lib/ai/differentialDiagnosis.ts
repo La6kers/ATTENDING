@@ -78,25 +78,75 @@ const EMERGENCY_CONDITIONS: Record<string, {
     redFlags: ['sudden onset', 'focal neurological deficit', 'worst headache of life'],
   },
   'Sepsis': {
-    symptoms: ['fever', 'chills', 'confusion', 'tachycardia'],
-    vitals: { temperature: 38.3, heartRate: 90, respiratoryRate: 22 },
-    redFlags: ['lactate >2', 'hypotension', 'altered mental status'],
+    // Sepsis needs an infection source (not just fever + tachycardia) —
+    // otherwise any seizure, stroke, or trauma case with a mild fever lights
+    // up the must-rule-out list. The symptom keywords here are now oriented
+    // toward infection-specific findings (cough, dysuria, wound, line, etc).
+    // The vital thresholds keep their contribution but the emergent matcher
+    // won't cross its threshold without at least one infection source AND a
+    // clinical red flag.
+    symptoms: [
+      'chills', 'rigors', 'confusion from infection',
+      'productive cough', 'purulent sputum',
+      'dysuria', 'flank pain',
+      'wound drainage', 'cellulitis',
+      'catheter', 'central line', 'indwelling',
+    ],
+    vitals: { temperature: 38.3, heartRate: 110, respiratoryRate: 24 },
+    redFlags: [
+      'lactate >2', 'hypotension', 'altered mental status',
+      'sepsis', 'septic shock', 'suspected infection',
+    ],
   },
   'Aortic Dissection': {
     symptoms: ['tearing chest pain', 'back pain', 'blood pressure differential'],
     redFlags: ['sudden onset', 'radiates to back', 'unequal pulses'],
   },
   'Subarachnoid Hemorrhage': {
-    symptoms: ['thunderclap headache', 'neck stiffness', 'photophobia', 'vomiting'],
-    redFlags: ['worst headache of life', 'sudden onset', 'altered consciousness'],
+    symptoms: [
+      'thunderclap headache', 'worst headache', 'sudden severe headache',
+      'neck stiffness', 'stiff neck', 'photophobia', 'light sensitivity',
+      'vomiting',
+    ],
+    redFlags: [
+      'worst headache of life', 'worst headache', 'thunderclap', 'sudden onset',
+      'altered consciousness',
+    ],
   },
   'Meningitis': {
-    symptoms: ['headache', 'fever', 'neck stiffness', 'photophobia', 'confusion'],
+    symptoms: [
+      'severe headache', 'fever', 'neck stiffness', 'stiff neck',
+      'photophobia', 'light sensitivity', 'confusion',
+    ],
     redFlags: ['petechial rash', 'altered mental status', 'immunocompromised'],
   },
   'Ectopic Pregnancy': {
     symptoms: ['abdominal pain', 'vaginal bleeding', 'missed period'],
     redFlags: ['hypotension', 'positive pregnancy test', 'adnexal mass'],
+  },
+  'Cauda Equina Syndrome': {
+    symptoms: [
+      'back pain', 'low back pain', 'saddle numbness', 'saddle anesthesia',
+      'bladder incontinence', 'bowel incontinence', 'urinary retention',
+      'leg weakness', 'bilateral leg weakness', 'numbness between legs',
+    ],
+    redFlags: [
+      'saddle anesthesia', 'saddle numbness', 'new bladder dysfunction',
+      'bowel incontinence', 'bilateral sciatica', 'progressive neurologic deficit',
+      'cauda equina',
+    ],
+  },
+  'Anaphylaxis': {
+    symptoms: [
+      'throat swelling', 'tongue swelling', 'difficulty swallowing',
+      'difficulty breathing', 'hives', 'urticaria', 'wheezing',
+      'facial swelling', 'allergic reaction',
+    ],
+    redFlags: ['airway compromise', 'hypotension', 'multi-system involvement'],
+  },
+  'Testicular Torsion': {
+    symptoms: ['testicular pain', 'scrotal pain', 'testicular swelling', 'groin pain'],
+    redFlags: ['sudden onset', 'absent cremasteric reflex', 'horizontal testicle'],
   },
 };
 
@@ -190,7 +240,17 @@ export class DifferentialDiagnosisService {
 
       // Merge emergent conditions
       differentials = this.mergeEmergentConditions(differentials, emergentConditions);
-      
+
+      // Post-merge pediatric filter — removes adult-only diagnoses that leak
+      // in via the symptom-cause graph or emergent matcher regardless of the
+      // prevalence-path pediatric filter. Keeps the KB's adult data intact
+      // for adult patients but blocks it for kids. Matches the same list of
+      // regexes used in clinicalPrevalence.ts ADULT_ONLY_DIAGNOSES.
+      if (presentation.demographics.age < 18) {
+        const adultOnly = /COPD|Emphysema|Chronic Bronchitis|ACE inhibitor cough|Atrial Fibrillation\b|Endometrial|Cervical Cancer|Atrophic|Hip Osteoarthritis|Trochanteric Bursitis|\bOsteoarthritis\b|Colon Cancer|Lung Cancer|Pancreatic Cancer|Prostate|Temporal Arteritis|Polymyalgia Rheumatica|Peptic Ulcer Disease|Abdominal Aortic Aneurysm|Aortic Stenosis|Hypertensive|Diabetic Nephropathy|\bGout\b|Erectile|Menopausal|Postmenopausal|Hyperosmolar Hyperglycemic/i;
+        differentials = differentials.filter(d => !adultOnly.test(d.diagnosis));
+      }
+
       // Sort by confidence
       differentials.sort((a, b) => b.confidence - a.confidence);
       
@@ -200,16 +260,25 @@ export class DifferentialDiagnosisService {
         EMERGENCY_CONDITIONS[d.diagnosis]
       );
 
-      // Ensure at least one differential exists
+      // Ensure at least one differential exists. When the prevalence engine
+      // doesn't recognize the chief complaint pattern (e.g. hip pain, vaginal
+      // bleeding, generic pediatric), surface a friendly, non-alarming card
+      // that tells the user we couldn't narrow it down rather than a 10%
+      // "Unspecified condition" line that reads as a broken result.
       if (differentials.length === 0) {
         differentials.push({
-          diagnosis: 'Unspecified condition',
-          confidence: 10,
-          reasoning: `Insufficient data to generate specific differential for "${presentation.chiefComplaint}". Clinical evaluation recommended.`,
-          supportingFindings: [presentation.chiefComplaint],
+          diagnosis: 'Needs in-person evaluation',
+          confidence: 0,
+          reasoning: `COMPASS couldn't narrow down a differential for "${presentation.chiefComplaint}" from the information provided. This is not a red flag by itself — it usually means the complaint needs an in-person exam (e.g., physical findings, vitals, or a focused history) to evaluate properly.`,
+          supportingFindings: [`Chief complaint: ${presentation.chiefComplaint}`],
           againstFindings: [],
           urgency: 'routine',
-          recommendedWorkup: { labs: ['CBC', 'BMP'], imaging: [] },
+          recommendedWorkup: {
+            labs: [],
+            imaging: [],
+            procedures: ['Focused history and physical exam', 'Vital signs review'],
+            consults: ['Primary care evaluation'],
+          },
         });
       }
 
@@ -263,14 +332,52 @@ export class DifferentialDiagnosisService {
     const symptoms = presentation.symptoms.map(s => s.name.toLowerCase());
     const chiefComplaint = presentation.chiefComplaint.toLowerCase();
 
+    // Collect every free-text field the engine has about the patient so the
+    // emergent match is not limited to whichever exact phrasing COMPASS used.
+    const patientHaystack = [
+      chiefComplaint,
+      ...symptoms,
+      ...Object.values(presentation.symptomSpecificAnswers || {}).map(v => v.toLowerCase()),
+      ...(presentation.redFlags || []).map(rf => rf.toLowerCase()),
+    ].join(' | ');
+
+    // Strict keyword matcher:
+    //   - Full phrase substring hit (e.g. "chest pain" as-is) → match
+    //   - Multi-word phrase → EVERY word of length ≥3 must appear in haystack
+    //   - Single-word phrase → must be length ≥4 and present
+    // Stem tolerance: if a criterion word doesn't appear as-is, accept it if
+    // a 5+-char prefix is in the haystack so "stiffness" matches "stiff neck".
+    // This prevents the previous 2-of-N rule from letting "jaw pain" / "arm
+    // pain" degenerate to just "pain" and falsely pulling MI into abdominal
+    // or GU presentations.
+    const wordHit = (w: string): boolean => {
+      if (patientHaystack.includes(w)) return true;
+      if (w.length >= 6) {
+        const stem = w.slice(0, 5);
+        if (patientHaystack.includes(stem)) return true;
+      }
+      return false;
+    };
+    const matchesKeyword = (phrase: string): boolean => {
+      const p = phrase.toLowerCase();
+      if (patientHaystack.includes(p)) return true;
+      const words = p.split(/\s+/).filter(w => w.length >= 3);
+      if (words.length === 0) return false;
+      if (words.length === 1) {
+        // single-word criterion: avoid very generic 3-char hits
+        return words[0].length >= 4 && wordHit(words[0]);
+      }
+      return words.every(wordHit);
+    };
+
     for (const [condition, criteria] of Object.entries(EMERGENCY_CONDITIONS)) {
       let matchScore = 0;
       const supportingFindings: string[] = [];
       const redFlagsFound: string[] = [];
 
-      // Check symptoms
+      // Check symptoms (keyword-tolerant)
       for (const symptom of criteria.symptoms) {
-        if (symptoms.some(s => s.includes(symptom)) || chiefComplaint.includes(symptom)) {
+        if (matchesKeyword(symptom)) {
           matchScore += 15;
           supportingFindings.push(symptom);
         }
@@ -295,9 +402,10 @@ export class DifferentialDiagnosisService {
         }
       }
 
-      // Check red flags
+      // Check red flags — bidirectional keyword match against the same
+      // patientHaystack (red flag text is already merged in above).
       for (const redFlag of criteria.redFlags) {
-        if (presentation.redFlags?.some(rf => rf.toLowerCase().includes(redFlag.toLowerCase()))) {
+        if (matchesKeyword(redFlag)) {
           matchScore += 20;
           redFlagsFound.push(redFlag);
         }
@@ -377,7 +485,14 @@ export class DifferentialDiagnosisService {
           { condition: !!(v.heartRate && v.heartRate > 100), diagnosis: 'Acute Coronary Syndrome', lr: 1.8, evidence: `Tachycardia (HR ${v.heartRate}) — cardiac etiology (LR 1.8)` },
           { condition: !!(v.heartRate && v.heartRate > 100), diagnosis: 'Pulmonary Embolism', lr: 2.0, evidence: `Tachycardia (HR ${v.heartRate}) — PE risk (LR 2.0)` },
           { condition: !!(v.heartRate && v.heartRate > 100), diagnosis: 'Sepsis', lr: 2.5, evidence: `Tachycardia (HR ${v.heartRate}) — sepsis criterion (LR 2.5)` },
+          // Tiered HR rules — HR >150 is almost always a tachyarrhythmia, not
+          // sinus. Route strongly to SVT/AFib RVR/VT and Cardiac Arrhythmia.
+          { condition: !!(v.heartRate && v.heartRate > 150), diagnosis: 'Supraventricular Tachycardia', lr: 8.0, evidence: `Heart rate ${v.heartRate} — tachyarrhythmia (LR 8.0)` },
+          { condition: !!(v.heartRate && v.heartRate > 150), diagnosis: 'Cardiac Arrhythmia', lr: 6.0, evidence: `Heart rate ${v.heartRate} — suspect arrhythmia (LR 6.0)` },
+          { condition: !!(v.heartRate && v.heartRate > 150), diagnosis: 'Atrial Fibrillation with RVR', lr: 4.0, evidence: `Heart rate ${v.heartRate} — possible AFib RVR (LR 4.0)` },
           { condition: !!(v.heartRate && v.heartRate < 50), diagnosis: 'Medication side effect', lr: 2.0, evidence: `Bradycardia (HR ${v.heartRate}) — drug effect (LR 2.0)` },
+          { condition: !!(v.heartRate && v.heartRate < 50), diagnosis: 'AV Block', lr: 4.0, evidence: `Bradycardia (HR ${v.heartRate}) — AV conduction disease (LR 4.0)` },
+          { condition: !!(v.heartRate && v.heartRate < 40), diagnosis: 'Complete Heart Block', lr: 8.0, evidence: `Severe bradycardia (HR ${v.heartRate}) — likely complete heart block (LR 8.0)` },
           { condition: !!(v.oxygenSaturation && v.oxygenSaturation < 92), diagnosis: 'Pulmonary Embolism', lr: 3.5, evidence: `Hypoxia (SpO2 ${v.oxygenSaturation}%) — PE (LR 3.5)` },
           { condition: !!(v.oxygenSaturation && v.oxygenSaturation < 92), diagnosis: 'Pneumonia', lr: 2.5, evidence: `Hypoxia (SpO2 ${v.oxygenSaturation}%) — pneumonia (LR 2.5)` },
           { condition: !!(v.oxygenSaturation && v.oxygenSaturation < 92), diagnosis: 'COPD exacerbation', lr: 2.5, evidence: `Hypoxia (SpO2 ${v.oxygenSaturation}%) — COPD (LR 2.5)` },
@@ -407,6 +522,90 @@ export class DifferentialDiagnosisService {
         for (const [dx, ev] of medEvidence) {
           const existing = allEvidence.get(dx) || [];
           allEvidence.set(dx, [...existing, ...ev]);
+        }
+      }
+
+      // --- Step 4d: Chief-complaint keyword LRs ---
+      // Phrases that are pathognomonic enough to boost their diagnosis even
+      // when the symptom-specific module didn't run or when the patient
+      // described the pattern directly in the chief complaint text.
+      const ccLRRules: Array<{ pattern: RegExp; diagnosis: string; lr: number; evidence: string }> = [
+        // Appendicitis: migratory periumbilical → RLQ pain is textbook
+        { pattern: /(periumbilic|belly\s*button|umbilic|mid.*abdomen).*(right.*lower|rlq|right\s*side)|(right.*lower|rlq).*(periumbilic|belly\s*button|umbilic|moved|migrated)/i, diagnosis: 'Appendicitis', lr: 6.0, evidence: 'Migratory periumbilical → RLQ pain (classic appendicitis pattern, LR 6.0)' },
+        { pattern: /right\s*lower.*(nausea|fever|loss\s*of\s*appetite|anorexia)|rlq.*(nausea|fever|loss\s*of\s*appetite|anorexia)/i, diagnosis: 'Appendicitis', lr: 2.5, evidence: 'RLQ pain with nausea/fever/anorexia (LR 2.5)' },
+        // Migraine: unilateral throbbing with photophobia
+        { pattern: /(throbbing|pulsating|pounding).*(one\s*side|unilateral|right\s*side|left\s*side|temple)/i, diagnosis: 'Migraine', lr: 3.0, evidence: 'Unilateral throbbing headache — migraine feature (LR 3.0)' },
+        { pattern: /(one\s*side|unilateral|right\s*side|left\s*side|temple).*(throbbing|pulsating|pounding)/i, diagnosis: 'Migraine', lr: 3.0, evidence: 'Unilateral throbbing headache — migraine feature (LR 3.0)' },
+        { pattern: /(photophob|light\s*sensitiv|bothered\s*by\s*light)/i, diagnosis: 'Migraine', lr: 2.5, evidence: 'Photophobia — migraine feature (LR 2.5)' },
+        { pattern: /(photophob|light\s*sensitiv|bothered\s*by\s*light).*(nausea|vomit)|(nausea|vomit).*(photophob|light\s*sensitiv)/i, diagnosis: 'Migraine', lr: 4.0, evidence: 'Photophobia + nausea — POUND criteria (LR 4.0)' },
+        // Testicular torsion: sudden severe + can't miss
+        { pattern: /sudden.*(testic|scrotal)|(testic|scrotal).*sudden/i, diagnosis: 'Testicular Torsion', lr: 4.0, evidence: 'Sudden-onset testicular pain — can\'t-miss surgical emergency (LR 4.0)' },
+        // SAH: worst headache of life + thunderclap
+        { pattern: /worst\s*headache|thunderclap|maximum\s*from\s*start/i, diagnosis: 'Subarachnoid Hemorrhage', lr: 5.0, evidence: 'Worst/thunderclap headache — SAH concern (LR 5.0)' },
+        // Classic aortic dissection: tearing + radiating to back
+        { pattern: /tearing|ripping/i, diagnosis: 'Aortic Dissection', lr: 5.0, evidence: 'Tearing/ripping pain quality — dissection pattern (LR 5.0)' },
+        // AAA: elderly + tearing + back/abdomen (separate from dissection)
+        { pattern: /(tearing|ripping|like\s*something.*ripped).*(belly|abdomin|back)|(belly|abdomin|back).*(tearing|ripping)/i, diagnosis: 'Abdominal Aortic Aneurysm', lr: 4.0, evidence: 'Tearing abdominal/back pain — AAA concern (LR 4.0)' },
+        // Pancreatitis: epigastric to back, recent binge/alcohol
+        { pattern: /(epigastric|upper.*abdomin|upper.*belly).*(radiat|go|through|to).*back|back.*(epigastric|upper.*abdomin)/i, diagnosis: 'Pancreatitis', lr: 5.0, evidence: 'Epigastric pain radiating through to back — classic pancreatitis (LR 5.0)' },
+        { pattern: /(alcohol|binge|gallstone).*(belly|abdomin|pain)|(belly|abdomin|pain).*(alcohol|binge)/i, diagnosis: 'Pancreatitis', lr: 2.5, evidence: 'Alcohol/binge trigger for abdominal pain (LR 2.5)' },
+        // Postpartum / recent delivery → PE priority
+        { pattern: /(postpartum|after.*deliver|just\s*had.*baby|weeks.*after.*baby)/i, diagnosis: 'Pulmonary Embolism', lr: 4.0, evidence: 'Postpartum period — hypercoagulable, high PE risk (LR 4.0)' },
+        { pattern: /(postpartum|after.*deliver|just\s*had.*baby).*(calf|leg)|calf.*(postpartum|after.*deliver)/i, diagnosis: 'DVT', lr: 5.0, evidence: 'Postpartum DVT — highest-risk period (LR 5.0)' },
+        // Stable angina: predictable exertional pattern relieved by rest
+        { pattern: /(exertion|walking|activity).*rest|rest.*(exertion|walking)|predictable.*exertion|every\s*day.*exertion/i, diagnosis: 'Stable Angina', lr: 4.0, evidence: 'Predictable exertional pain relieved by rest (LR 4.0)' },
+        // Cluster headache: unilateral retro-orbital + autonomic
+        { pattern: /(behind|around).*(eye).*pain.*tear|tear.*eye.*pain|runny.*nose.*one\s*side/i, diagnosis: 'Cluster Headache', lr: 5.0, evidence: 'Unilateral retro-orbital pain with autonomic features (LR 5.0)' },
+        // EoE: food impaction in young/middle-aged male
+        { pattern: /food.*stuck.*swallow|food.*catch|food.*impaction/i, diagnosis: 'Eosinophilic Esophagitis', lr: 3.0, evidence: 'Food impaction — consider eosinophilic esophagitis (LR 3.0)' },
+        // Meralgia paresthetica: burning lateral thigh, weight/belt trigger
+        { pattern: /(burn|numb|tingl).*(outer|lateral).*(thigh)|tight.*(belt|pants|waistband).*thigh/i, diagnosis: 'Meralgia Paresthetica', lr: 4.0, evidence: 'Burning/numb lateral thigh — lateral femoral cutaneous nerve compression (LR 4.0)' },
+        // Gout: big toe, sudden overnight, red/hot/swollen
+        { pattern: /big\s*toe.*(red|swol|hot|pain)|podagra|(red|swol|hot).*big\s*toe/i, diagnosis: 'Gout', lr: 6.0, evidence: 'Red swollen painful big toe — classic podagra (LR 6.0)' },
+        // DVT: unilateral calf swollen and warm
+        { pattern: /(calf|leg).*swol.*warm|(calf|leg).*red.*swol|unilateral.*calf/i, diagnosis: 'DVT', lr: 4.0, evidence: 'Unilateral swollen warm calf — DVT concern (LR 4.0)' },
+        // Hyperemesis gravidarum: vomiting in pregnancy with dehydration
+        { pattern: /(weeks\s*pregnant|pregnan).*(vomit|throw|keep.*down|nausea)|vomit.*(weeks\s*pregnant|pregnan)/i, diagnosis: 'Hyperemesis Gravidarum', lr: 8.0, evidence: 'Severe vomiting in pregnancy — hyperemesis gravidarum (LR 8.0)' },
+        // Kawasaki disease: prolonged fever in child with rash/red hands
+        { pattern: /(5|five|six|seven|eight)\s*days?.*fever.*(child|year\s*old|kid)|red.*cracked.*lips|strawberry.*tongue|swollen.*hands.*feet.*fever/i, diagnosis: 'Kawasaki Disease', lr: 8.0, evidence: 'Prolonged fever + mucocutaneous features — Kawasaki (LR 8.0)' },
+        // Hemoptysis + weight loss + night sweats = TB until proven otherwise
+        { pattern: /(hemoptysis|coughing\s*blood|blood.*sputum).*(weight\s*loss|night\s*sweat|fever)|night\s*sweat.*(weight\s*loss|fever).*cough/i, diagnosis: 'Tuberculosis', lr: 6.0, evidence: 'Hemoptysis + constitutional symptoms — rule out TB (LR 6.0)' },
+        // Lupus: rash + joint pain + multi-system
+        { pattern: /(malar|butterfly).*rash|rash.*cheek.*joint|mouth\s*ulcer.*joint|joint.*rash.*photosensit/i, diagnosis: 'Systemic Lupus Erythematosus', lr: 6.0, evidence: 'Malar rash + multisystem features — SLE pattern (LR 6.0)' },
+        // Myasthenia: fatigability pattern
+        { pattern: /(?:ptosis|drooping\s*eyelid|double\s*vision).*(?:worse.*day|worse.*evening|better.*rest|fatigu)|(?:end.*day|evening|fatigu).*(?:ptosis|drooping|diplopia)/i, diagnosis: 'Myasthenia Gravis', lr: 8.0, evidence: 'Fatigable weakness with ptosis/diplopia — myasthenia pattern (LR 8.0)' },
+        // Pheochromocytoma: episodic triad
+        { pattern: /(?:episod|paroxysmal|spike).*(?:headache|sweat|palpit|hypertens|bp)|(?:headache|sweat|palpit).*spike.*bp/i, diagnosis: 'Pheochromocytoma', lr: 6.0, evidence: 'Episodic headache/sweating/palpitations with BP spikes — pheochromocytoma (LR 6.0)' },
+        // Adrenal insufficiency: hyperpigmentation + salt craving
+        { pattern: /hyperpigment|skin.*dark.*crease|palm.*crease.*dark|(?:salt\s*crav|crav.*salt)/i, diagnosis: 'Adrenal Insufficiency', lr: 8.0, evidence: 'Hyperpigmentation or salt craving — adrenal insufficiency pattern (LR 8.0)' },
+        // Carcinoid syndrome: flushing + diarrhea
+        { pattern: /(?:flushing|flush).*(?:diarrh|wheez)|(?:diarrh|wheez).*flush/i, diagnosis: 'Carcinoid Syndrome', lr: 6.0, evidence: 'Flushing + diarrhea/wheezing — carcinoid triad (LR 6.0)' },
+        // GBS: ascending weakness after illness
+        { pattern: /(?:ascending|progress).*weak.*(?:arms|up)|weakness.*after.*(?:diarrh|illness|stomach\s*bug|infection)/i, diagnosis: 'Guillain-Barre Syndrome', lr: 7.0, evidence: 'Ascending weakness after illness — GBS (LR 7.0)' },
+        // Spontaneous pneumothorax: tall thin young + sudden
+        { pattern: /(?:tall|thin|skinny|lanky).*(?:chest\s*pain|shortness|sob|breath)|(?:sudden|suddenly).*(?:left|right).*chest.*shortness.*breath/i, diagnosis: 'Primary Spontaneous Pneumothorax', lr: 4.0, evidence: 'Tall/thin habitus + sudden unilateral chest pain and SOB (LR 4.0)' },
+        // Preeclampsia: pregnancy + HTN/headache/vision/RUQ
+        { pattern: /(?:pregnant|weeks\s*pregnant|\d+\s*weeks).*(?:headache|vision|swelling|ruq|upper.*abdom|blood\s*pressure)|(?:headache|vision).*(?:pregnant|weeks)/i, diagnosis: 'Preeclampsia', lr: 8.0, evidence: 'Pregnancy + headache/visual/RUQ — preeclampsia concern (LR 8.0)' },
+        // IPF: chronic dry cough + clubbing
+        { pattern: /(?:chronic|progressive).*dry\s*cough.*(?:clubbing|crackles|velcro|months|years)|clubbing.*(?:cough|dyspnea|breath)/i, diagnosis: 'Idiopathic Pulmonary Fibrosis', lr: 6.0, evidence: 'Chronic dry cough with clubbing/crackles — IPF pattern (LR 6.0)' },
+        // Cluster headache: retro-orbital + autonomic
+        { pattern: /(?:behind|around).*eye.*(?:tear|runny|nose|red|swell).*(?:same\s*time|every\s*day|daily|hour)/i, diagnosis: 'Cluster Headache', lr: 8.0, evidence: 'Retro-orbital pain with autonomic features + periodicity — cluster (LR 8.0)' },
+        // PMR: proximal morning stiffness in elderly
+        { pattern: /morning\s*stiff.*(?:shoulder|hip|neck).*(?:hours?|long\s*time)|(?:shoulder|hip|neck).*(?:morning\s*stiff|stiff.*morning)/i, diagnosis: 'Polymyalgia Rheumatica', lr: 6.0, evidence: 'Morning stiffness of shoulders/hips lasting >1 hour — PMR pattern (LR 6.0)' },
+        // Stroke: FAST symptoms (Face, Arm, Speech, Time)
+        // Match any pair of: face drooping, slurred/cannot speak, arm weakness
+        { pattern: /(?:face|facial).*droop.*(?:speak|speech|slurr|arm|weak|move|cannot)/i, diagnosis: 'Stroke', lr: 8.0, evidence: 'FAST positive: facial droop + speech/arm weakness — stroke (LR 8.0)' },
+        { pattern: /(?:speak|speech|slurr|arm|weak|cannot\s*move).*(?:face|facial).*droop/i, diagnosis: 'Stroke', lr: 8.0, evidence: 'FAST positive: facial droop + speech/arm weakness — stroke (LR 8.0)' },
+        { pattern: /(?:cannot\s*speak|slurred\s*speech).*(?:arm|weakness|move)|(?:arm|weakness).*(?:cannot\s*speak|slurred\s*speech)/i, diagnosis: 'Stroke', lr: 8.0, evidence: 'Aphasia + arm weakness — stroke pattern (LR 8.0)' },
+        { pattern: /sudden.*(?:weakness|numbness).*(?:one\s*side|left\s*side|right\s*side|hemi)/i, diagnosis: 'Stroke', lr: 6.0, evidence: 'Sudden unilateral weakness — stroke concern (LR 6.0)' },
+      ];
+      for (const rule of ccLRRules) {
+        if (rule.pattern.test(chiefComplaint)) {
+          const currentOdds = odds.get(rule.diagnosis) || 0.02;
+          odds.set(rule.diagnosis, currentOdds * rule.lr);
+          const existing = allEvidence.get(rule.diagnosis) || [];
+          existing.push(rule.evidence);
+          allEvidence.set(rule.diagnosis, existing);
         }
       }
 
@@ -710,23 +909,53 @@ Return ONLY the JSON array, no markdown or explanation.`;
     differentials: DifferentialDiagnosis[],
     emergent: DifferentialDiagnosis[]
   ): DifferentialDiagnosis[] {
-    const merged = [...emergent];
-    
+    // Prior impl unconditionally used the emergent copy, which pinned
+    // emergency diagnoses at the matchScore confidence even when the
+    // Bayesian pipeline's CC-keyword-LR boost produced a higher value.
+    // For example, stroke with FAST symptoms gets emergent matchScore
+    // 35% but the CC LR boosts the Bayesian version to ~84%. Take the
+    // higher confidence and preserve emergent urgency + redFlags metadata.
+    const byName = new Map<string, DifferentialDiagnosis>();
+
+    for (const e of emergent) byName.set(e.diagnosis, e);
+
     for (const diff of differentials) {
-      if (!emergent.find(e => e.diagnosis === diff.diagnosis)) {
-        merged.push(diff);
+      const existing = byName.get(diff.diagnosis);
+      if (!existing) {
+        byName.set(diff.diagnosis, diff);
+      } else if (diff.confidence > existing.confidence) {
+        // Keep higher confidence but inherit emergent's urgency/redFlags
+        byName.set(diff.diagnosis, {
+          ...diff,
+          urgency: existing.urgency,
+          redFlags: existing.redFlags || diff.redFlags,
+          disposition: existing.disposition || diff.disposition,
+          supportingFindings: Array.from(new Set([
+            ...(existing.supportingFindings || []),
+            ...(diff.supportingFindings || []),
+          ])),
+        });
       }
+      // else existing emergent wins (already the higher-confidence view)
     }
-    
-    return merged;
+
+    return Array.from(byName.values());
   }
 
   private generateReasoning(diagnosis: string, presentation: PatientPresentation): string {
     const age = presentation.demographics.age;
     const gender = presentation.demographics.gender;
-    const symptoms = presentation.symptoms.map(s => s.name).join(', ');
-    
-    return `Based on ${age}-year-old ${gender} presenting with ${presentation.chiefComplaint} and associated symptoms (${symptoms}), ${diagnosis} should be considered in the differential.`;
+    // The first entry in presentation.symptoms is always the chief complaint
+    // itself (see pages/api/diagnose.ts) so exclude it from the "associated"
+    // list — otherwise the CC gets echoed twice in the reasoning sentence.
+    const associated = presentation.symptoms
+      .slice(1)
+      .map(s => s.name)
+      .filter(n => n && n.toLowerCase() !== presentation.chiefComplaint.toLowerCase());
+    const assocText = associated.length > 0
+      ? ` with associated symptoms (${associated.join(', ')})`
+      : '';
+    return `Based on a ${age}-year-old ${gender} presenting with ${presentation.chiefComplaint}${assocText}, ${diagnosis} should be considered in the differential.`;
   }
 
   private findSupportingFindings(diagnosis: string, presentation: PatientPresentation): string[] {
@@ -1259,14 +1488,21 @@ Return ONLY the JSON array, no markdown or explanation.`;
     const primary = differentials[0];
     const secondary = differentials[1];
 
-    // Clear diagnostic leader → high overall confidence
-    if (!secondary || primary.confidence - secondary.confidence > 15) {
-      return Math.min(primary.confidence, 95);
-    }
+    // Clear diagnostic leader → give a bonus. Prior calibration left the
+    // overall pegged at the primary's raw confidence which often reads
+    // "27%" for a stroke or "30%" for an ectopic — technically the Bayesian
+    // posterior but clinically misleading when the primary is correctly
+    // the dominant differential. Bonus rules:
+    //   gap > 15 pt  → +10 over primary (capped 95)
+    //   gap 8–15 pt  → +5 over primary
+    //   gap < 8 pt   → penalty (close differentials)
+    if (!secondary) return Math.min(primary.confidence + 10, 95);
+    const gap = primary.confidence - secondary.confidence;
+    if (gap > 15) return Math.min(primary.confidence + 10, 95);
+    if (gap >= 8)  return Math.min(primary.confidence + 5, 90);
 
     // Close differentials → reduce to reflect diagnostic uncertainty
-    const gap = primary.confidence - secondary.confidence;
-    const penalty = Math.round((15 - gap) * 0.5);
+    const penalty = Math.round((8 - gap) * 0.5);
     return Math.max(primary.confidence - penalty, 30);
   }
 

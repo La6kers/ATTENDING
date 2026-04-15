@@ -23,6 +23,43 @@ export const EmergencyBanner: React.FC<EmergencyBannerProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  // Prefer precise geolocation if the user allows it; otherwise fall back to
+  // Google Maps' "near me" resolution which uses IP-based location. Some
+  // mobile browsers delay geolocation prompts for links, so we handle the
+  // click imperatively and open the resolved URL in a new tab.
+  const handleFindER = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    const fallback = 'https://www.google.com/maps/search/emergency+room+near+me';
+    if (!navigator.geolocation) {
+      window.open(fallback, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    const opened = { done: false };
+    const timeout = setTimeout(() => {
+      if (!opened.done) {
+        opened.done = true;
+        window.open(fallback, '_blank', 'noopener,noreferrer');
+      }
+    }, 2500);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (opened.done) return;
+        opened.done = true;
+        clearTimeout(timeout);
+        const { latitude, longitude } = pos.coords;
+        const url = `https://www.google.com/maps/search/emergency+room/@${latitude},${longitude},14z`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      },
+      () => {
+        if (opened.done) return;
+        opened.done = true;
+        clearTimeout(timeout);
+        window.open(fallback, '_blank', 'noopener,noreferrer');
+      },
+      { maximumAge: 60_000, timeout: 2_000 }
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60" style={{ animation: 'pulse 2s infinite' }} />
@@ -85,6 +122,7 @@ export const EmergencyBanner: React.FC<EmergencyBannerProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <a
               href="https://www.google.com/maps/search/emergency+room+near+me"
+              onClick={handleFindER}
               target="_blank"
               rel="noopener noreferrer"
               className="py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2 transition-colors"
