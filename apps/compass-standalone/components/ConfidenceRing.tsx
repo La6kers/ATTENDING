@@ -12,6 +12,28 @@ interface ConfidenceRingProps {
 }
 
 export const ConfidenceRing: React.FC<ConfidenceRingProps> = ({ confidence, size = 44, theme = 'dark' }) => {
+  // confidence === 0 is a sentinel used by "Needs in-person evaluation" cards
+  // where the engine couldn't produce a real differential. Rendering a 0%
+  // ring reads as a broken result; show an informational icon instead.
+  if (confidence === 0) {
+    const color = theme === 'dark' ? 'rgba(255,255,255,0.55)' : '#6B7280';
+    const bg = theme === 'dark' ? 'rgba(255,255,255,0.08)' : '#E5E7EB';
+    return (
+      <div
+        className="relative inline-flex items-center justify-center flex-shrink-0 rounded-full"
+        style={{ width: size, height: size, background: bg, border: `1.5px dashed ${color}` }}
+        role="img"
+        aria-label="Needs in-person evaluation"
+      >
+        <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+      </div>
+    );
+  }
+
   const r = (size - 6) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (confidence / 100) * circ;

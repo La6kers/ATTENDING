@@ -58,6 +58,7 @@ function createCompassMessage(
 export type CompassPhase =
   | 'welcome'
   | 'demographics'
+  | 'age'
   | 'vitals'
   | 'medications'
   | 'chiefComplaint'
@@ -78,7 +79,7 @@ export type CompassPhase =
   | 'emergency';
 
 const COMPASS_PHASES: CompassPhase[] = [
-  'welcome', 'demographics', 'vitals', 'medications', 'chiefComplaint',
+  'welcome', 'demographics', 'age', 'vitals', 'medications', 'chiefComplaint',
   'hpiOnset', 'hpiLocation', 'hpiDuration', 'hpiCharacter',
   'hpiSeverity', 'hpiTiming', 'hpiContext', 'hpiAggravating', 'hpiRelieving', 'hpiAssociated',
   'symptomSpecific', 'askingMultipleComplaints', 'generating', 'results',
@@ -186,6 +187,26 @@ const PHASE_CONFIG: Record<CompassPhase, PhaseConfig> = {
       { id: 'gender_female', text: 'Female', value: 'Female' },
       { id: 'gender_other', text: 'Other', value: 'Other' },
       { id: 'gender_prefer_not', text: 'Prefer not to say', value: 'Prefer not to say' },
+    ],
+    nextPhase: 'age',
+  },
+  age: {
+    // Pediatric-aware age chips. Parents typically bring COMPASS to their
+    // kids, so the chips MUST cover real pediatric ranges — infant, toddler,
+    // child, and adolescent — each mapped to a representative age so the
+    // prevalence/exclusion priors fire correctly. For any exact age, users
+    // can still type a number.
+    question: 'How old is the patient? Tap a range or type an exact age (in years — type "0" for infants).',
+    quickReplies: [
+      { id: 'age_infant',    text: 'Infant (<1 yr)',  value: '0' },
+      { id: 'age_toddler',   text: 'Toddler (1–4)',    value: '3' },
+      { id: 'age_child',     text: 'Child (5–11)',     value: '8' },
+      { id: 'age_teen',      text: 'Teen (12–17)',     value: '15' },
+      { id: 'age_18_29',     text: '18–29',            value: '24' },
+      { id: 'age_30_44',     text: '30–44',            value: '37' },
+      { id: 'age_45_59',     text: '45–59',            value: '52' },
+      { id: 'age_60_74',     text: '60–74',            value: '67' },
+      { id: 'age_75plus',    text: '75 or older',      value: '78' },
     ],
     nextPhase: 'vitals',
   },
@@ -374,6 +395,8 @@ export interface CompassAssessmentData {
   /** Medical Record Number — used instead of patient name for demo/pre-pilot */
   mrn?: string;
   gender?: string;
+  /** Patient age in years — collected in-chat as a fallback until patient portal auth is wired up */
+  age?: number;
   /** @deprecated Use mrn instead */
   patientName?: string;
   /** @deprecated Removed from demo flow — will be populated from patient portal auth */
@@ -488,12 +511,20 @@ export const useCompassStore = create<CompassState>()(
 
           // Store data based on phase
           switch (currentPhase) {
-            case 'welcome':
+            case 'welcome': {
               // Store MRN (or generate a session-based one if user says "new")
+              // Prior form: `DEMO-${sessionId.slice(0,8).toUpperCase()}` — but
+              // generateSessionId() produces strings beginning with "compass-"
+              // so slice(0,8) = "COMPASS-" and the final MRN rendered as
+              // "DEMO-COMPASS-" with a dangling hyphen. Take characters from
+              // AFTER the prefix and strip any trailing hyphens so the display
+              // is always "DEMO-<letters/numbers>".
+              const id = state.sessionId.replace(/^compass-/i, '').replace(/-/g, '').slice(0, 6).toUpperCase();
               state.assessmentData.mrn = /^new$/i.test(content.trim())
-                ? `DEMO-${state.sessionId.slice(0, 8).toUpperCase()}`
+                ? `DEMO-${id || 'SESSION'}`
                 : content.trim();
               break;
+            }
             case 'demographics':
               // Extract gender from response
               if (/\b(female|woman|girl)\b/i.test(content)) {
@@ -506,6 +537,17 @@ export const useCompassStore = create<CompassState>()(
                 state.assessmentData.gender = content.trim();
               }
               break;
+            case 'age': {
+              // Accept a pure number, a range like "45-59", or "52 years old"
+              const m = content.match(/\d{1,3}/);
+              if (m) {
+                const n = parseInt(m[0], 10);
+                if (n >= 0 && n <= 120) {
+                  state.assessmentData.age = n;
+                }
+              }
+              break;
+            }
             case 'vitals': {
               // Parse vitals from free text, skip if user says skip
               if (/don'?t\s*have|skip|no\s*vitals/i.test(content)) {
@@ -703,6 +745,7 @@ export const useCompassStore = create<CompassState>()(
                 hpi: assessmentData.hpi,
                 mrn: assessmentData.mrn,
                 gender: assessmentData.gender,
+                age: assessmentData.age,
                 symptomSpecificAnswers: assessmentData.symptomSpecificAnswers,
                 vitals: assessmentData.vitals,
                 medications: assessmentData.medications,
@@ -956,3 +999,10 @@ export const useCompassStore = create<CompassState>()(
 );
 
 export default useCompassStore;
+
+// Dev-mode only: expose the store on window so end-to-end test drivers can
+// reliably reset between runs without a full page reload (which would wipe
+// the driver itself). Never enabled in production.
+if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  (window as any).__compassStore = useCompassStore;
+}

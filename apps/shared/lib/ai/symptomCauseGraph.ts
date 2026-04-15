@@ -32,6 +32,79 @@ type SymptomGraph = Record<string, GraphCause[]>;
 const GRAPH: SymptomGraph = graphData as SymptomGraph;
 
 // ============================================================
+// Cause blocklist — graph-node strings that are NOT real clinical
+// diagnoses and should never appear in a patient-facing differential.
+// These leaked through during earlier QA (e.g. "Fatigue Causes" is a
+// meta-node, "Cough fracture" is technically valid but over-ranked,
+// "Decreased or inactive esophageal contractility" surfaced for
+// plain sore throats). Filtering at the graph boundary keeps the
+// Bayesian path clean without having to touch the underlying JSON.
+// ============================================================
+const CAUSE_BLOCKLIST: Set<string> = new Set([
+  'Fatigue Causes',
+  'Exhaustive lifestyle',
+  'Cough fracture',
+  'Intrinsic Laryngeal Muscle Weakness',
+  'Decreased or inactive esophageal contractility',
+  'Increased esophageal contractility',
+  'Includes Cauda Equina Syndrome',
+  'Nausea Causes',
+  'Dyspnea Causes',
+  'Hoarseness Causes',
+  'Low Back Pain Causes',
+  'Dyspepsia Causes',
+  'Pruritus Causes',
+  'Palpitation Causes',
+  'Chest Wall Deformity',
+  'testicular appendage',           // lowercase fragment, not a valid diagnosis
+  'Anomalous innominate artery',    // extremely rare anatomic variant, pollutes peds dyspnea
+  'Chronic or Recurrent: Common',   // raw category header
+  'Chronic Nausea and Vomiting syndrome', // catch-all that clutters every nausea case
+  'Bezoar',                          // extremely rare, pollutes any epigastric presentation
+  'Diaphragmatic Injury',           // leaks when CC mentions 'radiating to back' — rare
+  'Other Bronchiolitis',            // ranks above actual asthma for pediatric wheezing
+  'Postoperative Nausea and Vomiting', // only valid in post-op context
+  'Cyclic Vomiting Syndrome',       // diagnosed by history, leaks into any nausea case
+  'Medication-related Syncope',     // meta-node
+  'Acute inflammatory or infectious conditions', // category header, not a diagnosis
+  'Mental health disorders',        // category header
+  'Associated symptoms',            // category header
+  'Chronic or Recurrent',           // category header
+  'Commonly causes Shoulder Pain',  // category header leaking into shoulder diffs
+  'Commonly causes',                // generic category prefix
+  'Vomiting in Pregnancy',          // only valid with confirmed pregnancy context
+  'Familial mediterranean fever',   // ultra-rare, pollutes many unrelated cases
+  'Anomalous',                      // generic anatomic-variant prefix
+  'Tick Bite',                      // geography-dependent, pollutes unrelated cases
+  'Torsion of Cavernous Lymphangioma', // ultra-rare anatomic variant
+  'Local Urethral Trauma',          // too specific, leaks into urinary
+  'Chronic Nausea and Vomiting',    // redundant with blocked entry above
+  'Food Poisoning',                 // should be Gastroenteritis
+  'Aquagenic Pruritus',             // very rare; pollutes jaundice/itching cases
+  'Acute Glaucoma',                 // primary-eye dx leaking into any nausea/vomiting
+  'Cannabinoid Hyperemesis Syndrome', // diagnosed by social history, not symptoms
+  'See Psychogenic Vomiting',       // raw cross-reference text
+  'Functional Conditions',          // category header
+  'Organophosphate Poisoning',      // geography + exposure specific
+  'Dermatitis Herpetiformis',       // uncommon, pollutes any rash/itch
+  'Allergic Blepharitis',           // ophthalmology-specific leak
+  'Subset of patients present with', // meta prefix
+  'Airway malformation',            // congenital, pollutes pediatric respiratory
+  'Chronic or Recurrent: Common',   // repeat: category header
+  'Chest Wall Deformity',           // already listed above; keep as double-safe
+  'Increased esophageal contractility', // meta
+]);
+
+function isBlockedCause(cause: string): boolean {
+  if (CAUSE_BLOCKLIST.has(cause)) return true;
+  // Meta-nodes that describe categories rather than diagnoses
+  if (/\bCauses$/.test(cause)) return true;
+  if (/^Associated with\b/i.test(cause)) return true;
+  if (/^Includes\b/.test(cause)) return true;
+  return false;
+}
+
+// ============================================================
 // Fuzzy Symptom Matching
 // ============================================================
 
@@ -64,7 +137,8 @@ const SYMPTOM_ALIASES: Record<string, string[]> = {
   'coughing blood': ['Hemoptysis Causes'],
   'hemoptysis': ['Hemoptysis Causes'],
   // Neurological
-  'headache': ['Syncope'],  // closest in graph
+  // 'headache' intentionally omitted — no direct graph key and the closest
+  // proxy ('Syncope') added noise. Prevalence table handles headache priors.
   'dizziness': ['Dizziness', 'Dysequilibrium'],
   'fainting': ['Syncope', 'Vasovagal Syncope'],
   'syncope': ['Syncope', 'Vasovagal Syncope'],
@@ -85,7 +159,10 @@ const SYMPTOM_ALIASES: Record<string, string[]> = {
   'blood in urine': ['Dysuria'],
   'urinary frequency': ['Urinary Frequency', 'Nocturia'],
   // ENT
-  'sore throat': ['Hoarseness Causes', 'Esophageal Dysphagia', 'Oropharyngeal Dysphagia'],
+  // 'sore throat' intentionally omitted — no direct graph key and the prior
+  // aliases mapped to dysphagia/hoarseness which polluted pharyngitis cases
+  // with "Decreased esophageal contractility" and similar. Prevalence table
+  // handles sore throat priors (Viral/Strep Pharyngitis, Mono, etc.).
   'hoarseness': ['Hoarseness Causes'],
   'ear pain': ['Otalgia'],
   'ringing in ears': ['Tinnitus'],
@@ -103,8 +180,10 @@ const SYMPTOM_ALIASES: Record<string, string[]> = {
   'double vision': ['Diplopia'],
   'red eye': ['Red Eye'],
   // Other
-  'fatigue': ['Fatigue', 'Fatigue Causes'],
-  'tired': ['Fatigue', 'Fatigue Causes'],
+  // Fatigue/tired use the 'Fatigue' node only — 'Fatigue Causes' is a meta
+  // node (ISF=1.0 on a category label) and surfaced as a differential itself.
+  'fatigue': ['Fatigue'],
+  'tired': ['Fatigue'],
   'night sweats': ['Night Sweats'],
   'itching': ['Pruritus Causes'],
   'palpitations': ['Palpitation', 'Palpitation Causes'],
@@ -172,6 +251,7 @@ export function queryGraph(chiefComplaint: string): GraphDiagnosis[] {
     if (!causes) continue;
 
     for (const entry of causes) {
+      if (isBlockedCause(entry.cause)) continue;
       const existing = causeMap.get(entry.cause);
       if (existing) {
         // Cause matches multiple symptoms → boost score

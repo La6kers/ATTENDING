@@ -40,6 +40,7 @@ const DiagnoseRequestSchema = z.object({
   hpi: z.any().transform((val): HPIData => val || {}),
   mrn: z.string().max(50).optional(),
   gender: z.string().max(30).optional(),
+  age: z.number().int().min(0).max(120).optional(),
   redFlags: z.array(z.string().max(200)).max(20).optional(),
   symptomSpecificAnswers: z.record(z.string(), z.string().max(500)).optional(),
   imageSuggestedConditions: z.array(ImageConditionSchema).max(10).optional(),
@@ -113,7 +114,7 @@ export default async function handler(
     }
 
     const {
-      chiefComplaint, hpi, mrn, gender,
+      chiefComplaint, hpi, mrn, gender, age: reqAge,
       redFlags, symptomSpecificAnswers, imageSuggestedConditions,
       vitals, medications,
     } = parseResult.data;
@@ -125,8 +126,16 @@ export default async function handler(
     // Build HPI narrative (use MRN as identifier, not patient name)
     const hpiNarrative = buildHpiNarrative(hpi || {}, safeChiefComplaint, safeMrn ? `Patient (MRN: ${safeMrn})` : undefined);
 
-    // Default age — will be populated from patient portal auth when connected
-    const age = 40;
+    // Age comes from the request (collected in the chat flow or patient portal auth).
+    // Fallback of 40 is kept only to preserve back-compat for callers that haven't
+    // been updated yet — warn in logs so we notice.
+    let age: number;
+    if (typeof reqAge === 'number') {
+      age = reqAge;
+    } else {
+      age = 40;
+      console.warn('[COMPASS Diagnose] Request missing age — falling back to 40. Update caller to pass age.');
+    }
 
     // Merge image-suggested conditions into red flags and symptom answers
     const enhancedRedFlags = [...(redFlags || [])];
