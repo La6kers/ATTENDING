@@ -148,8 +148,15 @@ artifacts/
 # Keep workspace packages (monorepo)
 !/packages/
 !/packages/**
+# ...but still ignore each workspace's installed dependencies
+packages/*/node_modules/
 *.nuget.props
 *.nuget.targets
+
+# -----------------------------------------------------------------------------
+# Claude Flow runtime state (config + metrics + audit; not source)
+# -----------------------------------------------------------------------------
+.claude-flow/
 
 # -----------------------------------------------------------------------------
 # Testing

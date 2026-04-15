@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using ATTENDING.Application.Commands.AmbientScribe;
 using ATTENDING.Contracts.Requests;
 using ATTENDING.Contracts.Responses;
+using ATTENDING.Domain.Entities;
+using ATTENDING.Domain.Enums;
 using ATTENDING.Domain.Interfaces;
 
 namespace ATTENDING.Orders.Api.Controllers;
@@ -32,15 +34,18 @@ public class AmbientScribeController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IEncounterRecordingRepository _repo;
+    private readonly IBehavioralHealthRepository _bhRepo;
     private readonly ILogger<AmbientScribeController> _logger;
 
     public AmbientScribeController(
         IMediator mediator,
         IEncounterRecordingRepository repo,
+        IBehavioralHealthRepository bhRepo,
         ILogger<AmbientScribeController> logger)
     {
         _mediator = mediator;
         _repo = repo;
+        _bhRepo = bhRepo;
         _logger = logger;
     }
 
@@ -301,10 +306,18 @@ public class AmbientScribeController : ControllerBase
     /// Provider signs the reviewed note.
     /// Signed notes become part of the permanent medical record.
     /// Cannot be edited after signing — an addendum would be a new note.
+    ///
+    /// SAFETY GATE: Notes cannot be signed when the linked encounter has an
+    /// open behavioral health screening with a positive result that requires
+    /// a safety plan (PHQ-9 item 9 ≥ 1, C-SSRS ideation level ≥ 2, or any
+    /// active suicide risk). The provider must complete the safety plan
+    /// review FIRST. This enforces CMS quality measure CMS161 (suicide risk
+    /// assessment for MDD) and CMS2 (depression screening with follow-up).
     /// </summary>
     [HttpPost("notes/{noteId:guid}/sign")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> SignNote(
         Guid noteId,
         CancellationToken ct)
@@ -329,6 +342,37 @@ public class AmbientScribeController : ControllerBase
             return BadRequest("Cannot sign note: all SOAP sections must be populated");
         }
 
+        // ── SAFETY PLAN GATE ──────────────────────────────────────────────
+        // Block signing if any behavioral health screening on this encounter
+        // has a positive result that requires safety plan documentation and
+        // the provider has not yet completed the review.
+        var blockingScreenings = await GetBlockingBehavioralHealthScreeningsAsync(
+            note.EncounterId, ct);
+
+        if (blockingScreenings.Count > 0)
+        {
+            _logger.LogWarning(
+                "[SafetyGate] Note {NoteId} sign blocked — {Count} positive BH screening(s) require safety plan",
+                noteId, blockingScreenings.Count);
+
+            var detail = BuildSafetyGateMessage(blockingScreenings);
+            return Conflict(new ProblemDetails
+            {
+                Type = "https://attendingai.health/errors/safety-plan-required",
+                Title = "Safety plan required before signing note",
+                Detail = detail,
+                Status = StatusCodes.Status409Conflict,
+                Extensions =
+                {
+                    ["screeningIds"] = blockingScreenings.Select(s => s.Id).ToArray(),
+                    ["recommendedActions"] = blockingScreenings
+                        .Select(s => s.RecommendedAction.ToString())
+                        .ToArray(),
+                    ["cmsMeasures"] = new[] { "CMS2", "CMS161" },
+                }
+            });
+        }
+
         var result = await _mediator.Send(
             new SignAmbientNoteCommand(noteId, providerId), ct);
 
@@ -340,6 +384,47 @@ public class AmbientScribeController : ControllerBase
                 Detail = result.Error.Message,
                 Status = 400
             });
+    }
+
+    /// <summary>
+    /// Returns the list of behavioral health screenings on an encounter that
+    /// would block note signing because they have a positive result requiring
+    /// a safety plan AND the safety plan has not yet been documented.
+    ///
+    /// A screening blocks signing when ALL of these are true:
+    ///   1. RecommendedAction is SafetyPlanRequired or ImmediateSafetyIntervention
+    ///      (i.e. the patient screened positive for SI/active risk)
+    ///   2. Status is NOT Reviewed/Completed (review not yet done)
+    ///   3. SafetyPlanJson is null/empty (no safety plan documented)
+    /// </summary>
+    private async Task<IReadOnlyList<BehavioralHealthScreening>>
+        GetBlockingBehavioralHealthScreeningsAsync(Guid encounterId, CancellationToken ct)
+    {
+        var screenings = await _bhRepo.GetByEncounterIdAsync(encounterId, ct);
+        return screenings
+            .Where(s =>
+                (s.RecommendedAction == BehavioralHealthAction.SafetyPlanRequired
+                 || s.RecommendedAction == BehavioralHealthAction.ImmediateSafetyIntervention)
+                && s.Status != ScreeningStatus.Reviewed
+                && s.Status != ScreeningStatus.Completed
+                && string.IsNullOrWhiteSpace(s.SafetyPlanJson))
+            .ToList();
+    }
+
+    private static string BuildSafetyGateMessage(
+        IReadOnlyList<BehavioralHealthScreening> blockingScreenings)
+    {
+        var lines = blockingScreenings.Select(s =>
+            $"  • {s.Instrument} (completed {s.CompletedAt?.ToString("yyyy-MM-dd") ?? "n/a"}) — " +
+            $"{s.RecommendedAction}; HasSuicideRisk={s.HasSuicideRisk}");
+        return
+            "This encounter has one or more positive behavioral health screening(s) that " +
+            "require a safety plan before the note can be signed.\n\n" +
+            string.Join("\n", lines) + "\n\n" +
+            "Document a safety plan via POST /api/v1/behavioral-health/screenings/{id}/review " +
+            "(include safetyPlanJson) and then retry signing.\n\n" +
+            "Required for compliance with CMS2 (depression screening + follow-up plan) " +
+            "and CMS161 (adult MDD suicide risk assessment).";
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────

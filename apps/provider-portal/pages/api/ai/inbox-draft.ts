@@ -12,6 +12,7 @@ import { getToken } from 'next-auth/jwt';
 import {
   runInboxAgent,
   type InboxAIResponse,
+  type BehavioralHealthSnapshot,
 } from '../../../lib/services/inboxAIAgent';
 
 // ── Azure OpenAI Configuration ──────────────────────────────
@@ -96,6 +97,14 @@ interface InboxDraftRequest {
       weight?: string;
     };
     lastVisit: { date: string; reason: string; provider: string };
+    /**
+     * Optional behavioral health snapshot. When present, the inbox AI uses
+     * this as the AUTHORITATIVE record for SI/depression status to prevent
+     * false positives from negated message text. The provider portal should
+     * fetch this from the BehavioralHealthScreening aggregate before calling
+     * this endpoint whenever the patient has any active screenings.
+     */
+    behavioralHealth?: BehavioralHealthSnapshot;
   };
   providerName?: string;
 }

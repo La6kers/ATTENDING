@@ -1,7 +1,9 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using ATTENDING.Domain.Entities;
 using ATTENDING.Domain.Interfaces;
+using ATTENDING.Domain.Services;
 using ATTENDING.Infrastructure.Services;
 using Xunit;
 
@@ -18,7 +20,18 @@ public class AnalyticsServiceTests
         feedbackRepo.Setup(r => r.GetStatsAsync(null, default))
             .ReturnsAsync((100, 75, 4.2));
         var logger = new Mock<ILogger<AnalyticsService>>();
-        _sut = new AnalyticsService(encounterRepo.Object, feedbackRepo.Object, logger.Object);
+        var bhQualityMeasures = BuildBehavioralHealthQualityMeasureService();
+        _sut = new AnalyticsService(encounterRepo.Object, feedbackRepo.Object, bhQualityMeasures, logger.Object);
+    }
+
+    private static BehavioralHealthQualityMeasureService BuildBehavioralHealthQualityMeasureService()
+    {
+        var bhRepo = new Mock<IBehavioralHealthRepository>();
+        bhRepo.Setup(r => r.GetPendingReviewAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<BehavioralHealthScreening>());
+        bhRepo.Setup(r => r.GetActiveSuicideRiskAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<BehavioralHealthScreening>());
+        return new BehavioralHealthQualityMeasureService(bhRepo.Object);
     }
 
     [Fact]
@@ -70,7 +83,8 @@ public class AnalyticsServiceTests
         feedbackRepo.Setup(r => r.GetStatsAsync(null, default))
             .ReturnsAsync((0, 0, 0.0));
         var logger = new Mock<ILogger<AnalyticsService>>();
-        var sut = new AnalyticsService(encounterRepo.Object, feedbackRepo.Object, logger.Object);
+        var bhQualityMeasures = BuildBehavioralHealthQualityMeasureService();
+        var sut = new AnalyticsService(encounterRepo.Object, feedbackRepo.Object, bhQualityMeasures, logger.Object);
 
         var result = await sut.GetOutcomesAsync("month");
 
