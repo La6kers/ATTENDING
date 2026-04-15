@@ -190,6 +190,7 @@ public static class DependencyInjection
         // Behavioral Health
         services.AddScoped<IBehavioralHealthRepository, BehavioralHealthRepository>();
         services.AddScoped<Domain.Services.BehavioralHealthScoringService>();
+        services.AddScoped<Domain.Services.BehavioralHealthQualityMeasureService>();
 
         // Organization / Onboarding repositories (cross-tenant)
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();

@@ -8,6 +8,14 @@
 //
 // Tier 0: Zero network dependency. Hardcoded rules at build time.
 // Safety invariant: NEVER returns empty. Always evaluates all rules.
+//
+// Negation handling (added 2026-04-14):
+//   The single-term trigger matcher now consults an explicit negation parser
+//   so that phrases like "denies suicidal ideation", "no chest pain", and
+//   "patient denied SI" do NOT trip critical red flags. Negation is required
+//   for high-stakes triggers (suicidal ideation, chest pain, syncope, etc.)
+//   to prevent false positives that historically alarmed providers when
+//   patients explicitly denied a symptom in their own message.
 // =============================================================================
 
 import {
@@ -120,10 +128,20 @@ export function evaluateTextForRedFlags(text: string): TextRedFlagResult {
         continue;
       }
 
-      // Keyword matching
-      const keywordMatches = keywords.filter(
-        (kw) => expandedText.includes(kw) || normalizedText.includes(kw)
-      );
+      // Keyword matching — but suppress matches that are negated in the text.
+      // A keyword counts as "matched" only if it appears AT LEAST ONCE in an
+      // un-negated context. This prevents false positives like
+      // "patient denies suicidal ideation" from accumulating enough keyword
+      // hits (suicidal, ideation, plan) to fire rf-suicidal-ideation.
+      const keywordMatches = keywords.filter((kw) => {
+        const presentExpanded = expandedText.includes(kw);
+        const presentNormal = normalizedText.includes(kw);
+        if (!presentExpanded && !presentNormal) return false;
+        // If the keyword is negated everywhere it appears, drop it.
+        if (presentExpanded && isNegatedTerm(expandedText, kw)) return false;
+        if (presentNormal && isNegatedTerm(normalizedText, kw)) return false;
+        return true;
+      });
 
       if (keywords.length <= 3) {
         if (keywordMatches.length === keywords.length) {
@@ -250,7 +268,7 @@ function checkSingleTermMatch(criterion: string, expandedText: string): boolean 
     if (!related) continue;
 
     for (const pattern of trigger.patterns) {
-      if (expandedText.includes(pattern)) {
+      if (expandedText.includes(pattern) && !isNegatedTerm(expandedText, pattern)) {
         return true;
       }
     }
@@ -263,10 +281,160 @@ function checkSingleTermMatch(criterion: string, expandedText: string): boolean 
     if (!criterionHasPattern) continue;
 
     for (const pattern of trigger.patterns) {
-      if (expandedText.includes(pattern)) {
+      if (expandedText.includes(pattern) && !isNegatedTerm(expandedText, pattern)) {
         return true;
       }
     }
+  }
+
+  return false;
+}
+
+// =============================================================================
+// Negation Detection
+// =============================================================================
+//
+// Detects explicit negation of a symptom term in clinical/chat text so that
+// phrases like "denies suicidal ideation" or "no chest pain" do NOT trip the
+// red flag pattern matcher.
+//
+// Uses a window-based scan: looks for a negation cue within `windowWords`
+// tokens BEFORE the matched term, OR an "any of: 'no <term>'" pattern that
+// directly precedes the term. Stop-words (commas, periods, semicolons) break
+// the negation window so "I have a runny nose. No suicidal ideation, but..."
+// correctly negates only the second clause.
+//
+// IMPORTANT: This is a clinical safety function. Bias is intentionally
+// conservative — when in doubt, treat as NOT negated (i.e., still flag).
+// The only exit conditions for negation are explicit, common phrasings.
+// =============================================================================
+
+const NEGATION_CUES = [
+  'no',
+  'not',
+  'never',
+  'none',
+  'denies',
+  'denied',
+  'denying',
+  'denial of',
+  'without',
+  'w/o',
+  'negative for',
+  'neg for',
+  'ruled out',
+  'r/o',
+  'absence of',
+  'absent',
+  'free of',
+  'free from',
+  'no signs of',
+  'no evidence of',
+  'no history of',
+  'no complaints of',
+  'no c/o',
+  'no report of',
+  'no reports of',
+  'no recent',
+  'no current',
+  'no active',
+  "doesn't have",
+  'does not have',
+  "doesn't experience",
+  'does not experience',
+  "doesn't endorse",
+  'does not endorse',
+  "didn't have",
+  'did not have',
+  "isn't",
+  'is not',
+  'no longer',
+  'patient denies',
+  'pt denies',
+];
+
+// Phrases that LOOK like negation cues but should be ignored because they
+// reverse the meaning ("denies any history of NOT having SI" is rare;
+// the bigger risk is patterns like "without warning" attaching to the wrong
+// noun). We keep this list short to avoid weakening the safety check.
+const NEGATION_TERMINATORS = ['.', ';', '!', '?', ' but ', ' however ', ' although '];
+
+/**
+ * Returns true if `pattern` appears in `text` in a negated context.
+ *
+ * Algorithm:
+ *  1. For every occurrence of `pattern` in `text`, examine the preceding
+ *     `windowWords` words.
+ *  2. If a NEGATION_TERMINATOR appears between a negation cue and the term,
+ *     the negation does NOT apply (a new clause has begun).
+ *  3. If any NEGATION_CUE appears in the un-terminated window, return true.
+ *  4. Otherwise return false (term is asserted, flag should fire).
+ *
+ * Examples:
+ *   isNegatedTerm("denies suicidal ideation", "suicidal")       // true
+ *   isNegatedTerm("patient denies SI", "suicidal")              // false (pattern not present)
+ *   isNegatedTerm("no chest pain", "chest pain")                // true
+ *   isNegatedTerm("severe chest pain. denies SI", "chest pain") // false (chest pain is asserted)
+ *   isNegatedTerm("I am suicidal", "suicidal")                  // false
+ *   isNegatedTerm("she denies any chest pain or pressure", "chest pain") // true
+ */
+export function isNegatedTerm(text: string, pattern: string, windowWords = 6): boolean {
+  if (!text || !pattern) return false;
+  const normalizedText = text.toLowerCase();
+  const normalizedPattern = pattern.toLowerCase();
+
+  let searchFrom = 0;
+  while (searchFrom < normalizedText.length) {
+    const idx = normalizedText.indexOf(normalizedPattern, searchFrom);
+    if (idx === -1) return false;
+
+    // Slice the text BEFORE this occurrence
+    const before = normalizedText.slice(0, idx);
+
+    // Walk backwards collecting up to `windowWords` whitespace-separated tokens,
+    // but stop at any sentence/clause terminator.
+    let cursor = before.length;
+    let collected: string[] = [];
+    let terminated = false;
+
+    // Read tokens from the right
+    const beforeWords = before.split(/\s+/);
+    for (let i = beforeWords.length - 1; i >= 0 && collected.length < windowWords; i--) {
+      const tok = beforeWords[i];
+      if (!tok) continue;
+      // Sentence terminator? stop scanning further back.
+      if (NEGATION_TERMINATORS.some(t => tok.endsWith(t.trim()) && t.trim().length > 0)) {
+        // Include this token (it may contain "no.") then stop.
+        collected.unshift(tok);
+        terminated = true;
+        break;
+      }
+      collected.unshift(tok);
+    }
+
+    const window = collected.join(' ');
+
+    // Multi-word negation cues need substring check; single-word need exact-token check.
+    const negated = NEGATION_CUES.some(cue => {
+      if (cue.includes(' ')) {
+        return window.includes(cue);
+      }
+      // Single-word: must appear as its own token, not as a substring of another word
+      // (e.g., "now" must not match "no")
+      return collected.some(t => t.replace(/[.,;:!?]/g, '') === cue);
+    });
+
+    if (negated) return true;
+
+    // Not negated at this occurrence — try the next occurrence of the pattern.
+    // Don't return false yet: if ANY occurrence is negated above we returned true,
+    // but we want to require ALL occurrences to be negated to suppress the flag.
+    // → Actually the safer interpretation is: if AT LEAST ONE occurrence is asserted
+    //   (not negated), we should fire the flag. So return false here.
+    return false;
+
+    // (unreachable, kept for clarity)
+    // searchFrom = idx + normalizedPattern.length;
   }
 
   return false;

@@ -77,6 +77,51 @@ export interface RelevantChartContext {
   // Only included when relevant to the message
   relevantImaging?: { type: string; date: string; finding: string }[];
   relevantProcedures?: { name: string; date: string; result: string }[];
+  /**
+   * Recent behavioral health screenings — included whenever the prescan
+   * detects mood/anxiety/SI-related terminology so the LLM can reconcile
+   * patient message text against the structured (scored) screening record.
+   * This is the ground truth: if C-SSRS says ideationLevel=0 then the LLM
+   * must NOT escalate even if the message contains the word "suicidal".
+   */
+  behavioralHealth?: BehavioralHealthSnapshot;
+}
+
+/**
+ * Snapshot of the patient's most recent behavioral health screening data
+ * passed to the inbox AI for clinical reconciliation. Sourced from the
+ * BehavioralHealthScreening aggregate (BehavioralHealth.cs).
+ */
+export interface BehavioralHealthSnapshot {
+  /** Most recent PHQ-9 — null if none on file */
+  phq9?: {
+    completedAt: string;
+    totalScore: number;             // 0–27
+    severity: string;                // none|mild|moderate|moderately-severe|severe
+    item9Score: number;              // 0–3 (suicidal ideation question)
+    interpretation: string;
+  };
+  /** Most recent GAD-7 — null if none on file */
+  gad7?: {
+    completedAt: string;
+    totalScore: number;             // 0–21
+    severity: string;                // none|mild|moderate|severe
+  };
+  /** Most recent C-SSRS — null if none on file */
+  cssrs?: {
+    completedAt: string;
+    ideationLevel: number;          // 0=none, 1=wish dead, 2=non-specific, 3=method, 4=intent, 5=plan
+    behaviorPresent: boolean;       // any lifetime suicidal behavior endorsed
+    interpretation: string;
+  };
+  /** True if structured screening currently classifies patient as positive for suicide risk */
+  hasSuicideRisk: boolean;
+  /** Action recommended by the most recent screening review, if any */
+  recommendedAction?: string;
+  /** Whether a safety plan is currently on file (and active) */
+  safetyPlanOnFile: boolean;
+  /** Free-form clinician note for the AI: e.g. "Patient denied SI on 2026-04-12 C-SSRS." */
+  clinicianContextNote?: string;
 }
 
 // -----------------------------------------------------------------------------
@@ -92,6 +137,7 @@ interface ChartSections {
   procedures: boolean;
   allergies: boolean;
   conditions: boolean;
+  behavioralHealth: boolean;
 }
 
 const KEYWORD_MAP: Record<string, (keyof ChartSections)[]> = {
@@ -149,6 +195,39 @@ const KEYWORD_MAP: Record<string, (keyof ChartSections)[]> = {
   'appointment': ['conditions'],
   'follow-up': ['conditions', 'labs'],
   'schedule': ['conditions'],
+
+  // Behavioral health — ALWAYS pull recent screenings when these terms appear.
+  // Critical for PHQ-9 / GAD-7 / C-SSRS reconciliation in the LLM prompt so
+  // the model does not generate alarm responses based on negated phrasing.
+  'suicidal': ['behavioralHealth', 'conditions', 'medications'],
+  'suicide': ['behavioralHealth', 'conditions', 'medications'],
+  'self-harm': ['behavioralHealth', 'conditions'],
+  'self harm': ['behavioralHealth', 'conditions'],
+  'kill myself': ['behavioralHealth', 'conditions'],
+  'end my life': ['behavioralHealth', 'conditions'],
+  'depression': ['behavioralHealth', 'medications', 'conditions'],
+  'depressed': ['behavioralHealth', 'medications', 'conditions'],
+  'anxiety': ['behavioralHealth', 'medications', 'conditions'],
+  'anxious': ['behavioralHealth', 'medications', 'conditions'],
+  'panic': ['behavioralHealth', 'medications', 'conditions'],
+  'mood': ['behavioralHealth', 'medications', 'conditions'],
+  'phq-9': ['behavioralHealth'],
+  'phq9': ['behavioralHealth'],
+  'gad-7': ['behavioralHealth'],
+  'gad7': ['behavioralHealth'],
+  'cssrs': ['behavioralHealth'],
+  'c-ssrs': ['behavioralHealth'],
+  'ssri': ['medications', 'behavioralHealth'],
+  'antidepressant': ['medications', 'behavioralHealth'],
+  'sertraline': ['medications', 'behavioralHealth', 'labs'],
+  'fluoxetine': ['medications', 'behavioralHealth', 'labs'],
+  'escitalopram': ['medications', 'behavioralHealth', 'labs'],
+  'venlafaxine': ['medications', 'behavioralHealth', 'labs'],
+  'bupropion': ['medications', 'behavioralHealth'],
+  'lexapro': ['medications', 'behavioralHealth'],
+  'zoloft': ['medications', 'behavioralHealth'],
+  'prozac': ['medications', 'behavioralHealth'],
+  'wellbutrin': ['medications', 'behavioralHealth'],
 };
 
 export function prescanMessage(messageText: string): ChartSections {
@@ -161,6 +240,7 @@ export function prescanMessage(messageText: string): ChartSections {
     procedures: false,
     allergies: false,
     conditions: true, // always include conditions as baseline context
+    behavioralHealth: false,
   };
 
   for (const [keyword, sectionList] of Object.entries(KEYWORD_MAP)) {
@@ -188,6 +268,7 @@ export function gatherChartContext(
     allergies: string[];
     recentVitals: { bp?: string; hr?: string; temp?: string; weight?: string };
     lastVisit: { date: string; reason: string; provider: string };
+    behavioralHealth?: BehavioralHealthSnapshot;
   },
   sections: ChartSections
 ): RelevantChartContext {
@@ -212,6 +293,17 @@ export function gatherChartContext(
     context.relevantProcedures = []; // TODO: fetch from EHR
   }
 
+  // Behavioral health snapshot — pulled from the BehavioralHealthScreening
+  // aggregate. ALWAYS included when (a) the prescan flagged BH terms in the
+  // message, OR (b) the patient currently has hasSuicideRisk=true. The second
+  // condition prevents the AI from drafting a routine response on a patient
+  // with an active positive screen.
+  if (chartData.behavioralHealth) {
+    if (sections.behavioralHealth || chartData.behavioralHealth.hasSuicideRisk) {
+      context.behavioralHealth = chartData.behavioralHealth;
+    }
+  }
+
   return context;
 }
 
@@ -232,6 +324,39 @@ export function buildAgentPrompt(
   chartContext: RelevantChartContext,
   providerName: string,
 ): string {
+  const bh = chartContext.behavioralHealth;
+  const bhBlock = bh
+    ? `
+BEHAVIORAL HEALTH STATUS (STRUCTURED — TREAT AS GROUND TRUTH):
+${bh.phq9 ? `  PHQ-9 (${bh.phq9.completedAt}): total ${bh.phq9.totalScore}/27 — ${bh.phq9.severity}; item 9 (SI) = ${bh.phq9.item9Score}/3` : '  PHQ-9: no recent screening on file'}
+${bh.gad7 ? `  GAD-7 (${bh.gad7.completedAt}): total ${bh.gad7.totalScore}/21 — ${bh.gad7.severity}` : '  GAD-7: no recent screening on file'}
+${bh.cssrs ? `  C-SSRS (${bh.cssrs.completedAt}): ideationLevel=${bh.cssrs.ideationLevel}/5, lifetimeBehavior=${bh.cssrs.behaviorPresent ? 'yes' : 'no'} — ${bh.cssrs.interpretation}` : '  C-SSRS: no recent screening on file'}
+  hasSuicideRisk: ${bh.hasSuicideRisk}
+  safetyPlanOnFile: ${bh.safetyPlanOnFile}
+${bh.recommendedAction ? `  recommendedAction: ${bh.recommendedAction}` : ''}
+${bh.clinicianContextNote ? `  clinicianNote: ${bh.clinicianContextNote}` : ''}
+
+CRITICAL SI RECONCILIATION RULES:
+  - The structured screening above is the AUTHORITATIVE record. The patient's
+    free-text message is NOT a screening instrument.
+  - If hasSuicideRisk=false AND the message merely uses the word "suicidal",
+    "depression", or similar in a NEGATED or HISTORICAL context (e.g. "I used
+    to feel suicidal but no longer", "I deny any thoughts of self harm",
+    "no SI today"), DO NOT escalate severity to urgent/emergent solely on
+    keyword presence. Set severity based on the rest of the message.
+  - If hasSuicideRisk=true OR the message contains a NEW assertion of active
+    SI/plan/intent/means that is NOT reflected in the structured screening,
+    you MUST: set severity="emergent", set staffInstruction.assignTo="provider",
+    set staffInstruction.priority="emergent", and include in the patient draft
+    explicit instructions to call 988 (Suicide & Crisis Lifeline), text HOME
+    to 741741, OR go to the nearest ED. Add a pendedAction of type "follow-up"
+    titled "Same-day BH evaluation" with enabled=true.
+  - If a new assertion of SI conflicts with a recent negative screening,
+    treat the assertion as authoritative and trigger the same emergent path.
+  - Never imply that a patient is suicidal in a draft response when the
+    structured screening says they are not. Reconcile carefully.
+`
+    : '';
   return `You are a clinical AI assistant for ${providerName}, a primary care physician.
 
 PATIENT MESSAGE:
@@ -253,7 +378,7 @@ ${chartContext.recentVitals.bp ? `Vitals: BP ${chartContext.recentVitals.bp}, HR
 Last Visit: ${chartContext.lastVisit.date} - ${chartContext.lastVisit.reason}
 ${chartContext.relevantImaging?.length ? `Imaging:\n${chartContext.relevantImaging.map(i => `  - ${i.type} (${i.date}): ${i.finding}`).join('\n')}` : ''}
 ${chartContext.relevantProcedures?.length ? `Procedures:\n${chartContext.relevantProcedures.map(p => `  - ${p.name} (${p.date}): ${p.result}`).join('\n')}` : ''}
-
+${bhBlock}
 INSTRUCTIONS:
 Analyze this message and return a JSON response with:
 
@@ -371,6 +496,7 @@ export async function runInboxAgent(
     allergies: string[];
     recentVitals: { bp?: string; hr?: string; temp?: string; weight?: string };
     lastVisit: { date: string; reason: string; provider: string };
+    behavioralHealth?: BehavioralHealthSnapshot;
   },
   config: InboxAIAgentConfig,
 ): Promise<InboxAIResponse> {
@@ -389,6 +515,7 @@ export async function runInboxAgent(
   if (sections.procedures) contextUsed.push('procedures');
   if (sections.allergies) contextUsed.push('allergies');
   if (sections.conditions) contextUsed.push('conditions');
+  if (context.behavioralHealth) contextUsed.push('behavioralHealth');
 
   // Step 3: Build prompt and call LLM
   const prompt = buildAgentPrompt(message, context, config.providerName);
