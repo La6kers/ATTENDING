@@ -60,10 +60,8 @@ jobs:
           docker build \
             -f apps/provider-portal/Dockerfile \
             -t ${{ env.ACR_LOGIN_SERVER }}/attending-provider:${{ env.TAG }} \
-            -t ${{ env.ACR_LOGIN_SERVER }}/attending-provider:latest \
             .
           docker push ${{ env.ACR_LOGIN_SERVER }}/attending-provider:${{ env.TAG }}
-          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-provider:latest
 
       - name: Deploy Provider Portal
         if: inputs.component == 'all' || inputs.component == 'provider-portal'
@@ -82,10 +80,8 @@ jobs:
           docker build \
             -f apps/patient-portal/Dockerfile \
             -t ${{ env.ACR_LOGIN_SERVER }}/attending-patient:${{ env.TAG }} \
-            -t ${{ env.ACR_LOGIN_SERVER }}/attending-patient:latest \
             .
           docker push ${{ env.ACR_LOGIN_SERVER }}/attending-patient:${{ env.TAG }}
-          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-patient:latest
 
       - name: Deploy Patient Portal
         if: inputs.component == 'all' || inputs.component == 'patient-portal'
@@ -104,10 +100,8 @@ jobs:
           docker build \
             -f backend/Dockerfile \
             -t ${{ env.ACR_LOGIN_SERVER }}/attending-api:${{ env.TAG }} \
-            -t ${{ env.ACR_LOGIN_SERVER }}/attending-api:latest \
             backend/
           docker push ${{ env.ACR_LOGIN_SERVER }}/attending-api:${{ env.TAG }}
-          docker push ${{ env.ACR_LOGIN_SERVER }}/attending-api:latest
 
       - name: Deploy API Backend
         if: inputs.component == 'all' || inputs.component == 'api'

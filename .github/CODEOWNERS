@@ -1,0 +1,21 @@
+# =============================================================================
+# ATTENDING AI — Code Owners
+# Every PR touching these paths pulls @La6kers in as a required reviewer.
+# Single-maintainer repo for now; expand when the team grows.
+# =============================================================================
+
+# Default — everything gets owned
+*                                   @La6kers
+
+# Clinical safety code — the stuff that must never regress silently
+/backend/src/ATTENDING.Domain/              @La6kers
+/backend/src/ATTENDING.Application/         @La6kers
+/backend/tests/                             @La6kers
+/apps/compass-standalone/                   @La6kers
+/apps/shared/lib/clinical/                  @La6kers
+
+# Infra / CI — changes here affect everyone
+/.github/workflows/                         @La6kers
+/Dockerfile*                                @La6kers
+/.gitignore                                 @La6kers
+/.gitattributes                             @La6kers

@@ -1,0 +1,56 @@
+# =============================================================================
+# ATTENDING AI — Git Attributes
+# Normalize line endings and mark binary/generated files for cleaner diffs.
+# =============================================================================
+
+# Default: auto-detect text files, normalize to LF in the repo
+* text=auto eol=lf
+
+# -----------------------------------------------------------------------------
+# Source — force LF (avoids Windows CRLF sneaking into Linux containers)
+# -----------------------------------------------------------------------------
+*.ts      text eol=lf
+*.tsx     text eol=lf
+*.js      text eol=lf
+*.jsx     text eol=lf
+*.json    text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.md      text eol=lf
+*.css     text eol=lf
+*.scss    text eol=lf
+*.html    text eol=lf
+*.cs      text eol=lf
+*.csproj  text eol=lf
+*.sln     text eol=lf
+*.sh      text eol=lf
+Dockerfile text eol=lf
+
+# -----------------------------------------------------------------------------
+# Windows scripts — keep CRLF so they run natively
+# -----------------------------------------------------------------------------
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+*.ps1     text eol=crlf
+
+# -----------------------------------------------------------------------------
+# Binary — never try to diff or merge
+# -----------------------------------------------------------------------------
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.pdf     binary
+*.zip     binary
+*.tar.gz  binary
+*.woff    binary
+*.woff2   binary
+*.ttf     binary
+*.otf     binary
+
+# -----------------------------------------------------------------------------
+# Generated / lockfiles — hide from PR diff noise
+# -----------------------------------------------------------------------------
+package-lock.json  linguist-generated=true
+*.lock             linguist-generated=true

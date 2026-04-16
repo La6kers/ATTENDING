@@ -2,7 +2,7 @@
 # ATTENDING AI - CI Pipeline
 # .github/workflows/ci.yml
 #
-# Runs on every push and PR to main/mockup-2:
+# Runs on every push and PR to main:
 #   1. Lint & typecheck
 #   2. Unit + integration tests
 #   3. Build verification
@@ -13,9 +13,9 @@ name: CI
 
 on:
   push:
-    branches: [main, mockup-2]
+    branches: [main]
   pull_request:
-    branches: [main, mockup-2]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}

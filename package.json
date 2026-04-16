@@ -11,9 +11,7 @@
     "apps/compass-admin",
     "apps/compass-standalone",
     "apps/ems-portal",
-    "services/ems-backend",
-    "services/notification-service",
-    "services/cds-hooks"
+    "services/ems-backend"
   ],
   "prisma": {
     "schema": "prisma/schema.prisma",
