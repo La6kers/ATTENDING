@@ -160,6 +160,126 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   },
 
   // ================================================================
+  // PRIORITY EMERGENCY CATEGORIES — must fire before generic body-system categories
+  // (airway compromise, chemical exposures, hypertensive crisis, etc.)
+  // ================================================================
+
+  // --- ANAPHYLAXIS / AIRWAY ANGIOEDEMA ---
+  {
+    complaint: 'anaphylaxis/airway (priority)',
+    triggerPatterns: [
+      /(throat|airway).*(swell|tight|closing|shut)|swelling.*(throat|airway)/i,
+      /(lip|tongue|face).*(swell|swollen|puffy)/i,
+      /(swollen|swelling).*(lip|tongue|face|mouth)/i,
+      /(ate|eating|bit.*into|food|shellfish|shrimp|peanut|nut|egg|dairy).*(throat|lip|tongue|face).*(swell|tight|shut|close|react)/i,
+      /(sting|stung|bee|wasp|hornet).*(throat|lip|tongue|face).*(swell|tight|close|hives)/i,
+      /\banaphyla/i,
+      /(ace\s*inhibitor|lisinopril|enalapril|ramipril|benazepril).*(lip|tongue|face|swell|angioedema)/i,
+      /hereditary\s*angioedema|c1\s*esterase|\bangioedema\b/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Anaphylaxis', baseRate: 0.60, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Angioedema', baseRate: 0.25, ageModifiers: [{ range: [30, 70], multiplier: 1.2 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'ACE Inhibitor Angioedema', baseRate: 0.10, ageModifiers: [{ range: [45, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hereditary Angioedema', baseRate: 0.03, ageModifiers: [{ range: [5, 40], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Food Allergy (severe)', baseRate: 0.05, ageModifiers: [{ range: [0, 30], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // --- HYPERTENSIVE EMERGENCY ---
+  {
+    complaint: 'hypertensive emergency (priority)',
+    triggerPatterns: [
+      /(headache|vision|chest\s*pain).*(bp|blood\s*pressure).*(2[0-9][0-9]|1[89][0-9])/i,
+      /blood\s*pressure.*(200|210|220|180|190).*(headache|vision|bleed|pain)/i,
+      /hypertensive\s*(emergency|urgency|crisis)|malignant\s*hypertension/i,
+      /(headache|nosebleed).*(blood\s*pressure.*high|hypertens)/i,
+      /(blood\s*pressure|bp).*(usually|always|normally).*high.*(headache|nosebleed|vision|chest|bleed)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Hypertensive Emergency', baseRate: 0.45, ageModifiers: [{ range: [40, 100], multiplier: 1.5 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Hypertensive Urgency', baseRate: 0.25, ageModifiers: [{ range: [40, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hypertensive Encephalopathy', baseRate: 0.10, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Stroke (hypertensive)', baseRate: 0.10, ageModifiers: [{ range: [55, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Aortic Dissection', baseRate: 0.05, ageModifiers: [{ range: [50, 85], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Epistaxis (HTN-related)', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // --- CHEMICAL EYE / SKIN / INHALATION INJURIES ---
+  {
+    complaint: 'chemical injury (priority)',
+    triggerPatterns: [
+      /(bleach|chemical|cleaner|acid|lye|ammonia|drain\s*cleaner).*(eye|eyes)/i,
+      /(eye|eyes|face).*(splash|splashed|sprayed|squirted).*(bleach|cleaner|chemical|acid)/i,
+      /(drain\s*cleaner|acid|lye|bleach).*(skin|hand|arm|leg|turning\s*white|burn)/i,
+      /(bleach.*ammonia|ammonia.*bleach|mixed.*cleaning|chlorine\s*gas)/i,
+      /cleaning\s*with.*(bleach|ammonia).*(cough|chest|burn|breath)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Chemical Eye Burn', baseRate: 0.30, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Chemical Burn', baseRate: 0.30, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Chlorine Gas Exposure', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 0.8, female: 1.2 } },
+      { diagnosis: 'Chemical Inhalation Injury', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Alkali Burn (skin)', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Acid Burn (skin)', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Reactive Airway Dysfunction Syndrome', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // --- ELECTRICAL INJURY ---
+  {
+    complaint: 'electrical injury (priority)',
+    triggerPatterns: [
+      /\belectroc|electric(al)?\s*(shock|injur|burn)|got\s*shocked|shocked\s*by/i,
+      /power\s*line|live\s*wire|fixing\s*(an?\s*)?outlet|fix.*outlet|touched\s*a\s*wire/i,
+      /lightning\s*strike|struck\s*by\s*lightning/i,
+      /outlet.*(shock|zapped|tingl)|zapped\s*by|got\s*zapped/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Electrical Injury', baseRate: 0.50, ageModifiers: [], genderModifier: { male: 1.5, female: 0.6 } },
+      { diagnosis: 'Electrical Burn', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.5, female: 0.6 } },
+      { diagnosis: 'Cardiac Arrhythmia (post-electrical)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Rhabdomyolysis (post-electrical)', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Lightning Strike Injury', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.5, female: 0.6 } },
+    ],
+  },
+
+  // --- CARBON MONOXIDE POISONING ---
+  {
+    complaint: 'carbon monoxide (priority)',
+    triggerPatterns: [
+      /carbon\s*monoxide|\bco\s*(detector|alarm|poisoning|exposure)/i,
+      /(detector|alarm)\s*(went\s*off|going\s*off)/i,
+      /(headache|nausea).*(furnace|heater|garage|generator)|furnace.*headache/i,
+      /whole\s*family.*(sick|headache|nausea)|everyone\s*in\s*the\s*house.*sick/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Carbon Monoxide Poisoning', baseRate: 0.75, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Viral Illness', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Toxic Exposure (other)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // --- ALTITUDE / DROWNING ---
+  {
+    complaint: 'altitude/drowning (priority)',
+    triggerPatterns: [
+      /altitude\s*sick|altitude\s*headache|acute\s*mountain\s*sick|high\s*elevation|hiking.*high/i,
+      /after\s*hiking.*(high|elevation|mountain)|(high|mountain|elevation).*(headache|nausea|sick)/i,
+      /near\s*drowning|pulled\s*from\s*the\s*(pool|water)|almost\s*drowned|aspirated\s*water/i,
+      /\bdrowning\b|submersion|underwater\s*too\s*long|coughing\s*up\s*water/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Acute Mountain Sickness', baseRate: 0.35, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'High Altitude Pulmonary Edema', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'High Altitude Cerebral Edema', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Near Drowning / Submersion Injury', baseRate: 0.40, ageModifiers: [{ range: [0, 10], multiplier: 2.0 }, { range: [15, 30], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Aspiration Pneumonitis', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
   // HIP PAIN
   // ================================================================
   {
