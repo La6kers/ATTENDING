@@ -11,7 +11,7 @@
  */
 import http from 'node:http';
 
-const API = 'http://localhost:3005/api/compass/generate';
+const API = 'http://localhost:3005/api/diagnose';
 
 // ───────── test cases ─────────
 const CASES = [
@@ -167,7 +167,7 @@ const CASES = [
   { id: 4121, cc: 'silver scaly patches on my elbows and knees', age: 35, gender: 'male', expected: ['Psoriasis', 'Plaque Psoriasis'], urgency: 'routine' },
   { id: 4122, cc: 'red itchy rash where my new necklace was touching', age: 28, gender: 'female', expected: ['Contact Dermatitis', 'Nickel Allergy', 'Allergic Contact Dermatitis'], urgency: 'routine' },
   { id: 4123, cc: 'my baby has golden crusty sores around her nose and mouth', age: 3, gender: 'female', expected: ['Impetigo'], urgency: 'routine' },
-  { id: 4124, cc: 'bull's eye rash on my thigh after a camping trip, low grade fever', age: 40, gender: 'male', expected: ['Lyme Disease', 'Erythema Migrans'], urgency: 'urgent' },
+  { id: 4124, cc: 'bullseye rash on my thigh after a camping trip, low grade fever', age: 40, gender: 'male', expected: ['Lyme Disease', 'Erythema Migrans'], urgency: 'urgent' },
 
   // ========== NEUROLOGICAL (10) ==========
   { id: 4125, cc: 'sudden weakness on my right side and I cant speak clearly', age: 68, gender: 'male', expected: ['Stroke', 'CVA', 'Ischemic Stroke', 'TIA'], urgency: 'emergent' },
@@ -667,8 +667,9 @@ const CASES = [
 
 // ───────── test runner ─────────
 const API_URL = API;
-const CONCURRENCY = 5;
+const CONCURRENCY = 10;  // Higher concurrency — dev rate limit is 1000/min
 const TIMEOUT_MS = 30000;
+const DELAY_BETWEEN_MS = 0;
 
 function postAPI(body) {
   return new Promise((resolve, reject) => {
@@ -699,13 +700,19 @@ function postAPI(body) {
 async function runCase(c) {
   const body = {
     chiefComplaint: c.cc,
-    demographics: { age: c.age, gender: c.gender },
-    symptoms: [],
+    age: Math.round(c.age),  // API requires integer — round fractional infant ages to 0
+    gender: c.gender,
+    hpi: {},
+    medications: [],
     vitals: {},
-    medicalHistory: { conditions: [], medications: [], allergies: [], surgeries: [] },
   };
   try {
-    const data = await postAPI(body);
+    let data = await postAPI(body);
+    // Retry once on rate limit or error
+    if (data.error || data.statusCode === 429) {
+      await new Promise(r => setTimeout(r, 3000));
+      data = await postAPI(body);
+    }
     const dxList = Array.isArray(data.differentials)
       ? data.differentials
       : (data.differentials?.differentials || []);
@@ -734,6 +741,7 @@ async function main() {
 
   // Run with concurrency limit
   const queue = [...CASES];
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const workers = Array.from({ length: CONCURRENCY }, async () => {
     while (queue.length > 0) {
       const c = queue.shift();
@@ -743,6 +751,7 @@ async function main() {
       if (completed % 25 === 0) {
         console.log(`  Progress: ${completed}/${CASES.length}`);
       }
+      await sleep(DELAY_BETWEEN_MS);
     }
   });
   await Promise.all(workers);

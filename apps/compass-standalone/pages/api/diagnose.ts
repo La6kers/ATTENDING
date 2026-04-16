@@ -71,7 +71,7 @@ const DiagnoseRequestSchema = z.object({
 
 // Simple in-memory rate limiter (per IP, 20 requests/minute)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 20;
+const RATE_LIMIT = process.env.NODE_ENV === 'development' ? 1000 : 20;
 const RATE_WINDOW_MS = 60_000;
 
 function checkRateLimit(ip: string): boolean {

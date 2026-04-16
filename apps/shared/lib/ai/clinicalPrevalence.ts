@@ -1554,7 +1554,11 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'knee pain',
-    triggerPatterns: [/knee/i],
+    triggerPatterns: [
+      /\bknee\b(?!s?\s*to\s*(?:chest|stomach|belly)).*(?:pain|hurt|swell|ache|pop|lock|buckl|gave\s*out|stiff|injur|twist|torn)/i,
+      /(?:pain|hurt|swell|ache|pop|lock|buckl|stiff|injur|twist|torn).*\bknee\b(?!s?\s*to\s*(?:chest|stomach|belly))/i,
+      /\bknee\b\s*(?:replacement|surgery|swollen|red|warm|hot|clicking)/i,
+    ],
     diagnoses: [
       {
         diagnosis: 'Osteoarthritis',
