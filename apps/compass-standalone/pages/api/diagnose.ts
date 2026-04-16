@@ -37,9 +37,28 @@ const VitalsSchema = z.object({
   oxygenSaturation: z.number().min(0).max(100).optional(),
 }).optional();
 
+/** Coerce a value that may be a single string into a string array. */
+const stringOrArrayToArray = z.preprocess((val) => {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string' && val.length > 0) return [val];
+  return undefined;
+}, z.array(z.string().max(200)).optional());
+
+const HPISchema = z.object({
+  onset: z.string().max(200).optional(),
+  location: z.string().max(200).optional(),
+  duration: z.string().max(200).optional(),
+  character: z.string().max(200).optional(),
+  severity: z.number().min(0).max(10).optional(),
+  aggravating: stringOrArrayToArray,
+  relieving: stringOrArrayToArray,
+  associated: z.array(z.string().max(200)).optional(),
+  timing: z.string().max(200).optional(),
+}).passthrough().optional().transform((val): HPIData => val || {});
+
 const DiagnoseRequestSchema = z.object({
   chiefComplaint: z.string().min(1).max(500),
-  hpi: z.any().transform((val): HPIData => val || {}),
+  hpi: HPISchema,
   mrn: z.string().max(50).optional(),
   gender: z.string().max(30).optional(),
   age: z.number().int().min(0).max(120).optional(),

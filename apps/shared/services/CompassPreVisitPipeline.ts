@@ -124,7 +124,10 @@ function classifyTemporalPattern(
   aggravating: string[],
   relieving: string[],
 ): TemporalPattern {
-  const combined = [timing, ...aggravating, ...relieving]
+  // Defensive: coerce strings to arrays (API may receive string instead of string[])
+  const safeAgg = Array.isArray(aggravating) ? aggravating : [aggravating].filter(Boolean);
+  const safeRel = Array.isArray(relieving) ? relieving : [relieving].filter(Boolean);
+  const combined = [timing, ...safeAgg, ...safeRel]
     .join(' ')
     .toLowerCase();
 
@@ -308,11 +311,15 @@ export function parseOldcartsToProfile(
  * Extract and normalise symptom keyword terms from OLDCARTS fields.
  */
 export function extractSymptomTerms(oldcarts: OldcartsData): string[] {
+  // Defensive: coerce to arrays in case API sent strings
+  const agg = Array.isArray(oldcarts.aggravating) ? oldcarts.aggravating : [oldcarts.aggravating].filter(Boolean);
+  const rel = Array.isArray(oldcarts.relieving) ? oldcarts.relieving : [oldcarts.relieving].filter(Boolean);
+  const assoc = Array.isArray(oldcarts.associatedSymptoms) ? oldcarts.associatedSymptoms : [oldcarts.associatedSymptoms].filter(Boolean);
   const raw: string[] = [
     oldcarts.character,
-    ...oldcarts.aggravating,
-    ...oldcarts.relieving,
-    ...oldcarts.associatedSymptoms,
+    ...agg,
+    ...rel,
+    ...assoc,
   ];
 
   // Tokenise, lowercase, deduplicate
