@@ -70,6 +70,10 @@ const SYNONYMS: Record<string, string[]> = {
     'passed out', 'pass out', 'passes out', 'passing out',
     'blacked out', 'blacks out', 'fainted', 'fainting', 'faint spell',
     'lost consciousness', 'knocked out',
+    'almost passed out', 'nearly fainted', 'fell out',
+    'hit the floor', 'collapsed', 'went down',
+    'woke up on the floor', 'woke up on the ground',
+    'everything went black', 'lights went out',
   ],
 
   // ===== RESPIRATORY =====
@@ -174,6 +178,9 @@ const SYNONYMS: Record<string, string[]> = {
     "can't swallow", 'cant swallow', 'trouble swallowing',
     'food gets stuck', 'food stuck in my throat',
     'food catch', 'food catches in throat', 'hard to swallow',
+    'hard time swallowing', 'feels like something stuck in throat',
+    'choking on food', 'food wont go down', 'hurts when i eat',
+    'drooling', "can't breathe and drooling", 'cant breathe and drooling',
   ],
   'jaundice': [
     'yellow skin', 'yellow eyes', 'skin turned yellow',
@@ -372,6 +379,8 @@ const SYNONYMS: Record<string, string[]> = {
     'exhausted', 'tired all the time', 'no energy', 'wiped out',
     'worn out', 'so tired', 'bone tired', 'dead tired',
     'cant get out of bed', 'cant keep my eyes open',
+    'always tired', 'run down', 'draggin', 'sluggish',
+    'zero energy', 'barely functioning', 'low energy',
   ],
   'fever': [
     'running a temp', 'running a fever', 'got a fever', 'has a fever',
@@ -450,6 +459,14 @@ const SYNONYMS: Record<string, string[]> = {
     'tuggin at ear', 'tugs at ear', 'tugs on ear',
     'ear hurt', 'ear hurts', 'earache', 'ear ache',
     'ear infection',
+    'ear ringing', 'ringing in ear', 'ringing in ears', 'ears ringing',
+    'ear pressure', 'pressure in ear', 'ear feels full', 'ear blocked',
+    'fluid in ear', 'ear draining', 'drainage from ear', 'ear discharge',
+    'ear is clogged', 'clogged ear', 'muffled hearing', 'cant hear',
+    'grabbing ear', 'grabbin ear', 'grabbing his ear', 'grabbing her ear',
+    'grabbin his ear', 'grabbin her ear', 'grab at ear', 'grabs ear',
+    'holding ear', 'holdin ear', 'holding his ear', 'holding her ear',
+    'screaming and ear', 'crying and ear', 'fussy and ear',
   ],
   'fussy': [
     'wont stop crying', 'crying all the time', 'cryin all the time',
@@ -489,6 +506,10 @@ const SYNONYMS: Record<string, string[]> = {
     'throat is on fire', 'throat burning', 'my throat hurts',
     'throat is sore', 'hurts to swallow', 'painful swallowing',
     'pain when i swallow',
+    'scratchy throat', 'throat is scratchy', 'tickle in throat',
+    'lump in throat', 'feels like lump in throat',
+    'strep', 'think i have strep', 'swollen tonsils', 'tonsils swollen',
+    'tonsils are huge', 'white spots on tonsils', 'pus on tonsils',
   ],
   'butterfly rash': [
     'rash on my cheeks', 'rash on cheeks', 'rash across my cheeks',
@@ -519,6 +540,245 @@ const SYNONYMS: Record<string, string[]> = {
   'eye discharge': [
     'gunk in my eye', 'gunk coming out', 'goop in my eye',
     'eye boogers', 'stuck shut', 'crusty eye', 'crust in my eye',
+  ],
+
+  // ===== ENT (Nose, Sinus, Voice, Mouth) =====
+  'nasal congestion': [
+    'stuffy nose', 'stuffed up nose', 'nose is stuffed', 'blocked nose',
+    'nose blocked', 'congested', 'nose congested',
+    'cant breathe through nose', "can't breathe through my nose",
+    'nose is clogged', 'clogged nose',
+    'runny nose', 'nose running', 'nose wont stop running',
+    'nose is dripping', 'dripping nose', 'snot',
+  ],
+  'epistaxis': [
+    'nosebleed', 'nose bleed', 'nose bleeding', 'nose is bleeding',
+    'blood from nose', 'blood coming from nose', 'bloody nose',
+    'nose wont stop bleeding',
+  ],
+  'hoarseness': [
+    'voice is gone', 'lost my voice', 'losing my voice', 'raspy voice',
+    'voice is raspy', 'hoarse', 'voice sounds weird', 'voice cracking',
+    'voice is scratchy', 'scratchy voice', 'croaky voice',
+    'voice is different', 'cant talk', 'voice keeps cutting out',
+  ],
+  'sinusitis': [
+    'sinus pressure', 'sinus pain', 'sinus infection', 'face pressure',
+    'pressure in my face', 'pain behind eyes', 'pain between eyes',
+    'forehead pressure', 'pressure in forehead',
+    'sinus headache', 'sinuses killing me', 'sinuses are blocked',
+  ],
+  'mouth sores': [
+    'blisters in mouth', 'sores in mouth', 'mouth blisters',
+    'blisters on tongue', 'sores on lips', 'painful mouth',
+    'spots in mouth', 'white patches in mouth',
+    'mouth ulcer', 'canker sore', 'canker sores',
+    'blisters on hands', 'blisters on feet',
+  ],
+
+  // ===== PSYCH / SUBSTANCE / WITHDRAWAL =====
+  'altered mental status': [
+    'acting weird', 'acting strange', 'acting crazy', 'acting funny',
+    'not making sense', 'not himself', 'not herself',
+    'out of it', 'zoned out', 'barely conscious',
+    'cant think straight', 'brain fog', 'incoherent',
+  ],
+  'hallucinations': [
+    'seeing things', 'seeing stuff thats not there',
+    'hearing voices', 'voices in my head', 'voices telling me',
+    'bugs crawling on me', 'shadow people',
+  ],
+  'delirium tremens': [
+    'the shakes', 'the trembles', 'shaking after stopping drinking',
+    'seeing things after quitting alcohol', 'dts',
+    'sweating and shaking and confused',
+  ],
+  'mania': [
+    'racing thoughts', 'cant stop talking', 'talking a mile a minute',
+    'not sleeping for days', 'havent slept in days', 'up for days',
+    'feels invincible', 'spending spree', 'spending all the money',
+    'grandiose', 'thinks hes god', 'thinks shes special',
+    'wired', 'bouncing off the walls', 'out of control',
+  ],
+  'substance intoxication': [
+    'overdosed', 'od', 'took too many pills', 'took too much',
+    'swallowed a bottle of pills', 'found him on the floor',
+    'found her unresponsive', 'not breathing right',
+    'high on', 'smoked meth', 'smoked crack', 'shot up',
+    'track marks', 'needle marks', 'foaming at the mouth',
+    'blue lips', 'pinpoint pupils',
+  ],
+  'opioid withdrawal': [
+    'dope sick', 'dopesick', 'kicking', 'cold turkey',
+    'ran out of pills', 'ran out of suboxone', 'ran out of methadone',
+    'body aches and chills and diarrhea',
+    'crawling out of my skin', 'restless legs',
+  ],
+  'cannabinoid hyperemesis': [
+    'smoke weed every day and keep throwing up',
+    'daily smoker and vomiting', 'marijuana and vomiting',
+    'weed makes me sick now', 'cannabis and nausea',
+    'hot shower only thing that helps the nausea',
+    'hot bath stops the vomiting',
+    'throwing up for days smoke weed',
+  ],
+  // ===== DENTAL / ORAL =====
+  'toothache': [
+    'tooth hurts', 'tooth is killing me', 'tooth pain',
+    'bad tooth', 'tooth broke', 'cracked tooth',
+    'cavity', 'my tooth', 'tooth ache',
+  ],
+  'dental abscess': [
+    'face swollen from tooth', 'gum is swollen', 'gum boil',
+    'pus in my gum', 'infected tooth', 'tooth infection',
+    'swollen jaw from tooth',
+  ],
+  'tmj': [
+    'jaw clicks', 'jaw pops', 'jaw locks', 'jaw hurts when i chew',
+    'cant open my mouth wide', 'jaw pain',
+  ],
+
+  // ===== ALLERGIC REACTION =====
+  'urticaria': [
+    'broke out in hives', 'covered in hives', 'covered in welts',
+    'bumps all over', 'itchy bumps everywhere',
+    'rash all over after', 'broke out after eating',
+  ],
+
+  // ===== WOUND / LACERATION =====
+  'laceration': [
+    'cut my hand', 'cut my finger', 'cut my arm', 'cut my leg',
+    'deep cut', 'sliced my', 'gash on my',
+    'wont stop bleeding', 'bleeding a lot', 'needs stitches',
+    'stepped on a nail', 'stepped on glass',
+  ],
+
+  // ===== TRANSGENDER / GENDER-AFFIRMING =====
+  'gender dysphoria': [
+    'feel like im in the wrong body', 'wrong body',
+    'dont feel like my gender', 'gender identity',
+    'want to transition', 'transitioning',
+  ],
+  'hrt side effects': [
+    'on hormones', 'hormone therapy', 'my t shots',
+    'testosterone injection', 'estrogen side effects',
+    'spironolactone side effects', 'on hrt',
+    'started hormones and', 'hormone replacement',
+  ],
+  'chest binding injury': [
+    'binder hurts', 'binding too tight', 'chest binder',
+    'ribs hurt from binding', 'cant breathe in binder',
+    'skin raw from binder',
+  ],
+
+  // ===== ABUSE / VIOLENCE =====
+  'intimate partner violence': [
+    'my partner hit me', 'my husband hit me', 'my wife hit me',
+    'my boyfriend hit me', 'my girlfriend hit me',
+    'he hit me', 'she hit me', 'he pushed me', 'she pushed me',
+    'he choked me', 'he strangled me',
+    'afraid of my partner', 'scared to go home',
+    'domestic violence', 'abuse at home',
+    'not safe at home', 'he threatens me',
+  ],
+  'sexual assault': [
+    'was raped', 'sexually assaulted', 'forced to have sex',
+    'someone did something to me', 'inappropriate touching',
+    'molested', 'taken advantage of',
+  ],
+  'child abuse': [
+    'someone is hurting my child', 'bruises on my child',
+    'injuries dont match', 'story doesnt add up',
+  ],
+
+  // ===== SEXUAL DYSFUNCTION =====
+  'erectile dysfunction': [
+    'cant get it up', 'cant keep it up', 'cant get hard',
+    'cant perform', 'problems in the bedroom',
+    'not working down there', 'ed', 'impotent',
+  ],
+  'dyspareunia': [
+    'sex hurts', 'painful sex', 'pain during sex',
+    'hurts when we have sex', 'intercourse is painful',
+    'burning during sex',
+  ],
+
+  // ===== POSTPARTUM =====
+  'postpartum depression': [
+    'depressed after baby', 'sad after delivery',
+    'cant bond with baby', 'dont feel connected to my baby',
+    'crying all the time since baby', 'baby blues',
+    'regret having a baby', 'bad thoughts about baby',
+  ],
+  'mastitis': [
+    'breast is red and hot', 'breastfeeding and breast hurts',
+    'clogged duct', 'breast infection', 'breast is hard and painful',
+    'lump in breast while nursing', 'nursing and fever',
+  ],
+
+  // ===== GERIATRIC FALLS =====
+  'recurrent falls': [
+    'keep falling', 'fell again', 'falling a lot',
+    'unsteady on my feet', 'balance is off',
+    'afraid of falling', 'tripping a lot',
+    'lost my balance', 'legs give out',
+  ],
+
+  // ===== ENVIRONMENTAL =====
+  'heat illness': [
+    'been in the sun all day', 'overheated',
+    'feel like im overheating', 'heat stroke',
+    'hot outside and feel terrible', 'working in the heat',
+  ],
+  'cold exposure': [
+    'been out in the cold', 'frozen', 'frostbite',
+    'found outside in the cold', 'hypothermia',
+    'fingers are white and numb', 'toes are frozen',
+  ],
+
+  // ===== WEIGHT / APPETITE =====
+  'unintentional weight loss': [
+    'losing weight without trying', 'lost weight unintentionally',
+    'clothes are getting loose', 'dropping weight',
+    'lost 20 pounds', 'lost 30 pounds', 'skin and bones',
+  ],
+
+  // ===== INSOMNIA =====
+  'insomnia': [
+    'cant fall asleep', 'cant stay asleep',
+    'up all night', 'tossing and turning',
+    'havent slept in days', 'sleeping terrible',
+    'wake up every hour', 'mind wont shut off',
+  ],
+
+  // ===== BURNS =====
+  'burn injury': [
+    'burned my hand', 'burned my arm', 'burned myself',
+    'spilled hot water', 'boiling water', 'hot oil',
+    'steam burn', 'touched the stove', 'grease burn',
+  ],
+
+  // ===== BITES =====
+  'animal bite': [
+    'dog bit me', 'cat bit me', 'bitten by a dog',
+    'snake bit me', 'spider bit me', 'tick bit me',
+    'stung by a bee', 'stung by a wasp', 'bug bite',
+  ],
+
+  // ===== FOREIGN BODY =====
+  'foreign body': [
+    'swallowed a coin', 'swallowed a battery', 'swallowed a toy',
+    'stuck in his nose', 'stuck in her nose', 'stuck in my ear',
+    'fish bone stuck', 'bone stuck in throat',
+    'went down the wrong pipe', 'choking on',
+  ],
+
+  // ===== URINARY RETENTION =====
+  'urinary retention': [
+    'cant pee', "can't pee", 'unable to urinate',
+    'nothing comes out', 'bladder feels full', 'bladder wont empty',
+    'havent peed', 'havent urinated',
+    'trying to pee but cant', 'straining to pee',
   ],
 };
 

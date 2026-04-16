@@ -83,7 +83,7 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'trauma',
     triggerPatterns: [
-      /\b(fell|fall|falling|fallen|slipped|tripped)\b/i,
+      /\b(fell|fall|falling|fallen|slipped|tripped)\b(?!.*(again|lot|multiple|frequent|keep|balance|unsteady|three|four|five|\d+\s*time))/i,
       /motor\s*vehicle|\bmva\b|car\s*accident|struck|hit by/i,
       /\btrauma|injur(ed|y)|blunt|penetrating/i,
     ],
@@ -677,12 +677,34 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   },
 
   // ================================================================
+  // SORE THROAT — MUST come before dysphagia so "cant swallow" + "throat"
+  // routes here instead of to esophageal conditions
+  // ================================================================
+  {
+    complaint: 'sore throat',
+    triggerPatterns: [
+      /sore\s*throat|throat\s*(pain|hurt|kill|burn|on\s*fire|scratch|swell)|pharyngitis|tonsilitis|odynophagia|(hurt|kill|pain|burn|scratch|swell).*throat|swollen\s*tonsil|tonsil.*swollen|strep/i,
+      /drool.*throat|throat.*drool|cant\s*swallow.*throat|throat.*cant\s*swallow|hot\s*potato/i,
+      /white\s*spots?.*throat|throat.*white\s*spots?|glands?\s*swollen/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Viral Pharyngitis', baseRate: 0.50, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Strep Pharyngitis', baseRate: 0.20, ageModifiers: [{ range: [5, 15], multiplier: 1.8 }, { range: [16, 40], multiplier: 1.0 }, { range: [45, 100], multiplier: 0.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Infectious Mononucleosis', baseRate: 0.05, ageModifiers: [{ range: [15, 25], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Peritonsillar Abscess', baseRate: 0.04, ageModifiers: [{ range: [15, 40], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'GERD', baseRate: 0.05, ageModifiers: [{ range: [30, 60], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Epiglottitis', baseRate: 0.01, ageModifiers: [{ range: [2, 7], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
   // DYSPHAGIA / FOOD GETS STUCK — EoE, achalasia, strictures, cancer
+  // (narrowed trigger — "can't swallow" removed; caught by sore throat when throat present)
   // ================================================================
   {
     complaint: 'dysphagia',
     triggerPatterns: [
-      /dysphag|difficulty\s*swallow|hard\s*to\s*swallow|food.*stuck|food.*catch|can'?t\s*swallow|trouble\s*swallowing/i,
+      /dysphag|difficulty\s*swallow|hard\s*to\s*swallow|food.*stuck|food.*catch|trouble\s*swallowing/i,
     ],
     diagnoses: [
       { diagnosis: 'Eosinophilic Esophagitis', baseRate: 0.15, ageModifiers: [{ range: [15, 50], multiplier: 1.8 }], genderModifier: { male: 2.0, female: 0.8 } },
@@ -1145,8 +1167,8 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'ear pain',
     triggerPatterns: [
-      /\bear\s*(pain|pull|tugg|ach|infec)|otitis|earache/i,
-      /pulling.*ear|tugging.*ear/i,
+      /\bear\s*(pain|pull|tugg|ach|infec|ring|pressure|block|full|drain|discharg|hurt)|otitis|earache|tinnitus|ear\s*feels?\s*full/i,
+      /pulling.*ear|tugging.*ear|muffled\s*hear|clogged\s*ear|cant\s*hear|grab.*ear|hold.*ear|screaming.*ear|ear.*screaming/i,
     ],
     diagnoses: [
       {
@@ -1189,6 +1211,148 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
         ageModifiers: [],
         genderModifier: { male: 1.0, female: 1.0 },
       },
+    ],
+  },
+
+  // ================================================================
+  // NASAL / SINUS
+  // ================================================================
+  {
+    complaint: 'nasal/sinus',
+    triggerPatterns: [
+      /\b(stuffy|stuff|block|clog).*nose|nasal\s*(congest|block|obstruct)|congestion/i,
+      /nose\s*(bleed|running|drip|drain)|nosebleed|epistaxis|rhinorrhea/i,
+      /sinus\s*(pain|pressure|infect|headache)|sinusitis/i,
+      /runny\s*nose|snot|booger|cant\s*breathe\s*through\s*(my\s*)?nose/i,
+    ],
+    diagnoses: [
+      {
+        diagnosis: 'Viral URI',
+        baseRate: 0.45,
+        ageModifiers: [],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Allergic Rhinitis',
+        baseRate: 0.25,
+        ageModifiers: [{ range: [5, 40], multiplier: 1.3 }],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Acute Sinusitis',
+        baseRate: 0.15,
+        ageModifiers: [{ range: [18, 65], multiplier: 1.2 }],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Nasal Foreign Body',
+        baseRate: 0.05,
+        ageModifiers: [{ range: [1, 5], multiplier: 4.0 }],
+        genderModifier: { male: 1.2, female: 1.0 },
+      },
+      {
+        diagnosis: 'Epistaxis',
+        baseRate: 0.05,
+        ageModifiers: [
+          { range: [0, 10], multiplier: 1.5 },
+          { range: [60, 100], multiplier: 1.5 },
+        ],
+        genderModifier: { male: 1.2, female: 1.0 },
+      },
+      {
+        diagnosis: 'Nasal Polyps',
+        baseRate: 0.03,
+        ageModifiers: [{ range: [30, 60], multiplier: 1.5 }],
+        genderModifier: { male: 1.3, female: 1.0 },
+      },
+      {
+        diagnosis: 'Deviated Septum',
+        baseRate: 0.02,
+        ageModifiers: [{ range: [15, 50], multiplier: 1.2 }],
+        genderModifier: { male: 1.2, female: 1.0 },
+      },
+    ],
+  },
+
+  // ================================================================
+  // FOOT / TOE PAIN — Gout, Plantar Fasciitis, Fracture
+  // ================================================================
+  {
+    complaint: 'foot/toe pain',
+    triggerPatterns: [
+      /\b(toe|foot|heel|feet|ankle).*(pain|hurt|swell|throb|kill|red|hot|stab|swollen)/i,
+      /\b(pain|hurt|swell|throb|kill|stab|swollen).*(toe|foot|heel|feet|ankle)/i,
+      /gout|podagra|plantar\s*fasci/i,
+      /big\s*toe.*(swollen|red|hot|hurt|kill|cant)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Gout', baseRate: 0.25, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 3.0, female: 0.5 } },
+      { diagnosis: 'Plantar Fasciitis', baseRate: 0.25, ageModifiers: [{ range: [30, 60], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.2 } },
+      { diagnosis: 'Stress Fracture', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.3 } },
+      { diagnosis: 'Ankle Sprain', baseRate: 0.15, ageModifiers: [{ range: [15, 40], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Morton Neuroma', baseRate: 0.05, ageModifiers: [{ range: [40, 70], multiplier: 1.3 }], genderModifier: { male: 0.5, female: 2.0 } },
+      { diagnosis: 'Peripheral Neuropathy', baseRate: 0.05, ageModifiers: [{ range: [50, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Septic Arthritis', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // EYE PAIN — Corneal Abrasion, Conjunctivitis, Glaucoma
+  // ================================================================
+  {
+    complaint: 'eye pain',
+    triggerPatterns: [
+      /eye.*(pain|hurt|poke|scratch|stuck|water|tear|sting|burn|red|swol)/i,
+      /(pain|hurt|poke|scratch|stuck|something).*(in\s*my\s*)?eye/i,
+      /corneal|conjunctiv|red\s*eye/i,
+      /cant\s*open.*eye|eye.*wont\s*open|eye.*tearing/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Corneal Abrasion', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Conjunctivitis', baseRate: 0.25, ageModifiers: [{ range: [0, 10], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Foreign Body', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Acute Angle Closure Glaucoma', baseRate: 0.05, ageModifiers: [{ range: [50, 80], multiplier: 2.0 }], genderModifier: { male: 0.7, female: 1.5 } },
+      { diagnosis: 'Uveitis', baseRate: 0.05, ageModifiers: [{ range: [20, 50], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Orbital Cellulitis', baseRate: 0.03, ageModifiers: [{ range: [0, 10], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // TINGLING / NUMBNESS — Neuropathy, Carpal Tunnel, Radiculopathy
+  // ================================================================
+  {
+    complaint: 'tingling/numbness',
+    triggerPatterns: [
+      /tingl|numb|pins\s*and\s*needles|paresthes/i,
+      /cant\s*feel|losing\s*feeling|dead.*hand|dead.*foot|dead.*fingers/i,
+      /hand.*numb|numb.*hand|fingers?\s*numb|numb.*fingers?|feet?\s*numb|numb.*feet?|toes?\s*numb/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Peripheral Neuropathy', baseRate: 0.30, ageModifiers: [{ range: [50, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Carpal Tunnel Syndrome', baseRate: 0.25, ageModifiers: [{ range: [30, 60], multiplier: 1.3 }], genderModifier: { male: 0.6, female: 1.5 } },
+      { diagnosis: 'Cervical Radiculopathy', baseRate: 0.10, ageModifiers: [{ range: [40, 60], multiplier: 1.3 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Stroke', baseRate: 0.05, ageModifiers: [{ range: [55, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Multiple Sclerosis', baseRate: 0.03, ageModifiers: [{ range: [20, 50], multiplier: 2.0 }], genderModifier: { male: 0.5, female: 2.0 } },
+      { diagnosis: 'Vitamin B12 Deficiency', baseRate: 0.05, ageModifiers: [{ range: [60, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // EXTREMITY IMMOBILITY — Nursemaid Elbow, Fracture
+  // ================================================================
+  {
+    complaint: 'extremity immobility',
+    triggerPatterns: [
+      /wont\s*use.*(arm|hand|leg)|arm.*still|cant\s*move.*(arm|hand|wrist|elbow)/i,
+      /holding.*(arm|hand).*still|cries.*move.*arm|pulled.*hand|yanked/i,
+      /arm.*limp|wont\s*lift.*(arm|hand)|refuse.*use.*(arm|hand)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Nursemaid Elbow', baseRate: 0.40, ageModifiers: [{ range: [1, 5], multiplier: 2.0 }, { range: [6, 100], multiplier: 0.1 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Fracture', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Soft Tissue Injury', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Joint Dislocation', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Septic Arthritis', baseRate: 0.03, ageModifiers: [{ range: [0, 5], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
     ],
   },
 
@@ -1679,7 +1843,11 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'abdominal pain',
-    triggerPatterns: [/abdomen|abdominal|stomach\s*(pain|hurt|ache|kill)|belly\s*(pain|hurt|ache|kill)|tummy\s*(pain|hurt|ache)|stomach\s*is\s*killing|belly\s*is\s*killing|epigastri|upper\s*(middle\s*)?abdomen|periumbili|suprapubic|lower\s*abdomen|abdominal\s*pain/i],
+    triggerPatterns: [
+      /abdomen|abdominal|stomach\s*(pain|hurt|ache|kill)|belly\s*(pain|hurt|ache|kill)|tummy\s*(pain|hurt|ache)|stomach\s*is\s*killing|belly\s*is\s*killing|epigastri|upper\s*(middle\s*)?abdomen|periumbili|suprapubic|lower\s*abdomen|abdominal\s*pain/i,
+      /stomach.*(mess|cramp|upset|churning)|runnin.*to.*toilet|toilet.*every|pukin.*diarrhea|diarrhea.*pukin|throwing.*up.*diarrhea/i,
+      /belly.*(bloat|hard|distend|huge)|nauseous.*belly|belly.*nauseous|gut.*(hurt|pain|kill|cramp)/i,
+    ],
     diagnoses: [
       {
         diagnosis: 'Gastroenteritis',
@@ -1875,55 +2043,7 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
     ],
   },
 
-  // ================================================================
-  // SORE THROAT
-  // ================================================================
-  {
-    complaint: 'sore throat',
-    triggerPatterns: [/sore\s*throat|throat\s*(pain|hurt|kill|burn|on\s*fire)|pharyngitis|tonsilitis|odynophagia|(hurt|kill|pain|burn).*throat/i],
-    diagnoses: [
-      {
-        diagnosis: 'Viral Pharyngitis',
-        baseRate: 0.50,
-        ageModifiers: [],
-        genderModifier: { male: 1.0, female: 1.0 },
-      },
-      {
-        diagnosis: 'Strep Pharyngitis',
-        baseRate: 0.20,
-        ageModifiers: [
-          { range: [5, 15], multiplier: 1.8 },
-          { range: [16, 40], multiplier: 1.0 },
-          { range: [45, 100], multiplier: 0.5 },
-        ],
-        genderModifier: { male: 1.0, female: 1.0 },
-      },
-      {
-        diagnosis: 'Infectious Mononucleosis',
-        baseRate: 0.05,
-        ageModifiers: [{ range: [15, 25], multiplier: 3.0 }],
-        genderModifier: { male: 1.0, female: 1.0 },
-      },
-      {
-        diagnosis: 'Peritonsillar Abscess',
-        baseRate: 0.02,
-        ageModifiers: [{ range: [15, 40], multiplier: 1.5 }],
-        genderModifier: { male: 1.0, female: 1.0 },
-      },
-      {
-        diagnosis: 'GERD',
-        baseRate: 0.05,
-        ageModifiers: [{ range: [30, 60], multiplier: 1.3 }],
-        genderModifier: { male: 1.0, female: 1.0 },
-      },
-      {
-        diagnosis: 'Epiglottitis',
-        baseRate: 0.002,
-        ageModifiers: [],
-        genderModifier: { male: 1.0, female: 1.0 },
-      },
-    ],
-  },
+  // (sore throat moved before dysphagia — see line ~679)
 
   // ================================================================
   // COUGH
@@ -1988,7 +2108,7 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'urinary',
-    triggerPatterns: [/urin|burn.*pee|painful.*urinat|uti|bladder|dysuria|frequency|urgency.*urin/i],
+    triggerPatterns: [/urin|burn.*pee|pee.*burn|painful.*urinat|uti|bladder|dysuria|frequency|urgency.*urin|constant.*pee|gotta\s*pee|cant\s*stop\s*pee|burns.*every.*time|urge\s*to\s*pee|peeing.*lot|pee.*every|hurts\s*to\s*pee/i],
     diagnoses: [
       {
         diagnosis: 'UTI',
@@ -2034,7 +2154,7 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'dizziness',
-    triggerPatterns: [/dizz|vertigo|lightheaded|room\s*spinning/i],
+    triggerPatterns: [/dizz|vertigo|lightheaded|room\s*spinning|everything.*spinn|spinnin|turn.*head.*spin|roll.*over.*spin|rooms?\s*go.*around|go.*around.*around|world.*spinning|off\s*balance/i],
     diagnoses: [
       {
         diagnosis: 'BPPV',
@@ -2088,7 +2208,27 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   },
 
   // ================================================================
-  // FEVER
+  // SKIN INFECTION / REDNESS — must come before fever so "skin red warm + fever" routes here
+  // ================================================================
+  {
+    complaint: 'skin infection/redness',
+    triggerPatterns: [
+      /skin.*(red|warm|tender|infect|swollen|spread)|cellulitis|abscess|redness.*(spread|getting\s*bigger)/i,
+      /red.*hot.*swollen|warm.*tender|bug\s*bite.*red|cut.*(infect|red|swol)/i,
+      /eye.*(swollen|puffy|bulg).*fever|fever.*eye.*(swollen|puffy|bulg)|eye.*swollen\s*shut/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Cellulitis', baseRate: 0.40, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Abscess', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Contact Dermatitis', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Orbital Cellulitis', baseRate: 0.05, ageModifiers: [{ range: [0, 10], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Erysipelas', baseRate: 0.05, ageModifiers: [{ range: [60, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'DVT', baseRate: 0.03, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.2 } },
+    ],
+  },
+
+  // ================================================================
+  // FEVER — expanded with conditions that commonly present with fever as lead symptom
   // ================================================================
   {
     complaint: 'fever',
@@ -2096,13 +2236,13 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
     diagnoses: [
       {
         diagnosis: 'Viral infection',
-        baseRate: 0.45,
+        baseRate: 0.35,
         ageModifiers: [],
         genderModifier: { male: 1.0, female: 1.0 },
       },
       {
         diagnosis: 'UTI',
-        baseRate: 0.10,
+        baseRate: 0.08,
         ageModifiers: [],
         genderModifier: { male: 0.4, female: 1.6 },
       },
@@ -2113,16 +2253,40 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
         genderModifier: { male: 1.1, female: 0.9 },
       },
       {
-        diagnosis: 'Bacterial infection',
+        diagnosis: 'Gastroenteritis',
         baseRate: 0.08,
         ageModifiers: [],
         genderModifier: { male: 1.0, female: 1.0 },
       },
       {
+        diagnosis: 'Bacterial infection',
+        baseRate: 0.06,
+        ageModifiers: [],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Acute Otitis Media',
+        baseRate: 0.05,
+        ageModifiers: [{ range: [0, 5], multiplier: 3.0 }],
+        genderModifier: { male: 1.1, female: 1.0 },
+      },
+      {
         diagnosis: 'Sepsis',
-        baseRate: 0.02,
+        baseRate: 0.03,
         ageModifiers: [{ range: [65, 100], multiplier: 2.5 }],
         genderModifier: { male: 1.1, female: 0.9 },
+      },
+      {
+        diagnosis: 'Cellulitis',
+        baseRate: 0.03,
+        ageModifiers: [],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Hand Foot and Mouth Disease',
+        baseRate: 0.02,
+        ageModifiers: [{ range: [0, 7], multiplier: 4.0 }],
+        genderModifier: { male: 1.0, female: 1.0 },
       },
       {
         diagnosis: 'Meningitis',
@@ -2185,6 +2349,676 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
         ageModifiers: [{ range: [50, 100], multiplier: 2.0 }],
         genderModifier: { male: 1.0, female: 1.0 },
       },
+    ],
+  },
+
+  // ================================================================
+  // ALTERED MENTAL STATUS / CONFUSION — encephalopathies, DTs, intoxication, metabolic
+  // ================================================================
+  {
+    complaint: 'altered mental status',
+    triggerPatterns: [
+      /confus|altered\s*mental|disoriented|not\s*making\s*sense|acting\s*(weird|strange|funny|crazy|different)/i,
+      /seeing\s*things|hallucin|deliri|out\s*of\s*it|barely\s*conscious|wont\s*wake/i,
+      /cant\s*think\s*straight|brain\s*fog|foggy|incoherent|garbled|rambling/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Delirium Tremens', baseRate: 0.08, ageModifiers: [{ range: [30, 70], multiplier: 1.3 }], genderModifier: { male: 2.0, female: 0.5 } },
+      { diagnosis: 'Hepatic Encephalopathy', baseRate: 0.06, ageModifiers: [{ range: [45, 80], multiplier: 1.5 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Wernicke Encephalopathy', baseRate: 0.04, ageModifiers: [{ range: [30, 70], multiplier: 1.3 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Hypertensive Encephalopathy', baseRate: 0.04, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Toxic/Metabolic Encephalopathy', baseRate: 0.10, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Substance Intoxication', baseRate: 0.12, ageModifiers: [{ range: [15, 50], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Sepsis', baseRate: 0.06, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.1, female: 0.9 } },
+      { diagnosis: 'Stroke', baseRate: 0.05, ageModifiers: [{ range: [55, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Hypoglycemia', baseRate: 0.06, ageModifiers: [{ range: [60, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'UTI', baseRate: 0.05, ageModifiers: [{ range: [70, 100], multiplier: 3.0 }], genderModifier: { male: 0.4, female: 1.8 } },
+      { diagnosis: 'Meningitis', baseRate: 0.03, ageModifiers: [{ range: [0, 5], multiplier: 2.0 }, { range: [15, 25], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // MANIA / AGITATION — bipolar mania, psychosis, stimulant intoxication
+  // ================================================================
+  {
+    complaint: 'mania/agitation',
+    triggerPatterns: [
+      /manic|mania|racing\s*thoughts|cant\s*stop\s*talking|not\s*sleeping\s*for\s*days|havent\s*slept\s*in\s*days/i,
+      /grandiose|thinks?\s*(hes?|shes?)\s*(god|invincible|special)|spending\s*spree|reckless/i,
+      /psychos|psychotic|hearing\s*voices|voices\s*in\s*my\s*head|paranoi|delusional/i,
+      /agitat|combative|violent|out\s*of\s*control|climbing\s*the\s*walls|wired/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Bipolar Disorder — Manic Episode', baseRate: 0.25, ageModifiers: [{ range: [18, 35], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Psychotic Disorder', baseRate: 0.15, ageModifiers: [{ range: [18, 30], multiplier: 2.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Stimulant Intoxication', baseRate: 0.15, ageModifiers: [{ range: [18, 50], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Delirium Tremens', baseRate: 0.08, ageModifiers: [{ range: [30, 70], multiplier: 1.3 }], genderModifier: { male: 2.0, female: 0.5 } },
+      { diagnosis: 'Serotonin Syndrome', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Thyroid Storm', baseRate: 0.03, ageModifiers: [{ range: [20, 50], multiplier: 1.3 }], genderModifier: { male: 0.3, female: 1.8 } },
+      { diagnosis: 'Hyperthyroidism', baseRate: 0.05, ageModifiers: [{ range: [20, 50], multiplier: 1.3 }], genderModifier: { male: 0.3, female: 1.8 } },
+      { diagnosis: 'Anti-NMDA Receptor Encephalitis', baseRate: 0.02, ageModifiers: [{ range: [15, 35], multiplier: 2.0 }], genderModifier: { male: 0.3, female: 2.0 } },
+    ],
+  },
+
+  // ================================================================
+  // SUBSTANCE INTOXICATION / OVERDOSE
+  // ================================================================
+  {
+    complaint: 'substance intoxication/overdose',
+    triggerPatterns: [
+      /overdos|od'd|took\s*too\s*(many|much)|swallowed\s*(pills|bottle)|pill\s*bottle/i,
+      /found\s*(him|her|them)\s*(unresponsive|passed\s*out|on\s*the\s*floor)/i,
+      /pinpoint\s*pupils|track\s*marks|needle\s*marks|foaming.*mouth|blue\s*lips/i,
+      /drunk|wasted|high\s*on|smoked\s*(meth|crack|fentanyl)|snorted|injected|shot\s*up/i,
+      /narcan|naloxone|drug\s*use|substance\s*(abuse|use)|intoxicat/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Opioid Overdose', baseRate: 0.25, ageModifiers: [{ range: [18, 55], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Alcohol Intoxication', baseRate: 0.20, ageModifiers: [{ range: [18, 65], multiplier: 1.0 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Stimulant Intoxication', baseRate: 0.12, ageModifiers: [{ range: [18, 50], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Benzodiazepine Overdose', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.0, female: 1.2 } },
+      { diagnosis: 'Polypharmacy/Mixed Overdose', baseRate: 0.10, ageModifiers: [{ range: [15, 30], multiplier: 1.5 }], genderModifier: { male: 0.8, female: 1.3 } },
+      { diagnosis: 'Acetaminophen Overdose', baseRate: 0.08, ageModifiers: [{ range: [15, 30], multiplier: 1.5 }], genderModifier: { male: 0.7, female: 1.4 } },
+      { diagnosis: 'Serotonin Syndrome', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Neuroleptic Malignant Syndrome', baseRate: 0.02, ageModifiers: [{ range: [20, 60], multiplier: 1.3 }], genderModifier: { male: 1.5, female: 0.7 } },
+    ],
+  },
+
+  // ================================================================
+  // WITHDRAWAL SYNDROMES — alcohol, benzo, opioid withdrawal
+  // ================================================================
+  {
+    complaint: 'withdrawal',
+    triggerPatterns: [
+      /withdraw|detox|quit\s*(drinking|alcohol|drugs|pills|opioid|heroin)/i,
+      /dts|delirium\s*tremens|the\s*shakes|shaking.*quit.*drink|tremor.*alcohol/i,
+      /havent\s*(had\s*a\s*)?drink\s*in|stopped\s*drinking|last\s*drink/i,
+      /dope\s*sick|kicking|cold\s*turkey|ran\s*out\s*of.*(pills|meds|suboxone|methadone)/i,
+      /sweating.*shaking.*drinking|seeing\s*things.*quit/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Alcohol Withdrawal', baseRate: 0.30, ageModifiers: [{ range: [25, 65], multiplier: 1.3 }], genderModifier: { male: 2.0, female: 0.5 } },
+      { diagnosis: 'Delirium Tremens', baseRate: 0.10, ageModifiers: [{ range: [30, 65], multiplier: 1.3 }], genderModifier: { male: 2.0, female: 0.5 } },
+      { diagnosis: 'Opioid Withdrawal', baseRate: 0.20, ageModifiers: [{ range: [18, 50], multiplier: 1.5 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Benzodiazepine Withdrawal', baseRate: 0.10, ageModifiers: [{ range: [25, 70], multiplier: 1.2 }], genderModifier: { male: 1.0, female: 1.1 } },
+      { diagnosis: 'Stimulant Withdrawal', baseRate: 0.05, ageModifiers: [{ range: [18, 50], multiplier: 1.3 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Wernicke Encephalopathy', baseRate: 0.04, ageModifiers: [{ range: [30, 70], multiplier: 1.3 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Withdrawal Seizure', baseRate: 0.06, ageModifiers: [{ range: [25, 60], multiplier: 1.3 }], genderModifier: { male: 1.5, female: 0.7 } },
+    ],
+  },
+
+  // ================================================================
+  // CYCLIC VOMITING / CANNABINOID HYPEREMESIS
+  // ================================================================
+  {
+    complaint: 'cyclic vomiting',
+    triggerPatterns: [
+      /cannabinoid\s*hyperemesis|chs\b|cannabis.*vomit|weed.*vomit|marijuana.*vomit|pot.*throw/i,
+      /hot\s*(shower|bath).*help.*(nausea|vomit)|vomit.*hot\s*(shower|bath)/i,
+      /cyclic\s*vomit|episodes?\s*of\s*vomit.*come\s*and\s*go|vomit.*every\s*few\s*(weeks|months)/i,
+      /smoke.*(weed|marijuana|pot|cannabis).*sick|daily\s*(smoker|weed|marijuana)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Cannabinoid Hyperemesis Syndrome', baseRate: 0.35, ageModifiers: [{ range: [18, 45], multiplier: 2.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Cyclic Vomiting Syndrome', baseRate: 0.25, ageModifiers: [{ range: [5, 35], multiplier: 1.5 }], genderModifier: { male: 0.8, female: 1.3 } },
+      { diagnosis: 'Gastroparesis', baseRate: 0.10, ageModifiers: [{ range: [20, 50], multiplier: 1.3 }], genderModifier: { male: 0.6, female: 1.5 } },
+      { diagnosis: 'Gastroenteritis', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Pancreatitis', baseRate: 0.05, ageModifiers: [{ range: [30, 60], multiplier: 1.3 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Superior Mesenteric Artery Syndrome', baseRate: 0.02, ageModifiers: [{ range: [15, 30], multiplier: 2.0 }], genderModifier: { male: 0.7, female: 1.5 } },
+    ],
+  },
+
+  // ================================================================
+  // DENTAL / ORAL PAIN
+  // ================================================================
+  {
+    complaint: 'dental/oral pain',
+    triggerPatterns: [
+      /tooth\s*(pain|hurt|ache|kill|broke|crack|abscess)|toothache/i,
+      /dental|jaw\s*(pain|hurt|ache|swell|lock|click|pop)|tmj/i,
+      /face.*swollen.*tooth|tooth.*face.*swollen|gum.*(swell|bleed|hurt|abscess|boil)/i,
+      /mouth\s*(pain|hurt|sore)|bad\s*tooth|cavity/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Dental Abscess', baseRate: 0.30, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Dental Caries', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'TMJ Disorder', baseRate: 0.15, ageModifiers: [{ range: [20, 50], multiplier: 1.3 }], genderModifier: { male: 0.6, female: 1.5 } },
+      { diagnosis: 'Periapical Abscess', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Ludwig Angina', baseRate: 0.02, ageModifiers: [{ range: [20, 50], multiplier: 1.3 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Trigeminal Neuralgia', baseRate: 0.03, ageModifiers: [{ range: [50, 80], multiplier: 1.5 }], genderModifier: { male: 0.8, female: 1.3 } },
+      { diagnosis: 'Salivary Gland Stone', baseRate: 0.03, ageModifiers: [{ range: [30, 60], multiplier: 1.3 }], genderModifier: { male: 1.3, female: 0.8 } },
+    ],
+  },
+
+  // ================================================================
+  // SYNCOPE / FAINTING
+  // ================================================================
+  {
+    complaint: 'syncope',
+    triggerPatterns: [
+      /faint|passed\s*out|blacked\s*out|lost\s*consciousness|syncop/i,
+      /almost\s*(passed\s*out|fainted|blacked)|near\s*faint|nearly\s*passed/i,
+      /fell\s*out|dropped|collapsed|went\s*down|hit\s*the\s*floor|woke\s*up\s*on\s*the\s*(floor|ground)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Vasovagal Syncope', baseRate: 0.35, ageModifiers: [{ range: [15, 35], multiplier: 1.3 }], genderModifier: { male: 0.8, female: 1.2 } },
+      { diagnosis: 'Orthostatic Hypotension', baseRate: 0.15, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Cardiac Arrhythmia', baseRate: 0.12, ageModifiers: [{ range: [50, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Aortic Stenosis', baseRate: 0.03, ageModifiers: [{ range: [60, 100], multiplier: 2.5 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Pulmonary Embolism', baseRate: 0.03, ageModifiers: [{ range: [30, 80], multiplier: 1.2 }], genderModifier: { male: 1.0, female: 1.2 } },
+      { diagnosis: 'Seizure', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hypoglycemia', baseRate: 0.05, ageModifiers: [{ range: [50, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Dehydration', baseRate: 0.05, ageModifiers: [{ range: [0, 5], multiplier: 1.5 }, { range: [70, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // ALLERGIC REACTION (non-anaphylaxis) — hives, angioedema, drug reaction
+  // ================================================================
+  {
+    complaint: 'allergic reaction',
+    triggerPatterns: [
+      /hives|urticaria|welts|broke\s*out|covered\s*in\s*(bumps|spots|welts)/i,
+      /allergic\s*reaction|allergy.*react|react.*allergy|swelling.*(lip|face|tongue|eye)/i,
+      /angioedema|lips?\s*(swollen|puffy|swelling)|face\s*(swollen|puffy)/i,
+      /rash\s*after.*(med|medicine|pill|drug|antibiotic|food)|took.*and.*rash/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Urticaria', baseRate: 0.35, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Angioedema', baseRate: 0.15, ageModifiers: [{ range: [30, 60], multiplier: 1.2 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Drug Reaction', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Contact Dermatitis', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Anaphylaxis', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Serum Sickness', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'ACE Inhibitor Angioedema', baseRate: 0.04, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // LACERATION / WOUND
+  // ================================================================
+  {
+    complaint: 'laceration/wound',
+    triggerPatterns: [
+      /cut\s*(my|his|her)?|lacer|gash|slash|sliced|wound/i,
+      /bleeding.*(wont|wont|cant)\s*stop|deep\s*cut|stitches|staples/i,
+      /glass\s*cut|knife\s*cut|stepped\s*on\s*(nail|glass)|puncture\s*wound/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Simple Laceration', baseRate: 0.50, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Deep Laceration (tendon/nerve risk)', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Puncture Wound', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Foreign Body Retention', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Wound Infection', baseRate: 0.08, ageModifiers: [{ range: [50, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Tetanus Risk', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // FATIGUE (standalone) — thyroid, anemia, depression, CFS
+  // ================================================================
+  {
+    complaint: 'fatigue',
+    triggerPatterns: [
+      /exhaust|fatigue|tired\s*all\s*the\s*time|no\s*energy|always\s*tired|wiped\s*out/i,
+      /draggin|sluggish|run\s*down|worn\s*out|cant\s*get\s*out\s*of\s*bed|so\s*tired/i,
+      /low\s*energy|zero\s*energy|no\s*motivation.*tired/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Iron Deficiency Anemia', baseRate: 0.15, ageModifiers: [{ range: [15, 45], multiplier: 1.3 }], genderModifier: { male: 0.4, female: 1.8 } },
+      { diagnosis: 'Hypothyroidism', baseRate: 0.12, ageModifiers: [{ range: [40, 70], multiplier: 1.3 }], genderModifier: { male: 0.4, female: 1.8 } },
+      { diagnosis: 'Major Depressive Disorder', baseRate: 0.20, ageModifiers: [{ range: [18, 50], multiplier: 1.2 }], genderModifier: { male: 0.7, female: 1.3 } },
+      { diagnosis: 'Sleep Apnea', baseRate: 0.10, ageModifiers: [{ range: [40, 70], multiplier: 1.5 }], genderModifier: { male: 1.8, female: 0.5 } },
+      { diagnosis: 'Diabetes Mellitus', baseRate: 0.06, ageModifiers: [{ range: [40, 100], multiplier: 1.5 }], genderModifier: { male: 1.1, female: 0.9 } },
+      { diagnosis: 'Chronic Fatigue Syndrome', baseRate: 0.05, ageModifiers: [{ range: [20, 50], multiplier: 1.5 }], genderModifier: { male: 0.4, female: 1.8 } },
+      { diagnosis: 'Vitamin B12 Deficiency', baseRate: 0.04, ageModifiers: [{ range: [60, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Malignancy', baseRate: 0.03, ageModifiers: [{ range: [50, 100], multiplier: 2.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // STI / SEXUAL HEALTH — discharge, genital lesions, pelvic pain
+  // ================================================================
+  {
+    complaint: 'STI/sexual health',
+    triggerPatterns: [
+      /discharg.*(penis|vagina|down\s*there)|genital.*(sore|lesion|wart|bump|blister)/i,
+      /std|sti|sexually\s*transmitted|burning.*(penis|vagina)|drip/i,
+      /sore.*(privates|genitals|down\s*there)|painful\s*urination.*discharg/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Chlamydia', baseRate: 0.25, ageModifiers: [{ range: [15, 30], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Gonorrhea', baseRate: 0.15, ageModifiers: [{ range: [15, 30], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Genital Herpes', baseRate: 0.15, ageModifiers: [{ range: [18, 40], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Trichomoniasis', baseRate: 0.08, ageModifiers: [{ range: [18, 45], multiplier: 1.3 }], genderModifier: { male: 0.3, female: 1.8 } },
+      { diagnosis: 'Bacterial Vaginosis', baseRate: 0.10, ageModifiers: [{ range: [18, 45], multiplier: 1.3 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Syphilis', baseRate: 0.05, ageModifiers: [{ range: [20, 45], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Pelvic Inflammatory Disease', baseRate: 0.05, ageModifiers: [{ range: [18, 35], multiplier: 2.0 }], genderModifier: { male: 0.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // SCROTAL / GROIN (non-torsion) — hernia, epididymitis, hydrocele
+  // ================================================================
+  {
+    complaint: 'scrotal/groin',
+    triggerPatterns: [
+      /scrot.*(swell|pain|lump|heavy)|epididy|hydrocele/i,
+      /groin.*(bulge|lump|hernia|pain|swell)|hernia|inguinal/i,
+      /testic.*(swell|lump|heavy).*gradual|gradual.*testic.*(swell|lump)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Inguinal Hernia', baseRate: 0.30, ageModifiers: [{ range: [40, 80], multiplier: 1.3 }], genderModifier: { male: 4.0, female: 0.3 } },
+      { diagnosis: 'Epididymitis', baseRate: 0.25, ageModifiers: [{ range: [18, 50], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Hydrocele', baseRate: 0.10, ageModifiers: [{ range: [0, 2], multiplier: 2.0 }, { range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Varicocele', baseRate: 0.08, ageModifiers: [{ range: [15, 35], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Testicular Torsion', baseRate: 0.05, ageModifiers: [{ range: [10, 25], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Testicular Cancer', baseRate: 0.02, ageModifiers: [{ range: [15, 35], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 0.0 } },
+    ],
+  },
+
+  // ================================================================
+  // BURNS
+  // ================================================================
+  {
+    complaint: 'burn',
+    triggerPatterns: [
+      /burn.*(hand|arm|leg|face|foot|skin)|burned\s*(my|his|her)/i,
+      /scald|boiling\s*water|hot\s*(water|oil|grease)|steam\s*burn/i,
+      /chemical\s*burn|sunburn|sun\s*burn|blister.*(burn|sun)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'First Degree Burn', baseRate: 0.40, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Second Degree Burn', baseRate: 0.30, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Third Degree Burn', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Chemical Burn', baseRate: 0.05, ageModifiers: [{ range: [18, 65], multiplier: 1.3 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Sunburn', baseRate: 0.15, ageModifiers: [{ range: [10, 30], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // BITE / STING / ENVENOMATION
+  // ================================================================
+  {
+    complaint: 'bite/sting',
+    triggerPatterns: [
+      /\b(bit|bite|bitten)\s*(by|me|my|him|her)|dog\s*bite|cat\s*bite|snake\s*bite/i,
+      /spider\s*bite|tick\s*bite|insect\s*(bite|sting)|bee\s*sting|wasp\s*sting/i,
+      /stung\s*by|bit\s*by\s*a|animal\s*bite|human\s*bite/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Insect Bite/Sting', baseRate: 0.35, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Dog/Cat Bite', baseRate: 0.20, ageModifiers: [{ range: [0, 10], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Cellulitis (bite-related)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Snake Envenomation', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Allergic Reaction to Sting', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Rabies Exposure', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Tick-Borne Illness', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // FOREIGN BODY
+  // ================================================================
+  {
+    complaint: 'foreign body',
+    triggerPatterns: [
+      /swallow.*(coin|battery|toy|button|marble|magnet|object)/i,
+      /stuck.*(in\s*(nose|ear|throat))|something\s*in\s*(nose|ear|throat)/i,
+      /ate\s*something|chok.*(on|ing)|fish\s*bone|bone\s*stuck/i,
+      /inhaled|aspirat|went\s*down\s*the\s*wrong/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Esophageal Foreign Body', baseRate: 0.25, ageModifiers: [{ range: [1, 5], multiplier: 3.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Nasal Foreign Body', baseRate: 0.20, ageModifiers: [{ range: [1, 5], multiplier: 4.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Ear Canal Foreign Body', baseRate: 0.15, ageModifiers: [{ range: [1, 8], multiplier: 3.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Aspirated Foreign Body', baseRate: 0.10, ageModifiers: [{ range: [1, 4], multiplier: 4.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'GI Foreign Body (passing)', baseRate: 0.15, ageModifiers: [{ range: [1, 5], multiplier: 3.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Button Battery Ingestion', baseRate: 0.03, ageModifiers: [{ range: [1, 5], multiplier: 5.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // URINARY RETENTION — can't pee
+  // ================================================================
+  {
+    complaint: 'urinary retention',
+    triggerPatterns: [
+      /cant\s*(pee|urinate|go)|unable\s*to\s*(pee|urinate|void)/i,
+      /bladder.*(full|distend|wont\s*empty)|no\s*urine|nothing\s*comes?\s*out/i,
+      /havent\s*peed|retent|cathet/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Benign Prostatic Hyperplasia', baseRate: 0.35, ageModifiers: [{ range: [50, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Acute Urinary Retention', baseRate: 0.20, ageModifiers: [{ range: [60, 100], multiplier: 1.5 }], genderModifier: { male: 2.0, female: 0.5 } },
+      { diagnosis: 'Medication-Induced Retention', baseRate: 0.10, ageModifiers: [{ range: [50, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Urethral Stricture', baseRate: 0.05, ageModifiers: [{ range: [30, 70], multiplier: 1.3 }], genderModifier: { male: 2.0, female: 0.3 } },
+      { diagnosis: 'Neurogenic Bladder', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Cauda Equina Syndrome', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // TRANSGENDER / GENDER-AFFIRMING CARE — HRT complications, binding injuries
+  // ================================================================
+  {
+    complaint: 'gender-affirming care',
+    triggerPatterns: [
+      /\b(hrt|hormone\s*(therapy|replacement|treatment)|estrogen|testosterone|spironolactone|lupron)\b.*\b(side\s*effect|problem|issue|concern|complication|pain|swelling|mood|bleed|acne|hair|clot|headache|nausea|weight|tired|angry|emotional)/i,
+      /\b(testosterone\s*(shot|injection|gel|patch)|my\s*t\s*shots?|estrogen\s*(pill|patch|injection))\b/i,
+      /\b(transition|transitioning|trans\s*(woman|man|female|male|masculine|feminine))\b.*\b(pain|problem|issue|concern|complication|side\s*effect)/i,
+      /chest\s*bind.*(pain|hurt|cant\s*breathe|rib|bruise|skin)|bind.*(too\s*tight|rib|breathing)/i,
+      /gender\s*dysphori|dysphoria/i,
+      /\b(neo\s*vagina|phalloplast|metoidioplast|top\s*surgery|bottom\s*surgery)\b.*(pain|bleed|infect|complicat|problem)/i,
+      /\b(my\s*t\s*shots?|testosterone\s*(injection|shot|gel|patch))\b.*(problem|issue|side|pain|mood|acne|hair)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'HRT Side Effect — Venous Thromboembolism Risk', baseRate: 0.08, ageModifiers: [{ range: [35, 60], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'HRT Side Effect — Mood/Psychiatric', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'HRT Side Effect — Hepatic', baseRate: 0.05, ageModifiers: [{ range: [40, 70], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Testosterone-Induced Polycythemia', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Binding-Related Rib/Chest Pain', baseRate: 0.10, ageModifiers: [{ range: [14, 30], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Binding-Related Skin Breakdown', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Post-Surgical Complication', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Gender Dysphoria (primary presentation)', baseRate: 0.15, ageModifiers: [{ range: [12, 25], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Injection Site Reaction', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // ABUSE / VIOLENCE / TRAUMA SCREENING
+  // ================================================================
+  {
+    complaint: 'abuse/violence',
+    triggerPatterns: [
+      /\b(hit|punch|kick|choke|strangle|slap|shove|push|beat|threw)\b.*\b(me|him|her|partner|husband|wife|boyfriend|girlfriend|parent|child)/i,
+      /\b(partner|husband|wife|boyfriend|girlfriend|spouse)\b.*\b(hit|hurt|abuse|violent|angry|scared|afraid|threat)/i,
+      /domestic\s*(violen|abuse)|intimate\s*partner|batter|safe\s*at\s*home|afraid\s*(of|at)\s*home/i,
+      /sexual\s*(assault|abuse|attack)|rape|molest|forced\s*(sex|me|him|her)|non\s*consensual/i,
+      /child\s*(abuse|neglect)|elder\s*(abuse|neglect)|non\s*accidental\s*trauma|\bNAT\b/i,
+      /traffick|exploit|captive|held\s*against/i,
+      /bruise.*(different|various|multiple)\s*stage|injury.*doesn'?t\s*match|story\s*doesn'?t\s*(match|add\s*up)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Intimate Partner Violence', baseRate: 0.30, ageModifiers: [{ range: [18, 50], multiplier: 1.3 }], genderModifier: { male: 0.3, female: 1.8 } },
+      { diagnosis: 'Physical Abuse', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Sexual Assault', baseRate: 0.10, ageModifiers: [{ range: [15, 40], multiplier: 1.5 }], genderModifier: { male: 0.2, female: 1.8 } },
+      { diagnosis: 'Child Abuse / Non-Accidental Trauma', baseRate: 0.10, ageModifiers: [{ range: [0, 5], multiplier: 3.0 }, { range: [6, 17], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Elder Abuse/Neglect', baseRate: 0.08, ageModifiers: [{ range: [65, 100], multiplier: 3.0 }], genderModifier: { male: 0.8, female: 1.3 } },
+      { diagnosis: 'Strangulation Injury', baseRate: 0.05, ageModifiers: [{ range: [18, 50], multiplier: 1.5 }], genderModifier: { male: 0.3, female: 1.8 } },
+      { diagnosis: 'Human Trafficking', baseRate: 0.02, ageModifiers: [{ range: [14, 30], multiplier: 2.0 }], genderModifier: { male: 0.4, female: 1.8 } },
+    ],
+  },
+
+  // ================================================================
+  // SEXUAL DYSFUNCTION — ED, dyspareunia, libido, ejaculatory disorders
+  // ================================================================
+  {
+    complaint: 'sexual dysfunction',
+    triggerPatterns: [
+      /erectile\s*(dysfunction|problem)|cant\s*(get|keep)\s*(it|an?\s*erect)|impoten|ed\s*problem/i,
+      /pain.*(during|with)\s*(sex|intercourse)|sex\s*(hurt|pain)|dyspareunia|vaginismus/i,
+      /low\s*(libido|sex\s*drive|desire)|no\s*(libido|sex\s*drive|desire|interest\s*in\s*sex)/i,
+      /premature\s*ejaculat|come\s*too\s*(fast|quick|soon)|vaginal\s*(dry|atrophy)/i,
+      /cant\s*perform|performance\s*anxiety.*sex|problem.*(in\s*the\s*)?bedroom/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Erectile Dysfunction', baseRate: 0.30, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Female Sexual Arousal Disorder', baseRate: 0.10, ageModifiers: [{ range: [30, 60], multiplier: 1.2 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Dyspareunia', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 0.2, female: 1.8 } },
+      { diagnosis: 'Vaginismus', baseRate: 0.05, ageModifiers: [{ range: [18, 40], multiplier: 1.5 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Medication-Induced Sexual Dysfunction', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hypogonadism', baseRate: 0.08, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.5 } },
+      { diagnosis: 'Premature Ejaculation', baseRate: 0.08, ageModifiers: [{ range: [18, 40], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Atrophic Vaginitis', baseRate: 0.06, ageModifiers: [{ range: [45, 80], multiplier: 2.0 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Peyronie Disease', baseRate: 0.03, ageModifiers: [{ range: [40, 70], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 0.0 } },
+    ],
+  },
+
+  // ================================================================
+  // ANAL / RECTAL COMPLAINTS — proctitis, condyloma, fissure, abscess
+  // ================================================================
+  {
+    complaint: 'anal/rectal',
+    triggerPatterns: [
+      /anal\s*(pain|itch|bleed|lump|sore|discharge|wart|fissure|abscess)|rectal\s*(pain|bleed|itch|lump|mass)/i,
+      /butt\s*(pain|hurt|itch|lump|bleed)|pain\s*in\s*my\s*(butt|rear|bottom|rectum)/i,
+      /something\s*(hanging|sticking)\s*out.*(butt|rear|bottom|rectum)|hemorrhoid|pile/i,
+      /proctitis|perianal|perirectal|condyloma/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Hemorrhoids', baseRate: 0.30, ageModifiers: [{ range: [30, 70], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Anal Fissure', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Perianal/Perirectal Abscess', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Proctitis', baseRate: 0.08, ageModifiers: [{ range: [18, 45], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Condyloma Acuminata', baseRate: 0.05, ageModifiers: [{ range: [18, 40], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Rectal Prolapse', baseRate: 0.04, ageModifiers: [{ range: [60, 100], multiplier: 2.0 }], genderModifier: { male: 0.5, female: 1.5 } },
+      { diagnosis: 'Pilonidal Cyst', baseRate: 0.05, ageModifiers: [{ range: [15, 35], multiplier: 2.0 }], genderModifier: { male: 2.0, female: 0.5 } },
+      { diagnosis: 'Colorectal Cancer', baseRate: 0.02, ageModifiers: [{ range: [50, 100], multiplier: 2.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+    ],
+  },
+
+  // ================================================================
+  // PREGNANCY COMPLAINTS (non-emergency) — morning sickness, threatened miscarriage, routine
+  // ================================================================
+  {
+    complaint: 'pregnancy complaints',
+    triggerPatterns: [
+      /pregnant.*(sick|nausea|vomit|throw|morning|cramp|spotting|pain|tired|swollen)/i,
+      /(nausea|vomit|sick|throw|cramp|spotting|bleed).*(pregnant|pregnancy|weeks\s*along)/i,
+      /morning\s*sickness|hyperemesis|cant\s*keep\s*(anything|food|water)\s*down.*pregnant/i,
+      /think\s*i.*(might|could)\s*be\s*pregnant|missed\s*(my\s*)?period.*cramp/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Morning Sickness (NVP)', baseRate: 0.35, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Hyperemesis Gravidarum', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Threatened Miscarriage', baseRate: 0.10, ageModifiers: [{ range: [35, 45], multiplier: 1.5 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Ectopic Pregnancy', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Round Ligament Pain', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Gestational Diabetes', baseRate: 0.05, ageModifiers: [{ range: [30, 45], multiplier: 1.5 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Urinary Tract Infection', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Preeclampsia', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // POSTPARTUM — hemorrhage, infection, depression, mastitis, breastfeeding
+  // ================================================================
+  {
+    complaint: 'postpartum',
+    triggerPatterns: [
+      /postpartum|post\s*partum|after\s*(the\s*)?(baby|birth|deliver|c\s*section)/i,
+      /just\s*had\s*(a|my)\s*(baby|c\s*section)/i,
+      /had\s*(a|my)\s*baby\s*(and|last|week|month|days?\s*ago)/i,
+      /breastfeed.*(pain|hurt|red|lump|fever|hard|clog)|mastitis|breast\s*(infect|abscess|engorg)/i,
+      /nursing.*(fever|red|lump|hurt|pain)|breast.*(red|hot|hard).*baby/i,
+      /baby\s*blues|cant\s*bond|dont\s*feel\s*connected\s*to\s*(my\s*)?baby/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Postpartum Depression', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Lactation Mastitis', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Postpartum Endometritis', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Postpartum Hemorrhage', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Wound Infection (C-section)', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Postpartum Preeclampsia', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'DVT/PE (postpartum)', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Breast Abscess', baseRate: 0.04, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Postpartum Psychosis', baseRate: 0.01, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // BREAST COMPLAINTS
+  // ================================================================
+  {
+    complaint: 'breast complaints',
+    triggerPatterns: [
+      /breast\s*(pain|lump|mass|swell|tender|discharg|red|hot|hard)/i,
+      /lump\s*in\s*(my\s*)?breast|found\s*a\s*lump|nipple\s*(discharg|bleed|invert|retract)/i,
+      /(pain|hurt|sore)\s*in\s*(my\s*)?breast|breast\s*(is\s*)?(killing|hurting|aching)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Fibrocystic Breast Changes', baseRate: 0.30, ageModifiers: [{ range: [25, 50], multiplier: 1.3 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Breast Cyst', baseRate: 0.15, ageModifiers: [{ range: [30, 55], multiplier: 1.3 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Mastitis', baseRate: 0.10, ageModifiers: [{ range: [18, 40], multiplier: 1.5 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Fibroadenoma', baseRate: 0.10, ageModifiers: [{ range: [15, 35], multiplier: 2.0 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Breast Cancer', baseRate: 0.05, ageModifiers: [{ range: [45, 100], multiplier: 2.0 }], genderModifier: { male: 0.02, female: 1.0 } },
+      { diagnosis: 'Breast Abscess', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Gynecomastia', baseRate: 0.05, ageModifiers: [{ range: [12, 18], multiplier: 2.0 }, { range: [50, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 0.0 } },
+    ],
+  },
+
+  // ================================================================
+  // PEDIATRIC — COLIC / INCONSOLABLE CRYING INFANT
+  // ================================================================
+  {
+    complaint: 'crying infant',
+    triggerPatterns: [
+      /baby\s*(wont\s*stop|keeps?)\s*(cry|screaming|fussy)|inconsolable|colic/i,
+      /infant\s*(cry|scream|fuss).*hours|hours?\s*of\s*(cry|scream)/i,
+      /newborn\s*(cry|scream|fussy)|cant\s*(console|calm|soothe)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Colic', baseRate: 0.30, ageModifiers: [{ range: [0, 0.5], multiplier: 3.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Acute Otitis Media', baseRate: 0.15, ageModifiers: [{ range: [0, 3], multiplier: 2.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Corneal Abrasion (occult)', baseRate: 0.05, ageModifiers: [{ range: [0, 2], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hair Tourniquet', baseRate: 0.03, ageModifiers: [{ range: [0, 1], multiplier: 5.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Intussusception', baseRate: 0.03, ageModifiers: [{ range: [0, 3], multiplier: 3.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Testicular Torsion (neonatal)', baseRate: 0.02, ageModifiers: [{ range: [0, 1], multiplier: 5.0 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Non-Accidental Trauma', baseRate: 0.02, ageModifiers: [{ range: [0, 2], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'GERD', baseRate: 0.10, ageModifiers: [{ range: [0, 1], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Milk Protein Allergy', baseRate: 0.05, ageModifiers: [{ range: [0, 1], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // PEDIATRIC — DIAPER RASH / PERINEAL SKIN
+  // ================================================================
+  {
+    complaint: 'diaper rash',
+    triggerPatterns: [
+      /diaper\s*rash|diaper\s*area.*(red|raw|sore|bleed|blister)/i,
+      /butt\s*(is\s*)?(red|raw|rash|sore).*baby|baby.*(butt|bottom).*(red|raw|rash)/i,
+      /yeast.*(diaper|baby|rash)|candida.*diaper/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Irritant Contact Diaper Dermatitis', baseRate: 0.50, ageModifiers: [{ range: [0, 2], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Candidal Diaper Dermatitis', baseRate: 0.25, ageModifiers: [{ range: [0, 2], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Bacterial Superinfection', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Perianal Strep', baseRate: 0.03, ageModifiers: [{ range: [0, 5], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Psoriasis (inverse)', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // GERIATRIC — FALLS / RECURRENT FALLS
+  // ================================================================
+  {
+    complaint: 'falls',
+    triggerPatterns: [
+      /keep\s*(fall|tripp)|fall.*(again|lot|multiple|frequent)|recurrent\s*fall/i,
+      /\b(fell|fall)\b.*(dizz|weak|black|trip|unsteady|balance)/i,
+      /unsteady.*(feet|gait|walk)|gait\s*(problem|instab|unsteady)|balance\s*problem/i,
+      /afraid\s*of\s*falling|fear\s*of\s*fall/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Polypharmacy/Medication Effect', baseRate: 0.20, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Orthostatic Hypotension', baseRate: 0.15, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Peripheral Neuropathy', baseRate: 0.10, ageModifiers: [{ range: [60, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Cardiac Arrhythmia', baseRate: 0.08, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Vision Impairment', baseRate: 0.05, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Vestibular Disorder', baseRate: 0.08, ageModifiers: [{ range: [60, 100], multiplier: 1.5 }], genderModifier: { male: 0.8, female: 1.2 } },
+      { diagnosis: 'Deconditioning/Sarcopenia', baseRate: 0.10, ageModifiers: [{ range: [70, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Normal Pressure Hydrocephalus', baseRate: 0.02, ageModifiers: [{ range: [60, 85], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // ENVIRONMENTAL EXPOSURE — heat, cold, altitude
+  // ================================================================
+  {
+    complaint: 'environmental exposure',
+    triggerPatterns: [
+      /heat\s*(stroke|exhaust|illness|sick)|been\s*(out\s*)?in\s*the\s*(heat|sun)\s*(all\s*day|too\s*long)/i,
+      /hypother|frostbit|frozen|found.*(outside|cold|snow)|exposure\s*to\s*(cold|heat)/i,
+      /sun\s*(stroke|poison)|overheated|dehydrat.*heat|hot.*passed\s*out/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Heat Exhaustion', baseRate: 0.30, ageModifiers: [{ range: [65, 100], multiplier: 1.5 }, { range: [0, 5], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Heat Stroke', baseRate: 0.10, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Hypothermia', baseRate: 0.15, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }, { range: [0, 3], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Frostbite', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Dehydration', baseRate: 0.15, ageModifiers: [{ range: [0, 5], multiplier: 2.0 }, { range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Rhabdomyolysis (exertional)', baseRate: 0.03, ageModifiers: [{ range: [18, 40], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+    ],
+  },
+
+  // ================================================================
+  // OCCUPATIONAL INJURY
+  // ================================================================
+  {
+    complaint: 'occupational injury',
+    triggerPatterns: [
+      /hurt\s*at\s*work|work\s*(injury|accident|comp)|on\s*the\s*job\s*(injury|accident)/i,
+      /machine.*(caught|crush|cut|injur)|caught\s*in\s*(a\s*)?machine/i,
+      /fell\s*(off|from)\s*(a\s*)?(ladder|scaffold|roof)|construction\s*(accident|injury)/i,
+      /farm\s*(injury|accident)|tractor|pto|grain\s*(bin|auger)/i,
+      /chemical\s*(splash|expos|burn).*work|work.*chemical/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Laceration/Crush Injury', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Fracture', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Soft Tissue Injury/Strain', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Amputation/Degloving', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Chemical Exposure', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Traumatic Brain Injury', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Compartment Syndrome', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Spinal Injury', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // WEIGHT LOSS / APPETITE LOSS — cancer screening, thyroid, eating disorders
+  // ================================================================
+  {
+    complaint: 'weight loss/appetite loss',
+    triggerPatterns: [
+      /lost\s*\d+\s*(pound|lb|kg).*without\s*(try|diet)|unintentional\s*weight\s*loss/i,
+      /losing\s*weight.*not\s*trying|weight\s*keeps?\s*(dropping|falling|going\s*down)/i,
+      /no\s*appetite|not\s*hungry|cant\s*eat|wont\s*eat.*\d+\s*(days|weeks|months)/i,
+      /clothes?\s*(are|getting)\s*(loose|baggy|big)|skin\s*and\s*bones/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Malignancy', baseRate: 0.15, ageModifiers: [{ range: [50, 100], multiplier: 2.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Hyperthyroidism', baseRate: 0.10, ageModifiers: [{ range: [20, 50], multiplier: 1.3 }], genderModifier: { male: 0.3, female: 1.8 } },
+      { diagnosis: 'Major Depressive Disorder', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 0.7, female: 1.3 } },
+      { diagnosis: 'Diabetes Mellitus', baseRate: 0.08, ageModifiers: [{ range: [30, 80], multiplier: 1.3 }], genderModifier: { male: 1.1, female: 0.9 } },
+      { diagnosis: 'Eating Disorder', baseRate: 0.08, ageModifiers: [{ range: [12, 30], multiplier: 2.5 }], genderModifier: { male: 0.2, female: 1.8 } },
+      { diagnosis: 'Celiac Disease', baseRate: 0.03, ageModifiers: [{ range: [15, 45], multiplier: 1.5 }], genderModifier: { male: 0.7, female: 1.3 } },
+      { diagnosis: 'HIV/AIDS', baseRate: 0.03, ageModifiers: [{ range: [18, 50], multiplier: 1.5 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Tuberculosis', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Addison Disease', baseRate: 0.02, ageModifiers: [{ range: [30, 50], multiplier: 1.3 }], genderModifier: { male: 0.8, female: 1.3 } },
+    ],
+  },
+
+  // ================================================================
+  // INSOMNIA / SLEEP COMPLAINTS
+  // ================================================================
+  {
+    complaint: 'insomnia/sleep',
+    triggerPatterns: [
+      /cant\s*sleep|insomnia|trouble\s*sleeping|not\s*sleeping|havent\s*slept/i,
+      /wake\s*up\s*(at\s*night|multiple\s*times|gasping|choking)|waking\s*up\s*a\s*lot/i,
+      /snoring.*(loud|terrible|stop.*breath)|stop\s*breathing.*sleep|sleep\s*apnea/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Insomnia Disorder', baseRate: 0.30, ageModifiers: [{ range: [40, 80], multiplier: 1.3 }], genderModifier: { male: 0.8, female: 1.3 } },
+      { diagnosis: 'Obstructive Sleep Apnea', baseRate: 0.20, ageModifiers: [{ range: [40, 70], multiplier: 1.5 }], genderModifier: { male: 2.0, female: 0.5 } },
+      { diagnosis: 'Anxiety Disorder', baseRate: 0.15, ageModifiers: [{ range: [18, 50], multiplier: 1.3 }], genderModifier: { male: 0.7, female: 1.4 } },
+      { diagnosis: 'Major Depressive Disorder', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 0.7, female: 1.3 } },
+      { diagnosis: 'Restless Leg Syndrome', baseRate: 0.05, ageModifiers: [{ range: [40, 70], multiplier: 1.5 }], genderModifier: { male: 0.8, female: 1.3 } },
+      { diagnosis: 'Medication Side Effect', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hyperthyroidism', baseRate: 0.03, ageModifiers: [{ range: [20, 50], multiplier: 1.3 }], genderModifier: { male: 0.3, female: 1.8 } },
     ],
   },
 

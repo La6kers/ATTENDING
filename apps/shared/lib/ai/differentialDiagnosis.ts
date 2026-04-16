@@ -166,6 +166,55 @@ const SYMPTOM_DIAGNOSIS_MAP: Record<string, string[]> = {
   'urinary': ['UTI', 'Pyelonephritis', 'Kidney Stone', 'Interstitial Cystitis', 'Urethritis', 'Prostatitis'],
   'depression': ['Major Depressive Disorder', 'Generalized Anxiety Disorder', 'Adjustment Disorder', 'Bipolar Disorder', 'Hypothyroidism', 'Substance Use Disorder'],
   'anxiety': ['Generalized Anxiety Disorder', 'Panic Disorder', 'Major Depressive Disorder', 'Hyperthyroidism', 'Cardiac Arrhythmia', 'Substance Use Disorder'],
+  // ENT
+  'ear pain': ['Acute Otitis Media', 'Otitis Externa', 'Eustachian Tube Dysfunction', 'TMJ', 'Referred Dental Pain', 'Mastoiditis'],
+  'nasal congestion': ['Viral URI', 'Allergic Rhinitis', 'Sinusitis', 'Nasal Polyps', 'Deviated Septum', 'Vasomotor Rhinitis'],
+  'nosebleed': ['Anterior Epistaxis', 'Posterior Epistaxis', 'Nasal Foreign Body', 'Coagulopathy', 'Hypertension'],
+  'swallowing difficulty': ['Epiglottitis', 'Peritonsillar Abscess', 'Esophageal Foreign Body', 'GERD', 'Pharyngitis', 'Esophageal Stricture'],
+  'mouth sores': ['Hand Foot and Mouth Disease', 'Herpes Stomatitis', 'Aphthous Ulcers', 'Oral Candidiasis', 'Herpangina'],
+  'hoarseness': ['Laryngitis', 'Vocal Cord Nodules', 'GERD', 'Laryngeal Cancer', 'Thyroid Mass'],
+  'facial pain': ['Sinusitis', 'Dental Abscess', 'Trigeminal Neuralgia', 'TMJ', 'Cluster Headache'],
+  // Skin / Eye / GI gaps from v9 test
+  'skin redness': ['Cellulitis', 'Contact Dermatitis', 'Abscess', 'DVT', 'Erysipelas'],
+  'eye swelling': ['Orbital Cellulitis', 'Periorbital Cellulitis', 'Allergic Reaction', 'Conjunctivitis', 'Chalazion'],
+  'vomiting diarrhea': ['Gastroenteritis', 'Food Poisoning', 'Appendicitis', 'Bowel Obstruction'],
+  'rectal bleeding': ['Hemorrhoids', 'Anal Fissure', 'Diverticular Bleed', 'Colorectal Cancer', 'IBD'],
+  // Psych / Substance
+  'confusion': ['Delirium Tremens', 'Hepatic Encephalopathy', 'Wernicke Encephalopathy', 'Substance Intoxication', 'Hypoglycemia', 'Stroke', 'Meningitis', 'Sepsis'],
+  'hallucinations': ['Delirium Tremens', 'Psychotic Disorder', 'Stimulant Intoxication', 'Anti-NMDA Receptor Encephalitis', 'Alcohol Withdrawal'],
+  'overdose': ['Opioid Overdose', 'Benzodiazepine Overdose', 'Acetaminophen Overdose', 'Polypharmacy/Mixed Overdose', 'Alcohol Intoxication'],
+  'withdrawal': ['Alcohol Withdrawal', 'Delirium Tremens', 'Opioid Withdrawal', 'Benzodiazepine Withdrawal', 'Withdrawal Seizure'],
+  'mania': ['Bipolar Disorder — Manic Episode', 'Stimulant Intoxication', 'Psychotic Disorder', 'Hyperthyroidism', 'Serotonin Syndrome'],
+  'cyclic vomiting': ['Cannabinoid Hyperemesis Syndrome', 'Cyclic Vomiting Syndrome', 'Gastroparesis', 'Pancreatitis'],
+  // New gap categories
+  'toothache': ['Dental Abscess', 'Dental Caries', 'TMJ Disorder', 'Trigeminal Neuralgia', 'Periapical Abscess', 'Ludwig Angina'],
+  'fainting': ['Vasovagal Syncope', 'Cardiac Arrhythmia', 'Orthostatic Hypotension', 'Seizure', 'Aortic Stenosis', 'Hypoglycemia', 'Pulmonary Embolism'],
+  'hives': ['Urticaria', 'Angioedema', 'Drug Reaction', 'Anaphylaxis', 'Contact Dermatitis'],
+  'cut': ['Simple Laceration', 'Deep Laceration (tendon/nerve risk)', 'Puncture Wound', 'Wound Infection'],
+  'fatigue': ['Iron Deficiency Anemia', 'Hypothyroidism', 'Major Depressive Disorder', 'Sleep Apnea', 'Diabetes Mellitus', 'Malignancy'],
+  'genital discharge': ['Chlamydia', 'Gonorrhea', 'Trichomoniasis', 'Bacterial Vaginosis', 'Genital Herpes'],
+  'groin lump': ['Inguinal Hernia', 'Epididymitis', 'Hydrocele', 'Varicocele', 'Testicular Cancer'],
+  'burn': ['First Degree Burn', 'Second Degree Burn', 'Third Degree Burn', 'Chemical Burn', 'Sunburn'],
+  'animal bite': ['Dog/Cat Bite', 'Cellulitis (bite-related)', 'Rabies Exposure', 'Insect Bite/Sting'],
+  'swallowed object': ['Esophageal Foreign Body', 'GI Foreign Body (passing)', 'Aspirated Foreign Body', 'Button Battery Ingestion'],
+  'cant pee': ['Benign Prostatic Hyperplasia', 'Acute Urinary Retention', 'Medication-Induced Retention', 'Cauda Equina Syndrome'],
+  // Inclusive / sensitive categories
+  'hormone therapy side effects': ['HRT Side Effect — Venous Thromboembolism Risk', 'Testosterone-Induced Polycythemia', 'HRT Side Effect — Mood/Psychiatric', 'HRT Side Effect — Hepatic'],
+  'abuse': ['Intimate Partner Violence', 'Physical Abuse', 'Sexual Assault', 'Child Abuse / Non-Accidental Trauma', 'Elder Abuse/Neglect'],
+  'sexual dysfunction': ['Erectile Dysfunction', 'Dyspareunia', 'Medication-Induced Sexual Dysfunction', 'Vaginismus', 'Hypogonadism'],
+  'anal pain': ['Hemorrhoids', 'Anal Fissure', 'Perianal/Perirectal Abscess', 'Proctitis', 'Pilonidal Cyst'],
+  'pregnant and sick': ['Morning Sickness (NVP)', 'Hyperemesis Gravidarum', 'Threatened Miscarriage', 'UTI', 'Preeclampsia'],
+  'postpartum': ['Postpartum Depression', 'Lactation Mastitis', 'Postpartum Endometritis', 'Postpartum Hemorrhage', 'DVT/PE (postpartum)'],
+  'breast lump': ['Fibrocystic Breast Changes', 'Breast Cyst', 'Fibroadenoma', 'Breast Cancer', 'Breast Abscess'],
+  'baby wont stop crying': ['Colic', 'Acute Otitis Media', 'GERD', 'Hair Tourniquet', 'Intussusception', 'Non-Accidental Trauma'],
+  'diaper rash': ['Irritant Contact Diaper Dermatitis', 'Candidal Diaper Dermatitis', 'Bacterial Superinfection', 'Perianal Strep'],
+  'keep falling': ['Polypharmacy/Medication Effect', 'Orthostatic Hypotension', 'Peripheral Neuropathy', 'Cardiac Arrhythmia', 'Normal Pressure Hydrocephalus'],
+  'heat exposure': ['Heat Exhaustion', 'Heat Stroke', 'Dehydration', 'Rhabdomyolysis (exertional)'],
+  'cold exposure': ['Hypothermia', 'Frostbite', 'Dehydration'],
+  'work injury': ['Laceration/Crush Injury', 'Fracture', 'Soft Tissue Injury/Strain', 'Compartment Syndrome', 'Spinal Injury'],
+  'weight loss': ['Malignancy', 'Hyperthyroidism', 'Major Depressive Disorder', 'Diabetes Mellitus', 'Eating Disorder', 'HIV/AIDS'],
+  'cant sleep': ['Insomnia Disorder', 'Obstructive Sleep Apnea', 'Anxiety Disorder', 'Restless Leg Syndrome'],
+  'breast pain': ['Fibrocystic Breast Changes', 'Mastitis', 'Breast Abscess', 'Breast Cancer', 'Gynecomastia'],
 };
 
 // ============================================================
@@ -606,6 +655,49 @@ export class DifferentialDiagnosisService {
         { pattern: /(?:speak|speech|slurr|arm|weak|cannot\s*move).*(?:face|facial).*droop/i, diagnosis: 'Stroke', lr: 8.0, evidence: 'FAST positive: facial droop + speech/arm weakness — stroke (LR 8.0)' },
         { pattern: /(?:cannot\s*speak|slurred\s*speech).*(?:arm|weakness|move)|(?:arm|weakness).*(?:cannot\s*speak|slurred\s*speech)/i, diagnosis: 'Stroke', lr: 8.0, evidence: 'Aphasia + arm weakness — stroke pattern (LR 8.0)' },
         { pattern: /sudden.*(?:weakness|numbness).*(?:one\s*side|left\s*side|right\s*side|hemi)/i, diagnosis: 'Stroke', lr: 6.0, evidence: 'Sudden unilateral weakness — stroke concern (LR 6.0)' },
+        // Cholecystitis — RUQ / gallbladder pain after eating
+        { pattern: /(right.*upper|ruq|gallbladder|under.*rib).*(after.*eat|fatty|greasy|burger|meal)|(after.*eat|fatty|greasy|burger|meal).*(right.*upper|ruq|gallbladder)/i, diagnosis: 'Cholecystitis', lr: 5.0, evidence: 'RUQ/gallbladder pain post-prandial — biliary colic (LR 5.0)' },
+        // Bowel obstruction — no gas, no stool, distension
+        { pattern: /(no|havent|haven'?t).*(gas|flatus|stool|poop|bowel).*(bloat|disten|huge|hard)|(bloat|disten|huge|hard).*(no|havent).*(gas|poop|stool)/i, diagnosis: 'Bowel obstruction', lr: 6.0, evidence: 'Obstipation with abdominal distension — bowel obstruction (LR 6.0)' },
+        { pattern: /havent\s*passed\s*gas|no\s*gas.*no\s*(stool|poop)|no\s*(stool|poop).*no\s*gas/i, diagnosis: 'Bowel obstruction', lr: 5.0, evidence: 'Complete obstipation — bowel obstruction pattern (LR 5.0)' },
+        // Croup — barking/seal cough
+        { pattern: /bark.*cough|cough.*bark|seal.*cough|cough.*seal|sounds?\s*like\s*a?\s*seal/i, diagnosis: 'Croup', lr: 8.0, evidence: 'Barking/seal-like cough — pathognomonic for croup (LR 8.0)' },
+        // Constipation — no bowel movement + bloating
+        { pattern: /(havent|haven'?t|cant|no).*(poop|bowel\s*movement|go\s*to\s*the\s*bathroom).*(bloat|cramp|hard|days|week)/i, diagnosis: 'Constipation', lr: 4.0, evidence: 'Absent bowel movements with bloating — constipation (LR 4.0)' },
+        // Aortic dissection — tearing/ripping to back
+        { pattern: /(tear|rip|ripping|tearing).*(chest|back|shoulder)|(chest|back).*(tear|rip|ripping|tearing)/i, diagnosis: 'Aortic Dissection', lr: 6.0, evidence: 'Tearing/ripping chest-to-back pain — aortic dissection (LR 6.0)' },
+        // GI Bleed — black/tarry stool or coffee-ground emesis
+        { pattern: /black.*tar.*stool|tar.*poop|coffee.*ground|melena|blood.*stool|bloody.*stool|blood.*poop|black.*poop/i, diagnosis: 'Gastrointestinal Bleeding', lr: 5.0, evidence: 'Melena/hematochezia/coffee-ground emesis — GI bleed (LR 5.0)' },
+        // Atrial Fibrillation — irregular/skipping/fluttering heartbeat
+        { pattern: /(heart|pulse).*(irregular|skip|all\s*over|flutter|erratic)|(irregular|skip|flutter).*(heart|pulse|beat)/i, diagnosis: 'Atrial Fibrillation', lr: 4.0, evidence: 'Irregularly irregular pulse/palpitations — AFib (LR 4.0)' },
+        // Sciatica — shooting pain down leg from back
+        { pattern: /(shoot|radiat|electric|shock).*(down|leg|buttock|butt)|(back|butt|buttock).*(shoot|radiat|electric|shock).*leg/i, diagnosis: 'Sciatica', lr: 4.0, evidence: 'Radiating pain from back/buttock down leg — sciatica (LR 4.0)' },
+        // Cannabinoid Hyperemesis Syndrome — marijuana use + cyclic vomiting + hot shower relief
+        { pattern: /(weed|marijuana|pot|cannabis|thc|dab).*(vomit|puk|throw|sick|nausea)|(vomit|puk|throw|nausea).*(weed|marijuana|pot|cannabis)/i, diagnosis: 'Cannabinoid Hyperemesis Syndrome', lr: 6.0, evidence: 'Cannabis use + vomiting — CHS (LR 6.0)' },
+        { pattern: /hot\s*(shower|bath).*(help|relief|better|stops?|only\s*thing)/i, diagnosis: 'Cannabinoid Hyperemesis Syndrome', lr: 4.0, evidence: 'Hot shower/bath relieves vomiting — pathognomonic CHS sign (LR 4.0)' },
+        // Delirium Tremens — alcohol + confusion/hallucinations/tremor
+        { pattern: /(quit|stop|havent).*drink.*(shak|tremor|confus|see.*things|hallucin)|(shak|tremor|confus|see.*things).*(quit|stop|havent).*drink/i, diagnosis: 'Delirium Tremens', lr: 7.0, evidence: 'Alcohol cessation + tremor/confusion/hallucinations — DTs (LR 7.0)' },
+        { pattern: /delirium\s*tremens|\bDTs\b|the\s*shakes.*alcohol|alcohol.*the\s*shakes/i, diagnosis: 'Delirium Tremens', lr: 8.0, evidence: 'Named DTs reference (LR 8.0)' },
+        // Opioid Overdose — pinpoint pupils, unresponsive, blue lips
+        { pattern: /pinpoint\s*pupils|found.*(unresponsive|not\s*breathing|blue\s*lips)|narcan|naloxone/i, diagnosis: 'Opioid Overdose', lr: 6.0, evidence: 'Pinpoint pupils/unresponsive/cyanosis — opioid overdose (LR 6.0)' },
+        { pattern: /(heroin|fentanyl|oxy|opiate|opioid).*(overdos|too\s*much|not\s*breathing|passed\s*out)/i, diagnosis: 'Opioid Overdose', lr: 8.0, evidence: 'Named opioid + overdose symptoms (LR 8.0)' },
+        // Wernicke Encephalopathy — confusion + ataxia + eye movement abnormality (classic triad)
+        { pattern: /confus.*(?:walk|stumbl|atax|unsteady|eye).*(?:drink|alcohol)|(?:drink|alcohol).*confus.*(?:walk|stumbl|eye)/i, diagnosis: 'Wernicke Encephalopathy', lr: 6.0, evidence: 'Confusion + ataxia/oculomotor — Wernicke triad (LR 6.0)' },
+        // Bipolar Mania — not sleeping + grandiosity/spending/racing thoughts
+        { pattern: /(not\s*sleep|havent\s*slept|up\s*for\s*days).*(racing|grandiose|spending|energy|invincible|god)/i, diagnosis: 'Bipolar Disorder — Manic Episode', lr: 7.0, evidence: 'Decreased sleep + grandiosity/racing thoughts — mania (LR 7.0)' },
+        // Serotonin Syndrome — new/increased SSRI + agitation/tremor/fever/clonus
+        { pattern: /(ssri|antidepressant|sertraline|lexapro|prozac|zoloft).*(agitat|tremor|fever|rigid|clonus|jerk|twitch)/i, diagnosis: 'Serotonin Syndrome', lr: 5.0, evidence: 'Serotonergic med + agitation/tremor/clonus — serotonin syndrome (LR 5.0)' },
+        // NMS — antipsychotic + rigid + fever + AMS
+        { pattern: /(antipsychotic|haldol|risperdal|abilify|seroquel|zyprexa).*(rigid|fever|confus|muscle)/i, diagnosis: 'Neuroleptic Malignant Syndrome', lr: 5.0, evidence: 'Antipsychotic + rigidity/fever — NMS (LR 5.0)' },
+        // Heat illness — been in heat/sun + symptoms
+        { pattern: /(heat|sun|hot\s*outside|working\s*outside).*(dizz|nausea|vomit|pass|faint|confus|cramp|headache)/i, diagnosis: 'Heat Exhaustion', lr: 6.0, evidence: 'Heat/sun exposure + symptoms — heat illness (LR 6.0)' },
+        { pattern: /(heat|sun|hot\s*outside).*(confus|altered|seiz|not\s*sweat|dry\s*skin|temp.*10[3-9])/i, diagnosis: 'Heat Stroke', lr: 8.0, evidence: 'Heat exposure + AMS/anhidrosis — heat stroke emergency (LR 8.0)' },
+        // Recurrent falls — geriatric
+        { pattern: /keep\s*(fall|tripp)|fall.*(again|lot|multiple|frequent|three|twice|\d+\s*time)|recurrent\s*fall|balance\s*(problem|issue|off)/i, diagnosis: 'Polypharmacy/Medication Effect', lr: 3.0, evidence: 'Recurrent falls — medication/polypharmacy review needed (LR 3.0)' },
+        // Postpartum mastitis — breast + fever + nursing/baby
+        { pattern: /(breast|nurs|breastfeed|lactati).*(red|hot|fever|infect|hard|lump|pain)|(red|hot|hard).*breast.*(baby|nurs|feed)/i, diagnosis: 'Lactation Mastitis', lr: 6.0, evidence: 'Breast redness/pain in nursing mother — mastitis (LR 6.0)' },
+        // IPV — partner violence keywords
+        { pattern: /(partner|husband|wife|boyfriend|girlfriend).*(hit|punch|kick|choke|strangle|hurt|abuse|threat)/i, diagnosis: 'Intimate Partner Violence', lr: 8.0, evidence: 'Partner violence reported — IPV screening (LR 8.0)' },
       ];
       for (const rule of ccLRRules) {
         if (rule.pattern.test(chiefComplaint)) {

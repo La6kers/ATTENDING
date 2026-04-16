@@ -82,7 +82,7 @@ const CAUSE_BLOCKLIST: Set<string> = new Set([
   'Food Poisoning',                 // should be Gastroenteritis
   'Aquagenic Pruritus',             // very rare; pollutes jaundice/itching cases
   'Acute Glaucoma',                 // primary-eye dx leaking into any nausea/vomiting
-  'Cannabinoid Hyperemesis Syndrome', // diagnosed by social history, not symptoms
+  // 'Cannabinoid Hyperemesis Syndrome', // re-enabled — now has prevalence category + CC-keyword LR
   'See Psychogenic Vomiting',       // raw cross-reference text
   'Functional Conditions',          // category header
   'Organophosphate Poisoning',      // geography + exposure specific
