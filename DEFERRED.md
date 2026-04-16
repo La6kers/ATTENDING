@@ -83,6 +83,34 @@ Updated: 2026-04-15
 
 ---
 
+## Staged packages (source on disk, excluded from workspaces)
+
+### `packages/ai-governance/`
+- **Status:** Staged
+- **Current state:** Source files remain. Not in `package.json` workspaces (glob switched to explicit list).
+- **Why defer:** CMS HTE Phase 2. No imports anywhere.
+- **Activate when:** CMS HTE governance work begins → re-add `"packages/ai-governance"` to workspaces array.
+
+### `packages/fhir-client/`
+- **Status:** Staged
+- **Current state:** Source on disk, not in workspaces.
+- **Why defer:** CMS HTE Phase 1. No imports anywhere.
+- **Activate when:** FHIR integration work begins → re-add to workspaces.
+
+### `packages/consent/`
+- **Status:** Staged
+- **Current state:** Source on disk, not in workspaces.
+- **Why defer:** CMS HTE Phase 1. No imports anywhere.
+- **Activate when:** Patient consent workflow begins → re-add to workspaces.
+
+### `apps/compass-admin/`
+- **Status:** Staged
+- **Current state:** Source on disk (~21 files), not in workspaces. No deploy workflow.
+- **Why defer:** Admin dashboard stub with no active roadmap item.
+- **Activate when:** Admin features needed → re-add to workspaces, create Dockerfile + deploy workflow.
+
+---
+
 ## How to revive a deferred item
 
 1. Open this file, find the section, confirm the "Activate when" trigger actually fired.
