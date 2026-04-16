@@ -27,6 +27,7 @@ import type {
 } from '@attending/shared/lib/ai/differentialDiagnosis.types';
 
 import { getSymptomModule, type SymptomModule } from '../lib/symptomQuestions';
+import { matchesKnownSymptom } from '@attending/shared/lib/ai/symptomSynonyms';
 
 // Re-export types for components
 export type { DetailedAssessmentPhase, UrgencyLevel, QuickReply, ChatMessage, RedFlag, HPIData };
@@ -62,6 +63,7 @@ export type CompassPhase =
   | 'vitals'
   | 'medications'
   | 'chiefComplaint'
+  | 'chiefComplaintClarify'
   | 'hpiOnset'
   | 'hpiLocation'
   | 'hpiDuration'
@@ -79,7 +81,7 @@ export type CompassPhase =
   | 'emergency';
 
 const COMPASS_PHASES: CompassPhase[] = [
-  'welcome', 'demographics', 'age', 'vitals', 'medications', 'chiefComplaint',
+  'welcome', 'demographics', 'age', 'vitals', 'medications', 'chiefComplaint', 'chiefComplaintClarify',
   'hpiOnset', 'hpiLocation', 'hpiDuration', 'hpiCharacter',
   'hpiSeverity', 'hpiTiming', 'hpiContext', 'hpiAggravating', 'hpiRelieving', 'hpiAssociated',
   'symptomSpecific', 'askingMultipleComplaints', 'generating', 'results',
@@ -235,6 +237,16 @@ const PHASE_CONFIG: Record<CompassPhase, PhaseConfig> = {
     question: 'What brings you in today? Please describe your main concern or symptoms.',
     nextPhase: 'hpiOnset',
   },
+  chiefComplaintClarify: {
+    // Reached when the first CC didn't match any known symptom category
+    // (e.g. too vague, slang we don't recognize, or just "I feel bad"). We
+    // give the patient one more attempt with concrete examples of the kind
+    // of detail we need. This is the conversational clarification layer —
+    // cheaper and more empathetic than dropping straight to "Needs
+    // in-person evaluation."
+    question: "I want to make sure I understand what you're feeling. Could you tell me a little more? For example: where it hurts (chest, belly, head, back), what it feels like (burning, sharp, dull, pressure), and anything else you've noticed (fever, vomiting, rash, swelling).",
+    nextPhase: 'hpiOnset',
+  },
   hpiOnset: {
     question: 'When did this start? Was it sudden or gradual?',
     quickReplies: [
@@ -262,14 +274,22 @@ const PHASE_CONFIG: Record<CompassPhase, PhaseConfig> = {
     nextPhase: 'hpiCharacter',
   },
   hpiCharacter: {
-    question: "How would you describe what you're feeling? (e.g., sharp, dull, throbbing, burning, aching, pressure)",
+    // Multi-select: patients often describe pain as combined qualities
+    // ("sharp and burning", "throbbing with pressure", "dull aching").
+    // Forcing a single choice loses clinically meaningful detail that
+    // the differential engine uses.
+    question: "How would you describe what you're feeling? Select all that apply, or type your own.",
     quickReplies: [
-      { id: 'sharp', text: 'Sharp', value: 'sharp' },
-      { id: 'dull', text: 'Dull', value: 'dull' },
-      { id: 'burning', text: 'Burning', value: 'burning' },
-      { id: 'throbbing', text: 'Throbbing', value: 'throbbing' },
-      { id: 'pressure', text: 'Pressure', value: 'pressure' },
-      { id: 'aching', text: 'Aching', value: 'aching' },
+      { id: 'sharp', text: 'Sharp', value: 'sharp', multiSelect: true },
+      { id: 'dull', text: 'Dull', value: 'dull', multiSelect: true },
+      { id: 'burning', text: 'Burning', value: 'burning', multiSelect: true },
+      { id: 'throbbing', text: 'Throbbing', value: 'throbbing', multiSelect: true },
+      { id: 'pressure', text: 'Pressure', value: 'pressure', multiSelect: true },
+      { id: 'aching', text: 'Aching', value: 'aching', multiSelect: true },
+      { id: 'tearing', text: 'Tearing/Ripping', value: 'tearing', multiSelect: true },
+      { id: 'crampy', text: 'Cramping', value: 'crampy', multiSelect: true },
+      { id: 'stabbing', text: 'Stabbing', value: 'stabbing', multiSelect: true },
+      { id: 'electric', text: 'Electric/Shock', value: 'electric', multiSelect: true },
     ],
     nextPhase: 'hpiSeverity',
   },
@@ -589,6 +609,16 @@ export const useCompassStore = create<CompassState>()(
                 state.assessmentData.chiefComplaint = content;
               }
               break;
+            case 'chiefComplaintClarify':
+              // The clarification answer replaces the sparse original CC —
+              // the patient got a second chance to describe what's wrong.
+              // Keep both so the original phrase is preserved in the record.
+              if (state.assessmentData.chiefComplaint) {
+                state.assessmentData.chiefComplaint += ' — clarified: ' + content;
+              } else {
+                state.assessmentData.chiefComplaint = content;
+              }
+              break;
             case 'hpiOnset':
               state.assessmentData.hpi.onset = content;
               break;
@@ -647,6 +677,21 @@ export const useCompassStore = create<CompassState>()(
 
         const phaseConfig = PHASE_CONFIG[currentPhase];
         let nextPhase = phaseConfig.nextPhase;
+
+        // === Chief complaint clarification detour ===
+        // If the user just gave their chief complaint and it doesn't contain
+        // any recognizable symptom vocabulary, redirect to a clarification
+        // phase that asks for more detail with concrete examples. We only
+        // do this ONCE per assessment — if the user's second attempt is
+        // still unrecognizable, we proceed normally (the engine will fall
+        // back to "Needs in-person evaluation" if it truly can't match).
+        if (currentPhase === 'chiefComplaint') {
+          const { assessmentData: ad } = get();
+          const cc = ad.chiefComplaint || '';
+          if (!matchesKnownSymptom(cc)) {
+            nextPhase = 'chiefComplaintClarify';
+          }
+        }
 
         // === Symptom-specific question injection ===
         // After hpiAssociated: check if we have a complaint-specific module

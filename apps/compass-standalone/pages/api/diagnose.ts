@@ -13,6 +13,8 @@ import {
 import { buildHpiNarrative } from '../../lib/hpiNarrative';
 import crypto from 'crypto';
 import { logClinicalAudit, createDiagnoseAuditEntry } from '@attending/shared/lib/audit/clinicalAuditLog';
+import { normalizeWithLLM, type CCNormalizationResult } from '@attending/shared/lib/ai/ccNormalizer';
+import { matchesKnownSymptom, normalizeSymptomText } from '@attending/shared/lib/ai/symptomSynonyms';
 import { z } from 'zod';
 import type { HPIData } from '@attending/shared/types/chat.types';
 
@@ -137,6 +139,22 @@ export default async function handler(
       console.warn('[COMPASS Diagnose] Request missing age — falling back to 40. Update caller to pass age.');
     }
 
+    // --- Tier 3: LLM CC normalization (fallback when synonyms miss) ---
+    let effectiveCC = safeChiefComplaint;
+    let ccNormResult: CCNormalizationResult | null = null;
+
+    const synonymExpanded = normalizeSymptomText(safeChiefComplaint);
+    if (!matchesKnownSymptom(synonymExpanded)) {
+      ccNormResult = await normalizeWithLLM(safeChiefComplaint, age, gender || 'other');
+      if (ccNormResult.extractedTerms.length > 0) {
+        effectiveCC = `${safeChiefComplaint} ${ccNormResult.extractedTerms.join(' ')}`;
+      }
+    }
+
+    if (ccNormResult?.llmUsed) {
+      console.log(`[CC-Normalize] provider=${ccNormResult.provider} latency=${ccNormResult.latencyMs}ms terms=${ccNormResult.extractedTerms.join(',')}`);
+    }
+
     // Merge image-suggested conditions into red flags and symptom answers
     const enhancedRedFlags = [...(redFlags || [])];
     const enhancedAnswers = { ...(symptomSpecificAnswers || {}) };
@@ -153,11 +171,11 @@ export default async function handler(
 
     // Build presentation for Bayesian diagnosis engine
     const presentation: PatientPresentation = {
-      chiefComplaint: safeChiefComplaint,
+      chiefComplaint: effectiveCC,
       duration: hpi?.duration,
       symptoms: [
         {
-          name: safeChiefComplaint,
+          name: effectiveCC,
           severity: hpi?.severity && hpi.severity >= 7 ? 'severe' : hpi?.severity && hpi.severity >= 4 ? 'moderate' : 'mild',
           onset: hpi?.onset,
           location: hpi?.location,
@@ -220,7 +238,7 @@ export default async function handler(
       redFlagCount: enhancedRedFlags.length,
       differentialCount: differentials.differentials.length,
       provider: aiProvider,
-      aiInvoked: aiProvider !== 'local',
+      aiInvoked: aiProvider !== 'local' || (ccNormResult?.llmUsed ?? false),
       latencyMs,
       success: true,
     }));

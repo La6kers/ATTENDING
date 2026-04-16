@@ -9,6 +9,8 @@
 // - UpToDate prevalence estimates for primary care setting
 // ============================================================
 
+import { normalizeSymptomText } from './symptomSynonyms';
+
 // ============================================================
 // Types
 // ============================================================
@@ -222,11 +224,14 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
     // pyelonephritis/UTI lost their age- and gender-appropriate priors.
     complaint: 'flank pain',
     triggerPatterns: [
-      /flank.*(wave|groin|colick|stone)/i,
+      /flank.*(wave|groin|colick|stone|pain)/i,
       /(wave|groin|colick|stone).*flank/i,
       /renal\s*colic/i,
       /kidney\s*stone/i,
       /\bstone\b.*(pain|flank|side)/i,
+      /side.*(wave|groin|ball|nut|radiating)/i,
+      /(wave|groin|ball|nut).*side/i,
+      /side\s*pain.*(wave|groin)/i,
     ],
     diagnoses: [
       {
@@ -511,7 +516,7 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'testicular pain',
-    triggerPatterns: [/testic|scrotal|groin\s*pain/i],
+    triggerPatterns: [/testic|scrotal|groin\s*pain|\bnut\b.*\b(hurt|pain|swell|ache)|\bnuts\b.*\b(hurt|pain|swell)|\bballs?\b.*\b(hurt|pain|swell|ache)|testicular\s*pain/i],
     diagnoses: [
       {
         diagnosis: 'Testicular Torsion',
@@ -1499,7 +1504,11 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'chest pain',
-    triggerPatterns: [/chest\s*(pain|pressure|tightness|heaviness|discomfort)/i],
+    triggerPatterns: [
+      /chest\s*(pain|pressure|tightness|heaviness|discomfort|hurt|ache|crush|squeez)/i,
+      /(pain|hurt|ache|pressure|tight|crush|squeez|heavy).*chest/i,
+      /chest.*(elephant|sitting|weight|band|grip|vise)/i,
+    ],
     diagnoses: [
       {
         diagnosis: 'Musculoskeletal pain',
@@ -1670,7 +1679,7 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'abdominal pain',
-    triggerPatterns: [/abdomen|abdominal|stomach\s*pain|belly\s*pain|tummy|epigastri|upper\s*(middle\s*)?abdomen|periumbili|suprapubic|lower\s*abdomen/i],
+    triggerPatterns: [/abdomen|abdominal|stomach\s*(pain|hurt|ache|kill)|belly\s*(pain|hurt|ache|kill)|tummy\s*(pain|hurt|ache)|stomach\s*is\s*killing|belly\s*is\s*killing|epigastri|upper\s*(middle\s*)?abdomen|periumbili|suprapubic|lower\s*abdomen|abdominal\s*pain/i],
     diagnoses: [
       {
         diagnosis: 'Gastroenteritis',
@@ -1871,7 +1880,7 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'sore throat',
-    triggerPatterns: [/sore\s*throat|throat\s*pain|pharyngitis|tonsilitis|odynophagia/i],
+    triggerPatterns: [/sore\s*throat|throat\s*(pain|hurt|kill|burn|on\s*fire)|pharyngitis|tonsilitis|odynophagia|(hurt|kill|pain|burn).*throat/i],
     diagnoses: [
       {
         diagnosis: 'Viral Pharyngitis',
@@ -2267,6 +2276,155 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
       },
     ],
   },
+
+  // ================================================================
+  // DERMATOLOGIC / RASH — pediatric and adult
+  // ================================================================
+  {
+    complaint: 'rash / skin lesion',
+    triggerPatterns: [
+      /rash|hive|blister|sore.*mouth|mouth.*sore|honey.*crust|crusty.*sore|itchy.*bump|bump.*itch/i,
+      /conjunctivitis|pinkeye|pink\s*eye|eye.*red.*gunk|eye.*discharge|stuck\s*shut/i,
+      /chickenpox|chicken\s*pox|varicella|itchy.*blister.*all\s*over/i,
+      /impetigo|honey.*sore|golden.*crust/i,
+      /hand.*foot.*mouth|sores.*mouth.*blister.*hand|blisters.*palm.*feet/i,
+      /shingles|zoster|dermatomal|stripe.*blister|blister.*stripe|one\s*side.*rash/i,
+      /cellulitis|skin.*infect|red.*hot.*swollen.*skin|spreading.*redness/i,
+    ],
+    diagnoses: [
+      {
+        diagnosis: 'Contact Dermatitis',
+        baseRate: 0.25,
+        ageModifiers: [],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Viral Exanthem',
+        baseRate: 0.20,
+        ageModifiers: [{ range: [0, 10], multiplier: 2.0 }],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Hand Foot and Mouth Disease',
+        baseRate: 0.08,
+        ageModifiers: [
+          { range: [0, 5], multiplier: 3.0 },
+          { range: [6, 12], multiplier: 1.5 },
+          { range: [18, 100], multiplier: 0.2 },
+        ],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Varicella (Chickenpox)',
+        baseRate: 0.06,
+        ageModifiers: [
+          { range: [0, 12], multiplier: 2.5 },
+          { range: [13, 18], multiplier: 1.5 },
+          { range: [19, 100], multiplier: 0.3 },
+        ],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Conjunctivitis',
+        baseRate: 0.10,
+        ageModifiers: [
+          { range: [0, 10], multiplier: 2.0 },
+        ],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Impetigo',
+        baseRate: 0.06,
+        ageModifiers: [
+          { range: [0, 10], multiplier: 3.0 },
+          { range: [11, 18], multiplier: 1.0 },
+          { range: [19, 100], multiplier: 0.3 },
+        ],
+        genderModifier: { male: 1.1, female: 0.9 },
+      },
+      {
+        diagnosis: 'Herpes Zoster (Shingles)',
+        baseRate: 0.05,
+        ageModifiers: [
+          { range: [0, 40], multiplier: 0.3 },
+          { range: [50, 70], multiplier: 1.5 },
+          { range: [70, 100], multiplier: 2.5 },
+        ],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Cellulitis',
+        baseRate: 0.08,
+        ageModifiers: [
+          { range: [40, 100], multiplier: 1.3 },
+        ],
+        genderModifier: { male: 1.2, female: 0.8 },
+      },
+      {
+        diagnosis: 'Allergic Reaction',
+        baseRate: 0.10,
+        ageModifiers: [],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'Scabies',
+        baseRate: 0.04,
+        ageModifiers: [],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+    ],
+  },
+
+  // ================================================================
+  // CONGESTIVE HEART FAILURE — orthopnea / PND / bilateral edema
+  // ================================================================
+  {
+    complaint: 'heart failure symptoms',
+    triggerPatterns: [
+      /orthopnea|lay.*flat.*breath|cant.*lay.*flat|cant.*lie.*flat|sleep.*flat/i,
+      /wake.*gasp|gasp.*night|paroxysmal.*nocturnal/i,
+      /legs?\s*swollen.*breath|swollen.*legs?.*breath|edema.*dyspnea/i,
+      /legs?\s*swollen.*cant.*lay|swollen.*ankle.*breath/i,
+    ],
+    diagnoses: [
+      {
+        diagnosis: 'Congestive Heart Failure',
+        baseRate: 0.35,
+        ageModifiers: [
+          { range: [0, 40], multiplier: 0.2 },
+          { range: [50, 70], multiplier: 1.3 },
+          { range: [70, 100], multiplier: 2.0 },
+        ],
+        genderModifier: { male: 1.2, female: 0.9 },
+      },
+      {
+        diagnosis: 'COPD Exacerbation',
+        baseRate: 0.15,
+        ageModifiers: [
+          { range: [50, 100], multiplier: 1.5 },
+        ],
+        genderModifier: { male: 1.1, female: 0.9 },
+      },
+      {
+        diagnosis: 'Pulmonary Embolism',
+        baseRate: 0.08,
+        ageModifiers: [{ range: [40, 100], multiplier: 1.3 }],
+        genderModifier: { male: 0.9, female: 1.2 },
+      },
+      {
+        diagnosis: 'Pneumonia',
+        baseRate: 0.10,
+        ageModifiers: [{ range: [60, 100], multiplier: 1.5 }],
+        genderModifier: { male: 1.0, female: 1.0 },
+      },
+      {
+        diagnosis: 'DVT',
+        baseRate: 0.06,
+        ageModifiers: [{ range: [40, 100], multiplier: 1.3 }],
+        genderModifier: { male: 0.9, female: 1.2 },
+      },
+    ],
+  },
 ];
 
 // ============================================================
@@ -2344,7 +2502,9 @@ export function getPreTestProbabilities(
   gender: string
 ): Map<string, number> {
   const result = new Map<string, number>();
-  const cc = chiefComplaint.toLowerCase();
+  // Normalize lay language → append medical synonyms so categorizers
+  // can match on either the patient's words or the canonical term.
+  const cc = normalizeSymptomText(chiefComplaint).toLowerCase();
 
   // Find matching complaint category
   const matched = PREVALENCE_DATA.find(cp =>
@@ -2388,7 +2548,7 @@ export function getPreTestProbabilities(
  * Check if prevalence data exists for a given chief complaint
  */
 export function hasPrevalenceData(chiefComplaint: string): boolean {
-  const cc = chiefComplaint.toLowerCase();
+  const cc = normalizeSymptomText(chiefComplaint).toLowerCase();
   return PREVALENCE_DATA.some(cp =>
     cp.triggerPatterns.some(p => p.test(cc))
   );
