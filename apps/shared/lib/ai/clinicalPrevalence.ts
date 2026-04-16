@@ -2357,6 +2357,330 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   },
 
   // ================================================================
+  // ACETAMINOPHEN OVERDOSE — specific, must come before generic overdose
+  // ================================================================
+  {
+    complaint: 'acetaminophen overdose',
+    triggerPatterns: [
+      /tylenol.*(overdose|whole\s*bottle|too\s*many|lot\s*of)|whole\s*bottle\s*of\s*tylenol/i,
+      /acetaminophen.*(overdose|too\s*many|bottle)|apap\s*(overdose|bottle)/i,
+      /took\s*(a\s*whole\s*)?bottle\s*of\s*(tylenol|acetaminophen|paracetamol)/i,
+      /intentional.*(tylenol|acetaminophen)|suicid.*(tylenol|acetaminophen|pills)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Acetaminophen Overdose', baseRate: 0.85, ageModifiers: [{ range: [15, 30], multiplier: 1.5 }], genderModifier: { male: 0.7, female: 1.4 } },
+      { diagnosis: 'Hepatic Failure (APAP-induced)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Polypharmacy/Mixed Overdose', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // TOXIC ALCOHOL INGESTION — antifreeze, methanol, isopropyl
+  // ================================================================
+  {
+    complaint: 'toxic alcohol',
+    triggerPatterns: [
+      /antifreeze|ethylene\s*glycol|windshield\s*washer|methanol|wood\s*alcohol/i,
+      /drank\s*(antifreeze|bleach|windshield|rubbing\s*alcohol|hand\s*sanitizer)/i,
+      /(swallowed|drank|ate).*(cleaner|chemical|poison|solvent)/i,
+      /thought\s*it\s*was.*(sports\s*drink|juice|water).*(antifreeze|chemical|cleaner)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Toxic Alcohol Ingestion', baseRate: 0.55, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Ethylene Glycol Poisoning', baseRate: 0.20, ageModifiers: [{ range: [0, 5], multiplier: 2.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Methanol Poisoning', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Isopropyl Alcohol Poisoning', baseRate: 0.10, ageModifiers: [{ range: [0, 5], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // CHEMICAL EXPOSURE (inhalation / fumes)
+  // ================================================================
+  {
+    complaint: 'chemical inhalation',
+    triggerPatterns: [
+      /(bleach.*ammonia|ammonia.*bleach|mixed.*cleaning|chlorine\s*gas|toxic\s*fumes)/i,
+      /cleaning.*(bleach|ammonia).*(coughing|chest|burn|breath)/i,
+      /(bleach|ammonia).*(small|enclosed|bathroom|closet|closed).*(cough|chest|burn|breath)/i,
+      /cleaning\s*with.*(bleach|ammonia).*(cough|chest|breath|burn)/i,
+      /inhaled.*(chemical|fumes|smoke|gas)|breathed\s*in.*(fumes|chemical)/i,
+      /smoke\s*inhalation|house\s*fire|trapped\s*in.*fire/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Chemical Inhalation Injury', baseRate: 0.45, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Smoke Inhalation', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Chlorine Gas Exposure', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 0.8, female: 1.2 } },
+      { diagnosis: 'Reactive Airway Dysfunction Syndrome', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Carbon Monoxide Poisoning', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // PEDIATRIC POISONING (ingestion)
+  // ================================================================
+  {
+    complaint: 'pediatric poisoning',
+    triggerPatterns: [
+      /(my\s*)?(child|kid|toddler|baby|2\s*year|3\s*year|4\s*year).*(ate|got\s*into|swallowed).*(pills|medicine|medication)/i,
+      /(got\s*into|found\s*in).*(medicine\s*cabinet|grandma.*pills|grandpa.*pills)/i,
+      /accidental.*(ingestion|swallowed)|toddler\s*(ingestion|ate|got\s*into)/i,
+      /(ate|swallowed|drank).*(grandma.*pills|mom.*medicine|daddy.*pills)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Medication Overdose (pediatric)', baseRate: 0.55, ageModifiers: [{ range: [1, 6], multiplier: 3.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Accidental Ingestion', baseRate: 0.25, ageModifiers: [{ range: [1, 5], multiplier: 3.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Iron Overdose', baseRate: 0.05, ageModifiers: [{ range: [1, 5], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Button Battery Ingestion', baseRate: 0.05, ageModifiers: [{ range: [1, 5], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Mushroom Poisoning', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Household Cleaner Ingestion', baseRate: 0.05, ageModifiers: [{ range: [1, 5], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // DRUG REACTION — Stevens-Johnson, DRESS, serotonin syndrome, drug rash
+  // ================================================================
+  {
+    complaint: 'drug reaction',
+    triggerPatterns: [
+      /(skin|rash).*(peeling|sheets|blistering|falling\s*off|slough).*(medicine|medication|pill|drug|seizure\s*med|lamictal|carbamazepine|bactrim|allopurinol)/i,
+      /stevens\s*johnson|\bsjs\b|\bten\b|toxic\s*epidermal|\bdress\s*syndrome/i,
+      /(started|new|increased|changed).*(medication|medicine|antibiotic|antidepressant|ssri|seizure\s*med).*(rash|tremor|fever|agitat|muscle|jerk|twitch|sweat|rigid)/i,
+      /(new|started|started\s*a|changed).*antidepressant.*(agitat|tremor|fever|muscle|jerk|sweat)/i,
+      /serotonin\s*syndrome|neuroleptic\s*malignant/i,
+      /(rash|hives|breakout).*after.*(starting|taking|new).*(medication|medicine|pill|antibiotic|drug)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Stevens-Johnson Syndrome', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Toxic Epidermal Necrolysis', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'DRESS Syndrome', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Serotonin Syndrome', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Neuroleptic Malignant Syndrome', baseRate: 0.10, ageModifiers: [{ range: [20, 60], multiplier: 1.3 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Drug-Induced Rash (non-severe)', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Angioedema (drug-induced)', baseRate: 0.12, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // MEDICATION SIDE EFFECT — GI, mood, etc.
+  // ================================================================
+  {
+    complaint: 'medication side effect',
+    triggerPatterns: [
+      /since\s*(i\s*)?started\s*(my\s*)?(new\s*)?(medication|medicine|pill)|after\s*starting\s*(my\s*)?(new\s*)?medication/i,
+      /(metformin|lisinopril|statin|atorvastatin|simvastatin|pravastatin|amlodipine|ace\s*inhibitor).*(diarrhea|cough|muscle|cramp|swelling|dizzy|side\s*effect)/i,
+      /medicine\s*(is\s*)?making\s*me\s*(sick|nauseous|dizzy|tired)|pills?\s*(are\s*)?causing/i,
+      /(new\s*med|new\s*medication).*(problem|side\s*effect|rash|upset)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Medication Side Effect', baseRate: 0.50, ageModifiers: [{ range: [50, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Medication-Induced GI Disturbance', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Statin-Induced Myopathy', baseRate: 0.08, ageModifiers: [{ range: [45, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'ACE Inhibitor Cough', baseRate: 0.05, ageModifiers: [{ range: [45, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'ACE Inhibitor Angioedema', baseRate: 0.05, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Drug Interaction', baseRate: 0.05, ageModifiers: [{ range: [60, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Lactic Acidosis (metformin)', baseRate: 0.02, ageModifiers: [{ range: [60, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // CANCER — SPECIFIC PRESENTATIONS (melanoma, breast, bladder, leukemia, lymphoma, brain tumor)
+  // ================================================================
+  {
+    complaint: 'suspicious mole',
+    triggerPatterns: [
+      /mole.*(chang|grow|irregul|bigger|bleed|itch|different|asymmetr|dark|color)|changing\s*mole/i,
+      /(growing|new|suspicious|weird)\s*mole|mole.*concern|melanoma/i,
+      /dark\s*spot.*(grow|chang|bleed)|spot.*(grow|chang).*color/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Melanoma', baseRate: 0.55, ageModifiers: [{ range: [40, 100], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Dysplastic Nevus', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Basal Cell Carcinoma', baseRate: 0.08, ageModifiers: [{ range: [50, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Squamous Cell Carcinoma', baseRate: 0.07, ageModifiers: [{ range: [60, 100], multiplier: 2.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Seborrheic Keratosis', baseRate: 0.05, ageModifiers: [{ range: [50, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  {
+    complaint: 'breast mass suspicious',
+    triggerPatterns: [
+      /lump.*(breast|chest).*(hard|doesnt\s*move|immobile|fixed|getting\s*bigger|not\s*tender)/i,
+      /breast.*(lump|mass).*(hard|fixed|stuck|growing|doesnt\s*go\s*away)/i,
+      /hard\s*lump.*breast|immobile\s*breast\s*lump|breast\s*cancer\s*concern/i,
+      /nipple\s*(retract|invert|discharge|bloody).*(new|lump)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Breast Cancer', baseRate: 0.50, ageModifiers: [{ range: [45, 100], multiplier: 2.0 }], genderModifier: { male: 0.01, female: 1.0 } },
+      { diagnosis: 'Fibroadenoma', baseRate: 0.15, ageModifiers: [{ range: [15, 35], multiplier: 2.0 }], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Breast Cyst', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Fibrocystic Breast Changes', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Phyllodes Tumor', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
+      { diagnosis: 'Paget Disease of Nipple', baseRate: 0.02, ageModifiers: [{ range: [50, 100], multiplier: 1.5 }], genderModifier: { male: 0.0, female: 1.0 } },
+    ],
+  },
+
+  {
+    complaint: 'painless hematuria',
+    triggerPatterns: [
+      /blood\s*in.*(pee|urine).*(no\s*pain|painless|week|month|smoker)/i,
+      /(pee|urine).*(blood|red|pink).*(no\s*pain|painless|smoker|worse|nothing\s*hurts)/i,
+      /painless\s*(hematuria|blood\s*in\s*urine)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Bladder Cancer', baseRate: 0.35, ageModifiers: [{ range: [55, 100], multiplier: 2.5 }], genderModifier: { male: 2.5, female: 0.5 } },
+      { diagnosis: 'Renal Cell Carcinoma', baseRate: 0.15, ageModifiers: [{ range: [55, 100], multiplier: 2.0 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Prostate Cancer', baseRate: 0.10, ageModifiers: [{ range: [55, 100], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 0.0 } },
+      { diagnosis: 'Urinary Tract Infection', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 0.5, female: 1.5 } },
+      { diagnosis: 'Kidney Stone', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'BPH with Hematuria', baseRate: 0.10, ageModifiers: [{ range: [55, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 0.0 } },
+    ],
+  },
+
+  {
+    complaint: 'easy bruising/bleeding',
+    triggerPatterns: [
+      /(bruis|bruise|brusing).*(no\s*reason|for\s*no\s*reason|easily|easy|everywhere|all\s*the\s*time|spontaneous)/i,
+      /keep\s*getting\s*bruises.*(tired|fatigue|exhausted)|unexplained\s*bruising/i,
+      /(gums|nose).*(bleed|bleeding).*(easy|often|always|lot)/i,
+      /petechiae|blood\s*spots|purpur/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Leukemia', baseRate: 0.20, ageModifiers: [{ range: [0, 15], multiplier: 2.0 }, { range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Idiopathic Thrombocytopenic Purpura', baseRate: 0.20, ageModifiers: [{ range: [0, 10], multiplier: 2.0 }], genderModifier: { male: 0.7, female: 1.4 } },
+      { diagnosis: 'Anticoagulant Effect', baseRate: 0.20, ageModifiers: [{ range: [60, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Von Willebrand Disease', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 0.8, female: 1.2 } },
+      { diagnosis: 'Liver Disease (coagulopathy)', baseRate: 0.10, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Myelodysplastic Syndrome', baseRate: 0.05, ageModifiers: [{ range: [60, 100], multiplier: 2.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Aplastic Anemia', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hemophilia', baseRate: 0.05, ageModifiers: [{ range: [0, 20], multiplier: 2.0 }], genderModifier: { male: 2.0, female: 0.05 } },
+      { diagnosis: 'Vitamin K Deficiency', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  {
+    complaint: 'lymphadenopathy/lymphoma',
+    triggerPatterns: [
+      /(lymph\s*node|gland|lump).*(neck|armpit|groin).*(weeks|months|growing|fever|weight\s*loss|night\s*sweats)/i,
+      /(swollen\s*glands|swollen\s*lymph).*(weeks|months|persistent|fever)/i,
+      /painless\s*(lymph|gland|lump)|lymphoma|b\s*symptoms/i,
+      /hard\s*lump.*(neck|armpit|groin)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Lymphoma', baseRate: 0.30, ageModifiers: [{ range: [15, 40], multiplier: 1.5 }, { range: [55, 100], multiplier: 2.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Reactive Lymphadenopathy', baseRate: 0.25, ageModifiers: [{ range: [0, 20], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Infectious Mononucleosis', baseRate: 0.15, ageModifiers: [{ range: [15, 30], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Tuberculosis (scrofula)', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Metastatic Cancer (lymph)', baseRate: 0.10, ageModifiers: [{ range: [50, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Cat Scratch Disease', baseRate: 0.05, ageModifiers: [{ range: [0, 15], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'HIV/AIDS (lymphadenopathy)', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+    ],
+  },
+
+  {
+    complaint: 'brain tumor symptoms',
+    triggerPatterns: [
+      /headache.*(worse|progressi|getting\s*worse).*(week|month)/i,
+      /headache.*(week|month).*(vision|blurry|nausea|morning)/i,
+      /(vision|blurry).*morning.*headache|headache.*(morning|am).*(vomit|nausea|vision|blurry)/i,
+      /(new|worsening)\s*headache.*(weakness|numbness|speech|vision|seizure|morning)/i,
+      /brain\s*tumor|space\s*occupying|intracranial\s*mass/i,
+      /progressive\s*headache|headache.*keeps\s*getting\s*worse/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Brain Tumor', baseRate: 0.40, ageModifiers: [{ range: [40, 80], multiplier: 1.8 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Brain Metastases', baseRate: 0.20, ageModifiers: [{ range: [50, 100], multiplier: 2.0 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Idiopathic Intracranial Hypertension', baseRate: 0.10, ageModifiers: [{ range: [20, 45], multiplier: 1.5 }], genderModifier: { male: 0.2, female: 2.0 } },
+      { diagnosis: 'Migraine', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 0.5, female: 1.5 } },
+      { diagnosis: 'Chronic Subdural Hematoma', baseRate: 0.10, ageModifiers: [{ range: [60, 100], multiplier: 2.5 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Hydrocephalus', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // HYPERTENSIVE EMERGENCY
+  // ================================================================
+  {
+    complaint: 'hypertensive emergency',
+    triggerPatterns: [
+      /(headache|vision|chest\s*pain).*(bp|blood\s*pressure).*(2[0-9][0-9]|1[89][0-9])/i,
+      /blood\s*pressure.*(200|210|220|180|190).*(headache|vision|bleed|pain)/i,
+      /hypertensive\s*(emergency|urgency|crisis)|malignant\s*hypertension/i,
+      /(headache|nosebleed).*(high\s*blood\s*pressure|hypertens|bp\s*(is|was|has).*high)/i,
+      /(high\s*blood\s*pressure|hypertens).*(headache|nosebleed|vision|chest)/i,
+      /(bp|blood\s*pressure).*(usually|always|normally).*high.*(headache|bleed|vision|chest)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Hypertensive Emergency', baseRate: 0.40, ageModifiers: [{ range: [40, 100], multiplier: 1.5 }], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Hypertensive Urgency', baseRate: 0.25, ageModifiers: [{ range: [40, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hypertensive Encephalopathy', baseRate: 0.15, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Stroke (hypertensive)', baseRate: 0.10, ageModifiers: [{ range: [55, 100], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Aortic Dissection', baseRate: 0.05, ageModifiers: [{ range: [50, 85], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Acute Kidney Injury (hypertensive)', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // ABDOMINAL AORTIC ANEURYSM
+  // ================================================================
+  {
+    complaint: 'aaa',
+    triggerPatterns: [
+      /pulsat.*(mass|belly|abdomen|stomach)|(mass|belly|abdomen).*pulsat/i,
+      /belly.*(throb|pulse|beating)|abdomen.*(throb|pulse|beating)/i,
+      /abdominal\s*aortic\s*aneurysm|\baaa\b|aortic\s*aneurysm/i,
+      /severe\s*back\s*pain.*(pulse|throb|mass|belly)|back.*pain.*(pulsatile|throb).*(belly|abdomen)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Abdominal Aortic Aneurysm', baseRate: 0.65, ageModifiers: [{ range: [55, 100], multiplier: 2.0 }], genderModifier: { male: 3.0, female: 0.4 } },
+      { diagnosis: 'Ruptured AAA', baseRate: 0.15, ageModifiers: [{ range: [60, 100], multiplier: 2.5 }], genderModifier: { male: 3.0, female: 0.4 } },
+      { diagnosis: 'Aortic Dissection', baseRate: 0.10, ageModifiers: [{ range: [50, 85], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Renal Colic', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Musculoskeletal Back Pain', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // CONCUSSION / HEAD TRAUMA
+  // ================================================================
+  {
+    complaint: 'concussion',
+    triggerPatterns: [
+      /(hit|bumped|banged|smacked).*head.*(headache|dizzy|nausea|confus|vomit|blurry)/i,
+      /(fell|fall|struck|hit).*(head|skull).*(yesterday|today|hour|minute)/i,
+      /concussion|mild\s*tbi|head\s*injury.*(headache|dizzy|confus)/i,
+      /(soccer|football|hockey|basketball).*(hit\s*head|head\s*injury|concussion)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Concussion', baseRate: 0.55, ageModifiers: [{ range: [5, 25], multiplier: 1.5 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Mild Traumatic Brain Injury', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Post-Concussive Syndrome', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Subdural Hematoma', baseRate: 0.05, ageModifiers: [{ range: [60, 100], multiplier: 3.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Epidural Hematoma', baseRate: 0.03, ageModifiers: [{ range: [15, 35], multiplier: 2.0 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Scalp Contusion/Laceration', baseRate: 0.07, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+    ],
+  },
+
+  // ================================================================
+  // TEMPORAL ARTERITIS (GCA) — specific high priority
+  // ================================================================
+  {
+    complaint: 'temporal arteritis',
+    triggerPatterns: [
+      /headache.*(temple|temples)|temple\s*(pain|tender|headache|hurt)/i,
+      /jaw\s*(pain|hurt).*(chew|eat)|chew.*jaw\s*(pain|hurt)|jaw\s*claudication/i,
+      /temporal\s*arteritis|giant\s*cell\s*arteritis|\bgca\b|scalp\s*tender/i,
+      /sudden.*(vision\s*loss|blind).*(one\s*eye|temple|jaw)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Temporal Arteritis', baseRate: 0.60, ageModifiers: [{ range: [50, 100], multiplier: 3.0 }], genderModifier: { male: 0.6, female: 1.5 } },
+      { diagnosis: 'Polymyalgia Rheumatica', baseRate: 0.15, ageModifiers: [{ range: [50, 100], multiplier: 3.0 }], genderModifier: { male: 0.7, female: 1.4 } },
+      { diagnosis: 'Tension Headache', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 0.8, female: 1.2 } },
+      { diagnosis: 'Migraine', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 0.5, female: 1.5 } },
+      { diagnosis: 'TMJ Disorder', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 0.6, female: 1.5 } },
+    ],
+  },
+
+  // ================================================================
   // ALTERED MENTAL STATUS / CONFUSION — encephalopathies, DTs, intoxication, metabolic
   // ================================================================
   {
@@ -2410,7 +2734,8 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'substance intoxication/overdose',
     triggerPatterns: [
-      /overdos|od'd|took\s*too\s*(many|much)|swallowed\s*(pills|bottle)|pill\s*bottle/i,
+      /overdos(?!e\s*on\s*tylenol|e\s*on\s*acetaminophen)|od'd|took\s*too\s*(many|much)(?!\s*tylenol|\s*acetaminophen)/i,
+      /swallowed\s*(pills|bottle)|pill\s*bottle|bottle\s*of\s*pills/i,
       /found\s*(him|her|them)\s*(unresponsive|passed\s*out|on\s*the\s*floor)/i,
       /pinpoint\s*pupils|track\s*marks|needle\s*marks|foaming.*mouth|blue\s*lips/i,
       /drunk|wasted|high\s*on|smoked\s*(meth|crack|fentanyl)|snorted|injected|shot\s*up/i,
@@ -2478,10 +2803,14 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'dental/oral pain',
     triggerPatterns: [
-      /tooth\s*(pain|hurt|ache|kill|broke|crack|abscess)|toothache/i,
-      /dental|jaw\s*(pain|hurt|ache|swell|lock|click|pop)|tmj/i,
+      /\btooth\b/i,
+      /tooth.*(pain|hurt|ach|kill|broke|crack|abscess|infected|swollen|sensitive|throb)/i,
+      /(pain|hurt|ach|killing|throbbing|bad).*tooth/i,
+      /toothache|teeth.*(hurt|pain|ache)|dental/i,
+      /jaw\s*(pain|hurt|ache|swell|lock|click|pop)|tmj/i,
       /face.*swollen.*tooth|tooth.*face.*swollen|gum.*(swell|bleed|hurt|abscess|boil)/i,
-      /mouth\s*(pain|hurt|sore)|bad\s*tooth|cavity/i,
+      /\b(bad\s*tooth|cavity|filling|wisdom\s*teeth|root\s*canal)\b/i,
+      /mouth\s*(pain|hurt|sore).*tooth|tooth.*mouth\s*(pain|hurt|sore)/i,
     ],
     diagnoses: [
       { diagnosis: 'Dental Abscess', baseRate: 0.30, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
@@ -2517,14 +2846,38 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   },
 
   // ================================================================
+  // ANAPHYLAXIS / AIRWAY ANGIOEDEMA — must come BEFORE allergic reaction
+  // ================================================================
+  {
+    complaint: 'anaphylaxis/airway',
+    triggerPatterns: [
+      /(throat|airway).*(swell|tight|closing|shut)|swelling.*(throat|airway)/i,
+      /(lip|tongue|face).*(swell|swollen|puffy).*(breathe|breath|tight|shut|close)/i,
+      /(ate|eating|bit.*into|food|shellfish|shrimp|peanut|nut|egg|dairy).*(throat|lip|tongue|face|breath).*(swell|tight|shut|close|react)/i,
+      /(sting|stung|bee|wasp|hornet).*(throat|lip|tongue|face).*(swell|tight|close|hives)/i,
+      /anaphyla/i,
+      /(lip|tongue|face|mouth).*(swol|swell|puffy).*(eat|food|restaurant|medicine|new\s*med)/i,
+      /(ace\s*inhibitor|lisinopril|enalapril|ramipril|benazepril).*(lip|tongue|face|swell|angioedema)/i,
+      /hereditary\s*angioedema|c1\s*esterase/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Anaphylaxis', baseRate: 0.55, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Angioedema', baseRate: 0.25, ageModifiers: [{ range: [30, 70], multiplier: 1.2 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'ACE Inhibitor Angioedema', baseRate: 0.10, ageModifiers: [{ range: [45, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Hereditary Angioedema', baseRate: 0.03, ageModifiers: [{ range: [5, 40], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Food Allergy (severe)', baseRate: 0.05, ageModifiers: [{ range: [0, 30], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Insect Venom Allergy', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
   // ALLERGIC REACTION (non-anaphylaxis) — hives, angioedema, drug reaction
   // ================================================================
   {
     complaint: 'allergic reaction',
     triggerPatterns: [
       /hives|urticaria|welts|broke\s*out|covered\s*in\s*(bumps|spots|welts)/i,
-      /allergic\s*reaction|allergy.*react|react.*allergy|swelling.*(lip|face|tongue|eye)/i,
-      /angioedema|lips?\s*(swollen|puffy|swelling)|face\s*(swollen|puffy)/i,
+      /allergic\s*reaction|allergy.*react|react.*allergy/i,
       /rash\s*after.*(med|medicine|pill|drug|antibiotic|food)|took.*and.*rash/i,
     ],
     diagnoses: [
@@ -2641,24 +2994,103 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   },
 
   // ================================================================
-  // BITE / STING / ENVENOMATION
+  // SNAKE BITE / ENVENOMATION — MUST come before generic bite/sting
+  // ================================================================
+  {
+    complaint: 'snake bite',
+    triggerPatterns: [
+      /\b(snake|rattlesnake|copperhead|cottonmouth|water\s*moccasin|coral\s*snake)\s*bit/i,
+      /snake\s*bite|bit.*by.*(a\s*)?snake|snake\s*bit\s*me/i,
+      /fang\s*mark|fang\s*puncture|envenomation/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Snake Bite', baseRate: 0.75, ageModifiers: [], genderModifier: { male: 1.5, female: 0.6 } },
+      { diagnosis: 'Snake Envenomation', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.5, female: 0.6 } },
+      { diagnosis: 'Cellulitis (bite-related)', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // DOG / CAT BITE — MUST come before generic bite/sting
+  // ================================================================
+  {
+    complaint: 'dog/cat bite',
+    triggerPatterns: [
+      /\bdog\s*bit/i,
+      /\bbit\s*by.*(a\s*)?(dog|pet)/i,
+      /\bdog\s*bite/i,
+      /\bcat\s*bit/i,
+      /\bbit\s*by.*(a\s*)?cat/i,
+      /\bcat\s*bite|cat\s*scratch/i,
+      /\bhuman\s*bite|bit.*by.*(the\s*)?(neighbor|family|friend)s?\s*dog/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Dog Bite', baseRate: 0.40, ageModifiers: [{ range: [0, 10], multiplier: 2.0 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Cat Bite', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 0.7, female: 1.4 } },
+      { diagnosis: 'Cellulitis (bite-related)', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Cat Scratch Disease', baseRate: 0.05, ageModifiers: [{ range: [0, 15], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Rabies Exposure', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Pasteurella Infection', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Tetanus Risk', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // TICK BITE / LYME DISEASE — MUST come before generic bite/sting
+  // ================================================================
+  {
+    complaint: 'tick bite/lyme',
+    triggerPatterns: [
+      /\btick\s*(bit|bite|on\s*me|found)|found\s*a\s*tick/i,
+      /bullseye\s*rash|bull\s*eye\s*rash|target\s*rash|red\s*ring.*(bite|skin)|ring.*around.*bite/i,
+      /erythema\s*migrans|lyme/i,
+      /(tick|bite).*fever.*(joint|muscle|fatigue)|fever.*after.*tick/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Lyme Disease', baseRate: 0.45, ageModifiers: [{ range: [5, 50], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Tick Bite (non-pathogenic)', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Rocky Mountain Spotted Fever', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Ehrlichiosis', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Anaplasmosis', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.1, female: 1.0 } },
+      { diagnosis: 'Tick-Borne Illness (unspecified)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // ANAPHYLAXIS FROM STING — specific high-priority category
+  // ================================================================
+  {
+    complaint: 'sting anaphylaxis',
+    triggerPatterns: [
+      /(stung|sting).*(throat|face|lip|tongue).*(swell|tight|close)/i,
+      /(bee|wasp|hornet|yellow\s*jacket).*(sting|stung).*(swell|tight|breath|throat|lip|face)/i,
+      /(allergic\s*reaction|anaphyla).*(sting|bite|stung)/i,
+      /sting.*(cant\s*breathe|hard\s*to\s*breathe|throat\s*closing|hives)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Anaphylaxis', baseRate: 0.70, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Angioedema (sting-related)', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Allergic Reaction to Sting', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // BITE / STING / ENVENOMATION — generic fallback
   // ================================================================
   {
     complaint: 'bite/sting',
     triggerPatterns: [
-      /\b(bit|bite|bitten)\b|dog\s*bite|cat\s*bite|snake\s*bite|animal\s*bite/i,
-      /spider\s*bite|tick\s*bite|tick\s*on\s*me|insect\s*(bite|sting)|bee\s*sting|wasp\s*sting/i,
-      /bullseye\s*rash|erythema\s*migrans|red\s*ring.*bite|bite.*red\s*ring/i,
-      /stung\s*by|bit\s*by\s*a|animal\s*bite|human\s*bite/i,
+      /spider\s*bit|bit.*by.*(a\s*)?spider|spider\s*bite/i,
+      /insect\s*(bite|sting)|bee\s*sting|wasp\s*sting|hornet\s*sting|mosquito\s*bite/i,
+      /stung\s*by|bug\s*bit|bite.*swollen|swollen\s*bite/i,
     ],
     diagnoses: [
-      { diagnosis: 'Insect Bite/Sting', baseRate: 0.35, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
-      { diagnosis: 'Dog/Cat Bite', baseRate: 0.20, ageModifiers: [{ range: [0, 10], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Insect Bite/Sting', baseRate: 0.50, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Spider Bite', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
       { diagnosis: 'Cellulitis (bite-related)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
-      { diagnosis: 'Snake Envenomation', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.5, female: 0.7 } },
-      { diagnosis: 'Allergic Reaction to Sting', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
-      { diagnosis: 'Rabies Exposure', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
-      { diagnosis: 'Tick-Borne Illness', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Allergic Reaction to Sting', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Brown Recluse Bite', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Black Widow Bite', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
     ],
   },
 
@@ -2761,11 +3193,12 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'sexual dysfunction',
     triggerPatterns: [
-      /erectile\s*(dysfunction|problem)|cant\s*(get|keep)\s*(it\s+up|an?\s*erect)|impoten/i,
-      /pain.*(during|with)\s*(sex|intercourse)|sex\s*(hurt|pain)|dyspareunia|vaginismus/i,
+      /erectile\s*(dysfunction|problem)|cant\s*(get|keep)\s*(it\s+up|an?\s*erect)|\bimpoten/i,
+      /pain.*(during|with)\s*(sex|intercourse)|(sex|intercourse)\s*(hurt|pain|burns|painful)/i,
+      /\bdyspareunia\b|\bvaginismus\b/i,
       /low\s*(libido|sex\s*drive|desire)|no\s*(libido|sex\s*drive|desire|interest\s*in\s*sex)/i,
       /premature\s*ejaculat|come\s*too\s*(fast|quick|soon)|vaginal\s*(dry|atrophy)/i,
-      /cant\s*perform\s*(in\s*bed|sex|during)|performance\s*anxiety.*sex|problem.*(in\s*the\s*)?bedroom/i,
+      /cant\s*perform\s*(in\s*bed|sex|during)|performance\s*anxiety.*sex|problem.*in\s*the\s*bedroom/i,
     ],
     diagnoses: [
       { diagnosis: 'Erectile Dysfunction', baseRate: 0.30, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 0.0 } },
@@ -2944,17 +3377,114 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'environmental exposure',
     triggerPatterns: [
-      /heat\s*(stroke|exhaust|illness|sick)|been\s*(out\s*)?in\s*the\s*(heat|sun)\s*(all\s*day|too\s*long)/i,
+      /heat\s*(stroke|exhaust|illness|sick)|in\s*the\s*(heat|sun).*(all\s*day|too\s*long|dizzy|sick|nausea)/i,
+      /working\s*(outside|in\s*the\s*heat|in\s*the\s*sun)|\b10[0-9]\s*degrees?|hot\s*(outside|out\s*there).*(dizzy|sick|nausea|passed)/i,
       /hypother|frostbit|frozen|found.*(outside|cold|snow)|exposure\s*to\s*(cold|heat)/i,
+      /fingers?\s*(are\s*)?(white|numb).*(cold|snow|outside)|toes?\s*(are\s*)?(white|numb).*(cold|snow)/i,
       /sun\s*(stroke|poison)|overheated|dehydrat.*heat|hot.*passed\s*out/i,
     ],
     diagnoses: [
-      { diagnosis: 'Heat Exhaustion', baseRate: 0.30, ageModifiers: [{ range: [65, 100], multiplier: 1.5 }, { range: [0, 5], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
-      { diagnosis: 'Heat Stroke', baseRate: 0.10, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.3, female: 0.8 } },
-      { diagnosis: 'Hypothermia', baseRate: 0.15, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }, { range: [0, 3], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
-      { diagnosis: 'Frostbite', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
-      { diagnosis: 'Dehydration', baseRate: 0.15, ageModifiers: [{ range: [0, 5], multiplier: 2.0 }, { range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Heat Exhaustion', baseRate: 0.35, ageModifiers: [{ range: [65, 100], multiplier: 1.5 }, { range: [0, 5], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Heat Stroke', baseRate: 0.12, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Hypothermia', baseRate: 0.18, ageModifiers: [{ range: [65, 100], multiplier: 2.0 }, { range: [0, 3], multiplier: 1.5 }], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Frostbite', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Dehydration', baseRate: 0.12, ageModifiers: [{ range: [0, 5], multiplier: 2.0 }, { range: [65, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
       { diagnosis: 'Rhabdomyolysis (exertional)', baseRate: 0.03, ageModifiers: [{ range: [18, 40], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+    ],
+  },
+
+  // ================================================================
+  // ELECTRICAL INJURY
+  // ================================================================
+  {
+    complaint: 'electrical injury',
+    triggerPatterns: [
+      /\belectroc|electric(al)?\s*(shock|injur|burn)|got\s*shocked|shocked\s*by/i,
+      /power\s*line|live\s*wire|fixing\s*(an?\s*)?outlet|fix.*outlet|touched\s*a\s*wire/i,
+      /lightning\s*strike|struck\s*by\s*lightning/i,
+      /outlet.*(shock|zapped|tingl)|zapped\s*by|got\s*zapped/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Electrical Injury', baseRate: 0.45, ageModifiers: [], genderModifier: { male: 1.5, female: 0.6 } },
+      { diagnosis: 'Electrical Burn', baseRate: 0.25, ageModifiers: [], genderModifier: { male: 1.5, female: 0.6 } },
+      { diagnosis: 'Cardiac Arrhythmia (post-electrical)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Rhabdomyolysis (post-electrical)', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Lightning Strike Injury', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.5, female: 0.6 } },
+    ],
+  },
+
+  // ================================================================
+  // CARBON MONOXIDE POISONING
+  // ================================================================
+  {
+    complaint: 'carbon monoxide',
+    triggerPatterns: [
+      /carbon\s*monoxide|\bco\s*(detector|alarm|poisoning|exposure)/i,
+      /(detector|alarm)\s*(went\s*off|going\s*off|alarm)|co\s*alarm/i,
+      /headache.*(furnace|heater|garage|generator)|furnace.*headache/i,
+      /whole\s*family.*(sick|headache|nausea)|everyone\s*in\s*the\s*house.*sick/i,
+      /headache.*nausea.*(better\s*when\s*i\s*leave|worse\s*at\s*home)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Carbon Monoxide Poisoning', baseRate: 0.70, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Viral Illness', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Toxic Exposure (other)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // ALTITUDE / DROWNING
+  // ================================================================
+  {
+    complaint: 'altitude/drowning',
+    triggerPatterns: [
+      /altitude\s*sick|altitude\s*headache|acute\s*mountain\s*sick|high\s*elevation|hiking.*high/i,
+      /after\s*hiking.*(high|elevation|mountain)|(high|mountain|elevation).*(headache|nausea|sick)/i,
+      /near\s*drowning|pulled\s*from\s*the\s*(pool|water)|almost\s*drowned|aspirated\s*water/i,
+      /\bdrowning\b|submersion|underwater\s*too\s*long|coughing\s*up\s*water.*pool/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Acute Mountain Sickness', baseRate: 0.35, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'High Altitude Pulmonary Edema', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'High Altitude Cerebral Edema', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Near Drowning / Submersion Injury', baseRate: 0.35, ageModifiers: [{ range: [0, 10], multiplier: 2.0 }, { range: [15, 30], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Aspiration Pneumonitis', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // CHEMICAL EYE INJURY
+  // ================================================================
+  {
+    complaint: 'chemical eye',
+    triggerPatterns: [
+      /(bleach|cleaner|chemical|acid|lye).*(eye|eyes|face|vision)/i,
+      /splash.*(in\s*my\s*)?(eye|eyes|face).*(cleaner|bleach|chemical|acid)/i,
+      /(eye|eyes).*(burn|hurt|pain).*(cleaner|bleach|chemical)/i,
+      /drain\s*cleaner.*(eye|face)|(eye|face).*drain\s*cleaner/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Chemical Eye Burn', baseRate: 0.55, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Alkali Burn (ocular)', baseRate: 0.20, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Acid Burn (ocular)', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Corneal Abrasion', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // CHEMICAL SKIN INJURY
+  // ================================================================
+  {
+    complaint: 'chemical skin',
+    triggerPatterns: [
+      /(bleach|drain\s*cleaner|acid|lye|chemical).*(skin|hand|arm|leg|turning\s*white|burn)/i,
+      /(skin|hand|arm|leg).*(splashed|spilled).*(cleaner|bleach|chemical|acid)/i,
+      /chemical\s*burn.*(skin|hand|arm|leg)|(skin|hand|arm|leg).*chemical\s*burn/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Chemical Burn', baseRate: 0.70, ageModifiers: [], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Alkali Burn (skin)', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Acid Burn (skin)', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
     ],
   },
 
@@ -3113,6 +3643,69 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
         ageModifiers: [{ range: [18, 45], multiplier: 1.3 }],
         genderModifier: { male: 1.5, female: 0.7 },
       },
+    ],
+  },
+
+  // ================================================================
+  // SCABIES — specific nighttime interdigital itching
+  // ================================================================
+  {
+    complaint: 'scabies',
+    triggerPatterns: [
+      /scabies|mite/i,
+      /itch.*(between|web).*(finger|toes)|(between|web).*(finger|toes).*itch/i,
+      /itch.*(worse|bad).*(night|at\s*night|evening)/i,
+      /(itch|itchy).*(wrist|waist|armpit|genital).*(night|everyone|family)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Scabies', baseRate: 0.70, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Contact Dermatitis', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Atopic Dermatitis (Eczema)', baseRate: 0.08, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Pediculosis (Lice)', baseRate: 0.05, ageModifiers: [{ range: [3, 15], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Urticaria', baseRate: 0.04, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // TINEA / RINGWORM — annular lesion with central clearing
+  // ================================================================
+  {
+    complaint: 'tinea/ringworm',
+    triggerPatterns: [
+      /ringworm|tinea|dermatophyt/i,
+      /round.*(red|pink).*(patches?|spots?|ring).*(clear\s*center|center\s*clear|border)/i,
+      /(circular|ring|annular).*(rash|patches?|spots?)|(rash|patches?).*(circular|ring|annular|target)/i,
+      /jock\s*itch|athletes?\s*foot|tinea\s*(pedis|cruris|corporis|capitis|versicolor)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Tinea Corporis (Ringworm)', baseRate: 0.55, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Tinea Pedis', baseRate: 0.15, ageModifiers: [{ range: [15, 50], multiplier: 1.3 }], genderModifier: { male: 1.3, female: 0.8 } },
+      { diagnosis: 'Tinea Cruris', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 2.0, female: 0.5 } },
+      { diagnosis: 'Tinea Capitis', baseRate: 0.05, ageModifiers: [{ range: [3, 12], multiplier: 3.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Tinea Versicolor', baseRate: 0.05, ageModifiers: [{ range: [15, 35], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Nummular Eczema', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Granuloma Annulare', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 0.7, female: 1.3 } },
+      { diagnosis: 'Erythema Migrans (Lyme)', baseRate: 0.02, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
+  // HERPES ZOSTER (SHINGLES) — dermatomal band + blistering
+  // ================================================================
+  {
+    complaint: 'shingles',
+    triggerPatterns: [
+      /shingles|herpes\s*zoster|\bzoster\b/i,
+      /(blister|vesicle|rash|pain).*(stripe|band|belt).*(one\s*side|side|chest|back|torso|unilateral)/i,
+      /(stripe|band|belt|line).*(blister|vesicle|rash|pain).*(one\s*side|side)/i,
+      /painful\s*rash.*(one\s*side|dermatome|stripe|band)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Herpes Zoster (Shingles)', baseRate: 0.70, ageModifiers: [{ range: [50, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Post-Herpetic Neuralgia', baseRate: 0.10, ageModifiers: [{ range: [60, 100], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Herpes Simplex', baseRate: 0.10, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Contact Dermatitis (linear)', baseRate: 0.05, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Ramsay Hunt Syndrome', baseRate: 0.03, ageModifiers: [{ range: [40, 100], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
     ],
   },
 

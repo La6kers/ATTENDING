@@ -216,6 +216,7 @@ const SYNONYMS: Record<string, string[]> = {
   'hematuria': [
     'blood in pee', 'blood in my pee', 'blood in urine',
     'blood in my urine', 'pink pee', 'red pee', 'bloody urine',
+    'peeing blood', 'pink urine', 'red urine', 'blood when i pee',
   ],
   'urinary incontinence': [
     'peeing myself', 'wet my pants', 'leak pee', 'leaking pee',
@@ -439,7 +440,10 @@ const SYNONYMS: Record<string, string[]> = {
   'suicidal ideation': [
     'thinking about ending it', 'want to die', 'end my life',
     'thinking of ending it', 'thoughts of suicide', 'thoughts of killing myself',
-    'want to kill myself',
+    'want to kill myself', 'want to end it all',
+    'better off dead', 'no reason to live',
+    'dont want to wake up', 'planning to hurt myself',
+    'cutting myself', 'self harm',
   ],
   'depression': [
     'hopeless', 'no interest', 'nothing matters', 'dont want to do anything',
@@ -555,7 +559,8 @@ const SYNONYMS: Record<string, string[]> = {
   'epistaxis': [
     'nosebleed', 'nose bleed', 'nose bleeding', 'nose is bleeding',
     'blood from nose', 'blood coming from nose', 'bloody nose',
-    'nose wont stop bleeding',
+    'nose wont stop bleeding', 'nosebleed wont stop',
+    'blood coming from my nose', 'nostril bleeding',
   ],
   'hoarseness': [
     'voice is gone', 'lost my voice', 'losing my voice', 'raspy voice',
@@ -832,13 +837,6 @@ const SYNONYMS: Record<string, string[]> = {
     'glands are swollen', 'nodes are enlarged',
   ],
 
-  // ===== NOSEBLEED =====
-  'epistaxis': [
-    'nose is bleeding', 'nosebleed wont stop',
-    'blood coming from my nose', 'nose bleed',
-    'nostril bleeding', 'bloody nose',
-  ],
-
   // ===== NECK PAIN =====
   'neck pain': [
     'stiff neck', 'neck is stiff', 'cant turn my neck',
@@ -854,15 +852,6 @@ const SYNONYMS: Record<string, string[]> = {
     'shoulder came out', 'arm wont go up',
   ],
 
-  // ===== SUICIDAL IDEATION =====
-  'suicidal ideation': [
-    'want to kill myself', 'want to end it all',
-    'better off dead', 'no reason to live',
-    'dont want to wake up', 'thinking about ending it',
-    'want to die', 'planning to hurt myself',
-    'cutting myself', 'self harm',
-  ],
-
   // ===== SEASONAL ALLERGIES =====
   'allergic rhinitis': [
     'allergies acting up', 'seasonal allergies',
@@ -871,20 +860,13 @@ const SYNONYMS: Record<string, string[]> = {
     'sneezing and itchy eyes', 'eyes watering from allergies',
   ],
 
-  // ===== RECTAL BLEEDING =====
-  'rectal bleeding': [
+  // ===== RECTAL BLEEDING (additional synonyms) =====
+  'rectal bleeding layman': [
     'blood on the toilet paper', 'blood in the toilet',
     'blood when i wipe', 'bleeding from my bottom',
-    'bloody stool', 'blood in my poop',
     'bright red blood in stool', 'bleeding from my butt',
   ],
 
-  // ===== HEMATURIA =====
-  'hematuria': [
-    'blood in my urine', 'blood in my pee',
-    'peeing blood', 'pink urine',
-    'red urine', 'blood when i pee',
-  ],
 };
 
 /**

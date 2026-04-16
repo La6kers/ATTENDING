@@ -742,6 +742,170 @@ export class DifferentialDiagnosisService {
         { pattern: /(?:lump|mass|growth).*(?:grow|bigger|hard|firm|weeks|months).*(?:neck|breast|armpit|groin)/i, diagnosis: 'Malignancy', lr: 3.0, evidence: 'Growing firm mass — malignancy concern (LR 3.0)' },
         // Medication side effect generic
         { pattern: /(?:since\s*start|after\s*start|new\s*med).*(?:dizz|nausea|rash|itch|swell|pain|headache|tired)/i, diagnosis: 'Adverse Drug Reaction', lr: 4.0, evidence: 'Symptoms temporally related to new medication (LR 4.0)' },
+
+        // === v16 NEW CC-KEYWORD LR RULES ===
+
+        // Chemical eye injury — bleach/cleaner + eye
+        { pattern: /(bleach|chemical|cleaner|acid|lye|ammonia|drain\s*cleaner).*(eye|eyes|splash.*face)/i, diagnosis: 'Chemical Eye Burn', lr: 50.0, evidence: 'Chemical splash to eye — ocular chemical burn emergency (LR 50.0)' },
+        { pattern: /(eye|eyes|face).*(splash|splashed|sprayed|squirted).*(bleach|cleaner|chemical|acid)/i, diagnosis: 'Chemical Eye Burn', lr: 50.0, evidence: 'Chemical eye exposure (LR 50.0)' },
+
+        // Electrical injury — got shocked / electrocuted
+        { pattern: /(got\s*shocked|electrocut|electric\s*shock|electrical\s*shock|touched.*wire|live\s*wire|fixing.*outlet)/i, diagnosis: 'Electrical Injury', lr: 50.0, evidence: 'Electrical injury (LR 50.0)' },
+
+        // Carbon monoxide poisoning
+        { pattern: /(carbon\s*monoxide|\bco\s*(detector|alarm)|furnace.*(headache|nausea)|whole\s*family.*(headache|sick)|detector\s*went\s*off)/i, diagnosis: 'Carbon Monoxide Poisoning', lr: 50.0, evidence: 'CO detector alarm or household cluster symptoms — CO poisoning (LR 50.0)' },
+
+        // Altitude sickness
+        { pattern: /(altitude|elevation|mountain|hiking.*high).*(sick|headache|nausea|cant\s*breathe)|acute\s*mountain\s*sick|altitude\s*sickness/i, diagnosis: 'Acute Mountain Sickness', lr: 30.0, evidence: 'Altitude exposure symptoms — AMS (LR 30.0)' },
+
+        // Near drowning
+        { pattern: /(near\s*drown|almost\s*drown|pulled\s*from.*(pool|water)|submersion|aspirated\s*water|coughing\s*up\s*water)/i, diagnosis: 'Near Drowning / Submersion Injury', lr: 50.0, evidence: 'Near-drowning event (LR 50.0)' },
+
+        // Frostbite specific
+        { pattern: /(fingers|toes|ears|nose).*(white|numb|waxy|frozen|hard).*(cold|snow|ice|outside)/i, diagnosis: 'Frostbite', lr: 8.0, evidence: 'Cold exposure with tissue changes — frostbite (LR 8.0)' },
+
+        // Snake bite — rattlesnake, copperhead specific
+        { pattern: /(rattlesnake|copperhead|cottonmouth|coral\s*snake|pit\s*viper).*(bit|bite)|snake\s*bit.*\b(ankle|foot|leg|arm|hand)\b/i, diagnosis: 'Snake Bite', lr: 9.0, evidence: 'Venomous snake bite (LR 9.0)' },
+
+        // Lyme disease — bullseye rash or tick + symptoms
+        { pattern: /(bullseye|bull\s*eye|target|red\s*ring|ring.*bite)|erythema\s*migrans/i, diagnosis: 'Lyme Disease', lr: 9.0, evidence: 'Bullseye/target rash — Lyme disease (LR 9.0)' },
+        { pattern: /tick.*(fever|joint|muscle|fatigue|rash).*(weeks?|days?)|(fever|fatigue|joint).*(after|following).*tick/i, diagnosis: 'Lyme Disease', lr: 5.0, evidence: 'Tick exposure + systemic symptoms (LR 5.0)' },
+
+        // Anaphylaxis from sting
+        { pattern: /(sting|stung|bee|wasp|hornet).*(throat|lip|tongue|face).*(swell|tight|close)/i, diagnosis: 'Anaphylaxis', lr: 9.0, evidence: 'Sting + airway/facial swelling — anaphylaxis (LR 9.0)' },
+        { pattern: /(ate|eating|food|shrimp|shellfish|peanut|nut).*(throat|lip|tongue).*(swell|tight|close)/i, diagnosis: 'Anaphylaxis', lr: 9.0, evidence: 'Food allergen + airway involvement — anaphylaxis (LR 9.0)' },
+
+        // Angioedema — swollen lips/tongue without trigger
+        { pattern: /(lip|tongue|face).*(swell|swollen|puffy).*(eating|restaurant|food)/i, diagnosis: 'Angioedema', lr: 6.0, evidence: 'Facial swelling after eating — angioedema (LR 6.0)' },
+        { pattern: /(ace\s*inhibitor|lisinopril|enalapril|ramipril).*(lip|tongue|face|swell|angioedema)/i, diagnosis: 'ACE Inhibitor Angioedema', lr: 8.0, evidence: 'ACE inhibitor + angioedema (LR 8.0)' },
+
+        // Acetaminophen overdose
+        { pattern: /(whole\s*bottle|entire\s*bottle|all\s*the).*(tylenol|acetaminophen)|took.*tylenol.*intentional/i, diagnosis: 'Acetaminophen Overdose', lr: 9.0, evidence: 'Intentional tylenol overdose (LR 9.0)' },
+        { pattern: /(intentionally|intentional|on\s*purpose).*(took|swallowed).*(bottle|pills)/i, diagnosis: 'Intentional Overdose', lr: 8.0, evidence: 'Intentional overdose (LR 8.0)' },
+
+        // Toxic alcohol ingestion
+        { pattern: /(drank|swallowed|ingested).*(antifreeze|ethylene\s*glycol|windshield|methanol|wood\s*alcohol|rubbing\s*alcohol)/i, diagnosis: 'Toxic Alcohol Ingestion', lr: 9.0, evidence: 'Toxic alcohol ingestion (LR 9.0)' },
+        { pattern: /antifreeze.*(drank|swallow|ingest|accident|thought)/i, diagnosis: 'Ethylene Glycol Poisoning', lr: 9.0, evidence: 'Antifreeze ingestion (LR 9.0)' },
+
+        // Chlorine gas / chemical inhalation
+        { pattern: /(bleach.*ammonia|ammonia.*bleach|mixed.*cleaning|chlorine\s*gas)/i, diagnosis: 'Chlorine Gas Exposure', lr: 50.0, evidence: 'Chlorine gas exposure from mixing cleaners (LR 50.0)' },
+
+        // Stevens-Johnson Syndrome
+        { pattern: /(skin|rash).*(peel|sheet|fall.*off|slough).*(medicine|medication|drug|seizure\s*med|lamictal|carbamazepine|allopurinol|bactrim)/i, diagnosis: 'Stevens-Johnson Syndrome', lr: 50.0, evidence: 'Skin desquamation + drug exposure — SJS/TEN (LR 50.0)' },
+        { pattern: /mucosal.*(sore|ulcer|blister).*rash|(eye|mouth).*sore.*skin.*peel/i, diagnosis: 'Stevens-Johnson Syndrome', lr: 8.0, evidence: 'Mucocutaneous involvement — SJS (LR 8.0)' },
+
+        // Melanoma - changing mole
+        { pattern: /(mole|spot).*(chang|grow|bleed|itch|irregul|asymmetr|color).*(border|edge|bigger|different)/i, diagnosis: 'Melanoma', lr: 8.0, evidence: 'ABCDE changes in mole — melanoma concern (LR 8.0)' },
+
+        // Breast cancer — hard immobile lump
+        { pattern: /(lump|mass).*(breast|chest).*(hard|fixed|immobile|doesnt\s*move|stuck|growing)/i, diagnosis: 'Breast Cancer', lr: 6.0, evidence: 'Hard immobile breast lump (LR 6.0)' },
+
+        // Bladder cancer — painless hematuria + smoker
+        { pattern: /(blood.*urine|blood.*pee|pink\s*urine|red\s*urine).*(painless|no\s*pain|weeks|smoker|nothing\s*hurts)/i, diagnosis: 'Bladder Cancer', lr: 7.0, evidence: 'Painless hematuria — bladder cancer concern (LR 7.0)' },
+
+        // Leukemia — bruising + fatigue
+        { pattern: /(bruis|bruise).*(no\s*reason|everywhere|all\s*over|for\s*no\s*reason).*(tired|fatigue|exhausted|weak|pale)/i, diagnosis: 'Leukemia', lr: 7.0, evidence: 'Unexplained bruising + fatigue — leukemia concern (LR 7.0)' },
+
+        // Lymphoma — painless nodes + B-symptoms
+        { pattern: /(lymph|gland|node).*(neck|armpit|groin).*(weeks|months).*(fever|night\s*sweat|weight\s*loss)/i, diagnosis: 'Lymphoma', lr: 7.0, evidence: 'Persistent lymphadenopathy + B-symptoms — lymphoma (LR 7.0)' },
+
+        // Metastatic cancer — back pain + weight loss + night
+        { pattern: /back\s*pain.*(night|months|weeks).*(weight\s*loss|losing\s*weight|unintentional)/i, diagnosis: 'Metastatic Cancer', lr: 6.0, evidence: 'Back pain + constitutional symptoms — malignancy concern (LR 6.0)' },
+
+        // Brain tumor — progressive headache + morning vomiting/vision
+        { pattern: /headache.*(worse|progressi|getting\s*worse).*(week|month)/i, diagnosis: 'Brain tumor', lr: 15.0, evidence: 'Progressive headache — brain tumor concern (LR 15.0)' },
+        { pattern: /headache.*(week|month).*(vision|blurry|nausea|morning)/i, diagnosis: 'Brain tumor', lr: 20.0, evidence: 'Subacute headache with red flags — brain tumor (LR 20.0)' },
+        { pattern: /(blurry|blurred|vision).*morning.*headache|headache.*morning.*(vomit|nausea|vision|blurry)/i, diagnosis: 'Brain tumor', lr: 20.0, evidence: 'Morning headache with vision changes — brain tumor (LR 20.0)' },
+
+        // Hypertensive emergency — HA + high BP
+        { pattern: /(headache|vision\s*change|chest\s*pain).*(bp|blood\s*pressure).*(2[0-9][0-9]|1[89][0-9])/i, diagnosis: 'Hypertensive Emergency', lr: 30.0, evidence: 'Headache/symptoms + severe hypertension (LR 30.0)' },
+        { pattern: /(headache|epistaxis|nosebleed).*(high\s*blood\s*pressure|hypertens)/i, diagnosis: 'Hypertensive Emergency', lr: 20.0, evidence: 'Symptoms + known hypertension (LR 20.0)' },
+        { pattern: /(high\s*blood\s*pressure|hypertens).*(headache|nosebleed|vision\s*change)/i, diagnosis: 'Hypertensive Emergency', lr: 15.0, evidence: 'HTN + target organ symptoms (LR 15.0)' },
+        { pattern: /(blood\s*pressure).*(usually|always|normally).*high/i, diagnosis: 'Hypertensive Emergency', lr: 10.0, evidence: 'Known hypertension with symptoms (LR 10.0)' },
+
+        // AAA — pulsatile mass + back pain
+        { pattern: /(pulsat|throb|pulse|beating).*(mass|belly|abdomen|lump)|(mass|belly|abdomen).*(pulsat|pulse|throb)/i, diagnosis: 'Abdominal Aortic Aneurysm', lr: 9.0, evidence: 'Pulsatile abdominal mass — AAA (LR 9.0)' },
+        { pattern: /severe\s*back\s*pain.*(mass|bulge|pulse).*belly|aaa/i, diagnosis: 'Abdominal Aortic Aneurysm', lr: 7.0, evidence: 'Back pain + abdominal mass (LR 7.0)' },
+
+        // Cauda equina emphasis — saddle anesthesia + urinary retention
+        { pattern: /(saddle|groin|between.*legs).*(numb|cant\s*feel).*(cant\s*pee|cant\s*urinate|retention|bladder)/i, diagnosis: 'Cauda Equina Syndrome', lr: 9.0, evidence: 'Saddle anesthesia + urinary retention (LR 9.0)' },
+
+        // Concussion — head injury + symptoms
+        { pattern: /(hit|bump|bang|smack).*head.*(headache|dizzy|nausea|confus|vomit|blurry)|(headache|dizzy|nausea).*after.*(hit|fell.*head|head.*injury)/i, diagnosis: 'Concussion', lr: 20.0, evidence: 'Head trauma + neurologic symptoms — concussion (LR 20.0)' },
+        { pattern: /headache.*after.*hit.*head|headache.*(yesterday|today).*(hit|bump|bang).*head/i, diagnosis: 'Concussion', lr: 15.0, evidence: 'Post-traumatic headache — concussion (LR 15.0)' },
+
+        // Temporal Arteritis — headache + temples + jaw claudication
+        { pattern: /(temple|temporal).*(pain|tender|hurt|ach)|headache.*(temple|temporal)/i, diagnosis: 'Temporal arteritis', lr: 15.0, evidence: 'Temporal pain/tenderness — GCA (LR 15.0)' },
+        { pattern: /(jaw\s*(pain|hurt|ach|claudic)).*(chew|eat)|chew.*(jaw|temple)\s*(pain|hurt)/i, diagnosis: 'Temporal arteritis', lr: 20.0, evidence: 'Jaw claudication — GCA (LR 20.0)' },
+        { pattern: /scalp\s*(tender|pain)|temples?\s*(are|feel)?\s*tender/i, diagnosis: 'Temporal arteritis', lr: 10.0, evidence: 'Scalp/temporal tenderness — GCA (LR 10.0)' },
+
+        // Serotonin Syndrome — SSRI + agitation/tremor
+        { pattern: /(new|started|changed|increased).*(antidepressant|ssri|sertraline|lexapro|prozac|zoloft|paxil|effexor|cymbalta).*(agitat|tremor|fever|muscle|jerk|sweat|rigid|clonus)/i, diagnosis: 'Serotonin Syndrome', lr: 25.0, evidence: 'Serotonergic med + symptoms — serotonin syndrome (LR 25.0)' },
+
+        // Scabies — nocturnal interdigital itching
+        { pattern: /itch.*(between|web|web\s*space).*finger.*(night|worse\s*at\s*night)/i, diagnosis: 'Scabies', lr: 25.0, evidence: 'Interdigital nocturnal itching — scabies (LR 25.0)' },
+        { pattern: /(bumps?|itch).*(between|web).*finger|scabies|mite/i, diagnosis: 'Scabies', lr: 15.0, evidence: 'Interdigital rash — scabies (LR 15.0)' },
+
+        // Dental abscess — tooth + fever + facial swelling
+        { pattern: /tooth.*(swollen|swelling).*(face|jaw|cheek)|(face|jaw|cheek).*swollen.*tooth/i, diagnosis: 'Dental Abscess', lr: 7.0, evidence: 'Dental pain + facial swelling — dental abscess (LR 7.0)' },
+        { pattern: /tooth.*(pain|hurt|kill|ach|throb).*(week|days|worse|fever)|bad\s*tooth.*(fever|swollen|pus)/i, diagnosis: 'Dental Abscess', lr: 5.0, evidence: 'Tooth pain with infection signs (LR 5.0)' },
+
+        // Scabies — itch + between fingers + night
+        { pattern: /(itch|itchy).*(between|web).*finger.*(night|worse\s*at\s*night)|scabies/i, diagnosis: 'Scabies', lr: 8.0, evidence: 'Interdigital nocturnal itching — scabies (LR 8.0)' },
+
+        // Ringworm — round red patches with clear center
+        { pattern: /round.*(red|pink).*(patches?|spots?).*(clear\s*center|ring|border)|ringworm|tinea/i, diagnosis: 'Tinea Corporis (Ringworm)', lr: 7.0, evidence: 'Annular lesion with central clearing — ringworm (LR 7.0)' },
+
+        // IBD — diarrhea + blood + joint pain
+        { pattern: /(bloody\s*diarrhea|blood.*diarrhea|diarrhea.*blood).*(joint|arthri|belly|weight\s*loss|months)/i, diagnosis: 'Inflammatory Bowel Disease', lr: 6.0, evidence: 'Bloody diarrhea + extraintestinal — IBD (LR 6.0)' },
+
+        // Hyperventilation — tingling around mouth + hands
+        { pattern: /tingl.*(hand|finger).*(mouth|lip|face)|anxiety.*(tingl|numb).*(hand|mouth)/i, diagnosis: 'Hyperventilation Syndrome', lr: 6.0, evidence: 'Perioral + hand paresthesias — hyperventilation (LR 6.0)' },
+
+        // Costochondritis — tender chest wall
+        { pattern: /(chest|sternum|rib).*(tender|hurt|pain).*(press|touch|push)|pain.*(press|touch).*(chest|sternum|rib)/i, diagnosis: 'Costochondritis', lr: 7.0, evidence: 'Chest wall tenderness reproducible on palpation (LR 7.0)' },
+
+        // Rib fracture — blunt chest trauma
+        { pattern: /(car\s*accident|mva|motor\s*vehicle|hit\s*chest|fell.*chest).*(chest|rib).*(pain|hurt).*(breath|move)/i, diagnosis: 'Rib Fracture', lr: 7.0, evidence: 'Blunt chest trauma + pain with respiration (LR 7.0)' },
+
+        // Stable angina — exertional chest pain relieved by rest
+        { pattern: /chest.*(pain|pressure|tight).*(walk|stair|exert|exercise|uphill).*(rest|stop|goes\s*away)/i, diagnosis: 'Stable Angina', lr: 7.0, evidence: 'Exertional chest pain relieved by rest — stable angina (LR 7.0)' },
+
+        // Sciatica with leg radiation
+        { pattern: /(back|low\s*back|lumbar).*pain.*(shoot|radiat|travel|go|down).*(leg|buttock|foot|calf)/i, diagnosis: 'Sciatica', lr: 7.0, evidence: 'Radiating lumbar pain to leg — sciatica (LR 7.0)' },
+
+        // Allergic asthma — triggered by specific exposures
+        { pattern: /(wheez|tight\s*chest).*(mow.*lawn|pollen|dust|cat|dog|allerg|grass)/i, diagnosis: 'Allergic Asthma', lr: 6.0, evidence: 'Trigger-induced wheezing — allergic asthma (LR 6.0)' },
+
+        // CHF — orthopnea + edema
+        { pattern: /(cant\s*lay\s*flat|orthopnea|sleep\s*propped|wake.*gasp).*(ankle|leg|foot).*(swell|swol|edema)/i, diagnosis: 'Congestive Heart Failure', lr: 7.0, evidence: 'Orthopnea + lower extremity edema — CHF (LR 7.0)' },
+
+        // IPF — progressive DOE + clubbing
+        { pattern: /(shortness\s*of\s*breath|dyspnea).*(months|years|progressi|worsening).*(dry\s*cough|clubbing|fingers?.*club)/i, diagnosis: 'Idiopathic Pulmonary Fibrosis', lr: 7.0, evidence: 'Progressive DOE + dry cough + clubbing — IPF (LR 7.0)' },
+
+        // Bronchiolitis in infant
+        { pattern: /(infant|baby|months\s*old).*(wheez|fast\s*breath|nasal\s*flar|retract).*(cold|runny\s*nose|viral)/i, diagnosis: 'Bronchiolitis', lr: 7.0, evidence: 'Infant wheezing after URI — bronchiolitis (LR 7.0)' },
+
+        // Nasal foreign body in child
+        { pattern: /(child|toddler|year\s*old).*(put|shoved|stuck).*(bead|small|object|button).*(nose|nostril)|foreign\s*body.*nose/i, diagnosis: 'Nasal Foreign Body', lr: 9.0, evidence: 'Pediatric nasal foreign body (LR 9.0)' },
+
+        // Malaria — travel + fever
+        { pattern: /(fever|sick|rash).*(travel|returned|came\s*back).*(africa|asia|south\s*america|mexico|india)/i, diagnosis: 'Malaria', lr: 5.0, evidence: 'Returned traveler with fever — malaria workup (LR 5.0)' },
+
+        // Thyroid storm emphasis
+        { pattern: /(racing\s*heart|heart\s*racing|tachycardia).*(sweat|agitat|shaking|fever).*(thyroid|graves|hyperthy)/i, diagnosis: 'Thyroid Storm', lr: 8.0, evidence: 'Hyperthyroid + systemic decompensation — thyroid storm (LR 8.0)' },
+
+        // Chronic Subdural specific — delayed headache after minor head trauma in elderly
+        { pattern: /(elderly|grandpa|grandma|\b7[0-9]\s*year|\b8[0-9]\s*year).*(fell|hit\s*head).*(weeks?\s*ago|days?\s*ago).*(confus|headache|drowsy|weak)/i, diagnosis: 'Chronic Subdural Hematoma', lr: 8.0, evidence: 'Elderly + remote head trauma + delayed symptoms — chronic SDH (LR 8.0)' },
+
+        // Herpes Zoster stripe
+        { pattern: /(blister|rash|pain).*(stripe|band|belt).*(one\s*side|chest|back|torso)|(stripe|band).*(one\s*side).*(blister|rash|pain)/i, diagnosis: 'Herpes Zoster (Shingles)', lr: 8.0, evidence: 'Dermatomal band rash/pain — shingles (LR 8.0)' },
+
+        // Ovarian torsion priority over PID
+        { pattern: /sudden.*(severe|worst|sharp).*(one\s*side|unilateral|left|right).*(pelvi|ovary|lower\s*abdom).*(nausea|vomit|twisting)/i, diagnosis: 'Ovarian Torsion', lr: 9.0, evidence: 'Sudden unilateral pelvic pain with nausea — ovarian torsion (LR 9.0)' },
+
+        // Ovarian cyst (after appendectomy context)
+        { pattern: /(right\s*(side|lower).*(pelvi|abdom)).*(appendix.*(removed|out)|no\s*appendix)/i, diagnosis: 'Ovarian Cyst', lr: 5.0, evidence: 'RLQ pain post-appendectomy — ovarian cyst concern (LR 5.0)' },
       ];
       for (const rule of ccLRRules) {
         if (rule.pattern.test(chiefComplaint)) {
