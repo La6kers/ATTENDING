@@ -698,6 +698,50 @@ export class DifferentialDiagnosisService {
         { pattern: /(breast|nurs|breastfeed|lactati).*(red|hot|fever|infect|hard|lump|pain)|(red|hot|hard).*breast.*(baby|nurs|feed)/i, diagnosis: 'Lactation Mastitis', lr: 6.0, evidence: 'Breast redness/pain in nursing mother — mastitis (LR 6.0)' },
         // IPV — partner violence keywords
         { pattern: /(partner|husband|wife|boyfriend|girlfriend).*(hit|punch|kick|choke|strangle|hurt|abuse|threat)/i, diagnosis: 'Intimate Partner Violence', lr: 8.0, evidence: 'Partner violence reported — IPV screening (LR 8.0)' },
+        // Pyloric stenosis — projectile vomiting in infant
+        { pattern: /projectile\s*vomit.*(?:baby|infant|newborn|week\s*old)|(?:baby|infant|newborn|week\s*old).*projectile/i, diagnosis: 'Pyloric Stenosis', lr: 8.0, evidence: 'Projectile vomiting in infant — pyloric stenosis (LR 8.0)' },
+        { pattern: /(?:baby|infant).*(?:hungry|feeds?).*(?:after|right\s*after|immediately).*vomit/i, diagnosis: 'Pyloric Stenosis', lr: 5.0, evidence: 'Hungry after vomiting in infant — pyloric stenosis pattern (LR 5.0)' },
+        // Epiglottitis — drooling + stridor + tripod
+        { pattern: /(?:drool|stridor|tripod).*(?:fever|cant\s*swallow|toxic|hoarse)|(?:fever|cant\s*swallow).*(?:drool|stridor)/i, diagnosis: 'Epiglottitis', lr: 8.0, evidence: 'Drooling/stridor/fever — epiglottitis emergency (LR 8.0)' },
+        { pattern: /(?:child|kid|toddler).*(?:drool|stridor|cant\s*swallow|muffled\s*voice)/i, diagnosis: 'Epiglottitis', lr: 5.0, evidence: 'Pediatric drooling/stridor — consider epiglottitis (LR 5.0)' },
+        // Ovarian torsion — sudden unilateral pelvic pain + nausea
+        { pattern: /(?:sudden|sharp|worst).*(?:pelvi|ovary|ovarian|lower\s*abdom).*(?:nausea|vomit)|(?:ovary|ovarian).*(?:sudden|sharp|twist|torsion)/i, diagnosis: 'Ovarian Torsion', lr: 7.0, evidence: 'Sudden pelvic pain with nausea — ovarian torsion concern (LR 7.0)' },
+        // Shingles — dermatomal pain/rash one side
+        { pattern: /(?:stripe|band|belt|one\s*side).*(?:blister|rash|burn|pain)|shingles|zoster/i, diagnosis: 'Herpes Zoster (Shingles)', lr: 6.0, evidence: 'Dermatomal rash/pain — shingles (LR 6.0)' },
+        // Placental abruption — vaginal bleeding + abdominal pain in pregnancy
+        { pattern: /(?:pregnant|weeks\s*pregnant|\d+\s*weeks).*(?:bleed|blood).*(?:pain|cramp)|(?:bleed|blood).*(?:pregnant).*(?:pain|cramp)/i, diagnosis: 'Placental Abruption', lr: 6.0, evidence: 'Vaginal bleeding + pain in pregnancy — abruption concern (LR 6.0)' },
+        // Subdural hematoma — elderly/anticoagulant + headache/confusion after fall
+        { pattern: /(?:hit.*head|fell.*head|head.*hit|head.*injury|head.*bump).*(?:confus|headache|drowsy|vomit|weeks?\s*ago)/i, diagnosis: 'Subdural Hematoma', lr: 5.0, evidence: 'Head injury + delayed neuro symptoms — subdural hematoma (LR 5.0)' },
+        // Mesenteric ischemia — elderly + severe abd pain + out of proportion
+        { pattern: /(?:severe|worst|excruciating).*(?:abdom|belly).*(?:out\s*of\s*proportion|no\s*findings|looks\s*ok)/i, diagnosis: 'Mesenteric Ischemia', lr: 6.0, evidence: 'Severe pain out of proportion to exam — mesenteric ischemia (LR 6.0)' },
+        { pattern: /(?:abdom|belly).*(?:pain).*(?:after.*eat|atrial\s*fib|afib|blood\s*clot)/i, diagnosis: 'Mesenteric Ischemia', lr: 4.0, evidence: 'Abdominal pain with AFib/vascular risk — mesenteric ischemia concern (LR 4.0)' },
+        // Rhabdomyolysis — muscle pain + dark urine after exertion/crush
+        { pattern: /(?:dark|brown|tea|cola)\s*(?:urine|pee).*(?:muscle|workout|exertion|crush|pain)|(?:muscle|exercise|crush|pain).*(?:dark|brown|tea|cola)\s*(?:urine|pee)/i, diagnosis: 'Rhabdomyolysis', lr: 7.0, evidence: 'Dark urine + muscle pain — rhabdomyolysis (LR 7.0)' },
+        // Intussusception — currant jelly stool + episodic crying in infant/toddler
+        { pattern: /(?:currant\s*jelly|bloody\s*mucus).*(?:stool|poop|diaper)|(?:baby|infant|toddler).*(?:scream|cry|draw.*leg|pull.*knee).*(?:episod|comes?\s*and\s*goes?|every\s*few)/i, diagnosis: 'Intussusception', lr: 8.0, evidence: 'Currant jelly stool/episodic colic in infant — intussusception (LR 8.0)' },
+        // Henoch-Schonlein Purpura — palpable purpura + abd pain + joint pain in child
+        { pattern: /(?:purpl|purpur).*(?:rash|spot|bump).*(?:leg|buttock|butt|joint|belly)|(?:child|kid).*(?:purpl|rash).*(?:joint|belly|hurt)/i, diagnosis: 'Henoch-Schonlein Purpura (IgA Vasculitis)', lr: 7.0, evidence: 'Palpable purpura + abdominal/joint pain in child — HSP (LR 7.0)' },
+        // SCFE — obese adolescent + hip/knee pain + limp
+        { pattern: /(?:overweight|obese|heavy|big).*(?:teen|adolesc|\d+\s*year).*(?:hip|knee|limp)|(?:teen|adolesc).*(?:hip|limp|groin).*(?:cant\s*walk|waddl)/i, diagnosis: 'Slipped Capital Femoral Epiphysis', lr: 6.0, evidence: 'Obese adolescent + hip/knee pain — SCFE (LR 6.0)' },
+        // Hepatic encephalopathy — liver disease + confusion
+        { pattern: /(?:liver|cirrho|hepatit).*(?:confus|forget|asterix|flap|alter|sleepy)|(?:confus|alter).*(?:liver|cirrho)/i, diagnosis: 'Hepatic Encephalopathy', lr: 7.0, evidence: 'Confusion with liver disease — hepatic encephalopathy (LR 7.0)' },
+        // Opioid withdrawal — stopped/ran out + symptoms
+        { pattern: /(?:ran\s*out|stopped|quit|cant\s*get).*(?:opioid|opiate|pain\s*med|percocet|norco|suboxone|methadone|heroin)/i, diagnosis: 'Opioid Withdrawal', lr: 6.0, evidence: 'Opioid cessation — withdrawal (LR 6.0)' },
+        { pattern: /(?:opioid|opiate|heroin).*(?:withdraw|sick|cramp|sweat|diarr|restless|ache)/i, diagnosis: 'Opioid Withdrawal', lr: 5.0, evidence: 'Opioid use + withdrawal symptoms (LR 5.0)' },
+        // Psychotic disorder — hearing voices, paranoia, delusions
+        { pattern: /(?:hear|hearing)\s*(?:voice|thing|people).*(?:not\s*there|no\s*one|nobody)|voice.*(?:tell|command|say)/i, diagnosis: 'Psychotic Disorder', lr: 8.0, evidence: 'Auditory hallucinations — psychotic disorder (LR 8.0)' },
+        { pattern: /(?:paranoi|delusion|conspir).*(?:follow|watch|spy|poison|government|chip)/i, diagnosis: 'Psychotic Disorder', lr: 7.0, evidence: 'Paranoid delusions — psychotic features (LR 7.0)' },
+        // Hypothyroidism — weight gain + fatigue + cold intolerance
+        { pattern: /(?:weight\s*gain|gain.*weight|getting\s*fat).*(?:tired|fatigu|cold|constipat|hair\s*loss)|(?:tired|fatigu|cold|constipat).*(?:weight\s*gain|gain.*weight)/i, diagnosis: 'Hypothyroidism', lr: 4.0, evidence: 'Weight gain + fatigue/cold intolerance — hypothyroidism (LR 4.0)' },
+        // TB specific CC LR — cough + night sweats + weight loss
+        { pattern: /(?:cough|hemoptysis).*(?:night\s*sweat|weight\s*loss|fever\s*at\s*night|month)|(?:night\s*sweat|weight\s*loss).*cough/i, diagnosis: 'Pulmonary Tuberculosis', lr: 5.0, evidence: 'Chronic cough + B-symptoms — TB concern (LR 5.0)' },
+        // Drain cleaner / caustic exposure
+        { pattern: /(?:drain\s*cleaner|bleach|lye|caustic|acid).*(?:splash|burn|skin|hand|eye|mouth|swallow)/i, diagnosis: 'Chemical Burn', lr: 8.0, evidence: 'Caustic chemical exposure — chemical burn (LR 8.0)' },
+        { pattern: /(?:white|blanch|bleach).*(?:skin|hand|arm).*(?:burn|chemical|drain|acid)/i, diagnosis: 'Chemical Burn', lr: 6.0, evidence: 'Skin blanching from chemical exposure (LR 6.0)' },
+        // Cancer screening triggers
+        { pattern: /(?:lump|mass|growth).*(?:grow|bigger|hard|firm|weeks|months).*(?:neck|breast|armpit|groin)/i, diagnosis: 'Malignancy', lr: 3.0, evidence: 'Growing firm mass — malignancy concern (LR 3.0)' },
+        // Medication side effect generic
+        { pattern: /(?:since\s*start|after\s*start|new\s*med).*(?:dizz|nausea|rash|itch|swell|pain|headache|tired)/i, diagnosis: 'Adverse Drug Reaction', lr: 4.0, evidence: 'Symptoms temporally related to new medication (LR 4.0)' },
       ];
       for (const rule of ccLRRules) {
         if (rule.pattern.test(chiefComplaint)) {

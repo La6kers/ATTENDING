@@ -367,7 +367,8 @@ const SYNONYMS: Record<string, string[]> = {
     'red area spreading', 'warm red skin', 'infected skin',
   ],
   'erythema': [
-    'red', 'redness', 'skin is red', 'skin turned red',
+    'redness', 'skin is red', 'skin turned red', 'its red',
+    'looks red', 'really red', 'all red', 'turned red',
   ],
   'swelling': [
     'swollen', 'puffy', 'big and puffy', 'swole up',
@@ -601,7 +602,7 @@ const SYNONYMS: Record<string, string[]> = {
     'wired', 'bouncing off the walls', 'out of control',
   ],
   'substance intoxication': [
-    'overdosed', 'od', 'took too many pills', 'took too much',
+    'overdosed', 'took too many pills', 'took too much',
     'swallowed a bottle of pills', 'found him on the floor',
     'found her unresponsive', 'not breathing right',
     'high on', 'smoked meth', 'smoked crack', 'shot up',
@@ -665,7 +666,7 @@ const SYNONYMS: Record<string, string[]> = {
     'spironolactone side effects', 'on hrt',
     'started hormones and', 'hormone replacement',
   ],
-  'chest binding injury': [
+  'chest binding pain': [
     'binder hurts', 'binding too tight', 'chest binder',
     'ribs hurt from binding', 'cant breathe in binder',
     'skin raw from binder',
@@ -694,8 +695,8 @@ const SYNONYMS: Record<string, string[]> = {
   // ===== SEXUAL DYSFUNCTION =====
   'erectile dysfunction': [
     'cant get it up', 'cant keep it up', 'cant get hard',
-    'cant perform', 'problems in the bedroom',
-    'not working down there', 'ed', 'impotent',
+    'cant perform in bed', 'problems in the bedroom',
+    'not working down there', 'impotent',
   ],
   'dyspareunia': [
     'sex hurts', 'painful sex', 'pain during sex',
@@ -752,10 +753,11 @@ const SYNONYMS: Record<string, string[]> = {
   ],
 
   // ===== BURNS =====
-  'burn injury': [
+  'thermal burn': [
     'burned my hand', 'burned my arm', 'burned myself',
     'spilled hot water', 'boiling water', 'hot oil',
     'steam burn', 'touched the stove', 'grease burn',
+    'chemical burn', 'sunburn', 'sun burn',
   ],
 
   // ===== BITES =====
@@ -779,6 +781,109 @@ const SYNONYMS: Record<string, string[]> = {
     'nothing comes out', 'bladder feels full', 'bladder wont empty',
     'havent peed', 'havent urinated',
     'trying to pee but cant', 'straining to pee',
+  ],
+
+  // ===== POISONING / CAUSTIC INGESTION =====
+  'caustic ingestion': [
+    'drank bleach', 'swallowed bleach', 'drank cleaner',
+    'drain cleaner splashed', 'drain cleaner on my',
+    'swallowed drain cleaner', 'drank antifreeze',
+    'chemical in my mouth', 'acid splashed',
+    'lye on my skin', 'caustic exposure',
+  ],
+  'poisoning': [
+    'got into the medicine cabinet', 'child ate pills',
+    'toddler swallowed', 'baby put in mouth',
+    'accidentally swallowed', 'drank something toxic',
+    'mushroom poisoning', 'ate bad mushrooms',
+  ],
+
+  // ===== TUBERCULOSIS / INFECTIOUS =====
+  'tuberculosis screening': [
+    'tb test positive', 'ppd positive', 'quantiferon positive',
+    'exposed to tb', 'contact with tuberculosis',
+    'coughing up blood for weeks', 'night sweats and cough',
+    'night sweats and weight loss', 'been around someone with tb',
+  ],
+
+  // ===== CANCER SYMPTOMS =====
+  'cancer concern': [
+    'found a lump', 'growing lump', 'hard lump in my neck',
+    'lump in my armpit', 'lump in my groin', 'mass in my abdomen',
+    'lump getting bigger', 'worried about cancer',
+    'family history of cancer', 'unexplained weight loss and lump',
+    'swollen glands for months', 'firm lump that wont go away',
+  ],
+
+  // ===== MEDICATION SIDE EFFECTS =====
+  'medication side effect': [
+    'since i started my new medicine', 'after starting medication',
+    'medicine is making me sick', 'pills are causing',
+    'drug reaction', 'allergic to my medicine',
+    'broke out after taking', 'side effects from my medication',
+    'new med is causing problems', 'medicine making me dizzy',
+  ],
+
+  // ===== LYMPH NODE SWELLING =====
+  'lymphadenopathy': [
+    'swollen glands', 'swollen lymph nodes', 'glands in my neck',
+    'lump in my neck', 'lumps under my jaw',
+    'swollen nodes in armpit', 'groin lumps',
+    'glands are swollen', 'nodes are enlarged',
+  ],
+
+  // ===== NOSEBLEED =====
+  'epistaxis': [
+    'nose is bleeding', 'nosebleed wont stop',
+    'blood coming from my nose', 'nose bleed',
+    'nostril bleeding', 'bloody nose',
+  ],
+
+  // ===== NECK PAIN =====
+  'neck pain': [
+    'stiff neck', 'neck is stiff', 'cant turn my neck',
+    'neck hurts', 'neck is killing me', 'neck spasm',
+    'whiplash', 'crick in my neck',
+  ],
+
+  // ===== SHOULDER PAIN =====
+  'shoulder injury': [
+    'shoulder hurts', 'cant lift my arm', 'cant raise my arm',
+    'shoulder popped', 'shoulder dislocated', 'rotator cuff',
+    'frozen shoulder', 'shoulder is stuck',
+    'shoulder came out', 'arm wont go up',
+  ],
+
+  // ===== SUICIDAL IDEATION =====
+  'suicidal ideation': [
+    'want to kill myself', 'want to end it all',
+    'better off dead', 'no reason to live',
+    'dont want to wake up', 'thinking about ending it',
+    'want to die', 'planning to hurt myself',
+    'cutting myself', 'self harm',
+  ],
+
+  // ===== SEASONAL ALLERGIES =====
+  'allergic rhinitis': [
+    'allergies acting up', 'seasonal allergies',
+    'hay fever', 'pollen allergy',
+    'allergies are bad', 'allergy season',
+    'sneezing and itchy eyes', 'eyes watering from allergies',
+  ],
+
+  // ===== RECTAL BLEEDING =====
+  'rectal bleeding': [
+    'blood on the toilet paper', 'blood in the toilet',
+    'blood when i wipe', 'bleeding from my bottom',
+    'bloody stool', 'blood in my poop',
+    'bright red blood in stool', 'bleeding from my butt',
+  ],
+
+  // ===== HEMATURIA =====
+  'hematuria': [
+    'blood in my urine', 'blood in my pee',
+    'peeing blood', 'pink urine',
+    'red urine', 'blood when i pee',
   ],
 };
 
@@ -845,6 +950,14 @@ const FALLBACK_MEDICAL_HITS = [
   'diabetes', 'diabetic', 'glucose', 'insulin',
   'depress', 'anxious', 'panic', 'sad', 'suicid',
   'infect', 'sepsis',
+  'tb', 'tuberc', 'lymph', 'gland', 'node',
+  'poison', 'toxic', 'ingest', 'bleach', 'drain cleaner',
+  'allerg', 'pollen', 'hay fever', 'sneez',
+  'medication', 'medicine', 'side effect', 'drug react',
+  'nosebleed', 'bloody nose', 'epistaxis',
+  'blood in urine', 'blood in stool', 'rectal bleed',
+  'whiplash', 'stiff neck', 'frozen shoulder',
+  'suicide', 'self harm', 'kill myself',
 ];
 
 export function matchesKnownSymptom(text: string | undefined | null): boolean {

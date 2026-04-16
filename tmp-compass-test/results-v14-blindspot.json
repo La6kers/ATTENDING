@@ -1,0 +1,1986 @@
+[
+  {
+    "id": 3000,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Second Degree Burn",
+    "cc": "spilled boiling water on my arm its all red with blisters",
+    "primary": "Fracture",
+    "confidence": 27,
+    "top5": [
+      "Fracture",
+      "Soft Tissue Injury",
+      "Rib Fracture",
+      "Concussion",
+      "Traumatic Brain Injury"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 41,
+    "error": null
+  },
+  {
+    "id": 3001,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Chemical Burn",
+    "cc": "got drain cleaner splashed on my hand at work its turning white and hurts bad",
+    "primary": "Erectile Dysfunction",
+    "confidence": 44,
+    "top5": [
+      "Erectile Dysfunction",
+      "Hypogonadism",
+      "Medication-Induced Sexual Dysfunction",
+      "Premature Ejaculation",
+      "Peyronie Disease"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3002,
+    "demo": "peds",
+    "setting": "UC",
+    "expected": "Sunburn",
+    "cc": "fell asleep at the beach now my kid is bright red and crying it hurts to touch her",
+    "primary": "Fracture",
+    "confidence": 34,
+    "top5": [
+      "Fracture",
+      "Soft Tissue Injury",
+      "Concussion",
+      "Rib Fracture",
+      "Traumatic Brain Injury"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3003,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Dog Bite",
+    "cc": "neighbors dog bit my kid on the face its bleeding pretty bad",
+    "primary": "Dog/Cat Bite",
+    "confidence": 38,
+    "top5": [
+      "Dog/Cat Bite",
+      "Insect Bite/Sting",
+      "Cellulitis (bite-related)",
+      "Allergic Reaction to Sting",
+      "Snake Envenomation"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3004,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Spider Bite",
+    "cc": "something bit me in bed now theres a red area on my leg with a dark center",
+    "primary": "Insect Bite/Sting",
+    "confidence": 37,
+    "top5": [
+      "Insect Bite/Sting",
+      "Dog/Cat Bite",
+      "Cellulitis (bite-related)",
+      "Allergic Reaction to Sting",
+      "Tick-Borne Illness"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3005,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "Tick Bite",
+    "cc": "found a tick on me last week now theres a big red ring around the bite",
+    "primary": "Erectile Dysfunction",
+    "confidence": 44,
+    "top5": [
+      "Erectile Dysfunction",
+      "Hypogonadism",
+      "Medication-Induced Sexual Dysfunction",
+      "Premature Ejaculation",
+      "Peyronie Disease"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3006,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Snake Bite",
+    "cc": "got bit by a snake out hiking my ankle is swelling up fast and it hurts real bad",
+    "primary": "Gout",
+    "confidence": 84,
+    "top5": [
+      "Gout",
+      "Plantar Fasciitis",
+      "Ankle Sprain",
+      "Stress Fracture",
+      "Peripheral Neuropathy"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  },
+  {
+    "id": 3007,
+    "demo": "peds",
+    "setting": "UC",
+    "expected": "Nasal Foreign Body",
+    "cc": "my kid stuck a bead up his nose and we cant get it out its making a bad smell",
+    "primary": "Medication-Induced Sexual Dysfunction",
+    "confidence": 22,
+    "top5": [
+      "Medication-Induced Sexual Dysfunction",
+      "Hypogonadism",
+      "Premature Ejaculation",
+      "Peyronie Disease",
+      "Dyspareunia"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3008,
+    "demo": "peds",
+    "setting": "UC",
+    "expected": "Ear Foreign Body",
+    "cc": "my daughter put something in her ear now she says it hurts and wont stop crying",
+    "primary": "Needs in-person evaluation",
+    "confidence": "unknown",
+    "top5": [
+      "Needs in-person evaluation"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  },
+  {
+    "id": 3009,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Esophageal Foreign Body",
+    "cc": "my toddler swallowed a coin now hes drooling and wont eat anything",
+    "primary": "Esophageal Cancer",
+    "confidence": 40,
+    "top5": [
+      "Esophageal Cancer",
+      "Esophageal Stricture",
+      "Eosinophilic Esophagitis",
+      "GERD",
+      "Achalasia"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 12,
+    "error": null
+  },
+  {
+    "id": 3010,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Laceration",
+    "cc": "cut my hand real deep on a knife its gaping open and wont stop bleeding",
+    "primary": "Simple Laceration",
+    "confidence": 58,
+    "top5": [
+      "Simple Laceration",
+      "Deep Laceration (tendon/nerve risk)",
+      "Puncture Wound",
+      "Wound Infection",
+      "Foreign Body Retention"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3011,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Puncture Wound",
+    "cc": "stepped on a rusty nail went right through my shoe into my foot",
+    "primary": "Erectile Dysfunction",
+    "confidence": 42,
+    "top5": [
+      "Erectile Dysfunction",
+      "Hypogonadism",
+      "Medication-Induced Sexual Dysfunction",
+      "Premature Ejaculation",
+      "Peyronie Disease"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3012,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Vasovagal Syncope",
+    "cc": "i passed out at the doctors office when they drew my blood woke up on the floor",
+    "primary": "Opioid Overdose",
+    "confidence": 31,
+    "top5": [
+      "Opioid Overdose",
+      "Subset of patients present with Syncope Plus another key symptom",
+      "Alcohol Intoxication",
+      "Polypharmacy/Mixed Overdose",
+      "Acute Hemorrhage"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 13,
+    "error": null
+  },
+  {
+    "id": 3013,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Cardiac Syncope",
+    "cc": "passed out without any warning while just sitting in my chair no dizziness first",
+    "primary": "Orthostatic hypotension",
+    "confidence": 43,
+    "top5": [
+      "Orthostatic hypotension",
+      "BPPV",
+      "Cardiac Arrhythmia",
+      "Subset of patients present with Syncope Plus another key symptom",
+      "Acute Hemorrhage"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 13,
+    "error": null
+  },
+  {
+    "id": 3014,
+    "demo": "geri",
+    "setting": "PC",
+    "expected": "Orthostatic Syncope",
+    "cc": "every time i stand up from the chair i get so dizzy i almost fall over",
+    "primary": "Hip Fracture",
+    "confidence": 75,
+    "top5": [
+      "Hip Fracture",
+      "Fracture",
+      "Soft Tissue Injury",
+      "Traumatic Brain Injury",
+      "Rib Fracture"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3015,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Urticaria",
+    "cc": "broke out in hives all over my body theyre itchy and keep moving around",
+    "primary": "Opioid Overdose",
+    "confidence": 31,
+    "top5": [
+      "Opioid Overdose",
+      "Anaphylaxis",
+      "Polypharmacy/Mixed Overdose",
+      "Acetaminophen Overdose",
+      "Alcohol Intoxication"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3016,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Angioedema",
+    "cc": "my lips and tongue are swelling up really fast i just started a new blood pressure pill",
+    "primary": "Opioid Overdose",
+    "confidence": 52,
+    "top5": [
+      "Opioid Overdose",
+      "Alcohol Intoxication",
+      "Stimulant Intoxication",
+      "Benzodiazepine Overdose",
+      "Polypharmacy/Mixed Overdose"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3017,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Drug Reaction",
+    "cc": "started a new antibiotic and now i have a rash all over and my skin is peeling",
+    "primary": "Dyspareunia",
+    "confidence": 24,
+    "top5": [
+      "Dyspareunia",
+      "Medication-Induced Sexual Dysfunction",
+      "Atrophic Vaginitis",
+      "Female Sexual Arousal Disorder",
+      "Hypogonadism"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3018,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Dental Abscess",
+    "cc": "my tooth is killing me my whole jaw is swollen and i can feel a bump on my gum",
+    "primary": "Dental Abscess",
+    "confidence": 34,
+    "top5": [
+      "Dental Abscess",
+      "Dental Caries",
+      "TMJ Disorder",
+      "Periapical Abscess",
+      "Salivary Gland Stone"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3019,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "TMJ Disorder",
+    "cc": "my jaw clicks and locks when i open it and i get bad headaches from it",
+    "primary": "Tension headache",
+    "confidence": 53,
+    "top5": [
+      "Tension headache",
+      "Migraine",
+      "Sinusitis",
+      "Medication overuse headache",
+      "Cluster headache"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3020,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Chlamydia",
+    "cc": "new discharge down there that doesnt look normal and it burns a little when i pee",
+    "primary": "UTI",
+    "confidence": 70,
+    "top5": [
+      "UTI",
+      "Pyelonephritis",
+      "Kidney Stone",
+      "Interstitial Cystitis",
+      "Urethritis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3021,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Genital Herpes",
+    "cc": "painful blisters down there that popped and turned into sores its really uncomfortable",
+    "primary": "Erectile Dysfunction",
+    "confidence": 34,
+    "top5": [
+      "Erectile Dysfunction",
+      "Medication-Induced Sexual Dysfunction",
+      "Hypogonadism",
+      "Premature Ejaculation",
+      "Peyronie Disease"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3022,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Urinary Retention",
+    "cc": "i havent been able to pee all day my belly is getting big and it hurts down low",
+    "primary": "Major Depressive Disorder",
+    "confidence": 32,
+    "top5": [
+      "Major Depressive Disorder",
+      "Adjustment Disorder",
+      "Generalized Anxiety Disorder",
+      "Substance Use Disorder",
+      "Bipolar Disorder"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3023,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Heat Exhaustion",
+    "cc": "was working outside in the heat all day now im dizzy nauseous and sweating buckets",
+    "primary": "Acute Myocardial Infarction",
+    "confidence": 30,
+    "top5": [
+      "Acute Myocardial Infarction",
+      "BPPV",
+      "Vestibular neuritis",
+      "Orthostatic hypotension",
+      "Medication side effect"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 13,
+    "error": null
+  },
+  {
+    "id": 3024,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Hypothermia",
+    "cc": "found grandpa outside confused and shivering his skin feels ice cold",
+    "primary": "Viral infection",
+    "confidence": 37,
+    "top5": [
+      "Viral infection",
+      "Pneumonia",
+      "Gastroenteritis",
+      "Sepsis",
+      "Bacterial infection"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3025,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Frostbite",
+    "cc": "my fingers are white and numb from being out in the cold they hurt bad now warming up",
+    "primary": "Peripheral Neuropathy",
+    "confidence": 39,
+    "top5": [
+      "Peripheral Neuropathy",
+      "Carpal Tunnel Syndrome",
+      "Cervical Radiculopathy",
+      "Stroke",
+      "Vitamin B12 Deficiency"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3026,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Hyperemesis Gravidarum",
+    "cc": "im 10 weeks pregnant and i cant stop throwing up ive lost 8 pounds and feel so weak",
+    "primary": "Depression",
+    "confidence": 27,
+    "top5": [
+      "Depression",
+      "Anemia",
+      "Hypothyroidism",
+      "Hyperemesis Gravidarum",
+      "Acute Gastroenteritis"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  },
+  {
+    "id": 3027,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Threatened Miscarriage",
+    "cc": "im 8 weeks pregnant and started spotting with some cramping im really scared",
+    "primary": "Uterine Fibroids",
+    "confidence": 32,
+    "top5": [
+      "Uterine Fibroids",
+      "Dysfunctional Uterine Bleeding",
+      "Atrophic Vaginitis",
+      "Endometrial Hyperplasia",
+      "Miscarriage"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3028,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "Postpartum Depression",
+    "cc": "had my baby 3 weeks ago and i cant stop crying feel worthless and scared i might hurt myself",
+    "primary": "Dyspareunia",
+    "confidence": 24,
+    "top5": [
+      "Dyspareunia",
+      "Medication-Induced Sexual Dysfunction",
+      "Female Sexual Arousal Disorder",
+      "Vaginismus",
+      "Atrophic Vaginitis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3029,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Mastitis",
+    "cc": "breastfeeding and one breast is super red hot swollen and painful with a fever",
+    "primary": "Cellulitis",
+    "confidence": 41,
+    "top5": [
+      "Cellulitis",
+      "Abscess",
+      "Contact Dermatitis",
+      "Lactation Mastitis",
+      "Orbital Cellulitis"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3030,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "Breast Cyst",
+    "cc": "found a lump in my breast its round and moves and gets tender before my period",
+    "primary": "Opioid Overdose",
+    "confidence": 31,
+    "top5": [
+      "Opioid Overdose",
+      "Alcohol Intoxication",
+      "Polypharmacy/Mixed Overdose",
+      "Stimulant Intoxication",
+      "Acetaminophen Overdose"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3031,
+    "demo": "peds",
+    "setting": "PC",
+    "expected": "Gynecomastia",
+    "cc": "my chest is getting bigger on both sides and its embarrassing and a little sore",
+    "primary": "Needs in-person evaluation",
+    "confidence": "unknown",
+    "top5": [
+      "Needs in-person evaluation"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3032,
+    "demo": "peds",
+    "setting": "PC",
+    "expected": "Colic",
+    "cc": "my 6 week old baby cries for hours every evening nothing we do helps",
+    "primary": "Needs in-person evaluation",
+    "confidence": "unknown",
+    "top5": [
+      "Needs in-person evaluation"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3033,
+    "demo": "peds",
+    "setting": "PC",
+    "expected": "Diaper Rash",
+    "cc": "babys bottom is all red raw and now theres white patches that look like thrush on her diaper area",
+    "primary": "Dyspareunia",
+    "confidence": 24,
+    "top5": [
+      "Dyspareunia",
+      "Medication-Induced Sexual Dysfunction",
+      "Female Sexual Arousal Disorder",
+      "Vaginismus",
+      "Hypogonadism"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3034,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Falls with Polypharmacy",
+    "cc": "keep falling down three times this month i take about 12 different medicines",
+    "primary": "Dyspareunia",
+    "confidence": 24,
+    "top5": [
+      "Dyspareunia",
+      "Medication-Induced Sexual Dysfunction",
+      "Female Sexual Arousal Disorder",
+      "Atrophic Vaginitis",
+      "Polypharmacy/Medication Effect"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3035,
+    "demo": "geri",
+    "setting": "PC",
+    "expected": "Deconditioning",
+    "cc": "since my wife died ive barely left bed and now i can hardly walk to the bathroom",
+    "primary": "Erectile Dysfunction",
+    "confidence": 44,
+    "top5": [
+      "Erectile Dysfunction",
+      "Hypogonadism",
+      "Medication-Induced Sexual Dysfunction",
+      "Premature Ejaculation",
+      "Peyronie Disease"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 12,
+    "error": null
+  },
+  {
+    "id": 3036,
+    "demo": "geri",
+    "setting": "PC",
+    "expected": "Malignancy",
+    "cc": "lost 30 pounds without trying in 3 months and i have no appetite",
+    "primary": "Malignancy",
+    "confidence": 36,
+    "top5": [
+      "Malignancy",
+      "Diabetes Mellitus",
+      "Major Depressive Disorder",
+      "HIV/AIDS",
+      "Tuberculosis"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3037,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "Celiac Disease",
+    "cc": "every time i eat bread or pasta my belly bloats up terrible with diarrhea and im losing weight",
+    "primary": "Gastroenteritis",
+    "confidence": 26,
+    "top5": [
+      "Gastroenteritis",
+      "GERD",
+      "Cholecystitis",
+      "Appendicitis",
+      "Ectopic Pregnancy"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3038,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "Sleep Apnea",
+    "cc": "my wife says i stop breathing at night and snore real loud im exhausted during the day",
+    "primary": "Kidney Stone",
+    "confidence": 22,
+    "top5": [
+      "Kidney Stone",
+      "UTI",
+      "Prostatitis",
+      "Urethritis",
+      "Pyelonephritis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 12,
+    "error": null
+  },
+  {
+    "id": 3039,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "Restless Leg Syndrome",
+    "cc": "cant sit still at night my legs get this creepy crawly feeling and i have to keep moving them",
+    "primary": "Chlamydia",
+    "confidence": 30,
+    "top5": [
+      "Chlamydia",
+      "Genital Herpes",
+      "Trichomoniasis",
+      "Gonorrhea",
+      "Bacterial Vaginosis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3040,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Crush Injury",
+    "cc": "forklift rolled over my foot at work its smashed and turning purple",
+    "primary": "Erectile Dysfunction",
+    "confidence": 39,
+    "top5": [
+      "Erectile Dysfunction",
+      "Medication-Induced Sexual Dysfunction",
+      "Hypogonadism",
+      "Premature Ejaculation",
+      "Peyronie Disease"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3041,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Chemical Exposure",
+    "cc": "breathed in fumes at the factory now im coughing and my eyes are burning and watering",
+    "primary": "Corneal Abrasion",
+    "confidence": 36,
+    "top5": [
+      "Corneal Abrasion",
+      "Foreign Body",
+      "Post-Bronchitic cough",
+      "Conjunctivitis",
+      "Bronchitis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 12,
+    "error": null
+  },
+  {
+    "id": 3042,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Anal Fissure",
+    "cc": "sharp tearing pain every time i have a bowel movement with a little bright red blood",
+    "primary": "Opioid Overdose",
+    "confidence": 31,
+    "top5": [
+      "Opioid Overdose",
+      "Polypharmacy/Mixed Overdose",
+      "Alcohol Intoxication",
+      "Acetaminophen Overdose",
+      "Stimulant Intoxication"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3043,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Perianal Abscess",
+    "cc": "theres a painful swollen lump right next to my butt i cant sit down and got a fever",
+    "primary": "Viral infection",
+    "confidence": 37,
+    "top5": [
+      "Viral infection",
+      "Pneumonia",
+      "Gastroenteritis",
+      "Bacterial infection",
+      "Acute Otitis Media"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3044,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Pneumothorax",
+    "cc": "i think my lung collapsed im a tall skinny guy and it feels like air is leaking in my chest",
+    "primary": "Vasovagal Syncope",
+    "confidence": 87,
+    "top5": [
+      "Vasovagal Syncope",
+      "Cardiac Arrhythmia",
+      "Orthostatic Hypotension",
+      "Acute Hemorrhage",
+      "Seizure"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 13,
+    "error": null
+  },
+  {
+    "id": 3045,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Pneumothorax",
+    "cc": "something popped in my chest while lifting weights now one side hurts to breathe and i feel air under my skin",
+    "primary": "Kidney Stone",
+    "confidence": 74,
+    "top5": [
+      "Kidney Stone",
+      "Pyelonephritis",
+      "Musculoskeletal Strain",
+      "Abdominal Aortic Aneurysm",
+      "Primary Spontaneous Pneumothorax"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3046,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Pancreatitis",
+    "cc": "pain goes straight through from my belly to my back worse after drinking and eating fatty food",
+    "primary": "Opioid Overdose",
+    "confidence": 52,
+    "top5": [
+      "Opioid Overdose",
+      "Alcohol Intoxication",
+      "Stimulant Intoxication",
+      "Benzodiazepine Overdose",
+      "Polypharmacy/Mixed Overdose"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3047,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Pancreatitis",
+    "cc": "severe upper belly pain that bores through to my back i have to lean forward for any relief",
+    "primary": "Gastroenteritis",
+    "confidence": 32,
+    "top5": [
+      "Gastroenteritis",
+      "GERD",
+      "Cholecystitis",
+      "Pancreatitis",
+      "Diverticulitis"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3048,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Epiglottitis",
+    "cc": "my kid woke up drooling cant swallow sitting up leaning forward and making a weird high pitched noise breathing",
+    "primary": "Esophageal Cancer",
+    "confidence": 40,
+    "top5": [
+      "Esophageal Cancer",
+      "Esophageal Stricture",
+      "Eosinophilic Esophagitis",
+      "GERD",
+      "Achalasia"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 12,
+    "error": null
+  },
+  {
+    "id": 3049,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Epiglottitis",
+    "cc": "swallowing is so painful i cant even swallow my own spit and my voice sounds muffled",
+    "primary": "Erectile Dysfunction",
+    "confidence": 39,
+    "top5": [
+      "Erectile Dysfunction",
+      "Medication-Induced Sexual Dysfunction",
+      "Hypogonadism",
+      "Premature Ejaculation",
+      "Peyronie Disease"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3050,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Ovarian Torsion",
+    "cc": "sudden sharp stabbing pain in my lower right belly near my ovary im doubled over vomiting",
+    "primary": "Female Sexual Arousal Disorder",
+    "confidence": 25,
+    "top5": [
+      "Female Sexual Arousal Disorder",
+      "Dyspareunia",
+      "Medication-Induced Sexual Dysfunction",
+      "Acute Gastroenteritis",
+      "Vaginismus"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  },
+  {
+    "id": 3051,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Ovarian Torsion",
+    "cc": "woke up with the worst pain on my left side down low like something twisted inside me",
+    "primary": "Dyspareunia",
+    "confidence": 24,
+    "top5": [
+      "Dyspareunia",
+      "Medication-Induced Sexual Dysfunction",
+      "Female Sexual Arousal Disorder",
+      "Vaginismus",
+      "Atrophic Vaginitis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3052,
+    "demo": "geri",
+    "setting": "UC",
+    "expected": "Shingles",
+    "cc": "had chickenpox years ago now theres a painful band of blisters wrapping around my left side",
+    "primary": "Contact Dermatitis",
+    "confidence": 30,
+    "top5": [
+      "Contact Dermatitis",
+      "Viral Exanthem",
+      "Conjunctivitis",
+      "Allergic Reaction",
+      "Cellulitis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3053,
+    "demo": "geri",
+    "setting": "PC",
+    "expected": "Shingles",
+    "cc": "got herpes zoster my doctor said its shingles burning nerve pain with blisters on one side of my chest",
+    "primary": "Musculoskeletal pain",
+    "confidence": 30,
+    "top5": [
+      "Musculoskeletal pain",
+      "Acute Coronary Syndrome",
+      "GERD",
+      "Costochondritis",
+      "Pneumonia"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3054,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Status Epilepticus",
+    "cc": "my child has been having continuous seizures for over 30 minutes wont stop convulsing",
+    "primary": "Seizure",
+    "confidence": 41,
+    "top5": [
+      "Seizure",
+      "New-Onset Epilepsy",
+      "Alcohol Withdrawal Seizure",
+      "Syncope",
+      "Febrile Seizure"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3055,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Status Epilepticus",
+    "cc": "she keeps seizing over and over not waking up between the seizures its been almost an hour",
+    "primary": "Seizure",
+    "confidence": 41,
+    "top5": [
+      "Seizure",
+      "New-Onset Epilepsy",
+      "Syncope",
+      "Alcohol Withdrawal Seizure",
+      "Hypoglycemia"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3056,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Placental Abruption",
+    "cc": "im 35 weeks pregnant and having painful dark vaginal bleeding my uterus feels rock hard",
+    "primary": "Uterine Fibroids",
+    "confidence": 32,
+    "top5": [
+      "Uterine Fibroids",
+      "Dysfunctional Uterine Bleeding",
+      "Atrophic Vaginitis",
+      "Endometrial Hyperplasia",
+      "Miscarriage"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3057,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Tension Pneumothorax",
+    "cc": "stabbed in the chest and getting worse fast neck veins popping out and cant breathe",
+    "primary": "Asthma",
+    "confidence": 33,
+    "top5": [
+      "Asthma",
+      "Pneumonia",
+      "Pulmonary Embolism",
+      "Anxiety",
+      "Pneumothorax"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 12,
+    "error": null
+  },
+  {
+    "id": 3058,
+    "demo": "geri",
+    "setting": "PC",
+    "expected": "Temporal Arteritis",
+    "cc": "my temple artery is swollen and tender hurts to chew and im scared im going to go blind",
+    "primary": "Temporal Arteritis",
+    "confidence": 36,
+    "top5": [
+      "Temporal Arteritis",
+      "Stroke",
+      "Central Retinal Artery Occlusion",
+      "Retinal Detachment",
+      "Amaurosis Fugax"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3059,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Temporal Arteritis",
+    "cc": "sudden vision loss in one eye and my head hurts on the side with a tender bump near my temple",
+    "primary": "Temporal Arteritis",
+    "confidence": 36,
+    "top5": [
+      "Temporal Arteritis",
+      "Stroke",
+      "Central Retinal Artery Occlusion",
+      "Retinal Detachment",
+      "Amaurosis Fugax"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3060,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Subdural Hematoma",
+    "cc": "dad fell and hit his head 2 weeks ago seemed fine but now hes confused sleepy and one side is weak",
+    "primary": "Fracture",
+    "confidence": 54,
+    "top5": [
+      "Fracture",
+      "Hip Fracture",
+      "Traumatic Brain Injury",
+      "Soft Tissue Injury",
+      "Rib Fracture"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3061,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Subdural Hematoma",
+    "cc": "on blood thinners fell and bumped his head last week now having trouble speaking and walking",
+    "primary": "Fracture",
+    "confidence": 54,
+    "top5": [
+      "Fracture",
+      "Hip Fracture",
+      "Traumatic Brain Injury",
+      "Soft Tissue Injury",
+      "Rib Fracture"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3062,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Mesenteric Ischemia",
+    "cc": "belly pain thats way worse than it looks i have afib and the pain hit out of nowhere after eating",
+    "primary": "Gastroenteritis",
+    "confidence": 32,
+    "top5": [
+      "Gastroenteritis",
+      "GERD",
+      "Diverticulitis",
+      "Peptic Ulcer",
+      "Appendicitis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3063,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "Hypothyroidism",
+    "cc": "my thyroid feels swollen im exhausted constipated gaining weight and my hair is falling out in clumps",
+    "primary": "Fracture",
+    "confidence": 32,
+    "top5": [
+      "Fracture",
+      "Soft Tissue Injury",
+      "Hip Fracture",
+      "Rib Fracture",
+      "Traumatic Brain Injury"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3064,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Gastrointestinal Bleeding",
+    "cc": "throwing up blood looks like coffee grounds and my stool is black and tarry",
+    "primary": "Opioid Overdose",
+    "confidence": 39,
+    "top5": [
+      "Opioid Overdose",
+      "Alcohol Intoxication",
+      "Stimulant Intoxication",
+      "Acute Gastroenteritis",
+      "Gastrointestinal Bleeding"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 12,
+    "error": null
+  },
+  {
+    "id": 3065,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Gastrointestinal Bleeding",
+    "cc": "having large bloody bowel movements bright red blood filling the toilet and feeling faint",
+    "primary": "Opioid Overdose",
+    "confidence": 48,
+    "top5": [
+      "Opioid Overdose",
+      "Alcohol Intoxication",
+      "Stimulant Intoxication",
+      "Benzodiazepine Overdose",
+      "Polypharmacy/Mixed Overdose"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3066,
+    "demo": "adult",
+    "setting": "PC",
+    "expected": "Sciatica",
+    "cc": "electric shock pain shooting from my lower back down the back of my leg all the way to my toes numb and tingling",
+    "primary": "Gout",
+    "confidence": 84,
+    "top5": [
+      "Gout",
+      "Plantar Fasciitis",
+      "Cauda Equina Syndrome",
+      "Ankle Sprain",
+      "Narrowing of lumbar spinal canal with back pain and leg numbness, weakness better with rest"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3067,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Atrial Fibrillation",
+    "cc": "my pulse is totally irregular i checked it and its all over the place jumping from 80 to 140",
+    "primary": "Erectile Dysfunction",
+    "confidence": 44,
+    "top5": [
+      "Erectile Dysfunction",
+      "Hypogonadism",
+      "Medication-Induced Sexual Dysfunction",
+      "Premature Ejaculation",
+      "Atrial Fibrillation"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3068,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Deep Vein Thrombosis",
+    "cc": "my left calf is swollen red warm and painful just got off a long flight yesterday",
+    "primary": "DVT",
+    "confidence": 66,
+    "top5": [
+      "DVT",
+      "Cellulitis",
+      "Venous Insufficiency",
+      "Musculoskeletal Strain",
+      "Lymphedema"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3069,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Cholecystitis",
+    "cc": "terrible pain under my right ribs that goes to my shoulder blade especially after eating greasy food with fever",
+    "primary": "Viral infection",
+    "confidence": 37,
+    "top5": [
+      "Viral infection",
+      "UTI",
+      "Pneumonia",
+      "Cholecystitis",
+      "Gastroenteritis"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  },
+  {
+    "id": 3070,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "COPD Exacerbation",
+    "cc": "i have copd and my breathing got way worse cant walk to the kitchen wheezing and using my inhaler every hour",
+    "primary": "Aspiration Pneumonitis",
+    "confidence": 25,
+    "top5": [
+      "Aspiration Pneumonitis",
+      "Asthma Exacerbation",
+      "Cystic Fibrosis or ciliary Dyskinesia",
+      "Anomalous left common Carotid Artery",
+      "Bronchopulmonary Dysplasia"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3071,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Pyelonephritis",
+    "cc": "started as a uti now my back hurts on the left side with 103 fever and chills feel awful",
+    "primary": "Musculoskeletal strain",
+    "confidence": 47,
+    "top5": [
+      "Musculoskeletal strain",
+      "Herniated Disc",
+      "Genitourinary",
+      "Compression fracture",
+      "Urethral"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 14,
+    "error": null
+  },
+  {
+    "id": 3072,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Diabetic Ketoacidosis",
+    "cc": "im type 1 diabetic my blood sugar is over 500 im vomiting and my breath smells fruity",
+    "primary": "Diabetic Ketoacidosis",
+    "confidence": 70,
+    "top5": [
+      "Diabetic Ketoacidosis",
+      "Hyperosmolar Hyperglycemic State",
+      "New-onset Diabetes Mellitus",
+      "Acute Gastroenteritis",
+      "Medication Induced Vomiting"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3073,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Sepsis",
+    "cc": "infection spread from my wound now my whole body is shaking fever high heart pounding feeling confused",
+    "primary": "Atrial Fibrillation",
+    "confidence": 80,
+    "top5": [
+      "Atrial Fibrillation",
+      "Supraventricular Tachycardia",
+      "Panic Disorder",
+      "Cardiac Arrhythmia",
+      "Anxiety"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 14,
+    "error": null
+  },
+  {
+    "id": 3074,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Ectopic Pregnancy",
+    "cc": "missed my period positive pregnancy test now sharp pain on one side and vaginal bleeding feeling dizzy",
+    "primary": "Ectopic Pregnancy",
+    "confidence": 50,
+    "top5": [
+      "Ectopic Pregnancy",
+      "Uterine Fibroids",
+      "Dysfunctional Uterine Bleeding",
+      "Endometrial Hyperplasia",
+      "Atrophic Vaginitis"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 12,
+    "error": null
+  },
+  {
+    "id": 3075,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Pulmonary Embolism",
+    "cc": "leg was swollen for a week now suddenly cant catch my breath chest pain when breathing in and coughing up blood",
+    "primary": "Post-Infectious Cough",
+    "confidence": 75,
+    "top5": [
+      "Post-Infectious Cough",
+      "ACE Inhibitor Cough",
+      "Lung Cancer",
+      "Pulmonary Embolism",
+      "Post-Nasal Drip"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 18,
+    "error": null
+  },
+  {
+    "id": 3076,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Appendicitis",
+    "cc": "started around my belly button last night now it moved down to my lower right and it hurts way worse when i let go after pushing",
+    "primary": "Erectile Dysfunction",
+    "confidence": 34,
+    "top5": [
+      "Erectile Dysfunction",
+      "Medication-Induced Sexual Dysfunction",
+      "Hypogonadism",
+      "Premature Ejaculation",
+      "Peyronie Disease"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3077,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Congestive Heart Failure",
+    "cc": "cant lay flat at night without choking on fluid legs so swollen my shoes dont fit gained 15 pounds this week",
+    "primary": "DVT",
+    "confidence": 44,
+    "top5": [
+      "DVT",
+      "Cellulitis",
+      "Musculoskeletal Strain",
+      "Venous Insufficiency",
+      "Baker's Cyst Rupture"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3078,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Diverticulitis",
+    "cc": "pain in my lower left belly been getting worse for 2 days now with fever and my bowels changed",
+    "primary": "Viral infection",
+    "confidence": 37,
+    "top5": [
+      "Viral infection",
+      "Pneumonia",
+      "Gastroenteritis",
+      "Sepsis",
+      "Bacterial infection"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3079,
+    "demo": "peds",
+    "setting": "UC",
+    "expected": "Hand Foot and Mouth Disease",
+    "cc": "my toddler has tiny blisters on his palms and soles of his feet with mouth sores and a fever from daycare",
+    "primary": "Viral infection",
+    "confidence": 37,
+    "top5": [
+      "Viral infection",
+      "Acute Otitis Media",
+      "Gastroenteritis",
+      "Pneumonia",
+      "Hand Foot and Mouth Disease"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3080,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Orbital Cellulitis",
+    "cc": "my childs eye is bulging out red and swollen cant move it properly and has a high fever after a sinus infection",
+    "primary": "Viral URI",
+    "confidence": 59,
+    "top5": [
+      "Viral URI",
+      "Nasal Foreign Body",
+      "Allergic Rhinitis",
+      "Acute Sinusitis",
+      "Epistaxis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3081,
+    "demo": "peds",
+    "setting": "UC",
+    "expected": "Impetigo",
+    "cc": "sores with yellow honey colored crusty scabs spreading on my daughters face around her mouth and nose",
+    "primary": "Dyspareunia",
+    "confidence": 24,
+    "top5": [
+      "Dyspareunia",
+      "Medication-Induced Sexual Dysfunction",
+      "Female Sexual Arousal Disorder",
+      "Vaginismus",
+      "Hypogonadism"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3082,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Thyroid Storm",
+    "cc": "i have graves disease and now my heart is racing over 150 with fever confusion and nonstop shaking",
+    "primary": "Supraventricular Tachycardia",
+    "confidence": 65,
+    "top5": [
+      "Supraventricular Tachycardia",
+      "Panic Disorder",
+      "Anxiety",
+      "Cardiac Arrhythmia",
+      "Atrial Fibrillation"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 13,
+    "error": null
+  },
+  {
+    "id": 3083,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Rhabdomyolysis",
+    "cc": "did an insane workout yesterday now i cant move my arms they are swollen and my urine looks like coca cola",
+    "primary": "Fracture",
+    "confidence": 34,
+    "top5": [
+      "Fracture",
+      "Soft Tissue Injury",
+      "Joint Dislocation",
+      "Nursemaid Elbow",
+      "Septic Arthritis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3084,
+    "demo": "adult",
+    "setting": "UC",
+    "expected": "Panic Attack",
+    "cc": "out of nowhere i got terrified heart racing hands tingling felt like the world wasnt real thought i was going crazy",
+    "primary": "Supraventricular Tachycardia",
+    "confidence": 65,
+    "top5": [
+      "Supraventricular Tachycardia",
+      "Panic Disorder",
+      "Anxiety",
+      "Cardiac Arrhythmia",
+      "Atrial Fibrillation"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 13,
+    "error": null
+  },
+  {
+    "id": 3085,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Alcohol Withdrawal",
+    "cc": "quit drinking cold turkey 48 hours ago now im shaking sweating anxious nauseous and cant sleep",
+    "primary": "Alcohol Withdrawal",
+    "confidence": 67,
+    "top5": [
+      "Alcohol Withdrawal",
+      "Delirium Tremens",
+      "Opioid Withdrawal",
+      "Benzodiazepine Withdrawal",
+      "Withdrawal Seizure"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3086,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Serotonin Syndrome",
+    "cc": "started tramadol with my antidepressant now i have fever clonus muscle twitching and confusion",
+    "primary": "Viral infection",
+    "confidence": 57,
+    "top5": [
+      "Viral infection",
+      "Brachioradial Pruritus",
+      "Meningitis",
+      "Allergic Contact Dermatitis",
+      "Bacterial infection"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 17,
+    "error": null
+  },
+  {
+    "id": 3087,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Henoch-Schonlein Purpura",
+    "cc": "my son has raised purple spots all over his legs and butt plus belly pain and his ankles are swollen",
+    "primary": "Viral Illness",
+    "confidence": 17,
+    "top5": [
+      "Viral Illness",
+      "Fibromyalgia",
+      "Sleep Apnea",
+      "Depression",
+      "Chronic Fatigue Syndrome"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3088,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Slipped Capital Femoral Epiphysis",
+    "cc": "my heavy set 13 year old has been limping for weeks hip hurts and the knee on that side hurts too",
+    "primary": "Labral Tear",
+    "confidence": 60,
+    "top5": [
+      "Labral Tear",
+      "Hoffa Disease",
+      "Septic Arthritis",
+      "Acute Hip and Leg",
+      "Plica Syndrome"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 13,
+    "error": null
+  },
+  {
+    "id": 3089,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Intussusception",
+    "cc": "my 10 month old screams pulls his legs up tight then calms down then does it again with jelly like bloody poop",
+    "primary": "Opioid Overdose",
+    "confidence": 39,
+    "top5": [
+      "Opioid Overdose",
+      "Alcohol Intoxication",
+      "Stimulant Intoxication",
+      "Gastrointestinal Bleeding",
+      "Benzodiazepine Overdose"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3090,
+    "demo": "peds",
+    "setting": "ED",
+    "expected": "Pyloric Stenosis",
+    "cc": "my 4 week old forcefully vomits across the room after every single feeding but then wants to eat again right away",
+    "primary": "Medication-Induced Sexual Dysfunction",
+    "confidence": 22,
+    "top5": [
+      "Medication-Induced Sexual Dysfunction",
+      "Hypogonadism",
+      "Premature Ejaculation",
+      "Peyronie Disease",
+      "Dyspareunia"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3091,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Psychotic Disorder",
+    "cc": "hearing voices telling him to hurt himself and believes the government implanted chips in his brain",
+    "primary": "Substance Intoxication",
+    "confidence": 32,
+    "top5": [
+      "Substance Intoxication",
+      "Delirium Tremens",
+      "Toxic/Metabolic Encephalopathy",
+      "Hepatic Encephalopathy",
+      "Wernicke Encephalopathy"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3092,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Bipolar Disorder — Manic Episode",
+    "cc": "hasnt slept in 5 days spending thousands of dollars talking nonstop says shes starting a company and is unstoppable",
+    "primary": "Needs in-person evaluation",
+    "confidence": "unknown",
+    "top5": [
+      "Needs in-person evaluation"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3093,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Opioid Withdrawal",
+    "cc": "havent had any opiates in 3 days now i have horrible body aches diarrhea runny nose goosebumps and cant sleep",
+    "primary": "Viral URI",
+    "confidence": 44,
+    "top5": [
+      "Viral URI",
+      "Allergic Rhinitis",
+      "Acute Sinusitis",
+      "Nasal Foreign Body",
+      "Epistaxis"
+    ],
+    "hit": false,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3094,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Hepatic Encephalopathy",
+    "cc": "has cirrhosis and is getting more confused by the day hands flapping belly big with fluid",
+    "primary": "Delirium Tremens",
+    "confidence": 27,
+    "top5": [
+      "Delirium Tremens",
+      "Toxic/Metabolic Encephalopathy",
+      "Substance Intoxication",
+      "Sepsis",
+      "Hepatic Encephalopathy"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 9,
+    "error": null
+  },
+  {
+    "id": 3095,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Stimulant Intoxication",
+    "cc": "snorted cocaine an hour ago now chest is pounding he is agitated sweating and pupils are huge",
+    "primary": "Psychotic Disorder",
+    "confidence": 40,
+    "top5": [
+      "Psychotic Disorder",
+      "Bipolar Disorder — Manic Episode",
+      "Stimulant Intoxication",
+      "Delirium Tremens",
+      "Serotonin Syndrome"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 10,
+    "error": null
+  },
+  {
+    "id": 3096,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Aortic Dissection",
+    "cc": "sudden tearing pain in my chest ripping through to my back worst pain ive ever felt blood pressure different in each arm",
+    "primary": "Aortic Dissection",
+    "confidence": 45,
+    "top5": [
+      "Aortic Dissection",
+      "Musculoskeletal pain",
+      "Acute Myocardial Infarction",
+      "Acute Coronary Syndrome",
+      "Pneumonia"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  },
+  {
+    "id": 3097,
+    "demo": "geri",
+    "setting": "ED",
+    "expected": "Bowel Obstruction",
+    "cc": "belly is bloated hard as a rock havent pooped or passed gas in 3 days and keep vomiting green stuff",
+    "primary": "Gastroenteritis",
+    "confidence": 38,
+    "top5": [
+      "Gastroenteritis",
+      "Bowel obstruction",
+      "GERD",
+      "Cholecystitis",
+      "Diverticulitis"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  },
+  {
+    "id": 3098,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Cannabinoid Hyperemesis Syndrome",
+    "cc": "been smoking weed daily for years and keep having episodes of non stop puking only hot showers help",
+    "primary": "Opioid Overdose",
+    "confidence": 52,
+    "top5": [
+      "Opioid Overdose",
+      "Cannabinoid Hyperemesis Syndrome",
+      "Alcohol Intoxication",
+      "Stimulant Intoxication",
+      "Polypharmacy/Mixed Overdose"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  },
+  {
+    "id": 3099,
+    "demo": "adult",
+    "setting": "ED",
+    "expected": "Neuroleptic Malignant Syndrome",
+    "cc": "started a new antipsychotic and now he has a super high fever rigid muscles confusion and blood pressure is all over",
+    "primary": "Viral infection",
+    "confidence": 37,
+    "top5": [
+      "Viral infection",
+      "Meningitis",
+      "Pneumonia",
+      "Neuroleptic Malignant Syndrome",
+      "Gastroenteritis"
+    ],
+    "hit": true,
+    "redFlags": 0,
+    "ms": 11,
+    "error": null
+  }
+]
