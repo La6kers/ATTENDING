@@ -26,6 +26,7 @@ import { applyGraphBoosts, applyGraphLikelihoodRatios, getGraphStats } from './s
 import { getPreTestProbabilities, hasPrevalenceData } from './clinicalPrevalence';
 import { applyMedicationLikelihoodRatios } from './medicationDiagnosisRules';
 import { generateIntelligentWorkup, formatWorkupAsActions } from './workupIntelligence';
+import { normalizeSymptomText } from './symptomSynonyms';
 
 // Re-export all types from the types-only file so server-side code
 // can still import everything from this module. Frontend code should
@@ -329,16 +330,19 @@ export class DifferentialDiagnosisService {
 
   private checkEmergentConditions(presentation: PatientPresentation): DifferentialDiagnosis[] {
     const emergent: DifferentialDiagnosis[] = [];
-    const symptoms = presentation.symptoms.map(s => s.name.toLowerCase());
-    const chiefComplaint = presentation.chiefComplaint.toLowerCase();
+    // Normalize lay language to append canonical medical terms before matching.
+    // This lets "chest hurts / elephant on my chest" match the same criteria
+    // that "chest pain / chest pressure" previously matched.
+    const symptoms = presentation.symptoms.map(s => normalizeSymptomText(s.name).toLowerCase());
+    const chiefComplaint = normalizeSymptomText(presentation.chiefComplaint).toLowerCase();
 
     // Collect every free-text field the engine has about the patient so the
     // emergent match is not limited to whichever exact phrasing COMPASS used.
     const patientHaystack = [
       chiefComplaint,
       ...symptoms,
-      ...Object.values(presentation.symptomSpecificAnswers || {}).map(v => v.toLowerCase()),
-      ...(presentation.redFlags || []).map(rf => rf.toLowerCase()),
+      ...Object.values(presentation.symptomSpecificAnswers || {}).map(v => normalizeSymptomText(v).toLowerCase()),
+      ...(presentation.redFlags || []).map(rf => normalizeSymptomText(rf).toLowerCase()),
     ].join(' | ');
 
     // Strict keyword matcher:
@@ -430,7 +434,11 @@ export class DifferentialDiagnosisService {
   }
 
   private generateWithLocalLogic(presentation: PatientPresentation): DifferentialDiagnosis[] {
-    const chiefComplaint = presentation.chiefComplaint.toLowerCase();
+    // Normalize lay language + typos → append canonical medical terms.
+    // The resulting string is used for prevalence trigger matching and
+    // CC-keyword LRs while the original chiefComplaint stays intact for
+    // display. See apps/shared/lib/ai/symptomSynonyms.ts for the lexicon.
+    const chiefComplaint = normalizeSymptomText(presentation.chiefComplaint).toLowerCase();
     const age = presentation.demographics.age;
     const gender = presentation.demographics.gender;
 
