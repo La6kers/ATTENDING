@@ -1,0 +1,470 @@
+{
+  "provider": "biomistral",
+  "total": 20,
+  "hits1": 7,
+  "hits3": 7,
+  "hits5": 7,
+  "errors": 5,
+  "latency": {
+    "p50": 10715,
+    "p95": 17888,
+    "p99": 17888
+  },
+  "results": [
+    {
+      "id": 8000,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Myocardial Infarction",
+      "cc": "my chest feels like someones sittin on it and my left arm is numb",
+      "ok": false,
+      "latencyMs": 7569,
+      "differentials": [],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "PATIENT PRESENTATION:",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 373,
+        "eval_count": 9
+      }
+    },
+    {
+      "id": 8001,
+      "demo": "adult",
+      "setting": "UC",
+      "expected": "Stroke",
+      "cc": "i cant talk right everything is coming out wrong and my arm wont work",
+      "ok": true,
+      "latencyMs": 6881,
+      "differentials": [
+        {
+          "diagnosis": "2.",
+          "confidence": 95
+        }
+      ],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "1.2.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 193,
+        "eval_count": 4
+      }
+    },
+    {
+      "id": 8002,
+      "demo": "peds",
+      "setting": "PC",
+      "expected": "Pulmonary Embolism",
+      "cc": "i was just sittin there and suddenly couldnt breathe and started coughing",
+      "ok": true,
+      "latencyMs": 15060,
+      "differentials": [
+        {
+          "diagnosis": "2.",
+          "confidence": 95
+        }
+      ],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "1.2.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 195,
+        "eval_count": 4
+      }
+    },
+    {
+      "id": 8003,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Pneumonia",
+      "cc": "chest hurts when i cough and i been runnin a fever of 102 for three days",
+      "ok": true,
+      "latencyMs": 10715,
+      "differentials": [
+        {
+          "diagnosis": "2. Pneumonia",
+          "confidence": 95
+        }
+      ],
+      "t1": true,
+      "t3": true,
+      "t5": true,
+      "raw": {
+        "content": "1.2. Pneumonia (bacterial or viral)",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 203,
+        "eval_count": 14
+      }
+    },
+    {
+      "id": 8004,
+      "demo": "adult",
+      "setting": "UC",
+      "expected": "Urinary Tract Infection",
+      "cc": "constant urge to pee and it burns every single time",
+      "ok": true,
+      "latencyMs": 7044,
+      "differentials": [
+        {
+          "diagnosis": "2.",
+          "confidence": 95
+        }
+      ],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "1.2.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 194,
+        "eval_count": 4
+      }
+    },
+    {
+      "id": 8005,
+      "demo": "adult",
+      "setting": "PC",
+      "expected": "Appendicitis",
+      "cc": "started around my belly button now the pain moved to the lower right and i wanna puke",
+      "ok": true,
+      "latencyMs": 15734,
+      "differentials": [
+        {
+          "diagnosis": "2. Acute appendicitis",
+          "confidence": 95
+        }
+      ],
+      "t1": true,
+      "t3": true,
+      "t5": true,
+      "raw": {
+        "content": "1.2. Acute appendicitis",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 202,
+        "eval_count": 8
+      }
+    },
+    {
+      "id": 8006,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Asthma",
+      "cc": "cant breathe my chest is so tight and theres this wheezing sound",
+      "ok": true,
+      "latencyMs": 17888,
+      "differentials": [
+        {
+          "diagnosis": "2. Asthma exacerbation",
+          "confidence": 95
+        }
+      ],
+      "t1": true,
+      "t3": true,
+      "t5": true,
+      "raw": {
+        "content": "1.2. Asthma exacerbation",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 196,
+        "eval_count": 10
+      }
+    },
+    {
+      "id": 8007,
+      "demo": "geri",
+      "setting": "UC",
+      "expected": "Gastroenteritis",
+      "cc": "my stomach is a mess been runnin to the toilet every hour",
+      "ok": false,
+      "latencyMs": 6991,
+      "differentials": [],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "PATIENT PRESENTATION:",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 358,
+        "eval_count": 9
+      }
+    },
+    {
+      "id": 8008,
+      "demo": "geri",
+      "setting": "PC",
+      "expected": "Migraine",
+      "cc": "worst headache ever on one side and everything is too loud and too bright",
+      "ok": true,
+      "latencyMs": 12619,
+      "differentials": [
+        {
+          "diagnosis": "2.",
+          "confidence": 95
+        }
+      ],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "1.2.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 197,
+        "eval_count": 4
+      }
+    },
+    {
+      "id": 8009,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Nephrolithiasis",
+      "cc": "worst pain of my life in my side it comes and goes and i cant sit still",
+      "ok": true,
+      "latencyMs": 6876,
+      "differentials": [
+        {
+          "diagnosis": "2.",
+          "confidence": 95
+        }
+      ],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "1.2.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 199,
+        "eval_count": 4
+      }
+    },
+    {
+      "id": 8010,
+      "demo": "adult",
+      "setting": "UC",
+      "expected": "Congestive Heart Failure",
+      "cc": "my ankles are huge and i cant breathe when i lay down at night",
+      "ok": true,
+      "latencyMs": 12225,
+      "differentials": [
+        {
+          "diagnosis": "2. Heart failure",
+          "confidence": 95
+        }
+      ],
+      "t1": true,
+      "t3": true,
+      "t5": true,
+      "raw": {
+        "content": "1.2. Heart failure",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 202,
+        "eval_count": 5
+      }
+    },
+    {
+      "id": 8011,
+      "demo": "geri",
+      "setting": "PC",
+      "expected": "Deep Vein Thrombosis",
+      "cc": "pain in the back of my leg and its all swollen up after my long flight",
+      "ok": true,
+      "latencyMs": 7010,
+      "differentials": [
+        {
+          "diagnosis": "2. Cellulitis",
+          "confidence": 95
+        }
+      ],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "1.2. Cellulitis",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 196,
+        "eval_count": 6
+      }
+    },
+    {
+      "id": 8012,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "COPD Exacerbation",
+      "cc": "my copd is acting up cant breathe and coughing way more than usual",
+      "ok": true,
+      "latencyMs": 11168,
+      "differentials": [
+        {
+          "diagnosis": "2.",
+          "confidence": 95
+        }
+      ],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "1.2.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 200,
+        "eval_count": 4
+      }
+    },
+    {
+      "id": 8013,
+      "demo": "adult",
+      "setting": "UC",
+      "expected": "Pyelonephritis",
+      "cc": "started like a uti but now i got chills and my side hurts bad",
+      "ok": false,
+      "latencyMs": 11424,
+      "differentials": [],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "PATIENT PRESENTATION: 47 year-old female with a 3 day history of flank pain, burning urination, nausea, chills, and fever. Onset was gradual.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 360,
+        "eval_count": 47
+      }
+    },
+    {
+      "id": 8014,
+      "demo": "adult",
+      "setting": "PC",
+      "expected": "Meningitis",
+      "cc": "high fever headache stiff neck and i feel confused",
+      "ok": false,
+      "latencyMs": 6652,
+      "differentials": [],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "YOUR TURN:",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 347,
+        "eval_count": 7
+      }
+    },
+    {
+      "id": 8015,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Diabetic Ketoacidosis",
+      "cc": "im diabetic and been peein a ton super thirsty and my belly hurts",
+      "ok": true,
+      "latencyMs": 13227,
+      "differentials": [
+        {
+          "diagnosis": "s in order of likelihood:1. Diabetic ketoacidosis2. Pancreatitis3. Acute cholecystitis4. Appendicitis5. Acute hepatitis",
+          "confidence": 80
+        }
+      ],
+      "t1": true,
+      "t3": true,
+      "t5": true,
+      "raw": {
+        "content": "I have reviewed the patient's case and the following are my top 5 differentials in order of likelihood:1. Diabetic ketoacidosis2. Pancreatitis3. Acute cholecystitis4. Appendicitis5. Acute hepatitis",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 373,
+        "eval_count": 67
+      }
+    },
+    {
+      "id": 8016,
+      "demo": "adult",
+      "setting": "UC",
+      "expected": "Sepsis",
+      "cc": "feel like im dying fever chills cant think straight and so weak",
+      "ok": true,
+      "latencyMs": 8401,
+      "differentials": [
+        {
+          "diagnosis": "Possible diagnoses for this patient are sepsis, pneumonia, and meningitis.",
+          "confidence": 95
+        }
+      ],
+      "t1": true,
+      "t3": true,
+      "t5": true,
+      "raw": {
+        "content": "1.Possible diagnoses for this patient are sepsis, pneumonia, and meningitis.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 198,
+        "eval_count": 23
+      }
+    },
+    {
+      "id": 8017,
+      "demo": "peds",
+      "setting": "PC",
+      "expected": "Gout",
+      "cc": "woke up with the worst pain in my foot its swollen hot and throbbing",
+      "ok": true,
+      "latencyMs": 6698,
+      "differentials": [
+        {
+          "diagnosis": "2. Gout flare",
+          "confidence": 95
+        }
+      ],
+      "t1": true,
+      "t3": true,
+      "t5": true,
+      "raw": {
+        "content": "1.2. Gout flare",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 194,
+        "eval_count": 7
+      }
+    },
+    {
+      "id": 8018,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Pharyngitis",
+      "cc": "throat is on fire cant swallow and theres white spots back there",
+      "ok": true,
+      "latencyMs": 6877,
+      "differentials": [
+        {
+          "diagnosis": "as untreated strep throat can lead to complications such as rheumatic fever or peritonsillar abscess",
+          "confidence": 80
+        }
+      ],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "1.Streptococcal pharyngitis (strep throat) is a common bacterial infection that causes inflammation and irritation of the throat. It is usually caused by the Streptococcus pyogenes bacteria. Symptoms typically include a sore throat, fever, redness and swelling of the tonsils, white patches on the throat or tongue, difficulty swallowing, and swollen lymph nodes in the neck. The infection can be transmitted through contact with respiratory secretions, such as coughing or sneezing near someone with strep throat, or by coming into contact with contaminated surfaces. Antibiotics are typically recommended to treat strep throat. It is important to see a healthcare provider for proper diagnosis and treatment, as untreated strep throat can lead to complications such as rheumatic fever or peritonsillar abscess.",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 197,
+        "eval_count": 190
+      }
+    },
+    {
+      "id": 8019,
+      "demo": "peds",
+      "setting": "UC",
+      "expected": "Cellulitis",
+      "cc": "skin on my arm is red warm and tender and the redness keeps getting bigger",
+      "ok": false,
+      "latencyMs": 6783,
+      "differentials": [],
+      "t1": false,
+      "t3": false,
+      "t5": false,
+      "raw": {
+        "content": "PATIENT PRESENTATION:",
+        "model": "cniongolo/biomistral",
+        "prompt_eval_count": 353,
+        "eval_count": 9
+      }
+    }
+  ]
+}
