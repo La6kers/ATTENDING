@@ -604,7 +604,10 @@ export class DifferentialDiagnosisService {
         // AAA: elderly + tearing + back/abdomen (separate from dissection)
         { pattern: /(tearing|ripping|like\s*something.*ripped).*(belly|abdomin|back)|(belly|abdomin|back).*(tearing|ripping)/i, diagnosis: 'Abdominal Aortic Aneurysm', lr: 4.0, evidence: 'Tearing abdominal/back pain — AAA concern (LR 4.0)' },
         // Pancreatitis: epigastric to back, recent binge/alcohol
-        { pattern: /(epigastric|upper.*abdomin|upper.*belly).*(radiat|go|through|to).*back|back.*(epigastric|upper.*abdomin)/i, diagnosis: 'Pancreatitis', lr: 5.0, evidence: 'Epigastric pain radiating through to back — classic pancreatitis (LR 5.0)' },
+        { pattern: /(epigastric|upper.*(abdomin|belly|stomach)).*(radiat|go|goes|through|to).*back|back.*(epigastric|upper.*(abdomin|belly|stomach))/i, diagnosis: 'Pancreatitis', lr: 20.0, evidence: 'Epigastric pain radiating through to back — classic pancreatitis (LR 20.0)' },
+        { pattern: /belly\s*pain.*(after\s*eating|greasy|fatty|alcohol).*(through|back|radiat)/i, diagnosis: 'Pancreatitis', lr: 25.0, evidence: 'Post-prandial abdominal pain + radiation — pancreatitis (LR 25.0)' },
+        { pattern: /(worst|terrible|severe).*(belly|stomach|abdomin).*(pain|hurt).*(after\s*eat|greasy|fatty).*(back|through)/i, diagnosis: 'Pancreatitis', lr: 25.0, evidence: 'Severe post-prandial pain radiating to back (LR 25.0)' },
+        { pattern: /upper\s*(belly|stomach|abdomin).*(worse\s*after\s*eat|after.*eat).*(puk|vomit|nausea)/i, diagnosis: 'Pancreatitis', lr: 20.0, evidence: 'Upper abdominal pain post-meal + vomiting — pancreatitis (LR 20.0)' },
         { pattern: /(alcohol|binge|gallstone).*(belly|abdomin|pain)|(belly|abdomin|pain).*(alcohol|binge)/i, diagnosis: 'Pancreatitis', lr: 2.5, evidence: 'Alcohol/binge trigger for abdominal pain (LR 2.5)' },
         // Postpartum / recent delivery → PE priority
         { pattern: /(postpartum|after.*deliver|just\s*had.*baby|weeks.*after.*baby)/i, diagnosis: 'Pulmonary Embolism', lr: 4.0, evidence: 'Postpartum period — hypercoagulable, high PE risk (LR 4.0)' },
@@ -718,7 +721,10 @@ export class DifferentialDiagnosisService {
         // Rhabdomyolysis — muscle pain + dark urine after exertion/crush
         { pattern: /(?:dark|brown|tea|cola)\s*(?:urine|pee).*(?:muscle|workout|exertion|crush|pain)|(?:muscle|exercise|crush|pain).*(?:dark|brown|tea|cola)\s*(?:urine|pee)/i, diagnosis: 'Rhabdomyolysis', lr: 7.0, evidence: 'Dark urine + muscle pain — rhabdomyolysis (LR 7.0)' },
         // Intussusception — currant jelly stool + episodic crying in infant/toddler
-        { pattern: /(?:currant\s*jelly|bloody\s*mucus).*(?:stool|poop|diaper)|(?:baby|infant|toddler).*(?:scream|cry|draw.*leg|pull.*knee).*(?:episod|comes?\s*and\s*goes?|every\s*few)/i, diagnosis: 'Intussusception', lr: 8.0, evidence: 'Currant jelly stool/episodic colic in infant — intussusception (LR 8.0)' },
+        { pattern: /(?:currant\s*jelly|jelly.*(stool|poop|diaper|looking)|red\s*jelly|bloody\s*mucus.*(stool|poop|diaper))/i, diagnosis: 'Intussusception', lr: 40.0, evidence: 'Currant jelly stool — intussusception (LR 40.0)' },
+        { pattern: /(?:baby|infant|toddler).*(?:scream|cry|episod).*(?:draw|pull|drawing|pulling)\s*(?:up\s*)?(?:leg|knee)/i, diagnosis: 'Intussusception', lr: 25.0, evidence: 'Episodic screaming + leg-drawing in infant — intussusception (LR 25.0)' },
+        { pattern: /(?:baby|infant).*episod.*(scream|cry).*bloody.*stool|bloody\s*stool.*(?:baby|infant|episod)/i, diagnosis: 'Intussusception', lr: 30.0, evidence: 'Infant episodic crying + bloody stool — intussusception (LR 30.0)' },
+        { pattern: /(?:baby|infant).*(?:scream|cry).*(?:comes?\s*(?:and\s*)?goes?|episod|every\s*(few|\d+))/i, diagnosis: 'Intussusception', lr: 20.0, evidence: 'Episodic infant crying — intussusception concern (LR 20.0)' },
         // Henoch-Schonlein Purpura — palpable purpura + abd pain + joint pain in child
         { pattern: /(?:purpl|purpur).*(?:rash|spot|bump).*(?:leg|buttock|butt|joint|belly)|(?:child|kid).*(?:purpl|rash).*(?:joint|belly|hurt)/i, diagnosis: 'Henoch-Schonlein Purpura (IgA Vasculitis)', lr: 7.0, evidence: 'Palpable purpura + abdominal/joint pain in child — HSP (LR 7.0)' },
         // SCFE — obese adolescent + hip/knee pain + limp
@@ -992,9 +998,12 @@ export class DifferentialDiagnosisService {
         { pattern: /(seiz|shak|convuls).*(going\s*on\s*and\s*on|wont\s*stop|\d+\s*minutes?|back\s*to\s*back|continuous|nonstop)/i, diagnosis: 'Status Epilepticus', lr: 25.0, evidence: 'Prolonged/continuous seizure — status epilepticus (LR 25.0)' },
         { pattern: /status\s*epilepticus|seizure.*(20\s*min|15\s*min|10\s*min).*wont\s*stop/i, diagnosis: 'Status Epilepticus', lr: 30.0, evidence: 'Status epilepticus (LR 30.0)' },
 
-        // Sexual Assault — specific language
-        { pattern: /(assault|raped|forced.*(sex|me)|something\s*happened.*(party|last\s*night)|need.*forensic)/i, diagnosis: 'Sexual Assault', lr: 30.0, evidence: 'Sexual assault disclosure (LR 30.0)' },
-        { pattern: /(unwanted.*(sex|touch|contact)|non.?consensual|sane\s*exam)/i, diagnosis: 'Sexual Assault', lr: 30.0, evidence: 'Sexual assault / SANE exam indication (LR 30.0)' },
+        // Sexual Assault — specific and vague language
+        { pattern: /(assault|raped|forced.*(sex|me|myself))/i, diagnosis: 'Sexual Assault', lr: 50.0, evidence: 'Explicit sexual assault disclosure (LR 50.0)' },
+        { pattern: /(something\s*happened.*(party|last\s*night|bar|club|date)|need.*(forensic|rape\s*kit|sane))/i, diagnosis: 'Sexual Assault', lr: 40.0, evidence: 'Vague assault disclosure + forensic concern (LR 40.0)' },
+        { pattern: /(need\s*to\s*be\s*checked\s*out|need.*(exam|evaluation).*(party|assault|happened))/i, diagnosis: 'Sexual Assault', lr: 30.0, evidence: 'Post-assault medical evaluation (LR 30.0)' },
+        { pattern: /(dont\s*want\s*to\s*say\s*much|dont\s*remember\s*everything).*(happened|party|last\s*night)/i, diagnosis: 'Sexual Assault', lr: 35.0, evidence: 'Trauma-consistent vague disclosure (LR 35.0)' },
+        { pattern: /(unwanted.*(sex|touch|contact)|non.?consensual|sane\s*exam|violated)/i, diagnosis: 'Sexual Assault', lr: 40.0, evidence: 'Non-consensual contact (LR 40.0)' },
 
         // CHF orthopnea + leg swelling
         { pattern: /(cant\s*lay\s*flat|cant\s*sleep\s*flat|sleep\s*propped|wake.*gasp).*(ankle|leg|foot).*(swell|swol|edema)/i, diagnosis: 'Congestive Heart Failure', lr: 20.0, evidence: 'Orthopnea + edema — CHF (LR 20.0)' },
@@ -1032,15 +1041,19 @@ export class DifferentialDiagnosisService {
         { pattern: /(currant\s*jelly|jelly\s*(looking|like))\s*(stool|poop|diaper)/i, diagnosis: 'Intussusception', lr: 30.0, evidence: 'Currant jelly stool — intussusception (LR 30.0)' },
 
         // Placental Abruption — pregnant + hard belly + bleeding
-        { pattern: /(\d+\s*weeks?\s*pregnant|pregnant.*\d+\s*weeks?).*(belly|abdomen).*(hard|rigid|board).*(bleed|blood|pain)/i, diagnosis: 'Placental Abruption', lr: 30.0, evidence: 'Rigid gravid abdomen + bleeding — abruption (LR 30.0)' },
-        { pattern: /pregnant.*(suddenly\s*bleed|heavy\s*bleed|dark\s*blood).*(belly|abdom).*(hard|pain|rigid)/i, diagnosis: 'Placental Abruption', lr: 25.0, evidence: 'Third trimester bleed + abdominal rigidity (LR 25.0)' },
+        { pattern: /pregnant.*(belly|abdomen).*(hard|rigid|board|tense).*(bleed|blood|dark|pain)/i, diagnosis: 'Placental Abruption', lr: 40.0, evidence: 'Gravid rigid abdomen + bleeding — abruption (LR 40.0)' },
+        { pattern: /pregnant.*(bleed|dark\s*blood|heavy\s*bleed).*(belly|abdom).*(hard|pain|rigid|tense)/i, diagnosis: 'Placental Abruption', lr: 35.0, evidence: 'Pregnancy + bleeding + abdominal rigidity — abruption (LR 35.0)' },
+        { pattern: /pregnant.*(suddenly\s*(hard|painful|bleed)|belly.*(got|became|turned)\s*(hard|painful))/i, diagnosis: 'Placental Abruption', lr: 35.0, evidence: 'Sudden hardening/bleeding in pregnancy — abruption (LR 35.0)' },
+        { pattern: /\d+\s*weeks?\s*pregnant.*(bleed|blood|pain|hard)/i, diagnosis: 'Placental Abruption', lr: 15.0, evidence: 'Third trimester pregnancy + bleeding concern (LR 15.0)' },
 
         // Slipped Capital Femoral Epiphysis — boost
         { pattern: /(overweight|obese|heavy|big).*(teen|teenager|adolesc|\d+\s*year).*(hip|knee|limp|waddle|cant\s*run)/i, diagnosis: 'Slipped Capital Femoral Epiphysis', lr: 20.0, evidence: 'Obese adolescent + hip/knee/gait (LR 20.0)' },
 
-        // Subdural Hematoma priority over Concussion (elderly + delayed + confused)
-        { pattern: /(grandpa|grandma|\b7\d|\b8\d|\b9\d)\s*.*(bumped|hit|fell|fall).*(head).*(confus|drowsy|weird|acting)/i, diagnosis: 'Subdural Hematoma', lr: 20.0, evidence: 'Elderly + head trauma + altered behavior (LR 20.0)' },
-        { pattern: /(fell|hit).*head.*(week|days?)\s*ago.*(confus|drowsy|weird|different|forgetful)/i, diagnosis: 'Subdural Hematoma', lr: 15.0, evidence: 'Delayed post-trauma symptoms — SDH (LR 15.0)' },
+        // Subdural Hematoma priority over Concussion (elderly + delayed + confused, or anticoagulated)
+        { pattern: /(grandpa|grandma|\b7\d|\b8\d|\b9\d)\s*.*(bumped|hit|fell|fall).*(head).*(confus|drowsy|weird|acting)/i, diagnosis: 'Subdural Hematoma', lr: 30.0, evidence: 'Elderly + head trauma + altered behavior — SDH (LR 30.0)' },
+        { pattern: /(fell|hit).*head.*(week|days?)\s*ago.*(confus|drowsy|weird|different|forgetful)/i, diagnosis: 'Subdural Hematoma', lr: 25.0, evidence: 'Delayed post-trauma symptoms — SDH (LR 25.0)' },
+        { pattern: /(warfarin|coumadin|eliquis|xarelto|blood\s*thinner|anticoag).*(fell|hit|bumped|fall).*(head|hit\s*my\s*head)/i, diagnosis: 'Subdural Hematoma', lr: 40.0, evidence: 'Anticoagulated + head trauma — SDH (LR 40.0)' },
+        { pattern: /(warfarin|coumadin|eliquis|xarelto|blood\s*thinner|anticoag).*(head|confus|drowsy)/i, diagnosis: 'Subdural Hematoma', lr: 30.0, evidence: 'Anticoagulated + head symptoms — SDH (LR 30.0)' },
 
         // Vasovagal Syncope — specific trigger
         { pattern: /(passed\s*out|faint).*(blood\s*draw|standing\s*in\s*line|warm|hot|nausea|lightheaded|church|saw\s*blood)/i, diagnosis: 'Vasovagal Syncope', lr: 15.0, evidence: 'Triggered vasovagal syncope (LR 15.0)' },
@@ -1049,8 +1062,11 @@ export class DifferentialDiagnosisService {
         { pattern: /eye.*(swollen\s*shut|bulging|proptos|pushed\s*out).*(fever|sick)/i, diagnosis: 'Orbital Cellulitis', lr: 25.0, evidence: 'Proptosis + fever — orbital cellulitis (LR 25.0)' },
         { pattern: /(kid|child).*eye.*(bulg|puff|swol).*(fever|hot)/i, diagnosis: 'Orbital Cellulitis', lr: 20.0, evidence: 'Pediatric eye swelling + fever — orbital cellulitis (LR 20.0)' },
 
-        // Rhabdomyolysis — muscle + dark urine after exercise
-        { pattern: /(worked\s*out|exercise|crossfit|workout).*(muscle|body).*(killing|pain|hurt|ache).*(dark|brown|tea|cola)\s*(urine|pee)/i, diagnosis: 'Rhabdomyolysis', lr: 30.0, evidence: 'Exertional rhabdomyolysis pattern (LR 30.0)' },
+        // Rhabdomyolysis — muscle + dark urine after exercise (bidirectional match)
+        { pattern: /(worked\s*out|exercise|crossfit|workout|too\s*hard).*(muscle|body).*(killing|pain|hurt|ache|cant\s*move).*(dark|brown|tea|cola|tea\s*color)\s*(urine|pee)?/i, diagnosis: 'Rhabdomyolysis', lr: 40.0, evidence: 'Exertional muscle pain + dark urine — rhabdomyolysis (LR 40.0)' },
+        { pattern: /(worked\s*out|workout|crossfit|too\s*hard).*(muscle|body).*(kill|pain|hurt|ache).*(pee|urine).*(dark|brown|tea|cola)/i, diagnosis: 'Rhabdomyolysis', lr: 40.0, evidence: 'Rhabdo pattern — workout + muscle pain + dark urine (LR 40.0)' },
+        { pattern: /(dark|brown|tea|cola)\s*(urine|pee).*(muscle|workout|exertion|crossfit|work.*out)/i, diagnosis: 'Rhabdomyolysis', lr: 35.0, evidence: 'Dark urine after exertion — rhabdo (LR 35.0)' },
+        { pattern: /muscles?\s*(are\s*)?killing.*me.*(pee|urine).*(dark|brown|tea|cola)/i, diagnosis: 'Rhabdomyolysis', lr: 40.0, evidence: 'Muscle pain + dark urine — rhabdo (LR 40.0)' },
 
         // Henoch-Schonlein Purpura priority in kids
         { pattern: /(child|kid|\d+\s*year).*(purple|purplish|bruise.?like)\s*(rash|spots?|bumps?).*(legs?|butt|buttock|belly)/i, diagnosis: 'Henoch-Schonlein Purpura (IgA Vasculitis)', lr: 25.0, evidence: 'Palpable purpura on legs/buttocks in child — HSP (LR 25.0)' },
@@ -1077,6 +1093,269 @@ export class DifferentialDiagnosisService {
           const existing = allEvidence.get(rule.diagnosis) || [];
           existing.push(rule.evidence);
           allEvidence.set(rule.diagnosis, existing);
+        }
+      }
+
+      // ============================================================
+      // --- Step 4c: RISK FACTOR WEIGHTING (INNOVATION) ---
+      // Scans CC + associated symptoms for risk factor keywords
+      // and boosts relevant diagnoses. Simulates clinical pattern
+      // recognition (diabetic? → think DKA, HHS, infection).
+      // ============================================================
+      const riskFactorRules: Array<{ pattern: RegExp; boosts: Array<{ diagnosis: string; lr: number }>; evidence: string }> = [
+        // Diabetic risk factors
+        { pattern: /\b(diabetic|diabetes|t1d|t2d|type\s*1|type\s*2|insulin|sugar|glucose|a1c)\b/i, boosts: [
+          { diagnosis: 'Diabetic Ketoacidosis', lr: 3.0 },
+          { diagnosis: 'Hyperosmolar Hyperglycemic State', lr: 3.0 },
+          { diagnosis: 'Hypoglycemia', lr: 2.5 },
+          { diagnosis: 'Diabetic Neuropathy', lr: 2.0 },
+          { diagnosis: 'Cellulitis', lr: 1.8 },
+          { diagnosis: 'UTI', lr: 1.5 },
+          { diagnosis: 'Silent MI', lr: 2.0 },
+        ], evidence: 'Diabetic patient — increased DKA/infection/CV risk' },
+
+        // Smoker risk factors
+        { pattern: /\b(smoker|smoking|tobacco|cigarette|pack.year|\d+\s*ppd|vaping)\b/i, boosts: [
+          { diagnosis: 'COPD exacerbation', lr: 3.0 },
+          { diagnosis: 'Lung Cancer', lr: 5.0 },
+          { diagnosis: 'Bladder Cancer', lr: 3.0 },
+          { diagnosis: 'Acute Myocardial Infarction', lr: 2.0 },
+          { diagnosis: 'Pulmonary Embolism', lr: 1.8 },
+          { diagnosis: 'Chronic Bronchitis', lr: 2.5 },
+        ], evidence: 'Smoker — elevated lung/CV/bladder cancer risk' },
+
+        // Pregnancy risk factors (present already but boost further)
+        { pattern: /\b(pregnant|pregnancy|gestation|weeks\s*pregnant|trimester|miss.*period|gravid)\b/i, boosts: [
+          { diagnosis: 'Ectopic Pregnancy', lr: 3.0 },
+          { diagnosis: 'Preeclampsia', lr: 3.0 },
+          { diagnosis: 'Placental Abruption', lr: 5.0 },
+          { diagnosis: 'Hyperemesis Gravidarum', lr: 3.0 },
+          { diagnosis: 'UTI', lr: 2.0 },
+          { diagnosis: 'DVT/PE (postpartum)', lr: 2.5 },
+          { diagnosis: 'Pulmonary Embolism', lr: 2.5 },
+        ], evidence: 'Pregnancy — elevated pregnancy-specific risks' },
+
+        // Immunocompromised
+        { pattern: /\b(immunocompromis|immunosuppress|chemo|chemotherapy|hiv|aids|transplant|prednisone|steroid|biologic|methotrexate)\b/i, boosts: [
+          { diagnosis: 'Sepsis', lr: 3.0 },
+          { diagnosis: 'Opportunistic Infection', lr: 5.0 },
+          { diagnosis: 'Pneumocystis Pneumonia', lr: 3.0 },
+          { diagnosis: 'Bacterial Meningitis', lr: 2.5 },
+          { diagnosis: 'Invasive Fungal Infection', lr: 3.0 },
+          { diagnosis: 'Cellulitis', lr: 2.0 },
+        ], evidence: 'Immunocompromised — elevated infection risk' },
+
+        // Anticoagulated
+        { pattern: /\b(warfarin|coumadin|eliquis|apixaban|xarelto|rivaroxaban|heparin|blood\s*thinner|anticoagul|dabigatran)\b/i, boosts: [
+          { diagnosis: 'Gastrointestinal Bleeding', lr: 3.0 },
+          { diagnosis: 'Subdural Hematoma', lr: 3.0 },
+          { diagnosis: 'Chronic Subdural Hematoma', lr: 3.0 },
+          { diagnosis: 'Intracranial Hemorrhage', lr: 3.0 },
+          { diagnosis: 'Retroperitoneal Hematoma', lr: 2.5 },
+          { diagnosis: 'Hematuria', lr: 2.0 },
+        ], evidence: 'On anticoagulation — elevated bleeding risk' },
+
+        // IV drug use
+        { pattern: /\b(iv\s*drug|intravenous\s*drug|injection\s*drug|heroin|shooting\s*up|track\s*marks|needle\s*marks|inject\s*drugs?)\b/i, boosts: [
+          { diagnosis: 'Endocarditis', lr: 5.0 },
+          { diagnosis: 'Skin/Soft Tissue Abscess', lr: 3.0 },
+          { diagnosis: 'Cellulitis', lr: 2.5 },
+          { diagnosis: 'Hepatitis B/C', lr: 3.0 },
+          { diagnosis: 'HIV/AIDS', lr: 2.5 },
+          { diagnosis: 'Opioid Overdose', lr: 3.0 },
+          { diagnosis: 'Sepsis', lr: 2.0 },
+        ], evidence: 'IV drug use — elevated endocarditis/infection risk' },
+
+        // Recent surgery / immobilization
+        { pattern: /\b(recent\s*surgery|post.?op|surgical|surgery.*(weeks?\s*ago|days?\s*ago)|immobiliz|bedrest|bed.?ridden|long\s*flight|long\s*drive)\b/i, boosts: [
+          { diagnosis: 'Deep Vein Thrombosis', lr: 3.0 },
+          { diagnosis: 'Pulmonary Embolism', lr: 4.0 },
+          { diagnosis: 'Wound Infection', lr: 3.0 },
+          { diagnosis: 'Surgical Site Infection', lr: 3.0 },
+        ], evidence: 'Post-op/immobilization — elevated VTE risk' },
+
+        // Heavy alcohol use
+        { pattern: /\b(alcoholic|heavy\s*drink|daily\s*drink|\d+\s*beers?\s*a\s*day|fifth\s*of|cirrhosis|liver\s*disease)\b/i, boosts: [
+          { diagnosis: 'Alcohol Withdrawal', lr: 3.0 },
+          { diagnosis: 'Delirium Tremens', lr: 3.0 },
+          { diagnosis: 'Wernicke Encephalopathy', lr: 3.0 },
+          { diagnosis: 'Hepatic Encephalopathy', lr: 3.0 },
+          { diagnosis: 'Pancreatitis', lr: 3.0 },
+          { diagnosis: 'Gastrointestinal Bleeding', lr: 2.5 },
+          { diagnosis: 'Subdural Hematoma', lr: 2.0 },
+        ], evidence: 'Heavy alcohol use — liver/CNS/pancreatic risk' },
+
+        // Cancer history
+        { pattern: /\b(cancer|malignan|tumor|chemo|radiation\s*therapy|metastat|oncology)\s*(history|patient|diagnosis)|had\s*cancer|history\s*of\s*cancer/i, boosts: [
+          { diagnosis: 'Metastatic Cancer', lr: 5.0 },
+          { diagnosis: 'Pulmonary Embolism', lr: 3.0 },
+          { diagnosis: 'Neutropenic Fever', lr: 3.0 },
+          { diagnosis: 'Spinal Cord Compression', lr: 3.0 },
+          { diagnosis: 'Hypercalcemia', lr: 2.5 },
+          { diagnosis: 'Sepsis', lr: 2.0 },
+        ], evidence: 'Cancer history — elevated metastatic/complication risk' },
+
+        // Elderly + falls
+        { pattern: /\b(grandpa|grandma|elderly|nursing\s*home|\b(7|8|9)\d\s*year|senior\s*citizen)\b/i, boosts: [
+          { diagnosis: 'Hip Fracture', lr: 2.0 },
+          { diagnosis: 'Subdural Hematoma', lr: 2.0 },
+          { diagnosis: 'Chronic Subdural Hematoma', lr: 2.5 },
+          { diagnosis: 'UTI', lr: 1.8 },
+          { diagnosis: 'Polypharmacy/Medication Effect', lr: 2.5 },
+          { diagnosis: 'Aortic Aneurysm', lr: 1.8 },
+        ], evidence: 'Elderly — age-specific risks (falls, SDH, UTI-delirium)' },
+      ];
+      for (const rule of riskFactorRules) {
+        if (rule.pattern.test(chiefComplaint)) {
+          for (const boost of rule.boosts) {
+            const currentOdds = odds.get(boost.diagnosis) || 0.02;
+            odds.set(boost.diagnosis, currentOdds * boost.lr);
+            const existing = allEvidence.get(boost.diagnosis) || [];
+            existing.push(rule.evidence);
+            allEvidence.set(boost.diagnosis, existing);
+          }
+        }
+      }
+
+      // ============================================================
+      // --- Step 4d: CLASSIC TRIAD/PENTAD RECOGNITION (INNOVATION) ---
+      // Specific clinical patterns that are highly specific when all
+      // components are present. Named after historical clinicians.
+      // ============================================================
+      const classicPatternRules: Array<{ pattern: RegExp; diagnosis: string; lr: number; evidence: string }> = [
+        // Charcot's triad: fever + RUQ pain + jaundice → Ascending cholangitis
+        { pattern: /(fever|chill).*(right.*upper|ruq|gallbladder).*(jaundice|yellow)|jaundice.*(fever|chill).*(right.*upper|ruq)/i, diagnosis: 'Ascending Cholangitis', lr: 30.0, evidence: 'Charcot triad (fever + RUQ + jaundice) — cholangitis (LR 30.0)' },
+
+        // Reynold's pentad: Charcot's + hypotension + AMS → Suppurative cholangitis
+        { pattern: /(fever|chill).*(ruq|right.*upper).*(jaundice).*(confus|low\s*bp|shock|hypotens)/i, diagnosis: 'Suppurative Cholangitis', lr: 40.0, evidence: 'Reynolds pentad — severe cholangitis (LR 40.0)' },
+
+        // Beck's triad: hypotension + muffled heart sounds + JVD → Cardiac tamponade
+        { pattern: /(low\s*bp|hypotens|shock).*(muffled.*heart|distant.*heart).*(jvd|neck\s*vein|distended)/i, diagnosis: 'Cardiac Tamponade', lr: 30.0, evidence: 'Beck triad — cardiac tamponade (LR 30.0)' },
+
+        // Cushing's triad: HTN + bradycardia + irregular resp → Increased ICP
+        { pattern: /(high\s*bp|hypertens).*(slow\s*heart|bradycardia).*(irregular\s*breath|abnormal\s*breath)/i, diagnosis: 'Increased Intracranial Pressure', lr: 30.0, evidence: 'Cushing triad — elevated ICP (LR 30.0)' },
+
+        // Meningitis triad: fever + headache + stiff neck
+        { pattern: /fever.*(headache|head\s*pain).*(stiff\s*neck|neck\s*stiff|cant\s*touch\s*chin|cant\s*bend)/i, diagnosis: 'Meningitis', lr: 50.0, evidence: 'Classic meningitis triad (LR 50.0)' },
+        { pattern: /(fever|feverish).*(headache|head\s*hurt).*(neck|bend|chin)/i, diagnosis: 'Meningitis', lr: 40.0, evidence: 'Fever + HA + neck symptoms — meningitis (LR 40.0)' },
+        { pattern: /(stiff\s*neck|cant\s*touch\s*chin|neck\s*stiff).*(fever|headache|photophob|light\s*sensitive)/i, diagnosis: 'Meningitis', lr: 40.0, evidence: 'Nuchal rigidity + systemic features — meningitis (LR 40.0)' },
+
+        // Wernicke's triad: confusion + ataxia + ophthalmoplegia
+        { pattern: /(confus|altered).*(stumbl|atax|unsteady|walk).*(eye.*move|double.*vision|nystag)/i, diagnosis: 'Wernicke Encephalopathy', lr: 35.0, evidence: 'Wernicke triad (confusion + ataxia + ophthalmoplegia) (LR 35.0)' },
+
+        // DKA triad: polyuria + polydipsia + weight loss
+        { pattern: /(peeing\s*a\s*lot|frequent\s*urin|polyuri).*(thirsty|drinking|polydipsi).*(weight\s*loss|losing\s*weight)/i, diagnosis: 'Diabetic Ketoacidosis', lr: 25.0, evidence: 'DKA classic triad (LR 25.0)' },
+
+        // Pheochromocytoma triad: headache + palpitations + sweating (episodic)
+        { pattern: /episodic.*(headache|palpitat|sweat).*(headache|palpitat|sweat).*(headache|palpitat|sweat)|(headache.*palpitat.*sweat)|(palpitat.*headache.*sweat)/i, diagnosis: 'Pheochromocytoma', lr: 25.0, evidence: 'Pheo triad (HA + palpitations + sweating) (LR 25.0)' },
+
+        // Preeclampsia triad: HTN + proteinuria + edema (pregnant)
+        { pattern: /pregnant.*(high\s*bp|hypertens|vision\s*change|headache).*(swell|swollen|edema|puffy)/i, diagnosis: 'Preeclampsia', lr: 30.0, evidence: 'Preeclampsia features in pregnancy (LR 30.0)' },
+
+        // HUS triad: microangiopathic hemolytic anemia + thrombocytopenia + AKI
+        { pattern: /(bloody\s*diarrhea|diarrhea.*bloody).*(child|kid|\d+\s*year).*(pale|tired|bruise|weak|kidney|urine)/i, diagnosis: 'Hemolytic Uremic Syndrome', lr: 30.0, evidence: 'Post-diarrheal HUS in child (LR 30.0)' },
+
+        // Kawasaki criteria: fever >5d + 4 of (conjunctivitis, rash, cervical node, extremity, lips/oral)
+        { pattern: /(kid|child|toddler|\d+\s*year).*fever.*(5|five|six|seven).*days?.*(red\s*eye|rash|swell|crack.*lip|peel|strawberry\s*tongue)/i, diagnosis: 'Kawasaki Disease', lr: 30.0, evidence: 'Kawasaki multi-system criteria (LR 30.0)' },
+
+        // Pulmonary embolism classic: dyspnea + pleuritic chest pain + hemoptysis
+        { pattern: /(shortness\s*of\s*breath|cant\s*breathe|dyspnea).*(sharp.*chest|chest.*(deep\s*breath|breathing)).*(cough.*blood|hemoptys|blood.*spit)/i, diagnosis: 'Pulmonary Embolism', lr: 30.0, evidence: 'Classic PE triad — dyspnea + pleuritic pain + hemoptysis (LR 30.0)' },
+
+        // HSP tetrad: palpable purpura + arthritis + abdominal pain + renal
+        { pattern: /(purple|purpura|bruise.?like).*(joint.*pain|arthr).*(belly|abdom|stomach).*(kid|child)/i, diagnosis: 'Henoch-Schonlein Purpura (IgA Vasculitis)', lr: 35.0, evidence: 'HSP tetrad (LR 35.0)' },
+
+        // Anaphylaxis pattern: exposure + airway + skin + hypotension
+        { pattern: /(ate|ingest|sting|stung|exposed|taking).*(throat|lip|tongue|face).*(swell|tight|shut).*(hives|rash|flush|dizzy|faint)/i, diagnosis: 'Anaphylaxis', lr: 30.0, evidence: 'Anaphylaxis multi-system (airway + skin + trigger) (LR 30.0)' },
+
+        // Hyperthyroid storm: fever + tachy + altered mental status + hyperthyroid hx
+        { pattern: /(hyperthy|graves|thyroid).*(fever|hot|burning\s*up).*(racing|fast\s*heart|tachycar).*(agitat|confus|shaking|sweat)/i, diagnosis: 'Thyroid Storm', lr: 30.0, evidence: 'Thyroid storm criteria (LR 30.0)' },
+
+        // Meniere's triad: vertigo + tinnitus + hearing loss
+        { pattern: /(dizz|vertigo|spin).*(ear.*ring|tinnitus|buzz.*ear).*(hearing\s*loss|cant\s*hear|muffled)/i, diagnosis: 'Meniere Disease', lr: 25.0, evidence: 'Meniere triad (LR 25.0)' },
+
+        // Horner's triad: miosis + ptosis + anhidrosis (think Pancoast tumor or carotid dissection)
+        { pattern: /(droopy\s*eyelid|ptosis).*(small.*pupil|miosis).*(no\s*sweat|anhidrosis)/i, diagnosis: 'Horner Syndrome', lr: 20.0, evidence: 'Horner triad — think Pancoast/carotid dissection (LR 20.0)' },
+
+        // Rheumatoid arthritis classic: symmetric MCP/PIP + morning stiffness + female
+        { pattern: /(symmetric|both\s*hands|bilateral).*(finger|joint).*(swell|painful).*(morning\s*stiff|stiff.*morning).*(hour|\d+\s*min)/i, diagnosis: 'Rheumatoid Arthritis', lr: 20.0, evidence: 'RA classic symmetric polyarthritis + morning stiffness (LR 20.0)' },
+
+        // GBS classic: ascending weakness + areflexia + post-infection
+        { pattern: /(after|following).*(diarrhea|illness|gastro|stomach\s*bug|infection|cold).*(weakness|cant\s*walk|legs).*(arms|ascending|spreading\s*up)/i, diagnosis: 'Guillain-Barre Syndrome', lr: 30.0, evidence: 'Post-infectious ascending weakness — GBS (LR 30.0)' },
+      ];
+      for (const rule of classicPatternRules) {
+        if (rule.pattern.test(chiefComplaint)) {
+          const currentOdds = odds.get(rule.diagnosis) || 0.02;
+          odds.set(rule.diagnosis, currentOdds * rule.lr);
+          const existing = allEvidence.get(rule.diagnosis) || [];
+          existing.push(rule.evidence);
+          allEvidence.set(rule.diagnosis, existing);
+        }
+      }
+
+      // ============================================================
+      // --- Step 4e: TEMPORAL EVOLUTION WEIGHTING (INNOVATION) ---
+      // "Sudden" / "thunderclap" → vascular/surgical emergencies
+      // "Progressive over weeks/months" → chronic/malignancy
+      // "Waxing and waning" → functional/migraine/colic
+      // ============================================================
+      const temporalRules: Array<{ pattern: RegExp; boosts: Array<{ diagnosis: string; lr: number }>; evidence: string }> = [
+        // Sudden/thunderclap → vascular emergencies
+        { pattern: /\b(sudden|thunderclap|outta\s*nowhere|out\s*of\s*nowhere|all\s*at\s*once|maximum\s*from\s*start|instantan)\b/i, boosts: [
+          { diagnosis: 'Subarachnoid Hemorrhage', lr: 3.0 },
+          { diagnosis: 'Aortic Dissection', lr: 3.0 },
+          { diagnosis: 'Pulmonary Embolism', lr: 2.5 },
+          { diagnosis: 'Pneumothorax', lr: 2.5 },
+          { diagnosis: 'Stroke', lr: 2.5 },
+          { diagnosis: 'Testicular Torsion', lr: 2.5 },
+          { diagnosis: 'Ovarian Torsion', lr: 2.5 },
+          { diagnosis: 'Acute Angle Closure Glaucoma', lr: 2.5 },
+          { diagnosis: 'Ruptured AAA', lr: 3.0 },
+          { diagnosis: 'Retinal Detachment', lr: 2.5 },
+        ], evidence: 'Sudden onset — favors vascular/surgical emergency' },
+
+        // Progressive over weeks/months → chronic/malignancy
+        { pattern: /\b(weeks|months|progressi|getting\s*worse|gradually|over\s*time|slowly\s*worsen|for\s*(a\s*)?while)\b/i, boosts: [
+          { diagnosis: 'Malignancy', lr: 2.5 },
+          { diagnosis: 'Brain Tumor', lr: 3.0 },
+          { diagnosis: 'Lung Cancer', lr: 2.5 },
+          { diagnosis: 'Colorectal Cancer', lr: 2.0 },
+          { diagnosis: 'Tuberculosis', lr: 2.0 },
+          { diagnosis: 'Chronic Subdural Hematoma', lr: 2.5 },
+          { diagnosis: 'Idiopathic Pulmonary Fibrosis', lr: 2.5 },
+          { diagnosis: 'Heart Failure', lr: 2.0 },
+          { diagnosis: 'Inflammatory Bowel Disease', lr: 2.0 },
+          { diagnosis: 'Rheumatoid Arthritis', lr: 2.0 },
+        ], evidence: 'Chronic/progressive course — favors chronic/malignancy' },
+
+        // Waxing and waning / episodic
+        { pattern: /\b(comes?\s*and\s*goes?|episodic|waxing|waning|on\s*and\s*off|intermittent|flares?|attacks?)\b/i, boosts: [
+          { diagnosis: 'Migraine', lr: 2.0 },
+          { diagnosis: 'Benign Paroxysmal Positional Vertigo', lr: 2.5 },
+          { diagnosis: 'Cyclic Vomiting Syndrome', lr: 3.0 },
+          { diagnosis: 'Cannabinoid Hyperemesis Syndrome', lr: 2.0 },
+          { diagnosis: 'Nephrolithiasis', lr: 2.5 },
+          { diagnosis: 'Intussusception', lr: 2.5 },
+          { diagnosis: 'Paroxysmal Atrial Fibrillation', lr: 2.5 },
+          { diagnosis: 'Pheochromocytoma', lr: 2.5 },
+        ], evidence: 'Episodic/recurrent — favors functional/episodic condition' },
+
+        // Positional / exertional
+        { pattern: /\b(when\s*i\s*(walk|stand|lift|exert)|worse\s*with\s*(activity|exercise|exertion)|brought\s*on\s*by)\b/i, boosts: [
+          { diagnosis: 'Stable Angina', lr: 3.0 },
+          { diagnosis: 'Aortic Stenosis', lr: 2.5 },
+          { diagnosis: 'Congestive Heart Failure', lr: 2.0 },
+          { diagnosis: 'Exertional Asthma', lr: 2.0 },
+        ], evidence: 'Exertional symptoms — favors cardiopulmonary' },
+      ];
+      for (const rule of temporalRules) {
+        if (rule.pattern.test(chiefComplaint)) {
+          for (const boost of rule.boosts) {
+            const currentOdds = odds.get(boost.diagnosis) || 0.02;
+            odds.set(boost.diagnosis, currentOdds * boost.lr);
+            const existing = allEvidence.get(boost.diagnosis) || [];
+            existing.push(rule.evidence);
+            allEvidence.set(boost.diagnosis, existing);
+          }
         }
       }
 

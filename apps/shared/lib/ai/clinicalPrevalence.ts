@@ -1458,6 +1458,31 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   },
 
   // ================================================================
+  // MUSCLE PAIN / RHABDOMYOLYSIS
+  // ================================================================
+  {
+    complaint: 'muscle pain',
+    triggerPatterns: [
+      /\b(muscle|muscles)\s*(pain|hurt|ache|killing|sore)/i,
+      /(worked\s*out|exercise|crossfit|workout|gym).*(muscle|body|sore|hurt|ache|pain)/i,
+      /(dark|brown|tea|cola)\s*(urine|pee)/i,
+      /rhabdomyolysis|rhabdo|myositis|myopathy/i,
+      /body.*(achy|hurts|killing|sore).*all\s*over|whole\s*body\s*(ache|hurt|sore)/i,
+    ],
+    diagnoses: [
+      { diagnosis: 'Rhabdomyolysis', baseRate: 0.25, ageModifiers: [{ range: [15, 45], multiplier: 1.5 }], genderModifier: { male: 1.5, female: 0.7 } },
+      { diagnosis: 'Muscle Strain', baseRate: 0.30, ageModifiers: [], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Viral Myositis', baseRate: 0.10, ageModifiers: [{ range: [3, 15], multiplier: 2.0 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Polymyositis/Dermatomyositis', baseRate: 0.05, ageModifiers: [{ range: [30, 70], multiplier: 1.5 }], genderModifier: { male: 0.6, female: 1.5 } },
+      { diagnosis: 'Statin-Induced Myopathy', baseRate: 0.08, ageModifiers: [{ range: [50, 85], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
+      { diagnosis: 'Fibromyalgia', baseRate: 0.08, ageModifiers: [{ range: [25, 60], multiplier: 1.3 }], genderModifier: { male: 0.4, female: 1.8 } },
+      { diagnosis: 'Polymyalgia Rheumatica', baseRate: 0.05, ageModifiers: [{ range: [55, 85], multiplier: 2.5 }], genderModifier: { male: 0.7, female: 1.4 } },
+      { diagnosis: 'Compartment Syndrome', baseRate: 0.03, ageModifiers: [], genderModifier: { male: 1.2, female: 0.9 } },
+      { diagnosis: 'Delayed-Onset Muscle Soreness', baseRate: 0.06, ageModifiers: [{ range: [18, 45], multiplier: 1.3 }], genderModifier: { male: 1.0, female: 1.0 } },
+    ],
+  },
+
+  // ================================================================
   // EXTREMITY IMMOBILITY — Nursemaid Elbow, Fracture
   // ================================================================
   {
@@ -3296,10 +3321,12 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
       /\b(hit|punch|kick|choke|strangle|slap|shove|push|beat|threw)\b.*\b(me|him|her|partner|husband|wife|boyfriend|girlfriend|parent|child)/i,
       /\b(partner|husband|wife|boyfriend|girlfriend|spouse)\b.*\b(hit|hurt|abuse|violent|angry|scared|afraid|threat)/i,
       /domestic\s*(violen|abuse)|intimate\s*partner|batter|safe\s*at\s*home|afraid\s*(of|at)\s*home/i,
-      /sexual\s*(assault|abuse|attack)|rape|molest|forced\s*(sex|me|him|her)|non\s*consensual/i,
+      /sexual\s*(assault|abuse|attack)|\brape|molest|forced\s*(sex|me|him|her)|non\s*consensual/i,
       /child\s*(abuse|neglect)|elder\s*(abuse|neglect)|non\s*accidental\s*trauma|\bNAT\b/i,
       /traffick|exploit|captive|held\s*against/i,
       /bruise.*(different|various|multiple)\s*stage|injury.*doesn'?t\s*match|story\s*doesn'?t\s*(match|add\s*up)/i,
+      /something\s*happened.*(party|last\s*night|club|bar|date)|need.*(forensic|rape\s*kit|sane\s*exam)/i,
+      /dont\s*want\s*to\s*say\s*much|dont\s*remember.*(last\s*night|party)|need\s*to\s*be\s*checked\s*out/i,
     ],
     diagnoses: [
       { diagnosis: 'Intimate Partner Violence', baseRate: 0.30, ageModifiers: [{ range: [18, 50], multiplier: 1.3 }], genderModifier: { male: 0.3, female: 1.8 } },
