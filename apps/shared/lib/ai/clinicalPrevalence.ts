@@ -168,9 +168,10 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'anaphylaxis/airway (priority)',
     triggerPatterns: [
-      /(throat|airway).*(swell|tight|closing|shut)|swelling.*(throat|airway)/i,
-      /(lip|tongue|face).*(swell|swollen|puffy)/i,
-      /(swollen|swelling).*(lip|tongue|face|mouth)/i,
+      // Exclude if "glands" (lymphadenopathy) context — those are pharyngitis, not anaphylaxis
+      /^(?!.*(gland|lymph\s*node)).*(throat|airway).*(tight|closing|shut|closing\s*shut)/i,
+      /^(?!.*(gland|lymph)).*swelling.*(throat|airway).*(tight|close|shut)/i,
+      /^(?!.*(gland|lymph|tonsil)).*(lip|tongue|face|mouth)\s*(is\s*|are\s*)?(swell|swollen|puffy)/i,
       /(ate|eating|bit.*into|food|shellfish|shrimp|peanut|nut|egg|dairy).*(throat|lip|tongue|face).*(swell|tight|shut|close|react)/i,
       /(sting|stung|bee|wasp|hornet).*(throat|lip|tongue|face).*(swell|tight|close|hives)/i,
       /\banaphyla/i,
@@ -465,7 +466,10 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'palpitations',
-    triggerPatterns: [/palpit|racing\s*heart|heart\s*racing|fluttering.*chest|irregular\s*heartbeat|pounding.*heart/i],
+    triggerPatterns: [
+      // Negative lookahead: exclude if infection/fever/sepsis context is clear
+      /^(?!.*(infection|infected|fever\s*10[3-5]|sepsis|chills.*racing|shaking.*uncontroll|fever\s*wont\s*break)).*(\bpalpit|racing\s*heart|heart\s*racing|fluttering.*chest|irregular\s*heartbeat|pounding.*heart)/i,
+    ],
     diagnoses: [
       {
         diagnosis: 'Supraventricular Tachycardia',
@@ -2002,6 +2006,11 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
       /abdomen|abdominal|stomach\s*(pain|hurt|ache|kill)|belly\s*(pain|hurt|ache|kill)|tummy\s*(pain|hurt|ache)|stomach\s*is\s*killing|belly\s*is\s*killing|epigastri|upper\s*(middle\s*)?abdomen|periumbili|suprapubic|lower\s*abdomen|abdominal\s*pain/i,
       /stomach.*(mess|cramp|upset|churning)|runnin.*to.*toilet|toilet.*every|pukin.*diarrhea|diarrhea.*pukin|throwing.*up.*diarrhea/i,
       /belly.*(bloat|hard|distend|huge)|nauseous.*belly|belly.*nauseous|gut.*(hurt|pain|kill|cramp)/i,
+      /pain\s*in\s*(my\s*)?(stomach|belly|gut|abdomen)|pain\s*moved.*(right|left|rlq|llq)|stomach\s*moved|belly\s*moved/i,
+      /(my\s*)?right\s*side\s*(is\s*)?(killing|hurt|pain|kill)|(my\s*)?left\s*side\s*(is\s*)?(killing|hurt|pain|kill)/i,
+      /lower\s*right.*(belly|side|abdom|pain|hurt)|right\s*lower.*(belly|abdom)/i,
+      /lower\s*left.*(belly|side|abdom|pain|hurt)|left\s*lower.*(belly|abdom)/i,
+      /bumps?\s*in\s*(the\s*)?road.*worse/i,
     ],
     diagnoses: [
       {
@@ -2078,7 +2087,12 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'shortness of breath',
-    triggerPatterns: [/shortness\s*of\s*breath|can'?t\s*breathe|difficulty\s*breathing|dyspnea|breathless|SOB/i],
+    triggerPatterns: [
+      /shortness\s*of\s*breath|can'?t\s*breathe|cant\s*breathe|difficulty\s*breathing|dyspnea|breathless|\bSOB\b/i,
+      /suffocat|cant\s*catch\s*(my\s*)?breath|hard\s*to\s*breathe|cant\s*(get|take)\s*(a\s*)?(full\s*)?breath/i,
+      /breathing.*(worse|trouble|hard|hurts)|wheez/i,
+      /(my\s*)?inhaler\s*(not|aint|isnt)\s*help|inhaler\s*not\s*working|rescue\s*inhaler/i,
+    ],
     diagnoses: [
       {
         diagnosis: 'Asthma',
@@ -2862,10 +2876,11 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'mania/agitation',
     triggerPatterns: [
-      /manic|mania|racing\s*thoughts|cant\s*stop\s*talking|not\s*sleeping\s*for\s*days|havent\s*slept\s*in\s*days/i,
-      /grandiose|thinks?\s*(hes?|shes?)\s*(god|invincible|special)|spending\s*spree|reckless/i,
+      /manic|mania|racing\s*thoughts?|my\s*thoughts?\s*are\s*racing|cant\s*stop\s*talking|not\s*sleeping\s*for\s*days|havent\s*slept\s*in\s*days|havent\s*needed\s*sleep/i,
+      /grandiose|thinks?\s*(hes?|shes?)\s*(god|invincible|special)|spending\s*spree|reckless|invincible|on\s*top\s*of\s*the\s*world|unstoppable/i,
       /psychos|psychotic|hearing\s*voices|voices\s*in\s*my\s*head|paranoi|delusional/i,
       /agitat|combative|violent|out\s*of\s*control|climbing\s*the\s*walls|wired/i,
+      /feel\s*amazing|can\s*do\s*anything|feel\s*like\s*(i|im)\s*can\s*(do|accomplish)|dont\s*need\s*(to\s*)?sleep/i,
     ],
     diagnoses: [
       { diagnosis: 'Bipolar Disorder — Manic Episode', baseRate: 0.25, ageModifiers: [{ range: [18, 35], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 1.0 } },
@@ -3322,8 +3337,9 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'abuse/violence',
     triggerPatterns: [
-      /\b(hit|punch|kick|choke|strangle|slap|shove|push|beat|threw)\b.*\b(me|him|her|partner|husband|wife|boyfriend|girlfriend|parent|child)/i,
+      /\b(hit|punch|kick|choke|strangle|slap|shove|push|beat|threw|punched|kicked|hit)\b.*\b(me|him|her|partner|husband|wife|boyfriend|girlfriend|parent|child|face|cheek|jaw|eye|head|stomach|back|ribs)/i,
       /\b(partner|husband|wife|boyfriend|girlfriend|spouse)\b.*\b(hit|hurt|abuse|violent|angry|scared|afraid|threat)/i,
+      /\b(he|she)\s*(punched|hit|kicked|choked|beat|slapped|strangled|slammed|threw)\b/i,
       /domestic\s*(violen|abuse)|intimate\s*partner|batter|safe\s*at\s*home|afraid\s*(of|at)\s*home/i,
       /sexual\s*(assault|abuse|attack)|\brape|molest|forced\s*(sex|me|him|her)|non\s*consensual/i,
       /child\s*(abuse|neglect)|elder\s*(abuse|neglect)|non\s*accidental\s*trauma|\bNAT\b/i,
@@ -3331,6 +3347,8 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
       /bruise.*(different|various|multiple)\s*stage|injury.*doesn'?t\s*match|story\s*doesn'?t\s*(match|add\s*up)/i,
       /something\s*happened.*(party|last\s*night|club|bar|date)|need.*(forensic|rape\s*kit|sane\s*exam)/i,
       /dont\s*want\s*to\s*say\s*much|dont\s*remember.*(last\s*night|party)|need\s*to\s*be\s*checked\s*out/i,
+      /(punched|hit|kicked|slapped).*me.*(again|last\s*night|yesterday|this\s*week|last\s*week)/i,
+      /(cheekbone|orbital|facial\s*bone).*(broken|fractured|hit)/i,
     ],
     diagnoses: [
       { diagnosis: 'Intimate Partner Violence', baseRate: 0.30, ageModifiers: [{ range: [18, 50], multiplier: 1.3 }], genderModifier: { male: 0.3, female: 1.8 } },
