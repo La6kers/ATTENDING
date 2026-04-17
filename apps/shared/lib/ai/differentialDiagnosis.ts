@@ -906,6 +906,169 @@ export class DifferentialDiagnosisService {
 
         // Ovarian cyst (after appendectomy context)
         { pattern: /(right\s*(side|lower).*(pelvi|abdom)).*(appendix.*(removed|out)|no\s*appendix)/i, diagnosis: 'Ovarian Cyst', lr: 5.0, evidence: 'RLQ pain post-appendectomy — ovarian cyst concern (LR 5.0)' },
+
+        // === v18 FIXES for v17 failure modes ===
+
+        // Atrial Fibrillation — irregular/fluttering heart
+        { pattern: /heart.*(all\s*over\s*the\s*place|irregular|skipping|fluttering|flutter)|heart\s*is\s*(all\s*over|irregular|flutter|skip)/i, diagnosis: 'Atrial Fibrillation', lr: 25.0, evidence: 'Irregularly irregular heart rhythm — AFib (LR 25.0)' },
+        { pattern: /(heart|pulse)\s*(beating|going|is).*(irregular|all\s*over|fluttering|erratic)/i, diagnosis: 'Atrial Fibrillation', lr: 20.0, evidence: 'Irregular pulse — AFib (LR 20.0)' },
+
+        // Pneumothorax — sudden sharp chest pain + cant breathe
+        { pattern: /sharp\s*chest\s*pain.*(sudden|outta\s*nowhere|out\s*of\s*nowhere).*(cant\s*(take|catch)|hard\s*to\s*breathe|short\s*of\s*breath)/i, diagnosis: 'Pneumothorax', lr: 25.0, evidence: 'Sudden sharp chest pain + dyspnea — pneumothorax (LR 25.0)' },
+        { pattern: /felt\s*a\s*pop.*chest|pop.*chest.*cant\s*breathe|chest.*(pop|popped).*breath/i, diagnosis: 'Pneumothorax', lr: 30.0, evidence: 'Chest pop + dyspnea — spontaneous pneumothorax (LR 30.0)' },
+
+        // Tension Pneumothorax — chest trauma + getting worse + cant breathe
+        { pattern: /(hit|trauma|blow|got\s*hit).*chest.*(cant|barely|hardly)\s*(breathe|take\s*a\s*breath)/i, diagnosis: 'Tension Pneumothorax', lr: 40.0, evidence: 'Chest trauma + respiratory compromise — tension pneumothorax (LR 40.0)' },
+        { pattern: /chest\s*(trauma|injury|hit).*(feel\s*like\s*(im|gonna)\s*die|gonna\s*die|dying)/i, diagnosis: 'Tension Pneumothorax', lr: 35.0, evidence: 'Chest trauma + impending doom (LR 35.0)' },
+        { pattern: /chest\s*trauma.*(getting\s*worse|cant\s*breathe|deteriorat|rapidly|fast)/i, diagnosis: 'Tension Pneumothorax', lr: 25.0, evidence: 'Chest trauma + deterioration — tension PTX (LR 25.0)' },
+        { pattern: /(hit|got\s*hit).*chest.*(getting\s*worse|fast|rapid|one\s*side)/i, diagnosis: 'Tension Pneumothorax', lr: 30.0, evidence: 'Post-traumatic tension PTX pattern (LR 30.0)' },
+
+        // Panic Attack — heart pounding + tingling + 20 minutes
+        { pattern: /(heart\s*(is\s*)?pounding|racing\s*heart|chest\s*tight).*(cant\s*breathe|tingl).*(die|dying|heart\s*attack)/i, diagnosis: 'Panic Attack', lr: 20.0, evidence: 'Panic symptoms — panic attack (LR 20.0)' },
+        { pattern: /(heart\s*pounding|chest\s*tight).*(tingl.*hands|tingl.*fingers|around\s*mouth)/i, diagnosis: 'Panic Attack', lr: 15.0, evidence: 'Perioral/peripheral tingling + panic — panic attack (LR 15.0)' },
+        { pattern: /(nothing\s*triggered|no\s*reason).*(heart\s*pounding|cant\s*breathe|feel\s*like\s*dying)/i, diagnosis: 'Panic Attack', lr: 15.0, evidence: 'Unprovoked panic symptoms (LR 15.0)' },
+
+        // Hypothyroidism — cold + weight gain + tired + dry skin
+        { pattern: /(always\s*cold|cold\s*intoleran|feel\s*cold).*(tired|fatigue|exhausted).*(weight\s*gain|gaining\s*weight|constipat|dry\s*skin|hair\s*(loss|falling))/i, diagnosis: 'Hypothyroidism', lr: 30.0, evidence: 'Classic hypothyroid triad (LR 30.0)' },
+        { pattern: /(always\s*cold|cold\s*intoleran).*(weight\s*gain|gaining\s*weight)/i, diagnosis: 'Hypothyroidism', lr: 20.0, evidence: 'Cold + weight gain — hypothyroid (LR 20.0)' },
+        { pattern: /sluggish.*all\s*the\s*time.*(constipat|dry\s*skin|cold|hair\s*loss)/i, diagnosis: 'Hypothyroidism', lr: 15.0, evidence: 'Constitutional hypothyroid symptoms (LR 15.0)' },
+
+        // Stimulant Intoxication — meth/cocaine/adderall + symptoms
+        { pattern: /(smoked|took|used|snorted|injected).*(meth|crack|cocaine|amphet|adderall|speed|ice|crystal).*(racing|pounding|paranoi|agitat|sweat|dilated|pupils\s*(are\s*)?huge)/i, diagnosis: 'Stimulant Intoxication', lr: 30.0, evidence: 'Named stimulant + sympathomimetic syndrome (LR 30.0)' },
+        { pattern: /(meth|crack|cocaine|adderall).*(heart\s*racing|heart\s*pounding|wont\s*sit\s*still|agitat)/i, diagnosis: 'Stimulant Intoxication', lr: 25.0, evidence: 'Stimulant use + cardiotoxicity (LR 25.0)' },
+        { pattern: /(took\s*too\s*much|overdose).*(adderall|ritalin|concerta|vyvanse|stimulant)/i, diagnosis: 'Stimulant Intoxication', lr: 30.0, evidence: 'Stimulant overdose (LR 30.0)' },
+
+        // ADEM — child + after virus + weakness/neuro
+        { pattern: /(child|kid|\d+\s*year\s*old).*(after|following|developed).*(virus|cold|illness|infection).*(weakness|cant\s*walk|confus|headache|vision)/i, diagnosis: 'Acute Disseminated Encephalomyelitis', lr: 30.0, evidence: 'Post-viral neuro decline in child — ADEM (LR 30.0)' },
+        { pattern: /(kid|child|my\s*(son|daughter|boy|girl)).*(had\s*a\s*)?(cold|virus|infection).*(now|and).*(weakness|cant\s*walk|confus|vision|legs)/i, diagnosis: 'Acute Disseminated Encephalomyelitis', lr: 30.0, evidence: 'Post-infectious encephalomyelitis (LR 30.0)' },
+        { pattern: /(child|kid).*(weakness|cant\s*walk|legs).*(after|following).*(virus|cold|illness)/i, diagnosis: 'Acute Disseminated Encephalomyelitis', lr: 25.0, evidence: 'Child post-viral weakness — ADEM (LR 25.0)' },
+        { pattern: /(kid|child).*developed.*(weakness|ataxia|cant\s*walk).*(after|following|plus).*(virus|cold|illness|headache|fever)/i, diagnosis: 'Acute Disseminated Encephalomyelitis', lr: 30.0, evidence: 'ADEM clinical pattern (LR 30.0)' },
+
+        // Thyroid Storm — hyperthyroid + fever + racing heart
+        { pattern: /hyperthy.*(fever|racing|fast\s*heart|sweat|shaking|agitat|haywire)/i, diagnosis: 'Thyroid Storm', lr: 25.0, evidence: 'Hyperthyroid decompensation — thyroid storm (LR 25.0)' },
+        { pattern: /(fever|sweating|shaking).*(thyroid|graves|hyperthy).*(racing|fast\s*heart)/i, diagnosis: 'Thyroid Storm', lr: 20.0, evidence: 'Thyroid storm pattern (LR 20.0)' },
+
+        // Hand Foot Mouth Disease — kid + mouth sores + hands/feet + fever
+        { pattern: /(kid|child|toddler|daycare).*(fever).*(mouth\s*sores?|blisters?\s*(on|in)\s*(hands?|feet|mouth|tongue))/i, diagnosis: 'Hand Foot and Mouth Disease', lr: 25.0, evidence: 'HFM triad in child (LR 25.0)' },
+        { pattern: /(mouth\s*sores?|mouth\s*ulcers?).*(hands?|feet|palms?|soles?)|(hands?|feet).*(mouth\s*sores?|blisters?)/i, diagnosis: 'Hand Foot and Mouth Disease', lr: 20.0, evidence: 'Hand-foot-mouth pattern (LR 20.0)' },
+
+        // Bronchiolitis — infant + wheezing + after cold
+        { pattern: /(infant|baby|month.?old|6\s*month).*(wheez|fast\s*breath|nasal\s*flar|retract|cold).*(after|following|turned\s*into)/i, diagnosis: 'Bronchiolitis', lr: 25.0, evidence: 'Infant wheezing post-URI — bronchiolitis (LR 25.0)' },
+        { pattern: /(infant|baby|month.?old).*(wheez|fast\s*breath|breathing\s*fast|nasal\s*flar|retract)/i, diagnosis: 'Bronchiolitis', lr: 15.0, evidence: 'Infant respiratory distress — bronchiolitis (LR 15.0)' },
+
+        // Hypothermia — cold + shivering + confused
+        { pattern: /(found|out).*(outside|cold|snow|winter).*(shiver|cold\s*to\s*the\s*touch|confus|ice\s*cold)/i, diagnosis: 'Hypothermia', lr: 30.0, evidence: 'Cold exposure + altered mental status — hypothermia (LR 30.0)' },
+        { pattern: /(skin|body).*(ice\s*cold|cold\s*to\s*touch|frozen).*(confus|shiver|lethargic)/i, diagnosis: 'Hypothermia', lr: 25.0, evidence: 'Cold skin + neurologic change (LR 25.0)' },
+        { pattern: /(homeless|unsheltered|exposure).*(cold|winter|snow).*(shiver|confus|unresponsive)/i, diagnosis: 'Hypothermia', lr: 25.0, evidence: 'Environmental cold exposure (LR 25.0)' },
+
+        // Psychotic Disorder — hearing voices + paranoid
+        { pattern: /(hearing|talking\s*to|sees?).*(voices|people|someone|things).*(aren'?t\s*there|not\s*there|no\s*one)/i, diagnosis: 'Psychotic Disorder', lr: 30.0, evidence: 'Auditory/visual hallucinations — psychosis (LR 30.0)' },
+        { pattern: /(paranoi|conspiracy|government|someone).*(watch|follow|spy|poison|chip|out\s*to\s*get)/i, diagnosis: 'Psychotic Disorder', lr: 25.0, evidence: 'Paranoid delusions — psychotic disorder (LR 25.0)' },
+
+        // OSA — snoring + apneas + daytime sleepiness
+        { pattern: /(snore|snoring).*(freight\s*train|loud|terrible|wakes|gasp).*(stop|apnea|breath)|(stop\s*breathing|gasp|choke).*(sleep|night)/i, diagnosis: 'Obstructive Sleep Apnea', lr: 25.0, evidence: 'Witnessed apneas + snoring — OSA (LR 25.0)' },
+        { pattern: /(fall|falling)\s*asleep.*(desk|meeting|day|afternoon).*(snore|apnea|gasp)|(day|afternoon).*sleepy.*(snore|gasp)/i, diagnosis: 'Obstructive Sleep Apnea', lr: 20.0, evidence: 'Daytime sleepiness + snoring — OSA (LR 20.0)' },
+
+        // Malignancy — unintentional weight loss + months + no appetite
+        { pattern: /(lost|losing).*(weight|pounds?).*(without\s*trying|unintention|no\s*reason|dont\s*know\s*why)/i, diagnosis: 'Malignancy', lr: 15.0, evidence: 'Unintentional weight loss (LR 15.0)' },
+        { pattern: /(clothes?.*(getting\s*loose|dont\s*fit|baggy)).*(tired|fatigue|appetite)/i, diagnosis: 'Malignancy', lr: 10.0, evidence: 'Weight loss + constitutional symptoms (LR 10.0)' },
+        { pattern: /(lost\s*\d+\s*pounds?|30\s*pounds|20\s*pounds).*(months?|weeks?).*(no\s*appetite|not\s*hungry)/i, diagnosis: 'Malignancy', lr: 20.0, evidence: 'Significant unintentional weight loss + anorexia (LR 20.0)' },
+
+        // Inguinal Hernia — lump near privates + comes and goes
+        { pattern: /(lump|bulge).*(near|in|by).*(privates|groin|down\s*there|nuts|sack|boys)/i, diagnosis: 'Inguinal Hernia', lr: 25.0, evidence: 'Inguinal/groin lump — hernia (LR 25.0)' },
+        { pattern: /(bulge|lump).*(pops?\s*out|comes\s*and\s*goes?|reduce).*(cough|lift|stand|push)/i, diagnosis: 'Inguinal Hernia', lr: 20.0, evidence: 'Reducible bulge with Valsalva — hernia (LR 20.0)' },
+
+        // Postpartum Depression — after delivery + cant stop crying
+        { pattern: /(had|since\s*having).*(my\s*)?baby.*(cant\s*stop|wont\s*stop)\s*cry/i, diagnosis: 'Postpartum Depression', lr: 25.0, evidence: 'Persistent crying post-delivery — PPD (LR 25.0)' },
+        { pattern: /(had|since).*(baby|birth|delivery).*(weeks?\s*ago|months?\s*ago).*(sad|depress|cry|bonded|interest)/i, diagnosis: 'Postpartum Depression', lr: 20.0, evidence: 'Post-delivery mood symptoms — PPD (LR 20.0)' },
+        { pattern: /(scary\s*thoughts?|bad\s*thoughts?|intrusive\s*thoughts?).*(baby|newborn|infant)/i, diagnosis: 'Postpartum Depression', lr: 15.0, evidence: 'Intrusive thoughts about baby — PPD (LR 15.0)' },
+
+        // Colic — baby + inconsolable + hours + legs up
+        { pattern: /(baby|infant|newborn).*(cries?|crying|screaming)\s*(for\s*)?(\d+\s*)?hours?/i, diagnosis: 'Colic', lr: 25.0, evidence: 'Infant prolonged crying — colic (LR 25.0)' },
+        { pattern: /(baby|infant).*(pulls?|drawing?).*(legs?|knees?).*(chest|up|belly)/i, diagnosis: 'Colic', lr: 20.0, evidence: 'Infant drawing legs up — colic (LR 20.0)' },
+        { pattern: /inconsolab.*(baby|infant|newborn)|baby.*inconsolab/i, diagnosis: 'Colic', lr: 15.0, evidence: 'Inconsolable infant (LR 15.0)' },
+
+        // Status Epilepticus — continuous seizure or going on and on
+        { pattern: /(seiz|shak|convuls).*(going\s*on\s*and\s*on|wont\s*stop|\d+\s*minutes?|back\s*to\s*back|continuous|nonstop)/i, diagnosis: 'Status Epilepticus', lr: 25.0, evidence: 'Prolonged/continuous seizure — status epilepticus (LR 25.0)' },
+        { pattern: /status\s*epilepticus|seizure.*(20\s*min|15\s*min|10\s*min).*wont\s*stop/i, diagnosis: 'Status Epilepticus', lr: 30.0, evidence: 'Status epilepticus (LR 30.0)' },
+
+        // Sexual Assault — specific language
+        { pattern: /(assault|raped|forced.*(sex|me)|something\s*happened.*(party|last\s*night)|need.*forensic)/i, diagnosis: 'Sexual Assault', lr: 30.0, evidence: 'Sexual assault disclosure (LR 30.0)' },
+        { pattern: /(unwanted.*(sex|touch|contact)|non.?consensual|sane\s*exam)/i, diagnosis: 'Sexual Assault', lr: 30.0, evidence: 'Sexual assault / SANE exam indication (LR 30.0)' },
+
+        // CHF orthopnea + leg swelling
+        { pattern: /(cant\s*lay\s*flat|cant\s*sleep\s*flat|sleep\s*propped|wake.*gasp).*(ankle|leg|foot).*(swell|swol|edema)/i, diagnosis: 'Congestive Heart Failure', lr: 20.0, evidence: 'Orthopnea + edema — CHF (LR 20.0)' },
+        { pattern: /(wake\s*up.*gasping|paroxysmal.*dyspnea|pnd).*(ankle|leg).*(swell|swol)/i, diagnosis: 'Congestive Heart Failure', lr: 20.0, evidence: 'PND + edema — CHF (LR 20.0)' },
+        { pattern: /(gained.*\d+.*pounds?|water.*weight|\d+\s*pounds?.*week).*(swell|breath|cant\s*walk)/i, diagnosis: 'Congestive Heart Failure', lr: 15.0, evidence: 'Volume overload — CHF (LR 15.0)' },
+
+        // Caustic/Chemical Ingestion fix for pediatric + battery
+        { pattern: /(toddler|child|baby|\d+\s*year).*(put|swallow|ate).*(battery|button|coin|small\s*object)/i, diagnosis: 'Button Battery Ingestion', lr: 30.0, evidence: 'Pediatric button battery ingestion (LR 30.0)' },
+        { pattern: /(battery|coin|button).*(swallow|in\s*mouth|stuck).*(kid|child|toddler)/i, diagnosis: 'Button Battery Ingestion', lr: 25.0, evidence: 'Foreign body in child (LR 25.0)' },
+
+        // Acute Urinary Retention
+        { pattern: /(havent\s*(been\s*able\s*to\s*)?pee|cant\s*(pee|urinate|void))\s*(all\s*day|for\s*hours|hours)/i, diagnosis: 'Acute Urinary Retention', lr: 25.0, evidence: 'Inability to void — urinary retention (LR 25.0)' },
+        { pattern: /bladder.*(burst|huge|distend|full).*(cant|unable)\s*(pee|urinate|void)/i, diagnosis: 'Acute Urinary Retention', lr: 25.0, evidence: 'Bladder distension + retention (LR 25.0)' },
+
+        // Alcohol Withdrawal vs DTs — if confused/hallucinating it's DTs, else AW
+        { pattern: /(quit|stop|last\s*drink).*(drinking|alcohol).*(shakes?|tremor|anxiety|sweat|nausea)(?!.*(confus|hallucin|see.*things))/i, diagnosis: 'Alcohol Withdrawal', lr: 15.0, evidence: 'Alcohol cessation + autonomic symptoms — AW (LR 15.0)' },
+
+        // Chlamydia / STI — tighten to require genital context
+        { pattern: /(yellowish|green|white|clear)\s*(drip|discharge).*(urinate|pee|burn)/i, diagnosis: 'Chlamydia', lr: 20.0, evidence: 'Urethral discharge + dysuria — STI (LR 20.0)' },
+        { pattern: /(burns?|sting).*(pee|urinate).*(discharge|drip|after.*sex|unprotected)/i, diagnosis: 'Chlamydia', lr: 20.0, evidence: 'Dysuria + discharge — STI (LR 20.0)' },
+
+        // Laceration/Crush injury — work/machine trauma
+        { pattern: /(hand|arm|finger|leg).*(caught\s*in|stuck\s*in|mangled).*(machine|equipment)/i, diagnosis: 'Laceration/Crush Injury', lr: 25.0, evidence: 'Machine crush injury (LR 25.0)' },
+        { pattern: /fell\s*off.*(ladder|scaffold|roof).*(arm|leg|hand).*(bleed|broke|bone)/i, diagnosis: 'Laceration/Crush Injury', lr: 20.0, evidence: 'Fall from height with extremity trauma (LR 20.0)' },
+
+        // Polypharmacy / Medication Effect — elderly + many meds + falls
+        { pattern: /(grandpa|grandma|elderly|\d+\s*medications?|\d+\s*pills?|many\s*meds?|lots?\s*of\s*medicine).*(fall|falling|dizz|unsteady)/i, diagnosis: 'Polypharmacy/Medication Effect', lr: 20.0, evidence: 'Elderly + polypharmacy + falls (LR 20.0)' },
+        { pattern: /(fall|falling)\s*.*(on\s*\d+|takes?\s*\d+).*medication/i, diagnosis: 'Polypharmacy/Medication Effect', lr: 20.0, evidence: 'Falls + polypharmacy (LR 20.0)' },
+
+        // Pyloric Stenosis — boost existing + projectile vomiting
+        { pattern: /(\d+\s*week\s*old|3\s*week|newborn|infant).*projectile.*vomit|projectile\s*vomit.*(week\s*old|infant|newborn)/i, diagnosis: 'Pyloric Stenosis', lr: 30.0, evidence: 'Projectile vomiting in newborn — pyloric stenosis (LR 30.0)' },
+
+        // Intussusception — boost
+        { pattern: /(baby|infant).*(scream|cry).*(legs?|knees?).*(chest|up).*(calm|stop).*(few\s*minutes|episod)/i, diagnosis: 'Intussusception', lr: 25.0, evidence: 'Episodic screaming + leg drawing — intussusception (LR 25.0)' },
+        { pattern: /(currant\s*jelly|jelly\s*(looking|like))\s*(stool|poop|diaper)/i, diagnosis: 'Intussusception', lr: 30.0, evidence: 'Currant jelly stool — intussusception (LR 30.0)' },
+
+        // Placental Abruption — pregnant + hard belly + bleeding
+        { pattern: /(\d+\s*weeks?\s*pregnant|pregnant.*\d+\s*weeks?).*(belly|abdomen).*(hard|rigid|board).*(bleed|blood|pain)/i, diagnosis: 'Placental Abruption', lr: 30.0, evidence: 'Rigid gravid abdomen + bleeding — abruption (LR 30.0)' },
+        { pattern: /pregnant.*(suddenly\s*bleed|heavy\s*bleed|dark\s*blood).*(belly|abdom).*(hard|pain|rigid)/i, diagnosis: 'Placental Abruption', lr: 25.0, evidence: 'Third trimester bleed + abdominal rigidity (LR 25.0)' },
+
+        // Slipped Capital Femoral Epiphysis — boost
+        { pattern: /(overweight|obese|heavy|big).*(teen|teenager|adolesc|\d+\s*year).*(hip|knee|limp|waddle|cant\s*run)/i, diagnosis: 'Slipped Capital Femoral Epiphysis', lr: 20.0, evidence: 'Obese adolescent + hip/knee/gait (LR 20.0)' },
+
+        // Subdural Hematoma priority over Concussion (elderly + delayed + confused)
+        { pattern: /(grandpa|grandma|\b7\d|\b8\d|\b9\d)\s*.*(bumped|hit|fell|fall).*(head).*(confus|drowsy|weird|acting)/i, diagnosis: 'Subdural Hematoma', lr: 20.0, evidence: 'Elderly + head trauma + altered behavior (LR 20.0)' },
+        { pattern: /(fell|hit).*head.*(week|days?)\s*ago.*(confus|drowsy|weird|different|forgetful)/i, diagnosis: 'Subdural Hematoma', lr: 15.0, evidence: 'Delayed post-trauma symptoms — SDH (LR 15.0)' },
+
+        // Vasovagal Syncope — specific trigger
+        { pattern: /(passed\s*out|faint).*(blood\s*draw|standing\s*in\s*line|warm|hot|nausea|lightheaded|church|saw\s*blood)/i, diagnosis: 'Vasovagal Syncope', lr: 15.0, evidence: 'Triggered vasovagal syncope (LR 15.0)' },
+
+        // Orbital Cellulitis priority over Conjunctivitis (eye + fever + swollen)
+        { pattern: /eye.*(swollen\s*shut|bulging|proptos|pushed\s*out).*(fever|sick)/i, diagnosis: 'Orbital Cellulitis', lr: 25.0, evidence: 'Proptosis + fever — orbital cellulitis (LR 25.0)' },
+        { pattern: /(kid|child).*eye.*(bulg|puff|swol).*(fever|hot)/i, diagnosis: 'Orbital Cellulitis', lr: 20.0, evidence: 'Pediatric eye swelling + fever — orbital cellulitis (LR 20.0)' },
+
+        // Rhabdomyolysis — muscle + dark urine after exercise
+        { pattern: /(worked\s*out|exercise|crossfit|workout).*(muscle|body).*(killing|pain|hurt|ache).*(dark|brown|tea|cola)\s*(urine|pee)/i, diagnosis: 'Rhabdomyolysis', lr: 30.0, evidence: 'Exertional rhabdomyolysis pattern (LR 30.0)' },
+
+        // Henoch-Schonlein Purpura priority in kids
+        { pattern: /(child|kid|\d+\s*year).*(purple|purplish|bruise.?like)\s*(rash|spots?|bumps?).*(legs?|butt|buttock|belly)/i, diagnosis: 'Henoch-Schonlein Purpura (IgA Vasculitis)', lr: 25.0, evidence: 'Palpable purpura on legs/buttocks in child — HSP (LR 25.0)' },
+        { pattern: /(purple|purpur|palpable).*(rash|spot).*(joint|arthri|belly|abdom).*child/i, diagnosis: 'Henoch-Schonlein Purpura (IgA Vasculitis)', lr: 20.0, evidence: 'HSP tetrad (LR 20.0)' },
+
+        // Migraine priority over Angle Closure Glaucoma
+        { pattern: /(throbbing|pulsat|pounding).*(one\s*side|unilateral|behind\s*(my|the)\s*eye).*(nausea|vomit|light|sound)/i, diagnosis: 'Migraine', lr: 15.0, evidence: 'Unilateral throbbing + POUND features — migraine (LR 15.0)' },
+
+        // Temporal Arteritis — temple + throbbing + vision
+        { pattern: /temple.*(tender|throb|pain|hurt).*(vision|blurry|eye)/i, diagnosis: 'Temporal arteritis', lr: 25.0, evidence: 'Temporal throbbing + vision change — GCA (LR 25.0)' },
+
+        // Iron Deficiency Anemia — boost
+        { pattern: /(exhaust|tired|drag).*(pale|look\s*pale|ghost).*(period|heavy\s*period|cycle)/i, diagnosis: 'Iron Deficiency Anemia', lr: 20.0, evidence: 'Pallor + menorrhagia — iron deficiency (LR 20.0)' },
+        { pattern: /(craving|eat).*ice.*(tired|pale|dizzy)/i, diagnosis: 'Iron Deficiency Anemia', lr: 25.0, evidence: 'Pica for ice + fatigue — iron deficiency (LR 25.0)' },
+
+        // Opioid Withdrawal — specific
+        { pattern: /(ran\s*out|stopped|quit).*(pain\s*pills?|percocet|norco|oxy|heroin|methadone|suboxone|opioid).*(body\s*ach|cant\s*stop.*puk|diarrhea|chills|restless)/i, diagnosis: 'Opioid Withdrawal', lr: 25.0, evidence: 'Opioid cessation + withdrawal syndrome (LR 25.0)' },
+        { pattern: /(dope\s*sick|kicking|cold\s*turkey).*(body\s*ach|chills|diarrhea|crawling\s*out)/i, diagnosis: 'Opioid Withdrawal', lr: 25.0, evidence: 'Opioid withdrawal slang + symptoms (LR 25.0)' },
       ];
       for (const rule of ccLRRules) {
         if (rule.pattern.test(chiefComplaint)) {

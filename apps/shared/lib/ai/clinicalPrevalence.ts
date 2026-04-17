@@ -1482,7 +1482,9 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'seizure',
     triggerPatterns: [
-      /\bseizure|convuls|shaking.*episode|shook.*uncontroll|\bfit\b|epileps/i,
+      /\bseizure|seizing|seized|convuls|shaking.*episode|shook.*uncontroll|\bfit\b|epileps/i,
+      /(started|began)\s*(seizing|to\s*seize|convuls)|going\s*on\s*and\s*on|wont\s*stop.*(shaking|seizing|convuls)/i,
+      /status\s*epilepticus|back\s*to\s*back\s*seizure|nonstop\s*seizure/i,
     ],
     diagnoses: [
       {
@@ -3083,6 +3085,9 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
       /scrot.*(swell|pain|lump|heavy)|epididy|hydrocele/i,
       /groin.*(bulge|lump|hernia|pain|swell)|hernia|inguinal/i,
       /testic.*(swell|lump|heavy).*gradual|gradual.*testic.*(swell|lump)/i,
+      /lump\s*(in|on|near).*(groin|privates|nuts|sack|down\s*there|boys)/i,
+      /bulge\s*(in|on|near).*(groin|privates|down\s*there)/i,
+      /(lump|bulge|swelling).*(privates|down\s*there|nuts|sack).*(pops?\s*out|comes\s*(and\s*)?goes|when\s*i\s*(cough|lift|stand))/i,
     ],
     diagnoses: [
       { diagnosis: 'Inguinal Hernia', baseRate: 0.30, ageModifiers: [{ range: [40, 80], multiplier: 1.3 }], genderModifier: { male: 4.0, female: 0.3 } },
@@ -3315,10 +3320,13 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
     triggerPatterns: [
       /erectile\s*(dysfunction|problem)|cant\s*(get|keep)\s*(it\s+up|an?\s*erect)|\bimpoten/i,
       /pain.*(during|with)\s*(sex|intercourse)|(sex|intercourse)\s*(hurt|pain|burns|painful)/i,
+      /hurts?\s*every\s*time.*(sex|intercourse|husband|make\s*love)|sex\s*(has\s*become|is)\s*(really\s*)?painful/i,
       /\bdyspareunia\b|\bvaginismus\b/i,
       /low\s*(libido|sex\s*drive|desire)|no\s*(libido|sex\s*drive|desire|interest\s*in\s*sex)/i,
       /premature\s*ejaculat|come\s*too\s*(fast|quick|soon)|vaginal\s*(dry|atrophy)/i,
       /cant\s*perform\s*(in\s*bed|sex|during)|performance\s*anxiety.*sex|problem.*in\s*the\s*bedroom/i,
+      /things?\s*(arent|aint|are\s*not)\s*working.*(down\s*there|like.*used\s*to)|not\s*working.*down\s*there/i,
+      /cant\s*get\s*it\s*up.*anymore|trouble\s*performing/i,
     ],
     diagnoses: [
       { diagnosis: 'Erectile Dysfunction', baseRate: 0.30, ageModifiers: [{ range: [40, 80], multiplier: 1.5 }], genderModifier: { male: 1.0, female: 0.0 } },
@@ -3387,10 +3395,13 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
     triggerPatterns: [
       /postpartum|post\s*partum|after\s*(the\s*)?(baby|birth|deliver|c\s*section)/i,
       /just\s*had\s*(a|my)\s*(baby|c\s*section)/i,
-      /had\s*(a|my)\s*baby\s*(and|last|week|month|days?\s*ago)/i,
+      /had\s*(a|my)\s*baby\s*(and|last|week|month|days?\s*ago|\d+\s*(week|day|month)s?\s*ago)/i,
+      /\d+\s*(week|day|month)s?\s*ago.*(baby|delivery|birth|c\s*section)/i,
+      /(baby|birth|deliver|c\s*section).*\d+\s*(week|day|month)s?\s*ago/i,
       /breastfeed.*(pain|hurt|red|lump|fever|hard|clog)|mastitis|breast\s*(infect|abscess|engorg)/i,
       /nursing.*(fever|red|lump|hurt|pain)|breast.*(red|hot|hard).*baby/i,
       /baby\s*blues|cant\s*bond|dont\s*feel\s*connected\s*to\s*(my\s*)?baby/i,
+      /(since\s*i\s*gave\s*birth|after\s*giving\s*birth|new\s*mom|new\s*mother)/i,
     ],
     diagnoses: [
       { diagnosis: 'Postpartum Depression', baseRate: 0.15, ageModifiers: [], genderModifier: { male: 0.0, female: 1.0 } },
@@ -3432,9 +3443,12 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'crying infant',
     triggerPatterns: [
-      /baby\s*(wont\s*stop|keeps?)\s*(cry|screaming|fussy)|inconsolable|colic/i,
+      /baby\s*(wont\s*stop|keeps?)\s*(cry|screaming|fussy)|inconsolable|\bcolic/i,
       /infant\s*(cry|scream|fuss).*hours|hours?\s*of\s*(cry|scream)/i,
       /newborn\s*(cry|scream|fussy)|cant\s*(console|calm|soothe)/i,
+      /baby\s*cries?\s*(for\s*)?(hours|\d+\s*hours)/i,
+      /baby.*(pulls?|drawing?).*(legs?|knees?).*(chest|belly|up)/i,
+      /(baby|newborn|infant).*(inconsolab|wont\s*calm|screaming\s*for)/i,
     ],
     diagnoses: [
       { diagnosis: 'Colic', baseRate: 0.30, ageModifiers: [{ range: [0, 0.5], multiplier: 3.0 }], genderModifier: { male: 1.1, female: 1.0 } },
