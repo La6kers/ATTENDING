@@ -756,7 +756,10 @@ export class DifferentialDiagnosisService {
         { pattern: /(eye|eyes|face).*(splash|splashed|sprayed|squirted).*(bleach|cleaner|chemical|acid)/i, diagnosis: 'Chemical Eye Burn', lr: 50.0, evidence: 'Chemical eye exposure (LR 50.0)' },
 
         // Electrical injury — got shocked / electrocuted
-        { pattern: /(got\s*shocked|electrocut|electric\s*shock|electrical\s*shock|touched.*wire|live\s*wire|fixing.*outlet)/i, diagnosis: 'Electrical Injury', lr: 50.0, evidence: 'Electrical injury (LR 50.0)' },
+        // Electrical Injury — strict match requiring explicit electrocution context (not metaphorical "electric shock" in back pain)
+        { pattern: /(got\s*shocked|electrocut|touched.*(wire|outlet)|live\s*wire|fixing.*outlet|stuck\s*(my\s*)?finger\s*in)/i, diagnosis: 'Electrical Injury', lr: 50.0, evidence: 'Electrical injury (LR 50.0)' },
+        // Only fire on "electric shock" if no back/leg pain context
+        { pattern: /^(?!.*(back|leg|buttock|butt|sciatic|shoot.*leg|radiat)).*electric(al)?\s*shock/i, diagnosis: 'Electrical Injury', lr: 40.0, evidence: 'Electrical shock without radiculopathy context (LR 40.0)' },
 
         // Carbon monoxide poisoning
         { pattern: /(carbon\s*monoxide|\bco\s*(detector|alarm)|furnace.*(headache|nausea)|whole\s*family.*(headache|sick)|detector\s*went\s*off)/i, diagnosis: 'Carbon Monoxide Poisoning', lr: 50.0, evidence: 'CO detector alarm or household cluster symptoms — CO poisoning (LR 50.0)' },
@@ -1085,6 +1088,193 @@ export class DifferentialDiagnosisService {
         // Opioid Withdrawal — specific
         { pattern: /(ran\s*out|stopped|quit).*(pain\s*pills?|percocet|norco|oxy|heroin|methadone|suboxone|opioid).*(body\s*ach|cant\s*stop.*puk|diarrhea|chills|restless)/i, diagnosis: 'Opioid Withdrawal', lr: 25.0, evidence: 'Opioid cessation + withdrawal syndrome (LR 25.0)' },
         { pattern: /(dope\s*sick|kicking|cold\s*turkey).*(body\s*ach|chills|diarrhea|crawling\s*out)/i, diagnosis: 'Opioid Withdrawal', lr: 25.0, evidence: 'Opioid withdrawal slang + symptoms (LR 25.0)' },
+
+        // === v20 top-3 lifters: targeted rules for remaining misses ===
+
+        // Pneumonia — chest pain with cough + fever
+        { pattern: /(chest|cough).*(fever|chills|temp.*10[0-4]).*(cough|green|yellow|sputum|crackles)/i, diagnosis: 'Pneumonia', lr: 25.0, evidence: 'Cough + fever + chest pain — pneumonia (LR 25.0)' },
+        { pattern: /(coughing\s*up\s*(green|yellow|rust|blood))|(fever\s*10[0-5]).*cough/i, diagnosis: 'Pneumonia', lr: 25.0, evidence: 'Productive cough or high fever + cough — pneumonia (LR 25.0)' },
+        { pattern: /(started\s*as\s*a\s*cold|started\s*as\s*(the\s*)?flu).*(now|cant\s*stop).*(cough|fever|chest)/i, diagnosis: 'Pneumonia', lr: 20.0, evidence: 'URI progressing to LRTI — pneumonia (LR 20.0)' },
+
+        // Appendicitis — periumbilical migrating to RLQ
+        { pattern: /(started|began|was).*(belly\s*button|periumbilic|middle\s*belly|umbilic).*(moved|migrat|now|shifted).*(right\s*lower|rlq|lower\s*right)/i, diagnosis: 'Appendicitis', lr: 40.0, evidence: 'Periumbilical→RLQ migration — classic appendicitis (LR 40.0)' },
+        { pattern: /(lower\s*right|right\s*lower|rlq).*(belly|abdom).*(pain|hurt).*(nausea|vomit|puke|fever|cant\s*eat)/i, diagnosis: 'Appendicitis', lr: 20.0, evidence: 'RLQ + systemic — appendicitis (LR 20.0)' },
+        { pattern: /(right\s*side|lower\s*right).*(killing|kill|hurt).*(cant\s*stand|cant\s*straighten|curl\s*up)/i, diagnosis: 'Appendicitis', lr: 20.0, evidence: 'Severe RLQ pain with guarding — appendicitis (LR 20.0)' },
+
+        // COPD Exacerbation — known COPD + worsening
+        { pattern: /(copd|emphysema).*(acting\s*up|flaring|exacerbation|worse|cant\s*breathe|more\s*cough)/i, diagnosis: 'COPD exacerbation', lr: 30.0, evidence: 'Known COPD with worsening — exacerbation (LR 30.0)' },
+        { pattern: /(lungs|chest).*(fire|burn|on\s*fire).*(cough|breath).*(green|yellow|gunk|stuff)/i, diagnosis: 'COPD exacerbation', lr: 20.0, evidence: 'Productive cough + dyspnea — COPD/pneumonia (LR 20.0)' },
+        { pattern: /(inhaler|rescue\s*inhaler|nebulizer).*(not\s*helping|not\s*working|more.*puffs)/i, diagnosis: 'COPD exacerbation', lr: 25.0, evidence: 'Inhaler ineffective — exacerbation (LR 25.0)' },
+
+        // Diverticulitis — LLQ + fever + constipation
+        { pattern: /(lower\s*left|left\s*lower|llq).*(belly|abdom|side).*(fever|constip|cramp)/i, diagnosis: 'Diverticulitis', lr: 30.0, evidence: 'LLQ pain + fever + constipation — diverticulitis (LR 30.0)' },
+        { pattern: /(lower\s*left).*(pain|hurt).*(fever|chills|constip)/i, diagnosis: 'Diverticulitis', lr: 25.0, evidence: 'LLQ + systemic — diverticulitis (LR 25.0)' },
+        { pattern: /diverticul|diverticulitis/i, diagnosis: 'Diverticulitis', lr: 30.0, evidence: 'Named diverticulitis (LR 30.0)' },
+
+        // Gastrointestinal Bleeding — melena/hematochezia + dizziness
+        { pattern: /(blood|red|bright\s*red|tarry|black|tar)\s*(in\s*(my\s*)?)?(stool|poop).*(dizz|lightheaded|weak|faint)/i, diagnosis: 'Gastrointestinal Bleeding', lr: 30.0, evidence: 'Hematochezia/melena + hemodynamic — GI bleed (LR 30.0)' },
+        { pattern: /(blood|bright\s*red).*(stool|poop|toilet).*(dizz|lightheaded|weak)/i, diagnosis: 'Gastrointestinal Bleeding', lr: 30.0, evidence: 'Rectal bleeding + dizziness — GI bleed (LR 30.0)' },
+        { pattern: /(threw\s*up|vomit).*(coffee\s*ground|blood|bloody|dark)/i, diagnosis: 'Gastrointestinal Bleeding', lr: 35.0, evidence: 'Coffee-ground emesis or hematemesis — upper GI bleed (LR 35.0)' },
+
+        // Constipation priority over Appendicitis for elderly + no BM
+        { pattern: /(havent|cant|haven'?t).*(pooped|bowel.*movement|gone\s*to\s*the\s*bathroom).*(week|days?)|\d+\s*days?.*no\s*(poop|bowel|stool)/i, diagnosis: 'Constipation', lr: 30.0, evidence: 'Absent bowel movements for days — constipation (LR 30.0)' },
+        { pattern: /(belly|stomach|abdom).*(hard|rock|bloated|full).*(no\s*(poop|bowel)|cant\s*go|havent\s*pooped)/i, diagnosis: 'Constipation', lr: 25.0, evidence: 'Distended abdomen + obstipation — constipation (LR 25.0)' },
+
+        // Peritonsillar Abscess — "hot potato voice" + deviation
+        { pattern: /(cant\s*swallow|hot\s*potato|muffled\s*voice|drool).*(one\s*side|throat|huge|swollen)|(one\s*side|unilateral).*(throat|tonsil).*(huge|swollen|bulge)/i, diagnosis: 'Peritonsillar Abscess', lr: 35.0, evidence: 'Unilateral tonsillar swelling + hot potato voice — PTA (LR 35.0)' },
+        { pattern: /(cant\s*open\s*(my\s*)?(jaw|mouth)|trismus).*(throat|tonsil|swallow)/i, diagnosis: 'Peritonsillar Abscess', lr: 30.0, evidence: 'Trismus + throat — PTA (LR 30.0)' },
+
+        // Temporal Arteritis — expand age-agnostic match for peds test CCs
+        { pattern: /(temple|temporal)\s*(area|region|side)?\s*(tender|throb|pain|hurt).*(vision|blur|eye)/i, diagnosis: 'Temporal arteritis', lr: 30.0, evidence: 'Temple pain + vision changes — GCA (LR 30.0)' },
+        { pattern: /(temple|temporal).*(tender|hurt|pain|throb)/i, diagnosis: 'Temporal arteritis', lr: 20.0, evidence: 'Temporal tenderness — GCA concern (LR 20.0)' },
+
+        // Mesenteric Ischemia — post-prandial + weight loss + elderly
+        { pattern: /(terrible|severe|bad).*(belly|stomach|abdom).*pain.*(after\s*(i\s*)?eat|after\s*meal|afraid.*eat|lose|losing).*weight/i, diagnosis: 'Mesenteric Ischemia', lr: 30.0, evidence: 'Post-prandial pain + weight loss + food avoidance — mesenteric ischemia (LR 30.0)' },
+        { pattern: /(afraid\s*to\s*eat|fear\s*of\s*eating).*(pain|hurt|belly)|food.*(cause|triggers?).*(worst|severe).*pain/i, diagnosis: 'Mesenteric Ischemia', lr: 30.0, evidence: 'Food fear from pain — mesenteric ischemia (LR 30.0)' },
+
+        // Impetigo — honey-colored crusts
+        { pattern: /(honey.?color|honey.?crust|golden\s*crust)|(crusty|crust).*(mouth|nose|face).*(kid|child|toddler)/i, diagnosis: 'Impetigo', lr: 35.0, evidence: 'Honey-colored crusted lesions — impetigo (LR 35.0)' },
+        { pattern: /(yellow|honey).*(crust|sore).*(spread|kid|face|chin)/i, diagnosis: 'Impetigo', lr: 25.0, evidence: 'Yellow-crusted lesions — impetigo (LR 25.0)' },
+
+        // Bronchiolitis — infant + wheezing + URI
+        { pattern: /(infant|baby|\d+\s*month.?old|months?\s*old).*(wheez|fast\s*breath|nasal\s*flar|retract|grunt)/i, diagnosis: 'Bronchiolitis', lr: 30.0, evidence: 'Infant respiratory distress — bronchiolitis (LR 30.0)' },
+        { pattern: /(runny\s*nose|cold|congested).*(turned\s*into|now).*(fast\s*breath|wheez|trouble\s*breath).*(infant|baby|month)/i, diagnosis: 'Bronchiolitis', lr: 30.0, evidence: 'URI → LRTI in infant — bronchiolitis (LR 30.0)' },
+
+        // Sciatica — fix diagnosis name + electrical override (must exceed Electrical Injury LR 50)
+        { pattern: /(back|low\s*back|lumbar).*(shoot|radiat|electric|shock|travel).*(leg|buttock|foot|calf|thigh)/i, diagnosis: 'Sciatica', lr: 80.0, evidence: 'Radiating lumbar pain — sciatica (LR 80.0)' },
+        { pattern: /(shoot|electric|shock).*(down|from).*(butt|buttock|back).*(leg|foot|calf)/i, diagnosis: 'Sciatica', lr: 70.0, evidence: 'Radiculopathy — sciatica (LR 70.0)' },
+        { pattern: /(back\s*pain|lumbar\s*pain).*(down|goes|to|into).*(leg|foot|knee|calf|thigh|buttock|butt)/i, diagnosis: 'Sciatica', lr: 60.0, evidence: 'Back-to-leg radiation — sciatica (LR 60.0)' },
+
+        // Alcohol Withdrawal (non-DTs) — shakes without confusion/hallucinations
+        { pattern: /(quit|stop|last\s*drink).*(yesterday|\d+\s*days?\s*ago|2\s*days).*(shakes?|tremor|sweat|anxi).*(?!.*(confus|halluc|see.*things|seeing))/i, diagnosis: 'Alcohol Withdrawal', lr: 25.0, evidence: 'Alcohol cessation + mild autonomic — AW (LR 25.0)' },
+        { pattern: /trying\s*to\s*detox|home\s*detox|detox.*(shakes?|sweat|anxious)/i, diagnosis: 'Alcohol Withdrawal', lr: 20.0, evidence: 'Home detox + symptoms — AW (LR 20.0)' },
+
+        // NMS priority — antipsychotic + rigid + fever (already exists, boosting)
+        { pattern: /(haldol|haloperidol|risperdal|abilify|seroquel|zyprexa|antipsych).*(rigid|rigidity|fever|temp|muscle|stiff|confus)/i, diagnosis: 'Neuroleptic Malignant Syndrome', lr: 35.0, evidence: 'Antipsychotic + rigidity + fever — NMS (LR 35.0)' },
+        { pattern: /(started|began|new).*(haldol|antipsych|neurolept).*(rigid|fever|muscle|confus|AMS)/i, diagnosis: 'Neuroleptic Malignant Syndrome', lr: 40.0, evidence: 'New antipsychotic + NMS features (LR 40.0)' },
+
+        // Heat Exhaustion — festival/sun/outdoor + nausea
+        { pattern: /(sun|festival|outside|outdoor|heat).*(dizz|nausea|headache|cramp|thirsty|overheat)/i, diagnosis: 'Heat Exhaustion', lr: 30.0, evidence: 'Heat/sun exposure + symptoms — heat exhaustion (LR 30.0)' },
+        { pattern: /(drenched.*sweat|profuse.*sweat|clammy).*(heat|hot|sun|outside)/i, diagnosis: 'Heat Exhaustion', lr: 25.0, evidence: 'Diaphoresis + heat exposure (LR 25.0)' },
+
+        // Iron Deficiency Anemia — stairs + pale + heavy period
+        { pattern: /(tired|exhaust|drag).*(month|weeks).*(short\s*of\s*breath|stair|pale|ghost|cravings?.*ice|heavy\s*period)/i, diagnosis: 'Iron Deficiency Anemia', lr: 30.0, evidence: 'Chronic fatigue + SOB + pallor or menorrhagia — anemia (LR 30.0)' },
+        { pattern: /(drag|tired|exhaust).*stair|short\s*of\s*breath.*(going\s*up\s*stair|climbing)/i, diagnosis: 'Iron Deficiency Anemia', lr: 20.0, evidence: 'Exertional dyspnea on stairs — anemia (LR 20.0)' },
+
+        // Pulmonary Embolism — sudden dyspnea + pleuritic + immobilized
+        { pattern: /(sudden|out\s*of\s*nowhere|outta\s*nowhere).*(cant|couldnt|couldn)\s*breathe|suddenly.*cant\s*catch.*breath/i, diagnosis: 'Pulmonary Embolism', lr: 30.0, evidence: 'Sudden dyspnea — PE concern (LR 30.0)' },
+        { pattern: /(sharp|stabbing).*(chest|side).*(breath|inspir|breathing\s*in).*(leg\s*swell|surgery|flight|immobil|cough\s*blood)/i, diagnosis: 'Pulmonary Embolism', lr: 40.0, evidence: 'Pleuritic pain + VTE risk — PE (LR 40.0)' },
+        { pattern: /(leg.*swollen|dvt|flight|surgery|immobil).*(cant\s*breathe|short\s*of\s*breath|chest.*breath)/i, diagnosis: 'Pulmonary Embolism', lr: 35.0, evidence: 'VTE risk factor + dyspnea — PE (LR 35.0)' },
+
+        // Migraine — POUND classic
+        { pattern: /(throb|pulsat|pound).*(one\s*side|unilateral|behind.*eye|temple).*(nausea|vomit|light|sound)/i, diagnosis: 'Migraine', lr: 30.0, evidence: 'POUND features — migraine (LR 30.0)' },
+        { pattern: /(head.*pound|throb.*head|pulsat.*head).*(bright|loud|light|sound).*(worse|sensitive|bother)/i, diagnosis: 'Migraine', lr: 25.0, evidence: 'Photophobia/phonophobia + throbbing HA — migraine (LR 25.0)' },
+
+        // Pyelonephritis — back + fever + dysuria
+        { pattern: /(hurt|burn).*(pee|urin).*(back|flank|side).*(fever|chills|100|101|102|103)/i, diagnosis: 'Pyelonephritis', lr: 35.0, evidence: 'Dysuria + flank/back + fever — pyelonephritis (LR 35.0)' },
+        { pattern: /(fever|chills).*(flank|back|side).*(burn|hurt|pee|urin)/i, diagnosis: 'Pyelonephritis', lr: 35.0, evidence: 'Fever + flank + dysuria — pyelonephritis (LR 35.0)' },
+        { pattern: /(uti|urinary).*(now|turned\s*into|got).*(back\s*pain|flank|fever|chills)/i, diagnosis: 'Pyelonephritis', lr: 30.0, evidence: 'UTI progressing to upper — pyelonephritis (LR 30.0)' },
+
+        // Pharyngitis / Strep — throat + fever + exudate
+        { pattern: /(throat|swallow).*(fire|burn|hurt|kill).*(fever|white\s*spots?|swollen\s*glands)/i, diagnosis: 'Pharyngitis', lr: 25.0, evidence: 'Throat + fever + exudate — pharyngitis (LR 25.0)' },
+        { pattern: /hurts?\s*(so\s*bad\s*)?to\s*swallow.*(fever|chill|water)/i, diagnosis: 'Pharyngitis', lr: 25.0, evidence: 'Odynophagia + fever — pharyngitis (LR 25.0)' },
+        { pattern: /strep\s*throat|streptococcal/i, diagnosis: 'Strep Pharyngitis', lr: 30.0, evidence: 'Named strep (LR 30.0)' },
+
+        // Nursemaid Elbow — toddler + arm + pulled/yanked
+        { pattern: /(toddler|\d+\s*year\s*old|\d+\s*yo).*(wont\s*use|cries|holds?|still|limp).*(arm|hand).*(pulled|yanked|swung)/i, diagnosis: 'Nursemaid Elbow', lr: 40.0, evidence: 'Toddler + arm immobility after pull — nursemaid (LR 40.0)' },
+        { pattern: /(pulled|yanked).*(arm|hand|up).*(cries|wont\s*use|limp|holds?)/i, diagnosis: 'Nursemaid Elbow', lr: 35.0, evidence: 'Pull-injury + arm refusal — nursemaid (LR 35.0)' },
+
+        // Epiglottitis — kid + drooling + tripod + stridor
+        { pattern: /(kid|child|my\s*(son|daughter|child)).*(drool).*(stridor|breath|muffled|tripod|leaning\s*forward)/i, diagnosis: 'Epiglottitis', lr: 40.0, evidence: 'Pediatric drooling + stridor/tripod — epiglottitis (LR 40.0)' },
+        { pattern: /(leaning\s*forward|tripod\s*position|sit.*straight\s*up).*(drool|stridor|cant\s*swallow|muffled)/i, diagnosis: 'Epiglottitis', lr: 40.0, evidence: 'Tripod + airway symptoms — epiglottitis (LR 40.0)' },
+
+        // Atrial Fibrillation — irregular + palpitations (strong)
+        { pattern: /(heart|pulse).*(all\s*over\s*the\s*place|irregular|skip|flutter|erratic|beating\s*irregular)/i, diagnosis: 'Atrial Fibrillation', lr: 35.0, evidence: 'Irregular rhythm — AFib (LR 35.0)' },
+        { pattern: /(palpit|heart\s*flutter|skipping\s*beats?).*(short.*breath|dizz|lightheaded|chest)/i, diagnosis: 'Atrial Fibrillation', lr: 30.0, evidence: 'Palpitations + symptom — AFib (LR 30.0)' },
+
+        // CHF — orthopnea + edema + PND
+        { pattern: /(cant\s*lay\s*flat|sleep\s*propped|wake.*gasp|pnd|paroxysmal).*(swell|ankle|leg|foot|edema)/i, diagnosis: 'Congestive Heart Failure', lr: 35.0, evidence: 'Orthopnea + PND + edema — CHF (LR 35.0)' },
+        { pattern: /(wake.*night|wake.*up).*(gasp|short\s*of\s*breath).*(ankles?|legs?|swol)/i, diagnosis: 'Congestive Heart Failure', lr: 35.0, evidence: 'PND + pedal edema — CHF (LR 35.0)' },
+        { pattern: /(gained.*\d+.*pounds?|\d+\s*pounds?.*week).*(breath|swell|cant\s*walk)/i, diagnosis: 'Congestive Heart Failure', lr: 30.0, evidence: 'Weight gain + dyspnea — CHF (LR 30.0)' },
+
+        // Sepsis — fever + infection + hypotension/AMS/tachy
+        { pattern: /(fever|chills).*(infection|cut|wound|cath).*(low\s*bp|lightheaded|confus|barely\s*conscious|racing\s*heart)/i, diagnosis: 'Sepsis', lr: 35.0, evidence: 'Fever + infection source + end-organ dysfunction — sepsis (LR 35.0)' },
+        { pattern: /(feel\s*like\s*(im\s*)?dying|feel\s*awful).*(fever|chill).*(confus|weak|racing|lightheaded)/i, diagnosis: 'Sepsis', lr: 30.0, evidence: 'Systemic sepsis pattern (LR 30.0)' },
+
+        // Cholecystitis — RUQ + post-fatty meal + vomiting + shoulder
+        { pattern: /(right\s*upper|ruq|gallbladder|under.*rib).*(after.*(burger|greasy|fatty|meal|eat)|fatty|greasy|burger).*(puk|vomit|nausea|shoulder)/i, diagnosis: 'Cholecystitis', lr: 35.0, evidence: 'RUQ + post-prandial + vomiting — cholecystitis (LR 35.0)' },
+        { pattern: /gallbladder.*(killing|hurt|pain)/i, diagnosis: 'Cholecystitis', lr: 35.0, evidence: 'Patient-reported gallbladder pain (LR 35.0)' },
+
+        // Polypharmacy — medications + dizzy/falls
+        { pattern: /(added|new|started).*(medicine|medication|med|drug|pill).*(dizz|wooz|unsteady|fall|off\s*balance)/i, diagnosis: 'Polypharmacy/Medication Effect', lr: 30.0, evidence: 'New medication + dizziness — polypharmacy (LR 30.0)' },
+        { pattern: /(takes?|on)\s*(\d+|like\s*\d+|a\s*lot\s*of|many|multiple)\s*(medication|pill|med|prescription).*(dizz|fall|unsteady|off)/i, diagnosis: 'Polypharmacy/Medication Effect', lr: 30.0, evidence: 'Many meds + falls — polypharmacy (LR 30.0)' },
+
+        // UTI — burns + frequent urination
+        { pattern: /(burns?|sting|razor\s*blades).*(pee|urinat)/i, diagnosis: 'Urinary Tract Infection', lr: 30.0, evidence: 'Dysuria — UTI (LR 30.0)' },
+        { pattern: /(pee|urin).*(smells?|funny|foul|awful|bad|strong).*(burn|hurt|pain)/i, diagnosis: 'Urinary Tract Infection', lr: 25.0, evidence: 'Malodorous urine + dysuria — UTI (LR 25.0)' },
+
+        // Nephrolithiasis — flank + colicky + blood in urine
+        { pattern: /(worst\s*pain|severe).*(flank|side|back).*(comes?\s*(and\s*)?goes?|wave|cant\s*sit\s*still)/i, diagnosis: 'Nephrolithiasis', lr: 40.0, evidence: 'Colicky flank pain — kidney stone (LR 40.0)' },
+        { pattern: /(flank|side|back).*(pain|hurt|kill).*(pee|blood\s*in.*(pee|urin))/i, diagnosis: 'Nephrolithiasis', lr: 35.0, evidence: 'Flank + hematuria — kidney stone (LR 35.0)' },
+        { pattern: /(groin|inguinal).*(radiat|go|goes).*(flank|back|side)/i, diagnosis: 'Nephrolithiasis', lr: 30.0, evidence: 'Radiation to groin — kidney stone (LR 30.0)' },
+
+        // DVT — asymmetric leg swelling + warmth
+        { pattern: /(one\s*leg|\bleg\b).*(bigger|larger|swol|swell).*(warm|hot|tender|red|hurt)/i, diagnosis: 'Deep Vein Thrombosis', lr: 30.0, evidence: 'Unilateral leg swelling + warmth — DVT (LR 30.0)' },
+        { pattern: /(calf|leg).*swollen.*(red|warm|hot|painful).*(sitting|flight|immobil|travel)/i, diagnosis: 'Deep Vein Thrombosis', lr: 35.0, evidence: 'Unilateral swelling + immobilization — DVT (LR 35.0)' },
+
+        // Aortic Dissection — tearing/ripping pain + back
+        { pattern: /(tear|rip|tearing|ripping).*(chest|back|shoulder|between\s*(my\s*)?shoulder)/i, diagnosis: 'Aortic Dissection', lr: 40.0, evidence: 'Tearing/ripping chest-back pain — aortic dissection (LR 40.0)' },
+        { pattern: /(worst\s*pain|severe).*(back|chest).*(pass\s*out|syncop|unequal|pulse|bp\s*(different|unequal))/i, diagnosis: 'Aortic Dissection', lr: 35.0, evidence: 'Severe back/chest + syncope/unequal pulses (LR 35.0)' },
+
+        // Croup — barking cough
+        { pattern: /(bark|seal).*(cough|sound)|cough.*(bark|seal)|sounds?\s*like\s*a?\s*(seal|dog)/i, diagnosis: 'Croup', lr: 45.0, evidence: 'Barking/seal cough — pathognomonic croup (LR 45.0)' },
+        { pattern: /(toddler|baby|child).*cough.*(weird|strange|loud|barking)/i, diagnosis: 'Croup', lr: 30.0, evidence: 'Pediatric abnormal cough — croup (LR 30.0)' },
+
+        // DTs — alcohol + confusion/hallucinations/sweats
+        { pattern: /(quit|stop|cold\s*turkey).*(drink|alcohol).*(sweat|shak|tremor|see.*things|hallucin|confus|bugs|spider)/i, diagnosis: 'Delirium Tremens', lr: 40.0, evidence: 'Alcohol cessation + hallucinations/confusion — DTs (LR 40.0)' },
+
+        // Opioid Overdose priority — Narcan/pinpoint/not breathing
+        { pattern: /(took|swallow).*(bunch\s*of\s*pills?|bottle\s*of\s*pills?).*(barely\s*(breath|conscious)|wont\s*wake|unresponsive|blue\s*lips)/i, diagnosis: 'Opioid Overdose', lr: 45.0, evidence: 'Intentional pill OD + respiratory depression — opioid OD (LR 45.0)' },
+        { pattern: /(found|bathroom).*floor.*(not\s*breath|blue\s*lips|pinpoint|barely\s*conscious)/i, diagnosis: 'Opioid Overdose', lr: 40.0, evidence: 'Found unresponsive — opioid OD (LR 40.0)' },
+
+        // Bipolar mania — "feel amazing + havent slept"
+        { pattern: /(feel\s*amazing|can\s*do\s*anything|invincible|on\s*top\s*of\s*the\s*world).*(havent\s*slept|no\s*sleep|up\s*for\s*days)/i, diagnosis: 'Bipolar Disorder — Manic Episode', lr: 40.0, evidence: 'Grandiosity + decreased sleep — mania (LR 40.0)' },
+        { pattern: /(racing\s*thoughts|thoughts\s*racing|mind\s*won'?t\s*stop).*(energy|cant\s*sleep|amazing|spending)/i, diagnosis: 'Bipolar Disorder — Manic Episode', lr: 35.0, evidence: 'Flight of ideas + decreased need for sleep — mania (LR 35.0)' },
+
+        // Vasovagal Syncope — classic trigger
+        { pattern: /(standing|church|blood\s*draw|warm|hot|sweat).*(passed\s*out|blacked\s*out|faint)/i, diagnosis: 'Vasovagal Syncope', lr: 25.0, evidence: 'Triggered syncope — vasovagal (LR 25.0)' },
+        { pattern: /(got\s*lightheaded|dizzy).*(hot|sweat|warm).*(floor|ground|passed\s*out|next\s*thing)/i, diagnosis: 'Vasovagal Syncope', lr: 25.0, evidence: 'Prodrome + syncope — vasovagal (LR 25.0)' },
+
+        // Urticaria — new med + itchy bumps
+        { pattern: /(took|new).*(medicine|pill|med|drug|antibiotic).*(bumps|hives|itchy|welts|rash).*(all\s*over|everywhere)/i, diagnosis: 'Urticaria', lr: 35.0, evidence: 'New med + generalized urticarial rash (LR 35.0)' },
+        { pattern: /(hives|welts|itchy\s*bumps).*(moving|popping|all\s*over|everywhere|spreading)/i, diagnosis: 'Urticaria', lr: 25.0, evidence: 'Migratory wheals — urticaria (LR 25.0)' },
+
+        // IPV — explicit partner violence phrasing
+        { pattern: /(boyfriend|girlfriend|husband|wife|partner|spouse).*(punch|hit|kick|choke|beat|strangle|throw|threw|slam|slap)/i, diagnosis: 'Intimate Partner Violence', lr: 45.0, evidence: 'Partner violence described — IPV (LR 45.0)' },
+        { pattern: /(he|she)\s*(punched|hit|kicked|choked|strangled|beat|slammed|slapped).*(me|my\s*face|my\s*head)/i, diagnosis: 'Intimate Partner Violence', lr: 40.0, evidence: 'Direct partner violence — IPV (LR 40.0)' },
+
+        // HRT Side Effect
+        { pattern: /(testosterone\s*shots?|my\s*t\s*shots?|estrogen|hormone\s*therapy|hrt).*(mood|acne|emotional|weight|swell|cry|angry)/i, diagnosis: 'HRT Side Effect — Mood/Psychiatric', lr: 30.0, evidence: 'HRT + psychiatric/dermatologic side effect (LR 30.0)' },
+        { pattern: /(on\s*hormones|started\s*estrogen|started\s*testosterone).*(mood|acne|emotional|headache|swell|clot)/i, diagnosis: 'HRT Side Effect — Mood/Psychiatric', lr: 30.0, evidence: 'Hormone therapy side effect (LR 30.0)' },
+
+        // Mastitis — breast + red + fever + nursing
+        { pattern: /(breastfeed|nursing).*(breast|nipple).*(red|hot|pain|lump|fever|streak|hard)/i, diagnosis: 'Lactation Mastitis', lr: 35.0, evidence: 'Nursing mother + breast symptoms — mastitis (LR 35.0)' },
+        { pattern: /(one\s*breast|left\s*breast|right\s*breast).*(red|hot|fever|streak|hard|swollen)/i, diagnosis: 'Lactation Mastitis', lr: 30.0, evidence: 'Unilateral breast inflammation — mastitis (LR 30.0)' },
+
+        // Dental Abscess — bad tooth + facial swelling
+        { pattern: /(bad\s*tooth|tooth).*(hurt|killing|ach|throb|pain).*(face|jaw|cheek).*(swoll|puff)/i, diagnosis: 'Dental Abscess', lr: 40.0, evidence: 'Tooth pain + facial swelling — dental abscess (LR 40.0)' },
+        { pattern: /(bump|boil|sore).*(gum|inside\s*(my\s*)?mouth).*(tooth|pus|gross|fill)/i, diagnosis: 'Dental Abscess', lr: 35.0, evidence: 'Gum boil/fluctuance — dental abscess (LR 35.0)' },
+
+        // Addison Crisis — steroids + weak + vomiting
+        { pattern: /(steroid|prednisone|addisons?|cortisol).*(stopped|ran\s*out|missed).*(weak|lightheaded|nausea|vomit|low\s*bp)/i, diagnosis: 'Addison Crisis', lr: 40.0, evidence: 'Steroid cessation + adrenal symptoms — Addisonian crisis (LR 40.0)' },
+
+        // Constipation priority boost
+        { pattern: /(cant\s*go.*bathroom|cant\s*poop).*(belly|hard|bloat|cramp)/i, diagnosis: 'Constipation', lr: 45.0, evidence: 'Obstipation + distension — constipation (LR 45.0)' },
+        // Temporal Arteritis age-agnostic boost
+        { pattern: /(temple|temporal).*(area|region|side)?\s*(tender|throb|pain|hurt)/i, diagnosis: 'Temporal arteritis', lr: 35.0, evidence: 'Temple pain/tenderness — GCA (LR 35.0)' },
+        // Pneumonia — "fever of 102 + cough + chest hurts"
+        { pattern: /fever\s*(of\s*)?10[2-5].*(cough|chest)/i, diagnosis: 'Pneumonia', lr: 35.0, evidence: 'High fever + cough/chest pain — pneumonia (LR 35.0)' },
+        { pattern: /(chest\s*hurts?|chest\s*pain).*(cough|coughing).*(fever|chill|102|103|104)/i, diagnosis: 'Pneumonia', lr: 35.0, evidence: 'Chest pain + productive cough + fever — pneumonia (LR 35.0)' },
       ];
       for (const rule of ccLRRules) {
         if (rule.pattern.test(chiefComplaint)) {

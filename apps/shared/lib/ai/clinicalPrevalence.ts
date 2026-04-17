@@ -1910,7 +1910,11 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   // ================================================================
   {
     complaint: 'headache',
-    triggerPatterns: [/headache|head\s*pain|migraine|cephalgia/i],
+    triggerPatterns: [
+      /headache|head\s*pain|migraine|cephalgia/i,
+      /(temple|temporal).*(area|region|side)?\s*(tender|throb|pain|hurt)/i,
+      /head.*(hurts|pain|throb|pound)/i,
+    ],
     diagnoses: [
       {
         diagnosis: 'Tension headache',
