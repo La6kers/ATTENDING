@@ -1,0 +1,2733 @@
+{
+  "source": "medcasereasoning",
+  "generatedAt": "2026-04-17T15:23:53.524Z",
+  "seed": 42,
+  "cases": [
+    {
+      "id": 21000,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "vanishing bone disease",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10499291",
+      "body": {
+        "chiefComplaint": "A 35-year-old woman presented with a one-year history of mobile teeth in the lower left molar region and progressive difficulty chewing associated with pain and reduced mouth opening.",
+        "gender": "female",
+        "age": 35,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21001,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Brucellosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9801570",
+      "body": {
+        "chiefComplaint": "A 17-year-old Asian woman from a rural, animal‐husbandry family presented with a 1‐month history of abdominal pain, nocturnal fevers, and worsening lower back pain.",
+        "gender": "female",
+        "age": 17,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "abdominal pain",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21002,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Sclerosing meningioma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10232944",
+      "body": {
+        "chiefComplaint": "A 53-year-old man with no significant medical history presented with a headache.",
+        "gender": "male",
+        "age": 53,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "headache",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21003,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "chemical abscess",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11079415",
+      "body": {
+        "chiefComplaint": "An 8-month-old child presented with progressive head enlargement since birth, global developmental delay (developmental age equivalent to 3 months), and cranial bruits.",
+        "gender": "unspecified",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21004,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "psittacosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8243071",
+      "body": {
+        "chiefComplaint": "A previously healthy woman was admitted with a 20-day history of recurrent headache and fever and a 3-day history of dyspnea.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "dyspnea",
+            "headache",
+            "nausea",
+            "vomiting"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21005,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "microscopic polyangiitis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC5470560",
+      "body": {
+        "chiefComplaint": "A 55-year-old woman presented with a 6-day history of diffuse abdominal pain radiating to the flanks, nausea, and chronic constipation.",
+        "gender": "female",
+        "age": 55,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "dyspnea",
+            "nausea",
+            "vomiting",
+            "abdominal pain",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21006,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "nodular pulmonary amyloidosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7284055",
+      "body": {
+        "chiefComplaint": "A 74-year-old woman presented with a 2-day history of dyspnea and bilateral chest pain, continuous and worse on exertion; she denied cough, hemoptysis, fever, night sweats, or weight loss.",
+        "gender": "female",
+        "age": 74,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "dyspnea",
+            "chest pain",
+            "weight loss",
+            "hemoptysis"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21007,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "acquired hemophilia",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7036531",
+      "body": {
+        "chiefComplaint": "An 81-year-old man presented to the emergency department with presyncope.",
+        "gender": "male",
+        "age": 81,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "swelling",
+            "syncope",
+            "bleeding"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21008,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Serous cystadenoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9389568",
+      "body": {
+        "chiefComplaint": "A 60-year-old postmenopausal woman with a history of total abdominal hysterectomy 20 years earlier for fibroids presented with a 1-year history of clitoral enlargement, hirsutism, deepening of voice, decreased libido, and increasing abdominal girth.",
+        "gender": "female",
+        "age": 60,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21009,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "FunctionalNeurologicalDisorder",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10216786",
+      "body": {
+        "chiefComplaint": "A 22-year-old athletic man with no other medical history presented with two episodes of acute tetraparesis.",
+        "gender": "male",
+        "age": 22,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21010,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Nonbacterial thrombotic endocarditis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10586915",
+      "body": {
+        "chiefComplaint": "A 73-year-old man with ischemic heart disease and a bioprosthetic aortic valve implanted in 2009, type 2 diabetes mellitus, hypertension, hypercholesterolemia, stage 4 chronic kidney disease, and peptic ulcer disease presented with a 2-week history o",
+        "gender": "male",
+        "age": 73,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "syncope",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21011,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Essential thrombocytosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8627342",
+      "body": {
+        "chiefComplaint": "A 37-year-old woman presented with a 1-week history of pain in the toes of her left foot.",
+        "gender": "female",
+        "age": 37,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "numbness",
+            "tingling"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21012,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Hashimotos thyroiditis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3253064",
+      "body": {
+        "chiefComplaint": "A 17-year-old Caucasian woman presented with acute right lower abdominal pain.",
+        "gender": "female",
+        "age": 17,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21013,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Nonislet cell tumor hypoglycemia",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11447760",
+      "body": {
+        "chiefComplaint": "A 63-year-old woman with metastatic myoepithelial carcinoma of the left parotid gland, type 2 diabetes (managed with metformin until recently), hypertension, atrial fibrillation, and hypothyroidism presented for routine chemotherapy infusion and was ",
+        "gender": "male",
+        "age": 63,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "confusion"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21014,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Multiple sclerosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC6815408",
+      "body": {
+        "chiefComplaint": "A 16-year-old Iranian girl presented with sudden-onset bilateral horizontal gaze palsy that developed overnight.",
+        "gender": "female",
+        "age": 16,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21015,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "sulfonylurea poisoning",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11294736",
+      "body": {
+        "chiefComplaint": "A 33-year-old woman was found unresponsive and diaphoretic by paramedics.",
+        "gender": "female",
+        "age": 33,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "nausea"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21016,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "microvascular angina",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3483658",
+      "body": {
+        "chiefComplaint": "A term female newborn (3.700 kg) was born vaginally without prenatal complications.",
+        "gender": "female",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "discharge"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21017,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Pseudohypoaldosteronism type 1",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9176094",
+      "body": {
+        "chiefComplaint": "A 41-day-old female infant was referred for evaluation of recurrent electrolyte disturbances.",
+        "gender": "female",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "vomiting",
+            "discharge"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21018,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Cerebral salt wasting syndrome",
+      "source": "medcasereasoning",
+      "pmcid": "PMC5676292",
+      "body": {
+        "chiefComplaint": "An 8-year-old girl was brought to the emergency department with reduced consciousness and an 8-day history of high fever, accompanied by vomiting, epigastric pain, and a mild cough.",
+        "gender": "female",
+        "age": 8,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "vomiting",
+            "weight loss",
+            "seizure",
+            "discharge"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21019,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Primary aldosteronism",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7362425",
+      "body": {
+        "chiefComplaint": "A 48-year-old man of African descent was brought to the emergency department unresponsive after a generalized tonic–clonic seizure.",
+        "gender": "male",
+        "age": 48,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "seizure"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21020,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Upper septal fascicular ventricular tachycardia",
+      "source": "medcasereasoning",
+      "pmcid": "PMC5412606",
+      "body": {
+        "chiefComplaint": "A 35‐year‐old man with a 5‐year history of recurrent palpitations and multiple emergency department visits.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "palpitations"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21021,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Rhabdomyolysis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10622404",
+      "body": {
+        "chiefComplaint": "A 65-year-old man was brought to the emergency department because of progressive fatigue, diffuse myalgia, and altered mental status.",
+        "gender": "male",
+        "age": 65,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fatigue"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21022,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Poncet’s disease",
+      "source": "medcasereasoning",
+      "pmcid": "PMC5382461",
+      "body": {
+        "chiefComplaint": "A 25-year-old Asian woman presented with a 3-week history of constant bilateral heel pain and difficulty walking.",
+        "gender": "female",
+        "age": 25,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "swelling",
+            "weight loss",
+            "fatigue"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21023,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Sertoli-Leydig cell tumor",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10843258",
+      "body": {
+        "chiefComplaint": "A 22-year-old Chinese woman was referred for evaluation of oligomenorrhea.",
+        "gender": "female",
+        "age": 22,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21024,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "ClearCellAdenocarcinoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3884960",
+      "body": {
+        "chiefComplaint": "A 54-year-old man presented with right flank pain of eight months’ duration.",
+        "gender": "male",
+        "age": 54,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21025,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Idiopathic Infantile Arterial Calcification",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3934455",
+      "body": {
+        "chiefComplaint": "A 4-week-old male infant, born at 30 weeks’ gestation (birth weight 1665 g; Apgar scores 8 and 9), was admitted at birth for respiratory distress and cyanosis requiring intubation.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21026,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Secondary syphilis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC5799069",
+      "body": {
+        "chiefComplaint": "A 39-year-old Japanese man presented with three weeks of left chest pain and a rash on his hands and feet.",
+        "gender": "male",
+        "age": 39,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "chest pain",
+            "rash",
+            "weight loss"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21027,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "ProstheticValveThrombosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC12014310",
+      "body": {
+        "chiefComplaint": "A 43-year-old woman presented with a 2-week history of progressive dyspnea.",
+        "gender": "female",
+        "age": 43,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "dyspnea"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21028,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Cardiac metastasis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC6601241",
+      "body": {
+        "chiefComplaint": "A 25-year-old Caucasian woman with a history of moderately differentiated squamous cell carcinoma of the tongue, treated 16 months earlier with hemi-glossectomy and chemoradiation, presented with a 1-month history of progressively worsening severe, s",
+        "gender": "female",
+        "age": 25,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "cough",
+            "chest pain",
+            "swelling",
+            "weight loss",
+            "numbness"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21029,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "AorticValveFenestrationRupture",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10602372",
+      "body": {
+        "chiefComplaint": "A 66-year-old man with sleep apnoea and a history of junctional tachycardia ablation presented with acute dyspnoea shortly after undergoing urgent percutaneous coronary intervention for an inferior ST-elevation myocardial infarction.",
+        "gender": "male",
+        "age": 66,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "shortness of breath"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21030,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "PFAPAsyndrome",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11821356",
+      "body": {
+        "chiefComplaint": "A 69-year-old woman reported a 5-year history of recurrent febrile episodes every 6–8 weeks.",
+        "gender": "female",
+        "age": 69,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "headache",
+            "fatigue"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21031,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Amyotrophic lateral sclerosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7981723",
+      "body": {
+        "chiefComplaint": "A 30-year-old man first noted right calf muscle cramps in 2013.",
+        "gender": "male",
+        "age": 30,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "weakness"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21032,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "subglottic cyst",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9923279",
+      "body": {
+        "chiefComplaint": "A male infant was born at 39 weeks’ gestation via non-elective cesarean delivery for failed induction of labor in the setting of intrauterine growth restriction.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21033,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Leptospirosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7141725",
+      "body": {
+        "chiefComplaint": "A 61-year-old homeless African American man with hypertension presented with 1 week of nausea, vomiting, and abdominal pain.",
+        "gender": "male",
+        "age": 61,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "headache",
+            "nausea",
+            "vomiting",
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21034,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "eosinophilic gastroenteritis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8265096",
+      "body": {
+        "chiefComplaint": "A 49-year-old woman with type 2 diabetes, dyslipidemia, and hypertension presented with several weeks of cramping abdominal pain, vomiting, and frequent watery, nonbloody diarrhea.",
+        "gender": "female",
+        "age": 49,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "vomiting",
+            "diarrhea",
+            "abdominal pain",
+            "rash",
+            "chills"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21035,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Cryptococcoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4389205",
+      "body": {
+        "chiefComplaint": "A 37 year-old man with HIV infection and a recent history of cryptococcal meningitis, treated with amphotericin followed by fluconazole, began ART (zidovudine, lamivudine, efavirenz) 21 days after meningitis treatment completion.",
+        "gender": "male",
+        "age": 37,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "vomiting",
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21036,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Calcium pyrophosphate dihydrate deposition disease",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7141746",
+      "body": {
+        "chiefComplaint": "A 40‐year‐old woman with asthma, hypertension, and a 20‐year history of psoriatic arthritis involving both temporomandibular joints presented with a 4‐month history of a hard, tender swelling (1.5×2.0 cm) in the left preauricular region.",
+        "gender": "female",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "swelling"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21037,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Hepatic bartonellosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3287964",
+      "body": {
+        "chiefComplaint": "A 36-year-old woman with no prior liver disease presented in August 2008 with a 5-day history of constant, sharp right upper quadrant abdominal pain associated with nausea and fatigue but no vomiting.",
+        "gender": "female",
+        "age": 36,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "nausea",
+            "vomiting",
+            "abdominal pain",
+            "fatigue",
+            "discharge"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21038,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Tuberculosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC6192136",
+      "body": {
+        "chiefComplaint": "A 23-year-old man from Cameroon presented with acute-onset, right-sided scrotal pain and swelling while in the United States for military training.",
+        "gender": "male",
+        "age": 23,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "swelling",
+            "weight loss",
+            "discharge"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21039,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Eosinophilic gastritis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9234622",
+      "body": {
+        "chiefComplaint": "A 65‐year‐old woman presented with two months of persistent left upper‐quadrant abdominal pain and multiple episodes of nonbilious, nonbloody vomiting of recently ingested food.",
+        "gender": "female",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "vomiting",
+            "abdominal pain",
+            "weight loss"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21040,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "SBP-101 induced retinal toxicity",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11535749",
+      "body": {
+        "chiefComplaint": "A 69-year-old woman with metastatic pancreatic ductal adenocarcinoma (peritoneal and hepatic metastases) enrolled in a trial of SBP-101 combined with nab-paclitaxel and gemcitabine presented with a 6-month history of progressive blurred vision and vi",
+        "gender": "female",
+        "age": 69,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21041,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "non-exertional hyperthermia",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7993351",
+      "body": {
+        "chiefComplaint": "A 64-year-old woman was found unresponsive by her husband in their non–air-conditioned home during a heatwave, with outdoor temperatures above 33°C (90°F).",
+        "gender": "female",
+        "age": 64,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "headache",
+            "seizure"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21042,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Leiomyosarcoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3271452",
+      "body": {
+        "chiefComplaint": "A 62‐year‐old woman presented with angular stomatitis and intermittent mild-to-moderate abdominal pain for 6 months.",
+        "gender": "female",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "abdominal pain",
+            "bleeding"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21043,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Primary central nervous system lymphoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8557694",
+      "body": {
+        "chiefComplaint": "A 65-year-old woman with metastatic malignant peripheral nerve sheath tumor on a clinical trial agent and no known germline mutations presented with 6 weeks of nausea, progressive gait imbalance, and falls.",
+        "gender": "female",
+        "age": 65,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "nausea",
+            "weakness"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21044,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "arachnoid cyst",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4855788",
+      "body": {
+        "chiefComplaint": "A 49-year-old man presented with a 6-month history of headache.",
+        "gender": "male",
+        "age": 49,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "headache"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21045,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Sarcoidosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9943934",
+      "body": {
+        "chiefComplaint": "A 51-year-old Japanese man presented with a 2-month history of painless right vision loss.",
+        "gender": "male",
+        "age": 51,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21046,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Congenital insensitivity to pain and anhydrosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC5054479",
+      "body": {
+        "chiefComplaint": "A 19-year-old male, born in 1990 to consanguineous parents, was referred for evaluation of multisystem involvement.",
+        "gender": "male",
+        "age": 19,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "diarrhea",
+            "seizure",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21047,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Ureteral stone",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7676809",
+      "body": {
+        "chiefComplaint": "A 17-year-old male presented with several hours of right lower quadrant abdominal pain associated with nausea and subjective fevers.",
+        "gender": "male",
+        "age": 17,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "nausea",
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21048,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Caecal adenocarcinoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7845154",
+      "body": {
+        "chiefComplaint": "A 73-year-old woman with a history of poorly differentiated caecal adenocarcinoma (T4N2M0) treated by right hemicolectomy, incomplete adjuvant chemotherapy, and radiotherapy to para-aortic lymph nodes, presented three years after radiotherapy with a ",
+        "gender": "female",
+        "age": 73,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "weight loss"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21049,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Noonan syndrome",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4512128",
+      "body": {
+        "chiefComplaint": "A 13‐year‐old boy was referred to pediatric dentistry for irregularly placed upper and lower front teeth and unerupted teeth.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21050,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "AdultOnsetStillsDisease",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7813055",
+      "body": {
+        "chiefComplaint": "A 47-year-old woman was admitted with a 10-day history of remittent fevers up to 39°C, fatigue, and sore throat.",
+        "gender": "female",
+        "age": 47,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "rash",
+            "fatigue",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21051,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "functional dysphagia",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9366933",
+      "body": {
+        "chiefComplaint": "A 16-year-old girl presented with a 4-day history of increasing difficulty swallowing solid foods and a painless globus sensation.",
+        "gender": "female",
+        "age": 16,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "weight loss"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21052,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Oculomotor nerve schwannoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8544292",
+      "body": {
+        "chiefComplaint": "A 32-year-old man presented with excessive tearing of the left eye and mild ocular pain.",
+        "gender": "male",
+        "age": 32,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21053,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Birt-Hogg-Dubè syndrome",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4539463",
+      "body": {
+        "chiefComplaint": "A 43-year-old man with no prior lung disease presented to the emergency department with sudden-onset left-sided chest pain and progressive shortness of breath.",
+        "gender": "male",
+        "age": 43,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "shortness of breath",
+            "chest pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21054,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "embryonal rhabdomyosarcoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4689918",
+      "body": {
+        "chiefComplaint": "A 16-year-old boy noted a progressively enlarging lump at his posterior left knee over one year.",
+        "gender": "male",
+        "age": 16,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21055,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "gallbladder torsion",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3459730",
+      "body": {
+        "chiefComplaint": "An 84-year-old woman was admitted with a one-day history of left lower abdominal pain and nausea without fever.",
+        "gender": "female",
+        "age": 84,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "nausea",
+            "vomiting",
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21056,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Myofibrillar myopathy",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7325212",
+      "body": {
+        "chiefComplaint": "A 76-year-old man presented with a 5-year history of progressive leg weakness.",
+        "gender": "male",
+        "age": 76,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fatigue",
+            "weakness",
+            "discharge"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21057,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Enteric duplication cyst",
+      "source": "medcasereasoning",
+      "pmcid": "PMC6230635",
+      "body": {
+        "chiefComplaint": "A 13-year-old Sudanese girl presented with a 2-day history of colicky abdominal pain, absolute constipation, and vomiting of all ingested food.",
+        "gender": "female",
+        "age": 13,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "vomiting",
+            "diarrhea",
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21058,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Drug-induced myopathy",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10626292",
+      "body": {
+        "chiefComplaint": "A 72-year-old woman was referred for progressive symmetrical proximal muscle weakness.",
+        "gender": "female",
+        "age": 72,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "weakness"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21059,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "DRESS syndrome",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3747369",
+      "body": {
+        "chiefComplaint": "A 47-year-old woman with HIV-1 infection presented with a 10-day history of diffuse maculopapular rash, fever, myalgias, arthralgias, choluria, pruritus, and right upper-quadrant abdominal pain.",
+        "gender": "female",
+        "age": 47,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "nausea",
+            "vomiting",
+            "abdominal pain",
+            "rash",
+            "jaundice"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21060,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Cat scratch disease",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3423660",
+      "body": {
+        "chiefComplaint": "A 58-year-old woman presented with a history since February 2008 of painful left axillary lymphadenopathy accompanied by low-grade fever.",
+        "gender": "female",
+        "age": 58,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21061,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "neurolymphomatosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10225816",
+      "body": {
+        "chiefComplaint": "A 52-year-old man presented with progressive right upper limb weakness and sensory disturbance.",
+        "gender": "male",
+        "age": 52,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "swelling",
+            "weakness",
+            "numbness"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21062,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "GallbladderVolvulus",
+      "source": "medcasereasoning",
+      "pmcid": "PMC10999549",
+      "body": {
+        "chiefComplaint": "A previously healthy 5‐year‐old girl presented with 9 hours of intermittent, moderate–severity epigastric pain radiating to the right lower quadrant.",
+        "gender": "female",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "vomiting",
+            "jaundice"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21063,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Parasitic leiomyoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11387283",
+      "body": {
+        "chiefComplaint": "A 29-year-old woman presented with lower abdominal pain.",
+        "gender": "female",
+        "age": 29,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21064,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Factor XIIII deficiency",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11607135",
+      "body": {
+        "chiefComplaint": "A 3-year-old girl presented with gradual-onset abdominal pain and non-bilious vomiting over 2 days.",
+        "gender": "female",
+        "age": 3,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "vomiting",
+            "diarrhea",
+            "abdominal pain",
+            "bleeding"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21065,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "eosinophilic colitis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9246066",
+      "body": {
+        "chiefComplaint": "A 33 4/7-week, 2.22-kg female neonate was born after spontaneous vaginal delivery following premature rupture of membranes.",
+        "gender": "female",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21066,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "compartment syndrome",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9056206",
+      "body": {
+        "chiefComplaint": "A 71-year-old man with coronary artery disease, hypertension, hyperlipidemia, gout, and benign prostatic hyperplasia was transferred from a long-term acute care facility with a 2-day history of right wrist and hand pain, tenderness, and swelling.",
+        "gender": "male",
+        "age": 71,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "shortness of breath",
+            "swelling",
+            "fatigue",
+            "weakness",
+            "bleeding"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21067,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "sarcoidosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8365578",
+      "body": {
+        "chiefComplaint": "A 30-year-old man with psoriatic arthritis (on adalimumab for 6 years), hereditary spherocytosis, and a history of cutaneous herpes zoster infection presented with two weeks of intermittent fevers and headaches and a 10-lb weight loss over 9 months.",
+        "gender": "male",
+        "age": 30,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "headache",
+            "weight loss",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21068,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Kawasaki disease",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9832730",
+      "body": {
+        "chiefComplaint": "A previously healthy 9-month-old boy was transferred after 8 days of fever and new-onset macroscopic hematuria.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "diarrhea",
+            "rash"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21069,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "cold agglutinin disease",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9679462",
+      "body": {
+        "chiefComplaint": "A 69-year-old Hispanic woman was referred for progressively worsening blurry vision, right eye greater than left.",
+        "gender": "female",
+        "age": 69,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21070,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "AmeloblasticFibroma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3673371",
+      "body": {
+        "chiefComplaint": "An 18-year-old woman presented with a 1-year history of slowly enlarging gingival overgrowth in the left posterior mandible that interfered with chewing but was painless.",
+        "gender": "male",
+        "age": 18,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21071,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Congenital anterolateral tibial bowing and polydactyly",
+      "source": "medcasereasoning",
+      "pmcid": "PMC1948010",
+      "body": {
+        "chiefComplaint": "A 15-month-old boy was referred for evaluation of a right lower limb deformity.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21072,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Mycobacterium haemophilum",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3863494",
+      "body": {
+        "chiefComplaint": "A 67‐year‐old man with type 2 diabetes mellitus and nephropathy presented with a 4‐month history of an asymptomatic rash and swelling over his right thigh.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rash",
+            "swelling"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21073,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Epstein–Barr virus infection",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9675078",
+      "body": {
+        "chiefComplaint": "A 6-year-old girl was admitted with a 5-day history of fever (to 39.5 °C) and a 2-week history of unilateral clear tearing from the right eye.",
+        "gender": "female",
+        "age": 6,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "swelling",
+            "discharge",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21074,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "IgG4-related disease",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11133391",
+      "body": {
+        "chiefComplaint": "An 82-year-old man with chronic atrial fibrillation and type 2 diabetes mellitus presented with a 3-month history of worsening peripheral edema and pleural effusion despite escalating diuretic therapy.",
+        "gender": "male",
+        "age": 82,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21075,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Primary central nervous system lymphoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9610036",
+      "body": {
+        "chiefComplaint": "A 70-year-old woman with atrial fibrillation on enoxaparin, liver cirrhosis, type 2 diabetes mellitus, hypertension, and a history of venous thrombus presented with a 5-day history of left arm weakness, numbness in the left fourth and fifth digits an",
+        "gender": "female",
+        "age": 70,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "headache",
+            "confusion",
+            "weakness",
+            "numbness"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21076,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Scleroderma_renal_crisis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7443985",
+      "body": {
+        "chiefComplaint": "A 37-year-old man presented with a 3-month history of progressive skin thickening, initially on his torso and then spreading diffusely, accompanied by a 20–30-lb weight loss and fatigue.",
+        "gender": "male",
+        "age": 37,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "dyspnea",
+            "weight loss",
+            "fatigue"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21077,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "UrticarialFixedDrugEruption",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4949503",
+      "body": {
+        "chiefComplaint": "A 72-year-old Caucasian woman with Sézary syndrome, previously treated with interferon alfa-2b and photopheresis, began romidepsin therapy (14 mg/m2 on days 1, 8, and 15) with bexarotene.",
+        "gender": "female",
+        "age": 72,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "rash",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21078,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "bullous fixed drug eruption",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8378370",
+      "body": {
+        "chiefComplaint": "A 51-year-old woman with Crohn’s disease on infliximab presented with a 2-day history of a bullous rash on her left arm, axilla, and lateral chest wall accompanied by subjective fever.",
+        "gender": "female",
+        "age": 51,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "rash",
+            "swelling"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21079,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Non-pancreatic pseudocyst",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8666636",
+      "body": {
+        "chiefComplaint": "A 4-year-old boy was evaluated for a 1-year history of a slowly enlarging mass in the right cheek.",
+        "gender": "male",
+        "age": 4,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "dyspnea"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21080,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "TINU syndrome",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8461971",
+      "body": {
+        "chiefComplaint": "A 34-year-old Japanese man with a history of gastric ulcer treated with esomeprazole presented with 2 days of fever to 40 °C, headache, myalgia, fatigue, and vomiting starting 2 days after a finger laceration during sewage-plumbing work.",
+        "gender": "male",
+        "age": 34,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "headache",
+            "vomiting",
+            "fatigue",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21081,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Phototoxic reaction",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8777167",
+      "body": {
+        "chiefComplaint": "A 52‐year‐old man with Addison’s disease on lifelong corticosteroid replacement and a history of lateral epicondylitis presented with a 7‐day history of severe redness around his right elbow accompanied by intense burning and stinging.",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rash",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21082,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Heart failure",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11481506",
+      "body": {
+        "chiefComplaint": "A 26-year-old man with no history of hypertension or heart disease presented with a 3-day history of upper abdominal pain.",
+        "gender": "male",
+        "age": 26,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "abdominal pain",
+            "swelling",
+            "jaundice",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21083,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "hepatitis-associated aplastic anemia",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7205540",
+      "body": {
+        "chiefComplaint": "A 26-year-old man was admitted for evaluation of recurrent hepatitis and persistent cytopenias.",
+        "gender": "male",
+        "age": 26,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fatigue",
+            "jaundice"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21084,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Diaphragmatic amyloidosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4637487",
+      "body": {
+        "chiefComplaint": "A 70-year-old Caucasian man with IgG-kappa multiple myeloma diagnosed one year ago (initial K-FLC 685 mg/dL, λ 0.13 mg/dL; no lytic bone lesions or organ involvement) presented with 3 months of worsening dyspnea, dysphagia, and weight loss.",
+        "gender": "male",
+        "age": 70,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "dyspnea",
+            "weight loss"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21085,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "cemento-ossifying fibroma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3961933",
+      "body": {
+        "chiefComplaint": "A 34-year-old woman presented with a 6-year history of a painless swelling of the lower jaw, initially 1 cm in diameter on the left, which gradually enlarged to involve both sides of the face.",
+        "gender": "female",
+        "age": 34,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "swelling"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21086,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Wernicke–Korsakoff syndrome",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4012653",
+      "body": {
+        "chiefComplaint": "A 68-year-old man with high-grade lymphoma diagnosed four months earlier presented with confusion.",
+        "gender": "male",
+        "age": 68,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "confusion"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21087,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Acute disseminated encephalomyelitis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC7294351",
+      "body": {
+        "chiefComplaint": "A 28-year-old man presented with a tonic–clonic seizure, left arm paresis, paraparesis, two months of gait disturbance, and fever to 38 °C.",
+        "gender": "male",
+        "age": 28,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "seizure"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21088,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "sarcoidosis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC6151222",
+      "body": {
+        "chiefComplaint": "A 35-year-old African American man presented with a one-month history of worsening low back and bilateral leg pain, intermittent night sweats, and a 32-kg unintentional weight loss over one year.",
+        "gender": "male",
+        "age": 35,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "weight loss",
+            "weakness"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21089,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "ThyroidFollicularRenalCellCarcinoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9254170",
+      "body": {
+        "chiefComplaint": "A 60-year-old man presented with a 1-month history of right lower back and abdominal pain.",
+        "gender": "male",
+        "age": 60,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21090,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Sclerosing angiomatoid nodular transformation",
+      "source": "medcasereasoning",
+      "pmcid": "PMC6548910",
+      "body": {
+        "chiefComplaint": "A 41-year-old woman with no prior medical history was referred for evaluation of suspected early breast cancer.",
+        "gender": "female",
+        "age": 41,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21091,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "hepatic angiomyolipoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC11639004",
+      "body": {
+        "chiefComplaint": "A 50-year-old non-smoker Caucasian woman with no past medical history presented with chronic mild right upper quadrant abdominal pain for one year.",
+        "gender": "female",
+        "age": 50,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "abdominal pain"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21092,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Medullary thyroid carcinoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8123563",
+      "body": {
+        "chiefComplaint": "A 58-year-old woman was referred for evaluation of 8 months of progressive shortness of breath, intermittent fever and chills, productive (non–blood-stained) cough, and a 25-kg unintentional weight loss over 6 months.",
+        "gender": "female",
+        "age": 58,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "shortness of breath",
+            "weight loss",
+            "chills"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21093,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "acute disseminated encephalomyelitis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC8957291",
+      "body": {
+        "chiefComplaint": "A 37-year-old previously healthy man presented with four days of progressive weakness of all four limbs, dysphagia, drooling, nausea, and vomiting.",
+        "gender": "male",
+        "age": 37,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "nausea",
+            "vomiting",
+            "weakness"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21094,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "IgA-dominant MPGN",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4446922",
+      "body": {
+        "chiefComplaint": "A 55-year-old man presented with 1 month of edema and 2 weeks of decreased urine output, fever with chills, breathlessness, anorexia, nausea, and recurrent vomiting.",
+        "gender": "male",
+        "age": 55,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "nausea",
+            "vomiting",
+            "rash",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21095,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "PEComa",
+      "source": "medcasereasoning",
+      "pmcid": "PMC4223599",
+      "body": {
+        "chiefComplaint": "A 63-year-old woman presented with a 1-year history of atypical right upper-quadrant abdominal pain, significant fatigue, and weight loss.",
+        "gender": "female",
+        "age": 63,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "abdominal pain",
+            "weight loss",
+            "fatigue",
+            "jaundice"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21096,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "EBV-positive diffuse large B-cell lymphoma",
+      "source": "medcasereasoning",
+      "pmcid": "PMC5651110",
+      "body": {
+        "chiefComplaint": "A 22-month-old Caucasian girl presented with low-grade fever, cough, decreased activity, poor oral intake, and bilateral jaw-line swelling.",
+        "gender": "female",
+        "age": 45,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "cough",
+            "rash",
+            "swelling"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21097,
+      "demo": "geri",
+      "setting": "outpatient",
+      "expected": "Oculomotor mononeuropathy",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3263537",
+      "body": {
+        "chiefComplaint": "A 79-year-old white man presented with sudden onset of right-sided ophthalmoplegia, diplopia, and ptosis accompanied by nausea, vomiting, and headache.",
+        "gender": "male",
+        "age": 79,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "headache",
+            "nausea",
+            "vomiting"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21098,
+      "demo": "adult",
+      "setting": "outpatient",
+      "expected": "Giant cell myocarditis",
+      "source": "medcasereasoning",
+      "pmcid": "PMC9361461",
+      "body": {
+        "chiefComplaint": "A 46-year-old woman was referred for evaluation of new-onset heart failure.",
+        "gender": "female",
+        "age": 46,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "dyspnea",
+            "shortness of breath",
+            "nausea",
+            "abdominal pain",
+            "fatigue",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 21099,
+      "demo": "peds",
+      "setting": "outpatient",
+      "expected": "Limb girdle muscular dystrophy type 2B",
+      "source": "medcasereasoning",
+      "pmcid": "PMC3652784",
+      "body": {
+        "chiefComplaint": "A 10-year-old boy of West African origin, born to non-consanguineous parents, presented with a one-year history of bilateral knee pain radiating into his legs.",
+        "gender": "male",
+        "age": 10,
+        "hpi": {
+          "onset": "subacute",
+          "location": "varies",
+          "duration": "days to weeks",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "rash",
+            "swelling",
+            "weakness",
+            "edema"
+          ]
+        },
+        "medications": []
+      }
+    }
+  ]
+}
