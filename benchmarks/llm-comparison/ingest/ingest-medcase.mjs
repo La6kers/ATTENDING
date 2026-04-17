@@ -119,9 +119,13 @@ function extractAssociated(prompt) {
     const prompt = r.case_prompt || r.text || '';
     const diagnosis = (r.final_diagnosis || '').trim();
     if (!diagnosis) continue;
-    const cc = extractCC(prompt);
+    const ccRaw = extractCC(prompt);
     const { age, gender } = extractAgeGender(prompt);
     const associated = extractAssociated(prompt);
+    // Bundle extracted symptom keywords into the CC so LR rules see them
+    const cc = associated.length > 0
+      ? `${ccRaw}. Symptoms include ${associated.join(', ')}`
+      : ccRaw;
     const demo = age >= 65 ? 'geri' : age >= 18 ? 'adult' : 'peds';
 
     cases.push({

@@ -1,6 +1,6 @@
 {
   "source": "medcasereasoning",
-  "generatedAt": "2026-04-17T15:23:53.524Z",
+  "generatedAt": "2026-04-17T18:52:03.580Z",
   "seed": 42,
   "cases": [
     {
@@ -35,7 +35,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9801570",
       "body": {
-        "chiefComplaint": "A 17-year-old Asian woman from a rural, animal‐husbandry family presented with a 1‐month history of abdominal pain, nocturnal fevers, and worsening lower back pain.",
+        "chiefComplaint": "A 17-year-old Asian woman from a rural, animal‐husbandry family presented with a 1‐month history of abdominal pain, nocturnal fevers, and worsening lower back pain.. Symptoms include fever, abdominal pain, edema",
         "gender": "female",
         "age": 17,
         "hpi": {
@@ -63,7 +63,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC10232944",
       "body": {
-        "chiefComplaint": "A 53-year-old man with no significant medical history presented with a headache.",
+        "chiefComplaint": "A 53-year-old man with no significant medical history presented with a headache.. Symptoms include headache, edema",
         "gender": "male",
         "age": 53,
         "hpi": {
@@ -114,7 +114,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8243071",
       "body": {
-        "chiefComplaint": "A previously healthy woman was admitted with a 20-day history of recurrent headache and fever and a 3-day history of dyspnea.",
+        "chiefComplaint": "A previously healthy woman was admitted with a 20-day history of recurrent headache and fever and a 3-day history of dyspnea.. Symptoms include fever, cough, dyspnea, headache, nausea, vomiting",
         "gender": "male",
         "age": 45,
         "hpi": {
@@ -145,7 +145,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC5470560",
       "body": {
-        "chiefComplaint": "A 55-year-old woman presented with a 6-day history of diffuse abdominal pain radiating to the flanks, nausea, and chronic constipation.",
+        "chiefComplaint": "A 55-year-old woman presented with a 6-day history of diffuse abdominal pain radiating to the flanks, nausea, and chronic constipation.. Symptoms include fever, dyspnea, nausea, vomiting, abdominal pain, edema",
         "gender": "female",
         "age": 55,
         "hpi": {
@@ -176,7 +176,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7284055",
       "body": {
-        "chiefComplaint": "A 74-year-old woman presented with a 2-day history of dyspnea and bilateral chest pain, continuous and worse on exertion; she denied cough, hemoptysis, fever, night sweats, or weight loss.",
+        "chiefComplaint": "A 74-year-old woman presented with a 2-day history of dyspnea and bilateral chest pain, continuous and worse on exertion; she denied cough, hemoptysis, fever, night sweats, or weight loss.. Symptoms include fever, cough, dyspnea, chest pain, weight loss, hemoptysis",
         "gender": "female",
         "age": 74,
         "hpi": {
@@ -207,7 +207,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7036531",
       "body": {
-        "chiefComplaint": "An 81-year-old man presented to the emergency department with presyncope.",
+        "chiefComplaint": "An 81-year-old man presented to the emergency department with presyncope.. Symptoms include swelling, syncope, bleeding",
         "gender": "male",
         "age": 81,
         "hpi": {
@@ -283,7 +283,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC10586915",
       "body": {
-        "chiefComplaint": "A 73-year-old man with ischemic heart disease and a bioprosthetic aortic valve implanted in 2009, type 2 diabetes mellitus, hypertension, hypercholesterolemia, stage 4 chronic kidney disease, and peptic ulcer disease presented with a 2-week history o",
+        "chiefComplaint": "A 73-year-old man with ischemic heart disease and a bioprosthetic aortic valve implanted in 2009, type 2 diabetes mellitus, hypertension, hypercholesterolemia, stage 4 chronic kidney disease, and peptic ulcer disease presented with a 2-week history o. Symptoms include syncope, edema",
         "gender": "male",
         "age": 73,
         "hpi": {
@@ -310,7 +310,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8627342",
       "body": {
-        "chiefComplaint": "A 37-year-old woman presented with a 1-week history of pain in the toes of her left foot.",
+        "chiefComplaint": "A 37-year-old woman presented with a 1-week history of pain in the toes of her left foot.. Symptoms include numbness, tingling",
         "gender": "female",
         "age": 37,
         "hpi": {
@@ -337,7 +337,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3253064",
       "body": {
-        "chiefComplaint": "A 17-year-old Caucasian woman presented with acute right lower abdominal pain.",
+        "chiefComplaint": "A 17-year-old Caucasian woman presented with acute right lower abdominal pain.. Symptoms include abdominal pain",
         "gender": "female",
         "age": 17,
         "hpi": {
@@ -363,7 +363,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC11447760",
       "body": {
-        "chiefComplaint": "A 63-year-old woman with metastatic myoepithelial carcinoma of the left parotid gland, type 2 diabetes (managed with metformin until recently), hypertension, atrial fibrillation, and hypothyroidism presented for routine chemotherapy infusion and was ",
+        "chiefComplaint": "A 63-year-old woman with metastatic myoepithelial carcinoma of the left parotid gland, type 2 diabetes (managed with metformin until recently), hypertension, atrial fibrillation, and hypothyroidism presented for routine chemotherapy infusion and was . Symptoms include confusion",
         "gender": "male",
         "age": 63,
         "hpi": {
@@ -413,7 +413,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC11294736",
       "body": {
-        "chiefComplaint": "A 33-year-old woman was found unresponsive and diaphoretic by paramedics.",
+        "chiefComplaint": "A 33-year-old woman was found unresponsive and diaphoretic by paramedics.. Symptoms include nausea",
         "gender": "female",
         "age": 33,
         "hpi": {
@@ -439,7 +439,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3483658",
       "body": {
-        "chiefComplaint": "A term female newborn (3.700 kg) was born vaginally without prenatal complications.",
+        "chiefComplaint": "A term female newborn (3.700 kg) was born vaginally without prenatal complications.. Symptoms include discharge",
         "gender": "female",
         "age": 45,
         "hpi": {
@@ -465,7 +465,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9176094",
       "body": {
-        "chiefComplaint": "A 41-day-old female infant was referred for evaluation of recurrent electrolyte disturbances.",
+        "chiefComplaint": "A 41-day-old female infant was referred for evaluation of recurrent electrolyte disturbances.. Symptoms include vomiting, discharge",
         "gender": "female",
         "age": 45,
         "hpi": {
@@ -492,7 +492,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC5676292",
       "body": {
-        "chiefComplaint": "An 8-year-old girl was brought to the emergency department with reduced consciousness and an 8-day history of high fever, accompanied by vomiting, epigastric pain, and a mild cough.",
+        "chiefComplaint": "An 8-year-old girl was brought to the emergency department with reduced consciousness and an 8-day history of high fever, accompanied by vomiting, epigastric pain, and a mild cough.. Symptoms include fever, cough, vomiting, weight loss, seizure, discharge",
         "gender": "female",
         "age": 8,
         "hpi": {
@@ -523,7 +523,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7362425",
       "body": {
-        "chiefComplaint": "A 48-year-old man of African descent was brought to the emergency department unresponsive after a generalized tonic–clonic seizure.",
+        "chiefComplaint": "A 48-year-old man of African descent was brought to the emergency department unresponsive after a generalized tonic–clonic seizure.. Symptoms include seizure",
         "gender": "male",
         "age": 48,
         "hpi": {
@@ -549,7 +549,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC5412606",
       "body": {
-        "chiefComplaint": "A 35‐year‐old man with a 5‐year history of recurrent palpitations and multiple emergency department visits.",
+        "chiefComplaint": "A 35‐year‐old man with a 5‐year history of recurrent palpitations and multiple emergency department visits.. Symptoms include palpitations",
         "gender": "male",
         "age": 45,
         "hpi": {
@@ -575,7 +575,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC10622404",
       "body": {
-        "chiefComplaint": "A 65-year-old man was brought to the emergency department because of progressive fatigue, diffuse myalgia, and altered mental status.",
+        "chiefComplaint": "A 65-year-old man was brought to the emergency department because of progressive fatigue, diffuse myalgia, and altered mental status.. Symptoms include fatigue",
         "gender": "male",
         "age": 65,
         "hpi": {
@@ -601,7 +601,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC5382461",
       "body": {
-        "chiefComplaint": "A 25-year-old Asian woman presented with a 3-week history of constant bilateral heel pain and difficulty walking.",
+        "chiefComplaint": "A 25-year-old Asian woman presented with a 3-week history of constant bilateral heel pain and difficulty walking.. Symptoms include fever, cough, swelling, weight loss, fatigue",
         "gender": "female",
         "age": 25,
         "hpi": {
@@ -679,7 +679,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3934455",
       "body": {
-        "chiefComplaint": "A 4-week-old male infant, born at 30 weeks’ gestation (birth weight 1665 g; Apgar scores 8 and 9), was admitted at birth for respiratory distress and cyanosis requiring intubation.",
+        "chiefComplaint": "A 4-week-old male infant, born at 30 weeks’ gestation (birth weight 1665 g; Apgar scores 8 and 9), was admitted at birth for respiratory distress and cyanosis requiring intubation.. Symptoms include edema",
         "gender": "male",
         "age": 45,
         "hpi": {
@@ -705,7 +705,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC5799069",
       "body": {
-        "chiefComplaint": "A 39-year-old Japanese man presented with three weeks of left chest pain and a rash on his hands and feet.",
+        "chiefComplaint": "A 39-year-old Japanese man presented with three weeks of left chest pain and a rash on his hands and feet.. Symptoms include fever, cough, chest pain, rash, weight loss",
         "gender": "male",
         "age": 39,
         "hpi": {
@@ -735,7 +735,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC12014310",
       "body": {
-        "chiefComplaint": "A 43-year-old woman presented with a 2-week history of progressive dyspnea.",
+        "chiefComplaint": "A 43-year-old woman presented with a 2-week history of progressive dyspnea.. Symptoms include dyspnea",
         "gender": "female",
         "age": 43,
         "hpi": {
@@ -761,7 +761,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC6601241",
       "body": {
-        "chiefComplaint": "A 25-year-old Caucasian woman with a history of moderately differentiated squamous cell carcinoma of the tongue, treated 16 months earlier with hemi-glossectomy and chemoradiation, presented with a 1-month history of progressively worsening severe, s",
+        "chiefComplaint": "A 25-year-old Caucasian woman with a history of moderately differentiated squamous cell carcinoma of the tongue, treated 16 months earlier with hemi-glossectomy and chemoradiation, presented with a 1-month history of progressively worsening severe, s. Symptoms include cough, chest pain, swelling, weight loss, numbness",
         "gender": "female",
         "age": 25,
         "hpi": {
@@ -791,7 +791,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC10602372",
       "body": {
-        "chiefComplaint": "A 66-year-old man with sleep apnoea and a history of junctional tachycardia ablation presented with acute dyspnoea shortly after undergoing urgent percutaneous coronary intervention for an inferior ST-elevation myocardial infarction.",
+        "chiefComplaint": "A 66-year-old man with sleep apnoea and a history of junctional tachycardia ablation presented with acute dyspnoea shortly after undergoing urgent percutaneous coronary intervention for an inferior ST-elevation myocardial infarction.. Symptoms include shortness of breath",
         "gender": "male",
         "age": 66,
         "hpi": {
@@ -817,7 +817,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC11821356",
       "body": {
-        "chiefComplaint": "A 69-year-old woman reported a 5-year history of recurrent febrile episodes every 6–8 weeks.",
+        "chiefComplaint": "A 69-year-old woman reported a 5-year history of recurrent febrile episodes every 6–8 weeks.. Symptoms include headache, fatigue",
         "gender": "female",
         "age": 69,
         "hpi": {
@@ -844,7 +844,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7981723",
       "body": {
-        "chiefComplaint": "A 30-year-old man first noted right calf muscle cramps in 2013.",
+        "chiefComplaint": "A 30-year-old man first noted right calf muscle cramps in 2013.. Symptoms include weakness",
         "gender": "male",
         "age": 30,
         "hpi": {
@@ -894,7 +894,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7141725",
       "body": {
-        "chiefComplaint": "A 61-year-old homeless African American man with hypertension presented with 1 week of nausea, vomiting, and abdominal pain.",
+        "chiefComplaint": "A 61-year-old homeless African American man with hypertension presented with 1 week of nausea, vomiting, and abdominal pain.. Symptoms include fever, cough, headache, nausea, vomiting, abdominal pain",
         "gender": "male",
         "age": 61,
         "hpi": {
@@ -925,7 +925,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8265096",
       "body": {
-        "chiefComplaint": "A 49-year-old woman with type 2 diabetes, dyslipidemia, and hypertension presented with several weeks of cramping abdominal pain, vomiting, and frequent watery, nonbloody diarrhea.",
+        "chiefComplaint": "A 49-year-old woman with type 2 diabetes, dyslipidemia, and hypertension presented with several weeks of cramping abdominal pain, vomiting, and frequent watery, nonbloody diarrhea.. Symptoms include fever, vomiting, diarrhea, abdominal pain, rash, chills",
         "gender": "female",
         "age": 49,
         "hpi": {
@@ -956,7 +956,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC4389205",
       "body": {
-        "chiefComplaint": "A 37 year-old man with HIV infection and a recent history of cryptococcal meningitis, treated with amphotericin followed by fluconazole, began ART (zidovudine, lamivudine, efavirenz) 21 days after meningitis treatment completion.",
+        "chiefComplaint": "A 37 year-old man with HIV infection and a recent history of cryptococcal meningitis, treated with amphotericin followed by fluconazole, began ART (zidovudine, lamivudine, efavirenz) 21 days after meningitis treatment completion.. Symptoms include fever, cough, vomiting, abdominal pain",
         "gender": "male",
         "age": 37,
         "hpi": {
@@ -985,7 +985,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7141746",
       "body": {
-        "chiefComplaint": "A 40‐year‐old woman with asthma, hypertension, and a 20‐year history of psoriatic arthritis involving both temporomandibular joints presented with a 4‐month history of a hard, tender swelling (1.5×2.0 cm) in the left preauricular region.",
+        "chiefComplaint": "A 40‐year‐old woman with asthma, hypertension, and a 20‐year history of psoriatic arthritis involving both temporomandibular joints presented with a 4‐month history of a hard, tender swelling (1.5×2.0 cm) in the left preauricular region.. Symptoms include swelling",
         "gender": "female",
         "age": 45,
         "hpi": {
@@ -1011,7 +1011,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3287964",
       "body": {
-        "chiefComplaint": "A 36-year-old woman with no prior liver disease presented in August 2008 with a 5-day history of constant, sharp right upper quadrant abdominal pain associated with nausea and fatigue but no vomiting.",
+        "chiefComplaint": "A 36-year-old woman with no prior liver disease presented in August 2008 with a 5-day history of constant, sharp right upper quadrant abdominal pain associated with nausea and fatigue but no vomiting.. Symptoms include fever, nausea, vomiting, abdominal pain, fatigue, discharge",
         "gender": "female",
         "age": 36,
         "hpi": {
@@ -1042,7 +1042,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC6192136",
       "body": {
-        "chiefComplaint": "A 23-year-old man from Cameroon presented with acute-onset, right-sided scrotal pain and swelling while in the United States for military training.",
+        "chiefComplaint": "A 23-year-old man from Cameroon presented with acute-onset, right-sided scrotal pain and swelling while in the United States for military training.. Symptoms include fever, cough, swelling, weight loss, discharge",
         "gender": "male",
         "age": 23,
         "hpi": {
@@ -1072,7 +1072,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9234622",
       "body": {
-        "chiefComplaint": "A 65‐year‐old woman presented with two months of persistent left upper‐quadrant abdominal pain and multiple episodes of nonbilious, nonbloody vomiting of recently ingested food.",
+        "chiefComplaint": "A 65‐year‐old woman presented with two months of persistent left upper‐quadrant abdominal pain and multiple episodes of nonbilious, nonbloody vomiting of recently ingested food.. Symptoms include fever, vomiting, abdominal pain, weight loss",
         "gender": "female",
         "age": 45,
         "hpi": {
@@ -1125,7 +1125,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7993351",
       "body": {
-        "chiefComplaint": "A 64-year-old woman was found unresponsive by her husband in their non–air-conditioned home during a heatwave, with outdoor temperatures above 33°C (90°F).",
+        "chiefComplaint": "A 64-year-old woman was found unresponsive by her husband in their non–air-conditioned home during a heatwave, with outdoor temperatures above 33°C (90°F).. Symptoms include headache, seizure",
         "gender": "female",
         "age": 64,
         "hpi": {
@@ -1152,7 +1152,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3271452",
       "body": {
-        "chiefComplaint": "A 62‐year‐old woman presented with angular stomatitis and intermittent mild-to-moderate abdominal pain for 6 months.",
+        "chiefComplaint": "A 62‐year‐old woman presented with angular stomatitis and intermittent mild-to-moderate abdominal pain for 6 months.. Symptoms include abdominal pain, bleeding",
         "gender": "female",
         "age": 45,
         "hpi": {
@@ -1179,7 +1179,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8557694",
       "body": {
-        "chiefComplaint": "A 65-year-old woman with metastatic malignant peripheral nerve sheath tumor on a clinical trial agent and no known germline mutations presented with 6 weeks of nausea, progressive gait imbalance, and falls.",
+        "chiefComplaint": "A 65-year-old woman with metastatic malignant peripheral nerve sheath tumor on a clinical trial agent and no known germline mutations presented with 6 weeks of nausea, progressive gait imbalance, and falls.. Symptoms include nausea, weakness",
         "gender": "female",
         "age": 65,
         "hpi": {
@@ -1206,7 +1206,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC4855788",
       "body": {
-        "chiefComplaint": "A 49-year-old man presented with a 6-month history of headache.",
+        "chiefComplaint": "A 49-year-old man presented with a 6-month history of headache.. Symptoms include headache",
         "gender": "male",
         "age": 49,
         "hpi": {
@@ -1232,7 +1232,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9943934",
       "body": {
-        "chiefComplaint": "A 51-year-old Japanese man presented with a 2-month history of painless right vision loss.",
+        "chiefComplaint": "A 51-year-old Japanese man presented with a 2-month history of painless right vision loss.. Symptoms include edema",
         "gender": "male",
         "age": 51,
         "hpi": {
@@ -1258,7 +1258,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC5054479",
       "body": {
-        "chiefComplaint": "A 19-year-old male, born in 1990 to consanguineous parents, was referred for evaluation of multisystem involvement.",
+        "chiefComplaint": "A 19-year-old male, born in 1990 to consanguineous parents, was referred for evaluation of multisystem involvement.. Symptoms include fever, diarrhea, seizure, edema",
         "gender": "male",
         "age": 19,
         "hpi": {
@@ -1287,7 +1287,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7676809",
       "body": {
-        "chiefComplaint": "A 17-year-old male presented with several hours of right lower quadrant abdominal pain associated with nausea and subjective fevers.",
+        "chiefComplaint": "A 17-year-old male presented with several hours of right lower quadrant abdominal pain associated with nausea and subjective fevers.. Symptoms include fever, nausea, abdominal pain",
         "gender": "male",
         "age": 17,
         "hpi": {
@@ -1315,7 +1315,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7845154",
       "body": {
-        "chiefComplaint": "A 73-year-old woman with a history of poorly differentiated caecal adenocarcinoma (T4N2M0) treated by right hemicolectomy, incomplete adjuvant chemotherapy, and radiotherapy to para-aortic lymph nodes, presented three years after radiotherapy with a ",
+        "chiefComplaint": "A 73-year-old woman with a history of poorly differentiated caecal adenocarcinoma (T4N2M0) treated by right hemicolectomy, incomplete adjuvant chemotherapy, and radiotherapy to para-aortic lymph nodes, presented three years after radiotherapy with a . Symptoms include weight loss",
         "gender": "female",
         "age": 73,
         "hpi": {
@@ -1365,7 +1365,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7813055",
       "body": {
-        "chiefComplaint": "A 47-year-old woman was admitted with a 10-day history of remittent fevers up to 39°C, fatigue, and sore throat.",
+        "chiefComplaint": "A 47-year-old woman was admitted with a 10-day history of remittent fevers up to 39°C, fatigue, and sore throat.. Symptoms include fever, rash, fatigue, edema",
         "gender": "female",
         "age": 47,
         "hpi": {
@@ -1394,7 +1394,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9366933",
       "body": {
-        "chiefComplaint": "A 16-year-old girl presented with a 4-day history of increasing difficulty swallowing solid foods and a painless globus sensation.",
+        "chiefComplaint": "A 16-year-old girl presented with a 4-day history of increasing difficulty swallowing solid foods and a painless globus sensation.. Symptoms include weight loss",
         "gender": "female",
         "age": 16,
         "hpi": {
@@ -1444,7 +1444,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC4539463",
       "body": {
-        "chiefComplaint": "A 43-year-old man with no prior lung disease presented to the emergency department with sudden-onset left-sided chest pain and progressive shortness of breath.",
+        "chiefComplaint": "A 43-year-old man with no prior lung disease presented to the emergency department with sudden-onset left-sided chest pain and progressive shortness of breath.. Symptoms include shortness of breath, chest pain",
         "gender": "male",
         "age": 43,
         "hpi": {
@@ -1495,7 +1495,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3459730",
       "body": {
-        "chiefComplaint": "An 84-year-old woman was admitted with a one-day history of left lower abdominal pain and nausea without fever.",
+        "chiefComplaint": "An 84-year-old woman was admitted with a one-day history of left lower abdominal pain and nausea without fever.. Symptoms include fever, nausea, vomiting, abdominal pain",
         "gender": "female",
         "age": 84,
         "hpi": {
@@ -1524,7 +1524,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7325212",
       "body": {
-        "chiefComplaint": "A 76-year-old man presented with a 5-year history of progressive leg weakness.",
+        "chiefComplaint": "A 76-year-old man presented with a 5-year history of progressive leg weakness.. Symptoms include fatigue, weakness, discharge",
         "gender": "male",
         "age": 76,
         "hpi": {
@@ -1552,7 +1552,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC6230635",
       "body": {
-        "chiefComplaint": "A 13-year-old Sudanese girl presented with a 2-day history of colicky abdominal pain, absolute constipation, and vomiting of all ingested food.",
+        "chiefComplaint": "A 13-year-old Sudanese girl presented with a 2-day history of colicky abdominal pain, absolute constipation, and vomiting of all ingested food.. Symptoms include fever, vomiting, diarrhea, abdominal pain",
         "gender": "female",
         "age": 13,
         "hpi": {
@@ -1581,7 +1581,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC10626292",
       "body": {
-        "chiefComplaint": "A 72-year-old woman was referred for progressive symmetrical proximal muscle weakness.",
+        "chiefComplaint": "A 72-year-old woman was referred for progressive symmetrical proximal muscle weakness.. Symptoms include weakness",
         "gender": "female",
         "age": 72,
         "hpi": {
@@ -1607,7 +1607,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3747369",
       "body": {
-        "chiefComplaint": "A 47-year-old woman with HIV-1 infection presented with a 10-day history of diffuse maculopapular rash, fever, myalgias, arthralgias, choluria, pruritus, and right upper-quadrant abdominal pain.",
+        "chiefComplaint": "A 47-year-old woman with HIV-1 infection presented with a 10-day history of diffuse maculopapular rash, fever, myalgias, arthralgias, choluria, pruritus, and right upper-quadrant abdominal pain.. Symptoms include fever, nausea, vomiting, abdominal pain, rash, jaundice",
         "gender": "female",
         "age": 47,
         "hpi": {
@@ -1638,7 +1638,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3423660",
       "body": {
-        "chiefComplaint": "A 58-year-old woman presented with a history since February 2008 of painful left axillary lymphadenopathy accompanied by low-grade fever.",
+        "chiefComplaint": "A 58-year-old woman presented with a history since February 2008 of painful left axillary lymphadenopathy accompanied by low-grade fever.. Symptoms include fever",
         "gender": "female",
         "age": 58,
         "hpi": {
@@ -1664,7 +1664,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC10225816",
       "body": {
-        "chiefComplaint": "A 52-year-old man presented with progressive right upper limb weakness and sensory disturbance.",
+        "chiefComplaint": "A 52-year-old man presented with progressive right upper limb weakness and sensory disturbance.. Symptoms include swelling, weakness, numbness",
         "gender": "male",
         "age": 52,
         "hpi": {
@@ -1692,7 +1692,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC10999549",
       "body": {
-        "chiefComplaint": "A previously healthy 5‐year‐old girl presented with 9 hours of intermittent, moderate–severity epigastric pain radiating to the right lower quadrant.",
+        "chiefComplaint": "A previously healthy 5‐year‐old girl presented with 9 hours of intermittent, moderate–severity epigastric pain radiating to the right lower quadrant.. Symptoms include vomiting, jaundice",
         "gender": "female",
         "age": 45,
         "hpi": {
@@ -1719,7 +1719,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC11387283",
       "body": {
-        "chiefComplaint": "A 29-year-old woman presented with lower abdominal pain.",
+        "chiefComplaint": "A 29-year-old woman presented with lower abdominal pain.. Symptoms include abdominal pain",
         "gender": "female",
         "age": 29,
         "hpi": {
@@ -1745,7 +1745,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC11607135",
       "body": {
-        "chiefComplaint": "A 3-year-old girl presented with gradual-onset abdominal pain and non-bilious vomiting over 2 days.",
+        "chiefComplaint": "A 3-year-old girl presented with gradual-onset abdominal pain and non-bilious vomiting over 2 days.. Symptoms include fever, vomiting, diarrhea, abdominal pain, bleeding",
         "gender": "female",
         "age": 3,
         "hpi": {
@@ -1799,7 +1799,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9056206",
       "body": {
-        "chiefComplaint": "A 71-year-old man with coronary artery disease, hypertension, hyperlipidemia, gout, and benign prostatic hyperplasia was transferred from a long-term acute care facility with a 2-day history of right wrist and hand pain, tenderness, and swelling.",
+        "chiefComplaint": "A 71-year-old man with coronary artery disease, hypertension, hyperlipidemia, gout, and benign prostatic hyperplasia was transferred from a long-term acute care facility with a 2-day history of right wrist and hand pain, tenderness, and swelling.. Symptoms include shortness of breath, swelling, fatigue, weakness, bleeding",
         "gender": "male",
         "age": 71,
         "hpi": {
@@ -1829,7 +1829,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8365578",
       "body": {
-        "chiefComplaint": "A 30-year-old man with psoriatic arthritis (on adalimumab for 6 years), hereditary spherocytosis, and a history of cutaneous herpes zoster infection presented with two weeks of intermittent fevers and headaches and a 10-lb weight loss over 9 months.",
+        "chiefComplaint": "A 30-year-old man with psoriatic arthritis (on adalimumab for 6 years), hereditary spherocytosis, and a history of cutaneous herpes zoster infection presented with two weeks of intermittent fevers and headaches and a 10-lb weight loss over 9 months.. Symptoms include fever, headache, weight loss, edema",
         "gender": "male",
         "age": 30,
         "hpi": {
@@ -1858,7 +1858,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9832730",
       "body": {
-        "chiefComplaint": "A previously healthy 9-month-old boy was transferred after 8 days of fever and new-onset macroscopic hematuria.",
+        "chiefComplaint": "A previously healthy 9-month-old boy was transferred after 8 days of fever and new-onset macroscopic hematuria.. Symptoms include fever, diarrhea, rash",
         "gender": "male",
         "age": 45,
         "hpi": {
@@ -1958,7 +1958,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3863494",
       "body": {
-        "chiefComplaint": "A 67‐year‐old man with type 2 diabetes mellitus and nephropathy presented with a 4‐month history of an asymptomatic rash and swelling over his right thigh.",
+        "chiefComplaint": "A 67‐year‐old man with type 2 diabetes mellitus and nephropathy presented with a 4‐month history of an asymptomatic rash and swelling over his right thigh.. Symptoms include rash, swelling",
         "gender": "male",
         "age": 45,
         "hpi": {
@@ -1985,7 +1985,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9675078",
       "body": {
-        "chiefComplaint": "A 6-year-old girl was admitted with a 5-day history of fever (to 39.5 °C) and a 2-week history of unilateral clear tearing from the right eye.",
+        "chiefComplaint": "A 6-year-old girl was admitted with a 5-day history of fever (to 39.5 °C) and a 2-week history of unilateral clear tearing from the right eye.. Symptoms include fever, swelling, discharge, edema",
         "gender": "female",
         "age": 6,
         "hpi": {
@@ -2014,7 +2014,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC11133391",
       "body": {
-        "chiefComplaint": "An 82-year-old man with chronic atrial fibrillation and type 2 diabetes mellitus presented with a 3-month history of worsening peripheral edema and pleural effusion despite escalating diuretic therapy.",
+        "chiefComplaint": "An 82-year-old man with chronic atrial fibrillation and type 2 diabetes mellitus presented with a 3-month history of worsening peripheral edema and pleural effusion despite escalating diuretic therapy.. Symptoms include edema",
         "gender": "male",
         "age": 82,
         "hpi": {
@@ -2040,7 +2040,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9610036",
       "body": {
-        "chiefComplaint": "A 70-year-old woman with atrial fibrillation on enoxaparin, liver cirrhosis, type 2 diabetes mellitus, hypertension, and a history of venous thrombus presented with a 5-day history of left arm weakness, numbness in the left fourth and fifth digits an",
+        "chiefComplaint": "A 70-year-old woman with atrial fibrillation on enoxaparin, liver cirrhosis, type 2 diabetes mellitus, hypertension, and a history of venous thrombus presented with a 5-day history of left arm weakness, numbness in the left fourth and fifth digits an. Symptoms include headache, confusion, weakness, numbness",
         "gender": "female",
         "age": 70,
         "hpi": {
@@ -2069,7 +2069,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7443985",
       "body": {
-        "chiefComplaint": "A 37-year-old man presented with a 3-month history of progressive skin thickening, initially on his torso and then spreading diffusely, accompanied by a 20–30-lb weight loss and fatigue.",
+        "chiefComplaint": "A 37-year-old man presented with a 3-month history of progressive skin thickening, initially on his torso and then spreading diffusely, accompanied by a 20–30-lb weight loss and fatigue.. Symptoms include dyspnea, weight loss, fatigue",
         "gender": "male",
         "age": 37,
         "hpi": {
@@ -2097,7 +2097,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC4949503",
       "body": {
-        "chiefComplaint": "A 72-year-old Caucasian woman with Sézary syndrome, previously treated with interferon alfa-2b and photopheresis, began romidepsin therapy (14 mg/m2 on days 1, 8, and 15) with bexarotene.",
+        "chiefComplaint": "A 72-year-old Caucasian woman with Sézary syndrome, previously treated with interferon alfa-2b and photopheresis, began romidepsin therapy (14 mg/m2 on days 1, 8, and 15) with bexarotene.. Symptoms include fever, rash, edema",
         "gender": "female",
         "age": 72,
         "hpi": {
@@ -2125,7 +2125,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8378370",
       "body": {
-        "chiefComplaint": "A 51-year-old woman with Crohn’s disease on infliximab presented with a 2-day history of a bullous rash on her left arm, axilla, and lateral chest wall accompanied by subjective fever.",
+        "chiefComplaint": "A 51-year-old woman with Crohn’s disease on infliximab presented with a 2-day history of a bullous rash on her left arm, axilla, and lateral chest wall accompanied by subjective fever.. Symptoms include fever, rash, swelling",
         "gender": "female",
         "age": 51,
         "hpi": {
@@ -2153,7 +2153,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8666636",
       "body": {
-        "chiefComplaint": "A 4-year-old boy was evaluated for a 1-year history of a slowly enlarging mass in the right cheek.",
+        "chiefComplaint": "A 4-year-old boy was evaluated for a 1-year history of a slowly enlarging mass in the right cheek.. Symptoms include dyspnea",
         "gender": "male",
         "age": 4,
         "hpi": {
@@ -2179,7 +2179,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8461971",
       "body": {
-        "chiefComplaint": "A 34-year-old Japanese man with a history of gastric ulcer treated with esomeprazole presented with 2 days of fever to 40 °C, headache, myalgia, fatigue, and vomiting starting 2 days after a finger laceration during sewage-plumbing work.",
+        "chiefComplaint": "A 34-year-old Japanese man with a history of gastric ulcer treated with esomeprazole presented with 2 days of fever to 40 °C, headache, myalgia, fatigue, and vomiting starting 2 days after a finger laceration during sewage-plumbing work.. Symptoms include fever, headache, vomiting, fatigue, edema",
         "gender": "male",
         "age": 34,
         "hpi": {
@@ -2209,7 +2209,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8777167",
       "body": {
-        "chiefComplaint": "A 52‐year‐old man with Addison’s disease on lifelong corticosteroid replacement and a history of lateral epicondylitis presented with a 7‐day history of severe redness around his right elbow accompanied by intense burning and stinging.",
+        "chiefComplaint": "A 52‐year‐old man with Addison’s disease on lifelong corticosteroid replacement and a history of lateral epicondylitis presented with a 7‐day history of severe redness around his right elbow accompanied by intense burning and stinging.. Symptoms include rash, edema",
         "gender": "male",
         "age": 45,
         "hpi": {
@@ -2236,7 +2236,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC11481506",
       "body": {
-        "chiefComplaint": "A 26-year-old man with no history of hypertension or heart disease presented with a 3-day history of upper abdominal pain.",
+        "chiefComplaint": "A 26-year-old man with no history of hypertension or heart disease presented with a 3-day history of upper abdominal pain.. Symptoms include abdominal pain, swelling, jaundice, edema",
         "gender": "male",
         "age": 26,
         "hpi": {
@@ -2265,7 +2265,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7205540",
       "body": {
-        "chiefComplaint": "A 26-year-old man was admitted for evaluation of recurrent hepatitis and persistent cytopenias.",
+        "chiefComplaint": "A 26-year-old man was admitted for evaluation of recurrent hepatitis and persistent cytopenias.. Symptoms include fatigue, jaundice",
         "gender": "male",
         "age": 26,
         "hpi": {
@@ -2292,7 +2292,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC4637487",
       "body": {
-        "chiefComplaint": "A 70-year-old Caucasian man with IgG-kappa multiple myeloma diagnosed one year ago (initial K-FLC 685 mg/dL, λ 0.13 mg/dL; no lytic bone lesions or organ involvement) presented with 3 months of worsening dyspnea, dysphagia, and weight loss.",
+        "chiefComplaint": "A 70-year-old Caucasian man with IgG-kappa multiple myeloma diagnosed one year ago (initial K-FLC 685 mg/dL, λ 0.13 mg/dL; no lytic bone lesions or organ involvement) presented with 3 months of worsening dyspnea, dysphagia, and weight loss.. Symptoms include dyspnea, weight loss",
         "gender": "male",
         "age": 70,
         "hpi": {
@@ -2319,7 +2319,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3961933",
       "body": {
-        "chiefComplaint": "A 34-year-old woman presented with a 6-year history of a painless swelling of the lower jaw, initially 1 cm in diameter on the left, which gradually enlarged to involve both sides of the face.",
+        "chiefComplaint": "A 34-year-old woman presented with a 6-year history of a painless swelling of the lower jaw, initially 1 cm in diameter on the left, which gradually enlarged to involve both sides of the face.. Symptoms include swelling",
         "gender": "female",
         "age": 34,
         "hpi": {
@@ -2345,7 +2345,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC4012653",
       "body": {
-        "chiefComplaint": "A 68-year-old man with high-grade lymphoma diagnosed four months earlier presented with confusion.",
+        "chiefComplaint": "A 68-year-old man with high-grade lymphoma diagnosed four months earlier presented with confusion.. Symptoms include confusion",
         "gender": "male",
         "age": 68,
         "hpi": {
@@ -2371,7 +2371,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC7294351",
       "body": {
-        "chiefComplaint": "A 28-year-old man presented with a tonic–clonic seizure, left arm paresis, paraparesis, two months of gait disturbance, and fever to 38 °C.",
+        "chiefComplaint": "A 28-year-old man presented with a tonic–clonic seizure, left arm paresis, paraparesis, two months of gait disturbance, and fever to 38 °C.. Symptoms include fever, seizure",
         "gender": "male",
         "age": 28,
         "hpi": {
@@ -2398,7 +2398,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC6151222",
       "body": {
-        "chiefComplaint": "A 35-year-old African American man presented with a one-month history of worsening low back and bilateral leg pain, intermittent night sweats, and a 32-kg unintentional weight loss over one year.",
+        "chiefComplaint": "A 35-year-old African American man presented with a one-month history of worsening low back and bilateral leg pain, intermittent night sweats, and a 32-kg unintentional weight loss over one year.. Symptoms include weight loss, weakness",
         "gender": "male",
         "age": 35,
         "hpi": {
@@ -2425,7 +2425,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9254170",
       "body": {
-        "chiefComplaint": "A 60-year-old man presented with a 1-month history of right lower back and abdominal pain.",
+        "chiefComplaint": "A 60-year-old man presented with a 1-month history of right lower back and abdominal pain.. Symptoms include abdominal pain",
         "gender": "male",
         "age": 60,
         "hpi": {
@@ -2475,7 +2475,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC11639004",
       "body": {
-        "chiefComplaint": "A 50-year-old non-smoker Caucasian woman with no past medical history presented with chronic mild right upper quadrant abdominal pain for one year.",
+        "chiefComplaint": "A 50-year-old non-smoker Caucasian woman with no past medical history presented with chronic mild right upper quadrant abdominal pain for one year.. Symptoms include abdominal pain",
         "gender": "female",
         "age": 50,
         "hpi": {
@@ -2501,7 +2501,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8123563",
       "body": {
-        "chiefComplaint": "A 58-year-old woman was referred for evaluation of 8 months of progressive shortness of breath, intermittent fever and chills, productive (non–blood-stained) cough, and a 25-kg unintentional weight loss over 6 months.",
+        "chiefComplaint": "A 58-year-old woman was referred for evaluation of 8 months of progressive shortness of breath, intermittent fever and chills, productive (non–blood-stained) cough, and a 25-kg unintentional weight loss over 6 months.. Symptoms include fever, cough, shortness of breath, weight loss, chills",
         "gender": "female",
         "age": 58,
         "hpi": {
@@ -2531,7 +2531,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC8957291",
       "body": {
-        "chiefComplaint": "A 37-year-old previously healthy man presented with four days of progressive weakness of all four limbs, dysphagia, drooling, nausea, and vomiting.",
+        "chiefComplaint": "A 37-year-old previously healthy man presented with four days of progressive weakness of all four limbs, dysphagia, drooling, nausea, and vomiting.. Symptoms include nausea, vomiting, weakness",
         "gender": "male",
         "age": 37,
         "hpi": {
@@ -2559,7 +2559,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC4446922",
       "body": {
-        "chiefComplaint": "A 55-year-old man presented with 1 month of edema and 2 weeks of decreased urine output, fever with chills, breathlessness, anorexia, nausea, and recurrent vomiting.",
+        "chiefComplaint": "A 55-year-old man presented with 1 month of edema and 2 weeks of decreased urine output, fever with chills, breathlessness, anorexia, nausea, and recurrent vomiting.. Symptoms include fever, cough, nausea, vomiting, rash, edema",
         "gender": "male",
         "age": 55,
         "hpi": {
@@ -2590,7 +2590,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC4223599",
       "body": {
-        "chiefComplaint": "A 63-year-old woman presented with a 1-year history of atypical right upper-quadrant abdominal pain, significant fatigue, and weight loss.",
+        "chiefComplaint": "A 63-year-old woman presented with a 1-year history of atypical right upper-quadrant abdominal pain, significant fatigue, and weight loss.. Symptoms include abdominal pain, weight loss, fatigue, jaundice",
         "gender": "female",
         "age": 63,
         "hpi": {
@@ -2619,7 +2619,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC5651110",
       "body": {
-        "chiefComplaint": "A 22-month-old Caucasian girl presented with low-grade fever, cough, decreased activity, poor oral intake, and bilateral jaw-line swelling.",
+        "chiefComplaint": "A 22-month-old Caucasian girl presented with low-grade fever, cough, decreased activity, poor oral intake, and bilateral jaw-line swelling.. Symptoms include fever, cough, rash, swelling",
         "gender": "female",
         "age": 45,
         "hpi": {
@@ -2648,7 +2648,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3263537",
       "body": {
-        "chiefComplaint": "A 79-year-old white man presented with sudden onset of right-sided ophthalmoplegia, diplopia, and ptosis accompanied by nausea, vomiting, and headache.",
+        "chiefComplaint": "A 79-year-old white man presented with sudden onset of right-sided ophthalmoplegia, diplopia, and ptosis accompanied by nausea, vomiting, and headache.. Symptoms include headache, nausea, vomiting",
         "gender": "male",
         "age": 79,
         "hpi": {
@@ -2676,7 +2676,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC9361461",
       "body": {
-        "chiefComplaint": "A 46-year-old woman was referred for evaluation of new-onset heart failure.",
+        "chiefComplaint": "A 46-year-old woman was referred for evaluation of new-onset heart failure.. Symptoms include dyspnea, shortness of breath, nausea, abdominal pain, fatigue, edema",
         "gender": "female",
         "age": 46,
         "hpi": {
@@ -2707,7 +2707,7 @@
       "source": "medcasereasoning",
       "pmcid": "PMC3652784",
       "body": {
-        "chiefComplaint": "A 10-year-old boy of West African origin, born to non-consanguineous parents, presented with a one-year history of bilateral knee pain radiating into his legs.",
+        "chiefComplaint": "A 10-year-old boy of West African origin, born to non-consanguineous parents, presented with a one-year history of bilateral knee pain radiating into his legs.. Symptoms include fever, rash, swelling, weakness, edema",
         "gender": "male",
         "age": 10,
         "hpi": {

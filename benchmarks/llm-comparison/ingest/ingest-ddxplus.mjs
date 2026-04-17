@@ -321,7 +321,7 @@ for (const cols of finalSample) {
 
   const chiefComplaint = initialToCC(initial, age, sex);
 
-  // Build associated symptoms / aggravating / etc. from EVIDENCES
+  // Build associated symptoms from EVIDENCES (translate codes to phrases)
   const associated = [];
   for (const code of evidenceList) {
     const phrase = evidenceToPhrase(code);

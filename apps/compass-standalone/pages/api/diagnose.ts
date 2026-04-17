@@ -15,6 +15,7 @@ import crypto from 'crypto';
 import { logClinicalAudit, createDiagnoseAuditEntry } from '@attending/shared/lib/audit/clinicalAuditLog';
 import { normalizeWithLLM, type CCNormalizationResult } from '@attending/shared/lib/ai/ccNormalizer';
 import { matchesKnownSymptom, normalizeSymptomText } from '@attending/shared/lib/ai/symptomSynonyms';
+import { preprocessCC, describePreprocess } from '@attending/shared/lib/ai/ccPreprocessor';
 import { z } from 'zod';
 import type { HPIData } from '@attending/shared/types/chat.types';
 
@@ -158,15 +159,23 @@ export default async function handler(
       console.warn('[COMPASS Diagnose] Request missing age — falling back to 40. Update caller to pass age.');
     }
 
-    // --- Tier 3: LLM CC normalization (fallback when synonyms miss) ---
-    let effectiveCC = safeChiefComplaint;
-    let ccNormResult: CCNormalizationResult | null = null;
+    // --- Tier 1: Deterministic preprocessor (abbreviations, narrative, questions) ---
+    const preResult = preprocessCC(safeChiefComplaint);
+    let effectiveCC = preResult.processed;
+    if (preResult.expandedAbbrev || preResult.extractedNarrative || preResult.flattenedQuestions) {
+      console.log(`[CC-Preprocess] ${describePreprocess(preResult)} | "${safeChiefComplaint.slice(0, 60)}" → "${effectiveCC.slice(0, 100)}"`);
+    }
 
-    const synonymExpanded = normalizeSymptomText(safeChiefComplaint);
-    if (!matchesKnownSymptom(synonymExpanded)) {
+    // --- Tier 2: Synonym normalization (layman → canonical) ---
+    // normalizeSymptomText appends canonical forms for known layman phrasings
+    effectiveCC = normalizeSymptomText(effectiveCC);
+
+    // --- Tier 3: LLM CC normalization (fallback when deterministic passes miss) ---
+    let ccNormResult: CCNormalizationResult | null = null;
+    if (!matchesKnownSymptom(effectiveCC)) {
       ccNormResult = await normalizeWithLLM(safeChiefComplaint, age, gender || 'other');
       if (ccNormResult.extractedTerms.length > 0) {
-        effectiveCC = `${safeChiefComplaint} ${ccNormResult.extractedTerms.join(' ')}`;
+        effectiveCC = `${effectiveCC} ${ccNormResult.extractedTerms.join(' ')}`;
       }
     }
 
