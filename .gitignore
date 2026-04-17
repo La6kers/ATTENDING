@@ -310,6 +310,11 @@ typings/
 # archive/ directory — use git history instead
 archive/
 
+# Benchmark results (scripts committed; per-run outputs ignored)
+benchmarks/llm-comparison/results/*.md
+benchmarks/llm-comparison/results/*.json
+!benchmarks/llm-comparison/results/.gitkeep
+
 # Root-level scratch / temporary scripts
 commit-*.ps1
 Verify-*.ps1
