@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Send, Mic, MicOff, ChevronLeft, Volume2, VolumeX, Compass, Camera } from 'lucide-react';
+import { Send, Mic, MicOff, ChevronLeft, Volume2, VolumeX, Camera } from 'lucide-react';
 import { MessageBubble } from './MessageBubble';
 import { QuickReplies } from './QuickReplies';
 import { StagedImagePreview } from './ImagePreview';
@@ -319,7 +319,28 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
             </button>
           )}
           <div className="flex items-center gap-2">
-            <Compass className="w-5 h-5" />
+            {/* Compass icon with brand gold gradient (matches website gold accents) */}
+            <svg
+              className="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="compassGoldGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#FFD166" />
+                  <stop offset="100%" stopColor="#F0A500" />
+                </linearGradient>
+              </defs>
+              <circle cx="12" cy="12" r="10" stroke="url(#compassGoldGradient)" />
+              <path
+                d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"
+                stroke="url(#compassGoldGradient)"
+              />
+            </svg>
             <div>
               <h1 className="font-semibold text-sm">COMPASS</h1>
               {patientName && <p className="text-xs text-white/80">{patientName}</p>}

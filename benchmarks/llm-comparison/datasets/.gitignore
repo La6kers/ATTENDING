@@ -1,0 +1,11 @@
+# Large raw dataset files — regenerate via download scripts
+ddxplus/release_test_patients
+ddxplus/release_test_patients.zip
+ddxplus/release_train_patients.zip
+ddxplus/release_validate_patients.zip
+nhamcs/ed2019
+nhamcs/ed2019.zip
+nhamcs/ed19inp.txt
+medcasereasoning/test.parquet
+medcasereasoning/core.csv
+medcasereasoning/mcr-*.json

@@ -1,0 +1,7674 @@
+{
+  "source": "nhamcs-2019-ed",
+  "generatedAt": "2026-04-17T15:52:33.400Z",
+  "seed": 42,
+  "cases": [
+    {
+      "id": 22000,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Cholelithiasis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 46,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22001,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 27,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22002,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Seizure Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "had a seizure",
+        "gender": "male",
+        "age": 23,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22003,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Anaphylaxis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "female",
+        "age": 37,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22004,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Hypertensive Emergency",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 64,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of heart failure"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic"
+        ]
+      }
+    },
+    {
+      "id": 22005,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Sinusitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 54,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22006,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Diverticulitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 73,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22007,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 14,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22008,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gastrointestinal Bleeding",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "female",
+        "age": 32,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22009,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Electrolyte Imbalance",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "female",
+        "age": 44,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22010,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Croup",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22011,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Conjunctivitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 5,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22012,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 70,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22013,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Otitis Media",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 5,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22014,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Knee Osteoarthritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "male",
+        "age": 48,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22015,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Kidney Injury",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "female",
+        "age": 93,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 1,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of heart failure"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22016,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Syncope",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 16,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22017,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Type 2 Diabetes",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "female",
+        "age": 65,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD",
+            "history of diabetes",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "inhaler",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22018,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Back Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "male",
+        "age": 74,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22019,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Migraine",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "male",
+        "age": 40,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22020,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Ankle Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "female",
+        "age": 14,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22021,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Type 2 Diabetes",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "burning when i pee",
+        "gender": "male",
+        "age": 60,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication"
+        ]
+      }
+    },
+    {
+      "id": 22022,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Bronchiolitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22023,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Ankle Sprain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "male",
+        "age": 59,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22024,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Musculoskeletal Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "back pain killing me",
+        "gender": "female",
+        "age": 27,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22025,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Influenza",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 37,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22026,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Bronchitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "my legs are swelling up",
+        "gender": "female",
+        "age": 43,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22027,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Asthma Exacerbation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "my legs are swelling up",
+        "gender": "female",
+        "age": 41,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22028,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Upper Respiratory Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22029,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Cholecystitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 67,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22030,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Stress Reaction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "male",
+        "age": 38,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication"
+        ]
+      }
+    },
+    {
+      "id": 22031,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "ADHD",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "male",
+        "age": 11,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22032,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Intracranial Hemorrhage",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "female",
+        "age": 17,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22033,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "COPD exacerbation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 59,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of COPD",
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22034,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Headache",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 33,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22035,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Viral Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22036,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Back Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "back pain killing me",
+        "gender": "female",
+        "age": 73,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22037,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Cystitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "male",
+        "age": 68,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22038,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Myocardial Infarction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 72,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22039,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Dehydration",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "female",
+        "age": 54,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22040,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Pneumonia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 71,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "fast heart rate",
+            "rapid breathing",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22041,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Nausea and Vomiting",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "female",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22042,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Bronchiolitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22043,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gastritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 42,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22044,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Otitis Media",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "eye red and watery",
+        "gender": "male",
+        "age": 2,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22045,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Nausea and Vomiting",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "female",
+        "age": 21,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22046,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Anxiety Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "female",
+        "age": 82,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22047,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Nausea and Vomiting",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 11,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22048,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Ankle Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "male",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22049,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Musculoskeletal Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "arm hurts after fall",
+        "gender": "male",
+        "age": 40,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22050,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 5,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22051,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "female",
+        "age": 25,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22052,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Croup",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22053,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Inguinal Hernia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 55,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22054,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Dehydration",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 62,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22055,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Sinusitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cough with green phlegm",
+        "gender": "female",
+        "age": 24,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22056,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Nausea and Vomiting",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "female",
+        "age": 40,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22057,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Seizure Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "had a seizure",
+        "gender": "male",
+        "age": 54,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22058,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Head Injury",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "male",
+        "age": 3,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22059,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Dizziness",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "male",
+        "age": 61,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "inhaler",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22060,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Anaphylaxis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "female",
+        "age": 46,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22061,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Knee Osteoarthritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "female",
+        "age": 50,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22062,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Urinary Tract Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "female",
+        "age": 91,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22063,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Cellulitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 15,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22064,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Musculoskeletal Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "female",
+        "age": 30,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22065,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Diverticulitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 87,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22066,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Skin/Soft Tissue Abscess",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 27,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22067,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest feels heavy and pressure",
+        "gender": "female",
+        "age": 83,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 1,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22068,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Nausea and Vomiting",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "female",
+        "age": 2,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22069,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gout",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "male",
+        "age": 42,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22070,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Concussion",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "male",
+        "age": 15,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22071,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 34,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22072,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Cellulitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 70,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "low blood pressure",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22073,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Otitis Media",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 6,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22074,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Wrist Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "arm hurts after fall",
+        "gender": "female",
+        "age": 5,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22075,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "TIA",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "had a seizure",
+        "gender": "male",
+        "age": 30,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22076,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Type 1 Diabetes",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "male",
+        "age": 46,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication"
+        ]
+      }
+    },
+    {
+      "id": 22077,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Substance Use Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "male",
+        "age": 31,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22078,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Hypoglycemia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 30,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22079,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Fever",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22080,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Ischemic Stroke",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel confused",
+        "gender": "male",
+        "age": 62,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of diabetes",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22081,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Syncope",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "female",
+        "age": 39,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22082,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Unstable Angina",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 58,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of COPD",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22083,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Upper Respiratory Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 18,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22084,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Electrolyte Imbalance",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "female",
+        "age": 69,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 2,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22085,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Pneumonia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 36,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22086,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Knee Osteoarthritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "male",
+        "age": 63,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22087,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Congestive Heart Failure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 90,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of heart failure",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22088,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 21,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22089,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "BPPV",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 53,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22090,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Major Depression",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "male",
+        "age": 38,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22091,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Hip Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "neck pain",
+        "gender": "male",
+        "age": 87,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22092,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Coronary Syndrome",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 55,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22093,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Coronary Syndrome",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 43,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22094,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Hip Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "arm hurts after fall",
+        "gender": "male",
+        "age": 60,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22095,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Joint Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "male",
+        "age": 34,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22096,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Pancreatitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "female",
+        "age": 55,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22097,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Respiratory Failure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 60,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of COPD",
+            "history of heart failure",
+            "history of diabetes",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "diuretic",
+          "inhaler",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22098,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gastrointestinal Bleeding",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 29,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22099,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Joint Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "neck pain",
+        "gender": "male",
+        "age": 62,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22100,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Congestive Heart Failure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 85,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of heart failure"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic"
+        ]
+      }
+    },
+    {
+      "id": 22101,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Joint Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "male",
+        "age": 13,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22102,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Type 1 Diabetes",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "female",
+        "age": 9,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication"
+        ]
+      }
+    },
+    {
+      "id": 22103,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "GERD",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "female",
+        "age": 2,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22104,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Ischemic Stroke",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel confused",
+        "gender": "female",
+        "age": 67,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22105,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Pulmonary Embolism",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 69,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22106,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Opioid Overdose",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "male",
+        "age": 26,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22107,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Hypertension",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel lightheaded and dizzy",
+        "gender": "female",
+        "age": 48,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22108,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Alcohol Intoxication",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "male",
+        "age": 37,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22109,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Dizziness",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 72,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22110,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Musculoskeletal Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "female",
+        "age": 35,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22111,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Appendicitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 14,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22112,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Syncope",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 42,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22113,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Small Bowel Obstruction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 70,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22114,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Viral Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 10,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22115,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Concussion",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "female",
+        "age": 15,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22116,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Headache",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "female",
+        "age": 74,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22117,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Nausea and Vomiting",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "male",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22118,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Type 1 Diabetes",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "male",
+        "age": 39,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "insulin or oral diabetic medication"
+        ]
+      }
+    },
+    {
+      "id": 22119,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Conjunctivitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 3,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22120,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Respiratory Failure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 34,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22121,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Appendicitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 78,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of heart failure",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22122,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Skin/Soft Tissue Abscess",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 38,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22123,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 17,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22124,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Wrist Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "neck pain",
+        "gender": "female",
+        "age": 63,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication"
+        ]
+      }
+    },
+    {
+      "id": 22125,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Back Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "back pain killing me",
+        "gender": "female",
+        "age": 30,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22126,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Head Injury",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "male",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 2,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22127,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Sinusitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cough with green phlegm",
+        "gender": "female",
+        "age": 72,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22128,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Cholecystitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 83,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22129,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Head Injury",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "male",
+        "age": 71,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 1,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22130,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Knee Sprain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "male",
+        "age": 53,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22131,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Type 2 Diabetes",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 33,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22132,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Knee Sprain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "female",
+        "age": 62,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 2,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22133,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "GERD",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 53,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22134,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Hypertensive Emergency",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 44,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22135,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Kidney Injury",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "female",
+        "age": 80,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of COPD",
+            "history of heart failure",
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "diuretic",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22136,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Pulmonary Embolism",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 21,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22137,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Unstable Angina",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 63,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22138,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "TIA",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel confused",
+        "gender": "female",
+        "age": 56,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22139,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Wrist Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "arm hurts after fall",
+        "gender": "female",
+        "age": 55,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22140,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Atrial Fibrillation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest feels heavy and pressure",
+        "gender": "female",
+        "age": 78,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22141,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Small Bowel Obstruction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 74,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22142,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Knee Osteoarthritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "female",
+        "age": 65,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22143,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Seizure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 63,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22144,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Nausea and Vomiting",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "male",
+        "age": 10,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22145,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gout",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "male",
+        "age": 49,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22146,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Urinary Tract Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 2,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22147,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Dizziness",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "male",
+        "age": 57,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22148,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Anxiety Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "male",
+        "age": 27,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22149,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Major Depression",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "female",
+        "age": 14,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22150,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Encephalopathy",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "male",
+        "age": 65,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22151,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Nausea and Vomiting",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 20,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22152,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Simple Laceration",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "female",
+        "age": 21,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22153,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Bacterial Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 90,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD",
+            "history of heart failure",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic",
+          "inhaler",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22154,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Allergic Reaction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 7,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22155,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Stable Angina",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "my chest hurts real bad",
+        "gender": "male",
+        "age": 62,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22156,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Major Depression",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "female",
+        "age": 20,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22157,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Ischemic Stroke",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel confused",
+        "gender": "male",
+        "age": 81,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22158,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Hypertensive Emergency",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "my chest hurts real bad",
+        "gender": "female",
+        "age": 93,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22159,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Cholecystitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 51,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22160,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Atrial Fibrillation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 35,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing",
+            "history of heart failure"
+          ]
+        },
+        "medications": [
+          "diuretic"
+        ]
+      }
+    },
+    {
+      "id": 22161,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gastritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 24,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22162,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 14,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 2,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22163,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Upper Respiratory Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 7,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22164,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Viral Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "female",
+        "age": 16,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22165,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Viral Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 27,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22166,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "TIA",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel confused",
+        "gender": "female",
+        "age": 94,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD",
+            "history of heart failure"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22167,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Anxiety Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "female",
+        "age": 27,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22168,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "COPD exacerbation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 60,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22169,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Fever",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 3,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing",
+            "low blood pressure"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22170,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Urinary Tract Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 8,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22171,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Intracranial Hemorrhage",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 92,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22172,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 55,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22173,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "COPD exacerbation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 70,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22174,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Dizziness",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "male",
+        "age": 60,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22175,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "ADHD",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "female",
+        "age": 28,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22176,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Anaphylaxis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 33,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22177,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Tension Headache",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "male",
+        "age": 77,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22178,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Bacterial Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22179,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Knee Sprain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "male",
+        "age": 16,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22180,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Pneumonia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 76,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of COPD",
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22181,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gastritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 19,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22182,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Small Bowel Obstruction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 93,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22183,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Tension Headache",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 35,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22184,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 35,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22185,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Myocardial Infarction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 69,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22186,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Hypertension",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "my chest hurts real bad",
+        "gender": "male",
+        "age": 40,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22187,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Musculoskeletal Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "knee hurts bad",
+        "gender": "female",
+        "age": 65,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22188,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Pharyngitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 17,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22189,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Alcohol Intoxication",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "male",
+        "age": 28,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22190,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Inguinal Hernia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 34,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22191,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 5,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22192,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Asthma Exacerbation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 58,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22193,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Pancreatitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 57,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22194,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Viral Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 57,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 1,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22195,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Kidney Stone",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 17,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22196,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "female",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22197,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 50,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22198,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Cystitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 91,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22199,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Coronary Syndrome",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 62,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22200,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Ankle Sprain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "male",
+        "age": 43,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22201,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Gastrointestinal Bleeding",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "burning when i pee",
+        "gender": "male",
+        "age": 84,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22202,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Congestive Heart Failure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 76,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of heart failure",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22203,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Pharyngitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cough with green phlegm",
+        "gender": "female",
+        "age": 18,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22204,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Influenza",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 10,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22205,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Back Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "back pain killing me",
+        "gender": "female",
+        "age": 94,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 2,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22206,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Deep Vein Thrombosis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 18,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22207,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Seizure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "male",
+        "age": 16,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22208,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Opioid Overdose",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "male",
+        "age": 29,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22209,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Stress Reaction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "male",
+        "age": 53,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22210,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Electrolyte Imbalance",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "male",
+        "age": 66,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22211,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Kidney Injury",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 77,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22212,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Hypoglycemia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "female",
+        "age": 67,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22213,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Stable Angina",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 61,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22214,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Migraine",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "male",
+        "age": 22,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22215,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Pancreatitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 68,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22216,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Upper Respiratory Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 2,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22217,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Dehydration",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 2,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22218,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Cystitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "female",
+        "age": 19,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22219,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Otitis Externa",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 28,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22220,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Syncope",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "male",
+        "age": 14,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22221,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Seizure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "male",
+        "age": 46,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22222,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "my chest hurts real bad",
+        "gender": "female",
+        "age": 43,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22223,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Alcohol Intoxication",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "female",
+        "age": 38,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22224,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Skin/Soft Tissue Abscess",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 68,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22225,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Stable Angina",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 58,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of heart failure",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "diuretic",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22226,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gout",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "male",
+        "age": 32,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22227,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest feels heavy and pressure",
+        "gender": "male",
+        "age": 50,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22228,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Hypoglycemia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "female",
+        "age": 73,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication"
+        ]
+      }
+    },
+    {
+      "id": 22229,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Simple Laceration",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "male",
+        "age": 16,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22230,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Migraine",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "female",
+        "age": 46,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22231,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "BPPV",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "male",
+        "age": 66,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of heart failure"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "diuretic"
+        ]
+      }
+    },
+    {
+      "id": 22232,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Respiratory Failure",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel lightheaded and dizzy",
+        "gender": "female",
+        "age": 70,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22233,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Deep Vein Thrombosis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 61,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22234,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Pulmonary Embolism",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 75,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22235,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Kidney Stone",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "male",
+        "age": 74,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22236,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 58,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22237,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Atrial Fibrillation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "my legs are swelling up",
+        "gender": "male",
+        "age": 65,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22238,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Bronchitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 30,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22239,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gastrointestinal Bleeding",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "burning when i pee",
+        "gender": "male",
+        "age": 57,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of heart failure",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "diuretic",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22240,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Asthma Exacerbation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 19,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22241,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Conjunctivitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22242,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Electrolyte Imbalance",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "burning when i pee",
+        "gender": "female",
+        "age": 28,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22243,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Concussion",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "male",
+        "age": 15,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22244,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Bacterial Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 83,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22245,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Viral Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "nausea and vomiting",
+        "gender": "male",
+        "age": 36,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22246,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Diverticulitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 34,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22247,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Cellulitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 31,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 9,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22248,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Intracranial Hemorrhage",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel confused",
+        "gender": "female",
+        "age": 50,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22249,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Substance Use Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "male",
+        "age": 36,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22250,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Pharyngitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 52,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22251,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Simple Laceration",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "female",
+        "age": 4,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22252,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Influenza",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 28,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22253,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Substance Use Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "male",
+        "age": 31,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22254,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Opioid Overdose",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "cant sleep and racing thoughts",
+        "gender": "male",
+        "age": 58,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22255,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "BPPV",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 47,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22256,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Hip Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "neck pain",
+        "gender": "female",
+        "age": 56,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22257,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Encephalopathy",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "female",
+        "age": 34,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22258,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "diarrhea wont stop",
+        "gender": "female",
+        "age": 21,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22259,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Bacterial Gastroenteritis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 82,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22260,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Influenza",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 4,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22261,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Pharyngitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 7,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22262,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Otitis Externa",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 23,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22263,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Seizure Disorder",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "female",
+        "age": 39,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 5,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22264,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Hypertension",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest feels heavy and pressure",
+        "gender": "male",
+        "age": 24,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 2,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22265,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Supraventricular Tachycardia",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 20,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22266,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 45,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22267,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Syncope",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 19,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22268,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Unstable Angina",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 41,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "history of diabetes",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22269,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Sepsis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 50,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22270,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Headache",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "female",
+        "age": 34,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 7,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22271,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Acute Sinusitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 0,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22272,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Upper Respiratory Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22273,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 39,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22274,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Deep Vein Thrombosis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "my legs are swelling up",
+        "gender": "female",
+        "age": 33,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22275,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Bacterial Infection",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "female",
+        "age": 19,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22276,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Back Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "back pain killing me",
+        "gender": "male",
+        "age": 30,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22277,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Tension Headache",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "worst headache of my life",
+        "gender": "male",
+        "age": 46,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of COPD",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "inhaler",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22278,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Chest Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "female",
+        "age": 53,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22279,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Simple Laceration",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "female",
+        "age": 4,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22280,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Ankle Sprain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "female",
+        "age": 12,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22281,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Bronchitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "male",
+        "age": 48,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22282,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Sepsis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 74,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing",
+            "history of COPD"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22283,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Acute Bronchitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "male",
+        "age": 54,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22284,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Cholelithiasis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 68,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 8,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22285,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Croup",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22286,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Abdominal Pain (undifferentiated)",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 43,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22287,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Asthma Exacerbation",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest feels heavy and pressure",
+        "gender": "female",
+        "age": 38,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    },
+    {
+      "id": 22288,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Alcohol Intoxication",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feeling really anxious",
+        "gender": "male",
+        "age": 40,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22289,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Bronchiolitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "coughing bad",
+        "gender": "female",
+        "age": 3,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22290,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Ankle Fracture",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "male",
+        "age": 70,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22291,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "Fever",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel exhausted",
+        "gender": "male",
+        "age": 1,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fever",
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22292,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Joint Pain",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "ankle twisted",
+        "gender": "female",
+        "age": 33,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22293,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Appendicitis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "male",
+        "age": 23,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 10,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22294,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Acute Myocardial Infarction",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "chest pain that feels tight",
+        "gender": "male",
+        "age": 82,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 3,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22295,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Encephalopathy",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel dizzy",
+        "gender": "female",
+        "age": 69,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate"
+          ]
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22296,
+      "demo": "adult",
+      "setting": "ED",
+      "expected": "Cholelithiasis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "bleeding from the rectum",
+        "gender": "female",
+        "age": 41,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": []
+      }
+    },
+    {
+      "id": 22297,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Sepsis",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "feel weak all over",
+        "gender": "male",
+        "age": 76,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "history of diabetes",
+            "history of coronary artery disease"
+          ]
+        },
+        "medications": [
+          "insulin or oral diabetic medication",
+          "antihypertensive",
+          "statin, aspirin"
+        ]
+      }
+    },
+    {
+      "id": 22298,
+      "demo": "geri",
+      "setting": "ED",
+      "expected": "Concussion",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "fell and hurt myself",
+        "gender": "male",
+        "age": 86,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 4,
+          "aggravating": [],
+          "relieving": [],
+          "associated": []
+        },
+        "medications": [
+          "antihypertensive"
+        ]
+      }
+    },
+    {
+      "id": 22299,
+      "demo": "peds",
+      "setting": "ED",
+      "expected": "GERD",
+      "source": "nhamcs",
+      "body": {
+        "chiefComplaint": "lower right belly hurt bad",
+        "gender": "male",
+        "age": 2,
+        "hpi": {
+          "onset": "acute",
+          "location": "varies",
+          "duration": "hours to a day",
+          "character": "varies",
+          "severity": 6,
+          "aggravating": [],
+          "relieving": [],
+          "associated": [
+            "fast heart rate",
+            "rapid breathing"
+          ]
+        },
+        "medications": [
+          "inhaler"
+        ]
+      }
+    }
+  ]
+}
