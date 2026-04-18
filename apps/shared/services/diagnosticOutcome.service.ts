@@ -304,6 +304,58 @@ export async function getOutcome(requestId: string): Promise<DbDiagnosticOutcome
   return prisma.diagnosticOutcome.findUnique({ where: { requestId } });
 }
 
+/**
+ * List recent outcomes for the ML dashboard — most recent first.
+ * Tenant-scoped; respects soft-delete; caps at 100 by default.
+ */
+export async function listRecentOutcomes(
+  organizationId: string,
+  limit: number = 50,
+  assessmentFilter?: AIAccuracyAssessment
+): Promise<DbDiagnosticOutcome[]> {
+  return prisma.diagnosticOutcome.findMany({
+    where: {
+      organizationId,
+      deletedAt: null,
+      ...(assessmentFilter ? { aiAccuracyAssessment: assessmentFilter } : {}),
+    },
+    orderBy: { createdAt: 'desc' },
+    take: Math.min(Math.max(limit, 1), 100),
+  });
+}
+
+/**
+ * Per-clinic summary for the ML dashboard clinic panel.
+ * Groups by a clinic identifier available on the row (patientId → clinic
+ * join would require additional queries; for now we use assessmentId via
+ * PatientAssessment.organizationId — callers should join at the Prisma
+ * level if a finer clinic-level grouping is needed).
+ */
+export interface OutcomeClinicSummary {
+  organizationId: string;
+  totalConfirmed: number;
+  top3Rate: number;
+  pendingConfirmations: number;
+}
+
+export async function getClinicOutcomeSummary(
+  organizationId: string
+): Promise<OutcomeClinicSummary> {
+  const rows = await prisma.diagnosticOutcome.findMany({
+    where: { organizationId, deletedAt: null },
+    select: { aiAccuracyAssessment: true, aiTopKWasRight: true, finalConfirmedDiagnosis: true },
+  });
+  const total = rows.length;
+  const confirmed = rows.filter(r => r.finalConfirmedDiagnosis != null);
+  const top3 = confirmed.filter(r => (r.aiTopKWasRight || 0) > 0 && (r.aiTopKWasRight || 0) <= 3).length;
+  return {
+    organizationId,
+    totalConfirmed: confirmed.length,
+    top3Rate: confirmed.length === 0 ? 0 : parseFloat(((top3 / confirmed.length) * 100).toFixed(1)),
+    pendingConfirmations: total - confirmed.length,
+  };
+}
+
 // ============================================================
 // Analytics / ML export
 // ============================================================

@@ -211,6 +211,13 @@ export default function AdminDashboard() {
                   <Eye className="w-4 h-4" />
                   View Tickets
                 </Link>
+                <Link
+                  href="/ml-outcomes"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 text-teal-100 border border-white/10 rounded-lg text-sm font-medium hover:bg-white/5 transition-colors"
+                >
+                  <Brain className="w-4 h-4" />
+                  ML Outcomes
+                </Link>
               </div>
             </div>
           </div>

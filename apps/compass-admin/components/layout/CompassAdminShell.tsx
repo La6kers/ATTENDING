@@ -25,6 +25,7 @@ import {
   Building2,
   Ticket,
   Activity,
+  Brain,
 } from 'lucide-react';
 
 interface CompassAdminShellProps {
@@ -38,6 +39,7 @@ const navItems = [
   { id: 'providers', label: 'Providers', href: '/settings/providers', icon: Users },
   { id: 'tickets', label: 'Tickets', href: '/tickets', icon: Ticket },
   { id: 'queue', label: 'Queue', href: '/queue', icon: Inbox },
+  { id: 'ml-outcomes', label: 'ML Outcomes', href: '/ml-outcomes', icon: Brain },
   { id: 'system', label: 'System Health', href: '/system', icon: Activity },
 ];
 
