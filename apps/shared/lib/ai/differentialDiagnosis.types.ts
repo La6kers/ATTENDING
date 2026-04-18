@@ -134,6 +134,26 @@ export interface DifferentialDiagnosis {
   disposition?: 'discharge' | 'observation' | 'admit' | 'icu' | 'or';
 }
 
+/**
+ * R2 match-provenance trace — describes what matched the chief complaint
+ * in the prevalence / LR / boost systems, for auditability and miss analysis.
+ * Every successful diagnosis result now carries one of these.
+ */
+export interface MatchProvenance {
+  /** Prevalence category chosen by the routing scorer, or null if no category matched */
+  prevalenceCategory: string | null;
+  /** Top-N runner-up categories with their scores (empty if only one matched) */
+  alternativeCategories: Array<{ category: string; score: number }>;
+  /** Regex sources that triggered the chosen category */
+  triggeredBy: string[];
+  /** Whether the fallback SYMPTOM_DIAGNOSIS_MAP path was used */
+  fallbackUsed: boolean;
+  /** CC after all preprocessing (abbrev expand, synonym expand, LLM normalize) */
+  effectiveCC: string;
+  /** Preprocessing passes that fired */
+  preprocessingApplied: string[];
+}
+
 export interface DifferentialDiagnosisResult {
   /** Generated differential diagnoses ranked by likelihood */
   differentials: DifferentialDiagnosis[];
@@ -164,6 +184,9 @@ export interface DifferentialDiagnosisResult {
 
   /** Request ID for feedback */
   requestId: string;
+
+  /** R2: match-provenance trace for debugging and UI "why" drawer */
+  matchProvenance?: MatchProvenance;
 }
 
 // ============================================================

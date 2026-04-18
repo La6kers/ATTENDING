@@ -16,6 +16,8 @@ import { logClinicalAudit, createDiagnoseAuditEntry } from '@attending/shared/li
 import { normalizeWithLLM, type CCNormalizationResult } from '@attending/shared/lib/ai/ccNormalizer';
 import { matchesKnownSymptom, normalizeSymptomText } from '@attending/shared/lib/ai/symptomSynonyms';
 import { preprocessCC, describePreprocess } from '@attending/shared/lib/ai/ccPreprocessor';
+import { scorePrevalenceMatches } from '@attending/shared/lib/ai/clinicalPrevalence';
+import type { MatchProvenance } from '@attending/shared/lib/ai/differentialDiagnosis.types';
 import { z } from 'zod';
 import type { HPIData } from '@attending/shared/types/chat.types';
 
@@ -271,9 +273,33 @@ export default async function handler(
       success: true,
     }));
 
+    // --- R2: Build match provenance for auditability ---
+    // scorePrevalenceMatches is deterministic so the ranked list seen here
+    // mirrors what the engine routed on internally.
+    const preprocessingApplied: string[] = [];
+    if (preResult.expandedAbbrev) preprocessingApplied.push('abbreviation-expansion');
+    if (preResult.extractedNarrative) preprocessingApplied.push('narrative-extraction');
+    if (preResult.flattenedQuestions) preprocessingApplied.push('question-flattening');
+    if (ccNormResult?.llmUsed) preprocessingApplied.push(`llm-normalize:${ccNormResult.provider}`);
+
+    const ranked = scorePrevalenceMatches(effectiveCC);
+    const topMatch = ranked[0];
+    const matchProvenance: MatchProvenance = {
+      prevalenceCategory: topMatch ? topMatch.category.complaint : null,
+      alternativeCategories: ranked.slice(1, 4).map(m => ({
+        category: m.category.complaint,
+        score: m.score,
+      })),
+      triggeredBy: topMatch ? topMatch.matchedPatterns : [],
+      fallbackUsed: !topMatch,
+      effectiveCC,
+      preprocessingApplied,
+    };
+
     return res.status(200).json({
       hpiNarrative,
-      differentials,
+      differentials: { ...differentials, matchProvenance },
+      matchProvenance,
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {

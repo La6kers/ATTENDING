@@ -1,0 +1,593 @@
+{
+  "generatedFrom": "tmp-compass-test/results-v21.json",
+  "generatedAt": "2026-04-18T03:50:29.548Z",
+  "defaultTolerance": 2,
+  "globalTolerancePp": 2,
+  "baseline": {
+    "total": 600,
+    "hits": 557,
+    "accuracy": 92.8
+  },
+  "perCondition": {
+    "Acute Myocardial Infarction": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Stroke": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Pulmonary Embolism": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Pneumonia": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Urinary Tract Infection": {
+      "total": 6,
+      "minHits": 5,
+      "accuracy": 83.3
+    },
+    "Appendicitis": {
+      "total": 6,
+      "minHits": 5,
+      "accuracy": 83.3
+    },
+    "Asthma": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Gastroenteritis": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Migraine": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Nephrolithiasis": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Congestive Heart Failure": {
+      "total": 6,
+      "minHits": 5,
+      "accuracy": 83.3
+    },
+    "Deep Vein Thrombosis": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "COPD Exacerbation": {
+      "total": 6,
+      "minHits": 5,
+      "accuracy": 83.3
+    },
+    "Pyelonephritis": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Meningitis": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Diabetic Ketoacidosis": {
+      "total": 6,
+      "minHits": 4,
+      "accuracy": 66.7
+    },
+    "Sepsis": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Gout": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Pharyngitis": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Cellulitis": {
+      "total": 6,
+      "minHits": 6,
+      "accuracy": 100
+    },
+    "Bronchitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Upper Respiratory Infection": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Pneumothorax": {
+      "total": 5,
+      "minHits": 0,
+      "accuracy": 0
+    },
+    "Aortic Dissection": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Subarachnoid Hemorrhage": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Ectopic Pregnancy": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Testicular Torsion": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Diverticulitis": {
+      "total": 5,
+      "minHits": 3,
+      "accuracy": 60
+    },
+    "Pancreatitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Cholecystitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Croup": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Otitis Media": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Febrile Seizure": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Hip Fracture": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Gastrointestinal Bleeding": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Constipation": {
+      "total": 5,
+      "minHits": 0,
+      "accuracy": 0
+    },
+    "Benign Paroxysmal Positional Vertigo": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Anaphylaxis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Preeclampsia": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Cauda Equina Syndrome": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Peritonsillar Abscess": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Nursemaid Elbow": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Pyloric Stenosis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Epiglottitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Henoch-Schonlein Purpura": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Slipped Capital Femoral Epiphysis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Kawasaki Disease": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Intussusception": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Ovarian Torsion": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Placental Abruption": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Tension Pneumothorax": {
+      "total": 5,
+      "minHits": 0,
+      "accuracy": 0
+    },
+    "Status Epilepticus": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Addison Crisis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Thyroid Storm": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Rhabdomyolysis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Corneal Abrasion": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Orbital Cellulitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Temporal Arteritis": {
+      "total": 5,
+      "minHits": 4,
+      "accuracy": 80
+    },
+    "Mesenteric Ischemia": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Subdural Hematoma": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Shingles": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Hand Foot and Mouth Disease": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Impetigo": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Bronchiolitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Atrial Fibrillation": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Depression": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Panic Attack": {
+      "total": 5,
+      "minHits": 0,
+      "accuracy": 0
+    },
+    "Sciatica": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Bowel Obstruction": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Hemorrhoids": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Hypothyroidism": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Peripheral Neuropathy": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Plantar Fasciitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Carpal Tunnel Syndrome": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Fibromyalgia": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Delirium Tremens": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Alcohol Withdrawal": {
+      "total": 5,
+      "minHits": 4,
+      "accuracy": 80
+    },
+    "Opioid Overdose": {
+      "total": 5,
+      "minHits": 3,
+      "accuracy": 60
+    },
+    "Opioid Withdrawal": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Cannabinoid Hyperemesis Syndrome": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Bipolar Disorder — Manic Episode": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Psychotic Disorder": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Stimulant Intoxication": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Wernicke Encephalopathy": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Hepatic Encephalopathy": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Serotonin Syndrome": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Neuroleptic Malignant Syndrome": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "ADEM": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Dental Abscess": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Vasovagal Syncope": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Urticaria": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Simple Laceration": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Iron Deficiency Anemia": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Intimate Partner Violence": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Sexual Assault": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Erectile Dysfunction": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Dyspareunia": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Chlamydia": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "HRT Side Effect — Mood/Psychiatric": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Lactation Mastitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Postpartum Depression": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Colic": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Polypharmacy/Medication Effect": {
+      "total": 5,
+      "minHits": 4,
+      "accuracy": 80
+    },
+    "Heat Exhaustion": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Dog/Cat Bite": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Esophageal Foreign Body": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Acute Urinary Retention": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Inguinal Hernia": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Second Degree Burn": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Insomnia Disorder": {
+      "total": 5,
+      "minHits": 0,
+      "accuracy": 0
+    },
+    "Obstructive Sleep Apnea": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Malignancy": {
+      "total": 5,
+      "minHits": 0,
+      "accuracy": 0
+    },
+    "Fibrocystic Breast Changes": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Irritant Contact Diaper Dermatitis": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Hypothermia": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    },
+    "Laceration/Crush Injury": {
+      "total": 5,
+      "minHits": 5,
+      "accuracy": 100
+    }
+  }
+}

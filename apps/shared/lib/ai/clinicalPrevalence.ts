@@ -29,6 +29,31 @@ export interface ComplaintPrevalence {
   complaint: string;
   triggerPatterns: RegExp[];
   diagnoses: DiagnosisPrevalence[];
+  /**
+   * Optional anti-patterns — hard disqualifiers. If any regex here matches the CC,
+   * this category is excluded from routing even if triggerPatterns match.
+   *
+   * Example: the "knee pain" category uses anti-patterns to exclude "knees to chest"
+   * (infant intussusception context where knee is incidental).
+   */
+  antiPatterns?: RegExp[];
+  /**
+   * Optional specificity override. When provided, this value is used as the
+   * category's base match score instead of the auto-computed score
+   * (sum of matched pattern source lengths). Useful for rare/emergent conditions
+   * that should win routing even if their patterns are short.
+   */
+  specificity?: number;
+}
+
+/**
+ * Result of scoring a CC against all prevalence categories.
+ * Enables R2 match-provenance trace on the /api/diagnose response.
+ */
+export interface PrevalenceMatch {
+  category: ComplaintPrevalence;
+  score: number;
+  matchedPatterns: string[];
 }
 
 // ============================================================
@@ -1706,9 +1731,19 @@ const PREVALENCE_DATA: ComplaintPrevalence[] = [
   {
     complaint: 'knee pain',
     triggerPatterns: [
-      /\bknee\b(?!s?\s*to\s*(?:chest|stomach|belly)).*(?:pain|hurt|swell|ache|pop|lock|buckl|gave\s*out|stiff|injur|twist|torn)/i,
-      /(?:pain|hurt|swell|ache|pop|lock|buckl|stiff|injur|twist|torn).*\bknee\b(?!s?\s*to\s*(?:chest|stomach|belly))/i,
+      /\bknee\b.*(?:pain|hurt|swell|ache|pop|lock|buckl|gave\s*out|stiff|injur|twist|torn)/i,
+      /(?:pain|hurt|swell|ache|pop|lock|buckl|stiff|injur|twist|torn).*\bknee\b/i,
       /\bknee\b\s*(?:replacement|surgery|swollen|red|warm|hot|clicking)/i,
+    ],
+    antiPatterns: [
+      // R1: hard disqualifiers for incidental "knee" mentions.
+      // "knees to chest" = intussusception/colic stance, not knee pain
+      /\bknees?\s*(?:to|toward|up\s*to)\s*(?:chest|stomach|belly|tummy)/i,
+      // "behind my knees" with skin/rash context = atopic dermatitis
+      /(?:behind|back\s*of)\s*(?:my|the)?\s*knees?.*(?:rash|itch|dry|patch|eczema|scaly|psoriasis)/i,
+      /(?:rash|itch|dry|patch|eczema|scaly|psoriasis).*(?:behind|back\s*of)\s*(?:my|the)?\s*knees?/i,
+      // "surgery on my knee" as incidental past history (e.g., recent surgery → PE risk)
+      /surgery\s*on\s*(?:my|the)?\s*knee/i,
     ],
     diagnoses: [
       {
@@ -4561,20 +4596,67 @@ const PEDIATRIC_BOOSTED: RegExp = new RegExp(
   'i'
 );
 
+/**
+ * Score a chief complaint against every prevalence category and return the
+ * ranked list of matches. This is the R1 routing upgrade from the previous
+ * PREVALENCE_DATA.find() first-match-wins behavior.
+ *
+ * Scoring philosophy:
+ *   - Declaration order is the primary specificity signal (preserves all the
+ *     hand-tuned emergency-first ordering built up through v15 → v21 iteration).
+ *     Earlier categories get higher default scores.
+ *   - A category can opt into an explicit override via `specificity: number`
+ *     to jump ahead of its position. Useful for categories authored late
+ *     that need to win routing against broader earlier categories.
+ *   - Any `antiPatterns` match is a hard disqualifier — this is how we kill
+ *     the classic misroutes (knee/foot/tingling catching non-primary mentions).
+ *
+ * This preserves 100% of the v21 routing behavior when no category sets
+ * explicit specificity or anti-patterns. The upgrade is purely additive.
+ */
+export function scorePrevalenceMatches(chiefComplaint: string): PrevalenceMatch[] {
+  const cc = normalizeSymptomText(chiefComplaint).toLowerCase();
+  const matches: PrevalenceMatch[] = [];
+  const n = PREVALENCE_DATA.length;
+
+  for (let i = 0; i < n; i++) {
+    const cp = PREVALENCE_DATA[i];
+
+    // Hard disqualifier: any anti-pattern match kills this category for this CC
+    if (cp.antiPatterns && cp.antiPatterns.some(ap => ap.test(cc))) continue;
+
+    const matchedPatterns: string[] = [];
+    for (const p of cp.triggerPatterns) {
+      if (p.test(cc)) matchedPatterns.push(p.source);
+    }
+    if (matchedPatterns.length === 0) continue;
+
+    // Position-based default score: earlier declaration = higher score.
+    // First category gets n, last gets 1. Multiplied by 10 so explicit
+    // specificity values sit on a comparable scale.
+    const positionScore = (n - i) * 10;
+    const score = typeof cp.specificity === 'number' ? cp.specificity : positionScore;
+
+    matches.push({ category: cp, score, matchedPatterns });
+  }
+
+  // Sort by score desc; stable sort preserves declaration order within ties
+  matches.sort((a, b) => b.score - a.score);
+  return matches;
+}
+
 export function getPreTestProbabilities(
   chiefComplaint: string,
   age: number,
   gender: string
 ): Map<string, number> {
   const result = new Map<string, number>();
-  // Normalize lay language → append medical synonyms so categorizers
-  // can match on either the patient's words or the canonical term.
-  const cc = normalizeSymptomText(chiefComplaint).toLowerCase();
 
-  // Find matching complaint category
-  const matched = PREVALENCE_DATA.find(cp =>
-    cp.triggerPatterns.some(p => p.test(cc))
-  );
+  // R1: use weighted scoring instead of find() first-match-wins.
+  // The highest-scoring category wins, but ties and near-ties are exposed
+  // to callers via scorePrevalenceMatches() for match-provenance (R2).
+  const ranked = scorePrevalenceMatches(chiefComplaint);
+  const matched = ranked.length > 0 ? ranked[0].category : undefined;
 
   if (!matched) return result;
 
@@ -4610,11 +4692,9 @@ export function getPreTestProbabilities(
 }
 
 /**
- * Check if prevalence data exists for a given chief complaint
+ * Check if prevalence data exists for a given chief complaint.
+ * Honors anti-patterns — a category disqualified by an anti-pattern does not count.
  */
 export function hasPrevalenceData(chiefComplaint: string): boolean {
-  const cc = normalizeSymptomText(chiefComplaint).toLowerCase();
-  return PREVALENCE_DATA.some(cp =>
-    cp.triggerPatterns.some(p => p.test(cc))
-  );
+  return scorePrevalenceMatches(chiefComplaint).length > 0;
 }

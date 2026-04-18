@@ -11,8 +11,24 @@ const DELAY_MS = 200; // Dev mode allows 1000/min — fast iteration
 
 // --- Case Generator ---
 
-function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+// Seeded PRNG (Mulberry32) for deterministic test runs.
+// Without this, each run samples different phrasings → accuracy variance
+// of ±5pp makes the regression budget meaningless.
+// Pass SEED=... env var to override; defaults to a stable value.
+const SEED = parseInt(process.env.SEED || '20260417', 10);
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = a;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(SEED);
+
+function randomFrom(arr) { return arr[Math.floor(rng() * arr.length)]; }
+function randomInt(min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
 
 const SETTINGS = ['ED', 'UC', 'PC'];
 
@@ -22,7 +38,7 @@ function makeAge(demo) {
   return randomInt(65, 95);
 }
 
-function makeGender() { return Math.random() > 0.5 ? 'male' : 'female'; }
+function makeGender() { return rng() > 0.5 ? 'male' : 'female'; }
 
 // --- Disease definitions with layman phrasings ---
 // Each entry: { expected, phrasings[], hpiTemplate }
@@ -598,7 +614,7 @@ function buildCases() {
   ];
   // Shuffle
   for (let i = demoSlots.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [demoSlots[i], demoSlots[j]] = [demoSlots[j], demoSlots[i]];
   }
 
