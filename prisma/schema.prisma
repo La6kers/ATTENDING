@@ -89,6 +89,7 @@ model Organization {
   patientConsents       PatientConsent[]
   aiConversationReviews AIConversationReview[]
   aiModelVersions       AIModelVersion[]
+  diagnosticOutcomes    DiagnosticOutcome[]
 
   @@index([slug])
   @@index([isActive])
@@ -1688,4 +1689,115 @@ model AIModelVersion {
   @@index([organizationId])
   @@index([modelName])
   @@index([status])
+}
+
+// ============================================================
+// DIAGNOSTIC OUTCOME — ML FEEDBACK LOOP
+// ============================================================
+// Persists every AI differential-diagnosis call and its downstream
+// clinical resolution. This is the training-data source for improving
+// the Bayesian engine and for validating claimed accuracy against
+// real-world physician-confirmed outcomes.
+//
+// Lifecycle:
+//   1. Created  — when /api/diagnose returns (AI output + matchProvenance)
+//   2. Annotated — physician documents their initial impression
+//   3. Labs in   — lab results attached, labSupportsAIDiagnosis computed
+//   4. Imaging in— imaging results attached, imagingSupportsAIDiagnosis computed
+//   5. Finalized — encounter closes, finalConfirmedDiagnosis set,
+//                  aiAccuracyAssessment + aiTopKWasRight computed
+//
+// HIPAA note: chiefComplaint and HPI are stored in the same row because
+// the ML signal requires them. Access is scoped by organizationId and
+// soft-delete-protected. The row is NEVER returned to cross-tenant queries.
+// ============================================================
+
+model DiagnosticOutcome {
+  id                           String    @id @default(cuid())
+  organizationId               String
+  // Links — at least one of assessmentId or encounterId is expected.
+  // requestId is the /api/diagnose response id (also used in AuditLog).
+  requestId                    String    @unique
+  assessmentId                 String?
+  encounterId                  String?
+  patientId                    String?
+
+  // --- Stage 1: AI output (written on /api/diagnose response) ---
+  chiefComplaint               String    @db.NVarChar(Max)
+  age                          Int?
+  gender                       String?
+  hpiJson                      String?   @db.NVarChar(Max)  // HPIData payload
+  redFlagsJson                 String?   @db.NVarChar(Max)  // detected red flags
+  aiDifferentialJson           String    @db.NVarChar(Max)  // top-N differentials with confidence
+  aiPrimaryDiagnosis           String?                        // convenience — AI's rank-1
+  aiProvider                   String?                        // local | biomistral | azure-openai
+  matchProvenanceJson          String?   @db.NVarChar(Max)  // R2 trace
+  latencyMs                    Int?
+  aiCreatedAt                  DateTime  @default(now())
+
+  // --- Stage 2: Physician's documented diagnosis (initial impression) ---
+  physicianDiagnosis           String?
+  physicianDiagnosisIcd10      String?
+  physicianDiagnosisAt         DateTime?
+  physicianDiagnosedById       String?
+  physicianConfidence          Int?      // 1-5
+
+  // --- Stage 3: Lab-based confirmation ---
+  labOrdersJson                String?   @db.NVarChar(Max)  // what was ordered
+  labResultsJson               String?   @db.NVarChar(Max)  // results + interpretation
+  labSupportsAIDiagnosis       Boolean?                        // true | false | null (ambiguous)
+  labSupportsPhysicianDx       Boolean?
+  labResultsAt                 DateTime?
+
+  // --- Stage 4: Imaging-based confirmation ---
+  imagingOrdersJson            String?   @db.NVarChar(Max)
+  imagingResultsJson           String?   @db.NVarChar(Max)
+  imagingSupportsAIDiagnosis   Boolean?
+  imagingSupportsPhysicianDx   Boolean?
+  imagingResultsAt             DateTime?
+
+  // --- Stage 5: Final confirmed diagnosis (after full workup) ---
+  finalConfirmedDiagnosis      String?
+  finalConfirmedIcd10          String?
+  finalConfirmedAt             DateTime?
+  finalConfirmedById           String?
+
+  // --- Computed ML signal ---
+  // CONFIRMED — confirmed dx appears in AI top-1
+  // PARTIAL   — confirmed dx appears in AI top-3 or top-5 (not top-1)
+  // REFUTED   — confirmed dx not in AI top-5
+  // PENDING   — no confirmation yet
+  aiAccuracyAssessment         String    @default("PENDING")
+  // 1 = confirmed dx was AI rank-1; 3 = in top-3; 5 = in top-5; 0 = miss
+  aiTopKWasRight               Int?
+
+  // --- Physician feedback (optional, from UI thumbs + comments) ---
+  providerFoundHelpful         Boolean?
+  providerAccuracyRating       Int?      // 1-5
+  providerComments             String?   @db.NVarChar(Max)
+  providerFeedbackAt           DateTime?
+
+  // --- ML export tracking ---
+  mlExportedAt                 DateTime?
+  mlBatchId                    String?
+
+  // --- Soft-delete ---
+  deletedAt                    DateTime?
+  deletedBy                    String?
+
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([organizationId])
+  @@index([requestId])
+  @@index([assessmentId])
+  @@index([encounterId])
+  @@index([patientId])
+  @@index([aiAccuracyAssessment])
+  @@index([finalConfirmedAt])
+  @@index([aiCreatedAt])
+  @@index([mlBatchId])
+  @@index([deletedAt])
 }

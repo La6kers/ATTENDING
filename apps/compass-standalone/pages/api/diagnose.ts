@@ -18,6 +18,7 @@ import { matchesKnownSymptom, normalizeSymptomText } from '@attending/shared/lib
 import { preprocessCC, describePreprocess } from '@attending/shared/lib/ai/ccPreprocessor';
 import { scorePrevalenceMatches } from '@attending/shared/lib/ai/clinicalPrevalence';
 import type { MatchProvenance } from '@attending/shared/lib/ai/differentialDiagnosis.types';
+import { recordAIOutput } from '@attending/shared/services/diagnosticOutcome.service';
 import { z } from 'zod';
 import type { HPIData } from '@attending/shared/types/chat.types';
 
@@ -70,6 +71,13 @@ const DiagnoseRequestSchema = z.object({
   imageSuggestedConditions: z.array(ImageConditionSchema).max(10).optional(),
   vitals: VitalsSchema,
   medications: z.array(z.string().max(100)).max(30).optional(),
+  // ML feedback-loop linkage (optional — callers that don't know these yet
+  // still get a DiagnosticOutcome row via requestId; physician confirmation
+  // can be joined in later through /api/outcomes endpoints).
+  organizationId: z.string().max(50).optional(),
+  assessmentId: z.string().max(50).optional(),
+  encounterId: z.string().max(50).optional(),
+  patientId: z.string().max(50).optional(),
 });
 
 // Simple in-memory rate limiter (per IP, 20 requests/minute)
@@ -141,6 +149,7 @@ export default async function handler(
       chiefComplaint, hpi, mrn, gender, age: reqAge,
       redFlags, symptomSpecificAnswers, imageSuggestedConditions,
       vitals, medications,
+      organizationId, assessmentId, encounterId, patientId,
     } = parseResult.data;
 
     // Sanitize string inputs
@@ -257,10 +266,11 @@ export default async function handler(
     clearTimeout(timeout);
 
     const latencyMs = Date.now() - startTime;
+    const requestId = crypto.randomUUID();
 
     // HIPAA audit log — no raw PHI, only hashed identifiers and categories
     logClinicalAudit(createDiagnoseAuditEntry({
-      requestId: crypto.randomUUID(),
+      requestId,
       clientIp: clientIp,
       chiefComplaint: safeChiefComplaint,
       mrn: safeMrn,
@@ -296,7 +306,40 @@ export default async function handler(
       preprocessingApplied,
     };
 
+    // --- ML feedback loop: persist outcome row (fail-soft) ---
+    // When organizationId is provided, this starts the DiagnosticOutcome
+    // lifecycle. Downstream physician-diagnosis / lab / imaging / finalize
+    // updates are joined by requestId via /api/outcomes/* endpoints.
+    // Persistence errors are logged but never break the clinical response.
+    if (organizationId) {
+      const topDiffs = differentials.differentials.slice(0, 10).map((d) => ({
+        diagnosis: d.diagnosis,
+        confidence: d.confidence ?? 0,
+        icd10: d.icdCode,
+      }));
+      // Intentionally NOT awaited — diagnose shouldn't block on DB write.
+      recordAIOutput({
+        organizationId,
+        requestId,
+        assessmentId,
+        encounterId,
+        patientId,
+        chiefComplaint: safeChiefComplaint,
+        age: typeof reqAge === 'number' ? reqAge : undefined,
+        gender,
+        hpi,
+        redFlags: enhancedRedFlags,
+        aiDifferentials: topDiffs,
+        aiProvider,
+        matchProvenance,
+        latencyMs,
+      }).catch((err) => {
+        console.error('[COMPASS Diagnose] outcome persistence failed (non-fatal):', err);
+      });
+    }
+
     return res.status(200).json({
+      requestId,
       hpiNarrative,
       differentials: { ...differentials, matchProvenance },
       matchProvenance,

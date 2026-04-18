@@ -1,0 +1,87 @@
+# ============================================================
+# COMPASS Regression Check
+# .github/workflows/compass-regression.yml
+#
+# Runs the seeded v21 600-case stress test on every PR that touches
+# the diagnostic engine and fails the build if accuracy regresses
+# beyond the tolerance recorded in tmp-compass-test/regression-budget.json.
+#
+# This is the R4 one-way ratchet — COMPASS accuracy can only go up.
+# ============================================================
+name: COMPASS Regression
+
+on:
+  pull_request:
+    paths:
+      - 'apps/shared/lib/ai/**'
+      - 'apps/compass-standalone/**'
+      - 'apps/shared/services/diagnosticOutcome.service.ts'
+      - 'tmp-compass-test/run-tests-v21-600api.mjs'
+      - 'tmp-compass-test/regression-budget.json'
+      - 'tmp-compass-test/check-regression.mjs'
+      - '.github/workflows/compass-regression.yml'
+  push:
+    branches:
+      - main
+      - dev
+      - mockup-2
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start COMPASS dev server
+        run: |
+          npm run --workspace=compass-standalone dev &
+          echo $! > .server.pid
+          # Wait for server readiness (up to 60s)
+          for i in $(seq 1 60); do
+            if curl -s -f -o /dev/null -X POST \
+                 -H "Content-Type: application/json" \
+                 -d '{"chiefComplaint":"headache","age":30,"gender":"male","hpi":{},"medications":[],"vitals":{}}' \
+                 http://localhost:3005/api/diagnose; then
+              echo "Server ready after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start within 60s"
+          exit 1
+
+      - name: Run v21 seeded 600-case stress test
+        run: node tmp-compass-test/run-tests-v21-600api.mjs
+        env:
+          # Seeded RNG ensures reproducible results for the CI check
+          SEED: '20260417'
+
+      - name: Regression check vs locked budget
+        run: node tmp-compass-test/check-regression.mjs tmp-compass-test/results-v21.json
+
+      - name: Upload report artifacts (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compass-regression-results
+          path: |
+            tmp-compass-test/results-v21.md
+            tmp-compass-test/results-v21.json
+          retention-days: 14
+
+      - name: Stop COMPASS dev server
+        if: always()
+        run: |
+          if [ -f .server.pid ]; then
+            kill $(cat .server.pid) || true
+          fi

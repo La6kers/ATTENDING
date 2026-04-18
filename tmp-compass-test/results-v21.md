@@ -1,6 +1,6 @@
 # COMPASS Stress Test — 600 API Cases (v21)
 
-**Date:** 2026-04-18T03:53:39.880Z
+**Date:** 2026-04-18T04:35:58.436Z
 **Endpoint:** http://localhost:3005/api/diagnose
 **Total cases:** 600
 
@@ -33,9 +33,9 @@
 
 | Percentile | ms |
 |---|---|
-| p50 | 11 |
-| p95 | 14 |
-| p99 | 19 |
+| p50 | 10 |
+| p95 | 13 |
+| p99 | 20 |
 
 ## Top 10 Most-Missed Conditions
 

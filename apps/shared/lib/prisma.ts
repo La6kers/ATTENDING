@@ -113,4 +113,5 @@ export type {
   IntegrationConnection as DbIntegrationConnection,
   ClinicalProtocol as DbClinicalProtocol,
   RedFlagRule as DbRedFlagRule,
+  DiagnosticOutcome as DbDiagnosticOutcome,
 } from '@prisma/client';
